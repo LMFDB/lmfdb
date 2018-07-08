@@ -1,7 +1,6 @@
 # This Blueprint is about Higher Genus Curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
-from pymongo.mongo_client import MongoClient
 
 import StringIO
 import re
@@ -156,7 +155,7 @@ def statistics():
     info = {
         'stats': get_stats_object().stats(),
     }
-    title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
+    title = 'Families of Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('Statistics', ' ')])
     return render_template("hgcwa-stats.html", info=info, credit=credit, title=title, bread=bread)
 
@@ -184,7 +183,7 @@ def groups_per_genus(genus):
         'iso_classes' : iso_classes
     }
 
-    title = 'Families of Higher Genus Curves with Automorphisms: Genus ' + genus + ' Group Statistics'
+    title = 'Families of Higher Genus Curves with Automorphisms: genus ' + genus + ' group statistics'
     bread = get_bread([('Statistics', url_for('.statistics')), ('Groups per Genus', url_for('.statistics')), (str(genus), ' ')])
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
@@ -441,7 +440,7 @@ def higher_genus_w_automorphisms_search(**args):
             flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
     res = C.curve_automorphisms.passports.find(query).sort([(
          'genus', pymongo.ASCENDING), ('dim', pymongo.ASCENDING),
-        ('cc'[0],pymongo.ASCENDING)])
+        ('cc.0',pymongo.ASCENDING)])
 
     nres = res.count()
     res = res.skip(start).limit(count)
@@ -478,7 +477,7 @@ def higher_genus_w_automorphisms_search(**args):
         else:
             info['report'] = 'displaying all %s matches' % nres
 
-    return render_template("hgcwa-search.html", info=info, title="Families of Higher Genus Curves with Automorphisms Search Results", credit=credit, bread=bread)
+    return render_template("hgcwa-search.html", info=info, title="Families of Higher Genus Curves with Automorphisms Search Result", credit=credit, bread=bread)
 
 
 
@@ -486,13 +485,15 @@ def render_family(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        C = MongoClient(port=int(27017))
-        dataz = C.curve_automorphisms.passports.find({'label': label}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
-
+        C = base.getDBConnection()
+        dataz = C.curve_automorphisms.passports.find({'label': label}).sort('cc.0', pymongo.ASCENDING)
+        
         if dataz.count() is 0:
-            flash_error( "No Family with Label %s was Found in the Database.", label)
+            flash_error( "No family with label %s was found in the database.", label)
             return redirect(url_for(".index"))
+
         data=dataz[0]
+
         g = data['genus']
         GG = ast.literal_eval(data['group'])
         gn = GG[0]
@@ -505,7 +506,7 @@ def render_family(args):
             spname=False
         else:
             spname=True
-        title = 'Family of Genus ' + str(g) + ' Curves with Automorphism Group $' + pretty_group +'$'
+        title = 'Family of genus ' + str(g) + ' curves with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
@@ -528,48 +529,45 @@ def render_family(args):
         Lcc=[]
         Lall=[]
         Ltopo_rep=[] #List of topological representatives
-        i=1
+        Lelements=[] #List of lists of equivalence classes    
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
                 urlstrng=dat['passport_label']
                 Lcc.append(ast.literal_eval(dat['con']))
                 Lall.append([cc_display(ast.literal_eval(dat['con'])),dat['passport_label'],
                              urlstrng])
-                i=i+1
+                
+            #Topological equivalence
+            if 'topological' in dat:
+                if dat['topological'] == dat['cc']:
+                    x1=[] #A list of permutations of generating vectors of topo_rep
+                    for perm in dat['gen_vectors']:
+                        x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
+                    Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
 
-        #Topological equivalence
-        Lelements=[] #List of lists of equivalence classes
-        topological_data = C.curve_automorphisms.passports.find({'label': label, '$expr': {'$eq': ['$topological', '$cc']}}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
-        for dat in topological_data:
-            x1=[] #A list of permutations of generating vectors of topo_rep
-            for perm in dat['gen_vectors']:
-                x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
-            Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
+                    topo_class = C.curve_automorphisms.passports.find({'label': dat['label'], 'topological': dat['cc']}).sort('cc.0', pymongo.ASCENDING)
+                    elements=[] #An equivalence class
+                    for element in topo_class:
+                        elements.append((element['passport_label'], element['total_label']))
+                    Lelements.append(elements)    
 
-            #Topological equivalence classes
-            topo_class = C.curve_automorphisms.passports.find({'label': dat['label'], 'topological': dat['cc']}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True})
-            elements=[] #An equivalence class
-            for element in topo_class:
-                elements.append((element['passport_label'], element['total_label']))
-            Lelements.append(elements)
-
-        #List of tupples of representative and equivalence class
         Ltopo_class = zip(Ltopo_rep, Lelements)
-              
-        info.update({'passport': Lall})
-        info.update({'passport_num': len(Lall)})
-
+        topo_length = len(Ltopo_rep)
         #Add topological equivalence to info
         info.update({'topological_rep': Ltopo_rep})
         info.update({'topological_class': Ltopo_class})
+        info.update({'topological_num': topo_length})
+        
+        info.update({'passport': Lall})
+        info.update({'passport_num': len(Lall)})
+
         
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
         if g  == 2 and data['group'] in g2List:
             g2url = "/Genus2Curve/Q/?geom_aut_grp_id=" + data['group']
-            friends = [("Genus 2 Curves over $\Q$", g2url ) ]
+            friends = [("Genus 2 curves over $\Q$", g2url ) ]
         else:
             friends = [ ]
-
 
         br_g, br_gp, br_sign = split_family_label(label)
 
@@ -580,7 +578,7 @@ def render_family(args):
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
-        if len(Lall) == 1:
+        if len(Lall) == 1 or topo_length == 0:
             downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
@@ -599,12 +597,12 @@ def render_passport(args):
     info = {}
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
-        C = MongoClient(port=int(27017))
-        dataz = C.curve_automorphisms.passports.find({'passport_label': label})
+        C = base.getDBConnection()
+        dataz = C.curve_automorphisms.passports.find({'passport_label': label}).sort('cc.1', pymongo.ASCENDING)
         
         if dataz.count() is 0:
             bread = get_bread([("Search Error", url_for('.index'))])
-            flash_error( "No Refined Passport with Label %s was Found in the Database.", label)
+            flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
@@ -632,7 +630,7 @@ def render_passport(args):
         info['numgenvecs']=numgenvecs
         info['numbraidreps']=numbraidreps
 
-        title = 'One Refined Passport of Genus ' + str(g) + ' with Automorphism Group $' + pretty_group +'$'
+        title = 'One refined passport of genus ' + str(g) + ' with automorphism group $' + pretty_group +'$'
         smallgroup="[" + str(gn) + "," +str(gt) +"]"
 
         prop2 = [
@@ -684,18 +682,20 @@ def render_passport(args):
         info.update({'genvects': Ldata, 'HypColumn' : HypColumn})
 
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
-            
-        #Generate braid representatives
-        braid_data = C.curve_automorphisms.passports.find({'passport_label': label, '$expr': {'$eq': ['$braid', '$cc']}}).sort('passport_label', pymongo.ASCENDING).collation({'locale': "en_US", 'numericOrdering': True}) #Braid representatives
-        for dat in braid_data:
-            x5=[]
-            for perm in dat['gen_vectors']:
-                x5.append(sep.join(split_perm(Permutation(perm).cycle_string())))
-            Lbraid.append([dat['total_label'], x5])
         
+        #Generate braid representatives
+        if 'braid' in dataz[0]:
+            braid_data = list(filter(lambda entry: entry['braid'] == entry['cc'], list(dataz)))
+            for dat in braid_data:
+                x5=[]
+                for perm in dat['gen_vectors']:
+                    x5.append(sep.join(split_perm(Permutation(perm).cycle_string())))
+                Lbraid.append([dat['total_label'], x5])
+
+        braid_length = len(Lbraid)
+        print braid_length
         #Add braid equivalence into info
-        info.update({'braid': Lbraid, 'braid_numb': len(Lbraid), 'braid_disp_numb': min(len(Lbraid), numbraidreps)})
-        #print (len(Lbraid))
+        info.update({'braid': Lbraid, 'braid_numb': braid_length, 'braid_disp_numb': min(braid_length, numbraidreps)})
 
         if 'eqn' in data:
             info.update({'eqns': data['eqn']})
@@ -761,7 +761,7 @@ def render_passport(args):
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                         ('Source of the data', url_for(".how_computed_page")),
                         ('Labeling convention', url_for(".labels_page"))]
-        if numb == 1:
+        if numb == 1 or braid_length == 0:
             downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))
                              ]
@@ -785,7 +785,7 @@ def search_input_error(info, bread):
 
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Automorphisms of Curve Data'
+    t = 'Completeness of the automorphisms of curves data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
@@ -795,7 +795,7 @@ def completeness_page():
 
 @higher_genus_w_automorphisms_page.route("/Labels")
 def labels_page():
-    t = 'Label Scheme for the Data'
+    t = 'Label scheme for the data'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -804,7 +804,7 @@ def labels_page():
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Automorphisms of Curve Data'
+    t = 'Source of the automorphisms of curve data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Labeling convention', url_for(".labels_page"))]
@@ -831,7 +831,7 @@ FileSuffix= {'magma': '.m', 'gap': '.g'}
 def hgcwa_code_download(**args):
     import time
     label = args['label']
-    C = MongoClient(port=int(27017))
+    C = base.getDBConnection()
     #Choose lang
     if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma':
         lang = 'magma'
@@ -852,16 +852,18 @@ def hgcwa_code_download(**args):
 
 
     if label_is_one_passport(label):
+        search_data = C.curve_automorphisms.passports.find({"passport_label" : label}).sort('cc.1', pymongo.ASCENDING)
         if lang == args['download_type']:
-            data = C.curve_automorphisms.passports.find({"passport_label" : label})
+            data = search_data
         else:
-            data = C.curve_automorphisms.passports.find({"passport_label" : label, '$expr': {'$eq': ['$braid', '$cc']}})
+            data = list(filter(lambda entry : entry['braid'] == entry['cc'], list(search_data)))
             
     elif label_is_one_family(label):
+        search_data = C.curve_automorphisms.passports.find({"label" : label}).sort('cc.0', pymongo.ASCENDING)
         if lang == args['download_type']:
-            data = C.curve_automorphisms.passports.find({"label" : label})
+            data = search_data
         else:
-            data = C.curve_automorphisms.passports.find({"label" : label, '$expr': {'$eq': ['$topological', '$cc']}})
+            data = list(filter(lambda entry : entry['topological'] == entry['cc'], list(search_data)))
             
     code += s + code_list['gp_comment'][lang] +'\n'
     code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
@@ -1016,5 +1018,17 @@ def hgcwa_code_download_search(res,download_type):
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
+'''
+            #Topological equivalence
+            if dat['topological'] == dat['cc']:
+                x1=[] #A list of permutations of generating vectors of topo_rep
+                for perm in dat['gen_vectors']:
+                    x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
+                Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
 
-
+                topo_class = C.curve_automorphisms.passports.find({'label': dat['label'], 'topological': dat['cc']})
+                elements=[] #An equivalence class
+                for element in topo_class:
+                    elements.append((element['passport_label'], element['total_label']))
+                Lelements.append(elements)
+'''

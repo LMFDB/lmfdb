@@ -70,42 +70,155 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 
-<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating Vector(s)')}}</h2>
+<h2>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating
+  Vector(s)')}}</h2>
+<style>
+.tab button {
+transition: 0.3s;
+}
 
-<p>
-  {% if info.numb == 1 %}
-  Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+.tab button.active {
+    background-color: #efe; <!-- col_main_ll -->
+}
 
+.tab button:hover {
+    background-color: #bfb; <!-- col_main_l -->
+}
+
+.tabcontent {
+    display: none;
+    animation: fadeEffect 1s;
+}
+
+/* Fade in tabs */
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+</style>
+<!-- add in style.css -->
+{% if info.braid_numb == 0 %}
+{{info.braid_num}}
+    {% if info.numb == 1%}
+    Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    <p>{% for cdata in info.genvects %}
+      {{cdata[0]}}
+      <table>{% for perm in cdata[3] %}
+        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+      {% endfor %}
+    </p>
+    
+    {% else%}
+    Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    <p>{% for cdata in info.genvects %}
+      {{cdata[0]}}
+      <table>{% for perm in cdata[3] %}
+        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+        {% endfor %} </table> <br>
+      {% endfor %}
+    </p>
+
+    <p>
+      {% if info.numb >= 2 %}
+      <form>
+        <table>
+          <tr>
+            <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+            <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+          </tr>
+          <tr>
+            <td colspan=3><button type='submit' value='display'>Display</button></td>
+          </tr>
+        </table>
+      </form>
+      {% endif %} </p>
+    {% endif %}
+    
+{% else %}   
+<div class="tab">
+  <button type="select" class="tablinks" onclick="openData(event, 'All')"
+          id="defaultOpen">All Vectors</button> 
+  <button type="submit" class="tablinks" onclick="openData(event,
+          'Representative')">Braid Equivalence Representative</button>
+</div>
+{% endif %}
+
+<div id="All" class="tabcontent">
+    Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+  <p>{% for cdata in info.genvects %}
+    {{cdata[0]}}
+    <table>{% for perm in cdata[3] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
+    {% endfor %}
+  </p>
+
+  <p>
+    {% if info.numb >= 2 %}
+    <form>
+      <table>
+        <tr>
+          <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+          <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+        </tr>
+        <tr>
+          <td colspan=3><button type='submit' value='display'>Display</button></td>
+        </tr>
+      </table>
+    </form>
+    {% endif %} </p>
+</div>
+
+<div id="Representative" class="tabcontent">
+  {% if info.braid_numb == 1 %}
+  Displaying the unique braid equivalence representative for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
   {% else %}
-  Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-
+  Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} braid
+  equivalence representatives for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
   {% endif %}
-</p>
+  
+  <p>{% for count in range(info.braid_disp_numb) %}
+    {% for braid_rep in info.braid %}
+    {{braid_rep[0]}}
+    <table>{% for perm in braid_rep[1] %}
+      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      {% endfor %} </table> <br>
+    {% endfor %}
+    {% endfor %}
+  </p>
 
- <p>{% for cdata in info.genvects %}
-   {{cdata[0]}}
-     <table>{% for perm in cdata[3] %}
-	  <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-	  {% endfor %} </table> <br>
-  {% endfor %}
- </p>
+  {% if info.braid_numb >= 2 %}
+  <form>
+    <table>
+      <tr>
+        <td>Display number of braid equivalence representatives:</td>
+        <td><input type='text' name='numbraidreps' placeholder='20' size=10></td>
+      </tr>
+      <tr>
+        <td colspan=3><button type='submit' value='display'>Display</button></td>
+      </tr>
+    </table>
+  </form>
+  {% endif %}
+</div>
 
- <p>
-  {% if info.numb >= 2 %}
- <form>
-  <table>
-    <tr>
-      <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
-      <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
-    </tr>
-    <tr>
-      <td colspan=3><button type='submit' value='display'>Display</button></td>
-    </tr>
-  </table>
-</form>
-{% endif %} </p>
+<script>
+function openData(evt, dataType) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(dataType).style.display = "block";
+    evt.currentTarget.className += " active";
+}
 
-
-
+document.getElementById("defaultOpen").click();
+</script>
 
 {% endblock %}
