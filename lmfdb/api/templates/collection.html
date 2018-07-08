@@ -27,7 +27,7 @@ Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
 <ol class="api-entries" start="{{ start }}">
 {% for entry in data %}
   <li>
-    Object ID: <a href="{{ url_for('.api_query_id', table=table, id=entry.get('id')) }}">{{ entry.get('id') }}</a><br/>
+    {{ rec_id }}: <a href="{{ url_for('.api_query_id', table=table, id=entry.get('id')) }}">{{ entry.get(rec_id) }}</a><br/>
     <code>{{ pretty(entry,id=False) }}</code>
   </li>
 {% endfor %}

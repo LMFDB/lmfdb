@@ -267,7 +267,8 @@ def api_query(table, id = None):
         "start": start,
         "offset": offset,
         "query": query,
-        "next": next
+        "next": next,
+        "rec_id": 'id' if coll._label_col is None else coll._label_col,
     }
 
     if format.lower() == "json":
