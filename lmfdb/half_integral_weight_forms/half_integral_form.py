@@ -60,7 +60,7 @@ def half_integral_weight_form_search(**args):
         v['dimension'] = v.pop('dim')
     info['forms'] = res
 
-    t = 'Half Integral Weight Cusp Forms search results'
+    t = 'Half Integral Weight Cusp Forms Search Results'
     bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")),('Search Results', ' ')]
     properties = []
     return render_template("half_integral_weight_form_search.html", info=info, title=t, properties=properties, bread=bread)

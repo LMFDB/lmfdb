@@ -148,7 +148,7 @@ def render_modlmf_webpage(**args):
         lab = args.get('label')
         data = db.modlmf_forms.lookup(lab)
     if data is None:
-        t = "Mod &#x2113; modular form search error"
+        t = "Mod &#x2113; Modular Form Search Error"
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -232,7 +232,7 @@ def q_exp_display(label, number):
 #data quality pages
 @modlmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the mod &#8467; modular form data'
+    t = 'Completeness of the mod &#8467; Modular Form Data'
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.extent',
@@ -240,7 +240,7 @@ def completeness_page():
 
 @modlmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the mod &#8467; modular form data'
+    t = 'Source of the mod &#8467; Modular Form Data'
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.source',
@@ -248,7 +248,7 @@ def how_computed_page():
 
 @modlmf_page.route("/Labels")
 def labels_page():
-    t = 'Label of a mod &#x2113; modular forms'
+    t = 'Label of a mod &#x2113; Modular Forms'
 
     bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
     credit = modlmf_credit

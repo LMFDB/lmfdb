@@ -480,7 +480,7 @@ def show_slopes(sl):
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of hypergeometric motive data over $\Q$'
+    t = 'Completeness of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Completeness',''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
@@ -488,7 +488,7 @@ def completeness_page():
 
 @hypergm_page.route("/Source")
 def how_computed_page():
-    t = 'Source of hypergeometric motive data over $\Q$'
+    t = 'Source of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Source',''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread,
@@ -496,7 +496,7 @@ def how_computed_page():
 
 @hypergm_page.route("/Labels")
 def labels_page():
-    t = 'Labels for hypergeometric motives over $\Q$'
+    t = 'Labels for Hypergeometric Motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread,
