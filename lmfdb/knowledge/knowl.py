@@ -123,8 +123,6 @@ class KnowlBackend(PostgresBase):
         insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
         insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
         self._execute(insterer, (knowl.id,) + values + values)
-        if new_knowl:
-            self.update_knowl_categories(cat)
         self.save_history(knowl, who)
 
     def update(self, kid, key, value):
