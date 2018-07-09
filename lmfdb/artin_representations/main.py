@@ -63,7 +63,7 @@ def artin_representation_search(**args):
             return search_input_error({'err':''}, bread)
         return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-    title = 'Artin representation search results'
+    title = 'Artin Representation Search Results'
     bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
     sign_code = 0
     query = {'Hide': 0}
@@ -131,7 +131,7 @@ def render_artin_representation_webpage(label):
     #artin_logger.info("Found %s" % (the_rep._data))
 
 
-    title = "Artin representation %s" % label
+    title = "Artin Representation %s" % label
     the_nf = the_rep.number_field_galois_group()
     if the_rep.sign() == 0:
         processed_root_number = "not computed"
@@ -202,7 +202,7 @@ def random_representation():
 
 @artin_representations_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Artin representation data'
+    t = 'Completeness of Artin Representation Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Artin representation labels', url_for(".labels_page"))]
@@ -212,7 +212,7 @@ def completeness_page():
 
 @artin_representations_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Artin representations'
+    t = 'Labels for Artin Representations'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -220,7 +220,7 @@ def labels_page():
 
 @artin_representations_page.route("/Source")
 def how_computed_page():
-    t = 'Source of Artin representation data'
+    t = 'Source of Artin Representation Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),

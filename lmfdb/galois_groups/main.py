@@ -251,7 +251,7 @@ def random_group():
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Galois group data'
+    t = 'Completeness of Galois Group Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]
@@ -261,7 +261,7 @@ def completeness_page():
 
 @galois_groups_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Galois groups'
+    t = 'Labels for Galois Groups'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -269,7 +269,7 @@ def labels_page():
 
 @galois_groups_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Galois group data'
+    t = 'Source of the Galois Group Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),
