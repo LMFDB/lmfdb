@@ -326,16 +326,19 @@ def edit(ID):
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
-    k = Knowl(ID)
-    r = render(ID, footer="0", raw=True)
-    title = k.title or "'%s'" % k.id
-    b = get_bread([('%s' % title, url_for('.show', ID=ID))])
+    try:
+        k = Knowl(ID)
+        r = render(ID, footer="0", raw=True)
+        title = k.title or "'%s'" % k.id
+        b = get_bread([('%s' % title, url_for('.show', ID=ID))])
 
-    return render_template("knowl-show.html",
+        return render_template("knowl-show.html",
                            title=k.title,
                            k=k,
                            render=r,
                            bread=b)
+    except Exception:
+        flask.abort(404, "No knowl found with the given id");
 
 
 @knowledge_page.route("/raw/<ID>")
@@ -414,7 +417,7 @@ def render(ID, footer=None, kwargs=None, raw=False):
     """
     try:
         k = Knowl(ID)
-    except:
+    except Exception:
         logger.critical("Failed to render knowl %s"%ID)
         errmsg = "Sorry, the knowledge database is currently unavailable."
         return errmsg if raw else make_response(errmsg)

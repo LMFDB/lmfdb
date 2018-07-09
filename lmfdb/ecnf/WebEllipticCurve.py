@@ -237,7 +237,7 @@ class ECNF(object):
         # del dbdata["_id"]
         self.__dict__.update(dbdata)
         self.field = FIELD(self.field_label)
-        self.non_surjective_primes = dbdata.get('non_surjective_primes',None)
+        self.non_surjective_primes = dbdata.get('non-surjective_primes',None)
         self.make_E()
 
     @staticmethod

@@ -125,7 +125,6 @@ def render_artin_representation_webpage(label):
     except:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of an Artin representation in the database." % (label)), "error")
         return search_input_error({'err':''}, bread)
-              
 
     extra_data = {} # for testing?
     extra_data['galois_knowl'] = group_display_knowl(5,3) # for testing?

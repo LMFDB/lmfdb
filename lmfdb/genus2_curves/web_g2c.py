@@ -6,8 +6,8 @@ from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
-#from lmfdb.WebNumberField import nf_display_knowl
-#from lmfdb.transitive_group import group_display_knowl
+from lmfdb.WebNumberField import nf_display_knowl
+from lmfdb.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, NumberField, PolynomialRing, factor, implicit_plot, point, real, sqrt, var, expand, nth_prime
@@ -608,17 +608,17 @@ class WebG2C(object):
             data['tama'] = data['tama'][:-2] # trim last ", "
             if ratpts:
                 if len(ratpts['rat_pts']):
-                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(P) + ')') for P in ratpts['rat_pts'])
+                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
                 data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
                 # data['mw_rank'] = ratpts['mw_rank']
                 # data['mw_rank_v'] = ratpts['mw_rank_v']
             else:
                 data['rat_pts_v'] = 0
-            #if curve['two_torsion_field'][0]:
-            #    data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
-            #else:
-            #    t = curve['two_torsion_field']
-            #    data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
+            if curve['two_torsion_field'][0]:
+                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
+            else:
+                t = curve['two_torsion_field']
+                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
         else:
             # invariants specific to isogeny class
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))

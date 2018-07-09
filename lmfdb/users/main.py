@@ -10,6 +10,10 @@ from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
+from lmfdb.db_backend import  db
+from psycopg2.sql import SQL
+
+
 login_page = Blueprint("users", __name__, template_folder='templates')
 import lmfdb.utils
 logger = lmfdb.utils.make_logger(login_page)
@@ -45,21 +49,25 @@ def get_username(uid):
 @app.context_processor
 def ctx_proc_userdata():
     userdata = {}
-    userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
-    userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
+    userdata['user_can_write'] = userdb.can_read_write_userdb()
+    if not userdata['user_can_write']:
+        userdata['userid'] = 'anon'
+        userdata['username'] = 'Anonymous'
+        userdata['user_is_admin'] = False
+        userdata['user_is_authenticated'] = False
+        userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
-    if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
-        userdata['user_is_authenticated'] = current_user.is_authenticated
     else:
-        userdata['user_is_authenticated'] = current_user.is_authenticated()
+        userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
+        userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
 
-    try:
-        roles = getDBConnection()['admin'].command(SON({"connectionStatus":int(1)}))
-        userdata['user_can_write'] = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
-    except:
-        userdata['user_can_write'] = False
-    userdata['user_is_admin'] = current_user.is_admin()
-    userdata['get_username'] = get_username # this is a function
+        if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
+            userdata['user_is_authenticated'] = current_user.is_authenticated
+        else:
+            userdata['user_is_authenticated'] = current_user.is_authenticated()
+
+        userdata['user_is_admin'] = current_user.is_admin()
+        userdata['get_username'] = get_username # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -128,6 +136,7 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
+    from lmfdb.knowledge import knowldb
     # See issue #1169
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
@@ -182,13 +191,6 @@ def housekeeping(fn):
         return admin_required(fn)(*args, **kwargs)
     return decorated_view
 
-@login_page.route("/register")
-def register_new():
-    return ""
-    # q_admins = userdb.find({'admin' : True}) ## find is from MongoDB
-    # admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
-    # return "You have to contact one of the Admins: %s" % admins
-
 
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
@@ -205,6 +207,8 @@ def register(N=10):
 
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
+    if not userdb.rw_userdb:
+        flask.abort(401, "no attempt to create user, not enough privileges");
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
         flask.abort(401)

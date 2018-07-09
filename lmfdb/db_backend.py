@@ -152,6 +152,7 @@ class PostgresBase(object):
             if values_list:
                 execute_values(cur, query, values, template)
             else:
+                #print query.as_string(self.conn)
                 cur.execute(query, values)
             if not silent:
                 t = time.time() - t
@@ -1199,7 +1200,7 @@ class PostgresTable(PostgresBase):
                       silent=True, commit=False)
         if self.extra_table is not None:
             self._execute(command.format(Identifier(self.extra_table + suffix),
-                                         Identifier(self.search_table + suffix + "_pkey")),
+                                         Identifier(self.extra_table + suffix + "_pkey")),
                           silent=True, commit=False)
         if commit:
             self.conn.commit()
@@ -2402,8 +2403,10 @@ class PostgresStatsTable(PostgresBase):
         return data
 
     def create_oldstats(self, filename):
-        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(self.search_table + "_oldstats"))
+        name = self.search_table + "_oldstats"
+        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
         self._execute(creator)
+        self.table._db.grant_select(name)
         cur = self.conn.cursor()
         with open(filename) as F:
             try:
@@ -2475,6 +2478,7 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.config import Configuration
         options = Configuration().get_postgresql();
         self.fetch_userpassword(options);
+        self._user = options['user']
         logging.info("Connecting to PostgresSQL...")
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
@@ -2487,8 +2491,25 @@ class PostgresDatabase(PostgresBase):
         setup_connection(self.conn)
         cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
 
-        if options['user'] == "webserver":
+        if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
+
+        self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+
+        if self._read_only:
+            self._read_and_write_knowls = False
+            self._read_and_write_userdb = False
+        else:
+            privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
+            knowls_tables = ['kwl_deleted', 'kwl_history', 'kwl_knowls']
+            self._read_and_write_knowls = all( all( self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [self._user, table, priv]).rowcount == 1 for priv in privileges) for table in knowls_tables)
+            self._read_and_write_userdb =  all(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_schema = %s AND table_name=%s AND privilege_type=%s"), [self._user, 'userdb', 'users', priv]).rowcount == 1 for priv in privileges)
+
+        logging.info("Read only: %s" % self._read_only);
+        logging.info("Read/write to userdb: %s" % self._read_and_write_userdb);
+        logging.info("Read/write to knowls: %s" % self._read_and_write_knowls);
+
+
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -2515,7 +2536,7 @@ class PostgresDatabase(PostgresBase):
             # tries to read the file "password" on root of the project
             pw_filename = os.path.join(os.path.dirname(os.path.dirname(__file__)), "password")
             try:
-                password = open(pw_filename, "r").readlines()[0].strip()
+                options['password'] = open(pw_filename, "r").readlines()[0].strip()
                 logging.info("Done!")
             except Exception:
                 # file not found or any other problem
@@ -2526,6 +2547,36 @@ class PostgresDatabase(PostgresBase):
         elif 'password' not in options:
             options['user'], options['password'] = ['lmfdb', 'lmfdb']
 
+    def _grant(self, action, table_name, users, commit):
+        action = action.upper()
+        if action not in ['SELECT', 'INSERT', 'UPDATE', 'DELETE']:
+            raise ValueError("%s is not a valid action"%action)
+        grantor = SQL('GRANT %s ON TABLE {0} TO {1}'%action)
+        for user in users:
+            self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True, commit=False)
+        if commit:
+            self.conn.commit()
+
+    def grant_select(self, table_name, users=['lmfdb', 'webserver'], commit=True):
+        self._grant("SELECT", table_name, users, commit)
+
+    def grant_insert(self, table_name, users=['webserver'], commit=True):
+        self._grant("INSERT", table_name, users, commit)
+
+    def grant_update(self, table_name, users=['webserver'], commit=True):
+        self._grant("UPDATE", table_name, users, commit)
+
+    def grant_delete(self, table_name, users=['webserver'], commit=True):
+        self._grant("DELETE", table_name, users, commit)
+
+    def is_read_only(self):
+        return self._read_only;
+
+    def can_read_write_knowls(self):
+        return self._read_and_write_knowls
+
+    def can_read_write_userdb(self):
+        return self._read_and_write_userdb
 
     def is_alive(self):
         """
@@ -2641,17 +2692,10 @@ class PostgresDatabase(PostgresBase):
             if (not hasid):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
-        def grant_select(table_name):
-            grantor = SQL('GRANT SELECT ON TABLE {0} TO {1}')
-            self._execute(grantor.format(Identifier(table_name), Identifier('lmfdb')), silent=True, commit=False)
-            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
-        def grant_insert(table_name):
-            grantor = SQL('GRANT INSERT ON TABLE {0} TO {1}')
-            self._execute(grantor.format(Identifier(table_name), Identifier('webserver')), silent=True, commit=False)
         search_columns = process_columns(search_columns, search_order)
         creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name)
+        self.grant_select(name)
         if extra_columns is not None:
             valid_extra_list = sum(extra_columns.values(),[])
             valid_extra_set = set(valid_extra_list)
@@ -2670,18 +2714,18 @@ class PostgresDatabase(PostgresBase):
             creator = creator.format(Identifier(name+"_extras"),
                                      SQL(", ").join(extra_columns))
             self._execute(creator, silent=True, commit=False)
-            grant_select(name+"_extras")
+            self.grant_select(name+"_extras")
         creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
         creator = creator.format(Identifier(name+"_counts"))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name+"_counts")
-        grant_insert(name+"_counts")
+        self.grant_select(name+"_counts")
+        self.grant_insert(name+"_counts")
         creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
         creator = creator.format(Identifier(name + "_stats"))
         self._execute(creator, silent=True, commit=False)
-        grant_select(name+"_stats")
-        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras) VALUES (%s, %s, %s, %s, %s)')
-        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None], silent=True, commit=False)
+        self.grant_select(name+"_stats")
+        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
+        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col], silent=True, commit=False)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.conn.commit()
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))

@@ -10,12 +10,8 @@ from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 MAX_GROUP_DEGREE = 23
 
-tg_db = db.gps_transitive
-sg_db = db.gps_small
-gm_db = db.gps_gmodules
-
 def small_group_display_knowl(n, k, name=None):
-    group = sg_db.lookup('%s.%s'%(n,k))
+    group = db.gps_small.lookup('%s.%s'%(n,k))
     if group is None:
         return '$[%d, %d]$'%(n,k)
     if not name:
@@ -24,7 +20,7 @@ def small_group_display_knowl(n, k, name=None):
 
 def small_group_label_display_knowl(label, name=None):
     if not name:
-        group = sg_db.lookup(label)
+        group = db.gps_small.lookup(label)
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
@@ -32,7 +28,7 @@ def small_group_knowl_guts(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
     k = int(parts[1])
-    group = sg_db.lookup(str(gapid))
+    group = db.gps_small.lookup(str(gapid))
     inf = "Group $%s$"%str(group['pretty'])
     inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
     inf += ('' if group['cyclic'] else 'not')+' cyclic, '
@@ -77,7 +73,7 @@ class WebGaloisGroup:
         return cls(data['label'], data)
 
     def _get_dbdata(self):
-        return tg_db.lookup(self.label)
+        return db.gps_transitive.lookup(self.label)
 
     def n(self):
         return self._data['n']
@@ -170,7 +166,7 @@ def tryknowl(n, t):
 
 def group_display_short(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     if group is not None and group.get('pretty'):
         return group['pretty']
     return "%dT%d"%(n,t)
@@ -178,14 +174,14 @@ def group_display_short(n, t):
 # Returns the empty string if there is no pretty name
 def group_display_pretty(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     if group.get('pretty'):
         return group['pretty']
     return ""
 
 def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     if not name:
         if group is not None and group.get('pretty'):
             name = group['pretty']
@@ -197,7 +193,7 @@ def group_display_knowl(n, t, name=None):
 
 
 def galois_module_knowl(n, t, index):
-    name = gm_db.lucky({'n': n, 't': t, 'index': index}, 'name')
+    name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
     return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
@@ -225,7 +221,7 @@ def make_galois_pair(n, t):
 
 def group_phrase(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     inf = ''
     if group['cyc'] == 1:
         inf += "A cyclic"
@@ -242,7 +238,7 @@ def group_phrase(n, t):
 
 def group_display_long(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['size'], group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"
@@ -265,7 +261,7 @@ def group_display_long(n, t):
 
 def group_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
     inf += ", order " + str(group['size'])
     inf += ", parity " + str(group['parity'])
@@ -306,7 +302,7 @@ def group_knowl_guts(n, t):
 
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     gname = group['name']
     if group['pretty']:
         gname = group['pretty']
@@ -322,7 +318,7 @@ def group_cclasses_knowl_guts(n, t):
 
 def group_character_table_knowl_guts(n, t):
     label = base_label(n, t)
-    group = tg_db.lookup(label)
+    group = db.gps_transitive.lookup(label)
     gname = group['name']
     gname = gname.replace('=', ' = ')
     if group['pretty']:
@@ -338,7 +334,7 @@ def group_character_table_knowl_guts(n, t):
 
 
 def galois_module_knowl_guts(n, t, index):
-    mymod = gm_db.lucky({'n': int(n), 't': int(t), 'index': int(index)}, ['name','dim','gens'])
+    mymod = db.gps_gmodules.lucky({'n': int(n), 't': int(t), 'index': int(index)}, ['name','dim','gens'])
     if mymod is None:
         return 'Database call failed'
     name = mymod['name']

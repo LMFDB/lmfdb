@@ -389,7 +389,7 @@ def render_single_Lfunction(Lclass, args, request):
     try:
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
-    except (ValueError,KeyError,TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
+    except (ValueError, KeyError, TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
@@ -938,9 +938,9 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)
 
-    elif arg1 == 'ModularForm' and arg2 == 'GL2'and arg3 == 'Q' and arg4 == 'Maass':
+    elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'Maass':
         maass_id = arg5
-        return Lfunction_Maass(maass_id=maass_id, fromDB=False)
+        return Lfunction_Maass(maass_id = maass_id, fromDB = False)
 
     elif arg1 == 'ModularForm' and (arg2 == 'GSp4' or arg2 == 'GL4' or arg2 == 'GL3') and arg3 == 'Q' and arg4 == 'Maass':
         return Lfunction_Maass(fromDB = True, group = arg2, level = arg5,
