@@ -152,6 +152,7 @@ class PostgresBase(object):
             if values_list:
                 execute_values(cur, query, values, template)
             else:
+                #print query.as_string(self.conn)
                 cur.execute(query, values)
             if not silent:
                 t = time.time() - t
@@ -2492,6 +2493,23 @@ class PostgresDatabase(PostgresBase):
 
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
+
+        self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+
+        if self._read_only:
+            self._read_and_write_knowls = False
+            self._read_and_write_userdb = False
+        else:
+            privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
+            knowls_tables = ['kwl_deleted', 'kwl_history', 'kwl_knowls']
+            self._read_and_write_knowls = all( all( self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [self._user, table, priv]).rowcount == 1 for priv in privileges) for table in knowls_tables)
+            self._read_and_write_userdb =  all(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_schema = %s AND table_name=%s AND privilege_type=%s"), [self._user, 'userdb', 'users', priv]).rowcount == 1 for priv in privileges)
+
+        logging.info("Read only: %s" % self._read_only);
+        logging.info("Read/write to userdb: %s" % self._read_and_write_userdb);
+        logging.info("Read/write to knowls: %s" % self._read_and_write_knowls);
+
+
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
@@ -2538,14 +2556,27 @@ class PostgresDatabase(PostgresBase):
             self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True, commit=False)
         if commit:
             self.conn.commit()
+
     def grant_select(self, table_name, users=['lmfdb', 'webserver'], commit=True):
         self._grant("SELECT", table_name, users, commit)
+
     def grant_insert(self, table_name, users=['webserver'], commit=True):
         self._grant("INSERT", table_name, users, commit)
+
     def grant_update(self, table_name, users=['webserver'], commit=True):
         self._grant("UPDATE", table_name, users, commit)
+
     def grant_delete(self, table_name, users=['webserver'], commit=True):
         self._grant("DELETE", table_name, users, commit)
+
+    def is_read_only(self):
+        return self._read_only;
+
+    def can_read_write_knowls(self):
+        return self._read_and_write_knowls
+
+    def can_read_write_userdb(self):
+        return self._read_and_write_userdb
 
     def is_alive(self):
         """

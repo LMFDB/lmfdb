@@ -49,27 +49,25 @@ def get_username(uid):
 @app.context_processor
 def ctx_proc_userdata():
     userdata = {}
-    userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
-    userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
+    userdata['user_can_write'] = userdb.can_read_write_userdb()
+    if not userdata['user_can_write']:
+        userdata['userid'] = 'anon'
+        userdata['username'] = 'Anonymous'
+        userdata['user_is_admin'] = False
+        userdata['user_is_authenticated'] = False
+        userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
-    if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
-        userdata['user_is_authenticated'] = current_user.is_authenticated
     else:
+        userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
+        userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
 
-        userdata['user_is_authenticated'] = current_user.is_authenticated()
-
-    try:
-        #TODO improve this
-        privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
-        if all( db._execute(SQL("SELECT COUNT(privilege_type) FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [db._user, 'kwl_knowls', priv]).rowcount == 1 for priv in privileges):
-            userdata['user_can_write'] = True
+        if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
+            userdata['user_is_authenticated'] = current_user.is_authenticated
         else:
-            userdata['user_can_write'] = False
-    except Exception, err:
-        print err
-        userdata['user_can_write'] = False
-    userdata['user_is_admin'] = current_user.is_admin()
-    userdata['get_username'] = get_username # this is a function
+            userdata['user_is_authenticated'] = current_user.is_authenticated()
+
+        userdata['user_is_admin'] = current_user.is_admin()
+        userdata['get_username'] = get_username # this is a function
     return userdata
 
 # blueprint specific definition of the body_class variable
@@ -193,13 +191,6 @@ def housekeeping(fn):
         return admin_required(fn)(*args, **kwargs)
     return decorated_view
 
-@login_page.route("/register")
-def register_new():
-    return ""
-    # q_admins = userdb.find({'admin' : True}) ## find is from MongoDB
-    # admins =', '.join((_['full_name'] or _['_id'] for _ in q_admins))
-    # return "You have to contact one of the Admins: %s" % admins
-
 
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
@@ -216,6 +207,8 @@ def register(N=10):
 
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
+    if not userdb.rw_userdb:
+        flask.abort(401, "no attempt to create user, not enough privileges");
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
         flask.abort(401)

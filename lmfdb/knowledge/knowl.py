@@ -48,6 +48,11 @@ class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db.conn)
+        self._rw_knowldb = db.can_read_write_knowls()
+
+    def can_read_write_knowls(self):
+        return self._rw_knowldb
+
     def get_knowl(self, ID, fields=None):
         if fields is None:
             fields = ['id'] + self._default_fields
@@ -56,11 +61,12 @@ class KnowlBackend(PostgresBase):
         if cur.rowcount > 0:
             res = cur.fetchone()
             return {k:v for k,v in zip(fields, res)}
+
     def search(self, category="", filters=[], keywords="", author=None, sort=None):
         restrictions = []
         values = []
         if category:
-            restrictions.append(SQL("category = %s"))
+            restrictions.append(SQL("cat = %s"))
             values.append(category)
         if any(filters):
             qualities = [quality for quality, filt in zip(knowl_qualities, filters) if filt]
@@ -81,6 +87,7 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("{0} ORDER BY {1}").format(selecter, self._sort_str(sort))
         cur = self._execute(selecter, values)
         return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
+
     def check_title_and_content(self):
         # This should really be done at the database level now that we can require columns to be not null
         cur = self._execute(SQL("SELECT COUNT(*) FROM kwl_knowls WHERE title IS NULL"))
@@ -89,6 +96,7 @@ class KnowlBackend(PostgresBase):
         nocontent = cur.fetchone()[0]
         assert notitle == 0, "%s knowl(s) don't have a title" % notitle
         assert nocontent == 0, "%s knowl(s) don't have content" % nocontent
+
     def save(self, knowl, who):
         """who is the ID of the user, who wants to save the knowl"""
         new_history_item = self.get_knowl(knowl.id, ['id'] + self._default_fields + ['history'])
@@ -97,24 +105,34 @@ class KnowlBackend(PostgresBase):
             history = []
             authors = []
         else:
-            history = new_history_item.pop('history') + [new_history_item]
-            authors = new_history_item['authors']
+            history = new_history_item.pop('history')
+            if history is not None:
+                history += [new_history_item]
+            else:
+                history = []
+            authors = new_history_item.pop('authors', [])
+            if authors is None:
+                authors = []
+
         if who and who not in authors:
             authors = authors + [who]
+
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
         values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
         insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
-        insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), Placeholder() * (len(self._default_fields) + 2))
+        insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
         self._execute(insterer, (knowl.id,) + values + values)
         if new_knowl:
             self.update_knowl_categories(cat)
         self.save_history(knowl, who)
+
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
         updater = SQL("UPDATE kwl_knowls SET ({0}) = (%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
+
     def save_history(self, knowl, who):
         """
         saves history tokens in a collection "history".
@@ -128,6 +146,7 @@ class KnowlBackend(PostgresBase):
         now = datetime.utcnow()
         values = (knowl.title, now, who, 'saved')
         self._execute(insterer, (knowl.id,) + values + values)
+
     def get_history(self, limit=25):
         """
         returns the last @limit history items
@@ -136,14 +155,16 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT {0} FROM kwl_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
         cur = self._execute(selecter, (limit,))
         return [{k:v for k,v in zip(cols, res)} for res in cur]
+
     def delete(self, knowl):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        insterer = SQL("INSERT INTO kwl_knowls_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_values)), Placeholder() * len(self._default_values))
+        insterer = SQL("INSERT INTO kwl_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(', ').join(Placeholder() * len(self._default_fields)))
         values = self.get_knowl(knowl.id)
-        self._execute(insterer, [knowl.id] + [values[i] for i in self._default_values])
+        self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
         deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
         self._execute(deletor, (knowl.id,))
         self.refresh_knowl_categories()
+
     def is_locked(self, knowlid, delta_min=10):
         """
         if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
@@ -159,6 +180,7 @@ class KnowlBackend(PostgresBase):
         cur.execute(selecter, (knowlid, time))
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["who", "time"], cur.fetchone())}
+
     def set_locked(self, knowl, who):
         """
         when a knowl is edited, a lock is created. who is the user id.
@@ -166,6 +188,7 @@ class KnowlBackend(PostgresBase):
         insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
         now = datetime.utcnow()
         self._execute(insterer, (knowl.id, knowl.title, now, who, 'locked', knowl.title, now, who, 'locked'))
+
     def knowl_title(self, kid):
         """
         just the title, used in the knowls in the templates for the pages.
@@ -178,30 +201,34 @@ class KnowlBackend(PostgresBase):
         checks if the given knowl with ID=@kid exists
         """
         return self.get_knowl(kid) is not None
-    #def refresh_knowl_categories(self):
-    #    selecter = SQL("SELECT id FROM kwl_knowls")
-    #    cur = self._execute(selecter)
-    #    cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
-    #    updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
-    #    cur.execute(updater, (cats, CAT_ID))
-    #    return str(cats)
-    #def update_knowl_categories(self, cat):
-    #    """
-    #    when a new knowl is saved, it's category could be new. this function
-    #    ensures that we know it. this is much more efficient than the
-    #    refresh variant.
-    #    """
-    #    selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
-    #    cur = self._execute(selecter, (CAT_ID, [cat]))
-    #    if cur.rowcount > 0:
-    #        categories = cur.fetchone()[0]
-    #        updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
-    #        categories = sorted(categories + [cat])
-    #        cur.execute(updater, (categories, CAT_ID))
+
+    def refresh_knowl_categories(self):
+        selecter = SQL("SELECT id FROM kwl_knowls")
+        cur = self._execute(selecter)
+        cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
+        updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
+        cur.execute(updater, (cats, CAT_ID))
+        return str(cats)
+
+    def update_knowl_categories(self, cat):
+        """
+        when a new knowl is saved, it's category could be new. this function
+        ensures that we know it. this is much more efficient than the
+        refresh variant.
+        """
+        selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
+        cur = self._execute(selecter, (CAT_ID, [cat]))
+        if cur.rowcount > 0:
+            categories = cur.fetchone()[0]
+            updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
+            categories = sorted(categories + [cat])
+            cur.execute(updater, (categories, CAT_ID))
+
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
         cur = self._execute(selecter)
         return sorted([res[0] for res in cur])
+
     def cleanup(self, max_h=50):
         """
         reindexes knowls, also the list of categories. prunes history.
