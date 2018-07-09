@@ -449,10 +449,13 @@ def render_field_webpage(args):
     info.update(data)
     if nf.degree() > 1:
         gpK = nf.gpK()
-        rootof1coeff = gpK.nfrootsof1()[2]
-        rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+        rootof1coeff = gpK.nfrootsof1()
+        rootofunityorder = int(rootof1coeff[1])
+        rootof1coeff = rootof1coeff[2]
+        rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
+        rootofunity += ' (order $%d$)' % rootofunityorder
     else:
-        rootofunity = Ra('-1')
+        rootofunity = web_latex(Ra('-1'))+ ' (order $2$)'
 
     info.update({
         'label': pretty_label,
@@ -462,7 +465,7 @@ def render_field_webpage(args):
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
-        'root_of_unity': web_latex(rootofunity),
+        'root_of_unity': rootofunity,
         'fund_units': nf.units(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
