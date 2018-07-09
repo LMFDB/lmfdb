@@ -12,7 +12,7 @@ from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list
 
-from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
 from lmfdb.galois_groups.main import group_display_shortC
 
 LF_credit = 'J. Jones and D. Roberts'
@@ -32,9 +32,6 @@ def get_bread(breads=[]):
     for b in breads:
         bc.append(b)
     return bc
-
-def galois_group_data(n, t):
-    return group_knowl_guts(n, t, db())
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(string2list(coeffs)))
@@ -92,9 +89,6 @@ def lf_display_knowl(label, name=None):
 
 def local_algebra_display_knowl(labels, C):
     return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
-
-def small_group_data(label):
-    return small_group_knowl_guts(label, db())
 
 @app.context_processor
 def ctx_local_fields():
