@@ -731,7 +731,7 @@ class LmfdbFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-def make_logger(bp_or_name, hl=False):
+def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     """
     creates a logger for the given blueprint. if hl is set
     to true, the corresponding lines will be bold.
@@ -759,10 +759,13 @@ def make_logger(bp_or_name, hl=False):
         l.setLevel(logging.DEBUG)
     else:
         l.setLevel(logging.WARNING)
-    formatter = LmfdbFormatter(hl=name if hl else None)
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    l.addHandler(ch)
+    if len(l.handlers) == 0:
+        formatter = LmfdbFormatter(hl=name if hl else None)
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        l.addHandler(ch)
+        for elt in extraHandlers:
+            l.addHandler(elt)
     return l
 
 
