@@ -202,6 +202,7 @@ class KnowlBackend(PostgresBase):
         """
         return self.get_knowl(kid) is not None
 
+    # FIXME
     def refresh_knowl_categories(self):
         selecter = SQL("SELECT id FROM kwl_knowls")
         cur = self._execute(selecter)
