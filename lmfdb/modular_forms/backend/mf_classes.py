@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.base import getDBConnection
-from lmfdb.db_backend import db
-from lmfdb.modular_forms import mf_logger
+#from lmfdb.base import getDBConnection
+#from lmfdb.db_backend import db
+#from lmfdb.modular_forms import mf_logger
 
 
 class MFDataTable(object):
