@@ -4,9 +4,6 @@ r""" Checking that knowls only cross-reference existing knowls
 Initial version (Bristol March 2016)
 
 """
-import os.path
-import os
-
 from lmfdb.knowledge.knowl import knowldb
 
 cats = knowldb.get_categories()

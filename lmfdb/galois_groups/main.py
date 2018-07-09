@@ -105,7 +105,7 @@ def galois_group_search(**args):
     try:
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
-        parse_ints(info,query,'order', qfield='size')
+        parse_ints(info,query,'order')
         parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='Gap id', field='gapid')
         for param in ('cyc', 'solv', 'prim'):
             parse_bool(info,query,param,blank=['0','Any'])
@@ -122,8 +122,8 @@ def galois_group_search(**args):
 
     count = parse_count(info, 50)
     start = parse_start(info)
-    if 'size' in query and 'n' not in query:
-        sort = ['size', 'gapid', 'n', 't']
+    if 'order' in query and 'n' not in query:
+        sort = ['order', 'gapid', 'n', 't']
     else:
         sort = None # default ['n', 't']
     info['groups'] = db.gps_transitive.search(query, limit=count, offset=start, sort=sort, info=info)
@@ -158,7 +158,7 @@ def render_group_webpage(args):
         n = data['n']
         t = data['t']
         data['yesno'] = yesno
-        order = data['size']
+        order = data['order']
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
