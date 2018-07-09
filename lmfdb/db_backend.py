@@ -2654,7 +2654,7 @@ class PostgresDatabase(PostgresBase):
         grant_select(name)
         if extra_columns is not None:
             valid_extra_list = sum(extra_columns.values(),[])
-            valid_extra_set = set(valid_list)
+            valid_extra_set = set(valid_extra_list)
             # Check that columns aren't listed twice
             if len(valid_extra_list) != len(valid_extra_set):
                 C = Counter(valid_extra_list)
