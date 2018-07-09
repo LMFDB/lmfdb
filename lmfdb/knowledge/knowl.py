@@ -17,7 +17,7 @@ common_words = set(
     ['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'])
 
 # categories, level 0, never change this id
-CAT_ID = 'categories'
+#CAT_ID = 'categories'
 
 def make_keywords(content, kid, title):
     """
@@ -163,7 +163,6 @@ class KnowlBackend(PostgresBase):
         self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
         deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
         self._execute(deletor, (knowl.id,))
-        self.refresh_knowl_categories()
 
     def is_locked(self, knowlid, delta_min=10):
         """
@@ -203,27 +202,27 @@ class KnowlBackend(PostgresBase):
         return self.get_knowl(kid) is not None
 
     # FIXME
-    def refresh_knowl_categories(self):
-        selecter = SQL("SELECT id FROM kwl_knowls")
-        cur = self._execute(selecter)
-        cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
-        updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
-        cur.execute(updater, (cats, CAT_ID))
-        return str(cats)
+    #def refresh_knowl_categories(self):
+    #    selecter = SQL("SELECT id FROM kwl_knowls")
+    #    cur = self._execute(selecter)
+    #    cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
+    #    updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
+    #    cur.execute(updater, (cats, CAT_ID))
+    #    return str(cats)
 
-    def update_knowl_categories(self, cat):
-        """
-        when a new knowl is saved, it's category could be new. this function
-        ensures that we know it. this is much more efficient than the
-        refresh variant.
-        """
-        selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
-        cur = self._execute(selecter, (CAT_ID, [cat]))
-        if cur.rowcount > 0:
-            categories = cur.fetchone()[0]
-            updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
-            categories = sorted(categories + [cat])
-            cur.execute(updater, (categories, CAT_ID))
+    #def update_knowl_categories(self, cat):
+    #    """
+    #    when a new knowl is saved, it's category could be new. this function
+    #    ensures that we know it. this is much more efficient than the
+    #    refresh variant.
+    #    """
+    #    selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
+    #    cur = self._execute(selecter, (CAT_ID, [cat]))
+    #    if cur.rowcount > 0:
+    #        categories = cur.fetchone()[0]
+    #        updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
+    #        categories = sorted(categories + [cat])
+    #        cur.execute(updater, (categories, CAT_ID))
 
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
@@ -235,7 +234,7 @@ class KnowlBackend(PostgresBase):
         reindexes knowls, also the list of categories. prunes history.
         returns the list of categories (as a string), a count of the the number of knowls reindexed and the number of histories pruned.
         """
-        cats = self.refresh_knowl_categories()
+        cats = self.get_categories()
         selecter = SQL("SELECT (id, content, title) FROM kwl_knowls")
         cur = self._execute(selecter)
         updater = SQL("UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s")
