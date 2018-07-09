@@ -10,7 +10,7 @@ from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_container, parse_count, parse_start, clean_input
 
 from math_classes import ArtinRepresentation
 from lmfdb.transitive_group import group_display_knowl
@@ -78,6 +78,7 @@ def artin_representation_search(**args):
                          allowed=[1,-1],process=int)
         parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                          allowed=[1,0,-1],process=int)
+        parse_container(info,query, 'Container',qfield='Container', name="Smallest permutation representation")
         parse_galgrp(info,query,"group",name="Group",qfield="Galois_nt",use_bson=False)
         parse_ints(info,query,'dimension',qfield='Dim')
         parse_ints(info,query,'conductor',qfield='Conductor_key', parse_singleton=make_cond_key)
