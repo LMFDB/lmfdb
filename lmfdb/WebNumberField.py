@@ -708,14 +708,23 @@ class WebNumberField:
             R = PolynomialRing(QQ, 'x')
             palg = local_algebra_dict[str(p)]
             palgs = [R(str(s)) for s in palg.split(',')]
-            palgstr = [list2string([int(c) for c in 
-                pol.coefficients(sparse=False)]) for pol in palgs]
+            palgstr = [
+                    list2string([int(c) for c in pol.coefficients(sparse=False)])
+                    for pol in palgs]
             palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
-            return [[LF['label'], latex(f), 
-                int(LF['e']), int(LF['f']),int(LF['c']),
-                group_display_knowl(LF['gal'][0], LF['gal'][1]),
-                LF['t'],LF['u'],LF['slopes']]
-                    for LF, f in zip(palgrec, palgs)]
+            return [
+                    [
+                        LF['label'],
+                        latex(f),
+                        int(LF['e']),
+                        int(LF['f']),
+                        int(LF['c']),
+                        group_display_knowl(LF['gal'], LF['galT']),
+                        LF['t'],
+                        LF['u'],
+                        LF['slopes']
+                    ]
+                    for LF, f in zip(palgrec, palgs) ]
         return None
 
     def ramified_algebras_data(self):
