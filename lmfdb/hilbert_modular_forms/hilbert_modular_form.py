@@ -44,6 +44,8 @@ def random_hmf():    # Random Hilbert modular form
     return hilbert_modular_form_by_label(db.hmf_forms.random())
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    if not isinstance(pol_str, basestring):
+        pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
