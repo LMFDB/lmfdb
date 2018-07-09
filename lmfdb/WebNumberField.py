@@ -710,7 +710,7 @@ class WebNumberField:
             palgs = [R(str(s)) for s in palg.split(',')]
             palgstr = [list2string([int(c) for c in 
                 pol.coefficients(sparse=False)]) for pol in palgs]
-            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': c}) for c in palgstr]
+            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
             return [[LF['label'], latex(f), 
                 int(LF['e']), int(LF['f']),int(LF['c']),
                 group_display_knowl(LF['gal'][0], LF['gal'][1]),

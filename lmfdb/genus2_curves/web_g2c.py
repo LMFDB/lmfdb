@@ -25,8 +25,7 @@ def intlist_to_poly(s):
     return latex(PolynomialRing(QQ, 'x')(s))
 
 def strlist_to_nfelt(L, varname):
-    La = [ s.encode('ascii') for s in L ]
-    return latex(PolynomialRing(QQ, varname)(La))
+    return latex(PolynomialRing(QQ, varname)(L))
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')

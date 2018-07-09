@@ -204,7 +204,7 @@ def download_hmf_magma(**args):
     F_hmf = get_hmf_field(f['field_label'])
 
     hecke_pol  = f['hecke_polynomial']
-    hecke_eigs = f['hecke_eigenvalues']
+    hecke_eigs = map(str, f['hecke_eigenvalues'])
     AL_eigs    = f['AL_eigenvalues']
 
     outstr = 'P<x> := PolynomialRing(Rationals());\n'
@@ -260,7 +260,7 @@ def download_hmf_sage(**args):
         return "No such form"
 
     hecke_pol  = f['hecke_polynomial']
-    hecke_eigs = f['hecke_eigenvalues']
+    hecke_eigs = map(str, f['hecke_eigenvalues'])
     AL_eigs    = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
@@ -360,7 +360,7 @@ def render_hmf_webpage(**args):
     info['numeigs'] = numeigs
 
     hecke_pol  = data['hecke_polynomial']
-    eigs       = data['hecke_eigenvalues']
+    eigs       = map(str, data['hecke_eigenvalues'])
     eigs = eigs[:min(len(eigs), numeigs)]
     AL_eigs    = data['AL_eigenvalues']
 
