@@ -25,8 +25,16 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db.conn)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
-        self._cols = [rec[0] for rec in cur]
+        self._rw_userdb = db.can_read_write_userdb();
+        if self._rw_userdb:
+            cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
+            self._cols = [rec[0] for rec in cur]
+        else:
+            self._cols = None
+
+    def can_read_write_userdb(self):
+        return self._rw_userdb
+
     def get_random_salt(self):
         """
         Generates a random salt.
@@ -36,6 +44,7 @@ class PostgresUserTable(PostgresBase):
         """
         import random
         return str(random.randrange(self.rmin, self.rmax))
+
     def hashpwd(self, pwd, random_salt=None):
         """
         Globally unique routine how passwords are hashed.
@@ -50,6 +59,7 @@ class PostgresUserTable(PostgresBase):
         hashed.update(random_salt)
         hashed.update(fixed_salt)  # fixed salt must come last!
         return hashed.hexdigest()
+
     def bchash(self, pwd, existing_hash = None):
         """
         Generate a bcrypt based password hash. Intended to replace
@@ -63,11 +73,16 @@ class PostgresUserTable(PostgresBase):
         except Exception:
             logger.warning("Failed to return bchash, perhaps bcrypt is not installed");
             return None
+
     def new_user(self, uid, pwd=None, full_name=None, about=None, url=None):
         """
         generates a new user, asks for the password interactively,
         and stores it in the DB. This is now replaced with bcrypt version
         """
+        if not self._rw_userdb:
+            logger.info("no attempt to create user, not enough privileges")
+            return LmfdbAnonymousUser()
+
         if self.user_exists(uid):
             raise Exception("ERROR: User %s already exists" % uid)
         if not pwd:
@@ -83,24 +98,39 @@ class PostgresUserTable(PostgresBase):
         self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
+
     def change_password(self, uid, newpwd):
-        bcpass = self.bchash(newpwd)
-        updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
-        self._execute(updater, [bcpass, uid])
-        logger.info("password for %s changed!" % uid)
+        if self.rw_userd():
+            bcpass = self.bchash(newpwd)
+            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+            self._execute(updater, [bcpass, uid])
+            logger.info("password for %s changed!" % uid)
+        else:
+            logger.info("no attempt to change password, not enough privileges")
+
     def user_exists(self, uid):
+        if not self._rw_userdb:
+            return False
         selecter = SQL("SELECT 1 FROM userdb.users WHERE username = %s")
         cur = self._execute(selecter, [uid])
         return cur.rowcount > 0
+
     def get_user_list(self):
         """
         returns a list of tuples: [('username', 'full_name'),…]
         If full_name is None it will be replaced with username.
         """
+        if not self._rw_userdb:
+            return [('anon', 'Anonymous')]
+
         selecter = SQL("SELECT username, full_name FROM userdb.users")
         cur = self._execute(selecter)
         return [(uid, full_name or uid) for uid, full_name in cur]
+
     def authenticate(self, uid, pwd, bcpass=None, oldpass=None):
+        if not self.rw_userdb:
+            return False
+
         selecter = SQL("SELECT bcpassword, password FROM userdb.users WHERE username = %s")
         cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
@@ -128,7 +158,11 @@ class PostgresUserTable(PostgresBase):
                         logger.warning("user " + uid + " logged in with old style password, but update was not possible")
                         return False
         return False
+
     def save(self, data):
+        if not self._rw_userdb:
+            return;
+
         data = dict(data) # copy
         uid = data.pop("username",None)
         if not uid:
@@ -140,7 +174,10 @@ class PostgresUserTable(PostgresBase):
         fields, values = zip(*data.items())
         updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), Placeholder() * len(values))
         self._execute(updater, list(values) + [uid])
+
     def lookup(self, uid):
+        if not self._rw_userdb:
+            return {};
         selecter = SQL("SELECT {0} FROM userdb.users WHERE username = %s").format(SQL(", ").join(map(Identifier, self._cols)))
         cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
@@ -148,27 +185,43 @@ class PostgresUserTable(PostgresBase):
         if cur.rowcount > 1:
             raise ValueError("multiple users with same username!")
         return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
+
     def full_names(self, uids):
+        if not self._rw_userdb:
+            return [];
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
+
     def create_tokens(self, tokens):
+        if not self.rw_userd:
+            return;
+
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=1)
         exp = now + tdelta
         self._execute(insertor, [(t, exp) for t in tokens], values_list=True)
+
     def token_exists(self, token):
+        if not self._rw_userdb:
+            return False;
         selecter = SQL("SELECT 1 FROM userdb.tokens WHERE id = %s")
         cur = self._execute(selecter, [token])
         return cur.rowcount == 1
+
     def delete_old_tokens(self):
+        if not self.rw_userd:
+            return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
         now = datetime.utcnow()
         tdelta = timedelta(days=8)
         cutoff = now - tdelta
         self._execute(deletor, [cutoff])
+
     def delete_token(self, token):
+        if not self.rw_userd:
+            return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])
 
