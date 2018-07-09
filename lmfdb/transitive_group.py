@@ -46,7 +46,7 @@ def small_group_data(gapid):
     inf += ('' if group['abelian'] else 'non-')+'abelian, '
     inf += ('' if group['solvable'] else 'not')+' solvable'
     inf += '<p>Order: '+str(n)
-    inf += '<br>Gap small group number: '+str(k)
+    inf += '<br>GAP small group number: '+str(k)
     inf += '<br>Exponent: '+str(group['exponent'])
     inf += '<br>Perfect: '+str(group['perfect'])
     inf += '<br>Simple: '+str(group['simple'])
