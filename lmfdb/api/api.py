@@ -79,27 +79,27 @@ def stats():
         info['sortby'] = 'size'
     dbs = get_database_info(True)
     C = base.getDBConnection()
-    dbstats = {db:C[db].command("dbstats") for db in dbs}
+    dbstats = {elt:C[elt].command("dbstats") for elt in dbs}
     info['dbs'] = len(dbstats.keys())
     collections = objects = 0
     size = dataSize = indexSize = 0
     stats = {}
-    for db in dbstats:
-        dbsize = dbstats[db]['dataSize']+dbstats[db]['indexSize']
+    for elt in dbstats:
+        dbsize = dbstats[elt]['dataSize']+dbstats[elt]['indexSize']
         size += dbsize
-        dataSize += dbstats[db]['dataSize']
-        indexSize += dbstats[db]['indexSize']
+        dataSize += dbstats[elt]['dataSize']
+        indexSize += dbstats[elt]['indexSize']
         dbsize = mb(dbsize)
-        dbobjects = dbstats[db]['objects']
-        for c in pluck(0,dbs[db]):
-            if C[db][c].count():
+        dbobjects = dbstats[elt]['objects']
+        for c in pluck(0,dbs[elt]):
+            if C[elt][c].count():
                 collections += 1
-                coll = '<a href = "' + url_for (".api_query", db=db, collection = c) + '">'+c+'</a>'
-                cstats = C[db].command("collstats",c)
+                coll = '<a href = "' + url_for (".api_query", db=elt, collection = c) + '">'+c+'</a>'
+                cstats = C[elt].command("collstats",c)
                 objects += cstats['count']
                 csize = mb(cstats['size']+cstats['totalIndexSize'])
                 if csize >= int(info['minsize']):
-                    stats[cstats['ns']] = {'db':db, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
+                    stats[cstats['ns']] = {'db':elt, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
                                           'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
     info['collections'] = collections
     info['objects'] = objects

@@ -32,7 +32,6 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, default_prec,
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
-from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
