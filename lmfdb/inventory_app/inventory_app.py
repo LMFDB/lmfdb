@@ -7,7 +7,6 @@ import inventory_control
 import inventory_consistency
 import lmfdb_inventory as linv
 import inventory_helpers as ih
-import sys, os
 from datetime import datetime as dt
 import json
 
@@ -23,7 +22,7 @@ class CustomEncoder(json.JSONEncoder):
 inventory_app = Blueprint('inventory_app', __name__, template_folder='./templates', static_folder='./static', static_url_path = 'static/')
 url_pref = '/inventory/'
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+#sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #Set to info, debug etc
 linv.init_run_log(level_name='warning')
 
@@ -232,7 +231,7 @@ def edit_success(request=request):
         new_url = url_for('inventory_app.show_edit_root')
     else:
         new_url = url_info['parent']
-    print url_info, new_url
+    #print url_info, new_url
     bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
     return render_template('edit_success.html', new_url=new_url, db_name=url_info['db_name'], collection_name=url_info['collection_name'], bread=bread)
 

@@ -230,7 +230,7 @@ def render_hecke_algebras_webpage(**args):
             return redirect(url_for('.render_hecke_algebras_webpage', label=lab), 301)
         data = hecke_db().find_one({'label': lab })
     if data is None:
-        t = "Hecke Agebras Search Error"
+        t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -325,7 +325,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
         data = hecke_l_adic_db().find_one({'orbit_label': lab , 'ell': ell})
     if data is None:
-        t = "Hecke Agebras Search Error"
+        t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database." % (lab)),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
@@ -398,7 +398,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         ('Orbit label', '%s' %info['orbit_label'])]    
     info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
 
-    t = "%s-adic and mod %s data for the Hecke Algebra orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
+    t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
 
 
@@ -406,7 +406,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
 #data quality pages
 @hecke_algebras_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Hecke Algebra data'
+    t = 'Completeness of the Hecke Algebra Data'
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Completeness', '')]
     credit = hecke_algebras_credit
@@ -415,7 +415,7 @@ def completeness_page():
 
 @hecke_algebras_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Hecke Algebra data'
+    t = 'Source of the Hecke Algebra Data'
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Source', '')]
     credit = hecke_algebras_credit
@@ -433,7 +433,7 @@ def labels_page():
 
 @hecke_algebras_page.route("/History")
 def history_page():
-    t = 'A brief history of Hecke Algebras'
+    t = 'A Brief History of Hecke Algebras'
     bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage")),
              ('Histoy', '')]
     credit = hecke_algebras_credit

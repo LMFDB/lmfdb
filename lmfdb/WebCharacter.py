@@ -4,7 +4,7 @@ from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
 import lmfdb
-from lmfdb.utils import make_logger
+from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from WebNumberField import WebNumberField
@@ -1239,9 +1239,9 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
         return "Group of Hecke characters modulo %s"%(self.modulus)
 
     @property
-    def nf_pol(self):
+    def nfpol(self):
         #return self.nf.web_poly()
-        return self.k.polynomial()._latex_()
+        return web_latex_split_on_pm(self.k.polynomial())
 
     @property
     def codegen(self):
