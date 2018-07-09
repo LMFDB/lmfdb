@@ -49,7 +49,7 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
-    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
+    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(str(m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
 
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
