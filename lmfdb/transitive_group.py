@@ -92,7 +92,7 @@ class WebGaloisGroup:
         return 0
 
     def order(self):
-        return int(self._data['size'])
+        return int(self._data['order'])
 
     def display_short(self):
         if self._data['pretty']:
@@ -232,14 +232,14 @@ def group_phrase(n, t):
     else:
         inf += "A non-solvable"
     inf += ' group of order '
-    inf += str(group['size'])
+    inf += str(group['order'])
     return(inf)
 
 
 def group_display_long(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
-    inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['size'], group['parity'])
+    inf = "Group %sT%s, order %s, parity %s" % (group['n'], group['t'], group['order'], group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"
     elif group['ab'] == 1:
@@ -263,7 +263,7 @@ def group_knowl_guts(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
-    inf += ", order " + str(group['size'])
+    inf += ", order " + str(group['order'])
     inf += ", parity " + str(group['parity'])
     if group['cyc'] == 1:
         inf += ", cyclic"

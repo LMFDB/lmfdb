@@ -237,7 +237,6 @@ def search(**args):
         info['start'] = start
         info['count'] = count
 
-    print info.get('number')
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
     info['stgroups'] = results

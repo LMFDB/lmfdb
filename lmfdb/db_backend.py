@@ -702,7 +702,6 @@ class PostgresTable(PostgresBase):
             sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['reg'])
             {'reg':455.191694993}
         """
-        print query
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
         vars = SQL(", ").join(map(Identifier, search_cols))
         qstr, values = self._build_query(query, 1, offset)
@@ -1865,6 +1864,7 @@ class PostgresTable(PostgresBase):
         modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
         self._execute(modifier, commit=commit)
         self._col_type.pop(name, None)
+        print "Column %s dropped"%(name)
 
     def create_extra_table(self, columns, ordered=False):
         """
