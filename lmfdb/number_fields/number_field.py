@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-D
 
 import time, os
 import flask
@@ -106,7 +106,6 @@ def render_groups_page():
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group labels', ' ')]
     return render_template("galois_groups.html", al=aliastable(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
->>>>>>> upstream/master
 
 @nf_page.route("/FieldLabels")
 def render_labels_page():
