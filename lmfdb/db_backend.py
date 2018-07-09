@@ -586,8 +586,9 @@ class PostgresTable(PostgresBase):
             has_sort = True
             if self._sort is None:
                 if limit is not None and not (limit == 1 and offset == 0):
-                    raise ValueError("You must specify a sort order")
-                has_sort = False
+                    sort = Identifier("id")
+                else:
+                    has_sort = False
             elif self._primary_sort in query or self._out_of_order:
                 # We use the actual sort because the postgres query planner doesn't know that
                 # the primary key is connected to the id.
