@@ -72,16 +72,11 @@ def local_field_data(label):
     ans += '</div>'
     return ans
 
-def local_algebra_data(labels):
-    return lf_algebra_knowl_guts(labels, db())
 
 def lf_display_knowl(label, name=None):
     if name is None:
         name = label
     return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, name)
-
-def local_algebra_display_knowl(labels, C):
-    return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
 
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
@@ -95,12 +90,12 @@ def ctx_local_fields():
 # Utilities for subfield display
 def format_lfield(coefmult,p):
     coefmult = [int(c) for c in coefmult.split(",")]
-    label = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=0)
-    if label is None:
+    data = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=1)
+    if data is None:
         # This should not happen, what do we do?
         # This is wrong
         return ''
-    return lf_display_knowl(data['label'],name=prettyname(data))
+    return lf_display_knowl(data['label'], name = prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
@@ -213,6 +208,8 @@ def render_field_webpage(args):
             unramfriend = ''
         else:
             unramfriend = "/LocalNumberField/%s" % unramlabel
+            unramdata = db.lf_fields.lookup(unramlabel)
+
         Px = PolynomialRing(QQ, 'x')
         Pxt=PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
@@ -256,14 +253,13 @@ def render_field_webpage(args):
                     'f': data['f'],
                     't': data['t'],
                     'u': data['u'],
-                    'rf': lf_display_knowl( rfdata['label'], name=printquad(data['rf'], p)),
+                    'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
                     'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
                     'hw': data['hw'],
                     'slopes': show_slopes(data['slopes']),
                     'gal': group_display_knowl(gn, gt),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
-                    'inertia': group_display_inertia(data['inertia'], db()),
                     'unram': unramp,
                     'eisen': eisenp,
                     'gms': data['gms'],

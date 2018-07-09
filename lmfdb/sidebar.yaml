@@ -143,7 +143,8 @@
                colspan: onecolumn
            colspan: onecolumn
          - title: Belyi
-           url_for: "belyi.index"
+           status: future
+           #url_for: "belyi.index"
          - title: Shimura
            status: future
          - title: "Higher genus:"
