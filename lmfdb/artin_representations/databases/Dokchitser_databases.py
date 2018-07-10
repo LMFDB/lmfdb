@@ -1,7 +1,7 @@
 artin_location = ("artin", "representations")
 galois_group_location = ("artin", "field_data")
-#artin_location = ("artin", "representations_new")
-#galois_group_location = ("artin", "field_data_new")
+artin_location = ("artin", "representations_new")
+galois_group_location = ("artin", "field_data_new")
 
 from type_generation import String, Array, Dict, Int, Anything
 
@@ -57,6 +57,7 @@ Galois_Conjugate = Dict(
 Dokchitser_ArtinRepresentation = Dict({
     "_id": Anything,
     "Baselabel": String,
+    "Container": Anything,
     "Dim": Int,
     "Indicator": Int,
     "Conductor": TooLargeInt,

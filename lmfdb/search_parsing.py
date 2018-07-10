@@ -519,12 +519,12 @@ def parse_nf_elt(inp, query, name, qfield, field_label='field_label'):
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_container(inp, query, qfield):
-    inp = inp.replace('t','T')
-    format_ok = re.match(r'^\d+(T\d+)?$',inp)
+    inp = inp.replace('T','t')
+    format_ok = re.match(r'^\d+(t\d+)?$',inp)
     if format_ok:
         query[qfield] = str(inp)
     else:
-        raise ValueError("You must specify a permutation representation, such as 6T13 for a %s"% name)
+        raise ValueError("You must specify a permutation representation, such as 6T13" )
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_hmf_weight(inp, query, qfield):

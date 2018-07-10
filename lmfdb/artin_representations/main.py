@@ -78,7 +78,7 @@ def artin_representation_search(**args):
                          allowed=[1,-1],process=int)
         parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
                          allowed=[1,0,-1],process=int)
-        parse_container(info,query, 'Container',qfield='Container', name="Smallest permutation representation")
+        parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
         parse_galgrp(info,query,"group",name="Group",qfield="Galois_nt",use_bson=False)
         parse_ints(info,query,'dimension',qfield='Dim')
         parse_ints(info,query,'conductor',qfield='Conductor_key', parse_singleton=make_cond_key)
