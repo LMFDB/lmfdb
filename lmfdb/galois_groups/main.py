@@ -18,7 +18,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
+from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 from lmfdb.db_backend import db
@@ -40,8 +40,6 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-def db():
-    return base.getDBConnection()
 
 def int_reps_are_complete(intreps):
     for r in intreps:

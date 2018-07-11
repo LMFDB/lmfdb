@@ -11,11 +11,8 @@ from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 
 from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
-from lmfdb.galois_groups.main import group_display_shortC
 
 LF_credit = 'J. Jones and D. Roberts'
-
-# centralize db access here so that we can switch collection names when needed
 
 def get_bread(breads=[]):
     bc = [("Local Number Fields", url_for(".index"))]
