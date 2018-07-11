@@ -128,7 +128,7 @@ class KnowlBackend(PostgresBase):
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
-        updater = SQL("UPDATE kwl_knowls SET ({0}) = (%s) WHERE id = %s").format(Identifier(key))
+        updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
 
     def save_history(self, knowl, who):
