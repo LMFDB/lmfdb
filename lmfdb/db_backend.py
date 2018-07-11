@@ -651,6 +651,7 @@ class PostgresTable(PostgresBase):
     ##################################################################
 
     def lucky(self, query={}, projection=2, offset=0):
+        #FIXME Nulls aka Nones are being erased, we should perhaos just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for situations where only a single result is desired.
