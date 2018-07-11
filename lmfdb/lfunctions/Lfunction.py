@@ -1148,7 +1148,7 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            ALeigs = [str(al[1]).replace('^', '**') for al in f['AL_eigenvalues']]
             # the above fixed a bug at
             # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
             # but now the sign is wrong (i.e., not of absolute value 1 *)
