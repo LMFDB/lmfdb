@@ -24,7 +24,8 @@ def small_group_label_display_knowl(label, name=None):
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
-def small_group_knowl_guts(gapid):
+
+def small_group_data(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
     k = int(parts[1])
@@ -35,7 +36,7 @@ def small_group_knowl_guts(gapid):
     inf += ('' if group['abelian'] else 'non-')+'abelian, '
     inf += ('' if group['solvable'] else 'not')+' solvable'
     inf += '<p>Order: '+str(n)
-    inf += '<br>Gap small group number: '+str(k)
+    inf += '<br>GAP small group number: '+str(k)
     inf += '<br>Exponent: '+str(group['exponent'])
     inf += '<br>Perfect: '+str(group['perfect'])
     inf += '<br>Simple: '+str(group['simple'])
@@ -49,6 +50,7 @@ def small_group_knowl_guts(gapid):
         inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
     inf += '</table>'
     return inf
+
 
 ############  Galois group object
 
@@ -259,7 +261,7 @@ def group_display_long(n, t):
     return group['name'] + inf
 
 
-def group_knowl_guts(n, t):
+def galois_group_data(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
@@ -298,6 +300,7 @@ def group_knowl_guts(n, t):
     if group['pretty']:
         return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
     return inf + rest
+
 
 
 def group_cclasses_knowl_guts(n, t):
@@ -511,7 +514,7 @@ def generators(n, t):
     return gens
 
 
-def aliastable():
+def group_alias_table():
     akeys = aliases.keys()
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
@@ -525,6 +528,8 @@ def aliastable():
         ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += '</tbody></table>'
     return ans
+
+
 
 
 def complete_group_code(code):
