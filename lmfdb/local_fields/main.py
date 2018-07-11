@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
@@ -10,20 +10,15 @@ from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_st
 from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
 
 LF_credit = 'J. Jones and D. Roberts'
-
-# centralize db access here so that we can switch collection names when needed
 
 def get_bread(breads=[]):
     bc = [("Local Number Fields", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
-
-def galois_group_data(n, t):
-    return group_knowl_guts(n, t)
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
@@ -84,7 +79,7 @@ def local_algebra_display_knowl(labels):
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_knowl_guts,
+            'small_group_data': small_group_data,
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display

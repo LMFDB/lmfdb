@@ -18,7 +18,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 from lmfdb.db_backend import db
@@ -40,15 +40,20 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+
 def int_reps_are_complete(intreps):
     for r in intreps:
         if 'complete' in r:
             return r['complete']
     return -1
 
+def galois_module_data(n, t, index):
+    return galois_module_knowl_guts(n, t, index)
+
+
 @app.context_processor
 def ctx_galois_groups():
-    return {'group_alias_table': aliastable,
+    return {'group_alias_table': group_alias_table,
             'galois_module_data': galois_module_knowl_guts}
 
 
@@ -106,9 +111,10 @@ def galois_group_search(**args):
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
         parse_ints(info,query,'order')
-        parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='Gap id', field='gapid')
+        parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
         for param in ('cyc', 'solv', 'prim'):
-            parse_bool(info,query,param,blank=['0','Any'])
+            parse_bool(info, query, param, process=int, blank=['0','Any'])
+        print query
         parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
         degree_str = prep_ranges(info.get('n'))
         info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
