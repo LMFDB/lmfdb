@@ -233,7 +233,7 @@ def download_hmf_magma(**args):
 
     outstr += 'ALEigenvalues := AssociativeArray();\n'
     for s in AL_eigs:
-        outstr += 'ALEigenvalues[ideal<ZF | {' + s[0][1:-1] + '}>] := ' + s[1] + ';\n'
+        outstr += 'ALEigenvalues[ideal<ZF | {' + s[0][1:-1] + '}>] := ' + str(s[1]) + ';\n'
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
 
