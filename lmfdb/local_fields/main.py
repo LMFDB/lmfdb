@@ -12,7 +12,7 @@ from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.WebNumberField import string2list
 
-from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
 from lmfdb.galois_groups.main import group_display_shortC
 
 LF_credit = 'J. Jones and D. Roberts'
@@ -33,9 +33,6 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-def galois_group_data(n, t):
-    return group_knowl_guts(n, t, db())
-
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(string2list(coeffs)))
 
@@ -51,7 +48,7 @@ def lf_algebra_knowl_guts(labels, C):
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
-    fall = [C.localfields.fields.find_one({'label':label}) for label in labs]
+    fall = [lfdb().find_one({'label':label}) for label in labs]
     for f in fall:
         l = str(f['label'])
         ans += '<tr><td><a href="/LocalNumberField/%s">%s</a><td>'%(l,l)
@@ -64,16 +61,19 @@ def lf_algebra_knowl_guts(labels, C):
         ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
-def lf_knowl_guts(label, C):
-    f = C.localfields.fields.find_one({'label':label})
-    ans = 'Local number field %s<br><br>'% label
+def local_field_data(label):
+    f = lfdb().find_one({'label':label})
+    nicename = ''
+    if f['n'] < 3:
+        nicename = ' = '+prettyname(f)
+    ans = 'Local number field %s%s<br><br>'% (label, nicename)
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(string2list(f['coeffs']))))
     GG = f['gal']
     ans += 'Degree: %s<br>' % str(GG[0])
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1], C)
+    ans += 'Galois group $G$: %s<br>' % group_display_knowl(GG[0], GG[1], db())
     ans += '<div align="right">'
     ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
     ans += '</div>'
@@ -82,17 +82,13 @@ def lf_knowl_guts(label, C):
 def local_algebra_data(labels):
     return lf_algebra_knowl_guts(labels, db())
 
-def local_field_data(label):
-    return lf_knowl_guts(label, db())
-
-def lf_display_knowl(label, C):
-    return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, label)
+def lf_display_knowl(label, name=None):
+    if name is None:
+        name = label
+    return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, name)
 
 def local_algebra_display_knowl(labels, C):
     return '<a title = "%s [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels=%s">%s</a>' % (labels, labels, labels)
-
-def small_group_data(label):
-    return small_group_knowl_guts(label, db())
 
 @app.context_processor
 def ctx_local_fields():
@@ -107,8 +103,7 @@ def format_lfield(coefmult,p):
         # This should not happen, what do we do?
         # This is wrong
         return ''
-    # This is the nf version
-    return lf_display_knowl(data['label'],db())
+    return lf_display_knowl(data['label'],name=prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
@@ -206,9 +201,10 @@ def render_field_webpage(args):
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field ' + label
+        title = 'Local Number Field ' + prettyname(data)
         polynomial = coeff_to_poly(string2list(data['coeffs']))
         p = data['p']
+        Qp = r'\Q_{%d}' % p
         e = data['e']
         f = data['f']
         cc = data['c']
@@ -222,17 +218,13 @@ def render_field_webpage(args):
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
-            ('Base', '\(\Q_{%s}\)' % p),
+            ('Base', '\(%s\)' % Qp),
             ('Degree', '\(%s\)' % data['n']),
             ('e', '\(%s\)' % e),
             ('f', '\(%s\)' % f),
             ('c', '\(%s\)' % cc),
             ('Galois group', group_display_short(gn, gt, db())),
         ]
-        Pt = PolynomialRing(QQ, 't')
-        Pyt = PolynomialRing(Pt, 'y')
-        eisenp = Pyt(str(data['eisen']))
-        unramp = Pyt(str(data['unram']))
         # Look up the unram poly so we can link to it
         unramdata = lfdb().find_one({'p': p, 'n': f, 'c': 0})
         if unramdata is not None:
@@ -240,6 +232,25 @@ def render_field_webpage(args):
         else:
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
+        Px = PolynomialRing(QQ, 'x')
+        Pxt=PolynomialRing(Px,'t')
+        Pt = PolynomialRing(QQ, 't')
+        Ptx = PolynomialRing(Pt, 'x')
+        if data['f'] == 1:
+            unramp = r'$%s$' % Qp
+            # Eliminate t from the eisenstein polynomial
+            eisenp = Pxt(str(data['eisen']).replace('y','x'))
+            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = web_latex(eisenp)
+
+        else:
+            unramp = data['unram'].replace('t','x')
+            unramp = web_latex(Px(str(unramp)))
+            unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
+            eisenp = '$'+web_latex(eisenp, False)+'\\in'+Qp+'(t)[x]$'
+
+
         rfdata = lfdb().find_one({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']})
         if rfdata is None:
             logger.fatal("Cannot find discriminant root field!")
@@ -264,14 +275,15 @@ def render_field_webpage(args):
                     'f': data['f'],
                     't': data['t'],
                     'u': data['u'],
-                    'rf': printquad(data['rf'], p),
+                    'rf': lf_display_knowl( rfdata['label'], name=printquad(data['rf'], p)),
+                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
                     'hw': data['hw'],
                     'slopes': show_slopes(data['slopes']),
                     'gal': group_display_knowl(gn, gt, db()),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia'], db()),
-                    'unram': web_latex(unramp),
-                    'eisen': web_latex(eisenp),
+                    'unram': unramp,
+                    'eisen': eisenp,
                     'gms': data['gms'],
                     'gsm': gsm,
                     'galphrase': galphrase,
@@ -306,6 +318,11 @@ def show_slope_content(sl,t,u):
     if u>1:
         sc += '^{%d}'%u
     return(sc)
+
+def prettyname(ent):
+    if ent['n'] <= 2:
+        return printquad(ent['rf'], ent['p'])
+    return ent['label']
 
 def printquad(code, p):
     if code == [1, 0]:
