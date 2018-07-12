@@ -29,7 +29,7 @@ def render_picard_maass_forms():
     # TT.get_metadata()
     if docid:
         data = htp.find_one({'_id': docid})
-    return render_template("maass_form_picard.html", title="Maass Forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)", data=data, id=docid, ds=ds)
+    return render_template("maass_form_picard.html", title="Maass forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)", data=data, id=docid, ds=ds)
 
 
 @mwfp.route("/<docid>", methods=['GET', 'POST'])
@@ -39,7 +39,7 @@ def render_picard_maass_forms_get_one(docid):
         mwfp_dbname, collection='picard', skip=[0, 0], limit=[20, 20], keys=['coef'], docid=docid)
     PT.set_table(name='browsing')
     info = dict()
-    title = "Maass Form on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"
+    title = "Maass form on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"
     bread = [('Modular Forms', url_for('mf.modular_form_main_page'))]
     info['title'] = title
     info['bread'] = bread
@@ -66,5 +66,5 @@ def render_picard_test():
     info['table'] = PT.table()
     info['nrows'] = PT.nrows()
     info['ncols'] = PT.ncols()
-    info['title'] = "Maass Forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"
+    info['title'] = "Maass forms on \(\mathrm{PSL}(2,\mathbb{Z}[i])\)"
     return render_template("mwfp_navigation.html", **info)

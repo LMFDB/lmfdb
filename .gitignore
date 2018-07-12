@@ -14,6 +14,11 @@ static/MathJax
 
 flasklog
 
+# Testing files
+htmlcov
+.coverage*
+.pytest_cache/
+
 # vim swap files
 .*.sw?
 # backup files
@@ -22,8 +27,7 @@ paul_scripts
 
 local.sh
 
-lmfdb/cover
-lmfdb/.coverage
-.coverage
 .DS_Store
 .idea/
+LMFDBinventory.log
+LMFDBtransactions_inv.log

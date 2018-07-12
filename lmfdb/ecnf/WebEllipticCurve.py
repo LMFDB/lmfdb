@@ -600,6 +600,8 @@ class ECNF(object):
             pol = str(self.field.poly())
             if lang=='pari':
                 pol = pol.replace('x',gen)
+            elif lang=='magma':
+                pol = str(self.field.poly().list())
             self._code['field'][lang] = (self._code['field'][lang] % pol).replace("<a>", "<%s>" % gen)
 
         for lang in ['sage', 'magma', 'pari']:

@@ -1,7 +1,6 @@
 # This Blueprint is about Higher Genus Curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
-from pymongo.mongo_client import MongoClient
 
 import StringIO
 import re
@@ -786,7 +785,11 @@ def search_input_error(info, bread):
 
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
+<<<<<<< HEAD
     t = 'Completeness of the automorphisms of curves data'
+=======
+    t = 'Completeness of the Automorphisms of Curves Data'
+>>>>>>> ef60f7bb1721e6cc8478701f1cd5d789609acf14
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]

@@ -14,13 +14,13 @@ table.ntdata a {
 <table border="0">
 
           <tr>
-            <td colspan="4" align="center">
+            <td colspan="6" align="center">
             <table>
               <tr>
-                <td align="center">Parity</td>
-                <td align="center">Cyclic</td>
-                <td align="center">Solvable</td>
-                <td align="center">Primitive</td>
+                <td align="center">{{KNOWL('gg.parity', 'Parity')}}</td>
+                <td align="center">{{KNOWL('group.cyclic', 'Cyclic')}}</td>
+                <td align="center">{{KNOWL('group.solvable', 'Solvable')}}</td>
+                <td align="center">{{KNOWL('gg.primitive', 'Primitive')}}</td>
               </tr>
               <tr>
                 <td> <select name='parity'>
@@ -95,20 +95,23 @@ table.ntdata a {
 
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='Degree')}} :<td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
+{{KNOWL('gg.degree',title='degree')}} <td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
 </td>
 
 <td align=left> 
-{{KNOWL('gg.tnumber',title='$t$')}} :
+{{KNOWL('gg.tnumber',title='$t$')}} 
 <td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
 
 <td align=left> 
-{{KNOWL('group.order',title='Order')}} :
+{{KNOWL('group.order',title='order')}} 
 <td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP id')}} 
+<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
 </tr>
 
 <tr>
-<td align='left' colspan='4'>Maximum number of groups to display <input type='text' name='count' value="{{info.count}}" size='10'>
+<td align='left' colspan='8'>Maximum number of groups to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 <tr>
@@ -154,7 +157,7 @@ table.ntdata a {
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
-<th>Label</th>
+<th>{{KNOWL('gg.label', title='Label')}}</th>
 <th>{{KNOWL('gg.simple_name', title='Name')}}</th>
 <th>{{KNOWL('group.order', title='Order')}}</th>
 <th>{{ KNOWL('gg.parity', 'Parity') }} </th>
@@ -195,6 +198,8 @@ table.ntdata a {
      {% endif %}
 
 {% endif %}
+<p>
+Results are complete for degrees $\leq 23$.
 {% endif %}
 
 {% endblock %}

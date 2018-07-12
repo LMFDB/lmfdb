@@ -32,9 +32,9 @@ table,td {
 <p> <h2>Group </h2>
   <table>
    {% if info.specialname %}
-   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>{{info.gpid}}</td></tr>
+     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Identifier')}}:</td><td>{{info.gpid}}</td></tr>
     </table>
 
 </p>
@@ -69,18 +69,17 @@ transition: 0.3s;
 {% if info.passport_num == 1 or info.topological_num == 0%}
 <table>
   <tr>
-    <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-    <th>Lists of Conjugacy Classes</th>
-    
-  </tr>
-  
-  {% for itm in info.passport %}
-  <tr>
-    <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
-    <td class="center">{{itm[0]}}</td>
+     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+ 
+</tr>
+{% for itm in info.passport %}
+<tr>
+  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+  <td class="center">{{itm[0]}}</td>
 
-  </tr>
-  {% endfor %}
+</tr>
+{% endfor %}
 </table>
 {% else %}
 <div class="tab">

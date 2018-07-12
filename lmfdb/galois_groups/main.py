@@ -8,7 +8,7 @@ from lmfdb import base
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
 from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
-from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start, parse_bracketed_posints
 import re
 import bson
 from lmfdb.galois_groups import galois_groups_page, logger
@@ -22,7 +22,7 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
 
@@ -43,25 +43,17 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+def db():
+    return base.getDBConnection()
+
 def int_reps_are_complete(intreps):
     for r in intreps:
         if 'complete' in r:
             return r['complete']
     return -1
 
-def galois_group_data(n, t):
-    C = base.getDBConnection()
-    return group_knowl_guts(n, t, C)
-
-
-def group_alias_table():
-    C = base.getDBConnection()
-    return aliastable(C)
-
-
 def galois_module_data(n, t, index):
-    C = base.getDBConnection()
-    return galois_module_knowl_guts(n, t, index, C)
+    return galois_module_knowl_guts(n, t, index, db())
 
 
 @app.context_processor
@@ -135,6 +127,7 @@ def galois_group_search(**args):
         parse_ints(info,query,'n','degree')
         parse_ints(info,query,'t')
         parse_ints(info,query,'order', qfield='orderkey', parse_singleton=make_order_key)
+        parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
         for param in ('cyc', 'solv', 'prim', 'parity'):
             parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
         degree_str = prep_ranges(info.get('n'))
@@ -297,7 +290,7 @@ def random_group():
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Galois group data'
+    t = 'Completeness of Galois Group Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]
@@ -307,7 +300,7 @@ def completeness_page():
 
 @galois_groups_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Galois groups'
+    t = 'Labels for Galois Groups'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -315,7 +308,7 @@ def labels_page():
 
 @galois_groups_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Galois group data'
+    t = 'Source of the Galois Group Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),

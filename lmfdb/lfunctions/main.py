@@ -46,7 +46,7 @@ def l_function_top_page():
 @l_function_page.route("/history")
 def l_function_history():
     from lmfdb.pages import _single_knowl
-    t = "A Brief History of L-functions"
+    t = "A brief history of L-functions"
 
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
@@ -99,7 +99,7 @@ def l_function_degree_page(degree):
 def l_function_cuspform_browse_page():
     info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 13, 2, 12)]
-    return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
+    return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with trivial character', **info)
 
 
 # L-function of GL(2) maass forms browsing page ##############################################
@@ -110,7 +110,7 @@ def l_function_maass_browse_page():
     info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     info["colorminus1"] = rgbtohex(signtocolour(-1))
     info["colorplus1"] = rgbtohex(signtocolour(1))
-    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of Weight 0', **info)
+    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of weight 0', **info)
 
 
 # L-function of elliptic curves browsing page ##############################################
@@ -146,7 +146,7 @@ def l_function_ec_sym2_browse_page():
     info["representation"] = 'Symmetric square'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 26, 2)]
     return render_template("ellipticcurve.html",
-                           title='Symmetric Square L-functions of Elliptic Curves', **info)
+                           title='Symmetric square L-functions of Elliptic Curves', **info)
 
 
 # L-function of symmetric cube of elliptic curves browsing page ################
@@ -156,7 +156,7 @@ def l_function_ec_sym3_browse_page():
     info["representation"] = 'Symmetric cube'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
-                           title='Symmetric Cube L-functions of Elliptic Curves', **info)
+                           title='Symmetric cube L-functions of Elliptic Curves', **info)
 
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
@@ -174,22 +174,22 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
 
-    tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
+    tt = [[{'title': 'Riemann zeta function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page')},
-           {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
-           {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
+          [{'title': 'Holomorphic cusp form with trivial character', 'link': url_for('.l_function_cuspform_browse_page')},
+           {'title': 'GL2 Maass form', 'link': url_for('.l_function_maass_browse_page')},
+           {'title': 'Elliptic curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
-           {'title': 'GL3 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
+           {'title': 'GL3 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
                                                        degree='degree3')},
-           {'title': 'Symmetric Square L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
+           {'title': 'Symmetric square L-function of Elliptic curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
-          [{'title': 'GSp4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
-           {'title': 'GL4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
+          [{'title': 'GSp4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
+           {'title': 'GL4 Maass form', 'link': url_for('.l_function_maass_gln_browse_page',
                                                        degree='degree4')},
-           {'title': 'Symmetric Cube L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
+           {'title': 'Symmetric cube L-function of Elliptic curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
 
     info = {
         'degree_list': range(1, 5),

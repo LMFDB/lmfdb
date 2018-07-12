@@ -74,7 +74,7 @@ def index():
                          url_for('.render_bmf_webpage',field_label='2.0.7.1', level_label='10000.1', label_suffix='b'),' (with no associated elliptic curve)'))
 
         credit = bianchi_credit
-        t = 'Bianchi Modular Forms'
+        t = 'Bianchi modular forms'
         bread = [('Modular Forms', url_for('mf.modular_form_main_page')), ('Bianchi Modular Forms', url_for(".index"))]
         info['learnmore'] = []
         return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
@@ -180,7 +180,7 @@ def bianchi_modular_form_search(**args):
     info['start'] = start
     info['more'] = int(start + count < nres)
 
-    t = 'Bianchi Modular Form Search Results'
+    t = 'Bianchi modular form search results'
 
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         'Search Results', ' ')]
@@ -232,7 +232,7 @@ def bmf_field_dim_table(**args):
     else:
         info['group'] = 'SL(2)'
         info['bgroup'] = '\SL(2,\mathcal{O}_K)'
-    t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
+    t = ' '.join(['Dimensions of spaces of {} Bianchi modular forms over'.format(info['group']), pretty_field_label])
     query = {}
     query['field_label'] = field_label
     query[gl_or_sl] = {'$exists': True}
@@ -295,7 +295,7 @@ def bmf_field_dim_table(**args):
 @bmf_page.route('/<field_label>/<level_label>')
 def render_bmf_space_webpage(field_label, level_label):
     info = {}
-    t = "Bianchi Modular Forms of Level %s over %s" % (level_label, field_label)
+    t = "Bianchi modular forms of level %s over %s" % (level_label, field_label)
     credit = bianchi_credit
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
@@ -402,7 +402,7 @@ def bianchi_modular_form_by_label(lab):
 
 @bmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Bianchi Modular Forms'
+    t = 'Source of the Bianchi modular forms'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Source', '')]
@@ -412,7 +412,7 @@ def how_computed_page():
 
 @bmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Bianchi Modular Form Data'
+    t = 'Completeness of the Bianchi modular form data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Completeness', '')]
@@ -422,7 +422,7 @@ def completeness_page():
 
 @bmf_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Bianchi Newforms'
+    t = 'Labels for Bianchi newforms'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Labels', '')]
