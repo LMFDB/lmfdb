@@ -40,7 +40,7 @@ table,td {
 </p>
 
 
-<p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
+<h2>{{KNOWL('curve.highergenus.aut.refinedpassport', title ='Refined Passport')}} in the Family</h2>
 <style>
 .tab button {
 transition: 0.3s;
@@ -66,7 +66,7 @@ transition: 0.3s;
 }
 </style>
 <!-- add in style.css -->
-{% if info.passport_num == 1 or info.topological_num == 0%}
+{% if info.topological_num == 0 %}
 <table>
   <tr>
      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -77,22 +77,23 @@ transition: 0.3s;
 <tr>
   <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
   <td class="center">{{itm[0]}}</td>
-
 </tr>
 {% endfor %}
 </table>
+
 {% else %}
 <div class="tab">
   <button type="select" class="tablinks" onclick="openData(event, 'passports')"
-          id="defaultOpen">All Passports</button> 
+          id="defaultOpen">By conjugacy class</button> 
   <button type="submit" class="tablinks" onclick="openData(event,'representative')"
-          >Topological Equivalence Representative</button> 
+          >Topological equivalence representatives</button> 
   <button type="submit" class="tablinks" onclick="openData(event,'equivalence class')"
-          >Topological Equivalence Classes</button>
+          >By topological equivalence class</button>
 </div>
 {% endif %}
 
 <div id="passports" class="tabcontent">
+  <p>
   <table>
     <tr>
       <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
@@ -108,36 +109,45 @@ transition: 0.3s;
     </tr>
     {% endfor %}
   </table>
+  </p>
 </div>
 
 <div id="representative" class="tabcontent">
-  <p>Displaying topological equivalence representative(s)</p>
+  {% if info.topological_num == 1%}
+  <p>Displaying the representative for the unique action up to topological equivalence.</p>
+  {% else %}
+  <p>Displaying representatives for {{info.topological_num}} topologically
+    inequivalent actions.</p>
+  {% endif %}
   {% for topo_rep in info.topological_rep %}
-    <a href="{{topo_rep[0]}}">{{topo_rep[0]}}</a><br>
-    &nbsp; {{topo_rep[1]}} <br>
+    <a href="{{topo_rep[0]}}">{{topo_rep[1]}}</a><br>
     <table>{% for perm in topo_rep[2] %}
-      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+      <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
     {% endfor %}
   
 </div>
 
 <div id="equivalence class" class="tabcontent">
-  <p>Displaying topological equivalence classes</p>
-  <table cellpadding = 5>
+  <p>Displaying topological equivalence classes.</p>
+  <table cellpadding=5 class="ntdata">
     <thead>
       <tr>
         <th> Class Representatives </th>
-        <th> All Elements </th>
+        <th> Conjugacy Class(es) </th>
+        <th> Generating Vector </th>
       </tr>
     </thead>
 
     <tbody>
       {% for class in info.topological_class %}
       <tr>
-        <td><a href="{{class[0][0]}}">{{class[0][1]}}</a></td>
+        <td align="center"><a href="{{class[0][0]}}">{{class[0][1]}}</a></td>
         <td> {% for element in class[1] %}
-          <a href="{{element[0]}}">{{element[1]}}</a><br>
+          {{element[2]}}<br>
+          {% endfor %} </td>
+        <td> {% for element in class[1] %}
+          <a href="{{element[0]}}">{{element[1]}}</a>
           {% endfor %} </td>
       </tr>
       {% endfor %}

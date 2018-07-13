@@ -1,0 +1,30 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Actions up to Topological Equivalence of Class Representative {{info.representative}} </h2>
+<div>
+  <table cellpadding=5 class="ntdata">
+    
+    <thead>
+      <tr>
+        <th>Class Representative</th>
+        <th>List of Conjugacy Class</th>
+        <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+      </tr>
+    </thead>
+    
+    <tbody>
+      {% for i in range(0, info.groups | length) %}
+      <tr>
+        <td>${{info.iso_classes[i]}}$</td>
+        <td><a href={{url_for('.index', genus=info.genus, group=info.groups[i][0])}}>{{info.groups[i][0]}}</a></td>
+        <td align="center">
+          {{info.groups[i][1]}}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
