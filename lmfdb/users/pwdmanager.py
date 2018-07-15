@@ -129,7 +129,7 @@ class PostgresUserTable(PostgresBase):
         return [(uid, full_name or uid) for uid, full_name in cur]
 
     def authenticate(self, uid, pwd, bcpass=None, oldpass=None):
-        if not self.rw_userdb:
+        if not self._rw_userdb:
             logger.info("no attempt to authenticate, not enough privileges")
             return False
 
