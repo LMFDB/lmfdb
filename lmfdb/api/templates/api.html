@@ -90,8 +90,10 @@ where the prefix "-" indicates to sort in descending order.
 {% for db, collections in databases.iteritems()|sort %}
   <li>
     <b>{{ db }}</b>
+    <!--
     (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
-       target="_blank">description</a>)
+    target="_blank">description</a>)
+    -->
     <br/>
       {% for (fullname, shortname, count) in collections %}
         <a href="{{ url_for('.api_query', table=fullname) }}">{{ shortname }} ({{ count }})</a>
