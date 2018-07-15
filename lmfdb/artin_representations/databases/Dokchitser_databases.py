@@ -3,6 +3,7 @@ galois_group_location = ("artin", "field_data")
 artin_location = ("artin", "representations_new")
 galois_group_location = ("artin", "field_data_new")
 
+
 from type_generation import String, Array, Dict, Int, Anything
 
 from standard_types import PolynomialAsString, PermutationAsList,\
