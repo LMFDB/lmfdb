@@ -13,7 +13,7 @@ from lmfdb.search_parsing import parse_ints, parse_bracketed_posints, parse_coun
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_galmaps, belyi_db_passports
 
-credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, John Voight."
+credit_string = "Michael Musty, Sam Schiavone, and John Voight"
 
 ###############################################################################
 # global database connection and stats objects
