@@ -24,6 +24,7 @@ from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_
 # Determining what kind of label
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-[^\.]*$)')
 passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+)')
+vector_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+\.\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 
 def label_is_one_family(lab):
@@ -40,6 +41,8 @@ def split_family_label(lab):
 def split_passport_label(lab):
     return passport_label_regex.match(lab).groups()
 
+def split_vector_label(lab):
+    return vector_label_regex.match(lab).groups()
 
 credit ='Jen Paulhus, using group and signature data originally computed by Thomas Breuer'
 
@@ -125,6 +128,11 @@ def decjac_format(decjac_list):
     ccClasses = cc_display ([ints[2] for ints in decjac_list])
     return latex, ccClasses
 
+# Turn 'i.j' in the total label in to cc displayed in mongo
+def cc_to_list(cc):
+    l = list(cc)
+    return [int(l[0]), int(l[-1])]
+
 @higher_genus_w_automorphisms_page.route("/")
 def index():
     bread = get_bread()
@@ -192,29 +200,31 @@ def groups_per_genus(genus):
 
 @higher_genus_w_automorphisms_page.route("/topological_action/<representative>")
 def topological_action(representative):
+    fam, br_g, br_gp, br_sign, cc = split_vector_label(representative)
+    bread_sign = label_to_breadcrumbs(br_sign)
+    bread_gp = label_to_breadcrumbs(br_gp)
+    cc_list = cc_to_list(cc)
+
     C = base.getDBConnection()
 
     #Get the equivalence class
-    topo_class = C.curve_automorphisms.passports.find({'label': ..., 'topological': representative['cc']})
-    
-    
+    topo_class = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
+    rep_data = C.curve_automorphisms.passports.find({'total_label': representative})
+
     Ltopo_class=[]
     elements=[] #An equivalence class
-        
+
+    Ltopo_class.append([rep_data['passport_label'], representative])
+
     for element in topo_class:
         elements.append([element['passport_label'], element['total_label'], cc_display(ast.literal_eval(element['con']))])
     Ltopo_class.append(elements)
 
     info = {'topological_class': Ltopo_class}
-
-    br_g, br_gp, br_sign = split_family_label(representative['label'])
-
-    bread_sign = label_to_breadcrumbs(br_sign)
-    bread_gp = label_to_breadcrumbs(br_gp)
     
-    bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
+    bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign, fam), ('Representative' + representative, ' ')])
     title = 'Topological action for' + representative
-    return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
+    return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
@@ -613,8 +623,7 @@ def render_family(args):
             downloads = [('Download Magma code', url_for(".hgcwa_code_download", label=label, download_type='magma')),
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
-            downloads = [#('Magma code', url_for(None)),
-                             ('Magma-All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
+            downloads = [('Magma-All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
                              ('Magma-Up to topological equivalence', url_for(".hgcwa_code_download",  label=label, download_type='topo_magma')),
                              ('Gap-All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
                              ('Gap-Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
