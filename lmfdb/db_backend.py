@@ -2490,8 +2490,6 @@ class PostgresDatabase(PostgresBase):
         # Note that it has some global effects, since register_adapter
         # is not limited to just one connection
         setup_connection(self.conn)
-        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
-
         if self._user == "webserver":
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
@@ -2509,6 +2507,8 @@ class PostgresDatabase(PostgresBase):
         logging.info("Read only: %s" % self._read_only);
         logging.info("Read/write to userdb: %s" % self._read_and_write_userdb);
         logging.info("Read/write to knowls: %s" % self._read_and_write_knowls);
+
+        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
 
 
         self.tablenames = []
