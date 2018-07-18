@@ -582,18 +582,20 @@ def parse_hmf_weight(inp, query, qfield):
             raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers, such as 2 or 2,4,6.")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
-def parse_bool(inp, query, qfield, blank=[]):
+def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
+    if process is None: process = lambda x: x
     if inp in ["True", "1"]:
-        query[qfield] = True
+        query[qfield] = process(True)
     elif inp in ["False", "-1", "0"]:
-        query[qfield] = False
+        query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
         pass
     else:
         raise ValueError("It must be True or False.")
+
 
 @search_parser
 def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):

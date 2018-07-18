@@ -10,8 +10,8 @@ from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
-from lmfdb.db_backend import  db
-from psycopg2.sql import SQL
+from lmfdb.db_backend import db
+assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
@@ -136,7 +136,6 @@ def set_info():
 @login_page.route("/profile/<userid>")
 @login_required
 def profile(userid):
-    from lmfdb.knowledge import knowldb
     # See issue #1169
     user = LmfdbUser(userid)
     bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]

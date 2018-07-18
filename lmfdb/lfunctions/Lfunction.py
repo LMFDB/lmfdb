@@ -1148,7 +1148,7 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            ALeigs = [str(al[1]).replace('^', '**') for al in f['AL_eigenvalues']]
             # the above fixed a bug at
             # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
             # but now the sign is wrong (i.e., not of absolute value 1 *)
@@ -1286,8 +1286,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         generateSageLfunction(self)
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.siegel"
-        self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
-                      "modular form of weight " + str(self.weight) + ".")
+        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
+                      "Modular Form of Weight " + str(self.weight) + ".")
 
     def original_object(self):
         return self.S

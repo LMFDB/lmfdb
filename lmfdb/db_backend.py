@@ -115,13 +115,12 @@ class PostgresBase(object):
     """
     def __init__(self, loggername, conn):
         self.conn = conn
-        self.logger = make_logger(loggername)
         handler = logging.FileHandler(SLOW_QUERY_LOGFILE)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
         handler.setFormatter(formatter)
         handler.addFilter(filt)
-        self.logger.addHandler(handler)
+        self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
 
     def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True):
         """
@@ -159,8 +158,8 @@ class PostgresBase(object):
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
                     if values:
-                        query = query%(tuple(values))
-                    self.logger.info(query + " ran in %ss"%(t))
+                        query = query % (tuple(values))
+                    self.logger.info(query + " ran in %ss" % (t,))
         except DatabaseError:
             self.conn.rollback()
             raise
@@ -586,8 +585,9 @@ class PostgresTable(PostgresBase):
             has_sort = True
             if self._sort is None:
                 if limit is not None and not (limit == 1 and offset == 0):
-                    raise ValueError("You must specify a sort order")
-                has_sort = False
+                    sort = Identifier("id")
+                else:
+                    has_sort = False
             elif self._primary_sort in query or self._out_of_order:
                 # We use the actual sort because the postgres query planner doesn't know that
                 # the primary key is connected to the id.
@@ -651,6 +651,7 @@ class PostgresTable(PostgresBase):
     ##################################################################
 
     def lucky(self, query={}, projection=2, offset=0):
+        #FIXME Nulls aka Nones are being erased, we should perhaos just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for situations where only a single result is desired.

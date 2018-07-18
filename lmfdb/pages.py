@@ -136,7 +136,7 @@ def introduction_features():
 def introduction_zetatour():
     b = bread()
     b.append(('Tutorial', url_for("introduction_zetatour")))
-    return render_template(_single_knowl, title="A tour of the Riemann zeta function", kid='intro.tutorial', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A Tour of the Riemann Zeta Function", kid='intro.tutorial', body_class=_bc, bread=b)
 
 
 @app.route("/bigpicture")
@@ -147,7 +147,7 @@ def bigpicture():
 @app.route("/universe")
 def universe():
     b = [('LMFDB Universe', url_for('universe'))]
-    return render_template("universe.html", title="The LMFDB universe", body_class=_bc, bread=b)
+    return render_template("universe.html", title="The LMFDB Universe", body_class=_bc, bread=b)
 
 
 @app.route("/roadmap")
@@ -160,7 +160,7 @@ def roadmap():
 def news():
     t = "News"
     b = [(t, url_for('news'))]
-    return render_template(_single_knowl, title="LMFDB in the news", kid='doc.news.in_the_news', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="LMFDB in the News", kid='doc.news.in_the_news', body_class=_bc, bread=b)
 
 ## INTRO PAGES END
 
@@ -192,7 +192,7 @@ def fields_history():
     t = 'Fields'
     b = [(t, url_for('fields'))]
     b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A brief history of fields", kid='f.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A Brief History of Fields", kid='f.history', body_class=_bc, bread=b)
 
 
 @app.route('/Representation')
@@ -208,7 +208,7 @@ def representations_history():
     t = 'Representations'
     b = [(t, url_for('representations'))]
     b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief history of representations", kid='rep.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief History of Representations", kid='rep.history', body_class=_bc, bread=b)
 
 
 
@@ -225,7 +225,7 @@ def groups_history():
     t = 'Groups'
     b = [(t, url_for('groups'))]
     b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief history of groups", kid='g.history', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="A brief History of Groups", kid='g.history', body_class=_bc, bread=b)
 
 @app.route("/editorial-board")
 @app.route("/management-board")
@@ -243,23 +243,23 @@ def citation():
 
 @app.route("/citation/citing")
 def citing():
-    t = "How to cite LMFDB"
+    t = "How to Cite LMFDB"
     b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
     return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
 
 @app.route("/citation/citations")
 def citations():
-    t = "LMFDB citations"
+    t = "LMFDB Citations"
     b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citations"))]
     return render_template('citations.html', title=t, body_class='', bread=b)
 
 @app.route("/citation/citations_bib")
 def citations_bib():
-    t = "LMFDB citations (BiBTeX entries)"
+    t = "LMFDB Citations (BiBTeX Entries)"
     return render_template('citations_content_bib.html', title=t, body_class='')
 
 @app.route("/contact")
 def contact():
-    t = "Contact and feedback"
+    t = "Contact and Feedback"
     b = [(t, url_for("contact"))]
     return render_template('contact.html', title=t, body_class='', bread=b)

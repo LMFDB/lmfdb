@@ -118,16 +118,19 @@ class ArtinRepresentation(object):
         return cls(baselabel,1)
 
     def baselabel(self):
-        return self._data["Baselabel"]
+        return str(self._data["Baselabel"])
 
     def label(self):
         return str(self._data['label'])
 
     def dimension(self):
-        return self._data["Dim"]
+        return int(self._data["Dim"])
 
     def conductor(self):
-        return self._data["Conductor"]
+        return int(self._data["Conductor"])
+
+    def NFGal(self):
+        return  map(int, self._data["NFGal"]);
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
@@ -186,9 +189,7 @@ class ArtinRepresentation(object):
         try:
             return self._nf
         except AttributeError:
-            #FIXME fix this hack to force list of ints
-            intNFGal = map(int, self._data["NFGal"]);
-            self._nf = NumberFieldGaloisGroup.lucky({"Polynomial":  intNFGal})
+            self._nf = NumberFieldGaloisGroup.lucky({"Polynomial":  self.NFGal()})
         return self._nf
 
     def galois_conjugacy_size(self):

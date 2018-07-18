@@ -49,7 +49,7 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
-    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
+    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(map(str, m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
 
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
@@ -121,7 +121,7 @@ def index():
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
-    title = 'Sato-Tate groups'
+    title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
 
@@ -198,7 +198,7 @@ def search(**args):
         parse_rational(info,query,'trace_zero_density','trace zero density')
     except ValueError as err:
         info['err'] = str(err)
-        return render_template('st_results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
+        return render_template('st_results.html', info=info, title='Sato-Tate Groups Search Input Error', bread=bread, credit=credit_string)
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
@@ -241,7 +241,7 @@ def search(**args):
     info['st0_dict'] = st0_dict
     info['stgroups'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    title = 'Sato-Tate group search results'
+    title = 'Sato-Tate Group Search Results'
     return render_template('st_results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
 
 ###############################################################################
@@ -361,7 +361,7 @@ def render_st_group(info, portrait=None):
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = 'Sato-Tate group \(' + info['pretty'] + '\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
+    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
                            properties2=prop2,
                            credit=credit_string,
@@ -372,21 +372,21 @@ def render_st_group(info, portrait=None):
 
 @st_page.route('/Completeness')
 def completeness_page():
-    t = 'Completeness of Sato-Tate group data'
+    t = 'Completeness of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
     return render_template('single.html', kid='dq.st.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def how_computed_page():
-    t = 'Source of Sato-Tate group data'
+    t = 'Source of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
     return render_template('single.html', kid='dq.st.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Labels')
 def labels_page():
-    t = 'Labels for Sato-Tate groups'
+    t = 'Labels for Sato-Tate Groups'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))

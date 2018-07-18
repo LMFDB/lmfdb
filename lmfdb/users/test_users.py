@@ -2,6 +2,7 @@
 # testing users blueprint
 from lmfdb.base import LmfdbTest
 from main import login_page
+from lmfdb.users.main import userdb
 
 class UsersTestCase(LmfdbTest):
     ### helpers

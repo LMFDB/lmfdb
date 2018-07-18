@@ -32,7 +32,7 @@ def setup_connection(conn):
     NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
     register_type(NUMERIC, conn)
     register_adapter(Integer, AsIs)
-    register_adapter(RealLiteral, RealLiteralEncoder)
+    register_adapter(RealNumber, RealEncoder)
     register_adapter(list, Json)
     register_adapter(tuple, Json)
     register_adapter(dict, Json)
@@ -105,13 +105,16 @@ class Array(object):
     def __str__(self):
         return str(self.getquoted())
 
-class RealLiteralEncoder(object):
+class RealEncoder(object):
     def __init__(self, value):
         self._value = value
     def getquoted(self):
-        return self._value.literal
+        if isinstance(self._value, RealLiteral):
+            return self._value.literal
+        else:
+            return str(self._value)
     def __str__(self):
-        return self._value.literal
+        return self.getquoted()
 
 class Json(pgJson):
     @classmethod

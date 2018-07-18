@@ -97,7 +97,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     return render_template("show-abvarfq.html",
                            properties2=cl.properties(),
                            credit=abvarfq_credit,
-                           title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
+                           title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
                            bread=bread,
                            cl=cl,
                            learnmore=learnmore_list())
@@ -169,7 +169,7 @@ def abelian_variety_search(**args):
     res = db.av_fqisog.search(query, limit=count, offset=start, info=info)
 
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
-    t = 'Abelian Variety search results'
+    t = 'Abelian Variety Search Results'
     return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
 
 def abelian_variety_browse(**args):
@@ -242,7 +242,7 @@ def abelian_variety_browse(**args):
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = get_bread(('Search Results', '.'))
-    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety search input error', bread=bread)
+    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety Search Input Error', bread=bread)
 
 @abvarfq_page.route("/<label>")
 def by_label(label):
@@ -310,21 +310,21 @@ def download_search(info):
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Weil polynomial data'
+    t = 'Completeness of the Weil Polynomial Data'
     bread = get_bread(('Completeness', '.'))
     return render_template("single.html", kid='dq.av.fq.extent',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Weil polynomial data'
+    t = 'Source of the Weil Polynomial Data'
     bread = get_bread(('Source', '.'))
     return render_template("single.html", kid='dq.av.fq.source',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-    t = 'Labels for isogeny classes of abelian varieties'
+    t = 'Labels for Isogeny Classes of Abelian Varieties'
     bread = get_bread(('Labels', '.'))
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
