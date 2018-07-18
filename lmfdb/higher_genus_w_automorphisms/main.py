@@ -213,12 +213,21 @@ def topological_action(representative):
 
     Ltopo_class=[]
     elements=[] #An equivalence class
+    Lbraid={}
 
     Ltopo_class.append([rep_data['passport_label'], representative])
+    Ltopo_class.append(Lbraid)
 
     for element in topo_class:
-        elements.append([element['passport_label'], element['total_label'], cc_display(ast.literal_eval(element['con']))])
-    Ltopo_class.append(elements)
+        if element['braid'] not in Lbraid:
+            Lbraid[element['braid']] = []
+            Lbraid[element['braid']].append([element['passport_label'],
+                                             element['total_label'],
+                                             cc_display(ast.literal_eval(element['con']))])
+        else:
+            Lbraid[element['braid']].append([element['passport_label'],
+                                             element['total_label'],
+                                             cc_display(ast.literal_eval(element['con']))])
 
     info = {'topological_class': Ltopo_class}
     

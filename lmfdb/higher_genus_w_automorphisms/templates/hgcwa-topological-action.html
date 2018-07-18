@@ -9,21 +9,22 @@
       <tr>
         <th>Class Representative</th>
         <th>List of Conjugacy Class</th>
-        <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}</th>
+        <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} Sorted in Braid Action</th>
       </tr>
     </thead>
 
     <tbody>
       <tr>
           <td align="center"><a href="{{info.topological_class[0][0]}}">info.topological_class[0][1]</a></td>
-        {% for i in range(1, info.topological_class | length) %}
-        <td>{{info.groups[i][2]}}</td>
-        <td><a href="{{info.toplogical_class[i][0]}}">
-          {{info.topological_class[i][1]}}
-        </a></td>
-        {% endfor %}
+        {% for braid in info.topological_class[1] %}
+          {% for element in info.topological_class[1][braid] %}
+            <td>{{element[2]}}</td>
+            <td><a href="{{element[0]}}">
+              {{element[1]}}
+            </a></td>
+          {% endfor %}
+        {% endfor %} <br>
       </tr>
-      {% endfor %}
     </tbody>
   </table>
 </div>
