@@ -203,7 +203,7 @@ class Configuration(object):
                 "host": get('web', 'bindip'),
                 "debug": getboolean('core', 'debug')
                 };
-        for opt in ['use_debugger', 'use_reloader']:
+        for opt in ['use_debugger', 'use_reloader', 'profiler']:
             if opt in args_dict:
                 self.flask_options[opt] = args_dict[opt];
 
