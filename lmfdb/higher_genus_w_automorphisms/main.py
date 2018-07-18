@@ -201,8 +201,6 @@ def groups_per_genus(genus):
 @higher_genus_w_automorphisms_page.route("/topological_action/<representative>")
 def topological_action(representative):
     fam, br_g, br_gp, br_sign, cc = split_vector_label(representative)
-    bread_sign = label_to_breadcrumbs(br_sign)
-    bread_gp = label_to_breadcrumbs(br_gp)
     cc_list = cc_to_list(cc)
 
     C = base.getDBConnection()
@@ -212,27 +210,25 @@ def topological_action(representative):
     rep_data = C.curve_automorphisms.passports.find({'total_label': representative})
 
     Ltopo_class=[]
-    elements=[] #An equivalence class
     Lbraid={}
 
-    Ltopo_class.append([rep_data['passport_label'], representative])
+    Ltopo_class.append([rep_data[0]['passport_label'], representative])
     Ltopo_class.append(Lbraid)
 
     for element in topo_class:
-        if element['braid'] not in Lbraid:
-            Lbraid[element['braid']] = []
-            Lbraid[element['braid']].append([element['passport_label'],
+        if str(element['braid']) in Lbraid:
+            Lbraid[str(element['braid'])].append([element['passport_label'],
                                              element['total_label'],
                                              cc_display(ast.literal_eval(element['con']))])
         else:
-            Lbraid[element['braid']].append([element['passport_label'],
-                                             element['total_label'],
-                                             cc_display(ast.literal_eval(element['con']))])
+            Lbraid[str(element['braid'])] = [[element['passport_label'],
+                                        element['total_label'],
+                                        cc_display(ast.literal_eval(element['con']))]]
 
     info = {'topological_class': Ltopo_class}
     
-    bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign, fam), ('Representative' + representative, ' ')])
-    title = 'Topological action for' + representative
+    bread = get_bread([(fam, url_for('.by_label', label = fam)), ('Representative ' + representative, ' ')])
+    title = 'Topological action for ' + representative
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -243,7 +239,7 @@ def by_label(label):
     elif label_is_one_family(label):
         return render_family({'label': label})
     else:
-        flash_error( "No family with label %s was found in the database.", label)
+        flash_error("No family with label %s was found in the database.", label)
         return redirect(url_for(".index"))
 
 

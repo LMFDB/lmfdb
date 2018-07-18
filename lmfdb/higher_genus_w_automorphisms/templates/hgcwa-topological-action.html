@@ -15,7 +15,8 @@
 
     <tbody>
       <tr>
-          <td align="center"><a href="{{info.topological_class[0][0]}}">info.topological_class[0][1]</a></td>
+          <td align="center"><a href={{ url_for('.by_label', label = info.topological[0][0])}}>
+              info.topological_class[0][1]</a></td>
         {% for braid in info.topological_class[1] %}
           {% for element in info.topological_class[1][braid] %}
             <td>{{element[2]}}</td>
