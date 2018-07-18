@@ -101,7 +101,7 @@ Dokchitser_NumberFieldGaloisGroup = Dict({
     "Frobs": PrimeIndexedSequence(Int),
     "G-Gens": FiniteSet(PermutationAsList),
     "G-Name": Custom_GroupLabel,
-    "Polynomial": FiniteSequence(Int),
+    "Polynomial": FiniteSequence(int),
     "QpRts": FiniteSequence(PolynomialAsSequenceTooLargeInt),
     "QpRts-minpoly": PolynomialAsSequenceInt,
     "QpRts-p": Int,
