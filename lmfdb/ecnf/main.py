@@ -9,6 +9,7 @@ import StringIO
 from operator import mul
 from urllib import quote, unquote
 from lmfdb.db_backend import db
+from lmfdb.db_encoding import Json
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, flash, send_file, jsonify, make_response
 from lmfdb.utils import to_dict
@@ -681,8 +682,7 @@ def download_ECNF_all(nf,conductor_label,class_label,number):
     if data is None:
         return search_input_error()
 
-    import json
-    response = make_response(json.dumps(data))
+    response = make_response(Json.dumps(data))
     response.headers['Content-type'] = 'text/plain'
     return response
 
