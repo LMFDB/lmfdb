@@ -1015,15 +1015,19 @@ class PostgresTable(PostgresBase):
         for line in cur:
             print line[0]
 
-    def list_indexes(self):
+    def list_indexes(self, verbose = False):
         """
         Lists the indexes on the search table.
         """
         selecter = SQL("SELECT index_name, type, columns, modifiers FROM meta_indexes WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True)
+        output = {}
         for name, typ, columns, modifiers in cur:
-            colspec = [" ".join([col] + mods) for col, mods in zip(columns, modifiers)]
-            print "{0} ({1}): {2}".format(name, typ, ", ".join(colspec))
+            output[name] = {"type" : typ, "columns": columns, "modifiers" : modifiers}
+            if verbose:
+                colspec = [" ".join([col] + mods) for col, mods in zip(columns, modifiers)]
+                print "{0} ({1}): {2}".format(name, typ, ", ".join(colspec))
+        return output
 
     @staticmethod
     def _create_index_statement(name, table, type, columns, modifiers, storage_params):
@@ -1822,6 +1826,10 @@ class PostgresTable(PostgresBase):
             self.resort() # commits
         else:
             self.conn.commit()
+
+        # add an index for the default sort
+        if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
+            self.create_index(sort)
 
     def add_column(self, name, datatype, extra=False, commit=True):
         if name in self._search_cols: #name == 'id' or 
