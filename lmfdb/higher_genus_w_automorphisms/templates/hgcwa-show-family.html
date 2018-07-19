@@ -85,8 +85,6 @@ transition: 0.3s;
           id="defaultOpen">By conjugacy class</button>
   <button type="submit" class="tablinks" onclick="openData(event,'representative')"
           >Topological equivalence representatives</button>
-  <button type="submit" class="tablinks" onclick="openData(event,'equivalence class')"
-          >By topological equivalence class</button>
 </div>
 {% endif %}
 
@@ -102,7 +100,7 @@ transition: 0.3s;
     <tr>
       <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
       <td class="center">{{itm[0]}}</td>
-
+ 
     </tr>
     {% endfor %}
   </table>
@@ -115,41 +113,16 @@ transition: 0.3s;
   <p>Displaying representatives for {{info.topological_num}} topologically
     inequivalent actions.</p>
   {% endif %}
+  
   {% for topo_rep in info.topological_rep %}
-    <a href="{{topo_rep[0]}}">{{topo_rep[1]}}</a><br>
-    <table>{% for perm in topo_rep[2] %}
+    <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
+    <table>{% for perm in topo_rep[1] %}
       <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
   {% endfor %}
 
 </div>
 
-<div id="equivalence class" class="tabcontent">
-  <p>Displaying topological equivalence classes.</p>
-  <table cellpadding=5 class="ntdata">
-    <thead>
-      <tr>
-        <th> Class Representatives </th>
-        <th> Conjugacy Class(es) </th>
-        <th> Generating Vector </th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {% for class in info.topological_class %}
-      <tr>
-        <td align="center"><a href="{{class[0][0]}}">{{class[0][1]}}</a></td>
-        <td> {% for element in class[1] %}
-          {{element[2]}}<br>
-          {% endfor %} </td>
-        <td> {% for element in class[1] %}
-          <a href="{{element[0]}}">{{element[1]}}</a>
-          {% endfor %} </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
 
 <script>
 function openData(evt, dataType) {

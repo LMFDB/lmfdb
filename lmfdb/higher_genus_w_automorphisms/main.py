@@ -130,8 +130,8 @@ def decjac_format(decjac_list):
 
 # Turn 'i.j' in the total label in to cc displayed in mongo
 def cc_to_list(cc):
-    l = list(cc)
-    return [int(l[0]), int(l[-1])]
+    l = cc.split('.')
+    return [int(l[1]), int(l[-1])]
 
 @higher_genus_w_automorphisms_page.route("/")
 def index():
@@ -198,22 +198,34 @@ def groups_per_genus(genus):
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 
-@higher_genus_w_automorphisms_page.route("/topological_action/<representative>")
-def topological_action(representative):
-    fam, br_g, br_gp, br_sign, cc = split_vector_label(representative)
+@higher_genus_w_automorphisms_page.route("/<fam>/<cc>") 
+def topological_action(fam, cc):
+    br_g, br_gp, br_sign = split_family_label(fam)
     cc_list = cc_to_list(cc)
 
     C = base.getDBConnection()
-
+    
     #Get the equivalence class
     topo_class = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
-    rep_data = C.curve_automorphisms.passports.find({'total_label': representative})
 
-    Ltopo_class=[]
+    g = topo_class[0]['genus']
+    GG = ast.literal_eval(topo_class[0]['group'])
+    gn = GG[0]
+    gt = GG[1]
+
+    gp_string=str(gn) + '.' + str(gt)
+    pretty_group=sg_pretty(gp_string)
+
+    bread_sign = label_to_breadcrumbs(br_sign)
+    bread_gp = label_to_breadcrumbs(br_gp)
+
+    bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp),
+                           (bread_sign, url_for('.by_label', label = fam)),
+                           ('Topological Orbit for ' + str(cc_list[0]) + ', ' + str(cc_list[1]), ' ') ])
+
+    title = 'One Orbit Under Topological Action'
+    
     Lbraid={}
-
-    Ltopo_class.append([rep_data[0]['passport_label'], representative])
-    Ltopo_class.append(Lbraid)
 
     for element in topo_class:
         if str(element['braid']) in Lbraid:
@@ -225,10 +237,8 @@ def topological_action(representative):
                                         element['total_label'],
                                         cc_display(ast.literal_eval(element['con']))]]
 
-    info = {'topological_class': Ltopo_class}
-    
-    bread = get_bread([(fam, url_for('.by_label', label = fam)), ('Representative ' + representative, ' ')])
-    title = 'Topological action for ' + representative
+    info = {'topological_class': Lbraid, 'representative': fam + '.' + cc[2:]}
+
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -572,7 +582,6 @@ def render_family(args):
         Lcc=[]
         Lall=[]
         Ltopo_rep=[] #List of topological representatives
-        Lelements=[] #List of lists of equivalence classes
         for dat in dataz:
             if ast.literal_eval(dat['con']) not in Lcc:
                 urlstrng=dat['passport_label']
@@ -586,27 +595,18 @@ def render_family(args):
                     x1=[] #A list of permutations of generating vectors of topo_rep
                     for perm in dat['gen_vectors']:
                         x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
-                    Ltopo_rep.append([dat['passport_label'], dat['total_label'], x1])
-
-                    topo_class = C.curve_automorphisms.passports.find({'label': dat['label'], 'topological': dat['cc']}).sort('cc.0', pymongo.ASCENDING)
-                    elements=[] #An equivalence class
-                    for element in topo_class:
-                        elements.append([element['passport_label'], element['total_label'], cc_display(ast.literal_eval(element['con']))])
-                    Lelements.append(elements)    
+                    Ltopo_rep.append([dat['total_label'], x1, dat['label'], 'T.' + '.'.join(str(x) for x in dat['cc'])]) #Last element is used for webpage tag  
 
         Lall.sort(key=lambda x: x[3][0]) #Sort passport label
         
-        Ltopo_class = zip(Ltopo_rep, Lelements)
         topo_length = len(Ltopo_rep)
         
         #Add topological equivalence to info
         info.update({'topological_rep': Ltopo_rep})
-        info.update({'topological_class': Ltopo_class})
         info.update({'topological_num': topo_length})
         
         info.update({'passport': Lall})
         info.update({'passport_num': len(Lall)})
-
         
         g2List = ['[2,1]','[4,2]','[8,3]','[10,2]','[12,4]','[24,8]','[48,29]']
         if g  == 2 and data['group'] in g2List:

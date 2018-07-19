@@ -1,31 +1,35 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2> Actions up to Topological Equivalence of Class Representative {{info.representative}} </h2>
+<h2>Generating vectors in the orbit of {{info.representative}} grouped by equivalence under the braid action.</h2>
 <div>
-  <table cellpadding=5 class="ntdata">
+  <table class="ntdata">
 
     <thead>
       <tr>
-        <th>Class Representative</th>
-        <th>List of Conjugacy Class</th>
-        <th>Distinct {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} Sorted in Braid Action</th>
+        <th>Conjugacy Classes</th>
+        <th>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating
+        Vectors')}}</th>
       </tr>
     </thead>
-
+ 
     <tbody>
+      {% for braid in info.topological_class %}
       <tr>
-          <td align="center"><a href={{ url_for('.by_label', label = info.topological[0][0])}}>
-              info.topological_class[0][1]</a></td>
-        {% for braid in info.topological_class[1] %}
-          {% for element in info.topological_class[1][braid] %}
-            <td>{{element[2]}}</td>
-            <td><a href="{{element[0]}}">
-              {{element[1]}}
-            </a></td>
-          {% endfor %}
-        {% endfor %} <br>
+        <td class="center">
+            {% for element in info.topological_class[braid] %}
+              <a href={{url_for('.by_passport_label', passport_label=element[0])}}>
+              {{element[1]}}</a>
+              {% endfor %}<br>
+        </td>
+        
+        <td class="center">
+            {% for element in info.topological_class[braid] %}
+              {{element[2]}}<br>
+            {% endfor %}
+        </td>
       </tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
