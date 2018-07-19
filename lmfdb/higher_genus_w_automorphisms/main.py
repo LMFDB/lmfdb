@@ -237,8 +237,9 @@ def topological_action(fam, cc):
                                         element['total_label'],
                                         cc_display(ast.literal_eval(element['con']))]]
 
+    print Lbraid
     info = {'topological_class': Lbraid, 'representative': fam + '.' + cc[2:]}
-
+  
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
@@ -595,9 +596,11 @@ def render_family(args):
                     x1=[] #A list of permutations of generating vectors of topo_rep
                     for perm in dat['gen_vectors']:
                         x1.append(sep.join(split_perm(Permutation(perm).cycle_string())))
-                    Ltopo_rep.append([dat['total_label'], x1, dat['label'], 'T.' + '.'.join(str(x) for x in dat['cc'])]) #Last element is used for webpage tag  
+                    Ltopo_rep.append([dat['total_label'], x1, dat['label'],
+                                              'T.' + '.'.join(str(x) for x in dat['cc']), dat['cc']]) #2nd to last element is used for webpage tag  
 
         Lall.sort(key=lambda x: x[3][0]) #Sort passport label
+        Ltopo_rep.sort(key=lambda x: x[4][0] )
         
         topo_length = len(Ltopo_rep)
         
@@ -652,7 +655,6 @@ def render_passport(args):
             return redirect(url_for(".index"))
         
         data=dataz[0]
-        print data
         g = data['genus']
         GG = ast.literal_eval(data['group'])
         gn = GG[0]

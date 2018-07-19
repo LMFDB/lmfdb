@@ -3,29 +3,29 @@
 
 <h2>Generating vectors in the orbit of {{info.representative}} grouped by equivalence under the braid action.</h2>
 <div>
-  <table class="ntdata">
+  <table cellpadding=10 class="ntdata">
 
     <thead>
       <tr>
-        <th>Conjugacy Classes</th>
         <th>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating
-        Vectors')}}</th>
+          Vectors')}}</th>
+        <th>Conjugacy Classes</th>
       </tr>
     </thead>
  
     <tbody>
       {% for braid in info.topological_class %}
       <tr>
-        <td class="center">
+        <td>
             {% for element in info.topological_class[braid] %}
               <a href={{url_for('.by_passport_label', passport_label=element[0])}}>
               {{element[1]}}</a>
-              {% endfor %}<br>
+              {% endfor %}
         </td>
         
-        <td class="center">
+        <td>
             {% for element in info.topological_class[braid] %}
-              {{element[2]}}<br>
+              {{element[2]}} <br>
             {% endfor %}
         </td>
       </tr>
