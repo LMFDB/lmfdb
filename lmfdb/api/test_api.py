@@ -31,11 +31,13 @@ class ApiTest(LmfdbTest):
         r"""
         Check that the sample queries on the top page all work (html output)
         """
-        queries = ['ec_curves/?rank=i2&torsion=i5',
-                   #'ec_curves/?isogeny_matrix=py[[1,13],[13,1]]', # no index on isogeny_matrix
-                   'ec_curves/?xainvs=cs-1215&torsion_structure=ls2;2&_delim=;',
-                   'kwl_knowls/?_fields=authors,last_author',
-                   'kwl_knowls/?_fields=content,authors&_sort=timestamp']
+
+        queries = [
+                'nf_fields/?r2=i5&degree=i12',
+                'ec_curves/?rank=i2&torsion=i5',
+                'ec_curves/?ainvs=li0;1;1;-840;39800&_delim=;',
+                'ec_curves/?_delim=%3B&torsion_structure=ls2%3B2',
+                ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).data
             assert 'Query: <code><a href="/api/' in data
@@ -45,20 +47,20 @@ class ApiTest(LmfdbTest):
         r"""
         Check that the sample queries on the top page all work (yaml output)
         """
-        queries = [#'ec_curves/?ainvs=ls0;1;1;-840;39800&_format=yaml&_delim=;', # no index on ainvs
-                   'ec_curves/?xainvs=s[0,1,1,-840,39800]&_format=yaml']
+        queries = ['ec_curves/?ainvs=li0;1;1;-840;39800&_format=yaml&_delim=;',
+                ]
         for query in queries:
             data = self.tc.get("/api/{}".format(query), follow_redirects=True).data
-            assert "!!python/unicode 'x-coordinates_of_integral_points': !!python/unicode '[-42,-39,-21,0,15,21,24,42,77,126,231,302,420,609,1560,3444,14595]'" in data
+            assert "!!python/unicode 'jinv': !!python/unicode '-65626385453056/656000554923'" in data
             assert not "Error:" in data
 
     def test_api_examples_json(self):
         r"""
         Check that the sample queries on the top page all work (json output)
         """
-        query = 'nf_fields/?signature=s2,5&_format=json'
+        query = 'nf_fields/?degree=i12&r2=i5&_format=json'
         data = self.tc.get("/api/{}".format(query), follow_redirects=True).data
-        assert '"label": "12.2.167630295667.1"' in data
+        assert '"label": "12.2.167630295667.1",' in data
 
 
     def test_api_usage(self):
@@ -75,4 +77,5 @@ class ApiTest(LmfdbTest):
             if '8T3' in query:
                 assert '"name": "E(8)=2[x]2[x]2"' in data
             if '11a1' in query:
-                assert '"equation": "\\\\( y^2 + y = x^{3} -  x^{2} - 10 x - 20  \\\\)"' in data
+                assert '"lmfdb_label": "11.a2",' in data
+                assert '"jinv": "-122023936/161051",' in data
