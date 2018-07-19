@@ -351,7 +351,7 @@ def boolean_format(value):
     return 'True' if value else 'False'
 
 stats_attribute_list = [
-    {'name':'deg','top_title':'Degree','row_title':'deg','knowl':'belyi.deg','avg':True},
+    {'name':'deg','top_title':'Degree','row_title':'deg','knowl':'belyi.degree','avg':True},
     {'name':'orbit_size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.orbit_size','avg':True},
     {'name':'g','top_title':'Genus','row_title':'genus','knowl':'belyi.genus','avg':True}
 ]
