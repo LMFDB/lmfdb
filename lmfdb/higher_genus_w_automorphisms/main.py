@@ -237,8 +237,19 @@ def topological_action(fam, cc):
                                         element['total_label'],
                                         cc_display(ast.literal_eval(element['con']))]]
 
-    print Lbraid
-    info = {'topological_class': Lbraid, 'representative': fam + '.' + cc[2:]}
+    sorted_braid = []
+    braid_key = Lbraid.keys()
+    key_for_sorted = []
+    for key in braid_key:
+        key_for_sorted.append(ast.literal_eval(key))
+    key_for_sorted.sort()
+    print key_for_sorted
+
+    for key in key_for_sorted:
+        sorted_braid.append(Lbraid[str(key)])
+
+    print sorted_braid
+    info = {'topological_class': sorted_braid, 'representative': fam + '.' + cc[2:]}
   
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
 

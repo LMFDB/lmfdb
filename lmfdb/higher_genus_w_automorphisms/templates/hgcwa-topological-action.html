@@ -17,14 +17,14 @@
       {% for braid in info.topological_class %}
       <tr>
         <td>
-            {% for element in info.topological_class[braid] %}
+            {% for element in braid %}
               <a href={{url_for('.by_passport_label', passport_label=element[0])}}>
               {{element[1]}}</a>
               {% endfor %}
         </td>
         
         <td>
-            {% for element in info.topological_class[braid] %}
+            {% for element in braid %}
               {{element[2]}} <br>
             {% endfor %}
         </td>
