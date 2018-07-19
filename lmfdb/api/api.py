@@ -25,10 +25,11 @@ def quote_string(value):
         return repr(value)
     return value
 
-def pretty_document(rec,sep=", ",id=True):
+
+def pretty_document(rec,sep=", ",id = True):
     # sort keys and remove _id for html display
-    attrs = sorted([(key,quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
-    return "{"+sep.join(["'%s': %s"%attr for attr in attrs])+"}"
+    attrs = sorted([(key, quote_string(rec[key])) for key in rec.keys() if (id or key != 'id')])
+    return "{"+sep.join(["'%s': %s" % attr for attr in attrs])+"}"
 
 def hidden_collection(c):
     """
@@ -247,6 +248,12 @@ def api_query(table, id = None):
             return flask.redirect(url_for(".api_query", table=table))
 
     # fixup data for display and json/yaml encoding
+    if 'bytea' in coll._col_type.values():
+        for row in data:
+            for key, val in row.iteritems():
+                if type(val) == buffer:
+                    row[key] = "[binary data]"
+        #data = [ dict([ (key, val if coll._col_type[key] != 'bytea' else "binary data") for key, val in row.iteritems() ]) for row in data]
     data = Json.prep(data)
 
     # preparing the datastructure
