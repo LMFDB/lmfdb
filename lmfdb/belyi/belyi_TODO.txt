@@ -2,11 +2,10 @@ TODO:
 - genus 0 corner cases
 - hyperelliptic RR
 - hyperelliptic Newton
-- compute lots of maps
 - deg 7, g=2,3
-- timings/update tables
-- local sanity check before global in belyi_main
-- use sage to compute monodromy for computing entire Galois orbits
+- show automorphism group on lmfdb page for galmaps
+- display coeffs for map, phi = (a0xy+a1xy^2+...)/(b0+b1x+...) where a0=... etc
+- database of passports even if the maps are not computed
 
 It would be nice if:
 - sort a,b,c

@@ -1,6 +1,5 @@
 import db
 import os, sys, inspect
-import subprocess
 
 Cw = db.getDBconnection_write();
 
@@ -21,14 +20,21 @@ for elt in ola:
 
 passports.insert_many(passports_upload);
 galmaps.insert_many(galmaps_upload);
-print passports.find().count()
-print galmaps.find().count()
+print passports.find().count(), len(passports_upload)
+print galmaps.find().count(), len(galmaps_upload)
 
 
 filename = inspect.getframeinfo(inspect.currentframe())[0];
 folder = os.path.dirname(os.path.abspath(filename));
 sys.path.append(os.path.join(folder, "../../"));
-from data_mgt.utilities.rewrite import create_random_object_index, rewrite_collection
-rewrite_collection(belyidb,"galmaps","galmaps_new",lambda x: x)
-rewrite_collection(belyidb,"passports","passports_new",lambda x: x)
+# from data_mgt.utilities.rewrite import create_random_object_index, rewrite_collection
+from data_mgt.utilities.rewrite import create_random_object_index
+if "galmaps" in belyidb.collection_names():
+    belyidb["galmaps"].rename("galmaps_old")
+galmaps.rename("galmaps");
+if "passports" in belyidb.collection_names():
+    belyidb["passports"].rename("passports_old")
+passports.rename("passports");
 create_random_object_index(belyidb, "galmaps");
+belyidb.drop_collection('passports_old');
+belyidb.drop_collection('galmaps_old');

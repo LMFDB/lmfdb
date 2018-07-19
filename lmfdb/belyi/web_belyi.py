@@ -159,11 +159,18 @@ class WebBelyiGalmap(object):
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
 
         data['isQQ'] = False
+        data['in_LMFDB'] = False
         F = belyi_base_field(galmap)
-        if F.poly().degree()==1:
-            data['isQQ'] = True 
-        F.latex_poly = web_latex(F.poly())
-        data['base_field'] = F
+        if F._data == None:
+            fld_coeffs = galmap['base_field']
+            pol = PolynomialRing(QQ, 'x')(fld_coeffs)
+            data['base_field'] = latex(pol)
+        else:
+            data['in_LMFDB'] = True 
+            if F.poly().degree()==1:
+                data['isQQ'] = True 
+            F.latex_poly = web_latex(F.poly())
+            data['base_field'] = F
         crv_str = galmap['curve']
         if crv_str=='PP1':
             data['curve'] = '\mathbb{P}^1'
@@ -292,7 +299,7 @@ class WebBelyiPassport(object):
             data[elt] = passport[elt]
 
         nt = passport['group'].split('T')
-        data['group'] = group_display_knowl(nt[0],nt[1],getDBConnection())
+        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]),getDBConnection())
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
@@ -302,12 +309,31 @@ class WebBelyiPassport(object):
         galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
         galmapdata = [] 
         for galmap in galmaps_for_plabel:
-            # F = WebNumberField.from_coeffs(galmap['base_field'])
-            galmapdatum = [galmap['label'].split('-')[-1], 
-                           url_for_belyi_galmap_label(galmap['label']), 
-                           galmap['orbit_size'], 
-                           belyi_base_field(galmap),
-                           galmap['triples_cyc'][0][0], galmap['triples_cyc'][0][1], galmap['triples_cyc'][0][2]]
+            # wrap number field nonsense
+            F = belyi_base_field(galmap)
+            # inLMFDB = False;
+            field = {};
+            if F._data == None:
+                field['in_LMFDB'] = False;
+                fld_coeffs = galmap['base_field']
+                pol = PolynomialRing(QQ, 'x')(fld_coeffs)
+                field['base_field'] = latex(pol)
+                field['isQQ'] = False;
+            else:
+                field['in_LMFDB'] = True;
+                if F.poly().degree()==1:
+                    field['isQQ'] = True
+                F.latex_poly = web_latex(F.poly())
+                field['base_field'] = F
+
+            galmapdatum = [galmap['label'].split('-')[-1],
+                           url_for_belyi_galmap_label(galmap['label']),
+                           galmap['orbit_size'],
+                           field,
+                           galmap['triples_cyc'][0][0],
+                           galmap['triples_cyc'][0][1],
+                           galmap['triples_cyc'][0][2],
+                           ]
             galmapdata.append(galmapdatum)
         data['galmapdata'] = galmapdata
 
