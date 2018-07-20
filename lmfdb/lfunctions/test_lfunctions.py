@@ -136,7 +136,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/')
         assert '7.8729423429' in L.data
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
-        assert '1 + 5.09874190873i' in L.data
+        assert '5.09874190873i' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
         assert '11.614970337' in L.data
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032/')
