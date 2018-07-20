@@ -80,7 +80,7 @@ def ideal_from_string(K,s, IQF_format=False):
     it is of the form "[N,a,alpha]" where N is the norm, a the least
     positive integer in the ideal and alpha a second generator so that
     the ideal is (a,alpha).  alpha is a polynomial in the variable w
-    which represents the generator of K (but may actially be an
+    which represents the generator of K (but may actually be an
     integer).  """
     #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
