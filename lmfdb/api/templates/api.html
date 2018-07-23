@@ -63,20 +63,21 @@ where the prefix "-" indicates to sort in descending order.
     <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", rank="i2", torsion="i5")}}'><code>?rank=i2&amp;torsion=i5</code></a>.
     </li>
     <li>
-    A list of strings (string encoded integers) for the <code>ainvs</code> parameter of an elliptic curve is
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="ls0;1;1;-840;39800", _format="yaml", _delim=";")}}'>
-       <code>?ainvs=ls0;1;1;-840;39800&amp;_format=yaml&amp;_delim=;</code></a>,
-    where the delimiter is "<code>;</code>" and the result formatted in YAML.
+    A string encoding a list of integers for the <code>xainvs</code> parameter of an elliptic curve is
+    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", xainvs="s[0,1,1,-840,39800]", _format="yaml")}}'>
+       <code>?xainvs=s[0,1,1,-840,39800]&amp;_format=yaml</code></a>,
+    the result formatted in YAML.
     </li>
+    {#
     <li>
     This query <a href='{{ url_for('.api_query', db="elliptic_curves", collection="curves", isogeny_matrix="py[[1,13],[13,1]]", _format="json") }}'>?isogeny_matrix=py[[1,13],[13,1]]</a>
     returns elliptic curves where the isogeny matrix is $\left(\begin{smallmatrix}1 & 13\\ 13 & 1\end{smallmatrix}\right)$.
     </li>
+    #}
     <li>
-    To see those elliptic curves, where the <code>ainvs</code> list contains the string-encoded integer <code>-769</code>
-    and the field <code>non-surjective_primes</code> contains the integer number 3:
-    {% set kw = {"non-surjective_primes" : "ci3"} %}
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
+    To see those elliptic curves, where the field <code>torsion_structure</code> contains the list  [2,2], encoded as a list of strings:
+    <a href='{{ url_for(".api_query", db="elliptic_curves",
+    collection="curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
     </li>
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
     query <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.

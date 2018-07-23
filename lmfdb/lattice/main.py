@@ -346,7 +346,7 @@ def theta_display(label, number):
 #data quality pages
 @lattice_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the integral lattice data'
+    t = 'Completeness of the Integral Lattice Data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Completeness', '')]
     credit = lattice_credit
@@ -355,7 +355,7 @@ def completeness_page():
 
 @lattice_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the integral lattice data'
+    t = 'Source of the Integral Lattice Data'
     bread = [('Lattice', url_for(".lattice_render_webpage")),
              ('Source', '')]
     credit = lattice_credit

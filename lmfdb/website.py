@@ -17,6 +17,8 @@ import pages
 assert pages
 import api
 assert api
+import belyi
+assert belyi
 import bianchi_modular_forms
 assert bianchi_modular_forms
 import hilbert_modular_forms
@@ -117,12 +119,12 @@ def redirect_nonwww():
 def not_found_404(error):
     app.logger.info('%s 404 error for URL %s %s'%(timestamp(),request.url,error.description))
     messages = error.description if isinstance(error.description,(list,tuple)) else (error.description,)
-    return render_template("404.html", title='LMFDB page not found', messages=messages), 404
+    return render_template("404.html", title='LMFDB Page Not Found', messages=messages), 404
 
 @app.errorhandler(500)
 def not_found_500(error):
     app.logger.error("%s 500 error on URL %s %s"%(timestamp(),request.url, error.args))
-    return render_template("500.html", title='LMFDB error'), 500
+    return render_template("500.html", title='LMFDB Error'), 500
 
 @app.errorhandler(503)
 def not_found_503(error):
@@ -222,25 +224,25 @@ def get_configuration():
     # default options to pass to the MongoClient
     mongo_client_options = {"port": DEFAULT_DB_PORT, "host": "m0.lmfdb.xyz", "replicaset": None, "read_preference": ReadPreference.NEAREST};
     read_preference_classes = {"PRIMARY": ReadPreference.PRIMARY, "PRIMARY_PREFERRED": ReadPreference.PRIMARY_PREFERRED , "SECONDARY": ReadPreference.SECONDARY, "SECONDARY_PREFERRED": ReadPreference.SECONDARY_PREFERRED, "NEAREST": ReadPreference.NEAREST };
-    
+
     #setups the default mongo_client_config_filename
     mongo_client_config_filename = "mongoclient.config"
     config_dir = '/'.join( os.path.dirname(os.path.abspath(__file__)).split('/')[0:-1])
     mongo_client_config_filename = '{0}/{1}'.format(config_dir,mongo_client_config_filename)
 
-    if not 'sage' in sys.argv[0] and not sys.argv[0].endswith('nosetests'):
+    if not 'sage' in sys.argv[0] and not sys.argv[0].endswith('pytest'):
         try:
             opts, args = getopt.getopt(
                                         sys.argv[1:],
                                         "p:h:l:tm:",
                                        [
                                            "port=",
-                                           "host=", 
-                                           "log=", 
-                                           "logfocus=", 
+                                           "host=",
+                                           "log=",
+                                           "logfocus=",
                                            "dbmon=",
                                            "debug",
-                                           "help", 
+                                           "help",
                                            "mongo-client=",
                                            "mongo-port=",
                                            "mongo-host=",
@@ -253,7 +255,7 @@ def get_configuration():
                                         ]
                                        )
         except getopt.GetoptError, err:
-            sys.stderr.write("%s: %s\n" % (sys.argv[0], err))
+            sys.stderr.write("get_configuration error with %s: %s\n" % (sys.argv[0], err))
             sys.stderr.write("Try '%s --help' for usage\n" % sys.argv[0])
             sys.exit(2)
 
@@ -301,7 +303,7 @@ def get_configuration():
             elif opt =="--enable-profiler":
                 flask_options["PROFILE"] = True
 
-    #reads the kwargs from  mongo_client_config_filename  
+    #reads the kwargs from  mongo_client_config_filename
     if os.path.exists(mongo_client_config_filename):
         from ConfigParser import ConfigParser;
         parser = ConfigParser()
@@ -321,18 +323,18 @@ def get_configuration():
                 if not value:
                     #enforcing None to be the default if
                     mongo_client_options["replicaset"] = None
-                else: 
+                else:
                     mongo_client_options["replicaset"] = value
             else:
                 # tries to see if it is an integer valued keyword argument, if so converts it
                 if value == "":
                     value = None
                 else:
-                    try: 
+                    try:
                         value = int(value);
                     except ValueError:
                         pass;
-                mongo_client_options[key] = value;       
+                mongo_client_options[key] = value;
     return { 'flask_options' : flask_options, 'mongo_client_options' : mongo_client_options, 'logging_options' : logging_options }
 
 configuration = None

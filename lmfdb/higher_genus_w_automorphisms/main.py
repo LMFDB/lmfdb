@@ -785,7 +785,9 @@ def search_input_error(info, bread):
 
 @higher_genus_w_automorphisms_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Automorphisms of Curve Data'
+
+    t = 'Completeness of the Automorphisms of Curves Data'
+
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page"))]
