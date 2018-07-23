@@ -97,9 +97,9 @@ transition: 0.3s;
 <!-- add in style.css -->
 {% if info.braid_numb == 0 or info.numb == 1%}
     {% if info.numb == 1%}
-    Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    <p>Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
     <p>{% for cdata in info.genvects %}
-      {{cdata[0]}}
+      &nbsp; {{cdata[0]}}
       <table>{% for perm in cdata[3] %}
         <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
         {% endfor %} </table> <br>
@@ -107,9 +107,9 @@ transition: 0.3s;
     </p>
     
     {% else%}
-    Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
+    <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
     <p>{% for cdata in info.genvects %}
-      {{cdata[0]}}
+      &nbsp; {{cdata[0]}}
       <table>{% for perm in cdata[3] %}
         <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
         {% endfor %} </table> <br>
@@ -134,25 +134,25 @@ transition: 0.3s;
     
 {% else %}   
 <div class="tab">
-  <button type="select" class="tablinks" onclick="openData(event, 'All')"
-          id="defaultOpen">All vectors</button> 
+  <button type="submit" class="tablinks" onclick="openData(event, 'All')">
+    All vectors</button> 
   <button type="submit" class="tablinks" onclick="openData(event,
-          'Representative')">Vectors up to braid equivalence</button>
+          'Representative')"id="defaultOpen">
+    Vectors up to braid equivalence</button>
 </div>
 {% endif %}
 
 <div id="All" class="tabcontent">
-    Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.
-  <p>{% for cdata in info.genvects %}
-    {{cdata[0]}}
+    <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
+
+    {% for cdata in info.genvects %}
+    &nbsp; {{cdata[0]}}
     <table>{% for perm in cdata[3] %}
       <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
     {% endfor %}
-  </p>
 
-  <p>
-    {% if info.numb >= 2 %}
+    <p>{% if info.numb >= 2 %}
     <form>
       <table>
         <tr>
@@ -164,26 +164,25 @@ transition: 0.3s;
         </tr>
       </table>
     </form>
-    {% endif %} </p>
+    {% endif %}</p>
 </div>
 
 <div id="Representative" class="tabcontent">
   {% if info.braid_numb == 1 %}
-  Displaying the unique representative of this
-  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.
+ <p> Displaying the unique representative of this
+  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
   {% else %}
-  Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
-  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.
+ <p> Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
+  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
   {% endif %}
-  
-  <p>
+
     {% for braid_rep in info.braid %}
-    {{braid_rep[0]}}
+    &nbsp; {{braid_rep[0]}}
     <table>{% for perm in braid_rep[1] %}
       <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
       {% endfor %} </table> <br>
     {% endfor %}
-  </p>
+
 
   {% if info.braid_numb >= 2 %}
   <form>

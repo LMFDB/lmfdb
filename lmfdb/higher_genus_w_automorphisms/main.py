@@ -237,18 +237,16 @@ def topological_action(fam, cc):
                                         element['total_label'],
                                         cc_display(ast.literal_eval(element['con']))]]
 
+    # Sort braid ascending
     sorted_braid = []
     braid_key = Lbraid.keys()
-    key_for_sorted = []
-    for key in braid_key:
-        key_for_sorted.append(ast.literal_eval(key))
+    key_for_sorted = list(map(lambda key: ast.literal_eval(key), braid_key))
     key_for_sorted.sort()
-    print key_for_sorted
+    print key_for_sorted 
 
     for key in key_for_sorted:
         sorted_braid.append(Lbraid[str(key)])
 
-    print sorted_braid
     info = {'topological_class': sorted_braid, 'representative': fam + '.' + cc[2:]}
   
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
@@ -454,7 +452,7 @@ def add_group_order_range(mongo_query, expr, db):
 def higher_genus_w_automorphisms_search(**args):
     info = to_dict(args)
     bread = get_bread([("Search Results",'')])
-    C = base.getDBConnection()
+    C =  base.getDBConnection()
     query = {}
     if 'jump_to' in info:
         labs = info['jump_to']
@@ -543,7 +541,6 @@ def higher_genus_w_automorphisms_search(**args):
             info['report'] = 'displaying all %s matches' % nres
 
     return render_template("hgcwa-search.html", info=info, title="Families of Higher Genus Curves with Automorphisms Search Result", credit=credit, bread=bread)
-
 
 
 def render_family(args):
@@ -642,10 +639,12 @@ def render_family(args):
             downloads = [('Download Magma code', url_for(".hgcwa_code_download", label=label, download_type='magma')),
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
-            downloads = [('Magma-All vectors', url_for(".hgcwa_code_download", label=label, download_type='magma')),
-                             ('Magma-Up to topological equivalence', url_for(".hgcwa_code_download",  label=label, download_type='topo_magma')),
-                             ('Gap-All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
-                             ('Gap-Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
+            downloads = [('Magma code', None),
+                             (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_magma')),
+                             ('Gap code', None),
+                             (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='gap')),
+                             (u'\u2003 Up to topological equivalence', url_for(".hgcwa_code_download", label=label, download_type='topo_gap'))] 
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
@@ -657,14 +656,13 @@ def render_passport(args):
     info = {}
     if 'passport_label' in args:
         label =clean_input(args['passport_label'])
-        C = base.getDBConnection() #MongoClient(port=int(27017)) 
-        dataz = C.curve_automorphisms.passports.find({'passport_label': label})
-        
+        C = base.getDBConnection()
+        dataz = C.curve_automorphisms.passports.find({'passport_label': label}).sort('cc.1', ASC)
+
         if dataz.count() is 0:
             bread = get_bread([("Search Error", url_for('.index'))])
             flash_error( "No refined passport with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        
         data=dataz[0]
         g = data['genus']
         GG = ast.literal_eval(data['group'])
@@ -677,8 +675,8 @@ def render_passport(args):
         if gp_string == pretty_group:
             spname=False
         else:
-            spname=True
-
+            spname=True        
+        
         numb = dataz.count()
 
         try:
@@ -828,10 +826,12 @@ def render_passport(args):
                              ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))
                              ]
         else:
-            downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                             ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap')),
-                             ('Download Braid Equivalence Representative Magma code', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
-                             ('Download Braid Equivalence Representative Gap code', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))
+            downloads = [('Magma code', None),
+                             (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                             (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
+                             ('Gap code', None),
+                             (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
+                             (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))
                              ]
             
         return render_template("hgcwa-show-passport.html",

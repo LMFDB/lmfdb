@@ -81,10 +81,11 @@ transition: 0.3s;
 
 {% else %}
 <div class="tab">
-  <button type="submit" class="tablinks" onclick="openData(event, 'passports')"
-          id="defaultOpen">By conjugacy class</button>
-  <button type="submit" class="tablinks" onclick="openData(event,'representative')"
-          >Topological equivalence representatives</button>
+  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
+    By conjugacy class</button>
+  <button type="submit" class="tablinks"
+          onclick="openData(event,'representative')"id="defaultOpen">
+    Topological equivalence representatives</button>
 </div>
 {% endif %}
 
