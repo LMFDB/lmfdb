@@ -24,7 +24,7 @@ from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_
 # Determining what kind of label
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-[^\.]*$)')
 passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+)')
-vector_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+\.\d+)')
+vector_label_regex = re.compile(r'(\d+\.\d+-\d+\.\d+\.\d+.*)\.(\d+)\.(\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 
 def label_is_one_family(lab):
@@ -33,10 +33,12 @@ def label_is_one_family(lab):
 def label_is_one_passport(lab):
     return passport_label_regex.match(lab)
 
+def label_is_one_vector(lab):
+    return vector_label_regex.match(lab)
+
 
 def split_family_label(lab):
     return family_label_regex.match(lab).groups()
-
 
 def split_passport_label(lab):
     return passport_label_regex.match(lab).groups()
@@ -202,11 +204,13 @@ def groups_per_genus(genus):
 def topological_action(fam, cc):
     br_g, br_gp, br_sign = split_family_label(fam)
     cc_list = cc_to_list(cc)
-
+    representative = fam + '.' + cc[2:]
+    
     C = base.getDBConnection()
     
     #Get the equivalence class
     topo_class = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
+    print topo_class.count()
 
     g = topo_class[0]['genus']
     GG = ast.literal_eval(topo_class[0]['group'])
@@ -224,6 +228,9 @@ def topological_action(fam, cc):
                            ('Topological Orbit for ' + str(cc_list[0]) + ', ' + str(cc_list[1]), ' ') ])
 
     title = 'One Orbit Under Topological Action'
+
+    downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=representative, download_type='rep_magma')),
+                     ('Download Gap code', url_for(".hgcwa_code_download", label=representative, download_type='rep_gap'))]
     
     Lbraid={}
 
@@ -242,14 +249,13 @@ def topological_action(fam, cc):
     braid_key = Lbraid.keys()
     key_for_sorted = list(map(lambda key: ast.literal_eval(key), braid_key))
     key_for_sorted.sort()
-    print key_for_sorted 
 
     for key in key_for_sorted:
         sorted_braid.append(Lbraid[str(key)])
 
-    info = {'topological_class': sorted_braid, 'representative': fam + '.' + cc[2:]}
+    info = {'topological_class': sorted_braid, 'representative': representative}
   
-    return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread)
+    return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread, downloads=downloads)
 
 @higher_genus_w_automorphisms_page.route("/<label>")
 def by_label(label):
@@ -823,16 +829,14 @@ def render_passport(args):
                         ('Labeling convention', url_for(".labels_page"))]
         if numb == 1 or braid_length == 0:
             downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                             ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))
-                             ]
+                             ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
         else:
             downloads = [('Magma code', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
                              (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_magma')),
                              ('Gap code', None),
                              (u'\u2003 All vectors', url_for(".hgcwa_code_download", label=label, download_type='gap')),
-                             (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))
-                             ]
+                             (u'\u2003 Up to braid equivalence', url_for(".hgcwa_code_download", label=label, download_type='braid_gap'))]
             
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
@@ -893,15 +897,19 @@ FileSuffix= {'magma': '.m', 'gap': '.g'}
 def hgcwa_code_download(**args):
     import time
     label = args['label']
+    print label
+    print '\n' + '\n'
     C = base.getDBConnection()
+    
     #Choose lang
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma':
+    if args['download_type']=='topo_magma' or args['download_type']=='braid_magma' or args['download_type']=='rep_magma':
         lang = 'magma'
-    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap':
+    elif args['download_type']=='topo_gap' or args['download_type']=='braid_gap' or args['download_type']=='rep_gap':
         lang = 'gap'
     else:
         lang = args['download_type']
     s = Comment[lang]
+    
     #Choose filename
     if lang == args['download_type']:
         filename= 'HigherGenusData_' + str(label) + FileSuffix[lang]
@@ -912,8 +920,18 @@ def hgcwa_code_download(**args):
     code +=code_list['top_matter'][lang] + '\n' +'\n'
     code +="data:=[];" + '\n' +'\n'
 
-
-    if label_is_one_passport(label):
+    #Search data
+    if label_is_one_vector(label):
+        print "Hi"
+        fam, cc_1, cc_2 = split_vector_label(label)
+        cc_list = [int(cc_1), int(cc_2)]
+        print cc_1 + ' ' + cc_2
+        print fam
+        print cc_list
+        data = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
+        print data.count()
+    
+    elif label_is_one_passport(label):
         search_data = C.curve_automorphisms.passports.find({"passport_label" : label}).sort('cc.1', pymongo.ASCENDING)
         if lang == args['download_type']:
             data = search_data
@@ -926,7 +944,7 @@ def hgcwa_code_download(**args):
             data = search_data
         else:
             data = list(filter(lambda entry : entry['topological'] == entry['cc'], list(search_data)))
-            
+
     code += s + code_list['gp_comment'][lang] +'\n'
     code += code_list['group'][lang] + str(data[0]['group'])+ ';\n'
 
@@ -953,11 +971,17 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['gen_gp'][lang]+ '\n'
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
-    
+
     # Add braid and topological tag for each entry
     if lang == args['download_type']:
         stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
         stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+
+    if args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
+        print '\n' + '\n'
+        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+        
         
     # extended formatting template for when signH is present
     signHfmt = stdfmt
@@ -977,7 +1001,7 @@ def hgcwa_code_download(**args):
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
    
     #Action for all vectors and action for just representatives
-    if lang == args['download_type']:
+    if lang == args['download_type'] or args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
         signHfmt += code_list['add_to_total_full_rep'][lang] + '\n'
         hypfmt += code_list['add_to_total_hyp_rep'][lang] + '\n'
         cyctrigfmt += code_list['add_to_total_cyc_trig_rep'][lang] + '\n'
@@ -989,7 +1013,9 @@ def hgcwa_code_download(**args):
         nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
     
     start = time.time()
-    lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+    lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) +
+                  ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr)
+                       if 'hyperelliptic' in dataz else '')) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
     strIO = StringIO.StringIO()
