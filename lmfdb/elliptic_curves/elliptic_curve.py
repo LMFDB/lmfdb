@@ -91,7 +91,7 @@ def rational_elliptic_curves(err_args=None):
         'stats_url': url_for(".statistics")
     }
     #credit = 'John Cremona and Andrew Sutherland'
-    t = 'Elliptic curves over $\Q$'
+    t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
 
@@ -117,7 +117,7 @@ def statistics():
         'stats': get_stats().stats(),
     }
     #credit = 'John Cremona'
-    t = 'Elliptic curves over $\Q$: statistics'
+    t = 'Elliptic Curves over $\Q$: statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
              ('Statistics', ' ')]
@@ -133,7 +133,7 @@ def by_conductor(conductor):
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
             return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
-        info['title'] += ' search results'
+        info['title'] += ' Search Results'
         info['bread'].append(('Search Results',''))
     info['conductor'] = conductor
     return elliptic_curve_search(info)
