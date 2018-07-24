@@ -1,0 +1,44 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% if info.braid_num == 1%}
+<h2>Generating vectors in the orbit of {{info.representative}} grouped into
+  the unique braid inequivalent action.</h2>
+{% else %}
+<h2>Generating vectors in the orbit of {{info.representative}} grouped into
+  {{info.braid_num}} braid inequivalent actions.</h2>
+{% endif %}
+
+<div>
+  <table cellpadding=10 class="ntdata">
+
+    <thead>
+      <tr>
+        <th>{{KNOWL('curve.highergenus.aut.generatingvector',title='Generating
+          Vectors')}}</th>
+        <th>Conjugacy Classes</th>
+      </tr>
+    </thead>
+ 
+    <tbody>
+      {% for braid in info.topological_class %}
+      <tr>
+        <td>
+            {% for element in braid %}
+              <a href={{url_for('.by_passport_label', passport_label=element[0])}}>
+              {{element[1]}}</a>
+              {% endfor %}
+        </td>
+        
+        <td>
+            {% for element in braid %}
+              {{element[2]}} <br>
+            {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
