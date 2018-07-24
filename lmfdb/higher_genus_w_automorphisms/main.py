@@ -933,7 +933,3 @@ def hgcwa_code_download_search(res,download_type):
     strIO.write(code)
     strIO.seek(0)
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
-
-
-
