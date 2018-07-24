@@ -157,3 +157,4 @@ add_to_total_full:
 search_result_gp_comment:
   gap:  " Create group and signature information."
   magma: " Create group as a permutation group and initialize signature information."
+
