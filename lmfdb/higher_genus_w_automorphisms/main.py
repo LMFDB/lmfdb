@@ -223,8 +223,8 @@ def topological_action(fam, cc):
     bread_sign = label_to_breadcrumbs(br_sign)
     bread_gp = label_to_breadcrumbs(br_gp)
 
-    bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp),
-                           (bread_sign, url_for('.by_label', label = fam)),
+    bread = get_bread([(br_g, '../?genus='+br_g),('$'+pretty_group+'$','../?genus='+br_g + '&group='+bread_gp),
+                           (bread_sign, '../'+fam),
                            ('Topological Orbit for ' + str(cc_list[0]) + ', ' + str(cc_list[1]), ' ') ])
 
     title = 'One Orbit Under Topological Action'
@@ -253,7 +253,7 @@ def topological_action(fam, cc):
     for key in key_for_sorted:
         sorted_braid.append(Lbraid[str(key)])
 
-    info = {'topological_class': sorted_braid, 'representative': representative}
+    info = {'topological_class': sorted_braid, 'representative': representative, 'braid_num': len(braid_key)}
   
     return render_template("hgcwa-topological-action.html", info=info, credit=credit, title=title, bread=bread, downloads=downloads)
 
@@ -897,8 +897,6 @@ FileSuffix= {'magma': '.m', 'gap': '.g'}
 def hgcwa_code_download(**args):
     import time
     label = args['label']
-    print label
-    print '\n' + '\n'
     C = base.getDBConnection()
     
     #Choose lang
@@ -922,14 +920,9 @@ def hgcwa_code_download(**args):
 
     #Search data
     if label_is_one_vector(label):
-        print "Hi"
         fam, cc_1, cc_2 = split_vector_label(label)
         cc_list = [int(cc_1), int(cc_2)]
-        print cc_1 + ' ' + cc_2
-        print fam
-        print cc_list
         data = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
-        print data.count()
     
     elif label_is_one_passport(label):
         search_data = C.curve_automorphisms.passports.find({"passport_label" : label}).sort('cc.1', pymongo.ASCENDING)
@@ -957,6 +950,9 @@ def hgcwa_code_download(**args):
     for k in other_same_for_all:
         code += code_list[k][lang] + '\n'
 
+    if args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
+        code += code_list['topological_class'][lang] + str(data[0]['topological']) + ';\n'
+
     code += '\n'
 
     # create formatting templates to be filled in with each record in data
@@ -973,15 +969,12 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
 
     # Add braid and topological tag for each entry
-    if lang == args['download_type']:
-        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
+    if lang==args['download_type']:
+        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
         stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
 
     if args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
-        print '\n' + '\n'
-        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
-        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
-        
+       stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n' 
         
     # extended formatting template for when signH is present
     signHfmt = stdfmt

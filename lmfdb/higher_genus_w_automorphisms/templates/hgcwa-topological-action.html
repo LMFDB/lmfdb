@@ -1,7 +1,14 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<h2>Generating vectors in the orbit of {{info.representative}} grouped by equivalence under the braid action.</h2>
+{% if info.braid_num == 1%}
+<h2>Generating vectors in the orbit of {{info.representative}} grouped into
+  the unique braid inequivalent action.</h2>
+{% else %}
+<h2>Generating vectors in the orbit of {{info.representative}} grouped into
+  {{info.braid_num}} braid inequivalent actions.</h2>
+{% endif %}
+
 <div>
   <table cellpadding=10 class="ntdata">
 
