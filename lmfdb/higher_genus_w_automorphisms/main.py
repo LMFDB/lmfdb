@@ -911,8 +911,13 @@ def hgcwa_code_download(**args):
     #Choose filename
     if lang == args['download_type']:
         filename= 'HigherGenusData_' + str(label) + FileSuffix[lang]
-    else:
-        filename= 'HigherGenusDataRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='topo_magma' or args['download_type']=='topo_gap':
+        filename= 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='braid_magma' or args['download_type']=='braid_gap':
+        filename= 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
+        filename= 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
+        
     code = s + " " + Fullname[lang]+  " code for the lmfdb family of higher genus curves " + str(label) + '\n'  
     code += s + " The results are stored in a list of records called 'data'\n\n" 
     code +=code_list['top_matter'][lang] + '\n' +'\n'
