@@ -242,11 +242,13 @@ function show_invs(invstyle) {
 
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
 
+<p> 
 {% if data.analytic_rank > 1 %}
-<h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: </h3>\({{data.analytic_rank}}\)
+{{ KNOWL('g2c.analytic_rank', title='Analytic rank*') }}: \({{data.analytic_rank}}\)
 {% else %}
-<h3 class="inline"> {{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}: </h3>\({{data.analytic_rank}}\)
+{{ KNOWL('g2c.analytic_rank', title='Analytic rank') }}: \({{data.analytic_rank}}\)
 {% endif %}
+</p>
 
 <!--
 <p>
