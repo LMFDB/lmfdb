@@ -81,19 +81,20 @@ transition: 0.3s;
 
 {% else %}
 <div class="tab">
-  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
-    By conjugacy class</button>
   <button type="submit" class="tablinks"
           onclick="openData(event,'representative')"id="defaultOpen">
     Topological equivalence representatives</button>
+  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
+    By conjugacy class</button>
 </div>
 {% endif %}
 
 <div id="passports" class="tabcontent">
+  <p>
   <table>
     <tr>
       <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-      <th>Lists of Conjugacy Classes</th>
+      <th>Conjugacy Classes</th>
 
     </tr>
 
@@ -105,6 +106,7 @@ transition: 0.3s;
     </tr>
     {% endfor %}
   </table>
+  </p>
 </div>
 
 <div id="representative" class="tabcontent">

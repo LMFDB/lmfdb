@@ -132,17 +132,16 @@ transition: 0.3s;
       {% endif %} </p>
     {% endif %}
     
-{% else %}   
+{% else %}
 <div class="tab">
-  <button type="submit" class="tablinks" onclick="openData(event, 'All')">
+  <button type="submit" class="tablinks" onclick="openData(event,'braid')"id="defaultOpen">
+    Vectors up to braid equivalence</button>    
+  <button type="submit" class="tablinks" onclick="openData(event, 'all')">
     All vectors</button> 
-  <button type="submit" class="tablinks" onclick="openData(event,
-          'Representative')"id="defaultOpen">
-    Vectors up to braid equivalence</button>
 </div>
 {% endif %}
 
-<div id="All" class="tabcontent">
+<div id="all" class="tabcontent">
     <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
 
     {% for cdata in info.genvects %}
@@ -167,7 +166,7 @@ transition: 0.3s;
     {% endif %}</p>
 </div>
 
-<div id="Representative" class="tabcontent">
+<div id="braid" class="tabcontent">
   {% if info.braid_numb == 1 %}
  <p> Displaying the unique representative of this
   {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
