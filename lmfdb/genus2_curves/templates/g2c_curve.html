@@ -210,13 +210,13 @@ function show_invs(invstyle) {
 <p>
 {% if data.rat_pts_v == 1 %}
 {% if data.rat_pts %}
-{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: <div class="ratpts">{{data.rat_pts}}</div>
+{{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: {{data.rat_pts}}
 {% else %}
 {{ KNOWL('g2c.known_rational_points', title='No rational points known') }}
 {% endif %}
 {% else %}
 {% if data.rat_pts %}
-{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: <div class="ratpts">{{data.rat_pts}}</div>
+{{ KNOWL('g2c.all_rational_points', title='All rational points') }}: {{data.rat_pts}}
 {% else %}
 {{ KNOWL('g2c.all_rational_points', title='There are no rational points') }}
 {% endif %}
