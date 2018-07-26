@@ -201,7 +201,7 @@ function show_invs(invstyle) {
 <p>
 {{place_code('locally_solvable')}}
 </p>
-<h3 class="inline"> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</h3>
+<p> This curve is {{ KNOWL('g2c.locally_solvable', title='locally solvable') }} {{data.non_solvable_places}}.</p>
 
 {% if data.rat_pts_v > 0 %}
 <p>
@@ -210,25 +210,25 @@ function show_invs(invstyle) {
 <p>
 {% if data.rat_pts_v == 1 %}
 {% if data.rat_pts %}
-<h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: </h3>
+<p> {{ KNOWL('g2c.known_rational_points', title='Known rational points') }}: </p>
 <div class="ratpts">
 <p>
 {{data.rat_pts}}
 </p>
 </div>
 {% else %}
-<h3 class="inline"> {{ KNOWL('g2c.known_rational_points', title='No rational points known') }} </h3>
+<p> {{ KNOWL('g2c.known_rational_points', title='No rational points known') }} </p>
 {% endif %}
 {% else %}
 {% if data.rat_pts %}
-<h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='All rational points') }}: </h3>
+<p> {{ KNOWL('g2c.all_rational_points', title='All rational points') }}: </p>
 <div class="ratpts">
 <p>
 {{data.rat_pts}}
 </p>
 </div>
 {% else %}
-<h3 class="inline"> {{ KNOWL('g2c.all_rational_points', title='There are no rational points') }} </h3>
+<p> {{ KNOWL('g2c.all_rational_points', title='There are no rational points') }} </p>
 {% endif %}
 {% endif %}
 {% endif %}
@@ -237,7 +237,7 @@ function show_invs(invstyle) {
 <p>
 {{place_code('num_rat_wpts')}}
 </p>
-<h3 class="inline"> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: </h3>\({{data.num_rat_wpts}}\)
+<p> Number of rational {{ KNOWL('g2c.num_rat_wpts', title='Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 
 
 <h2 class='subhead'> Invariants of the {{KNOWL('g2c.jacobian', title='Jacobian')}}: </h2>
@@ -262,27 +262,27 @@ function show_invs(invstyle) {
 <p>
 {{place_code('two_selmer')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: </h3>\({{data.two_selmer_rank}}\)
+<p> {{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank') }}: \({{data.two_selmer_rank}}\)</p>
 
 <p>
 {{place_code('has_square_sha')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: </h3>{{data.has_square_sha}}
+<p> {{ KNOWL('g2c.has_square_sha', title='Order of &#1064;*') }}: {{data.has_square_sha}}</p>
 
 <p>
 {{place_code('tamagawa')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: </h3>{{data.tama}}
+<p> {{ KNOWL('g2c.tamagawa', title='Tamagawa numbers') }}: {{data.tama}}</p>
 
 <p>
 {{place_code('torsion_subgroup')}}
 </p>
-<h3 class="inline"> {{ KNOWL('g2c.torsion', title='Torsion') }}: </h3>\({{data.torsion_subgroup}}\)
+<p> {{ KNOWL('g2c.torsion', title='Torsion') }}: \({{data.torsion_subgroup}}\)</p>
 
 <p>
 {{place_code('two_torsion_field')}}
 </p>
-<h3 class="inline">  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}:</h3> <div style="display: inline">{{data.two_torsion_field_knowl|safe}}</div>
+<p>  {{ KNOWL('g2c.two_torsion_field', title='2-torsion field') }}: <div style="display: inline">{{data.two_torsion_field_knowl|safe}}</div></p>
 
 <h3> {{KNOWL('g2c.st_group', title='Sato-Tate group') }} </h3>
 
