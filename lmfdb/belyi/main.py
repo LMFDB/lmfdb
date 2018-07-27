@@ -4,16 +4,17 @@ import StringIO
 from ast import literal_eval
 import re
 import time
-from pymongo import ASCENDING, DESCENDING
-from flask import render_template, url_for, request, redirect, send_file, abort
+from flask import render_template, url_for, request, redirect, send_file, abort, jsonify
 from sage.misc.cachefunc import cached_function
+from sage.misc.cachefunc import cached_method
 
-from lmfdb.utils import to_dict, comma, format_percentage, random_value_from_collection, attribute_value_counts, flash_error
+from lmfdb.db_backend import db
+from lmfdb.utils import to_dict, comma, flash_error
 from lmfdb.search_parsing import parse_ints, parse_bracketed_posints, parse_count, parse_start
 from lmfdb.belyi import belyi_page
-from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport, belyi_db_galmaps, belyi_db_passports
+from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
 
-credit_string = "Edgar Costa, Michael Musty, Sam Schiavone, John Voight."
+credit_string = "Michael Musty, Sam Schiavone, John Voight"
 
 ###############################################################################
 # global database connection and stats objects
@@ -68,7 +69,7 @@ def index():
 
 @belyi_page.route("/random")
 def random_belyi_galmap():
-    label = random_value_from_collection(belyi_db_galmaps(), 'label')
+    label = db.belyi_galmaps.random()
     return redirect(url_for_belyi_galmap_label(label), 307)
 
 @belyi_page.route("/stats")
@@ -301,30 +302,18 @@ def belyi_search(info):
         info['err'] = str(err)
         return render_template("belyi_search_results.html", info=info, title='Belyi Maps Search Input Error', bread=bread, credit=credit_string)
 
-    # Database query happens here
-    info["query"] = query # save query for reuse in download_search
-    cursor = belyi_db_galmaps().find(query, {'_id':False, 'label':True, 'group': True, 'abc':True, 'g':True, 'deg':True, 'geomtype' : True, 'orbit_size' : True})
+
+    if 'result_count' in info:
+        nres = db.belyi_galmaps.count(query)
+        return jsonify({"nres":str(nres)})
 
     count = parse_count(info, 50)
     start = parse_start(info)
-    nres = cursor.count()
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
+    # Database query happens here
+    res = db.belyi_galmaps.search(query, ['label','group','abc','g','deg','geomtype', 'orbit_size'], limit=count, offset=start, info=info)
 
-    res = cursor.sort([("deg", ASCENDING), ("group_num", ASCENDING), ("g", ASCENDING),  ("label", ASCENDING)]).skip(start).limit(count)
-    nres = res.count()
 
-    if nres == 1:
-        info["report"] = "unique match"
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-    res_clean = []
-
+    res_clean = {}
     for v in res:
         v_clean = {}
         for key in ('label', 'group', 'deg', 'g','orbit_size' ):
@@ -334,9 +323,6 @@ def belyi_search(info):
 
     info["belyi_galmaps"] = res_clean
     info["belyi_galmap_url"] = lambda label: url_for_belyi_galmap_label(label)
-    info["start"] = start
-    info["count"] = count
-    info["more"] = int(start+count<nres)
 
     title = info.get('title','Belyi map search results')
     credit = credit_string
@@ -361,70 +347,68 @@ class belyi_stats(object):
     Class for creating and displaying statistics for Belyi maps
     """
 
-    def __init__(self):
-        self._counts = {}
-        self._stats = {}
 
+    @cached_method
     def counts(self):
-        self.init_belyi_count()
-        return self._counts
-
-    def stats(self):
-        self.init_belyi_count()
-        self.init_belyi_stats()
-        return self._stats
-
-    def init_belyi_count(self):
-        if self._counts:
-            return
-        galmaps = belyi_db_galmaps()
         counts = {}
-        ngalmaps = galmaps.count()
+        ngalmaps = db.belyi_galmaps.stats.count()
         counts['ngalmaps']  = ngalmaps
         counts['ngalmaps_c'] = comma(ngalmaps)
-        passports = belyi_db_passports()
-        npassports = passports.count()
+
+        npassports =  db.belyi_passports.stats.count()
         counts['npassports'] = npassports
         counts['npassports_c'] = comma(npassports)
-        max_deg = passports.find().sort('deg', DESCENDING).limit(1)[0]['deg']
+        max_deg = db.belyi_passports.max('deg')
         counts['max_deg'] = max_deg
         counts['max_deg_c'] = comma(max_deg)
-        self._counts = counts
+        return counts
 
-    def init_belyi_stats(self):
-        if self._stats:
-            return
-        galmaps = belyi_db_galmaps()
-        counts = self._counts
-        total = counts["ngalmaps"]
-        stats = {}
+    @cached_method
+    def stats(self):
         dists = []
-        # TODO use aggregate $group to speed this up and/or just store these counts in the database
         for attr in stats_attribute_list:
-            counts = attribute_value_counts(galmaps, attr['name'])
-            counts = [c for c in counts if c[0] != None]
-            if len(counts) == 0:
-                continue
-            vcounts = []
-            rows = []
-            avg = 0
-            total = sum([c[1] for c in counts])
-            for value,n in counts:
-                prop = format_percentage(n,total)
-                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
-                    avg += n*value
-                value_string = attr['format'](value) if 'format' in attr else value
-                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index")+'?'+attr['name']+'='+str(value),'proportion': prop})
-                if len(vcounts) == 10:
-                    rows.append(vcounts)
-                    vcounts = []
-            if len(vcounts):
-                rows.append(vcounts)
-            if 'avg' in attr and attr['avg']:
-                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'galmaps':total, 'query':url_for(".index") +'?'+attr['name'],'proportion':format_percentage(1,1)})
+            counts = db.belyi_galmaps.stats.display_data([attr["name"]],
+                                                      url_for(".index_Q"),
+                                                      include_avg=attr.get("avg",False),
+                                                      formatter=attr.get("format"),
+                                                      # artifact from copy and paste
+                                                      count_key='curves')
+            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
             dists.append({'attribute':attr,'rows':rows})
-        stats["distributions"] = dists
-        self._stats = stats
+        return {"distributions": dists}
+
+#        galmaps = belyi_db_galmaps()
+#        self.init_belyi_count()
+#        counts = self._counts
+#        total = counts["ngalmaps"]
+#        stats = {}
+#        dists = []
+#        # TODO use aggregate $group to speed this up and/or just store these counts in the database
+#        for attr in stats_attribute_list:
+#            counts = 100 #FIXME attribute_value_counts(galmaps, attr['name'])
+#            counts = [c for c in counts if c[0] != None]
+#            if len(counts) == 0:
+#                continue
+#            vcounts = []
+#            rows = []
+#            avg = 0
+#            total = sum([c[1] for c in counts])
+#            for value,n in counts:
+#                prop = format_percentage(n,total)
+#                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
+#                    avg += n*value
+#                value_string = attr['format'](value) if 'format' in attr else value
+#                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index")+'?'+attr['name']+'='+str(value),'proportion': prop})
+#                if len(vcounts) == 10:
+#                    rows.append(vcounts)
+#                    vcounts = []
+#            if len(vcounts):
+#                rows.append(vcounts)
+#            if 'avg' in attr and attr['avg']:
+#                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'galmaps':total, 'query':url_for(".index") +'?'+attr['name'],'proportion':format_percentage(1,1)})
+#            dists.append({'attribute':attr,'rows':rows})
+#        stats["distributions"] = dists
+#        self._stats = stats
 
 
 
@@ -445,9 +429,9 @@ def download_search(info):
     end = delim_end[lang];
     # reissue query here
     try:
-        res = belyi_db_galmaps().find(
+        res = db.belyi_galmaps.search(
                 literal_eval(info.get('query','{}')),
-                {'_id':False,'label':True, 'triples': True}
+                projection = ['label', 'triples'],
                 )
     except Exception as err:
         return "Unable to parse query: %s"%err

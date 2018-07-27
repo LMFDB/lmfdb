@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from pymongo import ASCENDING
-from lmfdb.base import getDBConnection
 from lmfdb.utils import web_latex
 from lmfdb.WebNumberField import  WebNumberField
 from lmfdb.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
 from flask import url_for
 
-###############################################################################
-# Database connection -- all access to mongo db should happen here
-###############################################################################
+from lmfdb.db_backend import db
 
-def belyi_db_galmaps():
-    return getDBConnection().belyi.galmaps
 
-def belyi_db_passports():
-    return getDBConnection().belyi.passports
 
 
 ###############################################################################
@@ -128,9 +120,9 @@ class WebBelyiGalmap(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 6:
-                galmap = belyi_db_galmaps().find_one({"plabel" : label})
+                galmap = db.belyi_galmaps.lucky({"plabel" : label})
             elif len(slabel) == 7:
-                galmap = belyi_db_galmaps().find_one({"label" : label})
+                galmap = db.belyi_galmaps.lucky({"label" : label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
         except AttributeError:
@@ -153,7 +145,7 @@ class WebBelyiGalmap(object):
         for elt in ('label', 'plabel', 'triples_cyc', 'orbit_size', 'g', 'abc', 'deg'):
             data[elt] = galmap[elt]
         nt = galmap['group'].split('T')
-        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]),getDBConnection())
+        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]))
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[galmap['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in galmap['lambdas']]
@@ -280,7 +272,7 @@ class WebBelyiPassport(object):
         try:
             slabel = label.split("-")
             if len(slabel) == 6:
-                passport = belyi_db_passports().find_one({"plabel" : label})
+                passport = db.belyi_passports.lucky({"plabel" : label})
             else:
                 raise ValueError("Invalid Belyi passport label %s." % label)
         except AttributeError:
@@ -299,15 +291,15 @@ class WebBelyiPassport(object):
             data[elt] = passport[elt]
 
         nt = passport['group'].split('T')
-        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]),getDBConnection())
+        data['group'] = group_display_knowl(int(nt[0]),int(nt[1]))
 
         data['geomtype'] = geomtypelet_to_geomtypename_dict[passport['geomtype']]
         data['lambdas'] = [str(c)[1:-1] for c in passport['lambdas']]
         data['pass_size'] = passport['pass_size']
 
         # Permutation triples
-        galmaps_for_plabel = belyi_db_galmaps().find({"plabel" : passport['plabel']}).sort([('label_index', ASCENDING)])
-        galmapdata = [] 
+        galmaps_for_plabel = db.belyi_galmaps.search( {"plabel" : passport['plabel']}, sort = ['label_index'])
+        galmapdata = []
         for galmap in galmaps_for_plabel:
             # wrap number field nonsense
             F = belyi_base_field(galmap)
