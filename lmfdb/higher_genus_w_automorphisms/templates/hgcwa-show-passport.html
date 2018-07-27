@@ -13,29 +13,28 @@ table,td {
 
 
 <p><h2> Family Information</h2>
-
   <table>
-      <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
-   {% if info.specialname %}
-   <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
-   {% endif %}
-  <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
-  <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
-  <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
-  </table></p>
+    <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
+    {% if info.specialname %}
+    <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
+    {% endif %}
+    <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
+    <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
+    <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
+</table></p>
 
 
 <p>  {% if info.fullauto  %}
-The full automorphism group for this family is ${{info.fullauto}}$ with signature ${{info.signH}}$.
-    {% endif %}
+  The full automorphism group for this family is ${{info.fullauto}}$ with signature ${{info.signH}}$.
+  {% endif %}
 </p>
 
 
 {% if info.jacobian_decomp %}
-  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} (partial) decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
-    <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> {{info.corrChar}}</td></tr>
-  </table>
- {% endif %}
+<table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} (partial) decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
+  <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> {{info.corrChar}}</td></tr>
+</table>
+{% endif %}
 
 
 {% if info.g0 == 0 %}
@@ -56,14 +55,14 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
   </p>
 {% endif %}
 
-  <p>
-    {% if info.eqns %}
-    <table><tr><td>Equation(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:</td></tr></table>
-       <table>{% for eqn in info.eqns %}
-	  <tr><td> &nbsp; </td><td>${{eqn}}$</td></tr>
-	  {% endfor %} </table> <br>
-     {% endif %}
-  </p>
+<p>
+  {% if info.eqns %}
+  <table><tr><td>Equation(s) of curve(s) in this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}:</td></tr></table>
+  <table>{% for eqn in info.eqns %}
+    <tr><td> &nbsp; </td><td>${{eqn}}$</td></tr>
+    {% endfor %} </table> <br>
+  {% endif %}
+</p>
 
 
 
@@ -96,41 +95,41 @@ transition: 0.3s;
 </style>
 <!-- add in style.css -->
 {% if info.braid_numb == 0 or info.numb == 1%}
-    {% if info.numb == 1%}
-    <p>Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
-    <p>{% for cdata in info.genvects %}
-      &nbsp; {{cdata[0]}}
-      <table>{% for perm in cdata[3] %}
-        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-        {% endfor %} </table> <br>
-      {% endfor %}
-    </p>
-    
-    {% else%}
-    <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
-    <p>{% for cdata in info.genvects %}
-      &nbsp; {{cdata[0]}}
-      <table>{% for perm in cdata[3] %}
-        <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-        {% endfor %} </table> <br>
-      {% endfor %}
-    </p>
+{% if info.numb == 1%}
+<p>Displaying the unique {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vector')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
+<p>{% for cdata in info.genvects %}
+  &nbsp; {{cdata[0]}}
+  <table>{% for perm in cdata[3] %}
+    <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
+</p>
 
-    <p>
-      {% if info.numb >= 2 %}
-      <form>
-        <table>
-          <tr>
-            <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
-            <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
-          </tr>
-          <tr>
-            <td colspan=3><button type='submit' value='display'>Display</button></td>
-          </tr>
-        </table>
-      </form>
-      {% endif %} </p>
-    {% endif %}
+{% else%}
+<p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
+<p>{% for cdata in info.genvects %}
+  &nbsp; {{cdata[0]}}
+  <table>{% for perm in cdata[3] %}
+    <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
+</p>
+
+<p>
+  {% if info.numb >= 2 %}
+  <form>
+    <table>
+      <tr>
+        <td>Display number of {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}}:</td>
+        <td><input type='text' name='numgenvecs' placeholder='20' size=10></td>
+      </tr>
+      <tr>
+        <td colspan=3><button type='submit' value='display'>Display</button></td>
+      </tr>
+    </table>
+  </form>
+  {% endif %} </p>
+{% endif %}
     
 {% else %}
 <div class="tab">
@@ -142,16 +141,16 @@ transition: 0.3s;
 {% endif %}
 
 <div id="all" class="tabcontent">
-    <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
+  <p>Displaying {{info.disp_numb}} of {{info.numb}} {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}.</p>
 
-    {% for cdata in info.genvects %}
-    &nbsp; {{cdata[0]}}
-    <table>{% for perm in cdata[3] %}
-      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-      {% endfor %} </table> <br>
-    {% endfor %}
+  {% for cdata in info.genvects %}
+  &nbsp; {{cdata[0]}}
+  <table>{% for perm in cdata[3] %}
+    <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
 
-    <p>{% if info.numb >= 2 %}
+  <p>{% if info.numb >= 2 %}
     <form>
       <table>
         <tr>
@@ -168,19 +167,19 @@ transition: 0.3s;
 
 <div id="braid" class="tabcontent">
   {% if info.braid_numb == 1 %}
- <p> Displaying the unique representative of this
-  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
+  <p> Displaying the unique representative of this
+    {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
   {% else %}
- <p> Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
-  {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
+  <p> Displaying {{info.braid_disp_numb}} of {{info.braid_numb}} representatives of this
+    {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}} up to braid equivalence.</p>
   {% endif %}
 
-    {% for braid_rep in info.braid %}
-    &nbsp; {{braid_rep[0]}}
-    <table>{% for perm in braid_rep[1] %}
-      <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
-      {% endfor %} </table> <br>
-    {% endfor %}
+  {% for braid_rep in info.braid %}
+  &nbsp; {{braid_rep[0]}}
+  <table>{% for perm in braid_rep[1] %}
+    <tr><td> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %} </table> <br>
+  {% endfor %}
 
 
   {% if info.braid_numb >= 2 %}

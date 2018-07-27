@@ -64,8 +64,8 @@ g0:
 
 
 dim:
-  gap:   dim:=r-3;
-  magma: dim:=r-3;
+  gap:   dim:=3*g0-3+r;
+  magma: dim:=3*g0-3+r;
 
 
 sym:
