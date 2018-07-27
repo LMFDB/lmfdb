@@ -44,7 +44,7 @@ def render_characterNavigation():
 
 def render_DirichletNavigation():
     args = to_dict(request.args)
-    
+
     info = {'args':args}
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
                       ('Dirichlet', url_for(".render_Dirichletwebpage")) ]
@@ -180,14 +180,14 @@ def render_Dirichletwebpage(modulus=None, number=None):
         flash_error ("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_Dirichletwebpage"))
 
-        
-    
+
+
     if number == None:
         if modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
-        info['title'] = 'Group of Dirichlet Characters of Modulus ' + str(modulus) 
+        info['title'] = 'Group of Dirichlet Characters of Modulus ' + str(modulus)
         info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                          ('Dirichlet', url_for(".render_Dirichletwebpage")),
                          ('%d'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus))]
