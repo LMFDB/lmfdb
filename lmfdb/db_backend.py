@@ -149,7 +149,7 @@ class PostgresBase(object):
         try:
             t = time.time()
             if values_list:
-                execute_values(cur, query, values, template)
+                execute_values(cur, query.as_string(self.conn), values, template)
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
