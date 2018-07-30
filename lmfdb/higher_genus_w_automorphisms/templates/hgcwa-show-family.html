@@ -67,44 +67,45 @@ transition: 0.3s;
 {% if info.topological_num == 0 %}
 <table>
   <tr>
-     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
-
-</tr>
-{% for itm in info.passport %}
-<tr>
-  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
-  <td class="center">{{itm[0]}}</td>
-</tr>
-{% endfor %}
+    <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+    <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+  </tr>
+  
+  {% for itm in info.passport %}
+  <tr>
+    <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
+    <td class="center">{{itm[0]}}</td>
+  </tr>
+  {% endfor %}
 </table>
 
 {% else %}
 <div class="tab">
-  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
-    By conjugacy class</button>
   <button type="submit" class="tablinks"
           onclick="openData(event,'representative')"id="defaultOpen">
     Topological equivalence representatives</button>
+  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
+    By conjugacy class</button>
 </div>
 {% endif %}
 
 <div id="passports" class="tabcontent">
-  <table>
-    <tr>
-      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-      <th>Lists of Conjugacy Classes</th>
+  <p>
+    <table>
+      <tr>
+        <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+        <th>Conjugacy Classes</th>
+      </tr>
 
-    </tr>
-
-    {% for itm in info.passport %}
-    <tr>
-      <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
-      <td class="center">{{itm[0]}}</td>
- 
-    </tr>
-    {% endfor %}
-  </table>
+      {% for itm in info.passport %}
+      <tr>
+        <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
+        <td class="center">{{itm[0]}}</td>
+      </tr>
+      {% endfor %}
+      
+    </table>
+  </p>
 </div>
 
 <div id="representative" class="tabcontent">
@@ -116,12 +117,12 @@ transition: 0.3s;
   {% endif %}
   
   {% for topo_rep in info.topological_rep %}
-    <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
-    <table>{% for perm in topo_rep[1] %}
-      <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
-      {% endfor %} </table> <br>
+  <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
+  <table>{% for perm in topo_rep[1] %}
+    <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
+    {% endfor %}
+  </table> <br>
   {% endfor %}
-
 </div>
 
 

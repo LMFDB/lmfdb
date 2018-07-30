@@ -1,9 +1,6 @@
 # This Blueprint is about Higher Genus Curves
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
-from operator import itemgetter
-from pymongo.mongo_client import MongoClient
-
 import StringIO
 import re
 import pymongo
@@ -200,6 +197,7 @@ def groups_per_genus(genus):
     return render_template("hgcwa-stats-groups-per-genus.html", info=info, credit=credit, title=title, bread=bread)
 
 
+#Generate topological webpage
 @higher_genus_w_automorphisms_page.route("/<fam>/<cc>") 
 def topological_action(fam, cc):
     br_g, br_gp, br_sign = split_family_label(fam)
@@ -210,7 +208,6 @@ def topological_action(fam, cc):
     
     #Get the equivalence class
     topo_class = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
-    print topo_class.count()
 
     g = topo_class[0]['genus']
     GG = ast.literal_eval(topo_class[0]['group'])
@@ -554,7 +551,7 @@ def render_family(args):
     if 'label' in args:
         label = clean_input(args['label'])
         C = base.getDBConnection()
-        dataz = C.curve_automorphisms.passports.find({'label': label})#.sort('cc.0', pymongo.ASCENDING)
+        dataz = C.curve_automorphisms.passports.find({'label': label})
         
         if dataz.count() is 0:
             flash_error( "No family with label %s was found in the database.", label)
@@ -911,8 +908,13 @@ def hgcwa_code_download(**args):
     #Choose filename
     if lang == args['download_type']:
         filename= 'HigherGenusData_' + str(label) + FileSuffix[lang]
-    else:
-        filename= 'HigherGenusDataRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='topo_magma' or args['download_type']=='topo_gap':
+        filename= 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='braid_magma' or args['download_type']=='braid_gap':
+        filename= 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
+    elif args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
+        filename= 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
+        
     code = s + " " + Fullname[lang]+  " code for the lmfdb family of higher genus curves " + str(label) + '\n'  
     code += s + " The results are stored in a list of records called 'data'\n\n" 
     code +=code_list['top_matter'][lang] + '\n' +'\n'
