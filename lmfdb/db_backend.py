@@ -149,7 +149,7 @@ class PostgresBase(object):
         try:
             t = time.time()
             if values_list:
-                execute_values(cur, query, values, template)
+                execute_values(cur, query.as_string(self.conn), values, template)
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
@@ -2260,7 +2260,7 @@ class PostgresStatsTable(PostgresBase):
                 if mx is None or val > mx:
                     mx = val
         stats = [(cols, "total", total, ccols, cvals, threshold)]
-        if onenumeric:
+        if onenumeric and total != 0:
             avg = float(avg) / total
             stats.append((cols, "avg", avg, ccols, cvals, threshold))
             stats.append((cols, "min", mn, ccols, cvals, threshold))
