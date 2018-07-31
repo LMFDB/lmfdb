@@ -220,13 +220,13 @@ class PostgresTable(PostgresBase):
         self._out_of_order = out_of_order
         self._stats_valid = stats_valid
         PostgresBase.__init__(self, search_table, db.conn)
-        self._col_type = {}
+        self.col_type = {}
         self.has_id = False
         def set_column_info(col_list, table_name):
             cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
             for rec in cur:
                 col = rec[0]
-                self._col_type[col] = rec[1]
+                self.col_type[col] = rec[1]
                 if col != 'id':
                     col_list.append(col)
                 else:
@@ -429,7 +429,7 @@ class PostgresTable(PostgresBase):
             # Compound specifier like cc.1
             force_json = True
         else:
-            force_json = (self._col_type[col] == 'jsonb')
+            force_json = (self.col_type[col] == 'jsonb')
             col = Identifier(col)
         # First handle the cases that have unusual values
         if key == '$exists':
@@ -521,7 +521,7 @@ class PostgresTable(PostgresBase):
                     force_json = True
                 else:
                     path = []
-                    force_json = (self._col_type[key] == 'jsonb')
+                    force_json = (self.col_type[key] == 'jsonb')
                 if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 if path:
@@ -1302,9 +1302,9 @@ class PostgresTable(PostgresBase):
                 with extrafile:
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
-                        searchfile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in search_cols) + u'\n')
+                        searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
-                            extrafile.write(u'\t'.join(tostr_func(processed.get(col), self._col_type[col]) for col in extra_cols) + u'\n')
+                            extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
             self.reload(searchfile.name, extrafile.name, includes_ids=True, resort=resort, reindex=reindex, restat=restat, **kwds)
         finally:
             searchfile.unlink(searchfile.name)
@@ -1839,7 +1839,7 @@ class PostgresTable(PostgresBase):
         if datatype.lower() not in types_whitelist:
             if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
                 raise ValueError("%s is not a valid type"%(datatype))
-        self._col_type[name] = datatype
+        self.col_type[name] = datatype
         if extra:
             if self.extra_table is None:
                 raise ValueError("No extra table")
@@ -1872,7 +1872,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("%s is not a column of %s"%(name, self.search_table))
         modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
         self._execute(modifier, commit=commit)
-        self._col_type.pop(name, None)
+        self.col_type.pop(name, None)
         print "Column %s dropped"%(name)
 
     def create_extra_table(self, columns, ordered=False):
@@ -1900,7 +1900,7 @@ class PostgresTable(PostgresBase):
         self.extra_table = self.search_table + "_extras"
         vars = [('id', 'bigint')]
         for col in columns:
-            if col not in self._col_type:
+            if col not in self.col_type:
                 raise ValueError("%s is not a column of %s"%(col, self.search_table))
             if col in self._sort_keys:
                 raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
@@ -1908,7 +1908,7 @@ class PostgresTable(PostgresBase):
             cur = self._execute(selecter, [self.search_table, [col]], commit=False)
             if cur.rowcount > 0:
                 raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
-            typ = self._col_type[col]
+            typ = self.col_type[col]
             if typ not in types_whitelist:
                 if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
                     raise RuntimeError("%s is not a valid type"%(typ))
@@ -2232,7 +2232,7 @@ class PostgresStatsTable(PostgresBase):
         onenumeric = False # whether we're grouping by a single numeric column
         if len(cols) == 1:
             col = cols[0]
-            if self.table._col_type.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
+            if self.table.col_type.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
                 onenumeric = True
                 avg = 0
                 mn = None
