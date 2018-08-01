@@ -6,32 +6,36 @@
 <input type="hidden" name="start" value="{{start}}"/>
   <table>
     <tr>
-      <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+      <td>{{ KNOWL('artin.dimension',title="dimension") }}</td>
       <td><input type='text' name='dimension' value="{{req.dimension}}" size=15/></td>
       <td><span class="formexample"> e.g. 1, 2-4 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+      <td>{{ KNOWL('artin.conductor',title = "conductor") }}</td>
       <td><input type='text' name='conductor' value="{{req.conductor}}" size=15/></td>
       <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
     <tr>
-        <td>{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
+        <td>{{ KNOWL('artin.gg_quotient',title="group") }}</td>
         <td><input type='text' name='group' value="{{req.group}}" size=15></td>
         <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
     </tr>
     <tr>
-      <td>Ramified primes</td>
+        <td>{{ KNOWL('artin.permutation_container',title="smallest permutation container") }}</td>
+        <td><input type='text' name='container' value="{{req.container}}" size=15></td>
+        <td><span class="formexample"> e.g. 4T3 or 6T10</span></td>
+    <tr>
+      <td>{{KNOWL('artin.ramified_primes', 'ramified primes')}}</td>
       <td><input type='text' name='ramified' value="{{req.ramified}}" size=15/></td>
       <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
     </tr>
     <tr>
-      <td>Unramified primes</td>
+      <td>{{KNOWL('artin.unramified_primes', 'unramified primes')}}</td>
       <td><input type='text' name='unramified' value = "{{req.unramified}}" size=15/></td>
       <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
+      <td>{{ KNOWL('artin.root_number',title="root number") }}</td>
       <td><input type='text' name='root_number' value = "{{req.root_number}}" size=15/></td>
       <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
     </tr>
@@ -93,7 +97,7 @@
 <div>
 	<table border=1 cellpadding=5 class="ntdata">
 
-	<thead><tr><th>Label</th>
+	<thead><tr><th>{{KNOWL('artin.label', 'Label')}}</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>

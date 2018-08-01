@@ -1,14 +1,13 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<h1>Graph of eigenvalues of Maass forms of levels {{min_level}} to {{max_level}} with ${{min_R}} \leq R\leq {{max_R}}$</h1>
+<h1>Maass forms of levels {{min_level}} to {{max_level}} with ${{min_R}} \leq R\leq {{max_R}}$</h1>
 <p>
    The horizontal axis is the {{KNOWL('mf.maass.mwf.spectralparameter', title='spectral parameter')}} $R$ with the {{KNOWL('mf.maass.mwf.eigenvalue', title='Laplace eigenvalue')}}
 satisying $\lambda=1/4+R²$. The vertical axis is the {{KNOWL('mf.maass.mwf.level', title='level')}} $N$. Each point
 corresponds to a Maass form of {{KNOWL('mf.maass.mwf.weight', title='weight')}} 0 and trivial character on $\Gamma_0(N)$
 with the color showing whether the {{KNOWL('mf.maass.mwf.symmetry', title='symmetry')}} is <b><font color="{{coloreven}}">even</font></b>
-or <b><font color="{{colorodd}}">odd</font></b>. Clicking on a dot takes you
-to the homepage of the Maass form. For $N>100$ there are only results for prime level.
+or <b><font color="{{colorodd}}">odd</font></b>. For $N>100$ there are only results for prime level.
 
 </p>
 <p>
@@ -22,5 +21,8 @@ Examples of some ranges with complete data:
     <li> <a href="{{ url_for('mwf.render_maass_browse_graph',min_level = 100,max_level= 1000,
                             min_R = 0,max_R = 1) }}">$N$ prime and $100< N<1000, \, 0\leq R\leq 1$</a></li>
 </ul>
+
+<p><b>Clicking on a dot takes you
+to the homepage of the Maass form.</p></b>
 {{contents[0]|safe}}
 {% endblock content %}
