@@ -4,7 +4,7 @@ from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
 import lmfdb
-from lmfdb.utils import make_logger
+from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from WebNumberField import WebNumberField
@@ -789,7 +789,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def indlabel(self):  return None
     def value(self, *args): return None
-    def charsums(self, *args): return False
+
+    @property
+    def charsums(self, *args):
+        return False
+
     def gauss_sum(self, *args): return None
     def jacobi_sum(self, *args): return None
     def kloosterman_sum(self, *args): return None
@@ -1239,9 +1243,9 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
         return "Group of Hecke characters modulo %s"%(self.modulus)
 
     @property
-    def nf_pol(self):
+    def nfpol(self):
         #return self.nf.web_poly()
-        return self.k.polynomial()._latex_()
+        return web_latex_split_on_pm(self.k.polynomial())
 
     @property
     def codegen(self):

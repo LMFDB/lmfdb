@@ -20,7 +20,7 @@ assert nf_logger
 
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
-from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, group_knowl_guts, group_cclasses_knowl_guts, group_character_table_knowl_guts, aliastable
+from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts, group_character_table_knowl_guts, group_alias_table
 
 from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, random_object_from_collection, web_latex_split_on_pm, search_cursor_timeout_decorator
 from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
@@ -55,9 +55,6 @@ def init_nf_count():
         max_deg = fields.find().sort('degree', pymongo.DESCENDING).limit(1)[0]['degree']
         init_nf_flag = True
 
-
-def galois_group_data(n, t):
-    return flask.Markup(group_knowl_guts(n, t, db()))
 
 def group_cclasses_data(n, t):
     return flask.Markup(group_cclasses_knowl_guts(n, t, db()))
@@ -127,10 +124,9 @@ def how_computed_page():
 def render_groups_page():
     info = {}
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")) ]
-    t = 'Galois group labels'
+    t = 'Galois Group Labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
-    C = db()
-    return render_template("galois_groups.html", al=aliastable(C), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+    return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
 
 
 @nf_page.route("/FieldLabels")
@@ -143,7 +139,7 @@ def render_labels_page():
     t = 'Labels for Global Number Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Number field labels'
+    t = 'Number Field Labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=info.pop('learnmore'))
 
@@ -214,8 +210,8 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    t = 'Global number field statistics'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number field statistics', '')]
+    t = 'Global Number Field Statistics'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
     n = statdb().find_one({'_id': 'degree'})['counts']
     nsig = statdb().find_one({'_id': 'nsig'})['counts']
@@ -449,10 +445,13 @@ def render_field_webpage(args):
     info.update(data)
     if nf.degree() > 1:
         gpK = nf.gpK()
-        rootof1coeff = gpK.nfrootsof1()[2]
-        rootofunity = Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))
+        rootof1coeff = gpK.nfrootsof1()
+        rootofunityorder = int(rootof1coeff[1])
+        rootof1coeff = rootof1coeff[2]
+        rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
+        rootofunity += ' (order $%d$)' % rootofunityorder
     else:
-        rootofunity = Ra('-1')
+        rootofunity = web_latex(Ra('-1'))+ ' (order $2$)'
 
     info.update({
         'label': pretty_label,
@@ -462,7 +461,7 @@ def render_field_webpage(args):
         'integral_basis': zk,
         'regulator': web_latex(nf.regulator()),
         'unit_rank': nf.unit_rank(),
-        'root_of_unity': web_latex(rootofunity),
+        'root_of_unity': rootofunity,
         'fund_units': nf.units(),
         'grh_label': grh_label,
         'loc_alg': loc_alg
@@ -622,7 +621,7 @@ def make_disc_key(D):
 def number_field_search(info):
 
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Global Number Field search results'
+    t = 'Global Number Field Search Results'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
 
     if 'natural' in info:
@@ -640,7 +639,7 @@ def number_field_search(info):
         for j in range(len(fields)):
             if fields2[j] is None:
                 fields2[j] = WebNumberField.fakenf(fields[j])
-        t = 'Number field algebra'
+        t = 'Number Field Algebra'
         info = {}
         info = {'fields': fields2}
         return render_template("number_field_algebra.html", info=info, title=t, bread=bread)

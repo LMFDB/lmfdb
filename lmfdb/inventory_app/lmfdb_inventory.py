@@ -198,7 +198,7 @@ def get_type_strings_as_json():
 
 #This is a log of actions, submits, failures etc
 LOG_ID = 'Inv_log'
-LOG_FILE_NAME = "LMFDBinventory.log"
+LOG_FILE_NAME = "logs/LMFDBinventory.log"
 LEVELS = {'debug': logging.DEBUG,
       'info': logging.INFO,
       'warning': logging.WARNING,
@@ -208,7 +208,7 @@ log_dest = None
 
 #This is a list of edit transactions
 TR_LOG_ID = 'Trans_log'
-TR_LOG_FILE_NAME = "LMFDBtransactions_inv.log"
+TR_LOG_FILE_NAME = "logs/LMFDBtransactions_inv.log"
 log_transac = None
 
 #To disable all logging etc, can just replace the filehandler with Nullhandler

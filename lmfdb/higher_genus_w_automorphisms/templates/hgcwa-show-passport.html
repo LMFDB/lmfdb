@@ -17,13 +17,11 @@ table,td {
   <table>
       <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
    {% if info.specialname %}
-   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-<tr>
-  <td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td>
-  <td>{{info.gpid}}</td></tr>
-  <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
-  <tr><td> Conjugacy classes for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
+  <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
+  <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
+  <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
   </table></p>
 
 
@@ -34,8 +32,8 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 {% if info.jacobian_decomp %}
-  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} (partial) decomposition:</td><td>${{info.jacobian_decomp}}$</td></tr>
-    <tr><td >Corresponding character(s):</td><td> {{info.corrChar}}</td></tr>
+  <table><tr><td>{{KNOWL('ag.jacobian',title='Jacobian variety')}} {{KNOWL('curve.highergenus.aut.groupalgebradecomp', title='group algebra decomposition')}}:</td><td>${{info.jacobian_decomp}}$</td></tr>
+    <tr><td >Corresponding {{KNOWL('curve.highergenus.aut.characters',title="character(s)")}}:</td><td> {{info.corrChar}}</td></tr>
   </table>
  {% endif %}
 
@@ -43,16 +41,16 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
   <p><h2>Other Data</h2>
     <table>
-        <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>
+       <!-- <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>-->
       {% if info.ishyp %}
       <tr><td>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:</td><td>{{info.ishyp}}</td></tr>
       {% if info.hypinv  %}
        <tr><td>Hyperelliptic involution:</td> <td>{{info.hypinv}}</td></tr>
        {% endif %}  {% endif %}
       {% if info.iscyctrig %}
-      <tr><td> {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:</td><td>{{info.iscyctrig}}</td></tr>
+      <tr><td>{{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:</td><td>{{info.iscyctrig}}</td></tr>
       {% if info.cinv  %}
-       <tr><td>Trigonal automorphism:</td> <td>{{info.cinv}}</td></tr>
+       <tr><td>{{KNOWL('ag.cyclic_trigonal',title='Trigonal automorphism')}}:</td> <td>{{info.cinv}}</td></tr>
        {% endif %}  {% endif %}
     </table>
 
@@ -109,3 +107,4 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
 
 
 {% endblock %}
+

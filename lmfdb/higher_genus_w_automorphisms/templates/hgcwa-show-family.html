@@ -32,9 +32,9 @@ table,td {
 <p> <h2>Group </h2>
   <table>
    {% if info.specialname %}
-   <tr><td>Isomorphism class:</td> <td>${{info.group}}$</td></tr>
+   <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma notation')}}:</td><td>{{info.gpid}}</td></tr>
+     <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Identifier')}}:</td><td>{{info.gpid}}</td></tr>
     </table>
 
 </p>
@@ -45,7 +45,7 @@ table,td {
 <table>
   <tr>
      <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-  <th>Lists of Conjugacy Classes</th>
+  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
  
 </tr>
 {% for itm in info.passport %}

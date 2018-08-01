@@ -1,0 +1,43 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+The database currently contains {{info.counts.ngalmaps_c}} Galois orbits of Belyi maps in {{info.counts.npassports_c}} passports,
+with {{ KNOWL('belyi.degree', title = "degree")}} at most {{info.counts.max_deg_c}}.
+</div>
+
+{% for d in info.stats.distributions %}
+<h2> Distribution of {{KNOWL(d.attribute['knowl'], title = d.attribute['top_title'])}} </h2>
+<div>
+<table border=1>
+{% for r in d["rows"] %}
+<tr>
+<th>{{d.attribute['row_title']}}</th>
+{% for c in r %}
+<td>{{c.value|safe}}</td>
+{% endfor %}
+</tr>
+<tr>
+<th>number of maps</th>
+{% for c in r %}
+<td><a href='{{c.query}}'>{{c.curves}}</a></td>
+{% endfor %}
+</tr>
+<tr>
+<th>proportion</th>
+{% for c in r %}
+<td>{{c.proportion}}%</td>
+{% endfor %}
+</tr>
+<tr height = 10px></tr>
+{%endfor %}
+
+</table>
+</div>
+{% endfor %}
+
+<p>
+</p>
+
+{% endblock %}
+</html>
