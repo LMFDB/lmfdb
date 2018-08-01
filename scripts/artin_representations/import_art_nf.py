@@ -170,4 +170,5 @@ for path in sys.argv[1:]:
       reindex_collection(art, 'field_data', 'field_data_new')
     if case == 'art rep':
       reindex_collection(art, 'representations', 'representations_new')
+    fn.close()
 
