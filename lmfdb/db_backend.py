@@ -1631,6 +1631,9 @@ class PostgresTable(PostgresBase):
                                              Identifier("{0}_tmp_pkey".format(table)),
                                              Identifier("{0}_pkey".format(table))),
                           silent=True, commit=False)
+            self._db.grant_select(table, commit=False)
+            if table.endswith("_counts"):
+                self._db.grant_insert(table, commit=False)
         selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True, commit=False)
         for res in cur:
@@ -1653,7 +1656,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, includes_ids=True, resort=None, reindex=True, restat=None, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -1666,12 +1669,11 @@ class PostgresTable(PostgresBase):
         - ``statsfile`` -- a string (optional), giving a file containing stats information for the table.
         - ``includes_ids`` -- whether the search/extra files include ids as the first column.
             If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
-            If the file does not include ids, and this table has ids, the user must have write permission
-            to the file's directory: the filename with "_with_ids" will be used as a temporary file.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
         - ``restat`` -- whether to refresh statistics afterward.  Default behavior is to refresh stats if either countsfile or statsfile is missing.
+        - ``final_swap`` -- whether to perform the final swap exchanging the temporary table with the live one.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
         """
         if resort is None:
@@ -1711,7 +1713,8 @@ class PostgresTable(PostgresBase):
             for table in [self.stats.counts, self.stats.stats]:
                 if table not in tables:
                     tables.append(table)
-        self._swap_in_tmp(tables, reindex)
+        if final_swap:
+            self._swap_in_tmp(tables, reindex)
         self.conn.commit()
 
     def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, restat=True, **kwds):
@@ -1725,12 +1728,10 @@ class PostgresTable(PostgresBase):
             If there is an extra table, this argument is required.
         - ``search_cols`` -- the order of the cols in the search_file, tab-separated.
             Defaults to ``self._search_cols``.  Do not include "id".
-        - ``extra_cols`` -- the order of the cols in the extra_file, tab-separated.
+        - ``extra_cols`` -- the order of the cols in the extrafile, tab-separated.
             Defaults to ``self._extra_cols``.  Do not include "id".
         - ``includes_ids`` -- whether the search/extra files include ids as the first column.
             If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
-            If the file does not include ids, and this table has ids, the user must have write permission
-            to the file's directory: the filename with "_with_ids" will be used as a temporary file.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
@@ -2759,5 +2760,51 @@ class PostgresDatabase(PostgresBase):
         self.tablenames.remove(name)
         if commit:
             self.conn.commit()
+
+    def reload_all(self, data_folder, includes_ids=True, resort=None, reindex=True, restat=None, **kwds):
+        """
+        Reloads all tables from files in a given folder.  The filenames must match
+        the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
+
+        Note that this function currently does not reload data that is not in a search table,
+        such as knowls, user data, meta_tables or meta_indexes.
+
+        Input is as for the `reload` function.
+        """
+        file_list = []
+        tablenames = []
+        for tablename in self.tablenames:
+            included = []
+            searchfile = os.path.join(data_folder, tablename)
+            if not os.path.exists(searchfile):
+                continue
+            included.append(tablename)
+            table = getattr(self, tablename)
+            extrafile = os.path.join(data_folder, tablename + '_extras')
+            if os.path.exists(extrafile):
+                if table.extra_table is None:
+                    raise ValueError("Unexpected file %s"%extrafile)
+                included.append(tablename + '_extras')
+            elif table.extra_table is None:
+                extrafile = None
+            else:
+                raise ValueError("Missing file %s"%extrafile)
+            countsfile = os.path.join(data_folder, tablename + '_counts')
+            if os.path.exists(countsfile):
+                included.append(tablename + '_counts')
+            else:
+                countsfile = None
+            statsfile = os.path.join(data_folder, tablename + '_stats')
+            if os.path.exists(statsfile):
+                included.append(tablename + '_stats')
+            else:
+                statsfile = None
+            file_list.append((table, (searchfile, extrafile, countsfile, statsfile), included))
+            tablenames.append(tablename)
+        print "Reloading %s"%(", ".join(tablenames))
+        for table, filedata, included in file_list:
+            table.reload(*filedata, final_swap=False, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=False, **kwds)
+        for table, filedata, included in file_list:
+            self._swap_in_tmp(included, reindex)
 
 db = PostgresDatabase()
