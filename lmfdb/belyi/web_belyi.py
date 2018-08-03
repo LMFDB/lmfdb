@@ -298,7 +298,7 @@ class WebBelyiPassport(object):
         data['pass_size'] = passport['pass_size']
 
         # Permutation triples
-        galmaps_for_plabel = db.belyi_galmaps.search( {"plabel" : passport['plabel']}, sort = ['label_index'])
+        galmaps_for_plabel = db.belyi_galmaps.search( {"plabel" : passport['plabel']})#, sort = ['label_index'])
         galmapdata = []
         for galmap in galmaps_for_plabel:
             # wrap number field nonsense

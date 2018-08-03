@@ -313,7 +313,7 @@ def belyi_search(info):
     res = db.belyi_galmaps.search(query, ['label','group','abc','g','deg','geomtype', 'orbit_size'], limit=count, offset=start, info=info)
 
 
-    res_clean = {}
+    res_clean = []
     for v in res:
         v_clean = {}
         for key in ('label', 'group', 'deg', 'g','orbit_size' ):
