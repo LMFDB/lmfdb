@@ -2805,7 +2805,7 @@ class PostgresDatabase(PostgresBase):
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
         for table, filedata, included in file_list:
-            table.reload(*filedata, final_swap=False, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=False, **kwds)
+            table.reload(*filedata, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=False, **kwds)
         for table, filedata, included in file_list:
             self._swap_in_tmp(included, reindex)
 
