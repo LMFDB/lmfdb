@@ -954,13 +954,14 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter)
         return [res[0] for res in cur]
 
-    def count(self, query={}):
+    def count(self, query={}, record=True):
         """
         Count the number of results for a given query.
 
         INPUT:
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
+        - ``record`` -- (default True) whether to record the number of results in the counts table.
 
         OUTPUT:
 
@@ -973,7 +974,7 @@ class PostgresTable(PostgresBase):
             sage: nf.count({'degree':int(6),'galt':int(7)})
             244006
         """
-        return self.stats.count(query)
+        return self.stats.count(query, record=record)
 
     ##################################################################
     # Indexes and performance analysis                               #
@@ -1965,7 +1966,7 @@ class PostgresStatsTable(PostgresBase):
         self.counts = st + "_counts"
         self.total = self.quick_count({})
         if self.total is None:
-            self.total = self._slow_count({}, record=True)
+            self.total = self._slow_count({})
 
     def _has_stats(self, jcols, ccols, cvals, threshold):
         """
@@ -2018,7 +2019,7 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
-    def _slow_count(self, query, record=False):
+    def _slow_count(self, query, record=True):
         """
         No shortcuts: actually count the rows in the search table.
 
@@ -2049,13 +2050,14 @@ class PostgresStatsTable(PostgresBase):
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
         self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
 
-    def count(self, query={}):
+    def count(self, query={}, record=True):
         """
         Count the number of results for a given query.
 
         INPUT:
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
+        - ``record`` -- (default True) whether to record the number of results in the counts table.
 
         OUTPUT:
 
@@ -2072,7 +2074,7 @@ class PostgresStatsTable(PostgresBase):
             return self.total
         nres = self.quick_count(query)
         if nres is None:
-            nres = self._slow_count(query)
+            nres = self._slow_count(query, record=record)
         return int(nres)
 
     def max(self, col):
