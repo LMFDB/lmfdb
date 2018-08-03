@@ -534,7 +534,8 @@ class WebNumberField:
         cg_list = self._data['class_group']
         if cg_list == []:
             return 'Trivial'
-        return cg_list
+        #return cg_list
+        return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
@@ -549,7 +550,7 @@ class WebNumberField:
 
     def class_number(self):
         if self.haskey('class_number'):
-            return self._data['class_number']
+            return '$%s$'%str(self._data['class_number'])
         return na_text()
 
     def can_class_number(self):
