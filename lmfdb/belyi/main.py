@@ -368,7 +368,7 @@ class belyi_stats(object):
         dists = []
         for attr in stats_attribute_list:
             counts = db.belyi_galmaps.stats.display_data([attr["name"]],
-                                                      url_for(".index_Q"),
+                                                      url_for(".index"),
                                                       include_avg=attr.get("avg",False),
                                                       formatter=attr.get("format"),
                                                       # artifact from copy and paste
@@ -422,7 +422,7 @@ def download_search(info):
     delim_end = {'magma':'*]','sage':']','gp':']','text':' ]'}
     start_and_end = {'magma':['[*','*];'],'sage':['[','];'],'gp':['{[',']}'],'text':['[','];']}
     file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
-    lang = info.get('download','text').strip()
+    lang = info.get('Submit','text').strip()
     filename = 'belyi_maps' + file_suffix[lang]
     mydate = time.strftime("%d %B %Y")
     start = delim_start[lang];
@@ -464,7 +464,7 @@ def download_search(info):
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Belye maps downloaded from the LMFDB, downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d maps.\n\n' %(str(info.get('query')), res.count())
+    s += c + ' Query "%s" returned %d maps.\n\n' %(str(info.get('query')), len(res_list))
     s += c + ' Below is a list called data. Each entry has the form:\n'
     s += c + '   [label, permutation_triples]\n'
     s += c + ' where the permutation triples are in one line notation\n'
