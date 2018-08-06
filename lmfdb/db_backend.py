@@ -26,7 +26,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging, tempfile, re, os, time, random
+import logging, tempfile, re, os, time, random, traceback
 from collections import Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -1691,6 +1691,7 @@ class PostgresTable(PostgresBase):
         if restat is None:
             restat = (countsfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
+        print "Reloading %s..."%(self.search_table)
         tables = []
         counts = {}
         for table, cols, addid, filename in [(self.search_table, self._search_cols, True, searchfile),
@@ -1725,7 +1726,31 @@ class PostgresTable(PostgresBase):
                     tables.append(table)
         if final_swap:
             self._swap_in_tmp(tables, reindex)
+        print "Finished reloading %s!"%(self.search_table)
         self.conn.commit()
+
+    def cleanup_from_reload(self, commit=True):
+        """
+        Drop the `_tmp` and `_old*` tables that are created during `reload`.
+        """
+        to_remove = []
+        for suffix in ['', '_extras', '_stats', '_counts']:
+            tablename = "{0}{1}_tmp".format(self.search_table, suffix)
+            if self._table_exists(tablename):
+                to_remove.append(tablename)
+            backup_number = 1
+            while True:
+                tablename = "{0}{1}_old{2}".format(self.search_table, suffix, backup_number)
+                if self._table_exists(tablename):
+                    to_remove.append(tablename)
+                else:
+                    break
+                backup_number += 1
+        for table in to_remove:
+            self._execute(SQL("DROP TABLE {0}").format(Identifier(table)), commit=False)
+            print "Dropped {0}".format(table)
+        if commit:
+            self.conn.commit()
 
     def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, restat=True, **kwds):
         """
@@ -2824,9 +2849,28 @@ class PostgresDatabase(PostgresBase):
             file_list.append((table, (searchfile, extrafile, countsfile, statsfile), included))
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
+        failures = []
         for table, filedata, included in file_list:
-            table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
+            try:
+                table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
+            except DatabaseError:
+                traceback.print_exc()
+                failures.append(table)
         for table, filedata, included in file_list:
+            if table in failures:
+                continue
             self._swap_in_tmp(included, reindex)
+        if failures:
+            print "Failures in reloading %s"%(", ".join(table.search_table for table in failures))
+        else:
+            print "Successfully reloaded %s"%(", ".join(tablenames))
+
+    def cleanup_all(self):
+        """
+        Drops all `_tmp` and `_old` tables created by the reload() method.
+        """
+        for tablename in self.tablenames:
+            table = getattr(tablename)
+            table.cleanup_from_reload()
 
 db = PostgresDatabase()
