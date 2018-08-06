@@ -191,13 +191,13 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('lf.newton_polygon',title="Newton polygon") }}
+                {{ KNOWL('lf.newton_polygon',title="slopes of Newton polygon") }}
             </td>
             <td colspan=3>
-                <input type='text' name='newton_polygon' example="[0,1/2,1/2,1]" size=40 value="{{info.newton_polygon}}" />
+                <input type='text' name='newton_polygon' example="[0,0,1/2]" size=40 value="{{info.newton_polygon}}" />
             </td>
             <td>
-                <span class="formexample"> e.g. [0,1/2,1/2,1] (slopes) or [(1,0),(3,1)] (breaks) </span>
+                <span class="formexample"> e.g. [0,0,1/2] </span>
             </td>
         </tr>
         <tr>
@@ -235,14 +235,82 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="isogeny factors decomposition") }}
+                {{ KNOWL('av.decomposition',title="simple factors") }}
+                <select name='simple_quantifier'>
+                  <option value='contained'>subset of</option>
+                  <option value='exactly'>equal to</option>
+                  <option value='include' selected>superset of</option>
+                </select>
             </td>
             <td colspan=3>
-                <input type='text' name='decomposition' example="[2,2.3.ae_i,*]" size=40 value="{{info.decomposition}}"/>
+                <input type='text' name='simple_factors' example="1.2.b,1.2.b,2.2.a_b" size=40 value="{{info.simple_factors}}"/>
             </td>
             <td>
-                <span class="formexample"> e.g. [2,2.3.ae_i,*] </span>
+                <span class="formexample"> e.g. 1.2.b,1.2.b,2.2.a_b </span>
             </td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('av.decomposition',title="number of dimension 1 factors") }}
+            </td>
+            <td>
+                <input type='text' name='dim1_factors' example="1-3" size=10 value="{{info.dim1_factors}}" />
+            </td>
+            <td>
+                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            </td>
+            <td>
+                <input type='text' name='dim1_distinct' example="1-2" size=10 value="{{info.dim1_distinct}}" />
+            </td>
+            <td><span class="formexample"> e.g. 2 or 1-3</span></td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('av.decomposition',title="number of dimension 2 factors") }}
+            </td>
+            <td>
+                <input type='text' name='dim2_factors' example="1-3" size=10 value="{{info.dim2_factors}}" />
+            </td>
+            <td>
+                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            </td>
+            <td>
+                <input type='text' name='dim2_distinct' example="1-2" size=10 value="{{info.dim2_distinct}}" />
+            </td>
+            <td><span class="formexample"> e.g. 2 or 1-3</span></td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('av.decomposition',title="number of dimension 3 factors") }}
+            </td>
+            <td>
+                <input type='text' name='dim3_factors' example="2" size=10 value="{{info.dim3_factors}}" />
+            </td>
+            <td>
+                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            </td>
+            <td>
+                <input type='text' name='dim3_distinct' example="1" size=10 value="{{info.dim3_distinct}}" />
+            </td>
+            <td><span class="formexample"> e.g. 2 or 0-1</span></td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('av.decomposition',title="number of dimension 4 factors") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='dim4_factors' example="1" size=10 value="{{info.dim4_factors}}" />
+            </td>
+            <td><span class="formexample"> e.g. 0 or 1</span></td>
+        </tr>
+        <tr>
+            <td>
+                {{ KNOWL('av.decomposition',title="number of dimension 5 factors") }}
+            </td>
+            <td colspan=3>
+                <input type='text' name='dim5_factors' example="0" size=10 value="{{info.dim5_factors}}" />
+            </td>
+            <td><span class="formexample"> e.g. 0 or 1</span></td>
         </tr>
         <tr>
             <td>

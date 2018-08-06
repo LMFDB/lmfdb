@@ -122,7 +122,7 @@ class PostgresBase(object):
         handler.addFilter(filt)
         self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
 
-    def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True):
+    def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True, slow_note=None):
         """
         Execute an SQL command, properly catching errors and returning the resulting cursor.
 
@@ -136,6 +136,7 @@ class PostgresBase(object):
         - ``values_list`` -- boolean (default False).  If True, use the ``execute_values`` method, designed for inserting multiple values.
         - ``template`` -- string, for use with ``values_list`` to insert constant values: for example ``"(%s, %s, 42)"``. See the documentation of ``execute_values`` for more details.
         - ``commit`` -- boolean (default True).  Whether to commit changes on success.
+        - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
 
         OUTPUT:
 
@@ -160,6 +161,8 @@ class PostgresBase(object):
                     if values:
                         query = query % (tuple(values))
                     self.logger.info(query + " ran in %ss" % (t,))
+                    if slow_note is not None:
+                        self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
         except DatabaseError:
             self.conn.rollback()
             raise
@@ -388,6 +391,7 @@ class PostgresTable(PostgresBase):
           - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
           - ``$containedin`` -- for json columns, the column should be a subset of the given list
           - ``$exists`` -- if True, require not null; if False, require null.
+          - ``$startswith`` -- for text columns, matches strings that start with the given string.
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column.
 
@@ -462,6 +466,9 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} @> %s")
             elif key == '$containedin':
                 cmd = SQL("{0} <@ %s")
+            elif key == '$startswith':
+                cmd = SQL("{0} LIKE %s")
+                value = value.replace('_',r'\_').replace('%',r'\%') + '%'
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if force_json:
@@ -650,8 +657,8 @@ class PostgresTable(PostgresBase):
     # Methods for querying                                           #
     ##################################################################
 
-    def lucky(self, query={}, projection=2, offset=0):
-        #FIXME Nulls aka Nones are being erased, we should perhaos just leave them there
+    def lucky(self, query={}, projection=2, offset=0, sort=None):
+        #FIXME Nulls aka Nones are being erased, we should perhaps just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for situations where only a single result is desired.
@@ -673,6 +680,8 @@ class PostgresTable(PostgresBase):
                                1 means return all search columns,
                                2 means all columns (default)).
         - ``offset`` -- integer. allows retrieval of a later record rather than just first.
+        - ``sort`` -- The sort order, from which the first result is returned.
+          If only one result is expected, setting this to `[]` can result in speedups.
 
         OUTPUT:
 
@@ -705,7 +714,7 @@ class PostgresTable(PostgresBase):
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
         vars = SQL(", ").join(map(Identifier, search_cols))
-        qstr, values = self._build_query(query, 1, offset)
+        qstr, values = self._build_query(query, 1, offset, sort=sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
@@ -809,7 +818,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values, silent=silent)
+        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "search", query, projection, limit, offset))
         if limit is None:
             if info is not None:
                 # caller is requesting count data
@@ -858,7 +867,7 @@ class PostgresTable(PostgresBase):
         """
         if self._label_col is None:
             raise ValueError("Lookup method not supported for tables with no label column")
-        return self.lucky({self._label_col:label}, projection=projection)
+        return self.lucky({self._label_col:label}, projection=projection, sort=[])
 
     def exists(self, query):
         """
@@ -2048,7 +2057,12 @@ class PostgresStatsTable(PostgresBase):
             updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
         else:
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
-        self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
+        try:
+            # This will fail if we don't have write permission,
+            # for example, if we're running as the lmfdb user
+            self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
+        except DatabaseError:
+            pass
 
     def count(self, query={}, record=True):
         """
@@ -2783,12 +2797,12 @@ class PostgresDatabase(PostgresBase):
         tablenames = []
         for tablename in self.tablenames:
             included = []
-            searchfile = os.path.join(data_folder, tablename)
+            searchfile = os.path.join(data_folder, tablename + '.txt')
             if not os.path.exists(searchfile):
                 continue
             included.append(tablename)
             table = getattr(self, tablename)
-            extrafile = os.path.join(data_folder, tablename + '_extras')
+            extrafile = os.path.join(data_folder, tablename + '_extras.txt')
             if os.path.exists(extrafile):
                 if table.extra_table is None:
                     raise ValueError("Unexpected file %s"%extrafile)
@@ -2797,12 +2811,12 @@ class PostgresDatabase(PostgresBase):
                 extrafile = None
             else:
                 raise ValueError("Missing file %s"%extrafile)
-            countsfile = os.path.join(data_folder, tablename + '_counts')
+            countsfile = os.path.join(data_folder, tablename + '_counts.txt')
             if os.path.exists(countsfile):
                 included.append(tablename + '_counts')
             else:
                 countsfile = None
-            statsfile = os.path.join(data_folder, tablename + '_stats')
+            statsfile = os.path.join(data_folder, tablename + '_stats.txt')
             if os.path.exists(statsfile):
                 included.append(tablename + '_stats')
             else:
@@ -2811,7 +2825,7 @@ class PostgresDatabase(PostgresBase):
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
         for table, filedata, included in file_list:
-            table.reload(*filedata, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=False, **kwds)
+            table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
         for table, filedata, included in file_list:
             self._swap_in_tmp(included, reindex)
 

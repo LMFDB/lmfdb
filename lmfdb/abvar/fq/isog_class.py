@@ -80,7 +80,8 @@ class AbvarFq_isoclass(object):
 
     @property
     def slopes(self):
-        return self.slps.split()
+        # Remove the multiset indicators
+        return [s[:-1] for s in self.slps]
 
     @property
     def C_counts(self):
