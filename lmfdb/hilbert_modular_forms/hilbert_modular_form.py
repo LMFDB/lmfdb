@@ -44,6 +44,8 @@ def random_hmf():    # Random Hilbert modular form
     return hilbert_modular_form_by_label(db.hmf_forms.random())
 
 def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    if not isinstance(pol_str, basestring):
+        pol_str = str(pol_str)
     o_str = pol_str.replace('*', '')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
@@ -170,7 +172,7 @@ def hilbert_modular_form_search(**args):
         v['level_ideal'] = teXify_pol(v['level_ideal'])
     info['forms'] = res
 
-    t = 'Hilbert Modular Form search results'
+    t = 'Hilbert Modular Form Search Results'
 
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms',
         url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
@@ -231,7 +233,7 @@ def download_hmf_magma(**args):
 
     outstr += 'ALEigenvalues := AssociativeArray();\n'
     for s in AL_eigs:
-        outstr += 'ALEigenvalues[ideal<ZF | {' + s[0][1:-1] + '}>] := ' + s[1] + ';\n'
+        outstr += 'ALEigenvalues[ideal<ZF | {' + s[0][1:-1] + '}>] := ' + str(s[1]) + ';\n'
 
     outstr += '\n// EXAMPLE:\n// pp := Factorization(2*ZF)[1][1];\n// heckeEigenvalues[pp];\n\n'
 
@@ -449,7 +451,7 @@ def learnmore_list_remove(matchstring):
 #data quality pages
 @hmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Hilbert Modular Forms data'
+    t = 'Completeness of the Hilbert Modular Forms Data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Completeness', '')]
     return render_template("single.html", kid='dq.mf.hilbert.extent',
@@ -457,7 +459,7 @@ def completeness_page():
 
 @hmf_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Hilbert Modular Forms data'
+    t = 'Source of the Hilbert Modular Forms Data'
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Source', '')]
     return render_template("single.html", kid='dq.mf.hilbert.source',
@@ -478,7 +480,8 @@ def browse():
         'stats': get_stats()
     }
     credit = 'John Voight'
-    t = 'Hilbert modular forms'
+    t = 'Hilbert Modular Forms'
+
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
              ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
@@ -501,23 +504,23 @@ def statistics_by_degree(d):
 
     credit = 'John Cremona'
     if d==2:
-        t = 'Hilbert modular forms over real quadratic number fields'
+        t = 'Hilbert Modular Forms over Real Quadratic Number Fields'
     elif d==3:
-        t = 'Hilbert modular forms over totally real cubic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Cubic Number Fields'
     elif d==4:
-        t = 'Hilbert modular forms over totally real quartic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Quartic Number Fields'
     elif d==5:
-        t = 'Hilbert modular forms over totally real quintic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Quintic Number Fields'
     elif d==6:
-        t = 'Hilbert modular forms over totally real sextic number fields'
+        t = 'Hilbert Modular Forms over Totally Real Sextic Number Fields'
     else:
-        t = 'Hilbert modular forms over totally real fields of degree %s' % d
+        t = 'Hilbert Modular Forms over Totally Real Fields of Degree %s' % d
 
     bread = [('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
               ('Degree %s' % d,' ')]
 
     if d=='bad':
-        t = 'Hilbert modular forms'
+        t = 'Hilbert Modular Forms'
         bread = bread[:-1]
 
     return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))

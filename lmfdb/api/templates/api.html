@@ -74,14 +74,16 @@ where the prefix "-" indicates to sort in descending order.
     #}
     <li>
     To see those elliptic curves, where the field <code>torsion_structure</code> is the list  [2,2], encoded as a list of integers:
-    <a href='{{ url_for(".api_query", table="ec_curves", torsion_structure="li2;2", _delim=";")}}'>?torsion_structure=li2;2&amp;_delim=;</a>.
+    <a href='{{ url_for(".api_query", table="ec_curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
     </li>
+    <!--
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
     query <a href="{{ url_for('.api_query', table='kwl_knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
     </li>
     <li>For sorting the result, use a query like
     <a href="{{ url_for('.api_query', table="kwl_knowls", _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
     </li>
+    -->
 </ul>
 </div>
 
@@ -90,8 +92,10 @@ where the prefix "-" indicates to sort in descending order.
 {% for db, collections in databases.iteritems()|sort %}
   <li>
     <b>{{ db }}</b>
+    <!--
     (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
-       target="_blank">description</a>)
+    target="_blank">description</a>)
+    -->
     <br/>
       {% for (fullname, shortname, count) in collections %}
         <a href="{{ url_for('.api_query', table=fullname) }}">{{ shortname }} ({{ count }})</a>

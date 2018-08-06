@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
@@ -10,20 +10,15 @@ from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_st
 from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import group_display_short, group_knowl_guts, group_display_knowl, group_display_inertia, small_group_knowl_guts, WebGaloisGroup
+from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
 
 LF_credit = 'J. Jones and D. Roberts'
-
-# centralize db access here so that we can switch collection names when needed
 
 def get_bread(breads=[]):
     bc = [("Local Number Fields", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
-
-def galois_group_data(n, t):
-    return group_knowl_guts(n, t)
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
@@ -55,7 +50,10 @@ def local_algebra_data(labels):
 
 def local_field_data(label):
     f = db.lf_fields.lookup(label)
-    ans = 'Local number field %s<br><br>'% label
+    nicename = ''
+    if f['n'] < 3:
+        nicename = ' = '+ prettyname(f)
+    ans = 'Local number field %s%s<br><br>'% (label, nicename)
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = f['gal']
     gn = f['n']
@@ -69,8 +67,11 @@ def local_field_data(label):
     ans += '</div>'
     return ans
 
-def lf_display_knowl(label):
-    return '<a title = "{0} [lf.field.data]" knowl="lf.field.data" kwargs="label={0}">{0}</a>'.format(label)
+
+def lf_display_knowl(label, name=None):
+    if name is None:
+        name = label
+    return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, name)
 
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
@@ -78,19 +79,18 @@ def local_algebra_display_knowl(labels):
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_knowl_guts,
+            'small_group_data': small_group_data,
             'local_algebra_data': local_algebra_data}
 
 # Utilities for subfield display
 def format_lfield(coefmult,p):
     coefmult = [int(c) for c in coefmult.split(",")]
-    label = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=0)
-    if label is None:
+    data = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=1)
+    if data is None:
         # This should not happen, what do we do?
         # This is wrong
         return ''
-    # This is the nf version
-    return lf_display_knowl(label)
+    return lf_display_knowl(data['label'], name = prettyname(data))
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
 def format_subfields(subdata, p):
@@ -169,13 +169,14 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            bread = get_bread([("Search error", ' ')])
+            bread = get_bread([("Search Error", ' ')])
             info['err'] = "Field " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
-        title = 'Local Number Field ' + label
+        title = 'Local Number Field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
+        Qp = r'\Q_{%d}' % p
         e = data['e']
         f = data['f']
         cc = data['c']
@@ -188,17 +189,13 @@ def render_field_webpage(args):
         autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
         prop2 = [
             ('Label', label),
-            ('Base', '\(\Q_{%s}\)' % p),
+            ('Base', '\(%s\)' % Qp),
             ('Degree', '\(%s\)' % data['n']),
             ('e', '\(%s\)' % e),
             ('f', '\(%s\)' % f),
             ('c', '\(%s\)' % cc),
             ('Galois group', group_display_short(gn, gt)),
         ]
-        Pt = PolynomialRing(QQ, 't')
-        Pyt = PolynomialRing(Pt, 'y')
-        eisenp = Pyt(str(data['eisen']))
-        unramp = Pyt(str(data['unram']))
         # Look up the unram poly so we can link to it
         unramlabel = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0}, projection=0)
         if unramlabel is None:
@@ -206,6 +203,27 @@ def render_field_webpage(args):
             unramfriend = ''
         else:
             unramfriend = "/LocalNumberField/%s" % unramlabel
+            unramdata = db.lf_fields.lookup(unramlabel)
+
+        Px = PolynomialRing(QQ, 'x')
+        Pxt=PolynomialRing(Px,'t')
+        Pt = PolynomialRing(QQ, 't')
+        Ptx = PolynomialRing(Pt, 'x')
+        if data['f'] == 1:
+            unramp = r'$%s$' % Qp
+            # Eliminate t from the eisenstein polynomial
+            eisenp = Pxt(str(data['eisen']).replace('y','x'))
+            eisenp = Pt(str(data['unram'])).resultant(eisenp)
+            eisenp = web_latex(eisenp)
+
+        else:
+            unramp = data['unram'].replace('t','x')
+            unramp = web_latex(Px(str(unramp)))
+            unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
+            eisenp = Ptx(str(data['eisen']).replace('y','x'))
+            eisenp = '$'+web_latex(eisenp, False)+'\\in'+Qp+'(t)[x]$'
+
+
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
         if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")
@@ -230,14 +248,15 @@ def render_field_webpage(args):
                     'f': data['f'],
                     't': data['t'],
                     'u': data['u'],
-                    'rf': printquad(data['rf'], p),
+                    'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
+                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
                     'hw': data['hw'],
                     'slopes': show_slopes(data['slopes']),
                     'gal': group_display_knowl(gn, gt),
                     'gt': gt,
                     'inertia': group_display_inertia(data['inertia']),
-                    'unram': web_latex(unramp),
-                    'eisen': web_latex(eisenp),
+                    'unram': unramp,
+                    'eisen': eisenp,
                     'gms': data['gms'],
                     'gsm': gsm,
                     'galphrase': galphrase,
@@ -273,6 +292,11 @@ def show_slope_content(sl,t,u):
         sc += '^{%d}'%u
     return(sc)
 
+def prettyname(ent):
+    if ent['n'] <= 2:
+        return printquad(ent['rf'], ent['p'])
+    return ent['label']
+
 def printquad(code, p):
     if code == [1, 0]:
         return('$\Q_{%s}$' % p)
@@ -296,7 +320,7 @@ def random_field():
 
 @local_fields_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the local field data'
+    t = 'Completeness of the Local Field Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Local field labels', url_for(".labels_page"))]
@@ -306,7 +330,7 @@ def completeness_page():
 
 @local_fields_page.route("/Labels")
 def labels_page():
-    t = 'Labels for local number fields'
+    t = 'Labels for Local Number Fields'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -314,7 +338,7 @@ def labels_page():
 
 @local_fields_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the local field data'
+    t = 'Source of the Local Field Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),

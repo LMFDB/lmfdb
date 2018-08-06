@@ -24,31 +24,33 @@ def small_group_label_display_knowl(label, name=None):
         name = '$%s$'%group['pretty']
     return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + label + '">' + name + '</a>'
 
-def small_group_knowl_guts(gapid):
+
+def small_group_data(gapid):
     parts = gapid.split('.')
     n = int(parts[0])
     k = int(parts[1])
     group = db.gps_small.lookup(str(gapid))
-    inf = "Group $%s$"%str(group['pretty'])
-    inf += '&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  '
+    inf = "Group $%s$" % str(group['pretty'])
+    inf += " &nbsp; &nbsp; &mdash; &nbsp; &nbsp;  "
     inf += ('' if group['cyclic'] else 'not')+' cyclic, '
     inf += ('' if group['abelian'] else 'non-')+'abelian, '
     inf += ('' if group['solvable'] else 'not')+' solvable'
     inf += '<p>Order: '+str(n)
-    inf += '<br>Gap small group number: '+str(k)
+    inf += '<br>GAP small group number: '+str(k)
     inf += '<br>Exponent: '+str(group['exponent'])
     inf += '<br>Perfect: '+str(group['perfect'])
     inf += '<br>Simple: '+str(group['simple'])
     inf += '<br>Normal subgroups: '+display_multiset(group['normal_subgroups'],small_group_label_display_knowl)
     inf += '<br>Maximal subgroups: '+display_multiset(group['maximal_subgroups'], small_group_label_display_knowl)
-    inf += '<br>Center: '+small_group_label_display_knowl(group['center'])
-    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(group['derived_group'])
-    inf += '<br>Abelianization: '+small_group_label_display_knowl(group['abelian_quotient'])
+    inf += '<br>Center: '+small_group_label_display_knowl(str(group['center']))
+    inf += '<br>Derived subgroup: '+small_group_label_display_knowl(str(group['derived_group']))
+    inf += '<br>Abelianization: '+small_group_label_display_knowl(str(group['abelian_quotient']))
     inf += '<br>Conjugacy class information: <table style="text-align: center;"><tr><th>Element Order<th>Size<th>Multiplicity'
     for row in group['clases']:
         inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
-    inf += '</table>'
+    inf += '</table></p>'
     return inf
+
 
 ############  Galois group object
 
@@ -95,7 +97,7 @@ class WebGaloisGroup:
         return int(self._data['order'])
 
     def display_short(self):
-        if self._data['pretty']:
+        if self._data.get('pretty',None) is not None:
             return self._data['pretty']
         return self._data['name']
 
@@ -167,7 +169,7 @@ def tryknowl(n, t):
 def group_display_short(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
-    if group is not None and group.get('pretty'):
+    if group is not None and group.get('pretty',None) is not None:
         return group['pretty']
     return "%dT%d"%(n,t)
 
@@ -175,7 +177,7 @@ def group_display_short(n, t):
 def group_display_pretty(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
-    if group.get('pretty'):
+    if group.get('pretty', None) is not None:
         return group['pretty']
     return ""
 
@@ -183,7 +185,7 @@ def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     if not name:
-        if group is not None and group.get('pretty'):
+        if group is not None and group.get('pretty',None) is not None:
             name = group['pretty']
         else:
             name = "%dT%d"%(n,t)
@@ -254,12 +256,12 @@ def group_display_long(n, t):
         inf += ", imprimitive"
 
     inf = "  (%s)" % inf
-    if group['pretty']:
+    if group.get('pretty', None) is not None:
         return group['pretty'] + inf
     return group['name'] + inf
 
 
-def group_knowl_guts(n, t):
+def galois_group_data(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     inf = "Transitive group " + str(group['n']) + "T" + str(group['t'])
@@ -295,16 +297,17 @@ def group_knowl_guts(n, t):
     rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>' % (label, str(n), str(t))
     rest += '</div>'
 
-    if group['pretty']:
+    if group.get('pretty', None) is not None:
         return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
     return inf + rest
+
 
 
 def group_cclasses_knowl_guts(n, t):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     gname = group['name']
-    if group['pretty']:
+    if group.get('pretty', None) is not None:
         gname = group['pretty']
     else:
         gname = gname.replace('=', ' = ')
@@ -321,7 +324,7 @@ def group_character_table_knowl_guts(n, t):
     group = db.gps_transitive.lookup(label)
     gname = group['name']
     gname = gname.replace('=', ' = ')
-    if group['pretty']:
+    if group.get('pretty', None) is not None:
         gname = group['pretty']
     inf = '<div>Character table for '
     inf += gname
@@ -511,7 +514,7 @@ def generators(n, t):
     return gens
 
 
-def aliastable():
+def group_alias_table():
     akeys = aliases.keys()
     akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
     ans = '<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
@@ -525,6 +528,8 @@ def aliastable():
         ans += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
     ans += '</tbody></table>'
     return ans
+
+
 
 
 def complete_group_code(code):
@@ -554,11 +559,6 @@ def complete_group_codes(codes):
         ans.extend(complete_group_code(code))
     return ans
 
-# for j in group_names.keys():
-#  for k in group_names[j]:
-#    if re.search('^\s*\d+T\d+\s*$', k) == None and re.search('^\s*\d+\s*$',k) ==  None:
-#      newv = (j[0], j[3])
-#      print "aliases['"+str(k)+"'] = ", newv
 
 aliases = {}
 

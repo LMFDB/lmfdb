@@ -7,8 +7,8 @@ from lmfdb.db_backend import db
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp
-from search_parsing import parse_newton_polygon, parse_abvar_decomp
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset
+from search_parsing import parse_newton_polygon
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
 from flask import flash, render_template, url_for, request, redirect, send_file, jsonify
@@ -97,7 +97,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     return render_template("show-abvarfq.html",
                            properties2=cl.properties(),
                            credit=abvarfq_credit,
-                           title='Abelian Variety isogeny class %s over $%s$'%(label, cl.field()),
+                           title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
                            bread=bread,
                            cl=cl,
                            learnmore=learnmore_list())
@@ -149,11 +149,20 @@ def abelian_variety_search(**args):
                 query['is_pp'] = -1
         parse_ints(info,query,'p_rank')
         parse_ints(info,query,'ang_rank')
-        parse_newton_polygon(info,query,'newton_polygon',qfield='slps') # TODO
-        parse_string_start(info,query,'initial_coefficients',qfield='poly',initial_segment=["1"])
-        parse_string_start(info,query,'abvar_point_count',qfield='A_cnts')
-        parse_string_start(info,query,'curve_point_count',qfield='C_cnts',first_field='pt_cnt')
-        parse_abvar_decomp(info,query,'decomposition',qfield='decomp',av_stats=AbvarFqStats())
+        parse_newton_polygon(info,query,'newton_polygon',qfield='slps')
+        parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
+        parse_string_start(info,query,'abvar_point_count',qfield='A_cnts_str')
+        parse_string_start(info,query,'curve_point_count',qfield='C_cnts_str',first_field='pt_cnt')
+        if info.get('simple_quantifier') == 'contained':
+            parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
+        elif info.get('simple_quantifier') == 'exactly':
+            parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
+        elif info.get('simple_quantifier') == 'include':
+            parse_submultiset(info,query,'simple_factors',mode='append')
+        for n in range(1,6):
+            parse_ints(info,query,'dim%s_factors'%n)
+        for n in range(1,4):
+            parse_ints(info,query,'dim%s_distinct'%n)
         parse_nf_string(info,query,'number_field',qfield='nf')
         parse_galgrp(info,query,qfield=('galois_n','galois_t'))
     except ValueError:
@@ -169,7 +178,7 @@ def abelian_variety_search(**args):
     res = db.av_fqisog.search(query, limit=count, offset=start, info=info)
 
     info['abvars'] = [AbvarFq_isoclass(x) for x in res]
-    t = 'Abelian Variety search results'
+    t = 'Abelian Variety Search Results'
     return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
 
 def abelian_variety_browse(**args):
@@ -242,7 +251,7 @@ def abelian_variety_browse(**args):
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
     if bread is None: bread = get_bread(('Search Results', '.'))
-    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety search input error', bread=bread)
+    return render_template("abvarfq-search-results.html", info=info, title='Abelian Variety Search Input Error', bread=bread)
 
 @abvarfq_page.route("/<label>")
 def by_label(label):
@@ -310,21 +319,21 @@ def download_search(info):
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Weil polynomial data'
+    t = 'Completeness of the Weil Polynomial Data'
     bread = get_bread(('Completeness', '.'))
     return render_template("single.html", kid='dq.av.fq.extent',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Weil polynomial data'
+    t = 'Source of the Weil Polynomial Data'
     bread = get_bread(('Source', '.'))
     return render_template("single.html", kid='dq.av.fq.source',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @abvarfq_page.route("/Labels")
 def labels_page():
-    t = 'Labels for isogeny classes of abelian varieties'
+    t = 'Labels for Isogeny Classes of Abelian Varieties'
     bread = get_bread(('Labels', '.'))
     return render_template("single.html", kid='av.fq.lmfdb_label',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))

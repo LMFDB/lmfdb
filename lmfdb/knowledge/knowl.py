@@ -128,7 +128,7 @@ class KnowlBackend(PostgresBase):
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
             raise ValueError("Bad key")
-        updater = SQL("UPDATE kwl_knowls SET ({0}) = (%s) WHERE id = %s").format(Identifier(key))
+        updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
 
     def save_history(self, knowl, who):
@@ -198,29 +198,6 @@ class KnowlBackend(PostgresBase):
         checks if the given knowl with ID=@kid exists
         """
         return self.get_knowl(kid) is not None
-
-    # FIXME
-    #def refresh_knowl_categories(self):
-    #    selecter = SQL("SELECT id FROM kwl_knowls")
-    #    cur = self._execute(selecter)
-    #    cats = sorted(list(set((extract_cat(res[0]) for res in cur))))
-    #    updater = SQL("UPDATE kwl_knowls_meta SET categories = %s WHERE id = %s")
-    #    cur.execute(updater, (cats, CAT_ID))
-    #    return str(cats)
-
-    #def update_knowl_categories(self, cat):
-    #    """
-    #    when a new knowl is saved, it's category could be new. this function
-    #    ensures that we know it. this is much more efficient than the
-    #    refresh variant.
-    #    """
-    #    selecter = SQL("SELECT categories FROM kwl_knowls_meta WHERE id = %s AND NOT categories @> %s")
-    #    cur = self._execute(selecter, (CAT_ID, [cat]))
-    #    if cur.rowcount > 0:
-    #        categories = cur.fetchone()[0]
-    #        updater = SQL("UPDATE kwl_meta SET categories = %s WHERE id = %s")
-    #        categories = sorted(categories + [cat])
-    #        cur.execute(updater, (categories, CAT_ID))
 
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")

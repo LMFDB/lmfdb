@@ -87,13 +87,7 @@ def normalize_motive(label):
 
 # A and B are lists, tn and td are num/den for t
 def ab_label(A,B):
-    abl = "A%s_B%s"%(A,B)
-    return abl.replace(',','.')
-    
-def string2list(li):
-    if li=='':
-        return []
-    return [int(a) for a in li.split(',')]
+    return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
 
 def list2Cnstring(li):
     l2 = [a for a in li if a>1]
@@ -361,8 +355,8 @@ def render_hgm_webpage(label):
         locinfo[j] = [primes[j]] + locinfo[j]
         #locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
         locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='x')
-    hodge = string2list(data['hodge'])
-    famhodge = string2list(data['famhodge'])
+    hodge = data['hodge']
+    famhodge = data['famhodge']
     prop2 = [
         ('Degree', '\(%s\)' % data['degree']),
         ('Weight',  '\(%s\)' % data['weight']),
@@ -408,8 +402,8 @@ def render_hgm_family_webpage(label):
     if data is None:
         abort(404, "Hypergeometric motive family " + label + " was not found in the database.")
     title = 'Hypergeometric Motive Family:' + label
-    A = string2list(data['A'])
-    B = string2list(data['B'])
+    A = data['A']
+    B = data['B']
     hodge = data['famhodge']
     mydet = data['det']
     detexp = QQ(data['weight']*data['degree'])
@@ -425,15 +419,15 @@ def render_hgm_family_webpage(label):
     bezoutmat = matrix(data['bezout'])
     bezoutdet = bezoutmat.det()
     bezoutmat = latex(bezoutmat)
-    snf = string2list(data['snf'])
+    snf = data['snf']
     snf = list2Cnstring(snf)
     typee = 'Orthogonal'
     if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
         typee = 'Symplectic'
-    ppart = [[2, [string2list(u) for u in [data['A2'],data['B2'],data['C2']]]],
-        [3, [string2list(u) for u in [data['A3'],data['B3'],data['C3']]]],
-        [5, [string2list(u) for u in [data['A5'],data['B5'],data['C5']]]],
-        [7, [string2list(u) for u in [data['A7'],data['B7'],data['C7']]]]]
+    ppart = [[2, [data['A2'],data['B2'],data['C2']]],
+        [3, [data['A3'],data['B3'],data['C3']]],
+        [5, [data['A5'],data['B5'],data['C5']]],
+        [7, [data['A7'],data['B7'],data['C7']]]]
     prop2 = [
         ('Degree', '\(%s\)' % data['degree']),
         ('Weight',  '\(%s\)' % data['weight'])
@@ -480,7 +474,7 @@ def show_slopes(sl):
 
 @hypergm_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of hypergeometric motive data over $\Q$'
+    t = 'Completeness of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Completeness',''))
     return render_template("single.html", kid='dq.hgm.extent',
            credit=HGM_credit, title=t, bread=bread,
@@ -488,7 +482,7 @@ def completeness_page():
 
 @hypergm_page.route("/Source")
 def how_computed_page():
-    t = 'Source of hypergeometric motive data over $\Q$'
+    t = 'Source of Hypergeometric Motive Data over $\Q$'
     bread = get_bread(('Source',''))
     return render_template("single.html", kid='dq.hgm.source',
            credit=HGM_credit, title=t, bread=bread,
@@ -496,7 +490,7 @@ def how_computed_page():
 
 @hypergm_page.route("/Labels")
 def labels_page():
-    t = 'Labels for hypergeometric motives over $\Q$'
+    t = 'Labels for Hypergeometric Motives over $\Q$'
     bread = get_bread(('Labels',''))
     return render_template("single.html", kid='hgm.field.label',
            credit=HGM_credit, title=t, bread=bread,
