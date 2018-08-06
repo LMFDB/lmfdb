@@ -83,7 +83,6 @@ def index():
 @bmf_page.route("/random")
 def random_bmf():    # Random Bianchi modular form
     label = db.bmf_forms.random()
-    print label
     return bianchi_modular_form_by_label(label)
 
 def bianchi_modular_form_search(**args):
@@ -353,9 +352,7 @@ def bianchi_modular_form_by_label(lab):
         # do nothing: display the top page
         return redirect(url_for(".index"))
     if isinstance(lab, basestring):
-        print "lookup", lab
         res = db.bmf_forms.lookup(lab)
-        print "res", res['level_label']
     else:
         res = lab
         lab = res['label']
@@ -364,7 +361,6 @@ def bianchi_modular_form_by_label(lab):
         flash(Markup("No Bianchi modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
         return redirect(url_for(".index"))
     else:
-        print "level_label", res['level_label']
         return redirect(url_for(".render_bmf_webpage", field_label = res['field_label'], level_label = res['level_label'], label_suffix = res['label_suffix']))
 
 @bmf_page.route("/Source")

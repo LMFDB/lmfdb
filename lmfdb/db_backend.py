@@ -2797,12 +2797,12 @@ class PostgresDatabase(PostgresBase):
         tablenames = []
         for tablename in self.tablenames:
             included = []
-            searchfile = os.path.join(data_folder, tablename)
+            searchfile = os.path.join(data_folder, tablename + '.txt')
             if not os.path.exists(searchfile):
                 continue
             included.append(tablename)
             table = getattr(self, tablename)
-            extrafile = os.path.join(data_folder, tablename + '_extras')
+            extrafile = os.path.join(data_folder, tablename + '_extras.txt')
             if os.path.exists(extrafile):
                 if table.extra_table is None:
                     raise ValueError("Unexpected file %s"%extrafile)
@@ -2811,12 +2811,12 @@ class PostgresDatabase(PostgresBase):
                 extrafile = None
             else:
                 raise ValueError("Missing file %s"%extrafile)
-            countsfile = os.path.join(data_folder, tablename + '_counts')
+            countsfile = os.path.join(data_folder, tablename + '_counts.txt')
             if os.path.exists(countsfile):
                 included.append(tablename + '_counts')
             else:
                 countsfile = None
-            statsfile = os.path.join(data_folder, tablename + '_stats')
+            statsfile = os.path.join(data_folder, tablename + '_stats.txt')
             if os.path.exists(statsfile):
                 included.append(tablename + '_stats')
             else:
@@ -2825,7 +2825,7 @@ class PostgresDatabase(PostgresBase):
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
         for table, filedata, included in file_list:
-            table.reload(*filedata, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=False, **kwds)
+            table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
         for table, filedata, included in file_list:
             self._swap_in_tmp(included, reindex)
 
