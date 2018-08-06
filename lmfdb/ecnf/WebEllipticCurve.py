@@ -99,6 +99,11 @@ def ideal_from_string(K,s, IQF_format=False):
     else:
         return "wrong" ## caller must check
 
+def pretty_ideal(I):
+    easy = I.number_field().degree()==2 or I.norm()==1
+    gens = I.gens_reduced() if easy else I.gens()
+    return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
+
 # HNF of an ideal I in a quadratic field
 
 def ideal_HNF(I):
@@ -251,6 +256,8 @@ class ECNF(object):
         print "No such curve in the database: %s" % label
 
     def make_E(self):
+        #print("Creating ECNF object for {}".format(self.label))
+        #sys.stdout.flush()
         K = self.field.K()
 
         # a-invariants
@@ -259,8 +266,13 @@ class ECNF(object):
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        N = ideal_from_string(K,self.conductor_ideal)
-        self.cond = web_latex(N)
+        if self.conductor_norm==1:
+            N = K.ideal(1)
+        else:
+            N = ideal_from_string(K,self.conductor_ideal)
+        # The following can trigger expensive computations!
+        #self.cond = web_latex(N)
+        self.cond = pretty_ideal(N)
         self.cond_norm = web_latex(self.conductor_norm)
         local_data = self.local_data
 
@@ -283,12 +295,12 @@ class ECNF(object):
         if not self.is_minimal:
             Pmin = self.non_min_primes[0]
             P_index = badprimes.index(Pmin)
-            self.non_min_prime = web_latex(Pmin)
+            self.non_min_prime = pretty_ideal(Pmin)
             disc_ords[P_index] += 12
 
         if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
             self.fact_cond = self.cond
-            self.fact_cond_norm = self.cond
+            self.fact_cond_norm = '1'
         else:
             Nfac = Factorization([(P,ld['ord_cond']) for P,ld in zip(badprimes,local_data)])
             self.fact_cond = web_latex_ideal_fact(Nfac)
@@ -297,22 +309,21 @@ class ECNF(object):
 
         # D is the discriminant ideal of the model
         D = prod([P**e for P,e in zip(badprimes,disc_ords)], K.ideal(1))
-        self.disc = web_latex(D)
+        self.disc = pretty_ideal(D)
         Dnorm = D.norm()
         self.disc_norm = web_latex(Dnorm)
         if Dnorm == 1:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
-            self.fact_disc_norm = self.disc
+            self.fact_disc_norm = '1'
         else:
             Dfac = Factorization([(P,e) for P,e in zip(badprimes,disc_ords)])
             self.fact_disc = web_latex_ideal_fact(Dfac)
             Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
             self.fact_disc_norm = web_latex(Dnormfac)
 
-
         if not self.is_minimal:
             Dmin = ideal_from_string(K,self.minD)
-            self.mindisc = web_latex(Dmin)
+            self.mindisc = pretty_ideal(Dmin)
             Dmin_norm = Dmin.norm()
             self.mindisc_norm = web_latex(Dmin_norm)
             if Dmin_norm == 1:  # since the factorization of (1) displays as "1"

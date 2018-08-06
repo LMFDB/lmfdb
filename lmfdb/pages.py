@@ -79,7 +79,7 @@ def index():
 
     return render_template(tmpl,
         titletag="The L-functions and modular forms database",
-        title="",
+        title="LMFDB - The L-functions and Modular Forms Database",
         bread=bread,
         boxes = boxes)
 

@@ -790,7 +790,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def indlabel(self):  return None
     def value(self, *args): return None
-    def charsums(self, *args): return False
+
+    @property
+    def charsums(self, *args):
+        return False
+
     def gauss_sum(self, *args): return None
     def jacobi_sum(self, *args): return None
     def kloosterman_sum(self, *args): return None

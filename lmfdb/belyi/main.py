@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 
 import StringIO
 from ast import literal_eval
@@ -14,7 +14,7 @@ from lmfdb.search_parsing import parse_ints, parse_bracketed_posints, parse_coun
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
 
-credit_string = "Michael Musty, Sam Schiavone, John Voight"
+credit_string = "Michael Musty, Sam Schiavone, and John Voight"
 
 ###############################################################################
 # global database connection and stats objects
@@ -337,7 +337,7 @@ def boolean_format(value):
     return 'True' if value else 'False'
 
 stats_attribute_list = [
-    {'name':'deg','top_title':'Degree','row_title':'deg','knowl':'belyi.deg','avg':True},
+    {'name':'deg','top_title':'Degree','row_title':'deg','knowl':'belyi.degree','avg':True},
     {'name':'orbit_size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.orbit_size','avg':True},
     {'name':'g','top_title':'Genus','row_title':'genus','knowl':'belyi.genus','avg':True}
 ]
