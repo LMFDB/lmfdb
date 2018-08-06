@@ -2870,7 +2870,7 @@ class PostgresDatabase(PostgresBase):
         Drops all `_tmp` and `_old` tables created by the reload() method.
         """
         for tablename in self.tablenames:
-            table = getattr(tablename)
+            table = getattr(self, tablename)
             table.cleanup_from_reload()
 
 db = PostgresDatabase()
