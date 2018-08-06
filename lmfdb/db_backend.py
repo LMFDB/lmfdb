@@ -2509,17 +2509,23 @@ class PostgresDatabase(PostgresBase):
             self._execute(SQL("SET SESSION statement_timeout = '25s'"))
 
         self._read_only = self._execute(SQL("SELECT pg_is_in_recovery()")).fetchone()[0]
+        self._super_user = self._execute(SQL("SELECT current_setting('is_superuser')")).fetchone()[0] == 'on'
 
         if self._read_only:
             self._read_and_write_knowls = False
             self._read_and_write_userdb = False
+        elif self._super_user and not self._read_only:
+            self._read_and_write_knowls = True
+            self._read_and_write_userdb = True
         else:
             privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
             knowls_tables = ['kwl_deleted', 'kwl_history', 'kwl_knowls']
             self._read_and_write_knowls = all( all( self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [self._user, table, priv]).rowcount == 1 for priv in privileges) for table in knowls_tables)
             self._read_and_write_userdb =  all(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_schema = %s AND table_name=%s AND privilege_type=%s"), [self._user, 'userdb', 'users', priv]).rowcount == 1 for priv in privileges)
 
+        logging.info("User: %s" % self._user);
         logging.info("Read only: %s" % self._read_only);
+        logging.info("Super user: %s" % self._super_user);
         logging.info("Read/write to userdb: %s" % self._read_and_write_userdb);
         logging.info("Read/write to knowls: %s" % self._read_and_write_knowls);
 

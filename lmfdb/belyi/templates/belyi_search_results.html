@@ -51,16 +51,11 @@ Download all search results for&nbsp;
 </table>
 </form>
 
-{% if info.err is not defined %}
+{% include 'matches.html' %}
+{% if info.number %}
 
-<h2> Results ({{info.report}})&nbsp;
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
+
+
 
 <table class="ntdata">
 <tr>
@@ -83,29 +78,10 @@ Download all search results for&nbsp;
 {% endfor %}
 </table>
 
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
 
-<form>
-<input type="hidden" name="query" value="{{info.query}}"/>
-Download all search results for&nbsp;
-<button type="submit" name="download" value="gp">Pari/GP</button>&nbsp;
-<button type="submit" name="download" value="sage">SageMath</button>&nbsp;
-<button type="submit" name="download" value="magma">Magma</button>&nbsp;
-</form>
-
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-
-<!-- Debugging! -->
-{% if DEBUG %}
-<hr>
-<div>
-Query was: {{info.query}}
-</div>
-{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}
