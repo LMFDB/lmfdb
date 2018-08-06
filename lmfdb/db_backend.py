@@ -122,7 +122,7 @@ class PostgresBase(object):
         handler.addFilter(filt)
         self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
 
-    def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True):
+    def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True, slow_note=None):
         """
         Execute an SQL command, properly catching errors and returning the resulting cursor.
 
@@ -136,6 +136,7 @@ class PostgresBase(object):
         - ``values_list`` -- boolean (default False).  If True, use the ``execute_values`` method, designed for inserting multiple values.
         - ``template`` -- string, for use with ``values_list`` to insert constant values: for example ``"(%s, %s, 42)"``. See the documentation of ``execute_values`` for more details.
         - ``commit`` -- boolean (default True).  Whether to commit changes on success.
+        - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
 
         OUTPUT:
 
@@ -160,6 +161,8 @@ class PostgresBase(object):
                     if values:
                         query = query % (tuple(values))
                     self.logger.info(query + " ran in %ss" % (t,))
+                    if slow_note is not None:
+                        self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
         except DatabaseError:
             self.conn.rollback()
             raise
@@ -815,7 +818,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values, silent=silent)
+        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "search", query, projection, limit, offset))
         if limit is None:
             if info is not None:
                 # caller is requesting count data
