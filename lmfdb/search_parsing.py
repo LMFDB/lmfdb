@@ -24,7 +24,7 @@ from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
 from markupsafe import Markup
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
@@ -207,22 +207,22 @@ def parse_range2rat(arg, key, process):
 
 # We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
 # If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
-def parse_range3(arg, name, split0 = False):
+def parse_range3(arg, split0 = False):
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if ',' in arg:
-        return sum([parse_range3(a, name, split0) for a in arg.split(',')],[])
+        return sum([parse_range3(a, split0) for a in arg.split(',')],[])
     elif '-' in arg[1:]:
         ix = arg.index('-', 1)
         start, end = arg[:ix], arg[ix + 1:]
         if start:
             low = ZZ(str(start))
         else:
-            raise ValueError("Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % name)
+            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if end:
             high = ZZ(str(end))
         else:
-            raise ValueError("Error parsing input for the %s.  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)." % name)
+            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if low == high: return [low]
         if split0 and low < 0 and high > 0:
             if low == -1: m = [low]
@@ -234,6 +234,24 @@ def parse_range3(arg, name, split0 = False):
             return [[low, high]]
     else:
         return [ZZ(str(arg))]
+
+def integer_options(arg, max_opts=None):
+    intervals = parse_range3(arg)
+    if max_opts is not None and len(intervals) > max_opts:
+        raise ValueError("Too many options.")
+    ans = set()
+    for interval in intervals:
+        if isinstance(interval, list):
+            a,b = interval
+            if max_opts is not None and len(ans) + b - a + 1 > max_opts:
+                raise ValueError("Too many options")
+            for n in range(a,b+1):
+                ans.add(n)
+        elif max_opts is not None and len(ans) == max_opts:
+            raise ValueError("Too many options")
+        else:
+            ans.add(int(interval))
+    return sorted(list(ans))
 
 def collapse_ors(parsed, query):
     # work around syntax for $or
@@ -263,15 +281,22 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_element_of(inp, query, qfield, parse_singleton=int):
-    query[qfield] = {'$contains': [parse_singleton(inp)]}
+def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):
+    if split_interval:
+        options = integer_options(inp, max_opts=split_interval)
+        if len(options) == 1:
+            query[qfield] = {'$contains': options}
+        elif len(options) > 1:
+            query[qfield] = {'$or': [{'$contains': [n]} for n in options]}
+    else:
+        query[qfield] = {'$contains': [parse_singleton(inp)]}
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
-        parsed = parse_range3(inp, qfield, split0 = True)
+        parsed = parse_range3(inp, split0 = True)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
             parsed = parsed[0]
@@ -318,58 +343,83 @@ def parse_rats(inp, query, qfield, process=None):
     else:
         raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
+def _parse_subset(inp, query, qfield, mode):
+    def add_condition(kwd):
+        if qfield in query:
+            query[qfield][kwd] = inp
+        else:
+            query[qfield] = {kwd: inp}
+    if mode == 'complement':
+        add_condition('$notcontains')
+    elif mode == 'subsets':
+        add_condition('$containedin')
+    elif mode == 'append':
+        add_condition('$contains')
+    elif mode == 'exact':
+        inp = sorted(inp)
+        if inp:
+            print inp
+            dup_free = [inp[0]]
+            for i,x in enumerate(inp[1:]):
+                if x != inp[i]:
+                    dup_free.append(x)
+            print dup_free
+        else:
+            dup_free = []
+        if qfield in query:
+            raise ValueError("Cannot specify containment and equality simultaneously")
+        query[qfield] = dup_free
+    else:
+        raise ValueError("Unrecognized mode: programming error in LMFDB code")
+
+@search_parser
+def parse_subset(inp, query, qfield, parse_singleton=None, mode='append'):
+    # Note that you can do sanity checking using parse_singleton
+    # Just raise a ValueError if it fails.
+    inp = inp.split(',')
+    if parse_singleton is not None:
+        inp = [parse_singleton(x) for x in inp]
+    _parse_subset(inp, query, qfield, mode)
+
+def _multiset_code(n):
+    # We encode multiplicities by appending consecutive letters: A, B,..., BA, BB, BC,...
+    if n == 0:
+        return 'A'
+    return ''.join(chr(65+d) for d in reversed(ZZ(n).digits(26)))
+
+def _multiset_encode(L):
+    # L should be a list of strings
+    distinguished = []
+    seen = Counter()
+    for x in L:
+        distinguished.append(x + _multiset_code(seen[x]))
+        seen[x] += 1
+    return distinguished
+
+@search_parser(clean_info=True)
+def parse_submultiset(inp, query, qfield, mode='append'):
+    # Only multisets of strings are supported.
+    if mode == 'complement':
+        # Searches for multisets whose multiplicity is strictly less than the
+        # provided set at each given element.  This notion reduces to
+        # the standard complement in the multiplicity free case.
+        counts = Counter(inp.split(','))
+        query[qfield] = {'$notcontains': [label + _multiset_code(n-1) for label,n in counts.items]}
+    else:
+        _parse_subset(_multiset_encode(inp.split(',')), query, qfield, mode)
+
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_primes(inp, query, qfield, mode=None, radical=None): #, prefix=None, cutoff=100):
+def parse_primes(inp, query, qfield, mode=None, radical=None):
     format_ok = LIST_POSINT_RE.match(inp)
     if format_ok:
         primes = [int(p) for p in inp.split(',')]
-        primes.sort()
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
-    if format_ok:
-        #small_primes = [p for p in primes if p < cutoff]
-        #big_primes = [p for p in primes if p >= cutoff]
-        if mode == 'complement':
-            #for p in small_primes:
-            #    query[prefix + str(p)] = False
-            #if big_primes:
-            #    query[qfield] = {'$notcontains': big_primes}
-            query[qfield] = {'$notcontains': primes}
-        elif mode == 'exact':
-            if radical is None:
-                if qfield in query:
-                    raise ValueError("Cannot specify containment and equality simultaneously")
-                query[qfield] = primes
-            else:
-                query[radical] = prod(primes)
-        elif mode == 'subsets':
-            query[qfield] = {'$containedin': primes}
-            ##if big_primes:
-            ##    pass
-            ##else:
-            ##    allfield = 'all' + prefix + 'small'
-            ##    query[allfield] = True
-            ##    for p in prime_range(cutoff):
-            ##        if p not in small_primes:
-            ##            query[prefix + str(p)] = False
-        elif mode == 'append':
-            if qfield in query:
-                query[qfield]['$contains'] = primes
-            else:
-                query[qfield] = {'$contains': primes}
-            #for p in small_primes:
-            #    key = prefix + str(p)
-            #    if key in query:
-            #        raise ValueError("Contradictory requirements for %s."%p)
-            #    query[key] = True
-            #if big_primes:
-            #    if qfield in query:
-            #        query[qfield]['$contains'] = big_primes
-            #    else:
-            #        query[qfield] = {'$contains': big_primes}
-        else:
-            raise ValueError("Unrecognized mode: programming error in LMFDB code")
-    else:
+    if not format_ok:
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
+    if mode == 'exact' and radical is not None:
+        query[radical] = prod(primes)
+    else:
+        _parse_subset(primes, query, qfield, mode)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, extractor=None):
@@ -742,13 +792,13 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
             else:
                 if any('-' in x[1:] for x in ispec):
                     raise ValueError("Ranges not supported.")
-                sub_query[qfield] = {'$regex':'^' + ' '.join(ispec) + ' '}
+                sub_query[qfield] = {'$startswith':' '.join(ispec) + ' '}
         elif first_field is not None:
             sub_query[first_field] = parse_range2(part, first_field, parse_singleton)[1]
         else:
             if '-' in part[1:]:
                 raise ValueError("Ranges not supported.")
-            sub_query[qfield] = {'$regex':'^%s %s '%(' '.join(initial_segment), part)}
+            sub_query[qfield] = {'$startswith':'%s %s '%(' '.join(initial_segment), part)}
         return sub_query
     if len(parts) == 1:
         query.update(make_sub_query(parts[0]))

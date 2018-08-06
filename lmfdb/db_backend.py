@@ -388,6 +388,7 @@ class PostgresTable(PostgresBase):
           - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
           - ``$containedin`` -- for json columns, the column should be a subset of the given list
           - ``$exists`` -- if True, require not null; if False, require null.
+          - ``$startswith`` -- for text columns, matches strings that start with the given string.
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column.
 
@@ -462,6 +463,9 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} @> %s")
             elif key == '$containedin':
                 cmd = SQL("{0} <@ %s")
+            elif key == '$startswith':
+                cmd = SQL("{0} LIKE %s")
+                value = value.replace('_',r'\_').replace('%',r'\%') + '%'
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if force_json:

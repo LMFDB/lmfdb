@@ -222,7 +222,7 @@ def elliptic_curve_search(info):
             elif info['include_cm'] == 'only':
                 query['cm'] = {'$ne' : 0}
 
-        parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees')
+        parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=10)
         #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
 
         parse_primes(info, query, 'surj_primes', name='maximal primes',
