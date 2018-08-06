@@ -654,8 +654,8 @@ class PostgresTable(PostgresBase):
     # Methods for querying                                           #
     ##################################################################
 
-    def lucky(self, query={}, projection=2, offset=0):
-        #FIXME Nulls aka Nones are being erased, we should perhaos just leave them there
+    def lucky(self, query={}, projection=2, offset=0, sort=None):
+        #FIXME Nulls aka Nones are being erased, we should perhaps just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for situations where only a single result is desired.
@@ -677,6 +677,8 @@ class PostgresTable(PostgresBase):
                                1 means return all search columns,
                                2 means all columns (default)).
         - ``offset`` -- integer. allows retrieval of a later record rather than just first.
+        - ``sort`` -- The sort order, from which the first result is returned.
+          If only one result is expected, setting this to `[]` can result in speedups.
 
         OUTPUT:
 
@@ -709,7 +711,7 @@ class PostgresTable(PostgresBase):
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
         vars = SQL(", ").join(map(Identifier, search_cols))
-        qstr, values = self._build_query(query, 1, offset)
+        qstr, values = self._build_query(query, 1, offset, sort=sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
         cur = self._execute(selecter, values)
         if cur.rowcount > 0:
@@ -862,7 +864,7 @@ class PostgresTable(PostgresBase):
         """
         if self._label_col is None:
             raise ValueError("Lookup method not supported for tables with no label column")
-        return self.lucky({self._label_col:label}, projection=projection)
+        return self.lucky({self._label_col:label}, projection=projection, sort=[])
 
     def exists(self, query):
         """
@@ -2052,7 +2054,12 @@ class PostgresStatsTable(PostgresBase):
             updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
         else:
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
-        self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
+        try:
+            # This will fail if we don't have write permission,
+            # for example, if we're running as the lmfdb user
+            self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
+        except DatabaseError:
+            pass
 
     def count(self, query={}, record=True):
         """
