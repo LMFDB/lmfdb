@@ -47,7 +47,7 @@ def extract_cat(kid):
 class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
     def __init__(self):
-        PostgresBase.__init__(self, 'db_knowl', db.conn)
+        PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
 
     def can_read_write_knowls(self):
