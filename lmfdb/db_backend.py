@@ -2859,7 +2859,7 @@ class PostgresDatabase(PostgresBase):
         for table, filedata, included in file_list:
             if table in failures:
                 continue
-            self._swap_in_tmp(included, reindex)
+            table._swap_in_tmp(included, reindex)
         if failures:
             print "Failures in reloading %s"%(", ".join(table.search_table for table in failures))
         else:
