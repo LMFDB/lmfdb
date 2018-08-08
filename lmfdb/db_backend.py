@@ -2309,7 +2309,7 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
-    def quick_count(self, query):
+    def quick_count(self, query, suffix=''):
         """
         Tries to quickly determine the number of results for a given query
         using the count table.
@@ -2323,7 +2323,7 @@ class PostgresStatsTable(PostgresBase):
         Either an integer giving the number of results, or None if not cached.
         """
         cols, vals = self._split_dict(query)
-        selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s").format(Identifier(self.counts))
+        selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s").format(Identifier(self.counts + suffix))
         cur = self._execute(selecter, [cols, vals])
         if cur.rowcount:
             return int(cur.fetchone()[0])
@@ -2653,7 +2653,8 @@ class PostgresStatsTable(PostgresBase):
         for cols, values_list in col_value_dict.items():
             for values in values_list:
                 query = self._join_dict(cols, values)
-                self._slow_count(query, record=True, suffix=suffix)
+                if self.quick_count(query, suffix=suffix) is None:
+                    self._slow_count(query, record=True, suffix=suffix)
 
     def extra_counts(self, include_counts=True, suffix=''):
         """
