@@ -2945,7 +2945,7 @@ class PostgresDatabase(PostgresBase):
 
     def _create_meta_indexes_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)")
+            self._execute(SQL("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)"))
             version = 0
 
             # copy data from meta_indexes
@@ -2958,7 +2958,7 @@ class PostgresDatabase(PostgresBase):
 
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, version integer)")
+            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, version integer)"))
             version = 0
 
             # copy data from meta_indexes
