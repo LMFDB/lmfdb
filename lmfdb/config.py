@@ -251,7 +251,7 @@ class Configuration(object):
     def get_postgresql_default(self):
         res = dict(self.default_args["postgresql"]);
         res["port"] = int(res["port"]);
-        return result
+        return res
 
     def get_logging(self):
         return self.logging_options;

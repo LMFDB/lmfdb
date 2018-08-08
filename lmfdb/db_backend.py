@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback
 from collections import Counter
-from psycopg2 import connect, DatabaseError, InterfaceError
+from psycopg2 import connect, DatabaseError 
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
@@ -1977,7 +1977,7 @@ class PostgresTable(PostgresBase):
             if metafile is not None:
                 self.reload_meta(metafile)
 
-    def reload_revert(self):
+    def reload_revert(self, commit = True):
         #TODO add doc
         with DelayCommit(self, commit, silence=True):
             # drops the `_tmp` tables
