@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback
 from collections import Counter
-from psycopg2 import connect, DatabaseError 
+from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
@@ -1908,7 +1908,7 @@ class PostgresTable(PostgresBase):
         counts = {}
         tabledata = [(self.search_table, self._search_cols, True, searchfile),
                      (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count"],False, countsfile),
+                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
         with DelayCommit(self, commit, silence=True):
@@ -1927,6 +1927,8 @@ class PostgresTable(PostgresBase):
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
+            if countsfile is not None:
+                self.stats._copy_extra_counts_to_tmp()
 
             if self._id_ordered and resort:
                 extra_table = None if self.extra_table is None else self.extra_table + suffix
@@ -2086,7 +2088,7 @@ class PostgresTable(PostgresBase):
 
         tabledata = [(self.search_table, self._search_cols, True, searchfile),
                      (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count"],False, countsfile),
+                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
         metadata = [("meta_indexes", "table_name", "(index_name, table_name, type, columns, modifiers, storage_params)", indexesfile),
@@ -2326,7 +2328,7 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
-    def _slow_count(self, query, record=True):
+    def _slow_count(self, query, record=True, suffix=''):
         """
         No shortcuts: actually count the rows in the search table.
 
@@ -2339,26 +2341,28 @@ class PostgresStatsTable(PostgresBase):
 
         The number of rows in the search table satisfying the query.
         """
-        selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.search_table))
+        selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.search_table + suffix))
         qstr, values = self.table._parse_dict(query)
         if qstr is not None:
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres)
+            self._record_count(query, nres, suffix)
         return nres
 
-    def _record_count(self, query, count):
+    def _record_count(self, query, count, suffix=''):
         cols, vals = self._split_dict(query)
+        data = [count, cols, vals]
         if self.quick_count(query) is None:
-            updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
+            updater = SQL("INSERT INTO {0} (count, cols, values, extra) VALUES (%s, %s, %s, %s)")
+            data.append(True)
         else:
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
-            self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
+            self._execute(updater.format(Identifier(self.counts + suffix)), data)
         except DatabaseError:
             pass
 
@@ -2493,7 +2497,14 @@ class PostgresStatsTable(PostgresBase):
         else:
             return [], []
 
-    def add_stats(self, cols, constraint=None, threshold=None, commit=True):
+    def _join_dict(self, ccols, cvals):
+        """
+        A utility function for joining a list of keys and of values into a dictionary.
+        """
+        assert len(ccols) == len(cvals)
+        return dict(zip(ccols, cvals))
+
+    def add_stats(self, cols, constraint=None, threshold=None, suffix='', commit=True):
         """
         Add statistics on counts, average, min and max values for a given set of columns.
 
@@ -2502,6 +2513,7 @@ class PostgresStatsTable(PostgresBase):
         - ``cols`` -- a list of columns, usually of length 1 or 2.
         - ``constraint`` -- only rows satisfying this constraint will be considered.
             It should take the form of a dictionary of the form used in search queries.
+            Alternatively, you can provide a pair ccols, cvals giving the items in the dictionary.
         - ``threshold`` -- an integer or None.
 
         OUTPUT:
@@ -2517,11 +2529,16 @@ class PostgresStatsTable(PostgresBase):
         if constraint is None:
             allcols = cols
         else:
+            if isinstance(constraint, tuple):
+                # reconstruct constraint from ccols and cvals
+                ccols, cvals = constraint
+                constraint = self._join_dict(ccols, cvals)
+            else:
+                ccols, cvals = self._split_dict(constraint)
             # We need to include the constraints in the count table if we're not grouping by that column
             allcols = sorted(list(set(cols + constraint.keys())))
-            if any(key.startswith('$') for key in constraint.keys()):
+            if any(key.startswith('$') for key in ccols):
                 raise ValueError("Top level special keys not allowed")
-            ccols, cvals = self._split_dict(constraint)
             qstr, values = self.table._parse_dict(constraint)
             if qstr is not None:
                 where = SQL(" AND ").join([where, qstr])
@@ -2541,7 +2558,7 @@ class PostgresStatsTable(PostgresBase):
             if not allcols:
                 where = SQL("")
         with DelayCommit(self, commit, silence=True):
-            selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table), groupby=groupby, where=where, having=having)
+            selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
             cur = self._execute(selecter, values)
             to_add = []
             total = 0
@@ -2583,12 +2600,85 @@ class PostgresStatsTable(PostgresBase):
                 stats.append((cols, "max", mx, ccols, cvals, threshold))
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
-            self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True)
+            self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
-            self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True)
+            self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
 
-    def refresh_stats(self, total=True, suffix=None):
-        pass
+    def refresh_stats(self, total=True, suffix=''):
+        """
+        Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
+        table to determine which stats to recompute, and the rows with ``extra = True``
+        in the counts table which have been added by user searches.
+
+        INPUT:
+
+        - ``total`` -- if False, doesn't update the total count (since we can often
+            update the total cheaply)
+        """
+        with DelayCommit(self, silence=True):
+            # Determine the stats and counts currently recorded
+            selecter = SQL("SELECT cols, constraint_cols, constraint_values, threshold FROM {0} WHERE stat = %s").format(Identifier(self.stats))
+            stat_cmds = list(self._execute(selecter, ["total"]))
+            col_value_dict = self.extra_counts(include_counts=False, suffix=suffix)
+
+            # Delete all stats and counts
+            deleter = SQL("DELETE FROM {0}")
+            self._execute(deleter.format(Identifier(self.stats + suffix)))
+            self._execute(deleter.format(Identifier(self.counts + suffix)))
+
+            # Regenerate stats and counts
+            for cols, ccols, cvals, threshold in stat_cmds:
+                self.add_stats(cols, (ccols, cvals), threshold)
+            self._add_extra_counts(col_value_dict, suffix=suffix)
+
+    def _copy_extra_counts_to_tmp(self):
+        """
+        Generates the extra counts in the ``_tmp`` table using the
+        extra counts that currently exist in the main table.
+        """
+        col_value_dict = self.extra_counts(include_counts=False)
+        self._add_extra_counts(col_value_dict, suffix='_tmp')
+
+    def _add_extra_counts(self, col_value_dict, suffix=''):
+        """
+        Records the counts requested in the col_value_dict.
+
+        INPUT:
+
+        - ``col_value_dict`` -- a dictionary giving queries to be counted,
+            as output by the ``extra_counts`` function.
+        - ``suffix`` -- A suffix (e.g. ``_tmp``) specifying where to
+            perform and record the counts
+        """
+        for cols, values_list in col_value_dict.items():
+            for values in values_list:
+                query = self._join_dict(cols, values)
+                self._slow_count(query, record=True, suffix=suffix)
+
+    def extra_counts(self, include_counts=True, suffix=''):
+        """
+        Returns a dictionary of the extra counts that have been added by explicit ``count`` calls
+        that were not included in counts generated by ``add_stats``.
+
+        The keys are tuples giving the columns being counted, the values are lists of pairs,
+        where the first entry is the tuple of values and the second is the count of rows
+        with those values.  Note that sometimes the values could be dictionaries
+        giving more complicated search queries on the corresponding columns.
+
+        INPUT:
+
+        - ``include_counts`` -- if False, will omit the counts and just give lists of values.
+        - ``suffix`` -- Used when dealing with `_tmp` or `_old*` tables.
+        """
+        selecter = SQL("SELECT cols, values, count FROM {0} WHERE extra = %s").format(Identifier(self.counts + suffix))
+        cur = self._execute(selecter, [True])
+        ans = defaultdict(list)
+        for cols, values, count in cur:
+            if include_counts:
+                ans[tuple(cols)].append((tuple(values), count))
+            else:
+                ans[tuple(cols)].append(tuple(values))
+        return ans
 
     def _get_values_counts(self, cols, constraint):
         """
@@ -3146,10 +3236,6 @@ class PostgresDatabase(PostgresBase):
 
         # copy all the data
         source.copy_to(search_tables = search_tables, data_folder = data_folder, include_ids = include_ids, **kwds)
-
-
-
-        
 
     def reload_all(self, data_folder, includes_ids=True, resort=None, reindex=True, restat=None, commit=True, **kwds):
         """
