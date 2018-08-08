@@ -1307,18 +1307,24 @@ class PostgresTable(PostgresBase):
         command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
         self._pkey_common(command, suffix, "Built", True)
 
-
-    ## To export, reload and revert indexes
-
-
-
+    ##################################################################
+    # Exporting, reloading and reverting indexes                     #
+    ##################################################################
 
     def copy_to_indexes(self, filename):
-        cols = "(index_name, table_name, type, columns, modifiers, storage_params)";
+        cols = "(index_name, table_name, type, columns, modifiers, storage_params)"
         select = "SELECT %s FROM meta_indexes WHERE table_name = '%s'" % (cols, self.search_table,)
         now = time.time()
-        self._copy_to_select(select, filename)
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
         print "Exported meta_indexes for %s in %.3f secs" % (self.search_table, time.time() - now)
+
+    def _get_current_index_version(self):
+        cur = self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = %s"), [self.search_table])
+        if cur.rowcount == 0:
+            return -1
+        else:
+            return cur.fetchone()[0]
 
 
     def reload_indexes(self, filename):
@@ -1328,56 +1334,64 @@ class PostgresTable(PostgresBase):
             columns = zip(*[line for line in csv.reader(F, delimiter = "\t")])
             for entry in columns[1]:
                 if entry != self.search_table:
-                    raise RuntimeError("the 2nd column in the file doesn't math the search table name")
+                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
 
-        # delete the current columns
-        self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table], commit = False);
+        with DelayCommit(self, silence=True):
+            # delete the current columns
+            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
 
-        # insert new columns
-        with open(filename, "r") as F:
-            try:
-                cur = self.conn.cursor()
-                cur.copy_from(filename, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
-            except Exception:
-                self.conn.rollback()
-                raise
+            # insert new columns
+            with open(filename, "r") as F:
+                try:
+                    cur = self.conn.cursor()
+                    cur.copy_from(filename, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
+                except Exception:
+                    self.conn.rollback()
+                    raise
 
-        # get version
-        version = list(self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = '%s'"), [self.search_table], commit = False))[0]
-        version += 1
+            version = self._get_current_index_version() + 1
 
-        # copy the new rows to history
-        rows = list(self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table], commit = False))
-        for row in rows:
-            self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version], commit = False)
-
-        self.conn.commit()
+            # copy the new rows to history
+            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
 
     def revert_indexes(self, version = None):
-        # by the default goes back one step
-        currentversion = list(self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = '%s'"), [self.search_table], commit = False))[0]
-        if version is None:
-            version = max(0, currentversion - 1);
+        with DelayCommit(self, silence=True):
+            # by the default goes back one step
+            currentversion = self._get_current_index_version()
+            if currentversion == -1:
+                raise RuntimeError("No history to revert")
+            if version is None:
+                version = max(0, currentversion - 1)
 
-        # delete current rows
-        self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table], commit = False);
+            # delete current rows
+            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
 
-        # copy data from history
-        rows = list(self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version], commit = False))
-        for row in rows:
-            self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row, commit = False)
-            self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + [currentversion + 1], commit = False)
+            # copy data from history
+            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + [currentversion + 1])
 
-        self.conn.commit()
-
-    ## To export, reload and revert rows in meta_table
+    ##################################################################
+    # Exporting, reloading and reverting meta_table                  #
+    ##################################################################
 
     def copy_to_meta(self, filename):
-        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)";
+        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)"
         select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, self.search_table,)
         now = time.time()
-        self._copy_to_select(select, filename)
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
         print "Exported meta_tables for %s in %.3f secs" % (self.search_table, time.time() - now)
+
+    def _get_current_tables_version(self):
+        cur = self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = %s"), [self.search_table])
+        if cur.rowcount == 0:
+            return -1
+        else:
+            return cur.fetchone()[0]
 
     def reload_meta(self, filename, final_swap = True, suffix = "_tmp"):
         """
@@ -1395,48 +1409,39 @@ class PostgresTable(PostgresBase):
         row = rows[0]
 
         if row[0] != self.search_table:
-            raise RuntimeError("The 1st column (%s) doesn't match the search table name (%s)" % (row[0], self.search_table));
+            raise RuntimeError("The 1st column (%s) doesn't match the search table name (%s)" % (row[0], self.search_table))
 
-        # get the current version
-        version = list(self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = '%s'"), [self.search_table], commit = False))[0]
-        version += 1
+        with DelayCommit(self, silence=True):
+            # get the current version
+            version = self._get_current_tables_version() + 1
 
-        # delete current row
-        self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'" ), [self.search_table], commit=False)
+            # delete current row
+            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table], commit=False)
 
-        # insert new row
-        self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row, commit=False)
-        self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [version], commit=False)
-
-        #commit
-        self.conn.commit()
-
+            # insert new row
+            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [version])
 
     def revert_meta(self, version = None):
-        currentversion = list(self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = '%s'"), [self.search_table], commit = False))[0]
+        with DelayCommit(self, silence=True):
+            currentversion = self._get_current_tables_version()
+            if currentversion == -1:
+                raise RuntimeError("No history to revert")
+            if version is None:
+                version = max(0, currentversion - 1)
 
+            # delete the current row
+            self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
 
-        if version is None:
-            version = max(0, currentversion - 1);
-        # delete the current row
-        self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table], commit = False);
+            # grab the old row
+            cur = self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
 
-        # grab the old row
-        rows = list(self._execute(SQL("SELECT FROM meta_tables_hist WHERE name = '%s' AND version = '%s'"), [self.search_table, version], commit = False));
+            assert cur.rowcount == 1
+            row = cur.fetchone()
 
-        assert len(rows) == 1
-        row = rows[0]
-
-        # insert the old row
-        self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row, commit=False)
-        self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [currentversion + 1], commit=False)
-
-
-        self.conn.commit()
-
-
-
-
+            # insert the old row
+            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [currentversion + 1])
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1799,7 +1804,7 @@ class PostgresTable(PostgresBase):
 
     def _copy_to_select(self, select, filename):
         """
-        Using the copy_expert from psycopg2 exports the data from a select statement
+        Using the copy_expert from psycopg2 exports the data from a select statement.
         """
         copyto = SQL("COPY (%s) TO STDOUT" % (select,))
         with open(filename, "w") as F:
@@ -1809,9 +1814,6 @@ class PostgresTable(PostgresBase):
             except Exception:
                 self.conn.rollback()
                 raise
-            else:
-                self.conn.commit()
-
 
     def _clone(self, table, tmp_table):
         """
@@ -1872,7 +1874,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True,  commit=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True, commit=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -1931,29 +1933,29 @@ class PostgresTable(PostgresBase):
                 self.resort(self.search_table + suffix, extra_table)
             else:
                 # We still need to build primary keys
-                self.restore_pkeys(suffix = suffix)
+                self.restore_pkeys(suffix=suffix)
             # update the indexes
             # these are needed before reindexing
             if indexesfile is not None:
                 # we do the swap at the end
                 self.reload_indexes(indexesfile)
             if reindex:
-                self.restore_indexes(suffix = suffix)
+                self.restore_indexes(suffix=suffix)
             if restat:
-                self.stats.refresh_stats(suffix = suffix)
+                self.stats.refresh_stats(suffix=suffix)
                 for table in [self.stats.counts, self.stats.stats]:
                     if table not in tables:
                         tables.append(table)
 
             if final_swap:
-                self.reload_final_swap(tables = tables, metafile = metafile)
+                self.reload_final_swap(tables=tables, metafile=metafile)
             elif metafile is not None:
-                print "Warning: since the final swap was not requested, we have not update meta_tables"
+                print "Warning: since the final swap was not requested, we have not updated meta_tables"
                 print "when performing the final swap with reload_final_swap, pass the metafile as an argument to update the meta_tables"
 
             print "Finished reloading %s!"%(self.search_table)
 
-    def reload_final_swap(self, tables = None, metafile = None, reindex = True, commit = True):
+    def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
         """
         Renames the _tmp versions of `tables` to the live versions.
         and updates the corresponding meta_tables row if `metafile` is provided
@@ -1981,9 +1983,9 @@ class PostgresTable(PostgresBase):
         #TODO add doc
         with DelayCommit(self, commit, silence=True):
             # drops the `_tmp` tables
-            self.cleanup_from_reload(old = False);
+            self.cleanup_from_reload(old = False)
             # reverts `meta_indexes` to previous state
-            self.revert_indexes();
+            self.revert_indexes()
             print "Reverted %s to its previous state" % (self.search_table,)
 
     def cleanup_from_reload(self, old = True):
@@ -2062,8 +2064,7 @@ class PostgresTable(PostgresBase):
             if restat:
                 self.stats.refresh_stats(total=False)
 
-    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metatablesfile = None, include_ids=True, commit=True, **kwds):
-        #FIXME: the Note for include_ids seems outdated
+    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metatablesfile = None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -2079,13 +2080,12 @@ class PostgresTable(PostgresBase):
         - ``statsfile`` -- a string (optional), the filename to write the data into for the stats table.
         - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
         - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
-        - ``include_ids`` -- whether to include the id column.  Note that this keyword differs from that in ``copy_from`` (no "s")
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
 
-        tabledata = [(self.search_table, self._search_cols, include_ids, searchfile),
-                     (self.extra_table, self._extra_cols, include_ids, extrafile),
+        tabledata = [(self.search_table, self._search_cols, True, searchfile),
+                     (self.extra_table, self._extra_cols, True, extrafile),
                      (self.stats.counts, ["cols", "values", "count"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
@@ -2113,10 +2113,8 @@ class PostgresTable(PostgresBase):
                     continue
                 now = time.time()
                 select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, table,)
-                self._copy_to_select(select, filename);
+                self._copy_to_select(select, filename)
                 print "Exported data from %s in %.3f secs" % (table, time.time() - now)
-
-
 
     ##################################################################
     # Updating the schema                                            #
@@ -2919,7 +2917,7 @@ class PostgresDatabase(PostgresBase):
         self._grant("DELETE", table_name, users)
 
     def is_read_only(self):
-        return self._read_only;
+        return self._read_only
 
     def can_read_write_knowls(self):
         return self._read_and_write_knowls
@@ -2946,32 +2944,30 @@ class PostgresDatabase(PostgresBase):
             raise ValueError
 
     def _create_meta_indexes_hist(self):
-        self._execute("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)");
-        version = 0;
+        with DelayCommit(self, silence=True):
+            self._execute("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)")
+            version = 0
 
-        # copy data from meta_indexes
-        rows = list(self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table], commit = False))
+            # copy data from meta_indexes
+            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
 
-
-        for row in rows:
-            self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version], commit = False)
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
 
         print("Table meta_indexes_hist created")
-        self.conn.commit()
 
     def _create_meta_tables_hist(self):
-        self._execute("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, version integer)");
-        version = 0;
+        with DelayCommit(self, silence=True):
+            self._execute("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, version integer)")
+            version = 0
 
-        # copy data from meta_indexes
-        rows = list(self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables "), commit = False))
+            # copy data from meta_indexes
+            rows = self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables "))
 
-
-        for row in rows:
-            self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version], commit = False)
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
 
         print("Table meta_indexes_hist created")
-        self.conn.commit()
 
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
         """
@@ -3221,11 +3217,13 @@ class PostgresDatabase(PostgresBase):
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables = included, metafile = filedata[-1], reindex = reindex);
+                table.reload_final_swap(tables = included, metafile = filedata[-1], reindex = reindex)
 
-        print "Successfully reloaded %s"%(", ".join(tablenames))
         if failures:
+            print "Reloaded %s"%(", ".join(tablenames))
             print "Failures in reloading %s"%(", ".join(table.search_table for table in failures))
+        else:
+            print "Successfully reloaded %s"%(", ".join(tablenames))
 
     def cleanup_all(self, commit=True):
         """
@@ -3237,5 +3235,3 @@ class PostgresDatabase(PostgresBase):
                 table.cleanup_from_reload()
 
 db = PostgresDatabase()
-
-
