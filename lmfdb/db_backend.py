@@ -2967,7 +2967,7 @@ class PostgresDatabase(PostgresBase):
             rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col FROM meta_tables "))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
             self.grant_select('meta_tables_hist')
 
