@@ -1354,7 +1354,7 @@ class PostgresTable(PostgresBase):
             # copy the new rows to history
             rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
     def revert_indexes(self, version = None):
         with DelayCommit(self, silence=True):
@@ -1372,7 +1372,7 @@ class PostgresTable(PostgresBase):
             rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + [currentversion + 1])
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
 
     ##################################################################
     # Exporting, reloading and reverting meta_table                  #
@@ -1420,7 +1420,7 @@ class PostgresTable(PostgresBase):
 
             # insert new row
             self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [version])
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + (version,))
 
     def revert_meta(self, version = None):
         with DelayCommit(self, silence=True):
@@ -1441,7 +1441,7 @@ class PostgresTable(PostgresBase):
 
             # insert the old row
             self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [currentversion + 1])
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + (currentversion + 1,))
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -2952,7 +2952,7 @@ class PostgresDatabase(PostgresBase):
             rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes"))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
+                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
         print("Table meta_indexes_hist created")
 
@@ -2965,7 +2965,7 @@ class PostgresDatabase(PostgresBase):
             rows = self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables "))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
+                self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
         print("Table meta_indexes_hist created")
 
