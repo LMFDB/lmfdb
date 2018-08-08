@@ -1352,7 +1352,7 @@ class PostgresTable(PostgresBase):
             version = self._get_current_index_version() + 1
 
             # copy the new rows to history
-            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
+            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
@@ -1369,7 +1369,7 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
 
             # copy data from history
-            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
+            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
@@ -1434,7 +1434,7 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
 
             # grab the old row
-            cur = self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
+            cur = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
 
             assert cur.rowcount == 1
             row = cur.fetchone()
@@ -2949,7 +2949,7 @@ class PostgresDatabase(PostgresBase):
             version = 0
 
             # copy data from meta_indexes
-            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes"))
+            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes"))
 
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
@@ -2962,7 +2962,7 @@ class PostgresDatabase(PostgresBase):
             version = 0
 
             # copy data from meta_indexes
-            rows = self._execute(SQL("SELECT (name, sort, id_ordered, out_of_order, has_extras, label_col) FROM meta_tables "))
+            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col FROM meta_tables "))
 
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_tables_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
