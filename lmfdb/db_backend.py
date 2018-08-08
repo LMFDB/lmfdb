@@ -106,6 +106,27 @@ class EmptyContext(object):
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
+class DelayCommit(object):
+    """
+    Used to set default behavior for whether to commit changes to the database connection.
+
+    Entering this context in a with statement will cause `_execute` calls to not commit by
+    default.  When the final DelayCommit is exited, the connection will commit.
+    """
+    def __init__(self, obj, final_commit=True, silence=None):
+        self.obj = obj
+        self.final_commit = final_commit
+        self._orig_silenced = obj._silenced
+        if silence is not None:
+            obj._silenced = silence
+    def __enter__(self):
+        self.obj._nocommit_stack += 1
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.obj._nocommit_stack -= 1
+        self.obj._silenced = self._orig_silenced
+        if exc_type is None and self.obj._nocommit_stack == 0 and self.final_commit:
+            self.obj.conn.commit()
+
 class PostgresBase(object):
     """
     A base class for various objects that interact with Postgres.
@@ -118,6 +139,8 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
+        self._nocommit_stack = 0
+        self._silenced = False
         handler = logging.FileHandler(SLOW_QUERY_LOGFILE)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
@@ -125,7 +148,7 @@ class PostgresBase(object):
         handler.addFilter(filt)
         self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
 
-    def _execute(self, query, values=None, silent=False, values_list=False, template=None, commit=True, slow_note=None, reissued=False):
+    def _execute(self, query, values=None, silent=None, values_list=False, template=None, commit=None, slow_note=None, reissued=False):
         """
         Execute an SQL command, properly catching errors and returning the resulting cursor.
 
@@ -138,13 +161,15 @@ class PostgresBase(object):
             Never, never, NEVER use Python string concatenation (+) or string parameters
             interpolation (%) to pass variables to a SQL query string. Not even at gunpoint.
 
-        - ``silent`` -- boolean (default False).  If True, don't log a warning for a slow query.
+        - ``silent`` -- boolean (default None).  If True, don't log a warning for a slow query.
+            If None, allow DelayCommit contexts to control silencing.
         - ``values_list`` -- boolean (default False).  If True, use the ``execute_values`` method,
             designed for inserting multiple values.
         - ``template`` -- string, for use with ``values_list`` to insert constant values:
             for example ``"(%s, %s, 42)"``. See the documentation of ``execute_values``
             for more details.
-        - ``commit`` -- boolean (default True).  Whether to commit changes on success.
+        - ``commit`` -- boolean (default None).  Whether to commit changes on success.  The default
+            is to commit unless we are currently in a DelayCommit context.
         - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
         - ``reissued`` -- used internally to prevent infinite recursion when attempting to
             reset the connection.
@@ -177,7 +202,7 @@ class PostgresBase(object):
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
-            if not silent:
+            if silent is False or (silent is None and not self._silenced):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
@@ -193,7 +218,7 @@ class PostgresBase(object):
                     raise
                 # Attempt to reset the connection
                 self._db.reset_connection()
-                if commit:
+                if commit or (commit is None and self._nocommit_stack == 0):
                     return self._execute(query, values=values, silent=silent, values_list=values_list, template=template, slow_note=slow_note, reissued=True)
                 else:
                     raise
@@ -201,13 +226,13 @@ class PostgresBase(object):
                 self.conn.rollback()
                 raise
         else:
-            if commit:
+            if commit or (commit is None and self._nocommit_stack == 0):
                 self.conn.commit()
         return cur
 
     @cached_method
-    def _table_exists(self, tablename, commit=True):
-        cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True, commit=commit)
+    def _table_exists(self, tablename):
+        cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True)
         return cur.fetchone()[0] is not None
 
     @staticmethod
@@ -1092,7 +1117,7 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
-    def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None, commit=True):
+    def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None):
         """
         Create an index.
 
@@ -1142,16 +1167,15 @@ class PostgresTable(PostgresBase):
                 raise ValueError("%s not a column"%(col))
         if name is None:
             name = "_".join([self.search_table] + columns + ([] if type == "btree" else [type]))
-        selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
-        cur = self._execute(selecter, [name, self.search_table], silent=True, commit=False)
-        if cur.rowcount > 0:
-            raise ValueError("Index with that name already exists; try specifying a different name")
-        creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
-        self._execute(creator, storage_params.values(), silent=True, commit=False)
-        inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
-        self._execute(inserter, [name, self.search_table, type, columns, modifiers, storage_params], silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, silence=True):
+            selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
+            cur = self._execute(selecter, [name, self.search_table])
+            if cur.rowcount > 0:
+                raise ValueError("Index with that name already exists; try specifying a different name")
+            creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
+            self._execute(creator, storage_params.values())
+            inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
+            self._execute(inserter, [name, self.search_table, type, columns, modifiers, storage_params])
         print "Index %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_index(self, name, suffix="", permanent=False, commit=True):
@@ -1165,16 +1189,15 @@ class PostgresTable(PostgresBase):
         - ``permanent`` -- whether to remove the index from the meta_indexes table
         """
         now = time.time()
-        if permanent:
-            deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND index_name = %s")
-            self._execute(deleter, [self.search_table, name], silent=True, commit=False)
-        dropper = SQL("DROP INDEX {0}").format(Identifier(name + suffix))
-        self._execute(dropper, silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            if permanent:
+                deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND index_name = %s")
+                self._execute(deleter, [self.search_table, name])
+            dropper = SQL("DROP INDEX {0}").format(Identifier(name + suffix))
+            self._execute(dropper)
         print "Dropped index %s in %.3f secs"%(name, time.time() - now)
 
-    def restore_index(self, name, suffix="", commit=True):
+    def restore_index(self, name, suffix=""):
         """
         Restore a specified index using the meta_indexes table.
 
@@ -1184,17 +1207,16 @@ class PostgresTable(PostgresBase):
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the CREATE INDEX statement.
         """
         now = time.time()
-        selecter = SQL("SELECT type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s AND index_name = %s")
-        cur = self._execute(selecter, [self.search_table, name], silent=True, commit=False)
-        if cur.rowcount > 1:
-            raise RuntimeError("Duplicated rows in meta_indexes")
-        elif cur.rowcount == 0:
-            raise ValueError("Index %s does not exist in meta_indexes"%(name,))
-        type, columns, modifiers, storage_params = cur.fetchone()
-        creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
-        self._execute(creator, storage_params.values(), silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, silence=True):
+            selecter = SQL("SELECT type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s AND index_name = %s")
+            cur = self._execute(selecter, [self.search_table, name])
+            if cur.rowcount > 1:
+                raise RuntimeError("Duplicated rows in meta_indexes")
+            elif cur.rowcount == 0:
+                raise ValueError("Index %s does not exist in meta_indexes"%(name,))
+            type, columns, modifiers, storage_params = cur.fetchone()
+            creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
+            self._execute(creator, storage_params.values())
         print "Created index %s in %.3f secs"%(name, time.time() - now)
 
     def _indexes_touching(self, columns):
@@ -1205,7 +1227,7 @@ class PostgresTable(PostgresBase):
         if columns:
             selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
             columns = [[col] for col in columns]
-        return self._execute(selecter, [self.search_table] + columns, silent=True, commit=False)
+        return self._execute(selecter, [self.search_table] + columns, silent=True)
 
     def drop_indexes(self, columns=[], suffix="", commit=True):
         """
@@ -1217,10 +1239,11 @@ class PostgresTable(PostgresBase):
             then only indexes referencing those columns will be included.
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the DROP INDEX statement.
         """
-        for res in self._indexes_touching(columns):
-            self.drop_index(res[0], suffix, commit=commit)
+        with DelayCommit(self, commit):
+            for res in self._indexes_touching(columns):
+                self.drop_index(res[0], suffix)
 
-    def restore_indexes(self, columns=[], suffix="", commit=True):
+    def restore_indexes(self, columns=[], suffix=""):
         """
         Restore all indexes using the meta_indexes table, or indexes that refer to any of a list of columns.
 
@@ -1230,8 +1253,9 @@ class PostgresTable(PostgresBase):
             then only indexes referencing those columns will be included.
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the CREATE INDEX statement.
         """
-        for res in self._indexes_touching(columns):
-            self.restore_index(res[0], suffix, commit=commit)
+        with DelayCommit(self):
+            for res in self._indexes_touching(columns):
+                self.restore_index(res[0], suffix)
 
     def _pkey_common(self, command, suffix, action, commit):
         """
@@ -1244,17 +1268,14 @@ class PostgresTable(PostgresBase):
         - ``action`` -- either "Dropped" or "Built", for printing.
         """
         now = time.time()
-        # Note that the primary keys don't follow the same convention as the other
-        # indexes, since they end in _pkey rather than the suffix.
-        self._execute(command.format(Identifier(self.search_table + suffix),
-                                     Identifier(self.search_table + suffix + "_pkey")),
-                      silent=True, commit=False)
-        if self.extra_table is not None:
-            self._execute(command.format(Identifier(self.extra_table + suffix),
-                                         Identifier(self.extra_table + suffix + "_pkey")),
-                          silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            # Note that the primary keys don't follow the same convention as the other
+            # indexes, since they end in _pkey rather than the suffix.
+            self._execute(command.format(Identifier(self.search_table + suffix),
+                                         Identifier(self.search_table + suffix + "_pkey")))
+            if self.extra_table is not None:
+                self._execute(command.format(Identifier(self.extra_table + suffix),
+                                             Identifier(self.extra_table + suffix + "_pkey")))
         print "%s primary key on %s in %.3f secs"%(action, self.search_table, time.time()-now)
 
     def drop_pkeys(self, suffix="", commit=True):
@@ -1268,7 +1289,7 @@ class PostgresTable(PostgresBase):
         command = SQL("ALTER TABLE {0} DROP CONSTRAINT {1}")
         self._pkey_common(command, suffix, "Dropped", commit)
 
-    def restore_pkeys(self, suffix="", commit=True):
+    def restore_pkeys(self, suffix=""):
         """
         Restore the primary key on the id columns.
 
@@ -1277,7 +1298,7 @@ class PostgresTable(PostgresBase):
         - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statements.
         """
         command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
-        self._pkey_common(command, suffix, "Built", commit)
+        self._pkey_common(command, suffix, "Built", True)
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -1286,25 +1307,21 @@ class PostgresTable(PostgresBase):
     def _break_stats(self):
         """
         This function should be called when the statistics are invalidated by an insertion or update.
-
-        Note that this function does not commit to the connection.
         """
         if self._stats_valid:
             # Only need to interact with database in this case.
             updater = SQL("UPDATE meta_tables SET stats_valid = false WHERE name = %s")
-            self._execute(updater, [self.search_table], silent=True, commit=False)
+            self._execute(updater, [self.search_table], silent=True)
             self._stats_valid = False
 
     def _break_order(self):
         """
         This function should be called when the id ordering is invalidated by an insertion or update.
-
-        Note that this function does not commit to the connection.
         """
         if not self._out_of_order:
             # Only need to interact with database in this case.
             updater = SQL("UPDATE meta_tables SET out_of_order = true WHERE name = %s")
-            self._execute(updater, [self.search_table], silent=True, commit=False)
+            self._execute(updater, [self.search_table], silent=True)
             self._out_of_order = True
 
     def finalize_changes(self):
@@ -1362,25 +1379,24 @@ class PostgresTable(PostgresBase):
         """
         Delete all rows matching the query.
         """
-        qstr, values = self._parse_dict(query)
-        if qstr is None:
-            qstr = SQL("")
-        else:
-            qstr = SQL(" WHERE {0}").format(qstr)
-        deleter = SQL("DELETE FROM {0}{1}").format(Identifier(self.search_table), qstr)
-        if self.extra_table is not None:
-            deleter = SQL("WITH deleted_ids AS ({0} RETURNING id) DELETE FROM {1} WHERE id IN (SELECT id FROM deleted_ids)").format(deleter, Identifier(self.extra_table))
-        cur = self._execute(deleter, values, commit=False)
-        self._break_order()
-        self._break_stats()
-        self.stats.total -= cur.rowcount
-        self.stats._record_count({}, self.stats.total, commit=False)
-        if resort:
-            self.resort(commit=False)
-        if restat:
-            self.stats.refresh_stats(total = False, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            qstr, values = self._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+            else:
+                qstr = SQL(" WHERE {0}").format(qstr)
+            deleter = SQL("DELETE FROM {0}{1}").format(Identifier(self.search_table), qstr)
+            if self.extra_table is not None:
+                deleter = SQL("WITH deleted_ids AS ({0} RETURNING id) DELETE FROM {1} WHERE id IN (SELECT id FROM deleted_ids)").format(deleter, Identifier(self.extra_table))
+            cur = self._execute(deleter, values)
+            self._break_order()
+            self._break_stats()
+            self.stats.total -= cur.rowcount
+            self.stats._record_count({}, self.stats.total)
+            if resort:
+                self.resort()
+            if restat:
+                self.stats.refresh_stats(total = False)
 
     def upsert(self, query, data, commit=True):
         """
@@ -1423,52 +1439,51 @@ class PostgresTable(PostgresBase):
         cases = [(self.search_table, search_data)]
         if self.extra_table is not None:
             cases.append((self.extra_table, extras_data))
-        # We have to split this command into a SELECT and an INSERT statement
-        # rather than using postgres' INSERT INTO ... ON CONFLICT statement
-        # because we have to take different additional steps depending on whether
-        # an insertion actually occurred
-        qstr, values = self._parse_dict(query)
-        selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id"), Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values, silent=True, commit=False)
-        if cur.rowcount > 1:
-            raise ValueError("Query %s does not specify a unique row"%(query))
-        elif cur.rowcount == 1: # update
-            row_id = cur.fetchone()[0]
-            for table, dat in cases:
-                updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
-                updater = updater.format(Identifier(table),
-                                         SQL(", ").join(map(Identifier, dat.keys())),
-                                         SQL(", ").join(Placeholder() * len(dat)),
-                                         SQL("id = %s"))
-                dvalues = dat.values()
-                dvalues.append(row_id)
-                self._execute(updater, dvalues, silent=True, commit=False)
-            if not self._out_of_order and any(key in self._sort_keys for key in data):
+        with DelayCommit(self, commit, silence=True):
+            # We have to split this command into a SELECT and an INSERT statement
+            # rather than using postgres' INSERT INTO ... ON CONFLICT statement
+            # because we have to take different additional steps depending on whether
+            # an insertion actually occurred
+            qstr, values = self._parse_dict(query)
+            selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id"), Identifier(self.search_table), qstr)
+            cur = self._execute(selecter, values)
+            if cur.rowcount > 1:
+                raise ValueError("Query %s does not specify a unique row"%(query))
+            elif cur.rowcount == 1: # update
+                row_id = cur.fetchone()[0]
+                for table, dat in cases:
+                    updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
+                    updater = updater.format(Identifier(table),
+                                             SQL(", ").join(map(Identifier, dat.keys())),
+                                             SQL(", ").join(Placeholder() * len(dat)),
+                                             SQL("id = %s"))
+                    dvalues = dat.values()
+                    dvalues.append(row_id)
+                    self._execute(updater, dvalues)
+                if not self._out_of_order and any(key in self._sort_keys for key in data):
+                    self._break_order()
+            else: # insertion
+                if "id" in data or "id" in query:
+                    raise ValueError("Cannot specify an id for insertion")
+                for col, val in query.items():
+                    if col not in search_data:
+                        search_data[col] = val
+                # We use the total on the stats object for the new id.  If someone else
+                # has inserted data this will be a problem,
+                # but it will raise an error rather than leading to invalid database state,
+                # so it should be okay.
+                search_data["id"] = self.stats.total + 1
+                if self.extra_table is not None:
+                    extras_data["id"] = self.stats.total + 1
+                for table, dat in cases:
+                    inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
+                    inserter.format(Identifier(table),
+                                    SQL(", ").join(map(Identifier, dat.keys())),
+                                    SQL(", ").join(Placeholder() * len(dat)))
+                    self._execute(inserter, dat.values())
                 self._break_order()
-        else: # insertion
-            if "id" in data or "id" in query:
-                raise ValueError("Cannot specify an id for insertion")
-            for col, val in query.items():
-                if col not in search_data:
-                    search_data[col] = val
-            # We use the total on the stats object for the new id.  If someone else
-            # has inserted data this will be a problem,
-            # but it will raise an error rather than leading to invalid database state,
-            # so it should be okay.
-            search_data["id"] = self.stats.total + 1
-            if self.extra_table is not None:
-                extras_data["id"] = self.stats.total + 1
-            for table, dat in cases:
-                inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
-                inserter.format(Identifier(table),
-                                SQL(", ").join(map(Identifier, dat.keys())),
-                                SQL(", ").join(Placeholder() * len(dat)))
-                self._execute(inserter, dat.values(), silent=True, commit=False)
-            self._break_order()
-            self.stats.total += 1
-        self._break_stats()
-        if commit:
-            self.conn.commit()
+                self.stats.total += 1
+            self._break_stats()
 
     def insert_many(self, search_data, extras_data=None, resort=True, reindex=False, restat=True, commit=True):
         """
@@ -1499,37 +1514,36 @@ class PostgresTable(PostgresBase):
             raise ValueError("extras_data must be present iff extra_table is")
         if extras_data is not None and len(search_data) != len(extras_data):
             raise ValueError("search_data and extras_data must have same length")
-        if reindex:
-            self.drop_pkeys(commit=False)
-            self.drop_indexes(commit=False)
-        for i, SD in enumerate(search_data):
-            SD["id"] = self.stats.total + i + 1
-        cases = [(self.search_table, search_data)]
-        if extras_data is not None:
-            for i, ED in enumerate(extras_data):
-                ED["id"] = self.stats.total + i + 1
-            cases.append((self.extra_table, extras_data))
-        now = time.time()
-        for table, L in cases:
-            template = SQL("({0})").format(map(Placeholder, L[0].keys()))
-            inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
-            inserter = inserter.format(Identifier(table),
-                                       SQL(", ").join(map(Identifier, L[0].keys())))
-            self._execute(inserter, L, values_list=True, template=template, silent=True, commit=False)
-        print "Inserted %s records into %s in %.3f secs"%(len(search_data), self.search_table, time.time()-now)
-        self._break_order()
-        self._break_stats()
-        self.stats.total += len(search_data)
-        self.stats._record_count({}, self.stats.total, commit=False)
-        if resort:
-            self.resort(commit=False)
-        if reindex:
-            self.restore_pkeys(commit=False)
-            self.restore_indexes(commit=False)
-        if restat:
-            self.stats.refresh_stats(total=False, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit):
+            if reindex:
+                self.drop_pkeys()
+                self.drop_indexes()
+            for i, SD in enumerate(search_data):
+                SD["id"] = self.stats.total + i + 1
+            cases = [(self.search_table, search_data)]
+            if extras_data is not None:
+                for i, ED in enumerate(extras_data):
+                    ED["id"] = self.stats.total + i + 1
+                cases.append((self.extra_table, extras_data))
+            now = time.time()
+            for table, L in cases:
+                template = SQL("({0})").format(map(Placeholder, L[0].keys()))
+                inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
+                inserter = inserter.format(Identifier(table),
+                                           SQL(", ").join(map(Identifier, L[0].keys())))
+                self._execute(inserter, L, values_list=True, template=template)
+            print "Inserted %s records into %s in %.3f secs"%(len(search_data), self.search_table, time.time()-now)
+            self._break_order()
+            self._break_stats()
+            self.stats.total += len(search_data)
+            self.stats._record_count({}, self.stats.total)
+            if resort:
+                self.resort()
+            if reindex:
+                self.restore_pkeys()
+                self.restore_indexes()
+            if restat:
+                self.stats.refresh_stats(total=False)
 
     def _identify_tables(self, search_table, extra_table):
         """
@@ -1547,7 +1561,7 @@ class PostgresTable(PostgresBase):
             extra_table = Identifier(self.extra_table)
         return search_table, extra_table
 
-    def resort(self, search_table=None, extra_table=None, commit=True):
+    def resort(self, search_table=None, extra_table=None):
         """
         Restores the sort order on the id column.
 
@@ -1558,48 +1572,47 @@ class PostgresTable(PostgresBase):
         - ``extra_table`` -- a string giving the name of the extra_table to be sorted.
             If None, will use ``self.extra_table``; another common input is ``self.extra_table + "_tmp"``.
         """
-        if self._id_ordered and (search_table is not None or self._out_of_order):
-            now = time.time()
-            search_table, extra_table = self._identify_tables(search_table, extra_table)
-            newid = "newid"
-            while newid in self._search_cols or newid in self._extra_cols:
-                newid += "_"
-            newid = Identifier(newid)
-            oldid = Identifier("id")
-            addcol = SQL("ALTER TABLE {0} ADD COLUMN {1} bigint")
-            dropcol = SQL("ALTER TABLE {0} DROP COLUMN {1}")
-            movecol = SQL("ALTER TABLE {0} RENAME COLUMN {1} TO {2}")
-            pkey = SQL("ALTER TABLE {0} ADD PRIMARY KEY ({1})")
-            self._execute(addcol.format(search_table, newid), silent=True, commit=False)
-            updater = SQL("UPDATE {0} SET {1} = newsort.newid FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) newsort WHERE {0}.id = newsort.id")
-            updater = updater.format(search_table, newid, self._sort)
-            self._execute(updater, silent=True, commit=False)
-            if extra_table is not None:
-                self._execute(addcol.format(extra_table, newid), silent=True, commit=False)
-                updater = SQL("UPDATE {0} SET {1} = search_table.{1} FROM (SELECT id, {1} FROM {2}) search_table WHERE {0}.id = search_table.id")
-                updater = updater.format(extra_table, newid, search_table)
-                self._execute(updater, silent=True, commit=False)
-                self._execute(dropcol.format(extra_table, oldid), silent=True, commit=False)
-                self._execute(movecol.format(extra_table, newid, oldid), silent=True, commit=False)
-                self._execute(pkey.format(extra_table, oldid), silent=True, commit=False)
-            self._execute(dropcol.format(search_table, oldid), silent=True, commit=False)
-            self._execute(movecol.format(search_table, newid, oldid), silent=True, commit=False)
-            self._execute(pkey.format(search_table, oldid), silent=True, commit=False)
-            self._set_ordered(commit=False)
-            print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
-            if commit:
-                self.conn.commit()
-        elif self._id_ordered:
-            print "Data already sorted"
-        else:
-            print "Data does not have an id column to be sorted"
+        with DelayCommit(self, silence=True):
+            if self._id_ordered and (search_table is not None or self._out_of_order):
+                now = time.time()
+                search_table, extra_table = self._identify_tables(search_table, extra_table)
+                newid = "newid"
+                while newid in self._search_cols or newid in self._extra_cols:
+                    newid += "_"
+                newid = Identifier(newid)
+                oldid = Identifier("id")
+                addcol = SQL("ALTER TABLE {0} ADD COLUMN {1} bigint")
+                dropcol = SQL("ALTER TABLE {0} DROP COLUMN {1}")
+                movecol = SQL("ALTER TABLE {0} RENAME COLUMN {1} TO {2}")
+                pkey = SQL("ALTER TABLE {0} ADD PRIMARY KEY ({1})")
+                self._execute(addcol.format(search_table, newid))
+                updater = SQL("UPDATE {0} SET {1} = newsort.newid FROM (SELECT id, ROW_NUMBER() OVER(ORDER BY {2}) AS newid FROM {0}) newsort WHERE {0}.id = newsort.id")
+                updater = updater.format(search_table, newid, self._sort)
+                self._execute(updater)
+                if extra_table is not None:
+                    self._execute(addcol.format(extra_table, newid))
+                    updater = SQL("UPDATE {0} SET {1} = search_table.{1} FROM (SELECT id, {1} FROM {2}) search_table WHERE {0}.id = search_table.id")
+                    updater = updater.format(extra_table, newid, search_table)
+                    self._execute(updater)
+                    self._execute(dropcol.format(extra_table, oldid))
+                    self._execute(movecol.format(extra_table, newid, oldid))
+                    self._execute(pkey.format(extra_table, oldid))
+                self._execute(dropcol.format(search_table, oldid))
+                self._execute(movecol.format(search_table, newid, oldid))
+                self._execute(pkey.format(search_table, oldid))
+                self._set_ordered()
+                print "Resorted %s in %.3f secs"%(self.search_table, time.time() - now)
+            elif self._id_ordered:
+                print "Data already sorted"
+            else:
+                print "Data does not have an id column to be sorted"
 
-    def _set_ordered(self, commit=True):
+    def _set_ordered(self):
         """
         Marks this table as sorted in meta_tables
         """
         updater = SQL("UPDATE meta_tables SET out_of_order = false WHERE name = %s")
-        self._execute(updater, [self.search_table], silent=True, commit=commit)
+        self._execute(updater, [self.search_table])
         self._out_of_order = False
 
     def _copy_from(self, filename, table, columns, cur_count, includes_ids, kwds):
@@ -1646,12 +1659,12 @@ class PostgresTable(PostgresBase):
                     self.conn.rollback()
                     raise
 
-    def _clone(self, table, tmp_table, commit=False):
+    def _clone(self, table, tmp_table):
         """
         Utility function: creates a table with the same schema as the given one.
         """
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
-        self._execute(creator, commit=commit)
+        self._execute(creator)
 
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
@@ -1665,35 +1678,32 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         backup_number = 1
-        for table in tables:
-            while self._table_exists("{0}_old{1}".format(table, backup_number), commit=False):
-                backup_number += 1
-        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
-        rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
-        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
-        for table in tables:
-            self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))), silent=True, commit=False)
-            self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)), silent=True, commit=False)
-            self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
-                                             Identifier("{0}_pkey".format(table)),
-                                             Identifier("{0}_old{1}_pkey".format(table, backup_number))),
-                          silent=True, commit=False)
-            self._execute(rename_pkey.format(Identifier(table),
-                                             Identifier("{0}_tmp_pkey".format(table)),
-                                             Identifier("{0}_pkey".format(table))),
-                          silent=True, commit=False)
-            self._db.grant_select(table, commit=False)
-            if table.endswith("_counts"):
-                self._db.grant_insert(table, commit=False)
-        selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
-        cur = self._execute(selecter, [self.search_table], silent=True, commit=False)
-        for res in cur:
-            self._execute(rename_index.format(Identifier(res[0]), Identifier("{0}_old{1}".format(res[0], backup_number))), silent=True, commit=False)
-            if indexed:
-                self._execute(rename_index.format(Identifier(res[0] + "_tmp"), Identifier(res[0])), silent=True, commit=False)
+        with DelayCommit(self, commit, silence=True):
+            for table in tables:
+                while self._table_exists("{0}_old{1}".format(table, backup_number)):
+                    backup_number += 1
+            rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
+            rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+            rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+            for table in tables:
+                self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))))
+                self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)))
+                self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
+                                                 Identifier("{0}_pkey".format(table)),
+                                                 Identifier("{0}_old{1}_pkey".format(table, backup_number))))
+                self._execute(rename_pkey.format(Identifier(table),
+                                                 Identifier("{0}_tmp_pkey".format(table)),
+                                                 Identifier("{0}_pkey".format(table))))
+                self._db.grant_select(table)
+                if table.endswith("_counts"):
+                    self._db.grant_insert(table)
+            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
+            cur = self._execute(selecter, [self.search_table])
+            for res in cur:
+                self._execute(rename_index.format(Identifier(res[0]), Identifier("{0}_old{1}".format(res[0], backup_number))))
+                if indexed:
+                    self._execute(rename_index.format(Identifier(res[0] + "_tmp"), Identifier(res[0])))
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
-        if commit:
-            self.conn.commit()
 
     def _check_file_input(self, searchfile, extrafile, kwds):
         """
@@ -1736,64 +1746,64 @@ class PostgresTable(PostgresBase):
         print "Reloading %s..."%(self.search_table)
         tables = []
         counts = {}
-        for table, cols, addid, filename in [(self.search_table, self._search_cols, True, searchfile),
-                                             (self.extra_table, self._extra_cols, True, extrafile),
-                                             (self.stats.counts, ["cols", "values", "count"],False, countsfile),
-                                             (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
-            if filename is None:
-                continue
-            tables.append(table)
-            now = time.time()
-            if addid:
-                cols = ["id"] + cols
-            tmp_table = table + "_tmp"
-            self._clone(table, tmp_table)
-            counts[table] = self._copy_from(filename, tmp_table, cols, 0, includes_ids, kwds)
-            print "Loaded data into %s in %.3f secs"%(table, time.time() - now)
-        if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
-            self.conn.rollback()
-            raise RuntimeError("Different number of rows in searchfile and extrafile")
-        if self._id_ordered and resort:
-            extra_table = None if self.extra_table is None else self.extra_table + "_tmp"
-            self.resort(self.search_table + "_tmp", extra_table, commit=False)
-        else:
-            # We still need to build primary keys
-            self.restore_pkeys(suffix="_tmp", commit=False)
-        if reindex:
-            self.restore_indexes(suffix="_tmp", commit=False)
-        if restat:
-            self.stats.refresh_stats(suffix="_tmp", commit=False)
-            for table in [self.stats.counts, self.stats.stats]:
-                if table not in tables:
-                    tables.append(table)
-        if final_swap:
-            self._swap_in_tmp(tables, reindex, commit=False)
-        print "Finished reloading %s!"%(self.search_table)
-        if commit:
-            self.conn.commit()
+        tabledata = [(self.search_table, self._search_cols, True, searchfile),
+                     (self.extra_table, self._extra_cols, True, extrafile),
+                     (self.stats.counts, ["cols", "values", "count"],False, countsfile),
+                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
+                                         "constraint_values", "threshold"], False, statsfile)]
+        with DelayCommit(self, commit, silence=True):
+            for table, cols, addid, filename in tabledata:
+                if filename is None:
+                    continue
+                tables.append(table)
+                now = time.time()
+                if addid:
+                    cols = ["id"] + cols
+                tmp_table = table + "_tmp"
+                self._clone(table, tmp_table)
+                counts[table] = self._copy_from(filename, tmp_table, cols, 0, includes_ids, kwds)
+                print "Loaded data into %s in %.3f secs"%(table, time.time() - now)
+            if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
+                self.conn.rollback()
+                raise RuntimeError("Different number of rows in searchfile and extrafile")
+            if self._id_ordered and resort:
+                extra_table = None if self.extra_table is None else self.extra_table + "_tmp"
+                self.resort(self.search_table + "_tmp", extra_table)
+            else:
+                # We still need to build primary keys
+                self.restore_pkeys(suffix="_tmp")
+            if reindex:
+                self.restore_indexes(suffix="_tmp")
+            if restat:
+                self.stats.refresh_stats(suffix="_tmp")
+                for table in [self.stats.counts, self.stats.stats]:
+                    if table not in tables:
+                        tables.append(table)
+            if final_swap:
+                self._swap_in_tmp(tables, reindex)
+            print "Finished reloading %s!"%(self.search_table)
 
-    def cleanup_from_reload(self, commit=True):
+    def cleanup_from_reload(self):
         """
         Drop the `_tmp` and `_old*` tables that are created during `reload`.
         """
         to_remove = []
         for suffix in ['', '_extras', '_stats', '_counts']:
             tablename = "{0}{1}_tmp".format(self.search_table, suffix)
-            if self._table_exists(tablename, commit=False):
+            if self._table_exists(tablename):
                 to_remove.append(tablename)
             backup_number = 1
             while True:
                 tablename = "{0}{1}_old{2}".format(self.search_table, suffix, backup_number)
-                if self._table_exists(tablename, commit=False):
+                if self._table_exists(tablename):
                     to_remove.append(tablename)
                 else:
                     break
                 backup_number += 1
-        for table in to_remove:
-            self._execute(SQL("DROP TABLE {0}").format(Identifier(table)), commit=False)
-            print "Dropped {0}".format(table)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, silence=True):
+            for table in to_remove:
+                self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
+                print "Dropped {0}".format(table)
 
     def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
@@ -1819,31 +1829,30 @@ class PostgresTable(PostgresBase):
         if search_cols is None:
             search_cols = self._search_cols
         search_cols = ["id"] + search_cols
-        if reindex:
-            self.drop_indexes(commit=False)
-        now = time.time()
-        search_count = self._copy_from(searchfile, self.search_table, search_cols, self.stats.total, includes_ids, kwds)
-        print "Loaded data into %s in %.3f secs"%(self.search_table, time.time() - now)
-        if extrafile is not None:
-            if extra_cols is None:
-                extra_cols = self._extra_cols
-            extra_cols = ["id"] + extra_cols
-            extra_count = self._copy_from(extrafile, self.extra_table, extra_cols, self.stats.total, includes_ids, kwds)
-            if search_count != extra_count:
-                self.conn.rollback()
-                raise RuntimeError("Different number of rows in searchfile and extrafile")
-        self._break_order()
-        if self._id_ordered and resort:
-            self.resort(commit=False)
-        if reindex:
-            self.restore_indexes(commit=False)
-        self._break_stats()
-        self.stats.total += search_count
-        self.stats._record_count({}, self.stats.total, commit=False)
-        if restat:
-            self.stats.refresh_stats(total=False, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            if reindex:
+                self.drop_indexes()
+            now = time.time()
+            search_count = self._copy_from(searchfile, self.search_table, search_cols, self.stats.total, includes_ids, kwds)
+            print "Loaded data into %s in %.3f secs"%(self.search_table, time.time() - now)
+            if extrafile is not None:
+                if extra_cols is None:
+                    extra_cols = self._extra_cols
+                extra_cols = ["id"] + extra_cols
+                extra_count = self._copy_from(extrafile, self.extra_table, extra_cols, self.stats.total, includes_ids, kwds)
+                if search_count != extra_count:
+                    self.conn.rollback()
+                    raise RuntimeError("Different number of rows in searchfile and extrafile")
+            self._break_order()
+            if self._id_ordered and resort:
+                self.resort()
+            if reindex:
+                self.restore_indexes()
+            self._break_stats()
+            self.stats.total += search_count
+            self.stats._record_count({}, self.stats.total)
+            if restat:
+                self.stats.refresh_stats(total=False)
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, include_ids=True, commit=True, **kwds):
         """
@@ -1863,26 +1872,26 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        for table, cols, addid, filename in [(self.search_table, self._search_cols, include_ids, searchfile),
-                                             (self.extra_table, self._extra_cols, include_ids, extrafile),
-                                             (self.stats.counts, ["cols", "values", "count"],False, countsfile),
-                                             (self.stats.stats, ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"], False, statsfile)]:
-            if filename is None:
-                continue
-            now = time.time()
-            if addid:
-                cols = ["id"] + cols
-            cur = self.conn.cursor()
-            with open(filename, "w") as F:
-                try:
-                    cur.copy_to(F, table, columns=cols, **kwds)
-                except Exception:
-                    self.conn.rollback()
-                    raise
-                else:
-                    if commit:
-                        self.conn.commit()
-            print "Exported data from %s in %.3f secs"%(table, time.time() - now)
+        tabledata = [(self.search_table, self._search_cols, include_ids, searchfile),
+                     (self.extra_table, self._extra_cols, include_ids, extrafile),
+                     (self.stats.counts, ["cols", "values", "count"],False, countsfile),
+                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
+                                         "constraint_values", "threshold"], False, statsfile)]
+        with DelayCommit(self, commit):
+            for table, cols, addid, filename in tabledata:
+                if filename is None:
+                    continue
+                now = time.time()
+                if addid:
+                    cols = ["id"] + cols
+                cur = self.conn.cursor()
+                with open(filename, "w") as F:
+                    try:
+                        cur.copy_to(F, table, columns=cols, **kwds)
+                    except Exception:
+                        self.conn.rollback()
+                        raise
+                print "Exported data from %s in %.3f secs"%(table, time.time() - now)
 
     ##################################################################
     # Updating the schema                                            #
@@ -1895,25 +1904,24 @@ class PostgresTable(PostgresBase):
         Change the default sort order for this table
         """
         self._set_sort(sort)
-        if sort:
-            updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
-            values = [sort, self.search_table]
-        else:
-            updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
-            values = [self.search_table]
-        self._execute(updater, values, commit=False)
-        self._break_order()
-        if resort:
-            self.resort(commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            if sort:
+                updater = SQL("UPDATE meta_tables SET sort = %s WHERE name = %s")
+                values = [sort, self.search_table]
+            else:
+                updater = SQL("UPDATE meta_tables SET sort = NULL WHERE name = %s")
+                values = [self.search_table]
+            self._execute(updater, values)
+            self._break_order()
+            if resort:
+                self.resort()
 
-        # add an index for the default sort
-        if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
-            self.create_index(sort, commit=commit)
+            # add an index for the default sort
+            if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
+                self.create_index(sort)
 
-    def add_column(self, name, datatype, extra=False, commit=True):
-        if name in self._search_cols: #name == 'id' or 
+    def add_column(self, name, datatype, extra=False):
+        if name in self._search_cols:
             raise ValueError("%s already has column %s"%(self.search_table, name))
         if name in self._extra_cols:
             raise ValueError("%s already has column %s"%(self.extra_table, name))
@@ -1930,32 +1938,29 @@ class PostgresTable(PostgresBase):
         # Since we have run the datatype through the whitelist,
         # the following string substitution is safe
         modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
-        self._execute(modifier, commit=False)
+        self._execute(modifier)
         if extra and name != 'id':
             self._extra_cols.append(name)
         elif not extra and name != 'id':
             self._search_cols.append(name)
-        if commit:
-            self.conn.commit()
 
     def drop_column(self, name, commit=True):
         if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
-        if name in self._search_cols:
-            table = self.search_table
-            deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-            self._execute(deleter, [self.search_table, [name]], commit=False)
-            self._search_cols.remove(name)
-        elif name in self._extra_cols:
-            table = self.extra_table
-            self._extra_cols.remove(name)
-        else:
-            raise ValueError("%s is not a column of %s"%(name, self.search_table))
-        modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
-        self._execute(modifier, commit=False)
-        self.col_type.pop(name, None)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            if name in self._search_cols:
+                table = self.search_table
+                deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
+                self._execute(deleter, [self.search_table, [name]])
+                self._search_cols.remove(name)
+            elif name in self._extra_cols:
+                table = self.extra_table
+                self._extra_cols.remove(name)
+            else:
+                raise ValueError("%s is not a column of %s"%(name, self.search_table))
+            modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
+            self._execute(modifier)
+            self.col_type.pop(name, None)
         print "Column %s dropped"%(name)
 
     def create_extra_table(self, columns, ordered=False, commit=True):
@@ -1971,66 +1976,63 @@ class PostgresTable(PostgresBase):
         """
         if self.extra_table is not None:
             raise ValueError("Extra table already exists")
-        if ordered and not self._id_ordered:
-            updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
-            self._execute(updater, [True, True, True], commit=False)
-            self._id_ordered = True
-            self._out_of_order = True
-            self.resort(commit=False)
-        else:
-            updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
-            self._execute(updater, [True], commit=False)
-        self.extra_table = self.search_table + "_extras"
-        vars = [('id', 'bigint')]
-        for col in columns:
-            if col not in self.col_type:
-                raise ValueError("%s is not a column of %s"%(col, self.search_table))
-            if col in self._sort_keys:
-                raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
-            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-            cur = self._execute(selecter, [self.search_table, [col]], commit=False)
-            if cur.rowcount > 0:
-                raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
-            typ = self.col_type[col]
-            if typ not in types_whitelist:
-                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                    raise RuntimeError("%s is not a valid type"%(typ))
-            if typ == 'text' or typ.startswith('char'):
-                typ += ' COLLATE "C"'
-            vars.append((col, typ))
-        self._extra_cols = []
-        vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
-        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
-        self._execute(creator, commit=False)
-        if columns:
-            try:
-                transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
-                cur = self.conn.cursor()
-                with transfer_file:
-                    try:
-                        cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
-                    except Exception:
-                        self.conn.rollback()
-                        raise
-                with open(transfer_file.name) as F:
-                    try:
-                        cur.copy_from(F, self.extra_table, columns=['id'] + columns)
-                    except Exception:
-                        self.conn.rollback()
-                        raise
-            finally:
-                transfer_file.unlink(transfer_file.name)
+        with DelayCommit(self, commit, silence=True):
+            if ordered and not self._id_ordered:
+                updater = SQL("UPDATE meta_tables SET (id_ordered, out_of_order, has_extras) = (%s, %s, %s)")
+                self._execute(updater, [True, True, True])
+                self._id_ordered = True
+                self._out_of_order = True
+                self.resort()
+            else:
+                updater = SQL("UPDATE meta_tables SET (has_extras) = (%s)")
+                self._execute(updater, [True])
+            self.extra_table = self.search_table + "_extras"
+            vars = [('id', 'bigint')]
             for col in columns:
-                modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
-                self._execute(modifier, commit=False)
-        else:
-            sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
-            self._execute(sequencer, commit=False)
-            updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.extra_table))
-            self._execute(updater, commit=False)
-        self.restore_pkeys(commit=False)
-        if commit:
-            self.conn.`commit()
+                if col not in self.col_type:
+                    raise ValueError("%s is not a column of %s"%(col, self.search_table))
+                if col in self._sort_keys:
+                    raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
+                selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
+                cur = self._execute(selecter, [self.search_table, [col]])
+                if cur.rowcount > 0:
+                    raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
+                typ = self.col_type[col]
+                if typ not in types_whitelist:
+                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                        raise RuntimeError("%s is not a valid type"%(typ))
+                vars.append((col, typ))
+            self._extra_cols = []
+            vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
+            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
+            self._execute(creator)
+            if columns:
+                try:
+                    transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
+                    cur = self.conn.cursor()
+                    with transfer_file:
+                        try:
+                            cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
+                        except Exception:
+                            self.conn.rollback()
+                            raise
+                    with open(transfer_file.name) as F:
+                        try:
+                            cur.copy_from(F, self.extra_table, columns=['id'] + columns)
+                        except Exception:
+                            self.conn.rollback()
+                            raise
+                finally:
+                    transfer_file.unlink(transfer_file.name)
+                for col in columns:
+                    modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
+                    self._execute(modifier)
+            else:
+                sequencer = SQL("CREATE TEMPORARY SEQUENCE tmp_id")
+                self._execute(sequencer)
+                updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.extra_table))
+                self._execute(updater)
+            self.restore_pkeys()
 
 class PostgresStatsTable(PostgresBase):
     """
@@ -2079,10 +2081,10 @@ class PostgresStatsTable(PostgresBase):
             threshold = "threshold = %s"
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
         selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
-        cur = self._execute(selecter, values, commit=False)
+        cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
-    def quick_count(self, query, commit=True):
+    def quick_count(self, query):
         """
         Tries to quickly determine the number of results for a given query
         using the count table.
@@ -2097,13 +2099,11 @@ class PostgresStatsTable(PostgresBase):
         """
         cols, vals = self._split_dict(query)
         selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s").format(Identifier(self.counts))
-        # The commit=commit is important, since this could be the first call after
-        # a connection failure, and we usually want it to recover gracefully.
-        cur = self._execute(selecter, [cols, vals], commit=commit)
+        cur = self._execute(selecter, [cols, vals])
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
-    def _slow_count(self, query, record=True, commit=True):
+    def _slow_count(self, query, record=True):
         """
         No shortcuts: actually count the rows in the search table.
 
@@ -2120,31 +2120,26 @@ class PostgresStatsTable(PostgresBase):
         qstr, values = self.table._parse_dict(query)
         if qstr is not None:
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
-        # The commit=commit is important, since this could be the first call after
-        # a connection failure, and we usually want it to recover gracefully.
-        cur = self._execute(selecter, values, commit=commit)
+        cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres, commit=commit)
+            self._record_count(query, nres)
         return nres
 
-    def _record_count(self, query, count, commit=True):
+    def _record_count(self, query, count):
         cols, vals = self._split_dict(query)
-        if self.quick_count(query, commit=commit) is None:
+        if self.quick_count(query) is None:
             updater = SQL("INSERT INTO {0} (count, cols, values) VALUES (%s, %s, %s)")
         else:
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
-            self._execute(updater.format(Identifier(self.counts)), [count, cols, vals], commit=False)
+            self._execute(updater.format(Identifier(self.counts)), [count, cols, vals])
         except DatabaseError:
             pass
-        else:
-            if commit:
-                self.conn.commit()
 
-    def count(self, query={}, record=True, commit=True):
+    def count(self, query={}, record=True):
         """
         Count the number of results for a given query.
 
@@ -2166,12 +2161,12 @@ class PostgresStatsTable(PostgresBase):
         """
         if not query:
             return self.total
-        nres = self.quick_count(query, commit=commit)
+        nres = self.quick_count(query)
         if nres is None:
-            nres = self._slow_count(query, record=record, commit=commit)
+            nres = self._slow_count(query, record=record)
         return int(nres)
 
-    def max(self, col, commit=True):
+    def max(self, col):
         """
         The maximum value attained by the given column, which must be in the search table.
 
@@ -2187,21 +2182,21 @@ class PostgresStatsTable(PostgresBase):
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
-        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", [col]], commit=commit)
+        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", [col]])
         if cur.rowcount:
             return cur.fetchone()[0]
         selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
-        cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)), commit=commit)
+        cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
         m = cur.fetchone()[0]
         if m is None:
             # the default order ends with NULLs, so we now have to use NULLS LAST,
             # preventing the use of indexes.
             selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC NULLS LAST LIMIT 1")
-            cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)), commit=commit)
+            cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
             m = cur.fetchone()[0]
         try:
             inserter = SQL("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)")
-            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m], commit=commit)
+            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m])
         except Exception:
             pass
         return m
@@ -2322,58 +2317,57 @@ class PostgresStatsTable(PostgresBase):
             groupby = SQL("")
             if not allcols:
                 where = SQL("")
-        selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table), groupby=groupby, where=where, having=having)
-        cur = self._execute(selecter, values, silent=True, commit=False)
-        to_add = []
-        total = 0
-        onenumeric = False # whether we're grouping by a single numeric column
-        if len(cols) == 1:
-            col = cols[0]
-            if self.table.col_type.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
-                onenumeric = True
-                avg = 0
-                mn = None
-                mx = None
-        for countvec in cur:
-            colvals, count = countvec[:-1], countvec[-1]
-            if constraint is None:
-                allcolvals = colvals
-            else:
-                allcolvals = []
-                i = 0
-                for col in allcols:
-                    if col in cols:
-                        allcolvals.append(colvals[i])
-                        i += 1
-                    else:
-                        allcolvals.append(constraint[col])
-            to_add.append((allcols, allcolvals, count))
-            total += count
-            if onenumeric:
-                val = colvals[0]
-                avg += val * count
-                if mn is None or val < mn:
-                    mn = val
-                if mx is None or val > mx:
-                    mx = val
-        stats = [(cols, "total", total, ccols, cvals, threshold)]
-        if onenumeric and total != 0:
-            avg = float(avg) / total
-            stats.append((cols, "avg", avg, ccols, cvals, threshold))
-            stats.append((cols, "min", mn, ccols, cvals, threshold))
-            stats.append((cols, "max", mx, ccols, cvals, threshold))
-        # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
-        inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
-        self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True, silent=True, commit=False)
-        inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
-        self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True, silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table), groupby=groupby, where=where, having=having)
+            cur = self._execute(selecter, values)
+            to_add = []
+            total = 0
+            onenumeric = False # whether we're grouping by a single numeric column
+            if len(cols) == 1:
+                col = cols[0]
+                if self.table.col_type.get(col) in ["numeric", "bigint", "integer", "smallint", "double precision"]:
+                    onenumeric = True
+                    avg = 0
+                    mn = None
+                    mx = None
+            for countvec in cur:
+                colvals, count = countvec[:-1], countvec[-1]
+                if constraint is None:
+                    allcolvals = colvals
+                else:
+                    allcolvals = []
+                    i = 0
+                    for col in allcols:
+                        if col in cols:
+                            allcolvals.append(colvals[i])
+                            i += 1
+                        else:
+                            allcolvals.append(constraint[col])
+                to_add.append((allcols, allcolvals, count))
+                total += count
+                if onenumeric:
+                    val = colvals[0]
+                    avg += val * count
+                    if mn is None or val < mn:
+                        mn = val
+                    if mx is None or val > mx:
+                        mx = val
+            stats = [(cols, "total", total, ccols, cvals, threshold)]
+            if onenumeric and total != 0:
+                avg = float(avg) / total
+                stats.append((cols, "avg", avg, ccols, cvals, threshold))
+                stats.append((cols, "min", mn, ccols, cvals, threshold))
+                stats.append((cols, "max", mx, ccols, cvals, threshold))
+            # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
+            self._execute(inserter.format(Identifier(self.stats)), stats, values_list=True)
+            inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
+            self._execute(inserter.format(Identifier(self.counts)), to_add, values_list=True)
 
-    def refresh_stats(self, total=True, suffix=None, commit=True):
+    def refresh_stats(self, total=True, suffix=None):
         pass
 
-    def _get_values_counts(self, cols, constraint, commit=True):
+    def _get_values_counts(self, cols, constraint):
         """
         Utility function used in ``display_data``.
 
@@ -2398,9 +2392,9 @@ class PostgresStatsTable(PostgresBase):
             selecter_values = [cols]
             positions = range(len(cols))
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
-        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values, commit=commit)]
+        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
 
-    def _get_total_avg(self, cols, constraint, include_avg, commit=True):
+    def _get_total_avg(self, cols, constraint, include_avg):
         """
         Utility function used in ``display_data``.
 
@@ -2425,20 +2419,20 @@ class PostgresStatsTable(PostgresBase):
         else:
             totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
             totaler_values = [cols, "total"]
-        cur_total = self._execute(totaler, values=totaler_values, commit=commit)
+        cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
         total = cur_total.fetchone()[0]
         if include_avg:
             # Modify totaler_values in place since query for avg is very similar
             totaler_values[1] = "avg"
-            cur_avg = self._execute(totaler, values=totaler_values, commit=commit)
+            cur_avg = self._execute(totaler, values=totaler_values)
             avg = cur_avg.fetchone()[0]
         else:
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, include_avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count', commit=True):
+    def display_data(self, cols, base_url, constraint=None, include_avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -2473,8 +2467,8 @@ class PostgresStatsTable(PostgresBase):
             if query_formatter is None:
                 query_formatter = lambda x: str(x)
             col = cols[0]
-            total, avg = self._get_total_avg(cols, constraint, include_avg, commit=commit)
-            data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint, commit=commit)]
+            total, avg = self._get_total_avg(cols, constraint, include_avg)
+            data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint)]
             data.sort()
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
             if include_avg:
@@ -2510,26 +2504,24 @@ class PostgresStatsTable(PostgresBase):
                          'proportion':format_percentage(1,1)})
         return data
 
-    def create_oldstats(self, filename, commit=True):
+    def create_oldstats(self, filename):
         name = self.search_table + "_oldstats"
-        creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
-        self._execute(creator, commit=False)
-        self._db.grant_select(name, commit=False)
-        cur = self.conn.cursor()
-        with open(filename) as F:
-            try:
-                cur.copy_from(F, self.search_table + "_oldstats")
-            except Exception:
-                self.conn.rollback()
-                raise
-            else:
-                if commit:
-                    self.conn.commit()
-                print "Oldstats created successfully"
+        with DelayCommit(self, silence=True):
+            creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
+            self._execute(creator)
+            self._db.grant_select(name)
+            cur = self.conn.cursor()
+            with open(filename) as F:
+                try:
+                    cur.copy_from(F, self.search_table + "_oldstats")
+                except Exception:
+                    self.conn.rollback()
+                    raise
+        print "Oldstats created successfully"
 
-    def get_oldstat(self, name, commit=True):
+    def get_oldstat(self, name):
         selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
-        cur = self._execute(selecter, [name], commit=commit)
+        cur = self._execute(selecter, [name])
         if cur.rowcount != 1:
             raise ValueError("Not a unique oldstat identifier")
         return cur.fetchone()[0]
@@ -2678,27 +2670,25 @@ class PostgresDatabase(PostgresBase):
         elif 'password' not in options:
             options['user'], options['password'] = 'lmfdb', 'lmfdb'
 
-    def _grant(self, action, table_name, users, commit):
+    def _grant(self, action, table_name, users):
         action = action.upper()
         if action not in ['SELECT', 'INSERT', 'UPDATE', 'DELETE']:
             raise ValueError("%s is not a valid action"%action)
         grantor = SQL('GRANT %s ON TABLE {0} TO {1}'%action)
         for user in users:
-            self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True, commit=False)
-        if commit:
-            self.conn.commit()
+            self._execute(grantor.format(Identifier(table_name), Identifier(user)), silent=True)
 
-    def grant_select(self, table_name, users=['lmfdb', 'webserver'], commit=True):
-        self._grant("SELECT", table_name, users, commit)
+    def grant_select(self, table_name, users=['lmfdb', 'webserver']):
+        self._grant("SELECT", table_name, users)
 
-    def grant_insert(self, table_name, users=['webserver'], commit=True):
-        self._grant("INSERT", table_name, users, commit)
+    def grant_insert(self, table_name, users=['webserver']):
+        self._grant("INSERT", table_name, users)
 
-    def grant_update(self, table_name, users=['webserver'], commit=True):
-        self._grant("UPDATE", table_name, users, commit)
+    def grant_update(self, table_name, users=['webserver']):
+        self._grant("UPDATE", table_name, users)
 
-    def grant_delete(self, table_name, users=['webserver'], commit=True):
-        self._grant("DELETE", table_name, users, commit)
+    def grant_delete(self, table_name, users=['webserver']):
+        self._grant("DELETE", table_name, users)
 
     def is_read_only(self):
         return self._read_only;
@@ -2824,42 +2814,41 @@ class PostgresDatabase(PostgresBase):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
         search_columns = process_columns(search_columns, search_order)
-        creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
-        self._execute(creator, silent=True, commit=False)
-        self.grant_select(name, commit=False)
-        if extra_columns is not None:
-            valid_extra_list = sum(extra_columns.values(),[])
-            valid_extra_set = set(valid_extra_list)
-            # Check that columns aren't listed twice
-            if len(valid_extra_list) != len(valid_extra_set):
-                C = Counter(valid_extra_list)
-                raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
-            if extra_order is not None:
-                for col in extra_order:
-                    if col not in valid_extra_set:
-                        raise ValueError("Column %s does not exist"%(col))
-                if len(extra_order) != len(valid_extra_set):
-                    raise ValueError("Must include all columns")
-            extra_columns = process_columns(extra_columns, extra_order)
-            creator = SQL('CREATE TABLE {0} ({1})')
-            creator = creator.format(Identifier(name+"_extras"),
-                                     SQL(", ").join(extra_columns))
-            self._execute(creator, silent=True, commit=False)
-            self.grant_select(name+"_extras", commit=False)
-        creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
-        creator = creator.format(Identifier(name+"_counts"))
-        self._execute(creator, silent=True, commit=False)
-        self.grant_select(name+"_counts", commit=False)
-        self.grant_insert(name+"_counts", commit=False)
-        creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
-        creator = creator.format(Identifier(name + "_stats"))
-        self._execute(creator, silent=True, commit=False)
-        self.grant_select(name+"_stats", commit=False)
-        inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
-        self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col], silent=True, commit=False)
-        print "Table %s created in %.3f secs"%(name, time.time()-now)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
+            self._execute(creator)
+            self.grant_select(name)
+            if extra_columns is not None:
+                valid_extra_list = sum(extra_columns.values(),[])
+                valid_extra_set = set(valid_extra_list)
+                # Check that columns aren't listed twice
+                if len(valid_extra_list) != len(valid_extra_set):
+                    C = Counter(valid_extra_list)
+                    raise ValueError("Column %s repeated"%(C.most_common(1)[0][0]))
+                if extra_order is not None:
+                    for col in extra_order:
+                        if col not in valid_extra_set:
+                            raise ValueError("Column %s does not exist"%(col))
+                    if len(extra_order) != len(valid_extra_set):
+                        raise ValueError("Must include all columns")
+                extra_columns = process_columns(extra_columns, extra_order)
+                creator = SQL('CREATE TABLE {0} ({1})')
+                creator = creator.format(Identifier(name+"_extras"),
+                                         SQL(", ").join(extra_columns))
+                self._execute(creator)
+                self.grant_select(name+"_extras")
+            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
+            creator = creator.format(Identifier(name+"_counts"))
+            self._execute(creator)
+            self.grant_select(name+"_counts")
+            self.grant_insert(name+"_counts")
+            creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
+            creator = creator.format(Identifier(name + "_stats"))
+            self._execute(creator)
+            self.grant_select(name+"_stats")
+            inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
+            self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
+            print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
         self.tablenames.append(name)
         self.tablenames.sort()
@@ -2867,21 +2856,20 @@ class PostgresDatabase(PostgresBase):
     def drop_table(self, name, commit=True):
         if name not in self.tablenames:
             raise ValueError("%s is not a search table")
-        table = getattr(self, name)
-        indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
-        if indexes:
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name], commit=False)
-            print "Deleted indexes {0}".format(", ".join(index[0] for index in indexes))
-        self._execute(SQL("DELETE FROM meta_tables WHERE name = %s"), [name], commit=False)
-        if table.extra_table is not None:
-            self._execute(SQL("DROP TABLE {0}").format(Identifier(table.extra_table)), commit=False)
-            print "Dropped {0}".format(table.extra_table)
-        for tbl in [name, name + "_counts", name + "_stats"]:
-            self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)), commit=False)
-            print "Dropped {0}".format(tbl)
-        self.tablenames.remove(name)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            table = getattr(self, name)
+            indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
+            if indexes:
+                self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
+                print "Deleted indexes {0}".format(", ".join(index[0] for index in indexes))
+            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s"), [name])
+            if table.extra_table is not None:
+                self._execute(SQL("DROP TABLE {0}").format(Identifier(table.extra_table)))
+                print "Dropped {0}".format(table.extra_table)
+            for tbl in [name, name + "_counts", name + "_stats"]:
+                self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)))
+                print "Dropped {0}".format(tbl)
+            self.tablenames.remove(name)
 
     def reload_all(self, data_folder, includes_ids=True, resort=None, reindex=True, restat=None, commit=True, **kwds):
         """
@@ -2924,19 +2912,18 @@ class PostgresDatabase(PostgresBase):
             file_list.append((table, (searchfile, extrafile, countsfile, statsfile), included))
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
-        failures = []
-        for table, filedata, included in file_list:
-            try:
-                table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, commit=False, **kwds)
-            except DatabaseError:
-                traceback.print_exc()
-                failures.append(table)
-        for table, filedata, included in file_list:
-            if table in failures:
-                continue
-            table._swap_in_tmp(included, reindex, commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            failures = []
+            for table, filedata, included in file_list:
+                try:
+                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
+                except DatabaseError:
+                    traceback.print_exc()
+                    failures.append(table)
+            for table, filedata, included in file_list:
+                if table in failures:
+                    continue
+                table._swap_in_tmp(included, reindex)
         if failures:
             print "Failures in reloading %s"%(", ".join(table.search_table for table in failures))
         else:
@@ -2946,10 +2933,9 @@ class PostgresDatabase(PostgresBase):
         """
         Drops all `_tmp` and `_old` tables created by the reload() method.
         """
-        for tablename in self.tablenames:
-            table = getattr(self, tablename)
-            table.cleanup_from_reload(commit=False)
-        if commit:
-            self.conn.commit()
+        with DelayCommit(self, commit, silence=True):
+            for tablename in self.tablenames:
+                table = getattr(self, tablename)
+                table.cleanup_from_reload()
 
 db = PostgresDatabase()
