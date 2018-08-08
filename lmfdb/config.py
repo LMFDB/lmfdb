@@ -147,6 +147,13 @@ class Configuration(object):
         default_arguments_dict = vars(parser.parse_args([]));
         del default_arguments_dict['config_file'];
 
+        self.default_args = {};
+        for key, val in default_arguments_dict.iteritems():
+            sec, opt = key.split('_', 1);
+            if sec not in self.default_args:
+                self.default_args[sec] = {}
+            self.default_args[sec][opt] = str(val)
+
         from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
@@ -162,9 +169,10 @@ class Configuration(object):
             _cfgp.add_section('postgresql')
             _cfgp.add_section('logging');
 
-            for key, val in default_arguments_dict.iteritems():
-                sec, opt = key.split('_', 1);
-                _cfgp.set(sec, opt, str(val));
+
+            for sec, options in self.default_args.iteritems():
+                for opt, val in options.iteritems():
+                    _cfgp.set(sec, opt, str(val));
 
             with open(args.config_file, 'wb') as configfile:
                 _cfgp.write(configfile)
@@ -239,6 +247,11 @@ class Configuration(object):
 
     def get_postgresql(self):
         return self.postgresql_options;
+
+    def get_postgresql_default(self):
+        res = dict(self.default_args["postgresql"]);
+        res["port"] = int(res["port"]);
+        return res
 
     def get_logging(self):
         return self.logging_options;
