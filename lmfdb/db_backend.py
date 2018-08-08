@@ -1166,7 +1166,14 @@ class PostgresTable(PostgresBase):
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s not a column"%(col))
         if name is None:
-            name = "_".join([self.search_table] + columns + ([] if type == "btree" else [type]))
+            # Postgres has a maximum name length of 64 bytes
+            # It will truncate if longer, but that causes suffixes of _tmp to be indistinguishable.
+            if len(columns) <= 2:
+                name = "_".join([self.search_table] + columns + ([] if type == "btree" else [type]))
+            elif len(columns) <= 8:
+                name = "_".join([self.search_table] + [col[:2] for col in columns])
+            else:
+                name = "_".join([self.search_table] + ["".join(col[0] for col in columns)])
         with DelayCommit(self, silence=True):
             selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
             cur = self._execute(selecter, [name, self.search_table])
