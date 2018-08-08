@@ -2949,7 +2949,7 @@ class PostgresDatabase(PostgresBase):
             version = 0
 
             # copy data from meta_indexes
-            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
+            rows = self._execute(SQL("SELECT (index_name, table_name, type, columns, modifiers, storage_params) FROM meta_indexes"))
 
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + [version])
