@@ -50,6 +50,7 @@ Galois_Conjugate = Dict(
 Dokchitser_ArtinRepresentation = Dict({
     "_id": Anything,
     "Baselabel": String,
+    "Container": Anything,
     "Dim": Int,
     "Indicator": Int,
     "Conductor": TooLargeInt,

@@ -22,7 +22,7 @@ from flask_login import UserMixin, AnonymousUserMixin
 
 class PostgresUserTable(PostgresBase):
     def __init__(self):
-        PostgresBase.__init__(self, 'db_users', db.conn)
+        PostgresBase.__init__(self, 'db_users', db)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
         self._rw_userdb = db.can_read_write_userdb()

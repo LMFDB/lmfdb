@@ -3,7 +3,7 @@
 from lmfdb.knowledge import logger
 from datetime import datetime
 
-from lmfdb.db_backend import db, PostgresBase
+from lmfdb.db_backend import db, PostgresBase, DelayCommit
 from lmfdb.db_encoding import Array
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
@@ -47,7 +47,7 @@ def extract_cat(kid):
 class KnowlBackend(PostgresBase):
     _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
     def __init__(self):
-        PostgresBase.__init__(self, 'db_knowl', db.conn)
+        PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
 
     def can_read_write_knowls(self):
@@ -120,10 +120,11 @@ class KnowlBackend(PostgresBase):
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
         values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
-        insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
-        insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
-        self._execute(insterer, (knowl.id,) + values + values)
-        self.save_history(knowl, who)
+        with DelayCommit(self):
+            insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
+            insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
+            self._execute(insterer, (knowl.id,) + values + values)
+            self.save_history(knowl, who)
 
     def update(self, kid, key, value):
         if key not in self._default_fields + ['history', '_keywords']:
@@ -156,11 +157,12 @@ class KnowlBackend(PostgresBase):
 
     def delete(self, knowl):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        insterer = SQL("INSERT INTO kwl_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(', ').join(Placeholder() * len(self._default_fields)))
-        values = self.get_knowl(knowl.id)
-        self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
-        deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
-        self._execute(deletor, (knowl.id,))
+        with DelayCommit(self):
+            insterer = SQL("INSERT INTO kwl_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(', ').join(Placeholder() * len(self._default_fields)))
+            values = self.get_knowl(knowl.id)
+            self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
+            deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
+            self._execute(deletor, (knowl.id,))
 
     def is_locked(self, knowlid, delta_min=10):
         """
@@ -209,25 +211,26 @@ class KnowlBackend(PostgresBase):
         reindexes knowls, also the list of categories. prunes history.
         returns the list of categories (as a string), a count of the the number of knowls reindexed and the number of histories pruned.
         """
-        cats = self.get_categories()
-        selecter = SQL("SELECT (id, content, title) FROM kwl_knowls")
-        cur = self._execute(selecter)
-        updater = SQL("UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s")
-        for kid, content, title in cur:
-            cat = extract_cat(kid)
-            search_keywords = make_keywords(content, kid, title)
-            self._execute(updater, (cat, search_keywords, kid))
-        hcount = 0
-        selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
-        cur = self._execute(selecter)
-        updater = SQL("UPDATE kwl_knowls SET history = %s WHERE id = %s")
-        for kid, history in cur:
-            if len(history) > max_h:
-                hcount += 1
-                self._execute(updater, (history[-max_h:], kid))
-        counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
-        cur = self._execute(counter)
-        reindex_count = int(cur.fetchone()[0])
+        with DelayCommit(self):
+            cats = self.get_categories()
+            selecter = SQL("SELECT (id, content, title) FROM kwl_knowls")
+            cur = self._execute(selecter)
+            updater = SQL("UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s")
+            for kid, content, title in cur:
+                cat = extract_cat(kid)
+                search_keywords = make_keywords(content, kid, title)
+                self._execute(updater, (cat, search_keywords, kid))
+            hcount = 0
+            selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
+            cur = self._execute(selecter)
+            updater = SQL("UPDATE kwl_knowls SET history = %s WHERE id = %s")
+            for kid, history in cur:
+                if len(history) > max_h:
+                    hcount += 1
+                    self._execute(updater, (history[-max_h:], kid))
+            counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
+            cur = self._execute(counter)
+            reindex_count = int(cur.fetchone()[0])
         return cats, reindex_count, hcount
 
 knowldb = KnowlBackend()

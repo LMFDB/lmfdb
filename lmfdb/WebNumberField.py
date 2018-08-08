@@ -719,7 +719,7 @@ class WebNumberField:
                         int(LF['e']),
                         int(LF['f']),
                         int(LF['c']),
-                        group_display_knowl(LF['gal'], LF['galT']),
+                        group_display_knowl(LF['n'], LF['galT']),
                         LF['t'],
                         LF['u'],
                         LF['slopes']
