@@ -2953,6 +2953,7 @@ class PostgresDatabase(PostgresBase):
 
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+
             self.grant_select('meta_indexes_hist')
 
         print("Table meta_indexes_hist created")
