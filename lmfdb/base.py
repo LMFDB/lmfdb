@@ -207,9 +207,9 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
-branch = "prod"
+branch = "web"
 if (os.getenv('BETA')=='1'):
-    branch = "beta"
+    branch = "dev"
 
 @app.before_request
 def set_beta_state():
