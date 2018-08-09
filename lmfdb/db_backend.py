@@ -3139,7 +3139,7 @@ class PostgresDatabase(PostgresBase):
                     extrasfile = None
                 indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
                 metafile = os.path.join(data_folder, tablename + '_meta.txt')
-                table.copy_to(searchfile = searchfile, extrasfile = extrasfile, countsfile = countsfile, statsfile = statsfile, indexesfile = indexesfile, metafile = metafile, include_ids = include_ids, **kwds)
+                table.copy_to(searchfile=searchfile, extrasfile=extrasfile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile, include_ids=include_ids, **kwds)
 
     def copy_from_remote(self, search_tables, data_folder, remote_opts = None, include_ids=True, **kwds):
         if remote_opts is None:
