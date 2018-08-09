@@ -2094,6 +2094,7 @@ class PostgresTable(PostgresBase):
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
+                cols = ['"' + col + '"' for col in cols]
                 if filename is None:
                     continue
                 now = time.time()
