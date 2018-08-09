@@ -32,7 +32,6 @@ from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
-from sage.misc.cachefunc import cached_method
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
 from lmfdb.utils import make_logger, format_percentage
@@ -41,6 +40,10 @@ from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchit
 SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 1
 
+def pause(text = ""):
+    print(text)
+    raw_input("Paused")
+    print("unpaused")
 
 # This list is used when creating new tables
 types_whitelist = set([
@@ -196,6 +199,9 @@ class PostgresBase(object):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
         cur = self.conn.cursor()
 
+        if "RENAME" in query.as_string(self.conn):
+            print query.as_string(self.conn)
+            print values
         try:
             t = time.time()
             if values_list:
@@ -231,10 +237,14 @@ class PostgresBase(object):
                 self.conn.commit()
         return cur
 
-    @cached_method
     def _table_exists(self, tablename):
         cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True)
         return cur.fetchone()[0] is not None
+
+    def _constraint_exists(self, tablename, constraintname):
+        print  tablename, constraintname
+        cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
+        return cur.fetchone() is not None
 
     @staticmethod
     def _sort_str(sort_list):
@@ -1813,8 +1823,10 @@ class PostgresTable(PostgresBase):
         with open(filename, "w") as F:
             try:
                 cur = self.conn.cursor()
+                print copyto
                 cur.copy_expert(copyto, F)
             except Exception:
+                print "something went wrong"
                 self.conn.rollback()
                 raise
 
@@ -1845,17 +1857,31 @@ class PostgresTable(PostgresBase):
             rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
             for table in tables:
-                # table -> table_oldN
-                self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))))
-                # table_tmp -> table
-                self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)))
-                # table_pkey in table_old1 to table_old1_pkey
-                self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
-                                                 Identifier("{0}_pkey".format(table)),
-                                                 Identifier("{0}_old{1}_pkey".format(table, backup_number))))
-                self._execute(rename_pkey.format(Identifier(table),
-                                                 Identifier("{0}_tmp_pkey".format(table)),
-                                                 Identifier("{0}_pkey".format(table))))
+                tablename = table
+                tablename_oldN = "{0}_old{1}".format(table, backup_number)
+                tablename_tmp = table + "_tmp"
+
+                # tablename -> tablename_oldN
+                self._execute(rename_table.format(Identifier(tablename), Identifier(tablename_oldN)))
+                # tablename_tmp -> tablename
+                self._execute(rename_table.format(Identifier(tablename_tmp), Identifier(tablename)))
+
+                tablename_pkey = "{0}_pkey".format(table)
+                tablename_oldN_pkey = "{0}_old{1}_pkey".format(table, backup_number)
+                tablename_tmp_pkey = "{0}_tmp_pkey".format(table)
+
+                # tablename_pkey ->  table_oldN_pkey in tablename_oldN
+                if self._constraint_exists(tablename_oldN, tablename_pkey):
+                    self._execute(rename_pkey.format(Identifier(tablename_oldN),
+                                                 Identifier(tablename_pkey),
+                                                 Identifier(tablename_oldN_pkey)))
+
+                # tablename_tmp_pkey -> tablename_pkey in table
+                if self._constraint_exists(tablename, tablename_tmp_pkey):
+                    self._execute(rename_pkey.format(Identifier(tablename),
+                                                    Identifier(tablename_tmp_pkey),
+                                                    Identifier(tablename_pkey)))
+
                 self._db.grant_select(table)
                 if table.endswith("_counts"):
                     self._db.grant_insert(table)
@@ -2098,8 +2124,8 @@ class PostgresTable(PostgresBase):
                      (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
-        metadata = [("meta_indexes", "table_name", "(index_name, table_name, type, columns, modifiers, storage_params)", indexesfile),
-                    ("meta_tables", "name", "(name, sort, id_ordered, out_of_order, has_extras, label_col)", metafile)
+        metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
+                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col", metafile)
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
@@ -2116,13 +2142,13 @@ class PostgresTable(PostgresBase):
                     except Exception:
                         self.conn.rollback()
                         raise
-                print "Exported data from %s in %.3f secs"%(table, time.time() - now)
+                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
             for table, wherecol, cols, filename in  metadata:
                 if filename is None:
                     continue
                 now = time.time()
-                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, table,)
+                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, self.search_table,)
                 self._copy_to_select(select, filename)
                 print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
@@ -2284,6 +2310,7 @@ class PostgresStatsTable(PostgresBase):
         self.total = self.quick_count({})
         if self.total is None:
             self.total = self._slow_count({}, extra=False)
+
 
     def _has_stats(self, jcols, ccols, cvals, threshold, threshold_inequality=False):
         """
