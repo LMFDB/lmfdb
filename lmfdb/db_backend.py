@@ -2659,10 +2659,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         deleter = SQL("DELETE FROM {0}")
         self._execute(deleter.format(Identifier(self.counts)))
         self._execute(deleter.format(Identifier(self.stats)))
-        self.add_stats([])
 
     def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
-        # Need to add_stats([]) separately
         with DelayCommit(self, silence=True):
             if cols is None:
                 cols = self._common_cols()
@@ -2672,12 +2670,12 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 else:
                     ccols, cvals = self._split_dict(constraint)
                 level = 1
-                curlevel = [[col] for col in cols]
+                curlevel = [([],None)]
                 while curlevel:
                     i = 0
                     logging.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
                     while i < len(curlevel):
-                        colvec = curlevel[i]
+                        colvec, _ = curlevel[i]
                         if self._has_stats(cols, ccols, cvals, threshold=threshold, threshold_inequality=True):
                             i += 1
                             continue
@@ -2690,10 +2688,18 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                         break
                     prevlevel = curlevel
                     curlevel = []
-                    for colvec in prevlevel:
-                        m = cols.index(colvec[-1])
-                        for j in range(m+1,len(cols)):
-                            curlevel.append(colvec + [cols[j]])
+                    for colvec, m in prevlevel:
+                        if m is None:
+                            for j, col in enumerate(cols):
+                                if not isinstance(col, list):
+                                    col = [col]
+                                curlevel.append((col, j))
+                        else:
+                            for j in range(m+1,len(cols)):
+                                col = cols[j]
+                                if not isinstance(col, list):
+                                    col = [col]
+                                curlevel.append((colvec + col, j))
                     level += 1
 
     def refresh_stats(self, total=True, suffix=''):

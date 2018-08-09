@@ -114,7 +114,6 @@ def galois_group_search(**args):
         parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
         for param in ('cyc', 'solv', 'prim'):
             parse_bool(info, query, param, process=int, blank=['0','Any'])
-        print query
         parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
         degree_str = prep_ranges(info.get('n'))
         info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
