@@ -27,7 +27,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 
 import logging, tempfile, re, os, time, random, traceback
-from collections import Counter
+from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
@@ -2275,9 +2275,9 @@ class PostgresStatsTable(PostgresBase):
         self.counts = st + "_counts"
         self.total = self.quick_count({})
         if self.total is None:
-            self.total = self._slow_count({})
+            self.total = self._slow_count({}, extra=False)
 
-    def _has_stats(self, jcols, ccols, cvals, threshold):
+    def _has_stats(self, jcols, ccols, cvals, threshold, threshold_inequality=False):
         """
         Checks whether statistics have been recorded for a given set of columns.
         It just checks whether the "total" stat has been computed.
@@ -2303,7 +2303,10 @@ class PostgresStatsTable(PostgresBase):
             threshold = "threshold IS NULL"
         else:
             values.append(threshold)
-            threshold = "threshold = %s"
+            if threshold_inequality:
+                threshold = "(threshold IS NULL OR threshold <= %s)"
+            else:
+                threshold = "threshold = %s"
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
         selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
@@ -2328,7 +2331,7 @@ class PostgresStatsTable(PostgresBase):
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
-    def _slow_count(self, query, record=True, suffix=''):
+    def _slow_count(self, query, record=True, suffix='', extra=True):
         """
         No shortcuts: actually count the rows in the search table.
 
@@ -2348,15 +2351,15 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres, suffix)
+            self._record_count(query, nres, suffix, extra)
         return nres
 
-    def _record_count(self, query, count, suffix=''):
+    def _record_count(self, query, count, suffix='', extra=True):
         cols, vals = self._split_dict(query)
         data = [count, cols, vals]
         if self.quick_count(query) is None:
             updater = SQL("INSERT INTO {0} (count, cols, values, extra) VALUES (%s, %s, %s, %s)")
-            data.append(True)
+            data.append(extra)
         else:
             updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
         try:
@@ -2522,6 +2525,8 @@ class PostgresStatsTable(PostgresBase):
         as long as the number of rows sharing that tuple is above
         the given threshold.  If there is only one column and it is numeric,
         average, min, and max will be computed as well.
+
+        Returns a boolean: whether any counts were stored.
         """
         cols = sorted(cols)
         where = SQL(" WHERE {0}").format(SQL(" AND ").join(SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols))
@@ -2544,7 +2549,7 @@ class PostgresStatsTable(PostgresBase):
                 where = SQL(" AND ").join([where, qstr])
         if self._has_stats(cols, ccols, cvals, threshold):
             return
-        self.logger.info("Adding stats for {0} ({1})".format(", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
+        self.logger.info("Adding stats to {0} for {1} ({2})".format(self.search_table, ", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
         having = SQL("")
         if threshold is not None:
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
@@ -2557,6 +2562,7 @@ class PostgresStatsTable(PostgresBase):
             groupby = SQL("")
             if not allcols:
                 where = SQL("")
+        now = time.time()
         with DelayCommit(self, commit, silence=True):
             selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
             cur = self._execute(selecter, values)
@@ -2592,8 +2598,11 @@ class PostgresStatsTable(PostgresBase):
                         mn = val
                     if mx is None or val > mx:
                         mx = val
+            if total == 0:
+                self.logger.info("No rows exceeded the threshold; returning after %.3f secs".format(time.time() - now))
+                return False
             stats = [(cols, "total", total, ccols, cvals, threshold)]
-            if onenumeric and total != 0:
+            if onenumeric:
                 avg = float(avg) / total
                 stats.append((cols, "avg", avg, ccols, cvals, threshold))
                 stats.append((cols, "min", mn, ccols, cvals, threshold))
@@ -2603,6 +2612,8 @@ class PostgresStatsTable(PostgresBase):
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
+        self.logger.info("Added stats for {0} in %.3f secs".format(", ".join(cols), time.time() - now))
+        return True
 
     def _approx_most_common(self, col, n):
         """
@@ -2640,8 +2651,35 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 common_cols.append(col)
         return common_cols
 
-    def add_stats_auto(self, dry_run=False):
-        common_cols = self._common_cols()
+    def _clear_stats_counts(self):
+        deleter = SQL("DELETE FROM {0}")
+        self._execute(deleter.format(Identifier(self.counts)))
+        self._execute(deleter.format(Identifier(self.stats)))
+        self.add_stats([])
+
+    def add_stats_auto(self, cols=None, constraints=[], max_depth=None, threshold=1000):
+        # Need to add_stats([]) separately
+        with DelayCommit(self, silence=True):
+            if cols is None:
+                cols = self._common_cols()
+            curlevel = [[col] for col in cols]
+            while curlevel:
+                i = 0
+                while i < len(curlevel):
+                    colvec = curlevel[i]
+                    if self._has_stats(jcols, threshold=threshold, threshold_inequality=True)
+                    added_any = self.add_stats(colvec, threshold=threshold)
+                    if added_any:
+                        i += 1
+                    else:
+                        curlevel.pop(i)
+                prevlevel = curlevel
+                curlevel = []
+                for colvec in prevlevel:
+                    m = cols.index(colvec[-1])
+                    for j in range(m+1,len(cols)):
+                        curlevel.append(colvec + [cols[j]])
+                logger.info("Next level %s"%(curlevel))
 
     def refresh_stats(self, total=True, suffix=''):
         """
