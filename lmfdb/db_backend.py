@@ -2671,7 +2671,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 curlevel = [[col] for col in cols]
                 while curlevel:
                     i = 0
-                    logger.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
+                    logging.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
                     while i < len(curlevel):
                         colvec = curlevel[i]
                         if self._has_stats(cols, constraint=constraint, threshold=threshold, threshold_inequality=True):
