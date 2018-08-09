@@ -34,6 +34,7 @@ from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
 from sage.misc.cachefunc import cached_method
 from sage.misc.mrange import cartesian_product_iterator
+from sage.functions.other import binomial
 from lmfdb.utils import make_logger, format_percentage
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
@@ -2670,6 +2671,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 curlevel = [[col] for col in cols]
                 while curlevel:
                     i = 0
+                    logger.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
                     while i < len(curlevel):
                         colvec = curlevel[i]
                         if self._has_stats(cols, constraint=constraint, threshold=threshold, threshold_inequality=True):
@@ -2680,7 +2682,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                             i += 1
                         else:
                             curlevel.pop(i)
-                    if level >= max_depth:
+                    if max_depth is not None and level >= max_depth:
                         break
                     prevlevel = curlevel
                     curlevel = []
@@ -2689,7 +2691,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                         for j in range(m+1,len(cols)):
                             curlevel.append(colvec + [cols[j]])
                     level += 1
-                    logger.info("Next level %s"%(curlevel))
 
     def refresh_stats(self, total=True, suffix=''):
         """
