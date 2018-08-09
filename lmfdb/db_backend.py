@@ -2617,7 +2617,7 @@ class PostgresStatsTable(PostgresBase):
 
         - ``col`` -- a
         """
-        if col not in self.table._search_cols
+        if col not in self.table._search_cols:
         selecter = SQL("""SELECT v.{0}, (c.reltuples * freq)::int as estimate_ct
 FROM pg_stats s
 CROSS JOIN LATERAL
