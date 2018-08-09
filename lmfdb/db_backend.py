@@ -2618,6 +2618,7 @@ class PostgresStatsTable(PostgresBase):
         - ``col`` -- a
         """
         if col not in self.table._search_cols:
+            raise ValueError("Column %s not a search column for %s"%(col, self.search_table))
         selecter = SQL("""SELECT v.{0}, (c.reltuples * freq)::int as estimate_ct
 FROM pg_stats s
 CROSS JOIN LATERAL
