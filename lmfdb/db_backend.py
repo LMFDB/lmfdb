@@ -544,7 +544,7 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``D`` -- a dictionary
+        - ``D`` -- a dictionary, or a scalar if outer is set
         - ``outer`` -- the column that we are parsing (None if not yet parsing any column).  Used in recursion.
 
         OUTPUT:
@@ -567,6 +567,10 @@ class PostgresTable(PostgresBase):
             sage: db.nf_fields._parse_dict({})
             (None, None)
         """
+        if outer and not isinstance(D, dict):
+            if self.col_type[outer] == 'jsonb':
+                D = Json(D)
+            return SQL("{0} = %s").format(Identifier(outer)), [D]
         if len(D) == 0:
             return None, None
         else:
