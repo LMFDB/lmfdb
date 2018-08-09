@@ -2536,7 +2536,7 @@ class PostgresStatsTable(PostgresBase):
         Returns a boolean: whether any counts were stored.
         """
         cols = sorted(cols)
-        where = SQL(" WHERE {0}").format(SQL(" AND ").join(SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols))
+        where = [SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols]
         values, ccols, cvals = [], None, None
         if constraint is None:
             allcols = cols
@@ -2556,7 +2556,11 @@ class PostgresStatsTable(PostgresBase):
                 raise ValueError("Top level special keys not allowed")
             qstr, values = self.table._parse_dict(constraint)
             if qstr is not None:
-                where = SQL(" AND ").join([where, qstr])
+                where.append(qstr)
+        if allcols:
+            where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
+        else:
+            where = SQL("")
         if self._has_stats(cols, ccols, cvals, threshold):
             return
         self.logger.info("Adding stats to {0} for {1} ({2})".format(self.search_table, ", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
@@ -2570,8 +2574,6 @@ class PostgresStatsTable(PostgresBase):
         else:
             vars = SQL("COUNT(*)")
             groupby = SQL("")
-            if not allcols:
-                where = SQL("")
         now = time.time()
         with DelayCommit(self, commit, silence=True):
             selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
@@ -2675,7 +2677,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     ccols, cvals = [], []
                 else:
                     ccols, cvals = self._split_dict(constraint)
-                level = 1
+                level = 0
                 curlevel = [([],None)]
                 while curlevel:
                     i = 0
