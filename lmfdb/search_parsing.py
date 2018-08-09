@@ -22,6 +22,7 @@ BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [
 from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
+from sage.misc.misc import subsets
 
 from markupsafe import Markup
 from collections import defaultdict, Counter
@@ -343,7 +344,7 @@ def parse_rats(inp, query, qfield, process=None):
     else:
         raise ValueError("It needs to be a non-negative rational number (such as 4/3), a range of non-negative rational numbers (such as 2-5/2 or 2.5..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
-def _parse_subset(inp, query, qfield, mode):
+def _parse_subset(inp, query, qfield, mode, radical, product):
     def add_condition(kwd):
         if qfield in query:
             query[qfield][kwd] = inp
@@ -352,10 +353,22 @@ def _parse_subset(inp, query, qfield, mode):
     if mode == 'complement':
         add_condition('$notcontains')
     elif mode == 'subsets':
+        # sadly, jsonb GIN indexes don't support <@, so we don't want to use
+        # $containedin if we can help it.
+        # Even more sadly, even switching to querying on the radical doesn't help,
+        # since the query planner still uses an index scan on the primary key.
+        #if len(inp) <= 5 and radical is not None:
+        #    if radical in query:
+        #        raise ValueError("Cannot specify containment and equality simultaneously")
+        #    query[radical] = {'$or': [product(X) for X in subsets(inp)]}
+        #else:
         add_condition('$containedin')
     elif mode == 'append':
         add_condition('$contains')
     elif mode == 'exact':
+        if radical is not None:
+            query[radical] = product(inp)
+            return
         inp = sorted(inp)
         if inp:
             print inp
@@ -373,13 +386,13 @@ def _parse_subset(inp, query, qfield, mode):
         raise ValueError("Unrecognized mode: programming error in LMFDB code")
 
 @search_parser
-def parse_subset(inp, query, qfield, parse_singleton=None, mode='append'):
+def parse_subset(inp, query, qfield, parse_singleton=None, mode='append', radical=None, product=prod):
     # Note that you can do sanity checking using parse_singleton
     # Just raise a ValueError if it fails.
     inp = inp.split(',')
     if parse_singleton is not None:
         inp = [parse_singleton(x) for x in inp]
-    _parse_subset(inp, query, qfield, mode)
+    _parse_subset(inp, query, qfield, mode, radical, product)
 
 def _multiset_code(n):
     # We encode multiplicities by appending consecutive letters: A, B,..., BA, BB, BC,...
@@ -416,10 +429,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None):
         format_ok = all([ZZ(p).is_prime(proof=False) for p in primes])
     if not format_ok:
         raise ValueError("It needs to be a prime (such as 5), or a comma-separated list of primes (such as 2,3,11).")
-    if mode == 'exact' and radical is not None:
-        query[radical] = prod(primes)
-    else:
-        _parse_subset(primes, query, qfield, mode)
+    _parse_subset(primes, query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, extractor=None):
