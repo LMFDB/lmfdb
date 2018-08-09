@@ -41,6 +41,7 @@ from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchit
 SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 1
 
+
 # This list is used when creating new tables
 types_whitelist = set([
     "int2", "smallint", "smallserial", "serial2",
@@ -115,9 +116,9 @@ class DelayCommit(object):
     default.  When the final DelayCommit is exited, the connection will commit.
     """
     def __init__(self, obj, final_commit=True, silence=None):
-        self.obj = obj
+        self.obj = obj._db
         self.final_commit = final_commit
-        self._orig_silenced = obj._silenced
+        self._orig_silenced = obj._db._silenced
         if silence is not None:
             obj._silenced = silence
     def __enter__(self):
@@ -140,8 +141,6 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
-        self._nocommit_stack = 0
-        self._silenced = False
         handler = logging.FileHandler(SLOW_QUERY_LOGFILE)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
@@ -196,6 +195,7 @@ class PostgresBase(object):
         if not isinstance(query, Composable):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
         cur = self.conn.cursor()
+
         try:
             t = time.time()
             if values_list:
@@ -203,7 +203,7 @@ class PostgresBase(object):
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
-            if silent is False or (silent is None and not self._silenced):
+            if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
@@ -219,7 +219,7 @@ class PostgresBase(object):
                     raise
                 # Attempt to reset the connection
                 self._db.reset_connection()
-                if commit or (commit is None and self._nocommit_stack == 0):
+                if commit or (commit is None and self._db._nocommit_stack == 0):
                     return self._execute(query, values=values, silent=silent, values_list=values_list, template=template, slow_note=slow_note, reissued=True)
                 else:
                     raise
@@ -227,7 +227,7 @@ class PostgresBase(object):
                 self.conn.rollback()
                 raise
         else:
-            if commit or (commit is None and self._nocommit_stack == 0):
+            if commit or (commit is None and self._db._nocommit_stack == 0):
                 self.conn.commit()
         return cur
 
@@ -1933,6 +1933,7 @@ class PostgresTable(PostgresBase):
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
+
             if countsfile is not None:
                 self.stats._copy_extra_counts_to_tmp()
 
@@ -2777,14 +2778,15 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``include_counts`` -- if False, will omit the counts and just give lists of values.
         - ``suffix`` -- Used when dealing with `_tmp` or `_old*` tables.
         """
-        selecter = SQL("SELECT cols, values, count FROM {0} WHERE extra = %s").format(Identifier(self.counts + suffix))
-        cur = self._execute(selecter, [True])
+        selecter = SQL("SELECT cols, values, count FROM {0} WHERE extra ='t'").format(Identifier(self.counts + suffix))
+        cur = self._execute(selecter)
         ans = defaultdict(list)
         for cols, values, count in cur:
             if include_counts:
                 ans[tuple(cols)].append((tuple(values), count))
             else:
                 ans[tuple(cols)].append(tuple(values))
+
         return ans
 
     def _get_values_counts(self, cols, constraint):
@@ -3026,6 +3028,8 @@ class PostgresDatabase(PostgresBase):
         self._objects.append(obj)
 
     def __init__(self, **kwargs):
+        self._nocommit_stack = 0
+        self._silenced = False
         self._objects = []
         self.conn = self._new_connection(**kwargs)
         PostgresBase.__init__(self, 'db_all', self)
