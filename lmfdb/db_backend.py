@@ -2064,7 +2064,7 @@ class PostgresTable(PostgresBase):
             if restat:
                 self.stats.refresh_stats(total=False)
 
-    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metatablesfile = None, commit=True, **kwds):
+    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, metafile=None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -2090,7 +2090,7 @@ class PostgresTable(PostgresBase):
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
         metadata = [("meta_indexes", "table_name", "(index_name, table_name, type, columns, modifiers, storage_params)", indexesfile),
-                    ("meta_tables", "name", "(name, sort, id_ordered, out_of_order, has_extras, label_col)", metatablesfile)
+                    ("meta_tables", "name", "(name, sort, id_ordered, out_of_order, has_extras, label_col)", metafile)
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
@@ -3127,21 +3127,23 @@ class PostgresDatabase(PostgresBase):
                 print "Dropped {0}".format(tbl)
             self.tablenames.remove(name)
 
-    def copy_to(self, search_tables, data_folder , include_ids=True, **kwds):
+    def copy_to(self, search_tables, data_folder, **kwds):
         for tablename in self.tablenames:
             if tablename in search_tables:
                 table = getattr(self, tablename)
                 searchfile = os.path.join(data_folder, tablename + '.txt')
                 statsfile =  os.path.join(data_folder, tablename + '_stats.txt')
                 countsfile =  os.path.join(data_folder, tablename + '_counts.txt')
-                extrasfile =  os.path.join(data_folder, tablename + '_extras.txt')
+                extrafile =  os.path.join(data_folder, tablename + '_extras.txt')
                 if table.extra_table is  None:
-                    extrasfile = None
+                    extrafile = None
                 indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
                 metafile = os.path.join(data_folder, tablename + '_meta.txt')
-                table.copy_to(searchfile=searchfile, extrasfile=extrasfile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile, include_ids=include_ids, **kwds)
+                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile,  **kwds)
+            else:
+                print "%s is not a search table" % (tablename,)
 
-    def copy_from_remote(self, search_tables, data_folder, remote_opts = None, include_ids=True, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
         if remote_opts is None:
             from lmfdb.config import Configuration
             remote_opts = Configuration().get_postgresql_default()
@@ -3149,7 +3151,7 @@ class PostgresDatabase(PostgresBase):
         source = PostgresDatabase(**remote_opts)
 
         # copy all the data
-        source.copy_to(search_tables = search_tables, data_folder = data_folder, include_ids = include_ids, **kwds)
+        source.copy_to(search_tables = search_tables, data_folder=data_folder, **kwds)
 
 
 
