@@ -2660,31 +2660,36 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         self._execute(deleter.format(Identifier(self.stats)))
         self.add_stats([])
 
-    def add_stats_auto(self, cols=None, constraints=[], max_depth=None, threshold=1000):
+    def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
         # Need to add_stats([]) separately
         with DelayCommit(self, silence=True):
             if cols is None:
                 cols = self._common_cols()
-            curlevel = [[col] for col in cols]
-            while curlevel:
-                i = 0
-                while i < len(curlevel):
-                    colvec = curlevel[i]
-                    if self._has_stats(jcols, threshold=threshold, threshold_inequality=True):
-                        i += 1
-                        continue
-                    added_any = self.add_stats(colvec, threshold=threshold)
-                    if added_any:
-                        i += 1
-                    else:
-                        curlevel.pop(i)
-                prevlevel = curlevel
-                curlevel = []
-                for colvec in prevlevel:
-                    m = cols.index(colvec[-1])
-                    for j in range(m+1,len(cols)):
-                        curlevel.append(colvec + [cols[j]])
-                logger.info("Next level %s"%(curlevel))
+            for constraint in constraints:
+                level = 1
+                curlevel = [[col] for col in cols]
+                while curlevel:
+                    i = 0
+                    while i < len(curlevel):
+                        colvec = curlevel[i]
+                        if self._has_stats(cols, constraint=constraint, threshold=threshold, threshold_inequality=True):
+                            i += 1
+                            continue
+                        added_any = self.add_stats(colvec, threshold=threshold)
+                        if added_any:
+                            i += 1
+                        else:
+                            curlevel.pop(i)
+                    if level >= max_depth:
+                        break
+                    prevlevel = curlevel
+                    curlevel = []
+                    for colvec in prevlevel:
+                        m = cols.index(colvec[-1])
+                        for j in range(m+1,len(cols)):
+                            curlevel.append(colvec + [cols[j]])
+                    level += 1
+                    logger.info("Next level %s"%(curlevel))
 
     def refresh_stats(self, total=True, suffix=''):
         """
