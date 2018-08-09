@@ -2667,6 +2667,10 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             if cols is None:
                 cols = self._common_cols()
             for constraint in constraints:
+                if constraint is None:
+                    ccols, cvals = [], []
+                else:
+                    ccols, cvals = self._split_dict(constraint)
                 level = 1
                 curlevel = [[col] for col in cols]
                 while curlevel:
@@ -2674,10 +2678,10 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     logging.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
                     while i < len(curlevel):
                         colvec = curlevel[i]
-                        if self._has_stats(cols, constraint=constraint, threshold=threshold, threshold_inequality=True):
+                        if self._has_stats(cols, ccols, cvals, threshold=threshold, threshold_inequality=True):
                             i += 1
                             continue
-                        added_any = self.add_stats(colvec, threshold=threshold)
+                        added_any = self.add_stats(colvec, constraint=constraint, threshold=threshold)
                         if added_any:
                             i += 1
                         else:
