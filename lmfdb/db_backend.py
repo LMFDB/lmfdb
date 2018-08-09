@@ -2005,8 +2005,10 @@ class PostgresTable(PostgresBase):
                 self.reload_meta(metafile)
 
     def reload_revert(self, commit = True):
+        raise ValueError("FIXME")
         #TODO add doc
         with DelayCommit(self, commit, silence=True):
+            #FIXME
             # drops the `_tmp` tables
             self.cleanup_from_reload(old = False)
             # reverts `meta_indexes` to previous state
