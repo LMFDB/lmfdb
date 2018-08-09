@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
-import urllib2, ssl
+import urllib2, ssl, errno
 
 class HomePageTest(LmfdbTest):
 
