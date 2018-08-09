@@ -2615,7 +2615,7 @@ class PostgresStatsTable(PostgresBase):
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
-        self.logger.info("Added stats for {0} in %.3f secs".format(", ".join(cols), time.time() - now))
+        self.logger.info("Added stats for %s in %.3f secs"%(", ".join(cols), time.time() - now))
         return True
 
     def _approx_most_common(self, col, n):
