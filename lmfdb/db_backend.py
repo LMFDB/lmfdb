@@ -2504,6 +2504,8 @@ class PostgresStatsTable(PostgresBase):
         """
         A utility function for joining a list of keys and of values into a dictionary.
         """
+        if ccols is None and cvals is None:
+            return {}
         assert len(ccols) == len(cvals)
         return dict(zip(ccols, cvals))
 
