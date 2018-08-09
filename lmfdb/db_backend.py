@@ -2667,7 +2667,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 i = 0
                 while i < len(curlevel):
                     colvec = curlevel[i]
-                    if self._has_stats(jcols, threshold=threshold, threshold_inequality=True)
+                    if self._has_stats(jcols, threshold=threshold, threshold_inequality=True):
+                        i += 1
+                        continue
                     added_any = self.add_stats(colvec, threshold=threshold)
                     if added_any:
                         i += 1
