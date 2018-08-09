@@ -3222,14 +3222,15 @@ class PostgresDatabase(PostgresBase):
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, **kwds)
+                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, commit=False, **kwds)
                 except DatabaseError:
                     traceback.print_exc()
                     failures.append(table)
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables = included, metafile=filedata[-1], reindex=reindex, commit=False)
+
+                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex, commit=False)
 
         if failures:
             print "Reloaded %s"%(", ".join(tablenames))
