@@ -3128,8 +3128,8 @@ class PostgresDatabase(PostgresBase):
             self.tablenames.remove(name)
 
     def copy_to(self, search_tables, data_folder, **kwds):
-        for tablename in self.tablenames:
-            if tablename in search_tables:
+        for tablename in search_tables:
+            if tablename in self.tablenames:
                 table = getattr(self, tablename)
                 searchfile = os.path.join(data_folder, tablename + '.txt')
                 statsfile =  os.path.join(data_folder, tablename + '_stats.txt')
@@ -3141,7 +3141,7 @@ class PostgresDatabase(PostgresBase):
                 metafile = os.path.join(data_folder, tablename + '_meta.txt')
                 table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile,  **kwds)
             else:
-                print "%s is not a search table" % (tablename,)
+                print "%s is not a in tablenames " % (tablename,)
 
     def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
         if remote_opts is None:
