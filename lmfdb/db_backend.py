@@ -1331,9 +1331,11 @@ class PostgresTable(PostgresBase):
         # check that the rows have the right table name
         with open(filename, "r") as F:
             import csv
-            columns = zip(*[line for line in csv.reader(F, delimiter = "\t")])
-            for entry in columns[1]:
-                if entry != self.search_table:
+            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            if len(lines) == 0:
+                return
+            for line in lines:
+                if line[1] != self.search_table:
                     raise RuntimeError("the 2nd column in the file doesn't match the search table name")
 
         with DelayCommit(self, silence=True):
@@ -1922,7 +1924,7 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 self._clone(table, tmp_table)
                 counts[table] = self._copy_from(filename, tmp_table, cols, 0, includes_ids, kwds)
-                print "Loaded data into %s in %.3f secs"%(table, time.time() - now)
+                print "Loaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
 
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
@@ -1953,7 +1955,7 @@ class PostgresTable(PostgresBase):
                 print "Warning: since the final swap was not requested, we have not updated meta_tables"
                 print "when performing the final swap with reload_final_swap, pass the metafile as an argument to update the meta_tables"
 
-            print "Finished reloading %s!"%(self.search_table)
+            print "Finished reloading %s!" % (self.search_table)
 
     def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
         """
@@ -2115,7 +2117,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, table,)
                 self._copy_to_select(select, filename)
-                print "Exported data from %s in %.3f secs" % (table, time.time() - now)
+                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
     ##################################################################
     # Updating the schema                                            #
