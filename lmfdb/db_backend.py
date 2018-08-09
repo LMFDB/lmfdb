@@ -2504,8 +2504,6 @@ class PostgresStatsTable(PostgresBase):
         """
         A utility function for joining a list of keys and of values into a dictionary.
         """
-        if ccols is None and cvals is None:
-            return {}
         assert len(ccols) == len(cvals)
         return dict(zip(ccols, cvals))
 
@@ -2539,6 +2537,9 @@ class PostgresStatsTable(PostgresBase):
             if isinstance(constraint, tuple):
                 # reconstruct constraint from ccols and cvals
                 ccols, cvals = constraint
+                if ccols is None and cvals is None:
+                    ccols = []
+                    cvals = []
                 constraint = self._join_dict(ccols, cvals)
             else:
                 ccols, cvals = self._split_dict(constraint)
