@@ -2632,8 +2632,16 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         cur = self._execute(selecter, [self.search_table, col, n])
         return [tuple(x) for x in cur]
 
+    def _common_cols(self, threshold=700):
+        common_cols = []
+        for col in self.table._search_cols:
+            most_common = self._approx_most_common(col, 1)
+            if most_common and most_common[0][1] >= threshold:
+                common_cols.append(col)
+        return common_cols
+
     def add_stats_auto(self, dry_run=False):
-        pass
+        common_cols = self._common_cols()
 
     def refresh_stats(self, total=True, suffix=''):
         """
