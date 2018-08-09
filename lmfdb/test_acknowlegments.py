@@ -1,5 +1,6 @@
 # -*- coding: utf8 -*-
 from lmfdb.base import LmfdbTest
+import urlib2, ssl
 
 class HomePageTest(LmfdbTest):
 
@@ -8,7 +9,6 @@ class HomePageTest(LmfdbTest):
         assert text in self.tc.get(path).data
 
     def check_external(self, homepage, path, text):
-        import urllib2, ssl
         headers = {'User-Agent': 'Mozilla/5.0'}
         context = ssl._create_unverified_context()
         request = urllib2.Request(path, headers = headers)
@@ -37,9 +37,16 @@ class HomePageTest(LmfdbTest):
         self.check_external(homepage,
                 "http://www2.warwick.ac.uk/fac/sci/maths/research/events/2013-2014/nonsymp/lmfdb/",
                 'elliptic curves over number fields' )
-        self.check_external(homepage,
+        try:
+            self.check_external(homepage,
                 "https://hobbes.la.asu.edu/lmfdb-14/",
                 'Arizona State University' )
+        except urllib2.URLError, e:
+            if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
+                pass;
+            else:
+                raise
+
         self.check_external(homepage,
                 "http://www.maths.bris.ac.uk/~maarb/public/lmfdb2013.html",
                 'Development of algorithms')
