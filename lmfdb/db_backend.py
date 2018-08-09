@@ -1844,8 +1844,11 @@ class PostgresTable(PostgresBase):
             rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
             for table in tables:
+                # table -> table_oldN
                 self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))))
+                # table_tmp -> table
                 self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)))
+                # table_pkey in table_old1 to table_old1_pkey
                 self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
                                                  Identifier("{0}_pkey".format(table)),
                                                  Identifier("{0}_old{1}_pkey".format(table, backup_number))))
@@ -1876,7 +1879,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True, commit=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, commit=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -1950,8 +1953,8 @@ class PostgresTable(PostgresBase):
                         tables.append(table)
 
             if final_swap:
-                self.reload_final_swap(tables=tables, metafile=metafile)
-            elif metafile is not None:
+                self.reload_final_swap(tables=tables, metafile=metafile, commit = False)
+            elif metafile is not None and not silence_meta:
                 print "Warning: since the final swap was not requested, we have not updated meta_tables"
                 print "when performing the final swap with reload_final_swap, pass the metafile as an argument to update the meta_tables"
 
@@ -1977,7 +1980,7 @@ class PostgresTable(PostgresBase):
                     if self._table_exists(tablename):
                         tables.append(tablename)
 
-            self._swap_in_tmp(tables, reindex)
+            self._swap_in_tmp(tables, reindex, commit=False)
             if metafile is not None:
                 self.reload_meta(metafile)
 
@@ -3219,14 +3222,14 @@ class PostgresDatabase(PostgresBase):
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, **kwds)
+                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, **kwds)
                 except DatabaseError:
                     traceback.print_exc()
                     failures.append(table)
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables = included, metafile = filedata[-1], reindex = reindex)
+                table.reload_final_swap(tables = included, metafile=filedata[-1], reindex=reindex, commit=False)
 
         if failures:
             print "Reloaded %s"%(", ".join(tablenames))
