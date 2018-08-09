@@ -2604,6 +2604,36 @@ class PostgresStatsTable(PostgresBase):
             inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
 
+    def _approx_most_common(self, col, n):
+        """
+        Returns the n most common values for ``col``.  Counts are only approximate,
+        but this functions should be quite fast.  Note that the returned list
+        may have length less than ``n`` if there are not many common values.
+
+        Returns a list of pairs ``(value, count)`` where ``count`` is
+        the number of rows where ``col`` takes on the value ``value``.
+
+        INPUT:
+
+        - ``col`` -- a
+        """
+        if col not in self.table._search_cols
+        selecter = SQL("""SELECT v.{0}, (c.reltuples * freq)::int as estimate_ct
+FROM pg_stats s
+CROSS JOIN LATERAL
+   unnest(s.most_common_vals::text::""" + self.table.col_type[col] + """[]
+        , s.most_common_freqs) WITH ORDINALITY v ({0}, freq, ord)
+CROSS  JOIN (
+   SELECT reltuples FROM pg_class
+   WHERE oid = regclass 'public.nf_fields') c
+WHERE schemaname = 'public' AND tablename = %s AND attname = %s
+ORDER BY v.ord LIMIT %s""").format(Identifier(col))
+        cur = self._execute(selecter, [self.search_table, col, n])
+        return [tuple(x) for x in cur]
+
+    def add_stats_auto(self, dry_run=False):
+        pass
+
     def refresh_stats(self, total=True, suffix=''):
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
