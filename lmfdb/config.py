@@ -19,7 +19,7 @@ import os
 
 class Configuration(object):
 
-    def __init__(self):
+    def __init__(self, writeargstofile = False):
         default_config_file = "config.ini";
         root_lmfdb_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'));
         if root_lmfdb_path != os.path.abspath(os.getcwd()):
@@ -138,13 +138,16 @@ class Configuration(object):
                 help=argparse.SUPPRESS,
                 action='store_false',
                 default=argparse.SUPPRESS)
-        if os.path.split(sys.argv[0])[-1] == "start-lmfdb.py":
+        if os.path.split(sys.argv[0])[-1] == "start-lmfdb.py" or writeargstofile:
             args = parser.parse_args()
         else:
             # only read config file
             args = parser.parse_args([])
         args_dict = vars(args);
         default_arguments_dict = vars(parser.parse_args([]));
+        if writeargstofile:
+            default_arguments_dict = dict(args_dict)
+
         del default_arguments_dict['config_file'];
 
         self.default_args = {};
@@ -154,12 +157,18 @@ class Configuration(object):
                 self.default_args[sec] = {}
             self.default_args[sec][opt] = str(val)
 
+
+
+
         from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
         # 2/1: does config file exist?
         if not os.path.exists(args.config_file):
-            print("Config file: %s not found, creating it with the default values" % args.config_file );
+            if not writeargstofile:
+                print("Config file: %s not found, creating it with the default values" % args.config_file );
+            else:
+                print("Config file: %s not found, creating it with the passed values" % args.config_file );
             _cfgp  =  ConfigParser()
 
             # create sections
@@ -256,3 +265,6 @@ class Configuration(object):
     def get_logging(self):
         return self.logging_options;
 
+
+if __name__ == '__main__':
+    Configuration(writeargstofile = True)
