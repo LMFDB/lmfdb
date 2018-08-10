@@ -2,7 +2,7 @@ flask
 flask-cache
 flask-login
 flask-markdown
-pymongo
+psycopg2-binary
 pyyaml
 pyflakes
 unittest2
@@ -13,3 +13,4 @@ cython
 markupsafe
 git+https://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
 bcrypt
+pymongo

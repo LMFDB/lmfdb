@@ -1,7 +1,5 @@
-import pymongo
-from lmfdb import base
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db \
-     import MaassDB
+     import maass_db
 from lmfdb.utils import signtocolour
 
 def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
@@ -36,23 +34,14 @@ def paintSvgMaass(min_level, max_level, min_R, max_R, weight=0, char=1,
                         xfactor, yfactor, ticlength, xshift)
 
     # Fetch Maass forms from database
-    # NB although base.getDBConnection().PORT works it gives the
-    # default port number of 27017 and not the actual one!
-    if pymongo.version_tuple[0] < 3:
-        host = base.getDBConnection().host
-        port = base.getDBConnection().port
-    else:
-        host, port = base.getDBConnection().address
-    db = MaassDB(host=host, port=port)
     search = {'level1': yMin, 'level2': yMax, 'char': char,
               'R1': xMin, 'R2': xMax, 'Newform' : None, 'weight' : weight}
-    fields = {'Eigenvalue', 'Level', 'Symmetry'}
-    forms = db.get_Maass_forms(search, fields, 
-                               do_sort=False, limit=10000)
+    projection = ['maass_id', 'Eigenvalue', 'Level', 'Symmetry']
+    forms = maass_db.get_Maass_forms(search, projection, sort=[], limit=10000)
 
     # Loop through all forms and add a clickable dot for each
     for f in forms:
-        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['_id'])
+        linkurl = L + "/ModularForm/GL2/Q/Maass/{0}".format(f['maass_id'])
         x = (f['Eigenvalue'] - xMin) * xfactor + xshift
         y = (f['Level'] - yMin + 1) * yfactor
         try:  # Shifting even slightly up and odd slightly down

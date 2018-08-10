@@ -1,4 +1,5 @@
-from lmfdb.base import LmfdbTest, getDBConnection
+from lmfdb.base import LmfdbTest
+from lmfdb.db_backend import db
 
 class Genus2Test(LmfdbTest):
 
@@ -7,10 +8,8 @@ class Genus2Test(LmfdbTest):
 
     def test_all_pages(self):
         errors = []
-        curves = getDBConnection().genus2_curves.curves
-        data = curves.find({},{'_id':False,'label':True,'class':True})
         n = 0
-        for c in data:
+        for c in db.g2c_curves.search({}, ['label','class']):
             l = c['label'].split('.')
             url = "Genus2Curve/Q/%s/%s/%s/%s"%(l[0],l[1],l[2],l[3])
             print "Checking home page for genus 2 curve " + c['label']

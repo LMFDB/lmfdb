@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from pymongo import ASCENDING
 from ast import literal_eval
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
@@ -16,34 +15,6 @@ from sage.plot.text import text
 from flask import url_for
 
 ###############################################################################
-# Database connection -- all access to mongo db should happen here
-###############################################################################
-
-def g2c_db_curves():
-    return getDBConnection().genus2_curves.curves
-
-def g2c_db_endomorphisms():
-    return getDBConnection().genus2_curves.endomorphisms
-
-def g2c_db_rational_points():
-    return getDBConnection().genus2_curves.ratpts
-
-def g2c_db_lfunction_by_hash(hash):
-    return getDBConnection().Lfunctions.Lfunctions.find_one({'Lhash':hash})
-
-# TODO: switch to Lfunctions database once all instance data has been moved there (wait until #433 is closed before doing this)
-def g2c_db_lfunction_instances():
-    return getDBConnection().genus2_curves.Lfunctions.instances
-
-# TODO: this is currently only used when computing stats, remove once stats are stored in DB
-def g2c_db_isogeny_classes_count():
-    return getDBConnection().Lfunctions.instances.find({'type':'G2Q'}).count()
-
-def g2c_db_tamagawa_numbers():
-	return getDBConnection().genus2_curves.tamagawa_numbers
-
-
-###############################################################################
 # Pretty print functions
 ###############################################################################
 
@@ -54,8 +25,7 @@ def intlist_to_poly(s):
     return latex(PolynomialRing(QQ, 'x')(s))
 
 def strlist_to_nfelt(L, varname):
-    La = [ s.encode('ascii') for s in L ]
-    return latex(PolynomialRing(QQ, varname)(La))
+    return latex(PolynomialRing(QQ, varname)(L))
 
 def list_to_min_eqn(L):
     xpoly_rng = PolynomialRing(QQ,'x')
@@ -484,7 +454,7 @@ def split_statement(coeffs, labels, condnorms):
             % (strlist_to_nfelt(coeffs[n][0], 'b'), strlist_to_nfelt(coeffs[n][1], 'b'), condnorms[n])
     return statement
 
-# create friend entry from url (typically coming from Lfunctions.instances)
+# create friend entry from url (typically coming from lfunc_instances)
 def lfunction_friend_from_url(url):
     if url[0] == '/':
         url = url[1:]
@@ -538,9 +508,9 @@ class WebG2C(object):
         try:
             slabel = label.split(".")
             if len(slabel) == 2:
-                curve = g2c_db_curves().find_one({"class" : label})
+                curve = db.g2c_curves.lucky({"class" : label})
             elif len(slabel) == 4:
-                curve = g2c_db_curves().find_one({"label" : label})
+                curve = db.g2c_curves.lookup(label)
             else:
                 raise ValueError("Invalid genus 2 label %s." % label)
         except AttributeError:
@@ -550,16 +520,16 @@ class WebG2C(object):
                 raise KeyError("Genus 2 isogeny class %s not found in the database." % label)
             else:
                 raise KeyError("Genus 2 curve %s not found in database." % label)
-        endo = g2c_db_endomorphisms().find_one({"label" : curve['label']})
+        endo = db.g2c_endomorphisms.lookup(curve['label'])
         if not endo:
             g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
             raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
-        tama = g2c_db_tamagawa_numbers().find({"label" : curve['label']}).sort('p', ASCENDING)
-        if tama.count() == 0:
+        tama = list(db.g2c_tamagawa.search({"label": curve['label']}))
+        if len(tama) == 0:
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel)==4:
-            ratpts = g2c_db_rational_points().find_one({"label" : curve['label']})
+            ratpts = db.g2c_ratpts.lookup(curve['label'])
             if not ratpts:
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
@@ -577,7 +547,7 @@ class WebG2C(object):
         data['slabel'] = data['label'].split('.')
 
         # set attributes common to curves and isogeny classes here
-        data['Lhash'] = curve['Lhash']
+        data['Lhash'] = str(curve['Lhash'])
         data['cond'] = ZZ(curve['cond'])
         data['cond_factor_latex'] = web_latex(factor(int(data['cond'])))
         data['analytic_rank'] = ZZ(curve['analytic_rank'])
@@ -593,8 +563,8 @@ class WebG2C(object):
         if is_curve:
             # invariants specific to curve
             data['class'] = curve['class']
-            data['abs_disc'] = ZZ(curve['disc_key'][3:]) # use disc_key rather than abs_disc (will work when abs_disc > 2^63)
-            data['disc'] = curve['disc_sign'] * curve['abs_disc']
+            data['abs_disc'] = ZZ(curve['abs_disc'])
+            data['disc'] = curve['disc_sign'] * data['abs_disc']
             data['min_eqn'] = literal_eval(curve['eqn'])
             data['min_eqn_display'] = list_to_min_eqn(data['min_eqn'])
             data['disc_factor_latex'] = web_latex(factor(data['disc']))
@@ -628,35 +598,33 @@ class WebG2C(object):
             data['end_ring_base'] = endo['ring_base']
             data['end_ring_geom'] = endo['ring_geom']
             data['tama'] = ''
-            for i in range(tama.count()):
-            	item = tama.next()
+            for item in tama:
             	if item['tamagawa_number'] > 0:
-            		tamgwnr = str(item['tamagawa_number'])
+            	    tamgwnr = str(item['tamagawa_number'])
             	else:
-            		tamgwnr = 'N/A'
-            	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + ')'
-            	if (i+1 < tama.count()):
-            		data['tama'] += ', '
+            	    tamgwnr = 'N/A'
+            	data['tama'] += tamgwnr + ' (p = ' + str(item['p']) + '), '
+            data['tama'] = data['tama'][:-2] # trim last ", "
             if ratpts:
                 if len(ratpts['rat_pts']):
-                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(P) + ')') for P in ratpts['rat_pts'])
+                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
                 data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
                 # data['mw_rank'] = ratpts['mw_rank']
                 # data['mw_rank_v'] = ratpts['mw_rank_v']
             else:
                 data['rat_pts_v'] = 0
             if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], getDBConnection(), field_pretty(curve['two_torsion_field'][0]))
+                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1],getDBConnection()))
+                data['two_torsion_field_knowl'] = """splitting field of \(%s\) with Galois group %s"""%(intlist_to_poly(t[1]),group_display_knowl(t[2][0],t[2][1]))
         else:
             # invariants specific to isogeny class
-            curves_data = g2c_db_curves().find({"class" : curve['class']},{'_id':int(0),'label':int(1),'eqn':int(1),'disc_key':int(1)}).sort([("disc_key", ASCENDING), ("label", ASCENDING)])
+            curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
             data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
-            lfunc_data = g2c_db_lfunction_by_hash(curve['Lhash'])
+            lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
             if lfunc_data and lfunc_data.get('euler_factors'):
@@ -725,12 +693,12 @@ class WebG2C(object):
         self.friends = friends = [('L-function', data['lfunc_url'])]
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
-        for friend in g2c_db_lfunction_instances().find({'Lhash':data['Lhash']},{'_id':False,'url':True}):
-            if 'url' in friend:
-                add_friend (friends, lfunction_friend_from_url(friend['url']))
-            if 'urls' in friend:
-                for url in friends['urls']:
-                    add_friend (friends, lfunction_friend_from_url(friend['url']))
+        for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
+            if '|' in friend_url:
+                for url in friend_url.split('|'):
+                    add_friend (friends, lfunction_friend_from_url(url))
+            else:
+                add_friend (friends, lfunction_friend_from_url(friend_url))
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:

@@ -75,14 +75,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 </form>
 
 <div align=left>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('next_previous');return
-            false">Previous</a>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('next_previous');return false">Next</a>
-{% endif %}
+  {% include 'forward_back.html' %}
 
 <p>
   <table border=2>
@@ -122,12 +115,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 </table>
 </p>
 
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('next_previous');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('next_previous');return false">Next</A>
-{% endif %}
+{% include 'forward_back.html' %}
 
 </div>
 {% else %}

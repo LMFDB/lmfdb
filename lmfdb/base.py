@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -31,7 +31,6 @@ def get_logfocus():
 # global db connection instance (will be set by the first call to
 # getDBConnection() and should always be obtained from that)
 _mongo_C = None
-_mongo_port = None
 _mongo_kwargs = None
 _mongo_user = None
 _mongo_pass = None
@@ -62,8 +61,8 @@ def getDBConnection():
             abort(503)
     return _mongo_C
 
-def configureDBConnection(port, **kwargs):
-    global _mongo_port, _mongo_kwargs, _mongo_user, _mongo_pass, _mongo_dbmon
+def configureDBConnection(**kwargs):
+    global _mongo_kwargs, _mongo_user, _mongo_pass, _mongo_dbmon
 
     if "dbmon" in kwargs:
         _mongo_dbmon = kwargs.pop("dbmon")
@@ -71,34 +70,33 @@ def configureDBConnection(port, **kwargs):
             _mongo_dbmon = ''
         kwargs["event_listeners"] = [MongoEventLogger()]
 
-    _mongo_port = port
     _mongo_kwargs = kwargs
     pw_filename = join(dirname(dirname(__file__)), "password")
     try:
         _mongo_user = "webserver"
         _mongo_pass = open(pw_filename, "r").readlines()[0].strip()
-    except:
+    except Exception:
         # file not found or any other problem
         # this is read-only everywhere
-        logging.warning("authentication: no password -- fallback to read-only access")
+        logging.warning("MongoDB authentication: no webserver password -- fallback to read-only access")
         _mongo_user = "lmfdb"
         _mongo_pass = "lmfdb"
 
 def makeDBConnection():
     global _mongo_C
 
-    logging.info("attempting to establish mongo db connection on port %s ..." % _mongo_port)
+    logging.info("attempting to establish mongo db connection with args = %s ..." % _mongo_kwargs)
     logging.info("using pymongo version %s" % pymongo.version)
     try:
         if pymongo.version_tuple[0] >= 3 or _mongo_kwargs.get("replicaset",None) is None:
-            _mongo_C = MongoClient(port = _mongo_port,  **_mongo_kwargs)
+            _mongo_C = MongoClient( **_mongo_kwargs)
         else:
-            _mongo_C = MongoReplicaSetClient(port = _mongo_port,  **_mongo_kwargs)
+            _mongo_C = MongoReplicaSetClient( **_mongo_kwargs)
         mongo_info = _mongo_C.server_info()
         logging.info("mongodb version: %s" % mongo_info["version"])
         logging.info("_mongo_C = %s", (_mongo_C,) )
         #the reads are not necessarily from host/address
-        #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address 
+        #those depend on the cursor, and can be checked with cursor.conn_id or cursor.address
         if pymongo.version_tuple[0] >= 3:
             logging.info("_mongo_C.address = %s" % (_mongo_C.address,) )
         else:
@@ -171,9 +169,14 @@ def _db_reconnect(func):
 # disabling this reconnect thing, doesn't really help anyways
 Cursor._Cursor__send_message = _db_reconnect(Cursor._Cursor__send_message)
 
-def _init(port, **kwargs):
-    configureDBConnection(port, **kwargs)
+def _init():
+    # creates MongoDB connection
+    from lmfdb.config import Configuration
+    configureDBConnection(**Configuration().get_mongodb())
     makeDBConnection()
+    # creates PostgresSQL connection
+    from lmfdb.db_backend import db
+    assert db
 
 app = Flask(__name__)
 
@@ -204,9 +207,9 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
-branch = "prod"
+branch = "web"
 if (os.getenv('BETA')=='1'):
-    branch = "beta"
+    branch = "dev"
 
 @app.before_request
 def set_beta_state():
@@ -274,14 +277,27 @@ def git_infos():
         from subprocess import Popen, PIPE
         git_rev_cmd = '''git rev-parse HEAD'''
         git_date_cmd = '''git show --format="%ci" -s HEAD'''
+        git_contains_cmd = '''git branch --contains HEAD'''
+        git_reflog_cmd = '''git reflog -n5'''
         rev = Popen([git_rev_cmd], shell=True, stdout=PIPE).communicate()[0]
         date = Popen([git_date_cmd], shell=True, stdout=PIPE).communicate()[0]
-        cmd_output = rev, date
-    except:
-        cmd_output = '-', '-'
+        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE).communicate()[0]
+        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE).communicate()[0]
+        pairs = [[git_rev_cmd, rev],
+                [git_date_cmd, date],
+                [git_contains_cmd, contains],
+                [git_reflog_cmd, reflog]]
+        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
+        cmd_output = rev, date,  summary
+    except Exception:
+        cmd_output = '-', '-', '-'
     return cmd_output
 
-git_rev, git_date = git_infos()
+def git_summary():
+    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
+
+
+git_rev, git_date, _  = git_infos()
 from sage.env import SAGE_VERSION
 
 """
@@ -343,4 +359,6 @@ class LmfdbTest(unittest2.TestCase):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
+        from lmfdb.db_backend import db
+        self.db = db
         self.C = getDBConnection()

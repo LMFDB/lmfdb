@@ -1,27 +1,18 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb import base
-import pymongo
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import MaassDB
-
-def db_lfunctions():
-    return base.getDBConnection().Lfunctions.Lfunctions;
-
-def db_instances():
-    return base.getDBConnection().Lfunctions.instances;
+from lmfdb.db_backend import db
 
 def get_lfunction_by_Lhash(Lhash):
-    Ldata = db_lfunctions().find_one({'Lhash': Lhash})
+    Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
     return fix_Ldata(Ldata);
 
 def get_instances_by_Lhash(Lhash):
-    return list(db_instances().find({'Lhash': Lhash})) 
+    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=["url"]))
 
 def get_instance_by_url(url):
-    instance =  db_instances().find_one({'url': url})
-    return instance
+    return db.lfunc_instances.lucky({'url': url})
 
 def get_lfunction_by_url(url):
     instance = get_instance_by_url(url);
@@ -45,26 +36,8 @@ def fix_Ldata(Ldata):
         Ldata['values'] += [ central_value ]
     return Ldata
 
-
 def getEllipticCurveData(label):
-    from lmfdb.elliptic_curves.web_ec import db_ec
-    return db_ec().find_one({'lmfdb_label': label})
-    
-#FIXME this should be deprecated
-def getInstanceLdata(label, label_type="url"):
-    try:
-        if label_type == "url":
-            return get_lfunction_by_url(label);
-        elif label_type == "Lhash":
-            return get_lfunction_by_Lhash(label);
-        else:
-            raise ValueError("Invalid label_type = '%s', should be 'url' or 'Lhash'" % label)
-    except ValueError:   
-        Ldata = None
-
-    return Ldata
-
-
+    return db.ec_curves.lucky({'lmfdb_label': label})
 
 def getHmfData(label):
     from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field
@@ -74,17 +47,5 @@ def getHmfData(label):
         return (f, get_hmf_field(f['field_label']))
     return (None, None)
 
-def getMaassDb():
-    # NB although base.getDBConnection().PORT works it gives the
-    # default port number of 27017 and not the actual one!
-    if pymongo.version_tuple[0] < 3:
-        host = base.getDBConnection().host
-        port = base.getDBConnection().port
-    else:
-        host, port = base.getDBConnection().address
-    return MaassDB(host=host, port=port)
-    
 def getHgmData(label):
-    connection = base.getDBConnection()
-    return connection.hgm.motives.find_one({'label': label})
-    
+    return db.hgm_motives.lookup(label)

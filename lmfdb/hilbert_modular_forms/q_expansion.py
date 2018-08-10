@@ -2,9 +2,7 @@
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma
 from sage.all import PolynomialRing, Rationals
-from lmfdb.base import getDBConnection
-from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
-
+from lmfdb.db_backend import db
 #
 # This script is intended to run Magma on all Hilbert newforms (or all
 # those over one base field), compute a string representing the
@@ -18,18 +16,16 @@ from lmfdb.hilbert_modular_forms.hmf_stats import db_forms, db_fields
 # This script is intended for offline use and should be moved to the
 # scripts directory.
 
-fields = getDBConnection().numberfields.fields
-
 P = PolynomialRing(Rationals(), 3, ['w', 'e', 'x'])
 w, e, x = P.gens()
 
 
 def qexpansion(field_label=None):
     if field_label is None:
-        S = db_forms().find({})
+        query = {}
     else:
-        S = db_forms().find({"field_label": field_label})
-    S = S.sort("label")
+        query = {"field_label": field_label}
+    S = db.hmf_forms.search(query, sort=["label"])
 
     field_label = None
 
@@ -40,19 +36,19 @@ def qexpansion(field_label=None):
 
         print v_label
 
-        if v.has_key('q_expansion'):
+        if v.get('q_expansion') is not None:
             v = S.next()
             continue
 
-        if field_label is None or not field_label == v["field_label"]:
+        if field_label is None or not field_label != v["field_label"]:
             field_label = v["field_label"]
             print "...new field " + field_label
 
-            F = fields.find_one({"label": field_label})
-            F_hmf = db_fields().find_one({"label": field_label})
+            coeffs = db.nf_fields.lookup(field_label, projection="coefficients")
+            F_hmf = db.hmf_fields.lookup(field_label, projection=["ideals", "primes", "narrow_class_number"])
 
             magma.eval('P<x> := PolynomialRing(Rationals());')
-            magma.eval('F<w> := NumberField(Polynomial(' + str(F["coefficients"]) + '));')
+            magma.eval('F<w> := NumberField(Polynomial(' + str(coeffs) + '));')
             magma.eval('ZF := Integers(F);')
             magma.eval('ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];')
             magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
@@ -60,7 +56,7 @@ def qexpansion(field_label=None):
             magma.eval('primes_str := [' + ','.join([st for st in F_hmf["primes"]]) + '];')
             magma.eval('primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
 
-            if not F_hmf.has_key('narrow_class_number'):
+            if F_hmf.get("narrow_class_number") is None:
                 F_hmf['narrow_class_number'] = eval(preparse(magma.eval('NarrowClassNumber(F);')))
 
         if v["hecke_polynomial"] != 'x':
@@ -123,6 +119,8 @@ def qexpansion(field_label=None):
         q_expansions = [[[str(c) for c in q[0]], [str(c) for c in q[1]]] for q in q_expansions]
 
         v["q_expansions"] = q_expansions
-        db_forms().save(v)
+
+        # UPDATES DON'T WORK
+        #db.hmf_forms.save(v)
 
         v = S.next()

@@ -1,5 +1,6 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest, getDBConnection
+# -*- coding: utf-8 -*-
+from lmfdb.base import LmfdbTest
+from lmfdb.db_backend import db
 
 class SMFPageTest(LmfdbTest):
 
@@ -8,8 +9,7 @@ class SMFPageTest(LmfdbTest):
 
     def test_all_pages(self):
         errors = []
-        samples = getDBConnection().siegel_modular_forms.experimental_samples
-        data = samples.find({'collection':{'$exists':True},'name':{'$exists':True}},{'_id':False,'collection':True,'name':True})
+        data = db.smf_samples.search({'collection':{'$exists':True},'name':{'$exists':True}},['collection','name'])
         n = 0
         print ""
         for s in data:
@@ -18,9 +18,9 @@ class SMFPageTest(LmfdbTest):
             print "Checking home page for SMF sample " + full_label
             try:
                 n = n+1
-                data  = self.tc.get(url, follow_redirects=True).data
-                #print "Got %d bytes" % len(data)
-                assert full_label in data and "Hecke eigenform" in data
+                pagedata = self.tc.get(url, follow_redirects=True).data
+                #print "Got %d bytes" % len(pagedata)
+                assert full_label in pagedata and "Hecke eigenform" in pagedata
             except:
                 print "Error on page " + url
                 errors.append(url)
