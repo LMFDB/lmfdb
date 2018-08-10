@@ -22,7 +22,7 @@ BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [
 from flask import flash
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
-from sage.misc.misc import subsets
+#from sage.misc.misc import subsets
 
 from markupsafe import Markup
 from collections import defaultdict, Counter
@@ -410,7 +410,7 @@ def _multiset_encode(L):
     return distinguished
 
 @search_parser(clean_info=True)
-def parse_submultiset(inp, query, qfield, mode='append'):
+def parse_submultiset(inp, query, qfield, mode='append', radical=None):
     # Only multisets of strings are supported.
     if mode == 'complement':
         # Searches for multisets whose multiplicity is strictly less than the
@@ -419,7 +419,7 @@ def parse_submultiset(inp, query, qfield, mode='append'):
         counts = Counter(inp.split(','))
         query[qfield] = {'$notcontains': [label + _multiset_code(n-1) for label,n in counts.items]}
     else:
-        _parse_subset(_multiset_encode(inp.split(',')), query, qfield, mode)
+        _parse_subset(_multiset_encode(inp.split(',')), query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_primes(inp, query, qfield, mode=None, radical=None):
