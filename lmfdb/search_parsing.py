@@ -419,7 +419,8 @@ def parse_submultiset(inp, query, qfield, mode='append'):
         counts = Counter(inp.split(','))
         query[qfield] = {'$notcontains': [label + _multiset_code(n-1) for label,n in counts.items]}
     else:
-        _parse_subset(_multiset_encode(inp.split(',')), query, qfield, mode)
+        # radical doesn't make sense (you should use subset instead of multiset)
+        _parse_subset(_multiset_encode(inp.split(',')), query, qfield, mode, None, None)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_primes(inp, query, qfield, mode=None, radical=None):
