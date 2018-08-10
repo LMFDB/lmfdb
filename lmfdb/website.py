@@ -62,7 +62,6 @@ import pages
 assert pages
 import api
 assert api
-#disabled temporarily, dont forget to enable it in the sidebar
 import belyi
 assert belyi
 import bianchi_modular_forms
