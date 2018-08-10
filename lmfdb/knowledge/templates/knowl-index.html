@@ -34,7 +34,7 @@ $(function() {
     {% for cat in categories -%}
      <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', qualities=qualities, category=cat,) }}">{{cat}}</a>
+      href="{{ url_for('.index', filters=filters, category=cat,) }}">{{cat}}</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
@@ -79,9 +79,9 @@ $(function() {
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
-          <span>{{ k._id }}</span>
-          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        <div title="{{k.title|striptags}} [{{k.id}}]" kid="{{k.id}}">
+          <span>{{ k.id }}</span>
+          <a href="{{ url_for('.show', ID=k.id) }}" >{{ k.title|safe }}</a>
         </div>
       {% endfor %}
      </td>

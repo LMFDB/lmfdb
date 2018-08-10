@@ -1,13 +1,5 @@
 # Not used yet
 
-from lmfdb.base import getDBConnection
-
-C = getDBConnection()
-
-lfunction_location = ("limbo", "lfunction20130910")
-
-collection = C[lfunction_location[0]][lfunction_location[1]]
-
 def schema_extract(x, **types_dict):
     # each kwarg is a a key, value pair
     # the key is the name of the attribute and the field in the database
@@ -15,10 +7,10 @@ def schema_extract(x, **types_dict):
     return {key : dtype(x[key]) for key, dtype in types_dict}
 
 # We are dealing with many sources of Lfunctions, so we need to cast everything to make sure we control the type
-database_format = {        
-        "mu_fe" : int, 
-        "nu_fe" : int, 
-        "sign": int, 
+database_format = {
+        "mu_fe" : int,
+        "nu_fe" : int,
+        "sign": int,
         "selfdual": bool,
         "primitive": bool,
         "motivic_weight": bool,
@@ -26,6 +18,6 @@ database_format = {
         "Ltype": str,
         "original_mathematical_object": str
     }
-    
+
 def query_Lfunction():
     pass

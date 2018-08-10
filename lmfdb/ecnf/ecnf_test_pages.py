@@ -1,4 +1,5 @@
-from lmfdb.base import LmfdbTest, getDBConnection
+from lmfdb.base import LmfdbTest
+from lmfdb.db_backend import db
 
 class ECNFTest(LmfdbTest):
 
@@ -8,10 +9,9 @@ class ECNFTest(LmfdbTest):
     def test_d6_pages(self):
         # check the page of every elliptic curve over a degree 6 field
         errors = []
-        nfcurves = getDBConnection().elliptic_curves.nfcurves
-        data = nfcurves.find({'degree':int(6)})
-        print "Checking %d elliptic curves over number fields of degree 6"%(data.count())
-        for e in data:
+        n = db.ec_nfcurves.count({'degree':6})
+        print "Checking %d elliptic curves over number fields of degree 6"%(n)
+        for e in db.ec_nfcurves.search({'degree':6}):
             url = "EllipticCurve/%s/%d"%("/".join(e['class_label'].split("-")),e['number'])
             print "Checking " + url
             page = self.tc.get(url, follow_redirects=True)

@@ -6,15 +6,12 @@
 
 from sage.structure.sage_object import SageObject
 from sage.misc.latex import Latex
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 import importlib, inspect
 from sample import Samples
 
-def smf_db_families():
-    return getDBConnection().siegel_modular_forms.families
-    
 def get_smf_families():
-    return sorted([SiegelFamily(r['name']) for r in smf_db_families().find({},{'name':True})],key=lambda x: x.order)
+    return [SiegelFamily(doc['name'], doc) for doc in db.smf_families.search({})]
 
 def get_smf_family(name):
     try:
@@ -27,11 +24,11 @@ class SiegelFamily (SageObject):
     Represents a family of spaces of Siegel modular forms.
     """
 
-    def __init__(self, name):
-
-        doc = smf_db_families().find_one({ 'name': name })
-        if not doc:
-            raise ValueError ('Siegel modular form family "%s" at not found in database' % (name))
+    def __init__(self, name, doc=None):
+        if doc is None:
+            doc = db.smf_families.lucky({ 'name': name })
+            if not doc:
+                raise ValueError ('Siegel modular form family "%s" not found in database' % (name))
         self.name = name
         self.latex_name = doc.get('latex_name')
         if not self.latex_name:
@@ -65,5 +62,5 @@ class SiegelFamily (SageObject):
 
     def samples(self):
         if not self.__samples:
-            self.__samples = Samples({ 'collection': self.name })
+            self.__samples = Samples({'collection': {'$contains': [self.name]}})
         return self.__samples

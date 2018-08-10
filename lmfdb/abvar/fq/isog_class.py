@@ -5,9 +5,9 @@ from collections import Counter
 
 from lmfdb.utils import make_logger, encode_plot
 
-from lmfdb.base import app, getDBConnection
+from lmfdb.db_backend import db
+from lmfdb.base import app
 
-from sage.misc.cachefunc import cached_function
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics
 
@@ -17,14 +17,6 @@ from lmfdb.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
 
 logger = make_logger("abvarfq")
-
-#########################
-#   Database connection
-#########################
-
-@cached_function
-def db():
-    return getDBConnection().abvar.fq_isog
 
 #########################
 #   Label manipulation
@@ -64,7 +56,7 @@ class AbvarFq_isoclass(object):
         Searches for a specific isogeny class in the database by label.
         """
         try:
-            data = db().find_one({"label": label})
+            data = db.av_fqisog.lookup(label)
             return cls(data)
         except (AttributeError, TypeError):
             raise ValueError("Label not found in database")
@@ -88,19 +80,20 @@ class AbvarFq_isoclass(object):
 
     @property
     def slopes(self):
-        return self.slps.split()
+        # Remove the multiset indicators
+        return [s[:-1] for s in self.slps]
 
     @property
     def C_counts(self):
-        return self.C_cnts.split()
+        return [str(ct) for ct in self.C_cnts]
 
     @property
     def A_counts(self):
-        return self.A_cnts.split()
+        return [str(ct) for ct in self.A_cnts]
 
     @property
     def polynomial(self):
-        return [int(c) for c in self.poly.split()]
+        return self.poly
 
     def field(self, q=None):
         if q is None:
@@ -227,15 +220,13 @@ class AbvarFq_isoclass(object):
         if self.nf == "":
             return "The number field of this isogeny class is not in the database."
         else:
-            C = getDBConnection()
-            return nf_display_knowl(self.nf,C,field_pretty(self.nf))
+            return nf_display_knowl(self.nf,field_pretty(self.nf))
 
     def display_galois_group(self):
-        if not self.gal or not self.gal['t']: #the number field was not found in the database
+        if not hasattr(self, 'galois_t') or not self.galois_t: #the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            C = getDBConnection()
-            return group_display_knowl(self.gal['n'],self.gal['t'],C)
+            return group_display_knowl(self.galois_n, self.galois_t)
 
     def decomposition_display_search(self,factors):
         if len(factors) == 1 and factors[0][1] == 1:

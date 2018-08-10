@@ -32,7 +32,6 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, default_prec,
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_object import web_latex_poly
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label
-from lmfdb.base import getDBConnection
 
 def render_web_newform(level, weight, character, label, **kwds):
     r"""
@@ -244,7 +243,7 @@ def set_info_for_web_newform(level=None, weight=None, character=None, label=None
     if WNF.is_cm == 1:
         info['cm_field'] = "2.0.{0}.1".format(-WNF.cm_disc)
         info['cm_disc'] = WNF.cm_disc
-        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], getDBConnection(), field_pretty(info['cm_field']))
+        info['cm_field_knowl'] = nf_display_knowl(info['cm_field'], field_pretty(info['cm_field']))
         info['cm_field_url'] = url_for("number_fields.by_label", label=info["cm_field"])
     if WNF.is_cm is None or WNF.is_cm==-1:
         s = '- Unknown (insufficient data)<br>'

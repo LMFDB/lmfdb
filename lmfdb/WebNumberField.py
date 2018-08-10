@@ -1,28 +1,17 @@
 # -*- coding: utf-8 -*-
-import lmfdb.base as base
 import sage
 from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, valuation
 import yaml, os
-import hashlib
 from sage.misc.cachefunc import cached_function
 from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html, display_multiset
 from flask import url_for
 from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
+from lmfdb.db_backend import db
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 dnc = 'data not computed'
-
-def db():
-    return base.getDBConnection()
-
-def nfdb():
-    return db().numberfields.fields
-
-def lfdb():
-    return db().localfields.fields
-
 
 # Dictionary of field label: n for abs(disc(Q(zeta_n)))
 # Does all cyclotomic fields of degree n s.t. 2<n<24
@@ -136,11 +125,11 @@ def formatfield(coef):
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
         return mypol
-    return nf_display_knowl(thefield.get_label(),db(),thefield.field_pretty())
+    return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
-    modlist = [[galois_module_knowl(n, t, z[0], db()), int(z[1])] for z in modlist]
+    modlist = [[galois_module_knowl(n, t, z[0]), int(z[1])] for z in modlist]
     ans = modlist[0][0]
     modlist[0][1] -= 1
     for j in range(len(modlist)):
@@ -149,12 +138,12 @@ def modules2string(n, t, modlist):
             modlist[j][1] -= 1
     return ans
 
-def nf_display_knowl(label, C, name=None):
+def nf_display_knowl(label, name=None):
     if not name:
         name = "Global Number Field %s" % label
     return '<a title = "%s [nf.field.data]" knowl="nf.field.data" kwargs="label=%s">%s</a>' % (name, label, name)
 
-def nf_knowl_guts(label, C):
+def nf_knowl_guts(label):
     out = ''
     wnf = WebNumberField(label)
     if wnf.is_null():
@@ -173,7 +162,7 @@ def nf_knowl_guts(label, C):
     out += Dfact
     out += '<br>Signature: '
     out += str(wnf.signature())
-    out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t(),C)
+    out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t())
     out += '<br>Class number: %s ' % str(wnf.class_number())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
@@ -198,11 +187,10 @@ class WebNumberField:
     # works with a string, or a list of coefficients
     @classmethod
     def from_coeffs(cls, coeffs):
-        if isinstance(coeffs, list):
-            coeffs = list2string(coeffs)
         if isinstance(coeffs, str):
-            chash = hashlib.md5(coeffs).hexdigest()
-            f = nfdb().find_one({'coeffhash': chash, 'coeffs': coeffs})
+            coeffs = string2list(coeffs)
+        if isinstance(coeffs, list):
+            f = db.nf_fields.lucky({'coeffs': coeffs})
             if f is None:
                 return cls('a')  # will initialize data to None
             return cls(f['label'], f)
@@ -248,7 +236,7 @@ class WebNumberField:
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
-        return nfdb().find_one({'label': self.label})
+        return db.nf_fields.lookup(self.label)
 
     def get_label(self):
         if self.label == 'a':
@@ -259,7 +247,7 @@ class WebNumberField:
         return field_pretty(self.get_label())
 
     def knowl(self):
-        return nf_display_knowl(self.get_label(), db(), self.field_pretty())
+        return nf_display_knowl(self.get_label(), self.field_pretty())
 
     # Is the polynomial polredabs'ed
     def is_reduced(self):
@@ -271,23 +259,22 @@ class WebNumberField:
 
     # Return discriminant as a sage int
     def disc(self):
-        return decodedisc(self._data['disc_abs_key'], self._data['disc_sign'])
+        return ZZ(self._data['disc_abs']) * self._data['disc_sign']
 
     def ramified_primes(self):
         return [int(str(j)) for j in self._data['ramps']]
 
     # Return a nice string for the Galois group
     def galois_string(self):
-        if not self.haskey('galois'):
+        if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
-        t = self._data['galois']['t']
-        C = db()
-        return group_display_short(n, t, C)
+        t = self._data['galt']
+        return group_display_short(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
-        return self._data['galois']['t']
+        return self._data['galt']
 
     # return the Galois group
     def gg(self):
@@ -302,10 +289,18 @@ class WebNumberField:
         return self.gg().is_abelian()
 
     def coeffs(self):
-        return string2list(self._data['coeffs'])
+        coeffs = self._data['coeffs']
+        if isinstance(coeffs, list):
+            return coeffs
+        elif isinstance(coeffs, str):
+            return string2list(coeffs)
+        else:
+            raise RuntimeError
 
     def signature(self):
-        return string2list(self._data['signature'])
+        r2 = self._data['r2']
+        n = self._data['degree']
+        return [n-2*r2, r2]
 
     def degree(self):
         return self._data['degree']
@@ -317,10 +312,10 @@ class WebNumberField:
         return self.signature()==[0,1]
 
     def poly(self):
-        return coeff_to_poly(string2list(self._data['coeffs']))
+        return coeff_to_poly(self._data['coeffs'])
 
     def haskey(self, key):
-        return key in self._data
+        return self._data.get(key) is not None
 
     # Warning, this produces our prefered integral basis
     # But, if you have the sage number field do computations,
@@ -331,6 +326,7 @@ class WebNumberField:
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
 
+    # 2018-4-1: is this actually used?  grep -r doesn't find anywhere it's called....
     # Used by subfields and resolvent functions to
     # take coefficients for fields and either return
     # information about the item, or a usable knowl
@@ -340,14 +336,13 @@ class WebNumberField:
     def myhelper(self, coefmult):
         coef = string2list(coefmult[0])
         subfield = self.from_coeffs(coef)
-        C = db()
         if subfield._data is None:
             deg = len(coef) - 1
             mypol = sage.all.latex(coeff_to_poly(coef))
             mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
             return [mypol, coefmult[1]]
-        return [nf_display_knowl(subfield.get_label(),C,subfield.field_pretty()), coefmult[1]]
+        return [nf_display_knowl(subfield.get_label(),subfield.field_pretty()), coefmult[1]]
 
     # returns resolvent dictionary
     # ae means arithmetically equivalent fields
@@ -491,6 +486,10 @@ class WebNumberField:
         else:
             return web_latex(self.gen_name)
 
+    def variable_name(self):
+        # For consistency with Sage number fields
+        return self.gen_name
+
     def unit_rank(self):
         if not self.haskey('unit_rank'):
             sig = self.signature()
@@ -532,7 +531,7 @@ class WebNumberField:
     def class_group_invariants(self):
         if not self.haskey('class_group'):
             return na_text()
-        cg_list = string2list(self._data['class_group'])
+        cg_list = self._data['class_group']
         if cg_list == []:
             return 'Trivial'
         return cg_list
@@ -540,11 +539,11 @@ class WebNumberField:
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
             return [-1]
-        return string2list(self._data['class_group'])
+        return self._data['class_group']
 
     def class_group(self):
         if self.haskey('class_group'):
-            cg_list = string2list(self._data['class_group'])
+            cg_list = self._data['class_group']
             return str(AbelianGroup(cg_list)) + ', order ' + str(self._data['class_number'])
         return na_text()
 
@@ -599,7 +598,7 @@ class WebNumberField:
 
     def artin_reps(self, nfgg=None):
         if nfgg is not None:
-                self._data["nfgg"] = nfgg
+            self._data["nfgg"] = nfgg
         else:
             if "nfgg" not in self._data:
                 from artin_representations.math_classes import NumberFieldGaloisGroup
@@ -614,14 +613,13 @@ class WebNumberField:
             return self._data['artincoefs']
         try:
             if nfgg is not None:
-                    self._data["nfgg"] = nfgg
+                self._data["nfgg"] = nfgg
+            elif "nfgg" not in self._data:
+                from artin_representations.math_classes import NumberFieldGaloisGroup
+                nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
+                self._data["nfgg"] = nfgg
             else:
-                if "nfgg" not in self._data:
-                    from artin_representations.math_classes import NumberFieldGaloisGroup
-                    nfgg = NumberFieldGaloisGroup(self._data['coeffs'])
-                    self._data["nfgg"] = nfgg
-                else:
-                    nfgg = self._data["nfgg"]
+                nfgg = self._data["nfgg"]
 
             cc = nfgg.conjugacy_classes()
             # cc is list, each has methods group, size, order, representative
@@ -710,14 +708,23 @@ class WebNumberField:
             R = PolynomialRing(QQ, 'x')
             palg = local_algebra_dict[str(p)]
             palgs = [R(str(s)) for s in palg.split(',')]
-            palgs = [list2string([int(c) for c in 
-                pol.coefficients(sparse=False)]) for pol in palgs]
-            palgs = [lfdb().find_one({'p': p, 'coeffs': c}) for c in palgs]
-            return [[f['label'], latex(R(string2list(f['coeffs']))), 
-                int(f['e']), int(f['f']),int(f['c']),
-                group_display_knowl(f['gal'][0], f['gal'][1], db()),
-                f['t'],f['u'],f['slopes']]
-                for f in palgs]
+            palgstr = [
+                    list2string([int(c) for c in pol.coefficients(sparse=False)])
+                    for pol in palgs]
+            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
+            return [
+                    [
+                        LF['label'],
+                        latex(f),
+                        int(LF['e']),
+                        int(LF['f']),
+                        int(LF['c']),
+                        group_display_knowl(LF['n'], LF['galT']),
+                        LF['t'],
+                        LF['u'],
+                        LF['slopes']
+                    ]
+                    for LF, f in zip(palgrec, palgs) ]
         return None
 
     def ramified_algebras_data(self):
