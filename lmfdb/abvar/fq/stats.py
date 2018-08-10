@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import comma, make_logger
 from sage.structure.unique_representation import UniqueRepresentation
-from sage.misc.cachefunc import cached_function
 from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("abvarfq")
-
-@cached_function
-def stats_db():
-    return getDBConnection().abvar.fq_isog.stats
 
 class AbvarFqStats(UniqueRepresentation):
     def __init__(self):
@@ -19,7 +14,7 @@ class AbvarFqStats(UniqueRepresentation):
     def _counts(self):
         logger.debug("Looking up abelian variety counts")
         D = {}
-        for q, L in stats_db().find_one({'label':'counts'})['counts'].iteritems():
+        for q, L in db.av_fqisog.stats.get_oldstat('counts').iteritems():
             D[int(q)] = L
         return D
 

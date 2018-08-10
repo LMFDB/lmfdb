@@ -4,38 +4,26 @@ r""" Checking that knowls only cross-reference existing knowls
 Initial version (Bristol March 2016)
 
 """
-import os.path
-import os
+from lmfdb.knowledge.knowl import knowldb
 
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-print "authenticating on the knowledge database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['knowledge'].authenticate(username, password)
-print "setting knowls"
-knowls = C.knowledge.knowls
-
-cats = knowls.distinct('cat')
+cats = knowldb.get_categories()
 print("There are %s categories of knowl in the database" % len(cats))
 
 def check_knowls(cat='ec', verbose=False):
-    cat_knowls = knowls.find({'cat': cat})
+    cat_knowls = knowldb.search(category=cat)
     if verbose:
-        print("%s knowls in category %s" % (cat_knowls.count(),cat))
+        print("%s knowls in category %s" % (len(cat_knowls),cat))
     for k in cat_knowls:
         if verbose:
-            print("Checking knowl %s" % k['_id'])
+            print("Checking knowl %s" % k['id'])
+        k = knowldb.get_knowl(k['id'])
         cont = k['content']
         i = 0
         while (i>=0):
             i = cont.find("KNOWL_INC")
             if i>=0:
                 offset = 10
-            else:    
+            else:
                 i = cont.find("KNOWL")
                 if i>=0:
                     offset=6
@@ -47,9 +35,9 @@ def check_knowls(cat='ec', verbose=False):
                 if verbose:
                     print("..cites %s" % ref)
                 cont = cont[j+1:]
-                the_ref = knowls.find_one({'_id':ref})
-                if the_ref==None:
-                    print("Non-existing reference to %s in knowl %s" % (ref,k['_id']))
+                the_ref = knowldb.get_knowl(ref)
+                if the_ref is None:
+                    print("Non-existing reference to %s in knowl %s" % (ref,k['id']))
                 elif verbose:
                     print("--- found")
 

@@ -73,7 +73,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '["1", "-1", "1", "-3", "3"]' in L.data
+        assert '[1, -1, 1, -3, 3]' in L.data
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -89,7 +89,7 @@ class EllCurveTest(LmfdbTest):
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert '\(-1 \cdot 163^{9} \)' in L.data
+        assert r'\(-1 \cdot 163^{9} \)' in L.data
 
     def test_torsion_growth(self):
         """

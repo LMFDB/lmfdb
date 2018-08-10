@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class HigherGenusWithAutomorphismsTest(LmfdbTest):
@@ -21,7 +21,7 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_search_genus_group(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=2&group=%5B48%2C29%5D&signature=&dim=&hyperelliptic=include&count=20&Submit=Search')
-        assert '2 matches' in L.data
+        assert 'both matches' in L.data
 
 
     def test_random(self):

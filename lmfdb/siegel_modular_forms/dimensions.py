@@ -8,7 +8,7 @@
 from flask import flash
 from markupsafe import Markup
 from sage.all import is_odd, is_even, ZZ, QQ, FunctionField, PowerSeriesRing
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.search_parsing import parse_ints_to_list_flash
 
 MAXWT = 9999
@@ -20,9 +20,6 @@ MAXJ = 99
 ## For Release 1.0 this is only relevant to Gamma_2
 ####################################################################
 
-def smf_db_dimensions():
-    return getDBConnection().siegel_modular_forms.dimensions
-    
 def parse_dim_args(dim_args, default_dim_args):
     res={}
     for v in ['k','j']:
@@ -235,11 +232,11 @@ def _dimension_Gamma_2(wt_range, j, group = 'Gamma(2)'):
         raise NotImplementedError("Dimensions of \(M_{k,j}(%s)\) for <span style='color:black'>\(k<4\)</span> and <span style='color:black'>\(j\ge 2\)</span> not implemented" % latex_names.get(group,group))
 
     query = { 'sym_power': str(j), 'group' : 'Gamma(2)', 'space': 'total' }
-    db_total = smf_db_dimensions().find_one(query)
+    db_total = db.smf_dims.lucky(query)
     if not db_total:
         raise NotImplementedError('Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
     query['space'] = 'cusp'
-    db_cusp = smf_db_dimensions().find_one(query)
+    db_cusp = db.smf_dims.lucky(query)
     if not db_cusp:
         raise NotImplementedError('Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
     

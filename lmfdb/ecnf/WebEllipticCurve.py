@@ -3,27 +3,11 @@ import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.bianchi_modular_forms.web_BMF import db_forms
-
-def db_ecnf():
-    return getDBConnection().elliptic_curves.nfcurves
-
-def db_ecnfstats():
-    return getDBConnection().elliptic_curves.nfcurves.stats
-
-def db_nfdb():
-    return getDBConnection().numberfields.fields
-
-def db_iqf_labels():
-    return getDBConnection().elliptic_curves.IQF_labels
-
-def is_ecnf_isogeny_class_in_db(label_isogeny_class):
-    return db_ecnf().find({"class_label" : label_isogeny_class}).limit(1).count(True) > 0;
-
+from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -44,9 +28,8 @@ def convert_IQF_label(fld, lab):
         newlab = lab[1:-1].replace(",",".")
     if len(newlab.split("."))!=3:
         return newlab
-    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
-    if data:
-        newlab = data['new']
+    newlab = db.ec_IQF_labels.lucky({'fld':fld, 'old':newlab}, 'new')
+    if newlab:
         if newlab!=lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
         return newlab
@@ -97,7 +80,7 @@ def ideal_from_string(K,s, IQF_format=False):
     it is of the form "[N,a,alpha]" where N is the norm, a the least
     positive integer in the ideal and alpha a second generator so that
     the ideal is (a,alpha).  alpha is a polynomial in the variable w
-    which represents the generator of K (but may actially be an
+    which represents the generator of K (but may actually be an
     integer).  """
     #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
@@ -267,7 +250,7 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
-        data = db_ecnf().find_one({"label": label})
+        data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
@@ -538,7 +521,7 @@ class ECNF(object):
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                if db_forms().find_one({'label':self.bmf_label}) != None:
+                if is_bmf_in_db(self.bmf_label):
                     self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
                     self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]

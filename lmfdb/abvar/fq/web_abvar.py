@@ -2,7 +2,7 @@
 import re
 from flask import url_for
 
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.WebNumberField import WebNumberField, nf_display_knowl
 from lmfdb.transitive_group import group_display_knowl
 
@@ -13,15 +13,14 @@ def split_label(lab):
 
 def av_display_knowl(label):
     return '<a title = "[av.data]" knowl="av.fq.abvar.data" kwargs="label=' + str(label) + '">' + label + '</a>'
-    
+
 def av_data(label):
-    C = getDBConnection()
-    abvar = C.abvar.fq_isog.find_one({ 'label' : label })
+    abvar = db.av_fqisog.lookup(label)
     wnf = WebNumberField(abvar['nf'])
     inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
     if not wnf.is_null():
-        inf += 'Number field: ' + nf_display_knowl(abvar['nf'], C, name = abvar['nf']) + '<br />'
-        inf += 'Galois group: ' + group_display_knowl(abvar['gal']['n'],abvar['gal']['t'],C) + '<br />'
+        inf += 'Number field: ' + nf_display_knowl(abvar['nf'], name = abvar['nf']) + '<br />'
+        inf += 'Galois group: ' + group_display_knowl(abvar['gal']['n'],abvar['gal']['t']) + '<br />'
     inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
     inf += '<div align="right">'
     g, q, iso = split_label(label)

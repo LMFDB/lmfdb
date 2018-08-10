@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from base import app, getDBConnection
+from base import app
 from flask import render_template, url_for, abort
 
 @app.route("/about")
@@ -23,12 +23,30 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/health")
 @app.route("/alive")
 def alive():
-    try:
-        conn = getDBConnection()
-        assert conn.userdb.users.count()
-    except:
+    from lmfdb.db_backend import db
+    if db.is_alive():
+        return "LMFDB!"
+    else:
         abort(503)
-    return "LMFDB!"
+
+@app.route("/info")
+def info():
+    from base import git_infos
+    output = "# GIT info";
+    output += git_infos()[-1]
+    output += "\n\n";
+    from lmfdb.db_backend import db
+    if not db.is_alive():
+        output += "offline\n"
+        return output
+    output += "# PostgreSQL info\n";
+    conn_str = "%s" % db.conn
+    output += "Connection: %s\n" % conn_str.replace("<","").replace(">","")
+    output += "User: %s\n" % db._user
+    output += "Read only: %s\n" % db._read_only
+    output += "Read/write to userdb: %s\n" % db._read_and_write_userdb
+    output += "Read/write to knowls: %s\n" % db._read_and_write_knowls
+    return output.replace("\n", "<br>")
 
 @app.route("/acknowledgment")
 def acknowledgment():
