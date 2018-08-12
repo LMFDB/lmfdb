@@ -117,10 +117,15 @@ Developer configuration
 
    When you run `sage -python start_lmfdb.py` for the first time, it will create a configuration file
    `config.ini` in the lmfdb root directory.  In the `postgresql` section it will add the default
-   username `lmfdb` and password `lmfdb` which allows for read access to the database.
+   username `lmfdb`, password `lmfdb`, host `devmirror.lmfdb.xyz`, and port `5432` which altogether
+   allows for read access to the database.
 
-   In order to get write access to the database, you should change the `user` field to `editor`
-   and the `password` field to the editor password.
+   In order to get write access to the database, you need to connect to the PostgreSQL server running
+   at `legendre.mit.edu`, which only accepts internal connections.
+   For this we recommend to `ssh` into `legendre.mit.edu`, change the `user` field to `editor`,
+   the `password` field to the editor password, and the `host` to `localhost`.
+   Instead, if you prefer to work from your own machine, you may use the `ssh` connection to forward
+   a local port to `5432`, and use that port on your `config.ini` file.
 
 Adding and modifying data
 -------------------------

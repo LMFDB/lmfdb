@@ -3028,7 +3028,7 @@ class PostgresDatabase(PostgresBase):
             options[key] = value
         self.fetch_userpassword(options)
         self._user = options['user']
-        logging.info("Connecting to PostgresSQL...")
+        logging.info("Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..." % (options['user'],options['host'], options['port'], options['dbname'],))
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
         # The following function controls how Python classes are converted to
