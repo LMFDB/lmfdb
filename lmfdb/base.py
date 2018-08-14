@@ -207,9 +207,9 @@ def is_debug_mode():
     from flask import current_app
     return current_app.debug
 
-branch = "prod"
+branch = "web"
 if (os.getenv('BETA')=='1'):
-    branch = "beta"
+    branch = "dev"
 
 @app.before_request
 def set_beta_state():
@@ -277,14 +277,27 @@ def git_infos():
         from subprocess import Popen, PIPE
         git_rev_cmd = '''git rev-parse HEAD'''
         git_date_cmd = '''git show --format="%ci" -s HEAD'''
+        git_contains_cmd = '''git branch --contains HEAD'''
+        git_reflog_cmd = '''git reflog -n5'''
         rev = Popen([git_rev_cmd], shell=True, stdout=PIPE).communicate()[0]
         date = Popen([git_date_cmd], shell=True, stdout=PIPE).communicate()[0]
-        cmd_output = rev, date
+        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE).communicate()[0]
+        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE).communicate()[0]
+        pairs = [[git_rev_cmd, rev],
+                [git_date_cmd, date],
+                [git_contains_cmd, contains],
+                [git_reflog_cmd, reflog]]
+        summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
+        cmd_output = rev, date,  summary
     except Exception:
-        cmd_output = '-', '-'
+        cmd_output = '-', '-', '-'
     return cmd_output
 
-git_rev, git_date = git_infos()
+def git_summary():
+    return "commit = %s\ndate = %s\ncontains = %s\nreflog = \n%s\n" % git_infos()
+
+
+git_rev, git_date, _  = git_infos()
 from sage.env import SAGE_VERSION
 
 """

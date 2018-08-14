@@ -12,8 +12,8 @@ Installation
 
   and follow these instructions.
 
-* Make sure you have Sage (>=7.0) installed and that `sage` is available from
-  the commandline.  In particular see
+* Make sure you have a recent version of Sage (at least >=7.1) installed
+  and that `sage` is available from the commandline.  In particular see
   [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
   Also check that your version of Sage has ssl available by checking that
   `import ssl` works on its command line. If not, then the `pip install`
@@ -80,7 +80,7 @@ Installation
 Running
 =======
 
-* A read-only copy of the database is hosted at m0.lmfdb.xyz. This is what is
+* A read-only copy of the database is hosted at devmirror.lmfdb.xyz. This is what is
   used by default. You can launch the webserver directly like this:
 
   ```
@@ -88,7 +88,7 @@ Running
   ```
 
 * The effect of the (optional) --debug is that you will be running
-  with the beta flag switched on as at beta.lmfdb.org, and also that
+  with the beta flag switched on as at dev.lmfdb.org, and also that
   if code fails your browser will show useful debugging information.
   Without `--debug` what you see will be more like www.lmfdb.org.
 
@@ -105,20 +105,8 @@ Running
   the yaml files which are read only once at startup will require
   you to manually stop the server and restart it.
 
-* If you don't have access to this server, you can temporarily start
-    your own mongodb server and use it locally.  There is no data
-    (obviously) but it will work.  To start mongo locally (after
-    installing mongo on your machine):
-
-    ```
-       mongod --port 37010 --dbpath [db_directory] --smallfiles
-    ```
-
 * You may have to suppress loading of your local python libraries:
   `sage -python -s start-lmfdb.py`
-
-* If you use a local MongoDB instance, specify its port:
-  `sage  -python start-lmfdb.py --debug --mongo-port 40000 --mongo-host localhost`
 
 * If several people are running their own version of the webserver on
     the same machine, they cannot all use port 37777 -- if they try,
@@ -143,25 +131,23 @@ Running
 
 * It is possible to use a different instance of the database. For many uses,
   using the default configuration (which uses a read-only database
-  on m0.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
-  on using a different database instance, it's a good idea to copy
-  `default_mongoclient.config` to `mongoclient.config` and to change the
-  entries in `mongoclient.config` to your access point for the database.
+  on devmirror.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
+  on using a different database instance, you can do so by changing
+  config.ini in the root of the lmfdb directory.
 
   One possibility is to connect to the lmfdb database on the machine
-  lmfdb.warwick.ac.uk, using ssh tunelling so that your local
-  machine's port 27017 (where the website code expects the database to
+  legendre.mit.edu, using ssh tunelling so that your local
+  machine's port 5432 (where the website code expects the database to
   be running) maps to the same port number on the database server.
-  (Note that in the past, the default port has also been 37010).
   For this to work you must first send your public SSH key (as an
-  email attachment preferably) to Harald Schilly, Jonathan Bober or
-  John Cremona who will install it on the database server
-  lmfdb.warwick.ac.uk.  To make life easier, the necessary ssh command
-  is in the lmfdb root directory in the script warwick.sh, so just
+  email attachment preferably) to David Roe or Edgar Costa
+  who will install it on the database server
+  legendre.mit.edu.  To make life easier, the necessary ssh command
+  is in the lmfdb root directory in the script mit.sh, so just
   type
 
   ```
-     ./warwick.sh &
+     ./mit.sh &
   ```
 
   The ampersand here makes this run in the background, so you should
@@ -227,12 +213,12 @@ Code development and sharing your work
 
    * You should make sure from time to time that you pull the latest
   changes from the official LMFDB repository.  There are three
-  branches upstream to be aware of: `prod`, `beta` and `master`:
+  branches upstream to be aware of: `web`, `dev` and `master`:
 
-    - `prod` is changed rarely and contains the code currently running at
+    - `web` is changed rarely and contains the code currently running at
       www.lmfdb.org
-    - `beta` is changed more often and contains the code currently running at
-      beta.lmfdb.org
+    - `dev` is changed more often and contains the code currently running at
+      dev.lmfdb.org
     - `master` is the development branch.
 
    Normal developers only need to be aware of the master

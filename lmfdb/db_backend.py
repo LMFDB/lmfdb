@@ -32,7 +32,6 @@ from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
-from sage.misc.cachefunc import cached_method
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
 from lmfdb.utils import make_logger, format_percentage
@@ -115,9 +114,9 @@ class DelayCommit(object):
     default.  When the final DelayCommit is exited, the connection will commit.
     """
     def __init__(self, obj, final_commit=True, silence=None):
-        self.obj = obj
+        self.obj = obj._db
         self.final_commit = final_commit
-        self._orig_silenced = obj._silenced
+        self._orig_silenced = obj._db._silenced
         if silence is not None:
             obj._silenced = silence
     def __enter__(self):
@@ -140,8 +139,6 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
-        self._nocommit_stack = 0
-        self._silenced = False
         handler = logging.FileHandler(SLOW_QUERY_LOGFILE)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
@@ -196,6 +193,7 @@ class PostgresBase(object):
         if not isinstance(query, Composable):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
         cur = self.conn.cursor()
+
         try:
             t = time.time()
             if values_list:
@@ -203,7 +201,7 @@ class PostgresBase(object):
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
-            if silent is False or (silent is None and not self._silenced):
+            if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
@@ -219,7 +217,7 @@ class PostgresBase(object):
                     raise
                 # Attempt to reset the connection
                 self._db.reset_connection()
-                if commit or (commit is None and self._nocommit_stack == 0):
+                if commit or (commit is None and self._db._nocommit_stack == 0):
                     return self._execute(query, values=values, silent=silent, values_list=values_list, template=template, slow_note=slow_note, reissued=True)
                 else:
                     raise
@@ -227,14 +225,18 @@ class PostgresBase(object):
                 self.conn.rollback()
                 raise
         else:
-            if commit or (commit is None and self._nocommit_stack == 0):
+            if commit or (commit is None and self._db._nocommit_stack == 0):
                 self.conn.commit()
         return cur
 
-    @cached_method
     def _table_exists(self, tablename):
         cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True)
         return cur.fetchone()[0] is not None
+
+    def _constraint_exists(self, tablename, constraintname):
+        print  tablename, constraintname
+        cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
+        return cur.fetchone() is not None
 
     @staticmethod
     def _sort_str(sort_list):
@@ -1400,7 +1402,7 @@ class PostgresTable(PostgresBase):
         else:
             return cur.fetchone()[0]
 
-    def reload_meta(self, filename, final_swap = True, suffix = "_tmp"):
+    def reload_meta(self, filename, final_swap=True, suffix="_tmp", commit=True):
         """
         Inserts a row into meta_tables
         """
@@ -1413,12 +1415,12 @@ class PostgresTable(PostgresBase):
         if len(rows) != 1:
             raise RuntimeError("Expected only one row")
 
-        row = rows[0]
+        row = list(rows[0])
 
         if row[0] != self.search_table:
             raise RuntimeError("The 1st column (%s) doesn't match the search table name (%s)" % (row[0], self.search_table))
 
-        with DelayCommit(self, silence=True):
+        with DelayCommit(self, commit, silence=True):
             # get the current version
             version = self._get_current_tables_version() + 1
 
@@ -1427,7 +1429,7 @@ class PostgresTable(PostgresBase):
 
             # insert new row
             self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + (version,))
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [version,])
 
     def revert_meta(self, version = None):
         with DelayCommit(self, silence=True):
@@ -1849,17 +1851,31 @@ class PostgresTable(PostgresBase):
             rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
             rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
             for table in tables:
-                # table -> table_oldN
-                self._execute(rename_table.format(Identifier(table), Identifier("{0}_old{1}".format(table, backup_number))))
-                # table_tmp -> table
-                self._execute(rename_table.format(Identifier(table + "_tmp"), Identifier(table)))
-                # table_pkey in table_old1 to table_old1_pkey
-                self._execute(rename_pkey.format(Identifier("{0}_old{1}".format(table, backup_number)),
-                                                 Identifier("{0}_pkey".format(table)),
-                                                 Identifier("{0}_old{1}_pkey".format(table, backup_number))))
-                self._execute(rename_pkey.format(Identifier(table),
-                                                 Identifier("{0}_tmp_pkey".format(table)),
-                                                 Identifier("{0}_pkey".format(table))))
+                tablename = table
+                tablename_oldN = "{0}_old{1}".format(table, backup_number)
+                tablename_tmp = table + "_tmp"
+
+                # tablename -> tablename_oldN
+                self._execute(rename_table.format(Identifier(tablename), Identifier(tablename_oldN)))
+                # tablename_tmp -> tablename
+                self._execute(rename_table.format(Identifier(tablename_tmp), Identifier(tablename)))
+
+                tablename_pkey = "{0}_pkey".format(table)
+                tablename_oldN_pkey = "{0}_old{1}_pkey".format(table, backup_number)
+                tablename_tmp_pkey = "{0}_tmp_pkey".format(table)
+
+                # tablename_pkey ->  table_oldN_pkey in tablename_oldN
+                if self._constraint_exists(tablename_oldN, tablename_pkey):
+                    self._execute(rename_pkey.format(Identifier(tablename_oldN),
+                                                 Identifier(tablename_pkey),
+                                                 Identifier(tablename_oldN_pkey)))
+
+                # tablename_tmp_pkey -> tablename_pkey in table
+                if self._constraint_exists(tablename, tablename_tmp_pkey):
+                    self._execute(rename_pkey.format(Identifier(tablename),
+                                                    Identifier(tablename_tmp_pkey),
+                                                    Identifier(tablename_pkey)))
+
                 self._db.grant_select(table)
                 if table.endswith("_counts"):
                     self._db.grant_insert(table)
@@ -1937,6 +1953,7 @@ class PostgresTable(PostgresBase):
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
+
             if countsfile is not None:
                 self.stats._copy_extra_counts_to_tmp()
 
@@ -1992,8 +2009,10 @@ class PostgresTable(PostgresBase):
                 self.reload_meta(metafile)
 
     def reload_revert(self, commit = True):
+        raise ValueError("FIXME")
         #TODO add doc
         with DelayCommit(self, commit, silence=True):
+            #FIXME
             # drops the `_tmp` tables
             self.cleanup_from_reload(old = False)
             # reverts `meta_indexes` to previous state
@@ -2101,8 +2120,8 @@ class PostgresTable(PostgresBase):
                      (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
-        metadata = [("meta_indexes", "table_name", "(index_name, table_name, type, columns, modifiers, storage_params)", indexesfile),
-                    ("meta_tables", "name", "(name, sort, id_ordered, out_of_order, has_extras, label_col)", metafile)
+        metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
+                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col", metafile)
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
@@ -2119,13 +2138,13 @@ class PostgresTable(PostgresBase):
                     except Exception:
                         self.conn.rollback()
                         raise
-                print "Exported data from %s in %.3f secs"%(table, time.time() - now)
+                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
             for table, wherecol, cols, filename in  metadata:
                 if filename is None:
                     continue
                 now = time.time()
-                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, table,)
+                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, self.search_table,)
                 self._copy_to_select(select, filename)
                 print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
@@ -2287,6 +2306,7 @@ class PostgresStatsTable(PostgresBase):
         self.total = self.quick_count({})
         if self.total is None:
             self.total = self._slow_count({}, extra=False)
+
 
     def _has_stats(self, jcols, ccols, cvals, threshold, threshold_inequality=False):
         """
@@ -2781,14 +2801,15 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``include_counts`` -- if False, will omit the counts and just give lists of values.
         - ``suffix`` -- Used when dealing with `_tmp` or `_old*` tables.
         """
-        selecter = SQL("SELECT cols, values, count FROM {0} WHERE extra = %s").format(Identifier(self.counts + suffix))
-        cur = self._execute(selecter, [True])
+        selecter = SQL("SELECT cols, values, count FROM {0} WHERE extra ='t'").format(Identifier(self.counts + suffix))
+        cur = self._execute(selecter)
         ans = defaultdict(list)
         for cols, values, count in cur:
             if include_counts:
                 ans[tuple(cols)].append((tuple(values), count))
             else:
                 ans[tuple(cols)].append(tuple(values))
+
         return ans
 
     def _get_values_counts(self, cols, constraint):
@@ -3007,7 +3028,7 @@ class PostgresDatabase(PostgresBase):
             options[key] = value
         self.fetch_userpassword(options)
         self._user = options['user']
-        logging.info("Connecting to PostgresSQL...")
+        logging.info("Connecting to PostgresSQL server as: user=%s host=%s port=%s dbname=%s..." % (options['user'],options['host'], options['port'], options['dbname'],))
         connection = connect( **options)
         logging.info("Done!\n connection = %s" % connection)
         # The following function controls how Python classes are converted to
@@ -3030,6 +3051,8 @@ class PostgresDatabase(PostgresBase):
         self._objects.append(obj)
 
     def __init__(self, **kwargs):
+        self._nocommit_stack = 0
+        self._silenced = False
         self._objects = []
         self.conn = self._new_connection(**kwargs)
         PostgresBase.__init__(self, 'db_all', self)
@@ -3420,7 +3443,6 @@ class PostgresDatabase(PostgresBase):
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-
                 table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex, commit=False)
 
         if failures:

@@ -29,6 +29,25 @@ def alive():
     else:
         abort(503)
 
+@app.route("/info")
+def info():
+    from base import git_infos
+    output = "# GIT info\n";
+    output += git_infos()[-1]
+    output += "\n\n";
+    from lmfdb.db_backend import db
+    if not db.is_alive():
+        output += "offline\n"
+        return output
+    output += "# PostgreSQL info\n";
+    conn_str = "%s" % db.conn
+    output += "Connection: %s\n" % conn_str.replace("<","").replace(">","")
+    output += "User: %s\n" % db._user
+    output += "Read only: %s\n" % db._read_only
+    output += "Read/write to userdb: %s\n" % db._read_and_write_userdb
+    output += "Read/write to knowls: %s\n" % db._read_and_write_knowls
+    return output.replace("\n", "<br>")
+
 @app.route("/acknowledgment")
 def acknowledgment():
     bread = [("Acknowledgments" , '')]
