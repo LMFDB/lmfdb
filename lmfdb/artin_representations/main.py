@@ -8,7 +8,8 @@ from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, clean_input
+from lmfdb.search_wrapper import search_wrap
 
 from math_classes import ArtinRepresentation
 from lmfdb.transitive_group import group_display_knowl
@@ -48,53 +49,42 @@ def index():
                 ('Artin representations labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
     else:
-        return artin_representation_search(**args)
+        return artin_representation_search(args)
 
-def artin_representation_search(**args):
-    info = to_dict(args)
-    if 'natural' in info:
-        label = info['natural']
-        # test if it is ok
-        try:
-            label = parse_artin_label(label)
-        except ValueError as err:
-            flash(Markup("Error: %s" % (err)), "error")
-            bread = get_bread([('Search Results','')])
-            return search_input_error({'err':''}, bread)
-        return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
-
-    title = 'Artin Representation Search Results'
-    bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
-    sign_code = 0
-    query = {'Hide': 0}
+def artin_representation_jump(info):
+    label = info['natural']
+    # test if it is ok
     try:
-        parse_primes(info,query,"unramified",name="Unramified primes",
-                     qfield="BadPrimes",mode="complement")
-        parse_primes(info,query,"ramified",name="Ramified primes",
-                     qfield="BadPrimes",mode="append")
-        parse_element_of(info,query,"root_number",qfield="GalConjSigns")
-        parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
-                         allowed=[1,0,-1],process=int)
-        parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
-        parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
-        parse_ints(info,query,'dimension',qfield='Dim')
-        parse_ints(info,query,'conductor',qfield='Conductor')
-        #parse_paired_fields(info,query,field1='conductor',qfield1='Conductor_key',parse1=parse_ints,kwds1={'parse_singleton':make_cond_key},
-                                       #field2='dimension',qfield2='Dim', parse2=parse_ints)
-    except ValueError:
-        return search_input_error(info, bread)
-    if 'result_count' in info:
-        nres = db.artin_reps.count(query)
-        return flask.jsonify({"nres":str(nres)})
+        label = parse_artin_label(label)
+    except ValueError as err:
+        flash(Markup("Error: %s" % (err)), "error")
+        bread = get_bread([('Search Results','')])
+        return search_input_error({'err':''}, bread)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-    count = parse_count(info,10)
-    start = parse_start(info)
-    results = db.artin_reps.search(query, limit=count, offset=start, info=info)
-
-    initfunc = ArtinRepresentation
-
-    return render_template("artin-representation-search.html", info=info, data=results, title=title, bread=bread, query=query, initfunc=initfunc, sign_code=sign_code)
-
+@search_wrap(template="artin-representation-search.html",
+             table=db.artin_reps,
+             title='Artin Representation Search Results',
+             err_title='Artin Representation Search Error',
+             per_page=10,
+             shortcuts={'natural':artin_representation_jump},
+             bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
+             initfunc=lambda:ArtinRepresentation)
+def artin_representation_search(info, query):
+    sign_code = 0
+    query['Hide'] = 0
+    info['sign_code'] = 0
+    parse_primes(info,query,"unramified",name="Unramified primes",
+                 qfield="BadPrimes",mode="complement")
+    parse_primes(info,query,"ramified",name="Ramified primes",
+                 qfield="BadPrimes",mode="append")
+    parse_element_of(info,query,"root_number",qfield="GalConjSigns")
+    parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
+                     allowed=[1,0,-1],process=int)
+    parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
+    parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
+    parse_ints(info,query,'dimension',qfield='Dim')
+    parse_ints(info,query,'conductor',qfield='Conductor')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)

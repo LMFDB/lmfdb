@@ -10,7 +10,8 @@ from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, pri
 
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints
+from lmfdb.search_wrapper import search_wrap
 from lmfdb.db_backend import db
 
 from markupsafe import Markup
@@ -78,7 +79,7 @@ def modlmf_render_webpage():
         info['counts'] = get_stats().counts()
         return render_template("modlmf-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
-        return modlmf_search(**args)
+        return modlmf_search(args)
 
 
 # Random modlmf
@@ -101,45 +102,55 @@ def modlmf_by_label(lab):
         flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".modlmf_render_webpage"))
 
+#download
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
-def modlmf_search(**args):
-    info = to_dict(args)  # what has been entered in the search boxes
+def download_search(info):
+    lang = info["Submit"]
+    filename = 'mod_l_modular_forms' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
 
-    if 'download' in info:
-        return download_search(info)
+    proj = ['characteristic', 'deg', 'level', 'min_weight', 'conductor']
+    res = list(db.modlmf_forms.search(ast.literal_eval(info["query"]), proj))
 
-    if info.get('label'):
-        return modlmf_by_label(info.get('label'))
-    query = {}
-    try:
-        for field, name in (('characteristic','Field characteristic'),('deg','Field degree'),('level', 'Level'),
-                            ('conductor','Conductor'), ('weight_grading', 'Weight grading')):
-            parse_ints(info, query, field, name)
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info)
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, len(res))
+    s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    for r in res:
+        for m in proj:
+            s += ",\\\n".join(str(r[m]))
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-# miss search by character, search up to twists and gamma0, gamma1
-
-    if 'result_count' in info:
-        nres = db.modlmf_forms.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info,50)
-    start = parse_start(info)
-    info['modlmfs'] = db.modlmf_forms.search(query, projection=['label','characteristic','deg','level','weight_grading'], limit=count, offset=start, info=info)
-    t = 'Mod &#x2113; Modular Forms Search Results'
-    bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
-    properties = []
-    return render_template("modlmf-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
-
-def search_input_error(info, bread=None):
-    t = 'mod &#x2113; Modular Forms Search Error'
-    if bread is None:
-        bread=[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')]
-    return render_template("modlmf-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
-
-
+@search_wrap(template="modlmf-search.html",
+             table=db.modlmf_forms,
+             title='Mod &#x2113; Modular Forms Search Results',
+             err_title='Mod &#x2113; Modular Forms Search Error',
+             shortcuts={'download':download_search,
+                        'label':lambda info:modlmf_by_label(info.get('label'))},
+             projection=['label','characteristic','deg','level','weight_grading'],
+             bread=lambda:[('Modular Forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Search Results', ' ')],
+             learnmore=learnmore_list,
+             properties=lambda:[])
+def modlmf_search(info, query):
+    for field, name in (('characteristic','Field characteristic'),('deg','Field degree'),
+                        ('level', 'Level'),('conductor','Conductor'),
+                        ('weight_grading', 'Weight grading')):
+        parse_ints(info, query, field, name)
+    # missing search by character, search up to twists and gamma0, gamma1
 
 @modlmf_page.route('/<label>')
 def render_modlmf_webpage(**args):
@@ -254,40 +265,6 @@ def labels_page():
     credit = modlmf_credit
     return render_template("single.html", kid='modlmf.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
-
-#download
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
-download_assignment_end = {'magma':';','sage':'','gp':''}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
-
-def download_search(info):
-    lang = info["Submit"]
-    filename = 'mod_l_modular_forms' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-
-    proj = ['characteristic', 'deg', 'level', 'min_weight', 'conductor']
-    res = list(db.modlmf_forms.search(ast.literal_eval(info["query"]), proj))
-
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, len(res))
-    s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
-    s += download_assignment_start[lang] + list_start + '\\\n'
-    for r in res:
-        for m in proj:
-            s += ",\\\n".join(str(r[m]))
-    s += list_end
-    s += download_assignment_end[lang]
-    s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
 
 @modlmf_page.route('/<label>/download/<lang>/')
 def render_modlmf_webpage_download(**args):

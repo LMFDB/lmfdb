@@ -81,7 +81,7 @@
 <th>{{ KNOWL('mf.bianchi.base_change', title='Base change') }} </th>
 <th>{{ KNOWL('mf.bianchi.cm', title='CM') }} </th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td>{{form.field_label}}</td>
 <td><a href={{url_for("bmf.render_bmf_space_webpage",field_label=form.field_label,

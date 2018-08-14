@@ -7,7 +7,8 @@ from lmfdb.db_backend import db
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_count, parse_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset
+from lmfdb.search_wrapper import search_wrap
 from search_parsing import parse_newton_polygon
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
@@ -53,7 +54,7 @@ def abelian_varieties():
         info = to_dict(args)
         #information has been entered, but not requesting to change the parameters of the table
         if not('table_field_range' in info) and not('table_dimension_range' in info):
-            return abelian_variety_search(**args)
+            return abelian_variety_search(info)
         #information has been entered, requesting to change the parameters of the table
         else:
             return abelian_variety_browse(**args)
@@ -66,7 +67,7 @@ def abelian_varieties_by_g(g):
     D = to_dict(request.args)
     if 'g' not in D: D['g'] = g
     D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)))
-    return abelian_variety_search(**D)
+    return abelian_variety_search(D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/")
 def abelian_varieties_by_gq(g, q):
@@ -75,7 +76,7 @@ def abelian_varieties_by_gq(g, q):
     if 'q' not in D: D['q'] = q
     D['bread'] = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
                            (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)))
-    return abelian_variety_search(**D)
+    return abelian_variety_search(D)
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
@@ -102,84 +103,113 @@ def abelian_varieties_by_gqi(g, q, iso):
                            cl=cl,
                            learnmore=learnmore_list())
 
+def download_search(info):
+    dltype = info['Submit']
+    R = PolynomialRing(ZZ, 'x')
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'weil_polynomials.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'weil_polynomials.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'weil_polynomials.m'
+    s = com1 + "\n"
+    s += com + " Weil polynomials downloaded from the LMFDB on %s.\n"%(mydate)
+    s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
+    s += com + " attached to each isogeny class of an abelian variety.\n"
+    s += "\n" + com2
+    s += "\n"
 
-def abelian_variety_search(**args):
-    info = to_dict(args)
+    if dltype == 'magma':
+        s += 'P<x> := PolynomialRing(Integers()); \n'
+        s += 'data := ['
+    else:
+        if dltype == 'sage':
+            s += 'x = polygen(ZZ) \n'
+        s += 'data = [ '
+    s += '\\\n'
+    for f in db.av_fqisog.search(ast.literal_eval(info["query"]), 'poly'):
+        poly = R(f)
+        s += str(poly) + ',\\\n'
+    s = s[:-3]
+    s += ']\n'
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    if 'download' in info and info['download'] != 0:
-        return download_search(info)
-
-    bread = args.get('bread', get_bread(('Search Results', ' ')))
-    if 'jump' in info:
-        return by_label(info.get('label',''))
-    query = {}
-
-    try:
-        parse_ints(info,query,'q',name='base field')
-        parse_ints(info,query,'g',name='dimension')
-        if 'simple' in info:
-            if info['simple'] == 'yes':
-                query['is_simp'] = True
-            elif info['simple'] == 'no':
-                query['is_simp'] = False
-        if 'primitive' in info:
-            if info['primitive'] == 'yes':
-                query['is_prim'] = True
-            elif info['primitive'] == 'no':
-                query['is_prim'] = False
-        if 'jacobian' in info:
-            jac = info['jacobian']
-            if jac == 'yes':
-                query['is_jac'] = 1
-            elif jac == 'not_no':
-                query['is_jac'] = {'$gt' : -1}
-            elif jac == 'not_yes':
-                query['is_jac'] = {'$lt' : 1}
-            elif jac == 'no':
-                query['is_jac'] = -1
-        if 'polarizable' in info:
-            pol = info['polarizable']
-            if pol == 'yes':
-                query['is_pp'] = 1
-            elif pol == 'not_no':
-                query['is_pp'] = {'$gt' : -1}
-            elif pol == 'not_yes':
-                query['is_pp'] = {'$lt' : 1}
-            elif pol == 'no':
-                query['is_pp'] = -1
-        parse_ints(info,query,'p_rank')
-        parse_ints(info,query,'ang_rank')
-        parse_newton_polygon(info,query,'newton_polygon',qfield='slps')
-        parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
-        parse_string_start(info,query,'abvar_point_count',qfield='A_cnts_str')
-        parse_string_start(info,query,'curve_point_count',qfield='C_cnts_str',first_field='pt_cnt')
-        if info.get('simple_quantifier') == 'contained':
-            parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
-        elif info.get('simple_quantifier') == 'exactly':
-            parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
-        elif info.get('simple_quantifier') == 'include':
-            parse_submultiset(info,query,'simple_factors',mode='append')
-        for n in range(1,6):
-            parse_ints(info,query,'dim%s_factors'%n)
-        for n in range(1,4):
-            parse_ints(info,query,'dim%s_distinct'%n)
-        parse_nf_string(info,query,'number_field',qfield='nf')
-        parse_galgrp(info,query,qfield=('galois_n','galois_t'))
-    except ValueError:
-        return search_input_error(info, bread)
-
-    if 'result_count' in info:
-        nres = db.av_fqisog.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info, 50)
-    start = parse_start(info)
-
-    res = db.av_fqisog.search(query, limit=count, offset=start, info=info)
-
-    info['abvars'] = [AbvarFq_isoclass(x) for x in res]
-    t = 'Abelian Variety Search Results'
-    return render_template("abvarfq-search-results.html", info=info, credit=abvarfq_credit, bread=bread, title=t)
+@search_wrap(template="abvarfq-search-results.html",
+             table=db.av_fqisog,
+             title='Abelian Variety Search Results',
+             err_title='Abelian Variety Search Input Error',
+             shortcuts={'jump': lambda info:by_label(info.get('label','')),
+                        'download': download_search},
+             postprocess=lambda res, info, query: [AbvarFq_isoclass(x) for x in res],
+             bread=lambda:get_bread(('Search Results', ' ')),
+             credit=lambda:abvarfq_credit)
+def abelian_variety_search(info, query):
+    parse_ints(info,query,'q',name='base field')
+    parse_ints(info,query,'g',name='dimension')
+    if 'simple' in info:
+        if info['simple'] == 'yes':
+            query['is_simp'] = True
+        elif info['simple'] == 'no':
+            query['is_simp'] = False
+    if 'primitive' in info:
+        if info['primitive'] == 'yes':
+            query['is_prim'] = True
+        elif info['primitive'] == 'no':
+            query['is_prim'] = False
+    if 'jacobian' in info:
+        jac = info['jacobian']
+        if jac == 'yes':
+            query['is_jac'] = 1
+        elif jac == 'not_no':
+            query['is_jac'] = {'$gt' : -1}
+        elif jac == 'not_yes':
+            query['is_jac'] = {'$lt' : 1}
+        elif jac == 'no':
+            query['is_jac'] = -1
+    if 'polarizable' in info:
+        pol = info['polarizable']
+        if pol == 'yes':
+            query['is_pp'] = 1
+        elif pol == 'not_no':
+            query['is_pp'] = {'$gt' : -1}
+        elif pol == 'not_yes':
+            query['is_pp'] = {'$lt' : 1}
+        elif pol == 'no':
+            query['is_pp'] = -1
+    parse_ints(info,query,'p_rank')
+    parse_ints(info,query,'ang_rank')
+    parse_newton_polygon(info,query,'newton_polygon',qfield='slps')
+    parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
+    parse_string_start(info,query,'abvar_point_count',qfield='A_cnts_str')
+    parse_string_start(info,query,'curve_point_count',qfield='C_cnts_str',first_field='pt_cnt')
+    if info.get('simple_quantifier') == 'contained':
+        parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
+    elif info.get('simple_quantifier') == 'exactly':
+        parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
+    elif info.get('simple_quantifier') == 'include':
+        parse_submultiset(info,query,'simple_factors',mode='append')
+    for n in range(1,6):
+        parse_ints(info,query,'dim%s_factors'%n)
+    for n in range(1,4):
+        parse_ints(info,query,'dim%s_distinct'%n)
+    parse_nf_string(info,query,'number_field',qfield='nf')
+    parse_galgrp(info,query,qfield=('galois_n','galois_t'))
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
@@ -269,53 +299,6 @@ def random_class():
     label = db.av_fqisog.random()
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
-
-def download_search(info):
-    dltype = info['Submit']
-    R = PolynomialRing(ZZ, 'x')
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'weil_polynomials.gp'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'weil_polynomials.sage'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'weil_polynomials.m'
-    s = com1 + "\n"
-    s += com + " Weil polynomials downloaded from the LMFDB on %s.\n"%(mydate)
-    s += com + " Below is a list (called data), collecting the weight 1 L-polynomial\n"
-    s += com + " attached to each isogeny class of an abelian variety.\n"
-    s += "\n" + com2
-    s += "\n"
-
-    if dltype == 'magma':
-        s += 'P<x> := PolynomialRing(Integers()); \n'
-        s += 'data := ['
-    else:
-        if dltype == 'sage':
-            s += 'x = polygen(ZZ) \n'
-        s += 'data = [ '
-    s += '\\\n'
-    for f in db.av_fqisog.search(ast.literal_eval(info["query"]), 'poly'):
-        poly = R(f)
-        s += str(poly) + ',\\\n'
-    s = s[:-3]
-    s += ']\n'
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 @abvarfq_page.route("/Completeness")
 def completeness_page():

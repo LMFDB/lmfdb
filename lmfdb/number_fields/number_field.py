@@ -22,7 +22,8 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts, group_character_table_knowl_guts, group_alias_table
 
 from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm
-from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_count, parse_start, parse_nf_string
+from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string
+from lmfdb.search_wrapper import search_wrap
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
@@ -580,74 +581,133 @@ def by_label(label):
 
 # input is a sage int
 
-
-def number_field_search(info):
-    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
-        return download_search(info)
-
-    info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Global Number Field Search Results'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
-
-    if 'natural' in info:
-        query = {'label_orig': info['natural']}
-        try:
-            parse_nf_string(info,query,'natural',name="Label",qfield='label')
-            return redirect(url_for(".by_label", label=query['label']))
-        except ValueError:
-            query['err'] = info['err']
-            return search_input_error(query, bread)
-
-    if 'algebra' in info:
-        fields=info['algebra'].split('_')
-        fields2=[WebNumberField.from_coeffs(a) for a in fields]
-        for j in range(len(fields)):
-            if fields2[j] is None:
-                fields2[j] = WebNumberField.fakenf(fields[j])
-        t = 'Number Field Algebra'
-        info = {}
-        info = {'fields': fields2}
-        return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
-
-
-
-    query = {}
-    try:
-        parse_ints(info,query,'degree')
-        parse_galgrp(info,query, qfield=('degree', 'galt'))
-        parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
-        parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
-        parse_ints(info,query,'class_number')
-        parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
-        parse_primes(info,query,'ur_primes',name='Unramified primes',
-                     qfield='ramps',mode='complement')
-        # modes are now contained (in), exactly, include
-        if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-            mode='append'
-        elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-            mode='subsets'
+def download_search(info):
+    dltype = info.get('Submit')
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'fields.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'fields.sage'
+    if dltype == 'mathematica':
+        com = ''
+        com1 = '(*'
+        com2 = '*)'
+        delim = 'brace'
+        filename = 'fields.ma'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'fields.m'
+    s = com1 + "\n"
+    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [polynomial, discriminant, t-number, class group]\n'
+    s += com + ' Here the t-number is for the Galois group\n'
+    s += com + ' If a class group was not computed, the entry is [-1]\n'
+    s += '\n' + com2
+    s += '\n'
+    if dltype == 'magma':
+        s += 'data := ['
+    else:
+        s += 'data = ['
+    s += '\\\n'
+    Qx = PolynomialRing(QQ,'x')
+    # reissue saved query here
+    res = db.nf_fields.search(ast.literal_eval(info["query"]))
+    for f in res:
+        pol = Qx(f['coeffs'])
+        D = f['disc_abs'] * f['disc_sign']
+        gal_t = f['galt']
+        if 'class_group' in f:
+            cl = f['class_group']
         else:
-            mode='exact'
-        parse_primes(info,query,'ram_primes',name='Ramified primes',
-                     qfield='ramps',mode=mode,radical='disc_rad')
+            cl = [-1]
+        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
+        s += '[' + entry + ']' + ',\\\n'
+    s = s[:-3]
+    if dltype == 'gp':
+        s += '];\n'
+    else:
+        s += ']\n'
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True,
+                     add_etags=False)
+
+def number_field_jump(info):
+    query = {'label_orig': info['natural']}
+    try:
+        parse_nf_string(info,query,'natural',name="Label",qfield='label')
+        return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
-        return search_input_error(info, bread)
+        query['err'] = info['err']
+        return search_input_error(query, bread)
 
-    if 'result_count' in info:
-        nres = db.nf_fields.count(query)
-        return jsonify({"nres":str(nres)})
-    if 'lucky' in info:
-        label = db.nf_fields.lucky(query, 0)
-        if label:
-            return redirect(url_for(".by_label", label=clean_input(label)))
+## This doesn't seem to be used currently
+#def number_field_algebra(info):
+#    fields = info['algebra'].split('_')
+#    fields2 = [WebNumberField.from_coeffs(a) for a in fields]
+#    for j in range(len(fields)):
+#        if fields2[j] is None:
+#            fields2[j] = WebNumberField.fakenf(fields[j])
+#    t = 'Number Field Algebra'
+#    info = {'results': fields2}
+#    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
 
-    start = parse_start(info)
-    count = parse_count(info)
-    res = db.nf_fields.search(query, limit=count, offset=start, info=info)
-    info['fields'] = res
+@search_wrap(template="number_field_search.html",
+             table=db.nf_fields,
+             title='Global Number Field Search Results',
+             err_title='Global Number Field Search Error',
+             per_page=20,
+             shortcuts={'natural':number_field_jump,
+                        #'algebra':number_field_algebra,
+                        'download':download_search},
+             bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
+                           ('Search Results', '.')],
+             learnmore=lambda:[('Global number field labels', url_for(".render_labels_page")),
+                               ('Galois group labels', url_for(".render_groups_page")),
+                               (Completename, url_for(".render_discriminants_page")),
+                               ('Quadratic imaginary class groups', url_for(".render_class_group_data"))])
+def number_field_search(info, query):
+    parse_ints(info,query,'degree')
+    parse_galgrp(info,query, qfield=('degree', 'galt'))
+    parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
+    parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
+    parse_ints(info,query,'class_number')
+    parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
+    parse_primes(info,query,'ur_primes',name='Unramified primes',
+                 qfield='ramps',mode='complement')
+    # modes are now contained (in), exactly, include
+    if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
+        mode='append'
+    elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
+        mode='subsets'
+    else:
+        mode='exact'
+    parse_primes(info,query,'ram_primes',name='Ramified primes',
+                 qfield='ramps',mode=mode,radical='disc_rad')
+    ## This seems not to be used
+    #if 'lucky' in info:
+    #    label = db.nf_fields.lucky(query, 0)
+    #    if label:
+    #        return redirect(url_for(".by_label", label=clean_input(label)))
     info['wnf'] = WebNumberField.from_data
-    return render_template("number_field_search.html", info=info, title=t, bread=bread)
-
 
 def search_input_error(info, bread):
     return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
@@ -717,76 +777,6 @@ def frobs(nf):
             ans.append([p, 'R'])
             seeram = True
     return ans, seeram
-
-
-def download_search(info):
-    dltype = info.get('Submit')
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'fields.gp'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'fields.sage'
-    if dltype == 'mathematica':
-        com = ''
-        com1 = '(*'
-        com2 = '*)'
-        delim = 'brace'
-        filename = 'fields.ma'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'fields.m'
-    s = com1 + "\n"
-    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [polynomial, discriminant, t-number, class group]\n'
-    s += com + ' Here the t-number is for the Galois group\n'
-    s += com + ' If a class group was not computed, the entry is [-1]\n'
-    s += '\n' + com2
-    s += '\n'
-    if dltype == 'magma':
-        s += 'data := ['
-    else:
-        s += 'data = ['
-    s += '\\\n'
-    Qx = PolynomialRing(QQ,'x')
-    # reissue saved query here
-    res = db.nf_fields.search(ast.literal_eval(info["query"]))
-    for f in res:
-        pol = Qx(f['coeffs'])
-        D = f['disc_abs'] * f['disc_sign']
-        gal_t = f['galt']
-        if 'class_group' in f:
-            cl = f['class_group']
-        else:
-            cl = [-1]
-        entry = ', '.join([str(pol), str(D), str(gal_t), str(cl)])
-        s += '[' + entry + ']' + ',\\\n'
-    s = s[:-3]
-    if dltype == 'gp':
-        s += '];\n'
-    else:
-        s += ']\n'
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
 
 @nf_page.route('/<nf>/download/<download_type>')
 def nf_code_download(**args):

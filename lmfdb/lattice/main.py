@@ -13,6 +13,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 
 from lmfdb.utils import to_dict, web_latex_split_on_pm
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
+from lmfdb.search_wrapper import search_wrap
 
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
@@ -87,7 +88,7 @@ def lattice_render_webpage():
         info['max_det']=maxs[2]
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
-        return lattice_search(**args)
+        return lattice_search(args)
 
 # Random Lattice
 @lattice_page.route("/random")
@@ -113,41 +114,51 @@ def lattice_by_label_or_name(lab):
         flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".lattice_render_webpage"))
 
-def lattice_search(**args):
-    info = to_dict(args)  # what has been entered in the search boxes
+#download
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
-    if 'download' in info:
-        return download_search(info)
+def download_search(info):
+    lang = info["Submit"]
+    filename = 'integral_lattices' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
 
-    if 'label' in info and info.get('label'):
-        return lattice_by_label_or_name(info.get('label'))
+    res = list(db.lat_lattices.search(ast.literal_eval(info["query"]), 'gram'))
 
-    query = {}
-    try:
-        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
-                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
-            parse_ints(info, query, field, name)
-        # Check if length of gram is triangular
-        gram = info.get('gram')
-        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
-            raise ValueError
-        parse_list(info, query, 'gram', process=vect_to_sym)
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info)
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the gram matrix
+    s += ",\\\n".join([entry(gram) for gram in res])
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    if 'result_count' in info:
-        nres = db.lat_lattices.count(query)
-        return jsonify({"nres":str(nres)})
+lattice_search_projection = ['label','dim','det','level','class_number','aut','minimum']
+def lattice_search_isometric(res, info, query):
+    """
+    We check for isometric lattices if the user enters a valid gram matrix
+    but not one stored in the database
 
-    count = parse_count(info,50)
-    start = parse_start(info)
-    proj = ['label','dim','det','level','class_number','aut','minimum']
-    res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
-
-    # here we are checking for isometric lattices if the user enters a valid gram matrix but not one stored in the database_names, this may become slow in the future: at the moment we compare against list of stored matrices with same dimension and determinant (just compare with respect to dimension is slow)
-
+    This may become slow in the future: at the moment we compare against
+    a list of stored matrices with same dimension and determinant
+    (just compare with respect to dimension is slow)
+    """
     if info['number'] == 0 and info.get('gram'):
         A = query['gram']
         n = len(A[0])
@@ -155,23 +166,38 @@ def lattice_search(**args):
         for gram in db.lat_lattices.search({'dim': n, 'det': int(d)}, 'gram'):
             if isom(A, gram):
                 query['gram'] = gram
+                proj = lattice_search_projection
+                count = parse_count(info)
+                start = parse_start(info)
                 res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
                 break
 
     for v in res:
         v['min'] = v.pop('minimum')
-    info['lattices'] = res
+    return res
 
-    t = 'Integral Lattices Search Results'
-    bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
-    properties = []
-    return render_template("lattice-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
-
-def search_input_error(info, bread=None):
-    t = 'Integral Lattices Search Error'
-    if bread is None:
-        bread = [('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')]
-    return render_template("lattice-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
+@search_wrap(template="lattice-search.html",
+             table=db.lat_lattices,
+             title='Integral Lattices Search Results',
+             err_title='Integral Lattices Search Error',
+             shortcuts={'download':download_search,
+                        'label':lambda info:lattice_by_label_or_name(info.get('label'))},
+             projection=lattice_search_projection,
+             postprocess=lattice_search_isometric,
+             bread=lambda:[('Lattices', url_for(".lattice_render_webpage")),('Search Results', ' ')],
+             learnmore=learnmore_list,
+             properties=lambda: [])
+def lattice_search(info, query):
+    for field, name in [('dim','Dimension'),('det','Determinant'),('level',None),
+                        ('minimum','Minimal vector length'), ('class_number',None),
+                        ('aut','Group order')]:
+        parse_ints(info, query, field, name)
+    # Check if length of gram is triangular
+    gram = info.get('gram')
+    if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        raise ValueError
+    parse_list(info, query, 'gram', process=vect_to_sym)
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(**args):
@@ -342,42 +368,6 @@ def history_page():
     credit = lattice_credit
     return render_template("single.html", kid='lattice.history',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('History'))
-
-#download
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
-download_assignment_end = {'magma':';','sage':'','gp':''}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
-
-def download_search(info):
-    lang = info["Submit"]
-    filename = 'integral_lattices' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-
-    res = list(db.lat_lattices.search(ast.literal_eval(info["query"]), 'gram'))
-
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
-    # The list entries are matrices of different sizes.  Sage and gp
-    # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
-    s += download_assignment_start[lang] + list_start + '\\\n'
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-    # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(gram) for gram in res])
-    s += list_end
-    s += download_assignment_end[lang]
-    s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
 
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):

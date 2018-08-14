@@ -16,6 +16,7 @@ from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
 from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start, parse_element_of
+from lmfdb.search_wrapper import search_wrap
 
 import sage.all
 from sage.all import ZZ, QQ, EllipticCurve
@@ -70,7 +71,7 @@ def learnmore_list_remove(matchstring):
 def rational_elliptic_curves(err_args=None):
     if err_args is None:
         if len(request.args) != 0:
-            return elliptic_curve_search(to_dict(request.args))
+            return elliptic_curve_search(request.args)
         else:
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
@@ -150,113 +151,131 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
         err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
+    elif not label:
+        err_args['err_msg'] = "Please enter a non-empty label"
     else:
         err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
     return rational_elliptic_curves(err_args)
 
-
-def elliptic_curve_search(info):
-
-    if info.get('download') == '1' and info.get('Submit') and info.get('query'):
-        return download_search(info)
-
-    if 'SearchAgain' in info:
-        return rational_elliptic_curves()
-
-    query = {}
-    bread = info.get('bread',[('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', url_for(".rational_elliptic_curves")), ('Search Results', '.')])
-
-    if 'jump' in info:
-        label = info.get('label', '').replace(" ", "")
-        m = match_lmfdb_label(label)
+def elliptic_curve_jump(info):
+    label = info.get('label', '').replace(" ", "")
+    m = match_lmfdb_label(label)
+    if m:
+        try:
+            return by_ec_label(label)
+        except ValueError:
+            return elliptic_curve_jump_error(label, info, wellformed_label=True)
+    elif label.startswith("Cremona:"):
+        label = label[8:]
+        m = match_cremona_label(label)
         if m:
             try:
                 return by_ec_label(label)
             except ValueError:
                 return elliptic_curve_jump_error(label, info, wellformed_label=True)
-        elif label.startswith("Cremona:"):
-            label = label[8:]
-            m = match_cremona_label(label)
-            if m:
-                try:
-                    return by_ec_label(label)
-                except ValueError:
-                    return elliptic_curve_jump_error(label, info, wellformed_label=True)
-        elif match_cremona_label(label):
-            return elliptic_curve_jump_error(label, info, cremona_label=True)
-        elif label:
-            # Try to parse a string like [1,0,3,2,4] as valid
-            # Weistrass coefficients:
-            lab = re.sub(r'\s','',label)
-            lab = re.sub(r'^\[','',lab)
-            lab = re.sub(r']$','',lab)
-            try:
-                labvec = lab.split(',')
-                labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
-                E = EllipticCurve(labvec).minimal_model()
-                # Now we do have a valid curve over Q, but it might
-                # not be in the database.
-                lmfdb_label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
-                if lmfdb_label is None:
-                    info['conductor'] = E.conductor()
-                    return elliptic_curve_jump_error(label, info, missing_curve=True)
-                return by_ec_label(lmfdb_label)
-            except (TypeError, ValueError, ArithmeticError):
-                return elliptic_curve_jump_error(label, info)
-        else:
-            query['label'] = ''
+    elif match_cremona_label(label):
+        return elliptic_curve_jump_error(label, info, cremona_label=True)
+    elif label:
+        # Try to parse a string like [1,0,3,2,4] as valid
+        # Weistrass coefficients:
+        lab = re.sub(r'\s','',label)
+        lab = re.sub(r'^\[','',lab)
+        lab = re.sub(r']$','',lab)
+        try:
+            labvec = lab.split(',')
+            labvec = [QQ(str(z)) for z in labvec] # Rationals allowed
+            E = EllipticCurve(labvec).minimal_model()
+            # Now we do have a valid curve over Q, but it might
+            # not be in the database.
+            lmfdb_label = db.ec_curves.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+            if lmfdb_label is None:
+                info['conductor'] = E.conductor()
+                return elliptic_curve_jump_error(label, info, missing_curve=True)
+            return by_ec_label(lmfdb_label)
+        except (TypeError, ValueError, ArithmeticError):
+            return elliptic_curve_jump_error(label, info)
+    else:
+        return elliptic_curve_jump_error('', info)
 
-    try:
-        parse_rational(info,query,'jinv','j-invariant')
-        parse_ints(info,query,'conductor')
-        parse_ints(info,query,'torsion','torsion order')
-        parse_ints(info,query,'rank')
-        parse_ints(info,query,'sha','analytic order of &#1064;')
-        parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
-        # speed up slow torsion_structure searches by also setting torsion
-        #if 'torsion_structure' in query and not 'torsion' in query:
-        #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-        if 'include_cm' in info:
-            if info['include_cm'] == 'exclude':
-                query['cm'] = 0
-            elif info['include_cm'] == 'only':
-                query['cm'] = {'$ne' : 0}
+def download_search(info):
+    dltype = info['Submit']
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    ass = '='  # assignment
+    eol = ''   # end of line
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        ass = ":="
+        eol = ';'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
+    s += '\n' + com2 + '\n'
+    s += 'data ' + ass + ' [' + '\\\n'
+    # reissue saved query here
+    res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
+    s += ",\\\n".join([str(ainvs) for ainvs in res])
+    s += ']' + eol + '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True,
+                     add_etags=False)
 
-        parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
-        #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
-
-        parse_primes(info, query, 'surj_primes', name='maximal primes',
-                     qfield='nonmax_primes', mode='complement')
-        if info.get('surj_quantifier') == 'exactly':
-            mode = 'exact'
-        else:
-            mode = 'append'
-        parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
-                     qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info, bread)
-
+@search_wrap(template="ec-search-results.html",
+             table=db.ec_curves,
+             title='Elliptic Curves Search Results',
+             err_title='Elliptic Curve Search Input Error',
+             per_page=100,
+             shortcuts={'jump':elliptic_curve_jump,
+                        'download':download_search},
+             bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),
+                           ('$\Q$', url_for(".rational_elliptic_curves")),
+                           ('Search Results', '.')],
+             credit=ec_credit)
+def elliptic_curve_search(info, query):
+    parse_rational(info,query,'jinv','j-invariant')
+    parse_ints(info,query,'conductor')
+    parse_ints(info,query,'torsion','torsion order')
+    parse_ints(info,query,'rank')
+    parse_ints(info,query,'sha','analytic order of &#1064;')
+    parse_bracketed_posints(info,query,'torsion_structure',maxlength=2,check_divisibility='increasing')
+    # speed up slow torsion_structure searches by also setting torsion
+    #if 'torsion_structure' in query and not 'torsion' in query:
+    #    query['torsion'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+    if 'include_cm' in info:
+        if info['include_cm'] == 'exclude':
+            query['cm'] = 0
+        elif info['include_cm'] == 'only':
+            query['cm'] = {'$ne' : 0}
+    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
+    #parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+    parse_primes(info, query, 'surj_primes', name='maximal primes',
+                 qfield='nonmax_primes', mode='complement')
+    if info.get('surj_quantifier') == 'exactly':
+        mode = 'exact'
+    else:
+        mode = 'append'
+    parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
+                 qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     if 'optimal' in info and info['optimal'] == 'on':
         # fails on 990h3
         query['number'] = 1
 
-    if 'result_count' in info:
-        nres = db.ec_curves.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info,100)
-    start = parse_start(info)
-    info['curves'] = db.ec_curves.search(query, limit=count, offset=start, info=info)
     info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
-
-    t = info.get('title','Elliptic Curves Search Results')
-    return render_template("ec-search-results.html", info=info, credit=ec_credit(), bread=bread, title=t)
-
-
-def search_input_error(info, bread):
-    return render_template("ec-search-results.html", info=info, title='Elliptic Curve Search Input Error', bread=bread, learnmore=learnmore_list())
 
 ##########################
 #  Specific curve pages
@@ -478,43 +497,6 @@ def download_EC_all(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-
-def download_search(info):
-    dltype = info['Submit']
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    ass = '='  # assignment
-    eol = ''   # end of line
-    filename = 'elliptic_curves.gp'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'elliptic_curves.sage'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        ass = ":="
-        eol = ';'
-        filename = 'elliptic_curves.m'
-    s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on {}.\n'.format(mydate)
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [a1,a2,a3,a4,a6] (Weierstrass Coefficients)\n'
-    s += '\n' + com2 + '\n'
-    s += 'data ' + ass + ' [' + '\\\n'
-    # reissue saved query here
-    res = db.ec_curves.search(ast.literal_eval(info["query"]), 'ainvs')
-    s += ",\\\n".join([str(ainvs) for ainvs in res])
-    s += ']' + eol + '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
 
 
 @ec_page.route("/Completeness")

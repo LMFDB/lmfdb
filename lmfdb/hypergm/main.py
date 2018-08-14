@@ -7,7 +7,8 @@ import re
 from lmfdb.db_backend import db
 from flask import render_template, request, url_for, jsonify, redirect, abort
 from lmfdb.utils import to_dict, image_callback, flash_error
-from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted, parse_start, parse_count
+from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
+from lmfdb.search_wrapper import search_wrap
 from lmfdb.transitive_group import small_group_display_knowl
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
@@ -204,7 +205,7 @@ def poly_with_factored_coeffs(c, p):
 def index():
     bread = get_bread()
     if len(request.args) != 0:
-        return hgm_search(to_dict(request.args))
+        return hgm_search(request.args)
     info = {'count': 20}
     return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
 
@@ -248,79 +249,61 @@ def by_family_label(label):
 def by_label(label, t):
     return hgm_search({'jump_to': label+'_'+t})
 
-def hgm_search(info):
-    #info = to_dict(args)
-    bread = get_bread([("Search Results", '')])
-    query = {}
-    queryab = {}
-    queryabrev = {}
-    if 'jump_to' in info:
-        label = clean_input(info['jump_to'])
-        if HGM_LABEL_RE.match(label):
-            return render_hgm_webpage(normalize_motive(label))
-        if HGM_FAMILY_LABEL_RE.match(label):
-            return render_hgm_family_webpage(normalize_family(label))
-        flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
-        return redirect(url_for(".index"))
+def hgm_jump(info):
+    label = clean_input(info['jump_to'])
+    if HGM_LABEL_RE.match(label):
+        return render_hgm_webpage(normalize_motive(label))
+    if HGM_FAMILY_LABEL_RE.match(label):
+        return render_hgm_family_webpage(normalize_family(label))
+    flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
+    return redirect(url_for(".index"))
 
+@search_wrap(template="hgm-search.html",
+             table=db.hgm_motives, # overridden if family search
+             title=r'Hypergeometric Motive over $\Q$ Search Result',
+             err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
+             per_page=20,
+             shortcuts={'jump_to':hgm_jump},
+             bread=lambda:get_bread([("Search Results", '')]),
+             credit=lambda:HGM_credit,
+             learnmore=learnmore_list)
+def hgm_search(info, query):
     family_search = False
     if info.get('Submit Family') or info.get('family'):
         family_search = True
+        query['__title__'] = r'Hypergeometric Family over $\Q$ Search Result'
+        query['__err_title__'] = r'Hypergeometric Family over $\Q$ Search Input Error'
+        query['__table__'] = db.hgm_families
 
-    # generic, irreducible not in DB yet
-
-    try:
-        parse_ints(info, query, 'degree')
-        parse_ints(info, query, 'weight')
-        parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=False)
-        parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
-        for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
-            'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
-            parse_bracketed_posints(info, queryab, param, split=False,
-                listprocess=lambda a: sorted(a, reverse=True))
-        # Make a version to search reversed way
-        if not family_search:
-            parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
-            parse_rational(info, query, 't')
-            parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
-    except ValueError:
-        if family_search:
-            return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
-
-    # Now combine the parts of the query if there are A,B parts
-    if queryab != {}:
+    queryab = {}
+    for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
+                  'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
+        parse_bracketed_posints(info, queryab, param, split=False,
+                                listprocess=lambda a: sorted(a, reverse=True))
+    # Combine the parts of the query if there are A,B parts
+    if queryab:
+        queryabrev = {}
         for k in queryab.keys():
             queryabrev[k+'rev'] = queryab[k]
-        queryab.update(query)
-        queryabrev.update(query)
-        query = {'$or':[queryab, queryabrev]}
-    print query
+        query['$or'] = [queryab, queryabrev]
 
-    # logger.debug(query)
-    if family_search:
-        coll = db.hgm_families
-    else:
-        coll = db.hgm_motives
-    if 'result_count' in info:
-        nres = coll.count(query)
-        return jsonify({"nres":str(nres)})
+    # generic, irreducible not in DB yet
+    parse_ints(info, query, 'degree')
+    parse_ints(info, query, 'weight')
+    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=False)
+    parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
+    # Make a version to search reversed way
+    if not family_search:
+        parse_ints(info, query, 'conductor', 'Conductor' , 'cond')
+        parse_rational(info, query, 't')
+        parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
-    start = parse_start(info)
-    count = parse_count(info)
-    info['motives'] = coll.search(query, limit=count, offset=start, info=info)
     info['make_label'] = make_abt_label
     info['make_t_label'] = make_t_label
     info['ab_label'] = ab_label
     info['display_t'] = display_t
     info['family'] = family_search
     info['factorint'] = factorint
-
-    if family_search:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Family over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
-    else:
-        return render_template("hgm-search.html", info=info, title="Hypergeometric Motive over $\Q$ Search Result", bread=bread, credit=HGM_credit, learnmore=learnmore_list())
-
 
 def render_hgm_webpage(label):
     data = None
