@@ -34,11 +34,16 @@ Changes
    been standardized, and some common features have been refactored into a common
    codebase.
 
-1. Why did the databases/collections got renamed?
+1. Why did the databases/collections get renamed?
 
    Postgres doesn't have the same notion of databases and collections that Mongo does,
    so some renaming was required.  We decided to take advantage of this restructuring to
    add some consistency to the naming scheme.
+
+1. Why do I still see messages about mongo when I start the LMFDB?
+
+   Classical modular forms are still using mongo.  We're working on revising them to use
+   postgres, but in the mean time we're still connecting to a mongo database.
 
 Database Interface
 ------------------
@@ -52,6 +57,25 @@ Database Interface
 
    Each section of the lmfdb will generally rely on one (or perhaps a few) table, and
    most of the methods of interest are on the table objects.
+
+1. How do I find the names of all of the tables?
+
+   The list `db.tablenames` is a list of the tables (with the exception of knowls,
+   users, and meta tables).
+
+1. How do I determine what columns are in a table?
+
+   Each table has a `col_type` dictionary, whose keys are column names and values
+   are column types.  For example,
+   ```python
+   sage: from lmfdb.db_backend import db
+   sage: db.fq_fields.col_type
+   {u'characteristic': u'bigint',
+    u'conway': u'smallint',
+    u'degree': u'integer',
+    u'id': u'bigint',
+    u'polynomial': u'jsonb'}
+   ```
 
 1. How do I search for entries in a table?
 

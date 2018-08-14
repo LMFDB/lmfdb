@@ -12,7 +12,8 @@ Installation
 
   and follow these instructions.
 
-* Make sure you have a recent version of Sage (at least >=7.1) installed
+* Make sure you have a recent version of Sage installed (look in lmfdb/website.py for
+  LMFDB_SAGE_VERSION if you are concerned that your version is too old)
   and that `sage` is available from the commandline.  In particular see
   [Sage installation](http://doc.sagemath.org/html/en/installation/source.html).
   Also check that your version of Sage has ssl available by checking that
@@ -135,25 +136,6 @@ Running
   on using a different database instance, you can do so by changing
   config.ini in the root of the lmfdb directory.
 
-  One possibility is to connect to the lmfdb database on the machine
-  legendre.mit.edu, using ssh tunelling so that your local
-  machine's port 5432 (where the website code expects the database to
-  be running) maps to the same port number on the database server.
-  For this to work you must first send your public SSH key (as an
-  email attachment preferably) to David Roe or Edgar Costa
-  who will install it on the database server
-  legendre.mit.edu.  To make life easier, the necessary ssh command
-  is in the lmfdb root directory in the script mit.sh, so just
-  type
-
-  ```
-     ./mit.sh &
-  ```
-
-  The ampersand here makes this run in the background, so you should
-  not have to run this more than once unless you close the current
-  shell or logout.
-
 Troubleshooting
 ===============
 
@@ -216,9 +198,9 @@ Code development and sharing your work
   branches upstream to be aware of: `web`, `dev` and `master`:
 
     - `web` is changed rarely and contains the code currently running at
-      www.lmfdb.org
+      [www.lmfdb.org](www.lmfdb.org)
     - `dev` is changed more often and contains the code currently running at
-      dev.lmfdb.org
+      [beta.lmfdb.org](beta.lmfdb.org)
     - `master` is the development branch.
 
    Normal developers only need to be aware of the master
