@@ -113,22 +113,8 @@ Running
     the same machine, they cannot all use port 37777 -- if they try,
     they can get very confused.  In such a scenario, all involved
     should agree to using a sequence of port numbers from 37700
-    upwards and allocate one such number to each user, then add it to
-    the command line: e.g.
-
-    ```
-       sage -python ./start-lmfdb.py --debug -p 37702
-    ```
-
-    To avoid having to remember that, it is a good idea to define an
-    alias for this.  e.g. with bash you can insert the line
-
-    ```
-    function start_lmfdb () { sage -python ./start-lmfdb.py --debug -p 37702;}
-    ```
-
-    in your .bashrc file, so that all you have to type to start the
-    server is `start_lmfdb`.
+    upwards and allocate one such number to each user, editing
+    their config.ini file with their personal port number.
 
 * It is possible to use a different instance of the database. For many uses,
   using the default configuration (which uses a read-only database
