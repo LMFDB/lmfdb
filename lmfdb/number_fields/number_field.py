@@ -3,7 +3,7 @@
 import time, os
 import flask
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, send_file, flash, jsonify, make_response
+from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor, factor_base_factorization_latex
@@ -115,8 +115,6 @@ def render_labels_page():
                          ('How data was computed', url_for(".how_computed_page")),
                          ('Galois group labels', url_for(".render_groups_page")),
                          ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-    t = 'Labels for Global Number Fields'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     info['learnmore'] = [('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), (Completename, url_for(".render_discriminants_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
     t = 'Number Field Labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Global Number Field Labels', '')]
@@ -657,6 +655,8 @@ def number_field_jump(info):
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
         query['err'] = info['err']
+        bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
+                 ('Search Results', '.')]
         return search_input_error(query, bread)
 
 ## This doesn't seem to be used currently

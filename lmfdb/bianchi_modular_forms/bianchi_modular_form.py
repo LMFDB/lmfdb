@@ -2,7 +2,7 @@
 
 import re
 
-from flask import render_template, url_for, request, redirect, flash, jsonify
+from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 
 from sage.all import latex

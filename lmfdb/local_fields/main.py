@@ -4,8 +4,8 @@
 
 from lmfdb.db_backend import db
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, display_multiset
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import web_latex, coeff_to_poly, pol_to_html, display_multiset
 from lmfdb.search_parsing import parse_galgrp, parse_ints, clean_input, parse_rats
 from lmfdb.search_wrapper import search_wrap
 from sage.all import PolynomialRing, QQ, RR

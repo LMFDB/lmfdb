@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, url_for, request, redirect, make_response, flash, jsonify
+from flask import render_template, url_for, request, redirect, make_response, flash
 
 from lmfdb.db_backend import db
 from lmfdb.hilbert_modular_forms import hmf_page
@@ -12,7 +12,7 @@ from lmfdb.ecnf.main import split_class_label
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, web_latex_split_on_pm
+from lmfdb.utils import web_latex_split_on_pm
 from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight
 from lmfdb.search_wrapper import search_wrap
 

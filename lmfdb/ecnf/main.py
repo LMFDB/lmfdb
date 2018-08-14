@@ -11,9 +11,9 @@ from urllib import quote, unquote
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, flash, send_file, jsonify, make_response
+from flask import render_template, request, url_for, redirect, flash, send_file, make_response
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
@@ -444,6 +444,7 @@ def elliptic_curve_jump(info):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
     except ValueError:
         info['err'] = ''
+        bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
         return search_input_error(info, bread)
 
     return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)

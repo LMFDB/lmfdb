@@ -6,12 +6,12 @@ import StringIO
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file, jsonify
+from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 from markupsafe import Markup
 
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.utils import to_dict, web_latex_split_on_pm
+from lmfdb.utils import web_latex_split_on_pm
 from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
 from lmfdb.search_wrapper import search_wrap
 

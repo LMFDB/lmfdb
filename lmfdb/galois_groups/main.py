@@ -3,8 +3,8 @@
 # Author: John Jones
 
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import to_dict, list_to_latex_matrix
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import list_to_latex_matrix
 from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted
 from lmfdb.search_wrapper import search_wrap
 import re

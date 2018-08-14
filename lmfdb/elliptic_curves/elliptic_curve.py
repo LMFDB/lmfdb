@@ -5,7 +5,7 @@ import ast
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.base import app
-from flask import render_template, url_for, request, redirect, make_response, send_file, jsonify
+from flask import render_template, url_for, request, redirect, make_response, send_file
 import tempfile
 import os
 import StringIO
@@ -15,7 +15,7 @@ from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
-from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_count, parse_start, parse_element_of
+from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of
 from lmfdb.search_wrapper import search_wrap
 
 import sage.all

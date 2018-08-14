@@ -2,9 +2,9 @@
 import re
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-from flask import render_template, request, url_for, make_response, redirect, flash, send_file, jsonify
+from flask import render_template, request, url_for, make_response, redirect, flash, send_file
 
-from lmfdb.utils import to_dict, web_latex_split_on_pm
+from lmfdb.utils import web_latex_split_on_pm
 
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 

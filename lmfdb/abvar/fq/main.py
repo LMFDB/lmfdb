@@ -12,7 +12,7 @@ from lmfdb.search_wrapper import search_wrap
 from search_parsing import parse_newton_polygon
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
-from flask import flash, render_template, url_for, request, redirect, send_file, jsonify
+from flask import flash, render_template, url_for, request, redirect, send_file
 from markupsafe import Markup
 from sage.rings.all import PolynomialRing, ZZ
 

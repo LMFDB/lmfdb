@@ -5,8 +5,8 @@
 import re
 
 from lmfdb.db_backend import db
-from flask import render_template, request, url_for, jsonify, redirect, abort
-from lmfdb.utils import to_dict, image_callback, flash_error
+from flask import render_template, request, url_for, redirect, abort
+from lmfdb.utils import image_callback, flash_error
 from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.transitive_group import small_group_display_knowl

@@ -7,7 +7,6 @@ from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page
-from lmfdb.utils import to_dict
 from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, clean_input
 from lmfdb.search_wrapper import search_wrap
 
@@ -17,7 +16,6 @@ from lmfdb.transitive_group import group_display_knowl
 from sage.all import ZZ
 
 import re, random
-import flask
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -71,7 +69,6 @@ def artin_representation_jump(info):
              bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
              initfunc=lambda:ArtinRepresentation)
 def artin_representation_search(info, query):
-    sign_code = 0
     query['Hide'] = 0
     info['sign_code'] = 0
     parse_primes(info,query,"unramified",name="Unramified primes",

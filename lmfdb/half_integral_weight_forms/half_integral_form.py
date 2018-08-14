@@ -3,12 +3,12 @@
 import re
 
 from lmfdb.db_backend import db
-from flask import render_template, url_for, request, redirect, jsonify
+from flask import render_template, url_for, request
 from lmfdb.half_integral_weight_forms import hiwf_page
 
 from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
-from lmfdb.utils import to_dict, flash_error
+from lmfdb.utils import flash_error
 from lmfdb.search_parsing import parse_ints
 from lmfdb.search_wrapper import search_wrap
 

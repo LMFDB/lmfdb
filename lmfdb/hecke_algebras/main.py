@@ -2,10 +2,9 @@
 import re
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file, jsonify
+from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 
 from lmfdb.db_backend import db
-from lmfdb.utils import to_dict
 
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
@@ -180,7 +179,7 @@ def hecke_algebras_search(info, query):
                 for field in ['level','weight']:
                     if info.get(field):
                         int(info.get(field))
-            except ValueError as err:
+            except ValueError:
                 flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(info.get('orbit_label'))),"error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:

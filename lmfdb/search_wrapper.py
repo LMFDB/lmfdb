@@ -1,7 +1,7 @@
 
 from lmfdb.search_parsing import parse_start, parse_count
 from sage.misc.decorators import decorator_keywords
-from flask import render_template, jsonify, url_for
+from flask import render_template, jsonify
 from psycopg2.extensions import QueryCanceledError
 from lmfdb.base import ctx_proc_userdata
 from lmfdb.utils import flash_error, to_dict
