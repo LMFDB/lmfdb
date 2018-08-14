@@ -507,15 +507,19 @@ class WebNumberField:
         return na_text()
 
     def units(self):  # fundamental units
+        res = None
         if self.haskey('units'):
-            return ',&nbsp; '.join(self._data['units'])
-        if self.unit_rank() == 0:
-            return ''
-        if self.haskey('class_number'):
+            res = ',&nbsp; '.join(self._data['units'])
+        elif self.unit_rank() == 0:
+            res = ''
+        elif self.haskey('class_number'):
             K = self.K()
             units = [web_latex(u) for u in K.unit_group().fundamental_units()]
             units = ',&nbsp; '.join(units)
-            return units
+            res = units
+        if res:
+            res = res.replace('\\\\', '\\')
+            return res
         return na_text()
 
     def disc_factored_latex(self):
