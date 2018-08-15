@@ -1353,7 +1353,7 @@ class PostgresTable(PostgresBase):
             with open(filename, "r") as F:
                 try:
                     cur = self.conn.cursor()
-                    cur.copy_from(filename, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
+                    cur.copy_from(F, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
                 except Exception:
                     self.conn.rollback()
                     raise
@@ -1521,7 +1521,7 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
-            self.reload(searchfile.name, extrafile.name, includes_ids=True, resort=resort, reindex=reindex, restat=restat, commit=commit, **kwds)
+            self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, **kwds)
         finally:
             searchfile.unlink(searchfile.name)
             if self.extra_table is not None:
@@ -1767,7 +1767,79 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _copy_from(self, filename, table, columns, cur_count, includes_ids, kwds):
+    def _read_header_lines(self, F, unordered, sep=u"\t", check=True):
+        """
+        Reads the header lines from a file
+        (row of column names, row of column types, blank line).
+        returning True if it includes ids and raising a ValueError if columns
+        do not match unordered.
+
+        INPUT:
+
+        - ``F`` -- an open file handle, at the beginning of the file.
+        - ``unordered`` -- a set of the columns in the table.
+        - ``sep`` -- a string giving the column separator.
+        - ``check`` -- whether to validate the columns.
+
+        OUTPUT:
+
+        The ordered list of columns.  The first entry may be ``"id"`` if the data
+        contains an id column.
+        """
+        names = [x.strip() for x in F.readline().strip().split(sep)]
+        types = [x.strip() for x in F.readline().strip().split(sep)]
+        blank = F.readline()
+        # Need to define types and blank in order to consume the lines.
+        if check:
+            if blank.strip():
+                raise ValueError("The third line must be blank")
+            if len(names) != len(types):
+                raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
+            name_set = set(names)
+            extra = name_set - unordered
+            if "id" in name_set and names[0] != "id":
+                raise ValueError("id must be the first column")
+            extra.discard("id")
+            missing = unordered - name_set
+            if missing or extra:
+                err = "Invalid header: "
+                if missing:
+                    err += ", ".join(list(missing)) + " (missing)"
+                if extra:
+                    err += ", ".join(list(extra)) + " (extra)"
+                raise ValueError(err)
+            # The header names are valid, now we check the column types
+            bad = []
+            for name, typ in zip(names, types):
+                actual = self.col_type[name]
+                if actual != typ:
+                    bad.append((name, actual))
+            if bad:
+                if len(bad) > 1:
+                    err = "Invalid types: "
+                else:
+                    err = "Invalid type: "
+                err += ", ".join("%s should be %s"%(pair) for pair in bad)
+                raise ValueError(err)
+        return names
+
+    def _write_header_lines(self, F, cols, sep=u"\t"):
+        """
+        Writes the header lines to a file
+        (row of column names, row of column types, blank line).
+
+        INPUT:
+
+        - ``F`` -- a writable open file handle, at the beginning of the file.
+        - ``cols`` -- a list of columns to write (either self._search_cols or self._extra_cols)
+        - ``sep`` -- a string giving the column separator.
+        """
+        if cols and cols[0] != "id":
+            cols = ["id"] + cols
+        types = [self.col_type[col] for col in cols]
+        F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
+
+    def _copy_from(self, filename, table, columns, cur_count, header, kwds):
         """
         Helper function for ``copy_from`` and ``reload``.
 
@@ -1775,41 +1847,50 @@ class PostgresTable(PostgresBase):
 
         - ``filename`` -- the filename to load
         - ``table`` -- the table into which the data should be added
-        - ``columns`` -- a list of columns specifying the format of the file
+        - ``columns`` -- a list of columns to load (the file may contain them in
+            a different order, specified by a header row)
         - ``cur_count`` -- the current number of rows in the table
-        - ``includes_ids`` -- whether the file starts with an id column.
-            If not, a temporary file will be written to.
+        - ``header`` -- whether the file has header rows ordering the columns.
+            This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
         """
+        sep = kwds.get("sep", u"\t")
         cur = self.conn.cursor()
-        # We have to add quotes manually since copy_from doesn't accept psycopg2.sql.Identifiers
-        # None of our column names have double quotes in them. :-D
-        columns = ['"' + col + '"' for col in columns]
-        if not includes_ids:
-            idfile = tempfile.NamedTemporaryFile('w', delete=False)
-            try:
-                sep = kwds.get("sep", u"\t")
-                with open(filename) as F:
-                    with idfile:
-                        for i, line in enumerate(F):
-                            idfile.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
-                try:
-                    with open(idfile.name) as Fid:
-                        cur.copy_from(Fid, table, columns=columns, **kwds)
-                        return cur.rowcount
-                except Exception:
-                    self.conn.rollback()
-                    raise
-            finally:
-                idfile.unlink(idfile.name)
-        else:
+        try:
             with open(filename) as F:
-                try:
+                if header:
+                    # This consumes the first three lines
+                    columns = self._read_header_lines(F, set(columns), sep=sep, check=check)
+                    addid = (columns[0] == 'id')
+                else:
+                    addid = False
+
+                # We have to add quotes manually since copy_from doesn't accept
+                # psycopg2.sql.Identifiers
+                # None of our column names have double quotes in them. :-D
+                columns = ['"' + col + '"' for col in columns]
+                if addid:
+                    # We write the rows with ids added to a temporary file
+                    # The speed here could be improved by implementing our own
+                    # file-like object that just inserted an appropriate
+                    # id at the beginning of each line, but implementing
+                    # the read method with a specified number of bytes is kind
+                    # of annoying.
+                    idfile = tempfile.NamedTemporaryFile('w', delete=False)
+                    try:
+                        with idfile:
+                            for i, line in enumerate(F):
+                                idfile.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
+                        with open(idfile.name) as Fid:
+                            cur.copy_from(Fid, table, columns=columns, **kwds)
+                    finally:
+                        idfile.unlink(idfile.name)
+                else:
                     cur.copy_from(F, table, columns=columns, **kwds)
-                    return cur.rowcount
-                except Exception:
-                    self.conn.rollback()
-                    raise
+                return addid, cur.rowcount
+        except Exception:
+            self.conn.rollback()
+            raise
 
     def _copy_to_select(self, select, filename):
         """
@@ -1900,7 +1981,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, includes_ids=True, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, commit=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, commit=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -1909,22 +1990,32 @@ class PostgresTable(PostgresBase):
         - ``searchfile`` -- a string, the file with data for the search table
         - ``extrafile`` -- a string, the file with data for the extra table.
             If there is an extra table, this argument is required.
-        - ``countsfile`` -- a string (optional), giving a file containing counts information for the table.
-        - ``statsfile`` -- a string (optional), giving a file containing stats information for the table.
-        - ``indexesfile`` -- a string (optional), giving a file containing indexes information for the table.
-        - ``metafile`` -- a string (optional), giving a file containing the meta information for the table.
-        - ``includes_ids`` -- whether the search/extra files include ids as the first column.
-            If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
-        - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
-        - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
-            If the number of rows is a substantial fraction of the size of the table, this will be faster.
-        - ``restat`` -- whether to refresh statistics afterward.  Default behavior is to refresh stats if either countsfile or statsfile is missing.
-        - ``final_swap`` -- whether to perform the final swap exchanging the temporary table with the live one.
+        - ``countsfile`` -- a string (optional), giving a file containing counts
+            information for the table.
+        - ``statsfile`` -- a string (optional), giving a file containing stats
+            information for the table.
+        - ``indexesfile`` -- a string (optional), giving a file containing index
+            information for the table.
+        - ``metafile`` -- a string (optional), giving a file containing the meta
+            information for the table.
+        - ``resort`` -- whether to sort the ids after copying in the data.
+            Only relevant for tables that are id_ordered.  Defaults to sorting
+            when the searchfile and extrafile do not contain ids.
+        - ``reindex`` -- whether to drop the indexes before importing data
+            and rebuild them afterward.  If the number of rows is a substantial
+            fraction of the size of the table, this will be faster.
+        - ``restat`` -- whether to refresh statistics afterward.  Default behavior
+            is to refresh stats if either countsfile or statsfile is missing.
+        - ``final_swap`` -- whether to perform the final swap exchanging the
+            temporary table with the live one.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+
+        .. NOTE:
+
+            If the search and extra files contain ids, they should be contiguous,
+            starting at 1.
         """
         suffix = "_tmp"
-        if resort is None:
-            resort = not includes_ids
         if restat is None:
             restat = (countsfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
@@ -1937,17 +2028,25 @@ class PostgresTable(PostgresBase):
                      (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
+        addedid = None
         with DelayCommit(self, commit, silence=True):
-            for table, cols, addid, filename in tabledata:
+            for table, cols, header, filename in tabledata:
                 if filename is None:
                     continue
                 tables.append(table)
                 now = time.time()
-                if addid:
-                    cols = ["id"] + cols
                 tmp_table = table + suffix
                 self._clone(table, tmp_table)
-                counts[table] = self._copy_from(filename, tmp_table, cols, 0, includes_ids, kwds)
+                addid, counts[table] = self._copy_from(filename, tmp_table, cols, 0, header, kwds)
+                # Raise error if exactly one of search and extra contains ids
+                if header:
+                    if addedid is None:
+                        addedid = addid
+                    elif addedid != addid:
+                        self.conn.rollback()
+                        raise ValueError("Mismatch on search and extra files containing id")
+                if resort is None and addid:
+                    resort = True
                 print "Loaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
 
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
@@ -2046,7 +2145,7 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
-    def copy_from(self, searchfile, extrafile=None, search_cols=None, extra_cols=None, includes_ids=False, resort=True, reindex=False, restat=True, commit=True, **kwds):
+    def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
 
@@ -2055,35 +2154,31 @@ class PostgresTable(PostgresBase):
         - ``searchfile`` -- a string, the file with data for the search table
         - ``extrafile`` -- a string, the file with data for the extra table.
             If there is an extra table, this argument is required.
-        - ``search_cols`` -- the order of the cols in the search_file, tab-separated.
-            Defaults to ``self._search_cols``.  Do not include "id".
-        - ``extra_cols`` -- the order of the cols in the extrafile, tab-separated.
-            Defaults to ``self._extra_cols``.  Do not include "id".
-        - ``includes_ids`` -- whether the search/extra files include ids as the first column.
-            If so, the ids should be contiguous, starting immediately after the current max id (or at 1 if empty).
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+
+        .. NOTE:
+
+            If the search and extra files contain ids, they should be contiguous,
+            starting immediately after the current max id (or at 1 if empty).
         """
         self._check_file_input(searchfile, extrafile, kwds)
-        if search_cols is None:
-            search_cols = self._search_cols
-        search_cols = ["id"] + search_cols
         with DelayCommit(self, commit, silence=True):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_count = self._copy_from(searchfile, self.search_table, search_cols, self.stats.total, includes_ids, kwds)
-            print "Loaded data into %s in %.3f secs"%(self.search_table, time.time() - now)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, self.stats.total, True, kwds)
             if extrafile is not None:
-                if extra_cols is None:
-                    extra_cols = self._extra_cols
-                extra_cols = ["id"] + extra_cols
-                extra_count = self._copy_from(extrafile, self.extra_table, extra_cols, self.stats.total, includes_ids, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, self.stats.total, True, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
-                    raise RuntimeError("Different number of rows in searchfile and extrafile")
+                    raise ValueError("Different number of rows in searchfile and extrafile")
+                if search_addid != extra_addid:
+                    self.conn.rollback()
+                    raise ValueError("Mismatch on search and extra containing id")
+            print "Loaded data into %s in %.3f secs"%(self.search_table, time.time() - now)
             self._break_order()
             if self._id_ordered and resort:
                 self.resort()
@@ -2114,6 +2209,7 @@ class PostgresTable(PostgresBase):
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
         self._check_file_input(searchfile, extrafile, kwds)
+        sep = kwds.get("sep", u"\t")
 
         tabledata = [(self.search_table, self._search_cols, True, searchfile),
                      (self.extra_table, self._extra_cols, True, extrafile),
@@ -2125,22 +2221,23 @@ class PostgresTable(PostgresBase):
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
-                cols = ['"' + col + '"' for col in cols]
                 if filename is None:
                     continue
                 now = time.time()
+                cols = ['"' + col + '"' for col in cols]
                 if addid:
                     cols = ["id"] + cols
                 cur = self.conn.cursor()
                 with open(filename, "w") as F:
                     try:
+                        self._write_header_lines(F, cols, sep=sep)
                         cur.copy_to(F, table, columns=cols, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
                 print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
-            for table, wherecol, cols, filename in  metadata:
+            for table, wherecol, cols, filename in metadata:
                 if filename is None:
                     continue
                 now = time.time()
@@ -2263,22 +2360,18 @@ class PostgresTable(PostgresBase):
             self._execute(creator)
             if columns:
                 try:
-                    transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
-                    cur = self.conn.cursor()
-                    with transfer_file:
-                        try:
+                    try:
+                        transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
+                        cur = self.conn.cursor()
+                        with transfer_file:
                             cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
-                        except Exception:
-                            self.conn.rollback()
-                            raise
-                    with open(transfer_file.name) as F:
-                        try:
+                        with open(transfer_file.name) as F:
                             cur.copy_from(F, self.extra_table, columns=['id'] + columns)
-                        except Exception:
-                            self.conn.rollback()
-                            raise
-                finally:
-                    transfer_file.unlink(transfer_file.name)
+                    finally:
+                        transfer_file.unlink(transfer_file.name)
+                except Exception:
+                    self.conn.rollback()
+                    raise
                 for col in columns:
                     modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
                     self._execute(modifier)
@@ -3352,6 +3445,7 @@ class PostgresDatabase(PostgresBase):
             self.tablenames.remove(name)
 
     def copy_to(self, search_tables, data_folder, **kwds):
+        failures = []
         for tablename in search_tables:
             if tablename in self.tablenames:
                 table = getattr(self, tablename)
@@ -3363,9 +3457,12 @@ class PostgresDatabase(PostgresBase):
                     extrafile = None
                 indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
                 metafile = os.path.join(data_folder, tablename + '_meta.txt')
-                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile,  **kwds)
+                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile, **kwds)
             else:
-                print "%s is not a in tablenames " % (tablename,)
+                print "%s is not in tablenames " % (tablename,)
+                failures.append(tablename)
+        if failures:
+            print "Failed to copy %s (not in tablenames)" % (", ".join(failures))
 
     def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
         if remote_opts is None:
@@ -3377,7 +3474,7 @@ class PostgresDatabase(PostgresBase):
         # copy all the data
         source.copy_to(search_tables = search_tables, data_folder=data_folder, **kwds)
 
-    def reload_all(self, data_folder, includes_ids=True, resort=None, reindex=True, restat=None, commit=True, **kwds):
+    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, commit=True, **kwds):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
@@ -3436,7 +3533,7 @@ class PostgresDatabase(PostgresBase):
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, includes_ids=includes_ids, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, commit=False, **kwds)
+                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, commit=False, **kwds)
                 except DatabaseError:
                     traceback.print_exc()
                     failures.append(table)
