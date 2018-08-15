@@ -908,7 +908,7 @@ class PostgresTable(PostgresBase):
             info['exact_count'] = exact_count
         return res
 
-    def lookup(self, label, projection=2):
+    def lookup(self, label, projection=2, label_col=None):
         """
         Look up a record by its label.
 
@@ -917,6 +917,7 @@ class PostgresTable(PostgresBase):
         - ``label`` -- string, the label for the desired record.
         - ``projection`` -- which columns are requested (default 2, meaning all columns).
                             See ``_parse_projection`` for more details.
+        - ``label_col`` -- which column holds the label.  Most tables store a default.
 
         OUTPUT:
 
@@ -930,9 +931,11 @@ class PostgresTable(PostgresBase):
             sage: rec['loc_algebras']['13']
             u'x^2-13,x^2-x+2,x^4+x^2-x+2'
         """
-        if self._label_col is None:
-            raise ValueError("Lookup method not supported for tables with no label column")
-        return self.lucky({self._label_col:label}, projection=projection, sort=[])
+        if label_col is None:
+            label_col = self._label_col
+            if label_col is None:
+                raise ValueError("Lookup method not supported for tables with no label column")
+        return self.lucky({label_col:label}, projection=projection, sort=[])
 
     def exists(self, query):
         """

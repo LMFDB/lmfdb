@@ -383,7 +383,7 @@ def modular_form_display(label, number):
         number = 10
     if number > 1000:
         number = 1000
-    ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
+    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -395,7 +395,7 @@ def modular_form_display(label, number):
 # base64-encoded pngs.
 @ec_page.route("/plot/<label>")
 def plot_ec(label):
-    ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
+    ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
     E = EllipticCurve(ainvs)
@@ -468,9 +468,9 @@ def padic_data():
 def download_EC_qexp(label, limit):
     N, iso, number = split_lmfdb_label(label)
     if number:
-        ainvs = db.ec_curves.lucky({'lmfdb_label': label}, 'ainvs')
+        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_label')
     else:
-        ainvs = db.ec_curves.lucky({'lmfdb_iso': label}, 'ainvs')
+        ainvs = db.ec_curves.lookup(label, 'ainvs', 'lmfdb_iso')
     E = EllipticCurve(ainvs)
     response = make_response(','.join(str(an) for an in E.anlist(int(limit), python_ints=True)))
     response.headers['Content-type'] = 'text/plain'
@@ -484,7 +484,7 @@ def download_EC_all(label):
     except (ValueError,AttributeError):
         return elliptic_curve_jump_error(label, {})
     if number:
-        data = db.ec_curves.lucky({'lmfdb_label': label})
+        data = db.ec_curves.lookup(label, label_col='lmfdb_label')
         if data is None:
             return elliptic_curve_jump_error(label, {})
         data_list = [data]
