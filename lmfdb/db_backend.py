@@ -1767,7 +1767,7 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _read_header_lines(self, F, unordered, sep=u"\t", check=True):
+    def _read_header_lines(self, F, unordered, sep=u"\t", check=True, adjust_schema=False):
         """
         Reads the header lines from a file
         (row of column names, row of column types, blank line).
@@ -1780,6 +1780,8 @@ class PostgresTable(PostgresBase):
         - ``unordered`` -- a set of the columns in the table.
         - ``sep`` -- a string giving the column separator.
         - ``check`` -- whether to validate the columns.
+        - ``adjust_schema`` -- If True, rather than raising an error if the columns
+            don't match expectations, will change the schema accordingly.
 
         OUTPUT:
 
@@ -1795,6 +1797,7 @@ class PostgresTable(PostgresBase):
                 raise ValueError("The third line must be blank")
             if len(names) != len(types):
                 raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
+            type_dict = dict(zip(names, types))
             name_set = set(names)
             extra = name_set - unordered
             if "id" in name_set and names[0] != "id":
@@ -1802,25 +1805,40 @@ class PostgresTable(PostgresBase):
             extra.discard("id")
             missing = unordered - name_set
             if missing or extra:
-                err = "Invalid header: "
-                if missing:
-                    err += ", ".join(list(missing)) + " (missing)"
-                if extra:
-                    err += ", ".join(list(extra)) + " (extra)"
-                raise ValueError(err)
+                if adjust_schema:
+                    is_extra_table = (unordered == set(self._extra_cols))
+                    for col in missing:
+                        self.drop_column(col)
+                    for col in extra:
+                        self.add_column(col, type_dict[col], extra=is_extra_table)
+                else:
+                    err = "Invalid header: "
+                    if missing:
+                        err += ", ".join(list(missing)) + " (missing)"
+                    if extra:
+                        err += ", ".join(list(extra)) + " (extra)"
+                    raise ValueError(err)
             # The header names are valid, now we check the column types
             bad = []
-            for name, typ in zip(names, types):
+            for name, typ in type_dict.items():
                 actual = self.col_type[name]
                 if actual != typ:
                     bad.append((name, actual))
             if bad:
-                if len(bad) > 1:
-                    err = "Invalid types: "
+                if adjust_schema:
+                    is_extra_table = (unordered == set(self._extra_cols))
+                    for col, old in bad:
+                        self.drop_column(col)
+                        self.add_column(col, type_dict[col], extra=is_extra_table)
                 else:
-                    err = "Invalid type: "
-                err += ", ".join("%s should be %s"%(pair) for pair in bad)
-                raise ValueError(err)
+                    if len(bad) > 1:
+                        err = "Invalid types: "
+                    else:
+                        err = "Invalid type: "
+                    err += ", ".join("%s should be %s"%pair for pair in bad)
+                    raise ValueError(err)
+        elif adjust_schema:
+            raise ValueError("check must be True to adjust schema")
         return names
 
     def _write_header_lines(self, F, cols, sep=u"\t"):
@@ -1839,7 +1857,7 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, cur_count, header, kwds):
+    def _copy_from(self, filename, table, columns, cur_count, header, kwds, adjust_schema=False):
         """
         Helper function for ``copy_from`` and ``reload``.
 
@@ -1853,6 +1871,8 @@ class PostgresTable(PostgresBase):
         - ``header`` -- whether the file has header rows ordering the columns.
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
+        - ``adjust_schema`` -- If True, rather than raising an error if the columns
+            don't match expectations, will change the schema accordingly.
         """
         sep = kwds.get("sep", u"\t")
         cur = self.conn.cursor()
@@ -1860,7 +1880,7 @@ class PostgresTable(PostgresBase):
             with open(filename) as F:
                 if header:
                     # This consumes the first three lines
-                    columns = self._read_header_lines(F, set(columns), sep=sep, check=check)
+                    columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
                     addid = (columns[0] == 'id')
                 else:
                     addid = False
@@ -1981,7 +2001,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, commit=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -2008,6 +2028,8 @@ class PostgresTable(PostgresBase):
             is to refresh stats if either countsfile or statsfile is missing.
         - ``final_swap`` -- whether to perform the final swap exchanging the
             temporary table with the live one.
+        - ``adjust_schema`` -- If True, rather than raising an error if the header
+            columns don't match expectations, will change the schema accordingly.
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
 
         .. NOTE:
@@ -2037,7 +2059,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 tmp_table = table + suffix
                 self._clone(table, tmp_table)
-                addid, counts[table] = self._copy_from(filename, tmp_table, cols, 0, header, kwds)
+                addid, counts[table] = self._copy_from(filename, tmp_table, cols, 0, header, kwds, adjust_schema=adjust_schema)
                 # Raise error if exactly one of search and extra contains ids
                 if header:
                     if addedid is None:
@@ -3474,7 +3496,7 @@ class PostgresDatabase(PostgresBase):
         # copy all the data
         source.copy_to(search_tables = search_tables, data_folder=data_folder, **kwds)
 
-    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, commit=True, **kwds):
+    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, **kwds):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
@@ -3533,7 +3555,7 @@ class PostgresDatabase(PostgresBase):
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, commit=False, **kwds)
+                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, commit=False, **kwds)
                 except DatabaseError:
                     traceback.print_exc()
                     failures.append(table)
