@@ -276,7 +276,7 @@ class PostgresTable(PostgresBase):
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
@@ -305,7 +305,7 @@ class PostgresTable(PostgresBase):
             self._extra_cols = []
         set_column_info(self._search_cols, search_table)
         self._set_sort(sort)
-        self.stats = PostgresStatsTable(self)
+        self.stats = PostgresStatsTable(self, total)
 
     def _set_sort(self, sort):
         """
@@ -1431,8 +1431,8 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table], commit=False)
 
             # insert new row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + [version,])
+            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + [version,])
 
     def revert_meta(self, version = None):
         with DelayCommit(self, silence=True):
@@ -1446,14 +1446,16 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
 
             # grab the old row
-            cur = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
+            cur = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
 
             assert cur.rowcount == 1
             row = cur.fetchone()
+            # The total may be incorrect, so we grab it from the counts table.
+            row[-1] = self.count()
 
             # insert the old row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row + (currentversion + 1,))
+            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
+            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + (currentversion + 1,))
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -2242,7 +2244,7 @@ class PostgresTable(PostgresBase):
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
         metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
-                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col", metafile)
+                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col, total", metafile)
                     ]
         with DelayCommit(self, commit):
             for table, cols, addid, filename in tabledata:
@@ -2415,16 +2417,17 @@ class PostgresStatsTable(PostgresBase):
 
     - ``table`` -- a ``PostgresTable`` object.
     """
-    def __init__(self, table):
+    def __init__(self, table, total=None):
         PostgresBase.__init__(self, table.search_table, table._db)
         self.table = table
         self.search_table = st = table.search_table
         self.stats = st + "_stats"
         self.counts = st + "_counts"
-        self.total = self.quick_count({})
-        if self.total is None:
-            self.total = self._slow_count({}, extra=False)
-
+        if total is None:
+            total = self.quick_count({})
+            if total is None:
+                total = self._slow_count({}, extra=False)
+        self.total = total
 
     def _has_stats(self, jcols, ccols, cvals, threshold, threshold_inequality=False):
         """
@@ -2517,6 +2520,12 @@ class PostgresStatsTable(PostgresBase):
             self._execute(updater.format(Identifier(self.counts + suffix)), data)
         except DatabaseError:
             pass
+        # We also store the total count in meta_tables to improve startup speed
+        if not query:
+            updater = SQL("UPDATE meta_tables SET total = %s WHERE name = %s")
+            # This should never be called from the webserver, since we only record
+            # counts for {} when data is updated.
+            self._execute(updater, [count, self.search_table])
 
     def count(self, query={}, record=True):
         """
@@ -2879,6 +2888,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 self.add_stats(cols, (ccols, cvals), threshold)
             self._add_extra_counts(col_value_dict, suffix=suffix)
 
+            # Refresh total in meta_tables
+            self._slow_count({}, suffix=suffix, extra=False)
+
     def _copy_extra_counts_to_tmp(self):
         """
         Generates the extra counts in the ``_tmp`` table using the
@@ -3198,7 +3210,7 @@ class PostgresDatabase(PostgresBase):
         logging.info("Read/write to userdb: %s" % self._read_and_write_userdb)
         logging.info("Read/write to knowls: %s" % self._read_and_write_knowls)
 
-        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid FROM meta_tables"))
+        cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
 
 
         self.tablenames = []
@@ -3302,14 +3314,14 @@ class PostgresDatabase(PostgresBase):
 
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, version integer)"))
+            self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, version integer)"))
             version = 0
 
             # copy data from meta_indexes
-            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col FROM meta_tables "))
+            rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables "))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(SQL("INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
             self.grant_select('meta_tables_hist')
 
@@ -3447,7 +3459,7 @@ class PostgresDatabase(PostgresBase):
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
             print "Table %s created in %.3f secs"%(name, time.time()-now)
-        self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None))
+        self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
 
