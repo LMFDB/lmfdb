@@ -271,6 +271,15 @@ Note that you need editor priviledges to add, delete or modify data.
 
    The `reload` method is the fastest option, but requires you to produce an appropriate file.
 
+1. What if I change my mind and want to revert to the old version of a table, from before a reload?
+
+   You can use the `reload_revert` method to switch back to the old version.  Note that this
+   will also work for the `rewrite` method, since it relies on `reload`.  If you want to
+   undo a `reload_all`, see the `reload_all_revert` method on `db`.
+
+   There is no built-in way to undo direct additions to tables via `copy_from`,
+   `upsert`, or `insert_many`.
+
 1. What is an `extra_table`?
 
    A few large tables (e.g. `nf_fields` and `ec_curves`) have been split in two.

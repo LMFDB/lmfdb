@@ -234,7 +234,7 @@ class PostgresBase(object):
         return cur.fetchone()[0] is not None
 
     def _constraint_exists(self, tablename, constraintname):
-        print  tablename, constraintname
+        print tablename, constraintname
         cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
         return cur.fetchone() is not None
 
@@ -1937,6 +1937,48 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator)
 
+    def _next_backup_number(self):
+        """
+        Finds the next unused backup number, for use in reload.
+        """
+        backup_number = 1
+        for ext in ["", "_extras", "_counts", "_stats"]:
+            while self._table_exists("{0}{1}_old{2}".format(self.search_table, ext, backup_number)):
+                backup_number += 1
+        return backup_number
+
+    def _swap(self, tables, indexes, source, target):
+        """
+        Renames tables, indexes and primary keys, for use in reload.
+
+        INPUT:
+
+        - ``tables`` -- a list of table names to reload (including suffixes like
+            ``_extra`` or ``_counts`` but not ``_tmp``).
+        - ``indexes`` -- a list of index names to reload, without suffixes.
+        - ``source`` -- the source suffix for the swap.
+        - ``target`` -- the target suffix for the swap.
+        """
+        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
+        rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+        with DelayCommit(self, commit, silence=True):
+            for table in tables:
+                tablename_old = table + source
+                tablename_new = table + target
+                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
+                pkey_old = table + source + "_pkey"
+                pkey_new = table + target + "_pkey"
+                if self._constraint_exists(tablename_new, pkey_old):
+                    self._execute(rename_pkey.format(Identifier(tablename_new),
+                                                     Identifier(pkey_old),
+                                                     Identifier(pkey_new)))
+            for index in indexes:
+                if self._table_exists(index + source):
+                    self._execute(rename_index.format(Identifier(index + source), Identifier(index + target)))
+                else:
+                    print "Warning: index %s does not exist"%(index + source)
+
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
         Helper function for ``reload``: appends _old{n} to the names of tables/indexes/pkeys
@@ -1948,49 +1990,17 @@ class PostgresTable(PostgresBase):
         - ``indexed`` -- boolean, whether the temporary table has indexes on it.
         """
         now = time.time()
-        backup_number = 1
+        backup_number = self._next_backup_number()
         with DelayCommit(self, commit, silence=True):
+            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
+            cur = self._execute(selecter, [self.search_table])
+            indexes = [res[0] for res in cur]
+            self._swap(tables, indexes, '', '_old' + str(backup_number))
+            self._swap(tables, indexes if indexed else [], '_tmp', '')
             for table in tables:
-                while self._table_exists("{0}_old{1}".format(table, backup_number)):
-                    backup_number += 1
-            rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
-            rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
-            rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
-            for table in tables:
-                tablename = table
-                tablename_oldN = "{0}_old{1}".format(table, backup_number)
-                tablename_tmp = table + "_tmp"
-
-                # tablename -> tablename_oldN
-                self._execute(rename_table.format(Identifier(tablename), Identifier(tablename_oldN)))
-                # tablename_tmp -> tablename
-                self._execute(rename_table.format(Identifier(tablename_tmp), Identifier(tablename)))
-
-                tablename_pkey = "{0}_pkey".format(table)
-                tablename_oldN_pkey = "{0}_old{1}_pkey".format(table, backup_number)
-                tablename_tmp_pkey = "{0}_tmp_pkey".format(table)
-
-                # tablename_pkey ->  table_oldN_pkey in tablename_oldN
-                if self._constraint_exists(tablename_oldN, tablename_pkey):
-                    self._execute(rename_pkey.format(Identifier(tablename_oldN),
-                                                 Identifier(tablename_pkey),
-                                                 Identifier(tablename_oldN_pkey)))
-
-                # tablename_tmp_pkey -> tablename_pkey in table
-                if self._constraint_exists(tablename, tablename_tmp_pkey):
-                    self._execute(rename_pkey.format(Identifier(tablename),
-                                                    Identifier(tablename_tmp_pkey),
-                                                    Identifier(tablename_pkey)))
-
                 self._db.grant_select(table)
                 if table.endswith("_counts"):
                     self._db.grant_insert(table)
-            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
-            cur = self._execute(selecter, [self.search_table])
-            for res in cur:
-                self._execute(rename_index.format(Identifier(res[0]), Identifier("{0}_old{1}".format(res[0], backup_number))))
-                if indexed:
-                    self._execute(rename_index.format(Identifier(res[0] + "_tmp"), Identifier(res[0])))
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
 
     def _check_file_input(self, searchfile, extrafile, kwds):
@@ -2134,20 +2144,66 @@ class PostgresTable(PostgresBase):
             if metafile is not None:
                 self.reload_meta(metafile)
 
-    def reload_revert(self, commit = True):
-        raise ValueError("FIXME")
-        #TODO add doc
+    def drop_tmp(self):
+        """
+        Drop the temporary tables used in reloading.
+
+        See the method ``cleanup_from_reload`` if you also want to drop
+        the old backup tables.
+        """
+        with DelayCommit(self, silence=True):
+            for suffix in ['', '_extras', '_stats', '_counts']:
+                tablename = "{0}{1}_tmp".format(self.search_table, suffix)
+                if self._table_exists(tablename):
+                    self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
+                    print "Dropped {0}".format(table)
+
+    def reload_revert(self, backup_number = None, commit = True):
+        """
+        Use this method to revert to an older version of a table.
+
+        Note that doing calling this method twice with the same input
+        should return you to the original state.
+
+        INPUT:
+
+        - ``backup_number`` -- the backup version to restore,
+            or ``None`` for the most recent.
+        - ``commit`` -- whether to commit the changes.
+        """
+        if self._table_exists(self.search_table + '_tmp'):
+            print "Reload did not successfully complete.  You must first call drop_tmp to delete the temporary tables created."
+            return
+        now = time.time()
+        if backup_number is None:
+            backup_number = self._next_backup_number() - 1
+            if backup_number == 0:
+                raise ValueError("No old tables available to revert from.")
+        elif not self._table_exists("%s_old%s"%(self.search_table, backup_number)):
+            raise ValueError("Backup %s does not exist"%backup_number)
         with DelayCommit(self, commit, silence=True):
-            #FIXME
-            # drops the `_tmp` tables
-            self.cleanup_from_reload(old = False)
-            # reverts `meta_indexes` to previous state
-            self.revert_indexes()
-            print "Reverted %s to its previous state" % (self.search_table,)
+            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
+            cur = self._execute(selecter, [self.search_table])
+            indexes = [res[0] for res in cur]
+            old = '_old' + str(backup_number)
+            self._swap(tables, indexes, '', '_tmp'))
+            self._swap(tables, indexes, old, '')
+            self._swap(tables, indexes, '_tmp', old))
+        print "Swapped backup %s with %s"%(self.search_table, "{0}_old{1}".format(self.search_table, backup_number))
+
+        # OLD VERSION that did something else
+        #with DelayCommit(self, commit, silence=True):
+        #    # drops the `_tmp` tables
+        #    self.cleanup_from_reload(old = False)
+        #    # reverts `meta_indexes` to previous state
+        #    self.revert_indexes()
+        #    print "Reverted %s to its previous state" % (self.search_table,)
 
     def cleanup_from_reload(self, old = True):
         """
-        Drop the `_tmp` and `_old*` tables that are created during `reload`.
+        Drop the ``_tmp`` and ``_old*`` tables that are created during ``reload``.
+
+        Note that doing so will prevent ``reload_revert`` from working.
 
         INPUT:
 
@@ -3295,7 +3351,7 @@ class PostgresDatabase(PostgresBase):
         if name in self.tablenames:
             return getattr(self, name)
         else:
-            raise ValueError
+            raise ValueError("%s is not a search table"%name)
 
     def _create_meta_indexes_hist(self):
         with DelayCommit(self, silence=True):
@@ -3464,10 +3520,8 @@ class PostgresDatabase(PostgresBase):
         self.tablenames.sort()
 
     def drop_table(self, name, commit=True):
-        if name not in self.tablenames:
-            raise ValueError("%s is not a search table")
         with DelayCommit(self, commit, silence=True):
-            table = getattr(self, name)
+            table = self[name]
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
                 self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
@@ -3485,7 +3539,7 @@ class PostgresDatabase(PostgresBase):
         failures = []
         for tablename in search_tables:
             if tablename in self.tablenames:
-                table = getattr(self, tablename)
+                table = self[tablename]
                 searchfile = os.path.join(data_folder, tablename + '.txt')
                 statsfile =  os.path.join(data_folder, tablename + '_stats.txt')
                 countsfile =  os.path.join(data_folder, tablename + '_counts.txt')
@@ -3517,7 +3571,7 @@ class PostgresDatabase(PostgresBase):
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
 
         Note that this function currently does not reload data that is not in a search table,
-        such as knowls, user data, meta_tables or meta_indexes.
+        such as knowls or user data.
 
         Input is as for the `reload` function.
         """
@@ -3531,7 +3585,7 @@ class PostgresDatabase(PostgresBase):
                 continue
             included.append(tablename)
 
-            table = getattr(self, tablename)
+            table = self[tablename]
 
             extrafile = os.path.join(data_folder, tablename + '_extras.txt')
             if os.path.exists(extrafile):
@@ -3585,13 +3639,30 @@ class PostgresDatabase(PostgresBase):
         else:
             print "Successfully reloaded %s"%(", ".join(tablenames))
 
+    def reload_all_revert(self, data_folder, commit=True):
+        """
+        Reverts the most recent ``reload_all`` by swapping with the backup table
+        for each search table modified.
+
+        INPUT:
+
+        - ``data_folder`` -- the folder used in ``reload_all``; determines which tables
+            were modified.
+        """
+        with DelayCommit(self, commit, silence=True):
+            for tablename in self.tablenames:
+                searchfile = os.path.join(data_folder, tablename + '.txt')
+                if not os.path.exists(searchfile):
+                    continue
+                self[tablename].reload_revert()
+
     def cleanup_all(self, commit=True):
         """
         Drops all `_tmp` and `_old` tables created by the reload() method.
         """
         with DelayCommit(self, commit, silence=True):
             for tablename in self.tablenames:
-                table = getattr(self, tablename)
+                table = self[tablename]
                 table.cleanup_from_reload()
 
 db = PostgresDatabase()
