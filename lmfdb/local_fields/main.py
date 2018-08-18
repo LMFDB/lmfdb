@@ -4,9 +4,10 @@
 
 from lmfdb.db_backend import db
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, display_multiset
-from lmfdb.search_parsing import parse_galgrp, parse_ints, parse_count, parse_start, clean_input, parse_rats
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import web_latex, coeff_to_poly, pol_to_html, display_multiset
+from lmfdb.search_parsing import parse_galgrp, parse_ints, clean_input, parse_rats
+from lmfdb.search_wrapper import search_wrap
 from sage.all import PolynomialRing, QQ, RR
 from lmfdb.local_fields import local_fields_page, logger
 
@@ -115,7 +116,7 @@ def ratproc(inp):
 def index():
     bread = get_bread()
     if len(request.args) != 0:
-        return local_field_search(**request.args)
+        return local_field_search(request.args)
     info = {'count': 20}
     learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
@@ -130,37 +131,27 @@ def by_label(label):
         return redirect(url_for('.by_label',label=clean_label), 301)
     return render_field_webpage({'label': label})
 
-def local_field_search(**args):
-    info = to_dict(args)
-    bread = get_bread([("Search Results", ' ')])
-    query = {}
-    if info.get('jump_to'):
-        return redirect(url_for(".by_label",label=info['jump_to']), 301)
+def local_field_jump(info):
+    return redirect(url_for(".by_label",label=info['jump_to']), 301)
 
-    try:
-        parse_galgrp(info,query,'gal',qfield=('n','galT'))
-        parse_ints(info,query,'p',name='Prime p')
-        parse_ints(info,query,'n',name='Degree')
-        parse_ints(info,query,'c',name='Discriminant exponent c')
-        parse_ints(info,query,'e',name='Ramification index e')
-        parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
-    except ValueError:
-        return search_input_error(info, bread)
-
-    if 'result_count' in info:
-        nres = db.lf_fields.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info)
-    start = parse_start(info)
-
-    info['fields'] = db.lf_fields.search(query, limit=count, offset=start, info=info)
+@search_wrap(template="lf-search.html",
+             table=db.lf_fields,
+             title='Local Number Field Search Results',
+             err_title='Local Field Search Input Error',
+             per_page=20,
+             shortcuts={'jump_to': local_field_jump},
+             bread=lambda:get_bread([("Search Results", ' ')]),
+             credit=lambda:LF_credit)
+def local_field_search(info,query):
+    parse_galgrp(info,query,'gal',qfield=('n','galT'))
+    parse_ints(info,query,'p',name='Prime p')
+    parse_ints(info,query,'n',name='Degree')
+    parse_ints(info,query,'c',name='Discriminant exponent c')
+    parse_ints(info,query,'e',name='Ramification index e')
+    parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
     info['group_display'] = group_display_short
     info['display_poly'] = format_coeffs
     info['slopedisp'] = show_slope_content
-
-    return render_template("lf-search.html", info=info, title="Local Number Field Search Result", bread=bread, credit=LF_credit)
-
 
 def render_field_webpage(args):
     data = None

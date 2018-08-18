@@ -6,6 +6,8 @@ from lmfdb.sato_tate_groups import st_page
 from lmfdb.utils import to_dict, encode_plot, flash_error
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
 from lmfdb.db_backend import db
+from lmfdb.base import ctx_proc_userdata
+from psycopg2.extensions import QueryCanceledError
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
@@ -167,15 +169,20 @@ def search_by_label(label):
     else:
         return redirect(url_for('.by_label', label=label), 301)
 
+# This search function doesn't fit the model of search_wrapper very well,
+# So we don't use it.
 def search(**args):
     """ query processing for Sato-Tate groups -- returns rendered results page """
-
     info = to_dict(args)
     if 'jump' in info:
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
-    bread = [('Sato-Tate Groups', url_for('.index')),('Search Results', '.')]
+    template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
+                     'credit':credit_string,
+                     'learnmore':learnmore_list()}
+    title = 'Sato-Tate Group Search Results'
+    err_title = 'Sato-Tate Groups Search Input Error'
     count = parse_count(info, 25)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
@@ -198,7 +205,7 @@ def search(**args):
         parse_rational(info,query,'trace_zero_density','trace zero density')
     except ValueError as err:
         info['err'] = str(err)
-        return render_template('st_results.html', info=info, title='Sato-Tate Groups Search Input Error', bread=bread, credit=credit_string)
+        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
@@ -224,7 +231,13 @@ def search(**args):
     if nres != INFINITY:
         start2 = start - nres if start > nres else 0
         proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','moments']
-        res = db.gps_sato_tate.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
+        try:
+            res = db.gps_sato_tate.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
+        except QueryCanceledError as err:
+            ctx = ctx_proc_userdata()
+            flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
+            info['err'] = str(err)
+            return render_template('st_results.html', info=info, title=err_title, **template_kwds)
         info['number'] += nres
         if start < info['number'] and len(results) < count:
             for v in res:
@@ -239,10 +252,9 @@ def search(**args):
 
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
-    info['stgroups'] = results
+    info['results'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    title = 'Sato-Tate Group Search Results'
-    return render_template('st_results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template('st_results.html', info=info, title=title, **template_kwds)
 
 ###############################################################################
 # Rendering

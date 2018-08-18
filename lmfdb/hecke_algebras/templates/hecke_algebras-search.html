@@ -46,7 +46,7 @@
     <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
     <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
   </tr>
-  {% for a in info.hecke_algebras %}
+  {% for a in info.results %}
   <tr>
     <td align='left'><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=a.label)}}#{{a.index}}">{{a.orbit_label}} </a></td>
     <td>{{a.level}}</td>
@@ -61,7 +61,7 @@
     <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
     <th>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</th>
   </tr>
-  {% for a in info.hecke_algebras %}
+  {% for a in info.results %}
   <tr>
     <td align='left'><a href="{{url_for('hecke_algebras.render_hecke_algebras_webpage', label=a.label)}}">{{a.label}} </a></td>
     <td>{{a.level}}</td>

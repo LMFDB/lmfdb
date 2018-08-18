@@ -9,9 +9,10 @@ import ast
 import yaml
 import os
 from lmfdb.db_backend import db
-from flask import render_template, request, url_for, redirect, send_file, abort, jsonify
-from lmfdb.utils import to_dict, flash_error
-from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input, parse_bracketed_posints, parse_gap_id
+from flask import render_template, request, url_for, redirect, send_file, abort
+from lmfdb.utils import flash_error
+from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
+from lmfdb.search_wrapper import search_wrap
 
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
@@ -122,7 +123,7 @@ def decjac_format(decjac_list):
 def index():
     bread = get_bread()
     if request.args:
-        return higher_genus_w_automorphisms_search(**request.args)
+        return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = range(2,genus_max+1)
     info = {'count': 20,
@@ -316,11 +317,11 @@ def evaluate_expr(expr, vars):
 
     return (err, result)
 
-def add_group_order_range(mongo_query, expr):
+def add_group_order_range(query, expr):
     # Support -- and .. as range
     query_range = expr.replace("--", "..")
     raw_parts = expr.split('..')
-    raw_parts = filter(lambda x: x != '', raw_parts)    
+    raw_parts = filter(lambda x: x != '', raw_parts)
     min_genus = 1
     max_genus = db.hgcwa_passports.max('genus')
 
@@ -328,27 +329,27 @@ def add_group_order_range(mongo_query, expr):
     special_case_parts = expr.split('-')
     #is_special_case_range = special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
     is_special_case_range = len(special_case_parts) == 2 and special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
-    
+
     if is_special_case_range:
-        mongo_query["group_order"] = {"$gte": int(special_case_parts[0]), "$lte": int(special_case_parts[1])}
+        query["group_order"] = {"$gte": int(special_case_parts[0]), "$lte": int(special_case_parts[1])}
         return (None, None)
 
     elif len(raw_parts) == 2:
-        mongo_expr = []
+        options = []
 
         for cur_genus in range(min_genus, max_genus + 1):
             left_err, left_value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
             right_err, right_value = evaluate_expr(raw_parts[1], {'g': cur_genus})
             if left_err == None and right_err == None:
-                mongo_expr.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
+                options.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
             elif left_err != None:
-                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                query["$or"] = [{"genus": {"$lte": 0}}]
                 return (raw_parts[0], left_err)
             else:
-                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                query["$or"] = [{"genus": {"$lte": 0}}]
                 return (raw_parts[1], right_err)
 
-        mongo_query["$or"] = mongo_expr
+        query["$or"] = options
         return (None, None)
     elif len(raw_parts) == 1:
         condition = ""
@@ -361,93 +362,79 @@ def add_group_order_range(mongo_query, expr):
         else:
             condition = "$eq"
 
-        mongo_expr = []
+        options = []
         for cur_genus in range(min_genus, max_genus + 1):
             err, value = evaluate_expr(raw_parts[0], {'g': cur_genus})
             if err == None:
-                mongo_expr.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
+                options.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
             else:
-                mongo_query["$or"] = [{"genus": {"$lte": 0}}]
+                query["$or"] = [{"genus": {"$lte": 0}}]
                 return (raw_parts[0], err)
 
-        mongo_query["$or"] = mongo_expr
+        query["$or"] = options
         return (None, None)
     else:
         return ("", "You must either specify a group size or range in the format Min..Max")
 
+def higher_genus_w_automorphisms_jump(info):
+    labs = info['jump_to']
+    if label_is_one_passport(labs):
+        return render_passport({'passport_label': labs})
+    elif label_is_one_family(labs):
+        return render_family({'label': labs})
+    else:
+        flash_error ("The label %s is not a legitimate label for this data.",labs)
+        return redirect(url_for(".index"))
 
-def higher_genus_w_automorphisms_search(**args):
-    info = to_dict(args)
-    bread = get_bread([("Search Results",'')])
-    query = {}
-    if 'jump_to' in info:
-        labs = info['jump_to']
-        if label_is_one_passport(labs):
-            return render_passport({'passport_label': labs})
-        elif label_is_one_family(labs):
-            return render_family({'label': labs})
-        else:
-            flash_error ("The label %s is not a legitimate label for this data.",labs)
-            return redirect(url_for(".index"))
+def higher_genus_w_automorphisms_postprocess(res, info, query):
+    info['show_downloads'] = len(res) > 0
+    return res
 
-    #allow for ; in signature
+@search_wrap(template="hgcwa-search.html",
+             table=db.hgcwa_passports,
+             title='Families of Higher Genus Curves with Automorphisms Search Results',
+             err_title='Families of Higher Genus Curve Search Input Error',
+             per_page=20,
+             shortcuts={'jump_to':higher_genus_w_automorphisms_jump},
+             longcuts={'download_magma':(lambda res, info, query: hgcwa_code_download_search(res,'magma')),
+                       'download_gap':(lambda res, info, query: hgcwa_code_download_search(res,'gap'))},
+             cleaners={'signature': lambda field:ast.literal_eval(field['signature'])},
+             postprocess=higher_genus_w_automorphisms_postprocess,
+             bread=lambda:get_bread([("Search Results",'')]),
+             credit=lambda:credit)
+def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
+        #allow for ; in signature
         info['signature'] = info['signature'].replace(';',',')
-
-    try:
-        parse_gap_id(info,query,'group',name='Group',qfield='group')
-        parse_ints(info,query,'genus',name='Genus')
         parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
         if query.get('signature'):
             query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
-        parse_ints(info,query,'dim',name='Dimension of the family')
-        if 'inc_hyper' in info:
-            if info['inc_hyper'] == 'exclude':
-                query['hyperelliptic'] = False
-            elif info['inc_hyper'] == 'only':
-                query['hyperelliptic'] = True
-        if 'inc_cyc_trig' in info:
-            if info['inc_cyc_trig'] == 'exclude':
-                query['cyclic_trigonal'] = False
-            elif info['inc_cyc_trig'] == 'only':
-                query['cyclic_trigonal'] = True
-        if 'inc_full' in info:
-            if info['inc_full'] == 'exclude':
-                query['full_auto'] = {'$exists': True}
-            elif info['inc_full'] == 'only':
-                query['full_auto'] = {'$exists': False}
-        query['cc.1'] = 1
-
-    except ValueError:
-        return search_input_error(info, bread)
+    parse_gap_id(info,query,'group',name='Group',qfield='group')
+    parse_ints(info,query,'genus',name='Genus')
+    parse_ints(info,query,'dim',name='Dimension of the family')
+    if 'inc_hyper' in info:
+        if info['inc_hyper'] == 'exclude':
+            query['hyperelliptic'] = False
+        elif info['inc_hyper'] == 'only':
+            query['hyperelliptic'] = True
+    if 'inc_cyc_trig' in info:
+        if info['inc_cyc_trig'] == 'exclude':
+            query['cyclic_trigonal'] = False
+        elif info['inc_cyc_trig'] == 'only':
+            query['cyclic_trigonal'] = True
+    if 'inc_full' in info:
+        if info['inc_full'] == 'exclude':
+            query['full_auto'] = {'$exists': True}
+        elif info['inc_full'] == 'only':
+            query['full_auto'] = {'$exists': False}
+    query['cc.1'] = 1
     if info.get('groupsize'):
         err, result = add_group_order_range(query, info['groupsize'])
         if err is not None:
             flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
 
-    if 'result_count' in info:
-        nres = db.hgcwa_passports.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info)
-    start = parse_start(info)
-    res = db.hgcwa_passports.search(query, limit=count, offset=start, info=info)
-
-    for field in res:
-        field['signature'] = ast.literal_eval(field['signature'])
-    info['fields'] = res
-
-    if 'download_magma' in info:
-        return hgcwa_code_download_search(res,'magma')
-    elif 'download_gap' in info:
-        return hgcwa_code_download_search(res,'gap')
-
     info['group_display'] = sg_pretty
-    info['show_downloads'] = len(res) > 0
     info['sign_display'] = sign_display
-    return render_template("hgcwa-search.html", info=info, title="Families of Higher Genus Curves with Automorphisms Search Result", credit=credit, bread=bread)
-
-
 
 def render_family(args):
     info = {}

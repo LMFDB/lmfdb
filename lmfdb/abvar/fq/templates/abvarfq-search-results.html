@@ -147,7 +147,7 @@ table td.params {
     <th class="center">{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</th>
     <th align="left">{{ KNOWL('av.decomposition',title="isogeny factors") }}</th>
   </tr>
-  {% for abvar in info.abvars: %}
+  {% for abvar in info.results: %}
   <tr>
     <td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
     <td class="center">

@@ -90,7 +90,7 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </tr>
 </thead>
 <tbody>
-{% for field in info.fields: %}
+{% for field in info.results: %}
 {% set wnf = info.wnf(field) %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>

@@ -51,7 +51,7 @@
     <th>{{ KNOWL('rep_galois_modl.level', title='Level')}}</th>
     <th>{{ KNOWL('rep_galois_modl.gram', title='Gram Matrix') }}</th>
   </tr>
-  {% for l in info.rep_galois_modls %}
+  {% for l in info.results %}
   <tr>
     <td align='left'><a href="{{url_for('rep_galois_modl.render_rep_galois_modl_webpage', label=l.label)}}">{{l.label}} </a></td>
     <td>{{l.dim}}</td>

@@ -76,7 +76,7 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </thead>
 <tbody>
 
-{% for field in info.fields: %}
+{% for field in info.results: %}
 <tr>
 <td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
 <td>{{field.p}}</td>

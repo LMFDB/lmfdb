@@ -825,7 +825,7 @@ def parse_string_start(inp, query, qfield, sep=" ", first_field=None, parse_sing
     else:
         collapse_ors(['$or',[make_sub_query(part) for part in parts]], query)
 
-def parse_count(info, default=20):
+def parse_count(info, default=50):
     try:
         info['count'] = int(info['count'])
     except (KeyError, ValueError):

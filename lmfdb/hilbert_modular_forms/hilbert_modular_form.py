@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, url_for, request, redirect, make_response, flash, jsonify
+from flask import render_template, url_for, request, redirect, make_response, flash
 
 from lmfdb.db_backend import db
 from lmfdb.hilbert_modular_forms import hmf_page
@@ -12,8 +12,10 @@ from lmfdb.ecnf.main import split_class_label
 from lmfdb.WebNumberField import WebNumberField
 
 from markupsafe import Markup
-from lmfdb.utils import to_dict, web_latex_split_on_pm
-from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight, parse_count, parse_start
+from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight
+from lmfdb.search_wrapper import search_wrap
+
 
 def get_hmf(label):
     """Return a complete HMF, give its label.  Note that the
@@ -96,7 +98,7 @@ def hilbert_modular_form_render_webpage():
         info['counts'] = get_counts()
         return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
     else:
-        return hilbert_modular_form_search(**args)
+        return hilbert_modular_form_search(args)
 
 
 
@@ -125,59 +127,57 @@ def hilbert_modular_form_by_label(lab):
     else:
         return redirect(url_for(".render_hmf_webpage", field_label=split_full_label(lab)[0], label=lab))
 
+# Learn more box
 
-def hilbert_modular_form_search(**args):
-    info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info and info['label']:
-        lab=info['label'].strip()
-        info['label']=lab
-        try:
-            split_full_label(lab)
-            return hilbert_modular_form_by_label(lab)
-        except ValueError:
-            return redirect(url_for(".hilbert_modular_form_render_webpage"))
+def learnmore_list():
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Labels for Hilbert Modular Forms', url_for(".labels_page"))]
 
-    query = {}
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+def hilbert_modular_form_jump(info):
+    lab = info['label'].strip()
+    info['label'] = lab
     try:
-        parse_nf_string(info,query,'field_label',name="Field")
-        parse_ints(info,query,'deg', name='Field degree')
-        parse_ints(info,query,'disc',name="Field discriminant")
-        parse_ints(info,query,'dimension')
-        parse_ints(info,query,'level_norm', name="Level norm")
-        parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
+        split_full_label(lab)
+        return hilbert_modular_form_by_label(lab)
     except ValueError:
-        return search_input_error()
+        return redirect(url_for(".hilbert_modular_form_render_webpage"))
 
+@search_wrap(template="hilbert_modular_form_search.html",
+             table=db.hmf_forms,
+             title='Hilbert Modular Form Search Results',
+             err_title='Hilbert Modular Form Search Error',
+             per_page=100,
+             shortcuts={'label':hilbert_modular_form_jump},
+             projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
+             cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
+             bread=lambda:[("Modular Forms", url_for('mf.modular_form_main_page')),
+                           ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+                           ('Search Results', '.')],
+             learnmore=learnmore_list,
+             credit=lambda:hmf_credit,
+             properties=lambda: [])
+def hilbert_modular_form_search(info, query):
+    parse_nf_string(info,query,'field_label',name="Field")
+    parse_ints(info,query,'deg', name='Field degree')
+    parse_ints(info,query,'disc',name="Field discriminant")
+    parse_ints(info,query,'dimension')
+    parse_ints(info,query,'level_norm', name="Level norm")
+    parse_hmf_weight(info,query,'weight',qfield=('parallel_weight','weight'))
     if 'cm' in info:
         if info['cm'] == 'exclude':
             query['is_CM'] = 'no'
         elif info['cm'] == 'only':
             query['is_CM'] = 'yes'
-
     if 'bc' in info:
         if info['bc'] == 'exclude':
             query['is_base_change'] = 'no'
         elif info['bc'] == 'only':
             query['is_base_change'] = 'yes'
-
-    if 'result_count' in info:
-        nres = db.hmf_forms.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info,100)
-    start = parse_start(info)
-    proj = ['field_label', 'short_label', 'label', 'level_ideal', 'dimension']
-    res = db.hmf_forms.search(query, proj, limit=count, offset=start, info=info)
-    for v in res:
-        v['level_ideal'] = teXify_pol(v['level_ideal'])
-    info['forms'] = res
-
-    t = 'Hilbert Modular Form Search Results'
-
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms',
-        url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
-    properties = []
-    return render_template("hilbert_modular_form_search.html", info=info, title=t, credit=hmf_credit, properties=properties, bread=bread, learnmore=learnmore_list())
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
@@ -432,21 +432,6 @@ def render_hmf_webpage(**args):
                    ]
 
     return render_template("hilbert_modular_form.html", downloads=info["downloads"], info=info, properties2=properties2, credit=hmf_credit, title=t, bread=bread, friends=info['friends'], learnmore=learnmore_list())
-
-
-
-# Learn more box
-
-def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for Hilbert Modular Forms', url_for(".labels_page"))]
-
-# Return the learnmore list with the matchstring entry removed
-def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
-
-
 
 #data quality pages
 @hmf_page.route("/Completeness")
