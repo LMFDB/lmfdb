@@ -104,7 +104,6 @@ def NF_redirect():
 
 @nf_page.route("/HowComputed")
 def how_computed_page():
-    info = {}
     learnmore = learnmore_list_remove('was computed')
     t = 'How Number Field Data was Computed'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
@@ -130,7 +129,6 @@ def render_labels_page():
 
 @nf_page.route("/Discriminants")
 def render_discriminants_page():
-    info = {}
     learnmore = learnmore_list_remove('Completeness')
     t = 'Completeness of Global Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
