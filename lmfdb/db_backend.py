@@ -1967,7 +1967,7 @@ class PostgresTable(PostgresBase):
         rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
         rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
         rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
-        with DelayCommit(self, commit, silence=True):
+        with DelayCommit(self, silence=True):
             for table in tables:
                 tablename_old = table + source
                 tablename_new = table + target
@@ -2162,8 +2162,8 @@ class PostgresTable(PostgresBase):
             for suffix in ['', '_extras', '_stats', '_counts']:
                 tablename = "{0}{1}_tmp".format(self.search_table, suffix)
                 if self._table_exists(tablename):
-                    self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
-                    print "Dropped {0}".format(table)
+                    self._execute(SQL("DROP TABLE {0}").format(Identifier(tablename)))
+                    print "Dropped {0}".format(tablename)
 
     def reload_revert(self, backup_number = None, commit = True):
         """
@@ -2181,7 +2181,6 @@ class PostgresTable(PostgresBase):
         if self._table_exists(self.search_table + '_tmp'):
             print "Reload did not successfully complete.  You must first call drop_tmp to delete the temporary tables created."
             return
-        now = time.time()
         if backup_number is None:
             backup_number = self._next_backup_number() - 1
             if backup_number == 0:
@@ -2193,6 +2192,11 @@ class PostgresTable(PostgresBase):
             cur = self._execute(selecter, [self.search_table])
             indexes = [res[0] for res in cur]
             old = '_old' + str(backup_number)
+            tables = []
+            for suffix in ['', '_extras', '_stats', '_counts']:
+                tablename = "{0}{1}".format(self.search_table, suffix)
+                if self._table_exists(tablename + old):
+                    tables.append(tablename)
             self._swap(tables, indexes, '', '_tmp')
             self._swap(tables, indexes, old, '')
             self._swap(tables, indexes, '_tmp', old)
@@ -2380,7 +2384,7 @@ class PostgresTable(PostgresBase):
             table = self.extra_table
         else:
             table = self.search_table
-        with DelayCommit(self, commit, silence=True):
+        with DelayCommit(self, silence=True):
             # Since we have run the datatype through the whitelist,
             # the following string substitution is safe
             modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
