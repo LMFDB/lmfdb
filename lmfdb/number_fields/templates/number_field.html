@@ -39,7 +39,7 @@ table.ntdata a {
   {% if info.is_abelian %}
             <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
-            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
+            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet character group") }}:
                 <td>&nbsp;&nbsp;<td>
                 {% if info.dirichlet_group is defined %}
                 {{info.dirichlet_group|safe}}

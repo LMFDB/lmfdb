@@ -459,7 +459,7 @@ def render_field_webpage(args):
             info['friends'].append(('L-function', "/L/NumberField/%s" % label))
     info['friends'].append(('Galois group', "/GaloisGroup/%dT%d" % (n, t)))
     if 'dirichlet_group' in info:
-        info['friends'].append(('Dirichlet group', url_for("characters.dirichlet_group_table",
+        info['friends'].append(('Dirichlet character group', url_for("characters.dirichlet_group_table",
                                                            modulus=int(conductor),
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),
