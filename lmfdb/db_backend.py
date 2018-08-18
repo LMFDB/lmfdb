@@ -26,7 +26,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging, tempfile, re, os, time, random, traceback
+import logging, tempfile, re, os, time, random, traceback, datetime, getpass
 from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -1526,7 +1526,8 @@ class PostgresTable(PostgresBase):
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
                         if self.extra_table is not None:
                             extrafile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in extra_cols) + u'\n')
-            self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, **kwds)
+            self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, log_change=False, **kwds)
+            self.log_db_change("rewrite", query=query, projection=projection)
         finally:
             searchfile.unlink(searchfile.name)
             if self.extra_table is not None:
@@ -1548,12 +1549,14 @@ class PostgresTable(PostgresBase):
             cur = self._execute(deleter, values)
             self._break_order()
             self._break_stats()
-            self.stats.total -= cur.rowcount
+            nrows = cur.rowcount
+            self.stats.total -= nrows
             self.stats._record_count({}, self.stats.total)
             if resort:
                 self.resort()
             if restat:
                 self.stats.refresh_stats(total = False)
+            self.log_db_change("delete", query=query, nrows=nrows)
 
     def upsert(self, query, data, commit=True):
         """
@@ -1641,6 +1644,7 @@ class PostgresTable(PostgresBase):
                 self._break_order()
                 self.stats.total += 1
             self._break_stats()
+            self.log_db_change("upsert", query=query, data=data)
 
     def insert_many(self, search_data, extras_data=None, resort=True, reindex=False, restat=True, commit=True):
         """
@@ -1701,6 +1705,7 @@ class PostgresTable(PostgresBase):
                 self.restore_indexes()
             if restat:
                 self.stats.refresh_stats(total=False)
+            self.log_db_change("insert_many", nrows=len(search_data))
 
     def _identify_tables(self, search_table, extra_table):
         """
@@ -2016,7 +2021,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, log_change=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -2118,6 +2123,8 @@ class PostgresTable(PostgresBase):
                 print "Warning: since the final swap was not requested, we have not updated meta_tables"
                 print "when performing the final swap with reload_final_swap, pass the metafile as an argument to update the meta_tables"
 
+            if log_change:
+                self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
             print "Finished reloading %s!" % (self.search_table)
 
     def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
@@ -2186,9 +2193,10 @@ class PostgresTable(PostgresBase):
             cur = self._execute(selecter, [self.search_table])
             indexes = [res[0] for res in cur]
             old = '_old' + str(backup_number)
-            self._swap(tables, indexes, '', '_tmp'))
+            self._swap(tables, indexes, '', '_tmp')
             self._swap(tables, indexes, old, '')
-            self._swap(tables, indexes, '_tmp', old))
+            self._swap(tables, indexes, '_tmp', old)
+            self.log_db_change("reload_revert")
         print "Swapped backup %s with %s"%(self.search_table, "{0}_old{1}".format(self.search_table, backup_number))
 
         # OLD VERSION that did something else
@@ -2272,6 +2280,7 @@ class PostgresTable(PostgresBase):
             self.stats._record_count({}, self.stats.total)
             if restat:
                 self.stats.refresh_stats(total=False)
+            self.log_db_change("copy_from", nrows=search_count)
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, metafile=None, commit=True, **kwds):
         """
@@ -2354,6 +2363,7 @@ class PostgresTable(PostgresBase):
             # add an index for the default sort
             if not any([index["columns"] == sort for index_name, index in self.list_indexes().iteritems()]):
                 self.create_index(sort)
+            self.log_db_change("set_sort", sort=sort)
 
     def add_column(self, name, datatype, extra=False):
         if name in self._search_cols:
@@ -2370,14 +2380,16 @@ class PostgresTable(PostgresBase):
             table = self.extra_table
         else:
             table = self.search_table
-        # Since we have run the datatype through the whitelist,
-        # the following string substitution is safe
-        modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
-        self._execute(modifier)
-        if extra and name != 'id':
-            self._extra_cols.append(name)
-        elif not extra and name != 'id':
-            self._search_cols.append(name)
+        with DelayCommit(self, commit, silence=True):
+            # Since we have run the datatype through the whitelist,
+            # the following string substitution is safe
+            modifier = SQL("ALTER TABLE {0} ADD COLUMN {1} %s"%datatype).format(Identifier(table), Identifier(name))
+            self._execute(modifier)
+            if extra and name != 'id':
+                self._extra_cols.append(name)
+            elif not extra and name != 'id':
+                self._search_cols.append(name)
+            self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True):
         if name in self._sort_keys:
@@ -2396,6 +2408,7 @@ class PostgresTable(PostgresBase):
             modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(table), Identifier(name))
             self._execute(modifier)
             self.col_type.pop(name, None)
+            self.log_db_change("drop_column", name=name)
         print "Column %s dropped"%(name)
 
     def create_extra_table(self, columns, ordered=False, commit=True):
@@ -2464,6 +2477,13 @@ class PostgresTable(PostgresBase):
                 updater = SQL("UPDATE {0} SET id = nextval('tmp_id')").format(Identifier(self.extra_table))
                 self._execute(updater)
             self.restore_pkeys()
+            self.log_db_change("create_extra_table", columns=columns)
+
+    def log_db_change(self, operation, **data):
+        """
+        Log changes to search tables.
+        """
+        self._db.log_db_change(operation, tablename=self.search_table, **data)
 
 class PostgresStatsTable(PostgresBase):
     """
@@ -3265,6 +3285,9 @@ class PostgresDatabase(PostgresBase):
         logging.info("Super user: %s" % self._super_user)
         logging.info("Read/write to userdb: %s" % self._read_and_write_userdb)
         logging.info("Read/write to knowls: %s" % self._read_and_write_knowls)
+        # Stores the name of the person making changes to the database
+        from lmfdb.config import Configuration
+        self.__editor = Configuration().get_logging().get('editor')
 
         cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
 
@@ -3285,6 +3308,44 @@ class PostgresDatabase(PostgresBase):
 
     def __repr__(self):
         return "Interface to Postgres database"
+
+    def login(self):
+        """
+        Identify an editor by their lmfdb username.
+
+        The goal is to associate changes with people and keep a record of changes made.
+        There is no real security against malicious use.
+
+        Note that you can permanently log in by setting the editor
+        field in the logging section of your config.ini file.
+        """
+        if self.__editor is None:
+            print "Please log in using your knowl username and password,"
+            print "so that we can associate database changes with individuals"
+            uid = raw_input("Username: ")
+            pwd = getpass.getpass()
+            selecter = SQL("SELECT bcpassword FROM userdb.users WHERE username = %s")
+            cur = self._execute(selecter, [uid])
+            if cur.rowcount == 0:
+                raise ValueError("That username not present in database!")
+            bcpass = cur.fetchone()[0]
+            from lmfdb.users.pwdmanager import userdb
+            if bcpass:
+                if bcpass == userdb.bchash(pwd, existing_hash = bcpass):
+                    self.__editor = uid
+                else:
+                    raise ValueError("Password invalid")
+            else:
+                raise ValueError("Old-style password: please log in to the website to update")
+        return self.__editor
+
+    def log_db_change(self, operation, tablename=None, **data):
+        """
+        Log a change to the database.
+        """
+        uid = self.login()
+        inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
+        self._execute(inserter, [uid, datetime.utcnow(), tablename, operation, data])
 
     def fetch_userpassword(self, options):
         if 'user' not in options:
