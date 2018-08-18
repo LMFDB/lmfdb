@@ -34,11 +34,16 @@ Changes
    been standardized, and some common features have been refactored into a common
    codebase.
 
-1. Why did the databases/collections got renamed?
+1. Why did the databases/collections get renamed?
 
    Postgres doesn't have the same notion of databases and collections that Mongo does,
    so some renaming was required.  We decided to take advantage of this restructuring to
    add some consistency to the naming scheme.
+
+1. Why do I still see messages about mongo when I start the LMFDB?
+
+   Classical modular forms are still using mongo.  We're working on revising them to use
+   postgres, but in the mean time we're still connecting to a mongo database.
 
 Database Interface
 ------------------
@@ -52,6 +57,25 @@ Database Interface
 
    Each section of the lmfdb will generally rely on one (or perhaps a few) table, and
    most of the methods of interest are on the table objects.
+
+1. How do I find the names of all of the tables?
+
+   The list `db.tablenames` is a list of the tables (with the exception of knowls,
+   users, and meta tables).
+
+1. How do I determine what columns are in a table?
+
+   Each table has a `col_type` dictionary, whose keys are column names and values
+   are column types.  For example,
+   ```python
+   sage: from lmfdb.db_backend import db
+   sage: db.fq_fields.col_type
+   {u'characteristic': u'bigint',
+    u'conway': u'smallint',
+    u'degree': u'integer',
+    u'id': u'bigint',
+    u'polynomial': u'jsonb'}
+   ```
 
 1. How do I search for entries in a table?
 
@@ -246,6 +270,15 @@ Note that you need editor priviledges to add, delete or modify data.
    ```
 
    The `reload` method is the fastest option, but requires you to produce an appropriate file.
+
+1. What if I change my mind and want to revert to the old version of a table, from before a reload?
+
+   You can use the `reload_revert` method to switch back to the old version.  Note that this
+   will also work for the `rewrite` method, since it relies on `reload`.  If you want to
+   undo a `reload_all`, see the `reload_all_revert` method on `db`.
+
+   There is no built-in way to undo direct additions to tables via `copy_from`,
+   `upsert`, or `insert_many`.
 
 1. What is an `extra_table`?
 

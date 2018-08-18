@@ -11,7 +11,7 @@
 <th>Character</th>
 <th>Dimension</th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td align='left'><a href="{{url_for('hiwf.render_hiwf_webpage', label=form.label)}}">{{form.label}} </a></td>
 <td>${{form.level}}$</td>

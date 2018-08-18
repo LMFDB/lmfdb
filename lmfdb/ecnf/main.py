@@ -11,9 +11,10 @@ from urllib import quote, unquote
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, flash, send_file, jsonify, make_response
+from flask import render_template, request, url_for, redirect, flash, send_file, make_response
 from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints
+from lmfdb.search_wrapper import search_wrap
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
@@ -162,7 +163,7 @@ def index():
     #    if 'jump' in request.args:
     #        return show_ecnf1(request.args['label'])
     if len(request.args) > 0:
-        return elliptic_curve_search(to_dict(request.args))
+        return elliptic_curve_search(request.args)
     bread = get_bread()
 
     # the dict data will hold additional information to be displayed on
@@ -370,54 +371,116 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            info=info,
                            learnmore=learnmore_list())
 
+def download_search(info):
+    dltype = info['submit']
+    delim = 'bracket'
+    com = r'\\'  # single line comment start
+    com1 = ''  # multiline comment start
+    com2 = ''  # multiline comment end
+    filename = 'elliptic_curves.gp'
+    mydate = time.strftime("%d %B %Y")
+    if dltype == 'sage':
+        com = '#'
+        filename = 'elliptic_curves.sage'
+    if dltype == 'magma':
+        com = ''
+        com1 = '/*'
+        com2 = '*/'
+        delim = 'magma'
+        filename = 'elliptic_curves.m'
+    s = com1 + "\n"
+    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
+    s += com + ' Below is a list called data. Each entry has the form:\n'
+    s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
+    s += '\n' + com2
+    s += '\n'
 
-def elliptic_curve_search(info):
+    if dltype == 'magma':
+        s += 'P<x> := PolynomialRing(Rationals()); \n'
+        s += 'data := ['
+    elif dltype == 'sage':
+        s += 'R.<x> = QQ[]; \n'
+        s += 'data = [ '
+    else:
+        s += 'data = [ '
+    s += '\\\n'
+    nf_dict = {}
+    for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
+        nf = str(f['field_label'])
+        # look up number field and see if we already have the min poly
+        if nf in nf_dict:
+            poly = nf_dict[nf]
+        else:
+            poly = str(WebNumberField(f['field_label']).poly())
+            nf_dict[nf] = poly
+        entry = str(f['ainvs'])
+        entry = entry.replace('u','')
+        entry = entry.replace('\'','')
+        entry = entry.replace(';','],[')
+        s += '[[' + poly + '], [[' + entry + ']]],\\\n'
+    s = s[:-3]
+    s += ']\n'
 
-    if info.get('download') == '1' and info.get('submit') and info.get('query'):
-        return download_search(info)
+    if delim == 'brace':
+        s = s.replace('[', '{')
+        s = s.replace(']', '}')
+    if delim == 'magma':
+        s = s.replace('[', '[*')
+        s = s.replace(']', '*]')
+        s += ';'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO,
+                     attachment_filename=filename,
+                     as_attachment=True,
+                     add_etags=False)
 
-    if not 'query' in info:
-        info['query'] = {}
-    
-    bread = info.get('bread',[('Elliptic Curves', url_for(".index")), ('Search Results', '.')])
-    if 'jump' in info:
-        label = info.get('label', '').replace(" ", "")
-        # This label should be a full isogeny class label or a full
-        # curve label (including the field_label component)
-        try:
-            nf, cond_label, iso_label, number = split_full_label(label.strip())
-        except ValueError:
-            info['err'] = ''
-            return search_input_error(info, bread)
+def elliptic_curve_jump(info):
+    label = info.get('label', '').replace(" ", "")
+    # This label should be a full isogeny class label or a full
+    # curve label (including the field_label component)
+    try:
+        nf, cond_label, iso_label, number = split_full_label(label.strip())
+    except ValueError:
+        info['err'] = ''
+        bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
+        return search_input_error(info, bread)
 
-        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
+    return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
-    query = {}
+@search_wrap(template="ecnf-search-results.html",
+             table=db.ec_nfcurves,
+             title='Elliptic Curve Search Results',
+             err_title='Elliptic Curve Search Input Error',
+             shortcuts={'jump':elliptic_curve_jump,
+                        'download':download_search},
+             cleaners={'numb':lambda e: str(e['number']),
+                       'field_knowl':lambda e: nf_display_knowl(e['field_label'], field_pretty(e['field_label']))},
+             bread=lambda:[('Elliptic Curves', url_for(".index")), ('Search Results', '.')],
+             credit=lambda:ecnf_credit)
+def elliptic_curve_search(info, query):
+    parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
+    if query.get('field_label') == '1.1.1.1':
+        return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
+
+    parse_ints(info,query,'conductor_norm')
+    parse_noop(info,query,'conductor_label')
+    parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
+    parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
+    if 'torsion_structure' in query and not 'torsion_order' in query:
+        query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
+    parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':
             info['jinv'] = info['jinv'].replace('phi','a')
         if info.get('field','').strip() == '2.0.4.1':
             info['jinv'] = info['jinv'].replace('i','a')
-    try:
-        parse_ints(info,query,'conductor_norm')
-        parse_noop(info,query,'conductor_label')
-        parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
-        parse_nf_elt(info,query,'jinv',name='j-invariant')
-        parse_ints(info,query,'torsion',name='Torsion order',qfield='torsion_order')
-        parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
-        if 'torsion_structure' in query and not 'torsion_order' in query:
-            query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-        parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
-    except (TypeError,ValueError):
-        return search_input_error(info, bread)
-
+    parse_nf_elt(info,query,'jinv',name='j-invariant')
     if query.get('jinv'):
         query['jinv'] =','.join(query['jinv'])
 
-    if query.get('field_label') == '1.1.1.1':
-        return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
-        
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
         query['number'] = 1
@@ -439,23 +502,8 @@ def elliptic_curve_search(info):
         elif info['include_cm'] == 'only':
             query['cm'] = {'$ne' : 0}
 
-    if 'result_count' in info:
-        nres = db.ec_nfcurves.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info, 50)
-    start = parse_start(info)
-    res = db.ec_nfcurves.search(query, limit=count, offset=start, info=info)
-    for e in res:
-        e['numb'] = str(e['number'])
-        e['field_knowl'] = nf_display_knowl(e['field_label'], field_pretty(e['field_label']))
-
-    info['curves'] = res
     info['field_pretty'] = field_pretty
     info['web_ainvs'] = web_ainvs
-    t = info.get('title','Elliptic Curve Search Results')
-    return render_template("ecnf-search-results.html", info=info, credit=ecnf_credit, bread=bread, title=t)
-
 
 def search_input_error(info=None, bread=None):
     if info is None: info = {'err':'','query':{}}
@@ -570,72 +618,6 @@ def statistics_by_signature(d,r):
               ('Degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
               ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
-
-
-def download_search(info):
-    dltype = info['submit']
-    delim = 'bracket'
-    com = r'\\'  # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    filename = 'elliptic_curves.gp'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'sage':
-        com = '#'
-        filename = 'elliptic_curves.sage'
-    if dltype == 'magma':
-        com = ''
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'elliptic_curves.m'
-    s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
-    s += '\n' + com2
-    s += '\n'
-    
-    if dltype == 'magma':
-        s += 'P<x> := PolynomialRing(Rationals()); \n'
-        s += 'data := ['
-    elif dltype == 'sage':
-        s += 'R.<x> = QQ[]; \n'
-        s += 'data = [ '
-    else:
-        s += 'data = [ '
-    s += '\\\n'
-    nf_dict = {}
-    for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
-        nf = str(f['field_label'])
-        # look up number field and see if we already have the min poly
-        if nf in nf_dict:
-            poly = nf_dict[nf]
-        else:
-            poly = str(WebNumberField(f['field_label']).poly())
-            nf_dict[nf] = poly
-        entry = str(f['ainvs'])
-        entry = entry.replace('u','')
-        entry = entry.replace('\'','')
-        entry = entry.replace(';','],[')
-        s += '[[' + poly + '], [[' + entry + ']]],\\\n'
-    s = s[:-3]
-    s += ']\n'
-
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO,
-                     attachment_filename=filename,
-                     as_attachment=True,
-                     add_etags=False)
 
 def get_torsion_structures():
     ecnfstats = db.ec_nfcurves.stats

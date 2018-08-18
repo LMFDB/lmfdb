@@ -96,7 +96,7 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 <th>{{ KNOWL('mf.hilbert.level_norm', title='Level') }}</th>
 <th>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }} </th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
   {{form.short_label}} </a></td>

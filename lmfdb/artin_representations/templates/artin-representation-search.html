@@ -74,13 +74,13 @@
 	</tr></thead>
 	<tbody>
 
-        {% for artin in data%}
+        {% for artin in info.results%}
         {% set art = initfunc(artin['Baselabel'],1) %}
         {% set galccsize = art.galois_conjugacy_size() %}
           <tr><td>
           {% for cnt in range(galccsize) %}
         {% set artx = initfunc(artin['Baselabel'],cnt+1) %}
-        {% if sign_code == 0 or sign_code == art.sign() %}
+        {% if info.sign_code == 0 or info.sign_code == art.sign() %}
             <a href = "{{artx.url_for()}}">{{art.baselabel()}}c{{cnt+1}}</a>
         {% endif %}
           {% endfor %}

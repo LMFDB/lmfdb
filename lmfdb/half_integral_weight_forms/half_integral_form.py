@@ -3,13 +3,14 @@
 import re
 
 from lmfdb.db_backend import db
-from flask import render_template, url_for, request, redirect, jsonify
+from flask import render_template, url_for, request
 from lmfdb.half_integral_weight_forms import hiwf_page
 
 from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
-from lmfdb.utils import to_dict, flash_error
-from lmfdb.search_parsing import parse_ints, parse_count, parse_start
+from lmfdb.utils import flash_error
+from lmfdb.search_parsing import parse_ints
+from lmfdb.search_wrapper import search_wrap
 
 from lmfdb.WebNumberField import nf_display_knowl
 
@@ -25,47 +26,29 @@ def half_integral_weight_form_render_webpage():
         info['learnmore'] = []
         return render_template("half_integral_weight_form_all.html", info=info, credit=credit, title=t, bread=bread)
     else:
-        return half_integral_weight_form_search(**args)
+        return half_integral_weight_form_search(args)
 
-
-def half_integral_weight_form_search(**args):
-    info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        args = {'label': info['label']}
-        return render_hiwf_webpage(**args)
-    query = {}
-    try:
-        parse_ints(info, query, 'weight')
-        parse_ints(info, query, 'level')
-        if info.get('character','').strip():
-            if re.match('^\d+.\d+$', info['character'].strip()):
-                query['character'] = info['character'].strip()
-            else:
-                flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
-    except Exception:
-        return redirect(url_for(".half_integral_weight_form_render_webpage"))
-
-    if 'result_count' in info:
-        nres = db.halfmf_forms.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info, 100)
-    start = parse_start(info)
-    proj = ['level','label','weight','character','dim']
-    res = db.halfmf_forms.search(query, proj, limit=count, offset=start, info=info)
-
-    for v in res:
-        v['char']= "\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)"
-        v['ch_lab']= v.pop('character').replace('.','/')
-        v['dimension'] = v.pop('dim')
-    info['forms'] = res
-
-    t = 'Half Integral Weight Cusp Forms Search Results'
-    bread = [('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")),('Search Results', ' ')]
-    properties = []
-    return render_template("half_integral_weight_form_search.html", info=info, title=t, properties=properties, bread=bread)
-
-
+@search_wrap(template="half_integral_weight_form_search.html",
+             table=db.halfmf_forms,
+             title='Half Integral Weight Cusp Forms Search Results',
+             err_title='Half Integral Weight Cusp Forms Search Input Error',
+             per_page=100,
+             shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
+             projection=['level','label','weight','character','dim'],
+             cleaners={'char': lambda v:"\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)",
+                       'ch_lab': lambda v: v.pop('character').replace('.','/'),
+                       'dimension': lambda v: v.pop('dim')},
+             bread=lambda:[('Half Integral Weight Cusp Forms', url_for(".half_integral_weight_form_render_webpage")),('Search Results', ' ')],
+             properties=lambda: [])
+def half_integral_weight_form_search(info, query):
+    parse_ints(info, query, 'weight')
+    parse_ints(info, query, 'level')
+    if info.get('character','').strip():
+        if re.match('^\d+.\d+$', info['character'].strip()):
+            query['character'] = info['character'].strip()
+        else:
+            flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
+            raise ValueError
 
 def print_q_expansion(list):
      list=[str(c) for c in list]

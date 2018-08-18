@@ -170,7 +170,7 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)') }}</th>
     <th>{{ KNOWL('g2c.analytic_rank', title='Rank*') }}</th>
 </tr>
-{% for curve in info.curves: %}
+{% for curve in info.results: %}
 <tr>
     <td> <a href = "{{info.curve_url(curve.label)}}"> {{curve.label}} </a> </td>
     <td> <a href = "{{info.class_url(curve.class)}}"> {{curve.class}} </a> </td>

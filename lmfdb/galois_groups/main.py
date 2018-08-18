@@ -3,9 +3,10 @@
 # Author: John Jones
 
 from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, jsonify
-from lmfdb.utils import to_dict, list_to_latex_matrix
-from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start, parse_bracketed_posints, parse_restricted
+from flask import render_template, request, url_for, redirect
+from lmfdb.utils import list_to_latex_matrix
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted
+from lmfdb.search_wrapper import search_wrap
 import re
 from lmfdb.galois_groups import galois_groups_page, logger
 from sage.all import ZZ, latex, gap
@@ -72,7 +73,7 @@ def by_label(label):
 def index():
     bread = get_bread()
     if len(request.args) != 0:
-        return galois_group_search(**request.args)
+        return galois_group_search(request.args)
     info = {'count': 50}
     info['degree_list'] = range(16)[2:]
     learnmore = [#('Completeness of the data', url_for(".completeness_page")),
@@ -85,13 +86,14 @@ def make_order_key(order):
     order1 = int(ZZ(order).log(10))
     return '%03d%s'%(order1,str(order))
 
-def galois_group_search(**args):
-    info = to_dict(args)
-    if info.get('jump_to'):
-        return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
-    bread = get_bread([("Search Results", ' ')])
-    query = {}
-
+@search_wrap(template="gg-search.html",
+             table=db.gps_transitive,
+             title='Galois Group Search Results',
+             err_title='Galois Group Search Input Error',
+             shortcuts={'jump_to': lambda info:redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)},
+             bread=lambda: get_bread([("Search Results", ' ')]),
+             credit=lambda: GG_credit)
+def galois_group_search(info, query):
     def includes_composite(s):
         s = s.replace(' ','').replace('..','-')
         for interval in s.split(','):
@@ -107,37 +109,21 @@ def galois_group_search(**args):
                 a = ZZ(interval)
                 if a != 1 and not a.is_prime():
                     return True
-    try:
-        parse_ints(info,query,'n','degree')
-        parse_ints(info,query,'t')
-        parse_ints(info,query,'order')
-        parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
-        for param in ('cyc', 'solv', 'prim'):
-            parse_bool(info, query, param, process=int, blank=['0','Any'])
-        parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
-        degree_str = prep_ranges(info.get('n'))
-        info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info, bread)
-
-    if 'result_count' in info:
-        nres = db.gps_transitive.count(query)
-        return jsonify({"nres":str(nres)})
-
-    count = parse_count(info, 50)
-    start = parse_start(info)
+    parse_ints(info,query,'n','degree')
+    parse_ints(info,query,'t')
+    parse_ints(info,query,'order')
+    parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
+    for param in ('cyc', 'solv', 'prim'):
+        parse_bool(info, query, param, process=int, blank=['0','Any'])
+    parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
     if 'order' in query and 'n' not in query:
-        sort = ['order', 'gapid', 'n', 't']
-    else:
-        sort = None # default ['n', 't']
-    info['groups'] = db.gps_transitive.search(query, limit=count, offset=start, sort=sort, info=info)
+        query['__sort__'] = ['order', 'gapid', 'n', 't']
+
+    degree_str = prep_ranges(info.get('n'))
+    info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
     info['group_display'] = group_display_pretty
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
-
-    return render_template("gg-search.html", info=info, title="Galois Group Search Result", bread=bread, credit=GG_credit)
-
 
 def yesno(val):
     if val:
