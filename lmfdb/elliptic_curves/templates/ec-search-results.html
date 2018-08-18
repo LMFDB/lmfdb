@@ -100,17 +100,8 @@
 </table>
 </form>
 
-{% if info.err is defined %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-
-{% else %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <style type="text/css">
 table td.center {
   text-align: center;
@@ -119,21 +110,8 @@ table td.params {
   text-align: left;
   font-family: monospace;
 }
-
 </style>
 
-{% if info.number %}
-
-<h2> Results ({{info.report}})
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
 <table>
 <tr>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
@@ -146,61 +124,24 @@ table td.params {
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
 </tr>
-{% for curve in info.curves: %}
+{% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url(curve)}}">{{curve.lmfdb_label}}</a></td>
 <td class="center">{{curve.label}}</td>
 <td class="center"><a href="{{info.iso_url(curve)}}">{{curve.lmfdb_iso}}</a></td>
-<td class="params">{{curve.xainvs.replace(",",", ")}}</td>
+<td class="params">{{curve.ainvs}}</td>
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>
 {% if info.surj_primes or info.nonsurj_primes %}
-<td class="center">{{curve['non-maximal_primes']}}</td>
+<td class="center">{{curve.nonmax_primes}}</td>
 {% endif %}
 </tr>
 {% endfor %}
 </table>
-
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-<br>
-<br>
-{% if info.number < 100001 %}
-
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="hidden" name="download" value="1"/>
-<input type="hidden" name="query" value="{{info.query}}"/>
-</form>
-{% else %}
-There are too many curves in the search results for downloading.
-{% endif %} {# provide download links? #}
-
-
-{% else %}
-<h2> No matches</h2>
-{% endif %}
-
-{% endif %}
-
-
-
-
-{#
-Query was: {{info.query}}
-#}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

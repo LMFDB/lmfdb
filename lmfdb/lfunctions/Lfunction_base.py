@@ -8,7 +8,7 @@ from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 #############################################################################
 # The base Lfunction class. The goal is to make this dependent on the least
 # possible, so it can be loaded from sage or even python
-# Please do not pollute with flask, pymongo, logger or similar
+# Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
 class Lfunction:
@@ -41,8 +41,8 @@ class Lfunction:
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined"+str(e))
-        
-        
+
+
     ############################################################################
     ### other useful methods not implemented universally yet
     ############################################################################
@@ -80,7 +80,7 @@ class Lfunction:
         else:
             lower_bound = lower_bound or -20
         return self.compute_lcalc_zeros(via_N = False, step_size = step_size, upper_bound = upper_bound, lower_bound = lower_bound)
-    
+
     def compute_lcalc_zeros(self, via_N = True, **kwargs):
 
         if not hasattr(self,"fromDB"):
@@ -103,7 +103,7 @@ class Lfunction:
             if not self.sageLfunction:
                 return "not available"
             return self.sageLfunction.find_zeros(T1, T2, stepsize)
-    
+
     def general_webpagedata(self):
         info = {}
         try:
@@ -141,7 +141,7 @@ class Lfunction:
         info['dirichlet'] = lfuncDShtml(self, "analytic")
         # Hack, fix this more general?
         info['dirichlet'] = info['dirichlet'].replace('*I','<em>i</em>')
-        
+
         info['eulerproduct'] = lfuncEPtex(self, "abstract")
         info['functionalequation'] = lfuncFEtex(self, "analytic")
         info['functionalequationSelberg'] = lfuncFEtex(self, "selberg")
@@ -155,7 +155,7 @@ class Lfunction:
 
         if hasattr(self, 'factorization'):
             info['factorization'] = self.factorization
-            
+
         if self.fromDB and self.algebraic:
             info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
             info['eulerproduct_arithmetic'] = lfuncEPtex(self, "arithmetic")
@@ -189,7 +189,7 @@ class Lfunction:
             info['st_link'] = self.st_link
             info['rank'] = self.order_of_vanishing
             info['motivic_weight'] = self.motivic_weight
-        
+
         elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
             try:
                 info['sv_edge'] = specialValueString(self, 1, '1')

@@ -3,13 +3,13 @@
 
 <p>
 The database currently contains {{info["counts"]["ngalmaps_c"]}} <a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>
-of <a title="degree [belyi.deg]" knowl="belyi.deg" kwargs="">degree</a> up to {{info["counts"]["max_deg"]}}.
+of <a title="degree [belyi.degree]" knowl="belyi.degree" kwargs="">degree</a> up to {{info["counts"]["max_deg"]}}.
 Here are some <a href={{info["stats_url"]}}>further statistics</a>.
 </p>
 
 <h2> Browse {{ KNOWL('belyi.galmap', title='Belyi maps') }} </h2>
 <p>
-By {{ KNOWL('belyi.deg', title='degree')}}:
+By {{ KNOWL('belyi.degree', title='degree')}}:
 {% for rnge in info.degree_list %}
 <a href="?deg={{rnge}}">{{rnge}}</a>&nbsp;
 {% endfor %}

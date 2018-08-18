@@ -116,17 +116,8 @@
 
 </form>
 
-{% if info.err is defined %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-
-{% else %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <style type="text/css">
 table td.center {
   text-align: center;
@@ -137,65 +128,32 @@ table td.params {
   font-family: monospace;
 }
 </style>
-
-
-<h2> Results ({{info.report}})
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-</h2>
 <table>
-<tr>
-  <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
-  <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
-  <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
-  <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
-  <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
-  <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
-</tr>
-{% for curve in info.curves: %}
-<tr>
-<td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
-<td class="center">
- {{ curve.field_knowl|safe }}
-</td>
-<td class="center">{{curve.conductor_norm}}</td>
-<td class="center">{{curve.conductor_label}}</td>
-<td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
-<td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>
-</tr>
-{% endfor %}
+  <tr>
+    <th class="center">{{ KNOWL('ec.curve_label',title = "curve label") }}</th>
+    <th class="center">{{ KNOWL('nf',title = "base field") }}</th>
+    <th class="center">{{ KNOWL('ec.conductor',title = "conductor") }} norm</th>
+    <th class="center">{{ KNOWL('ec.conductor_label',title = "conductor label") }}</th>
+    <th class="center">{{ KNOWL('ec.isogeny_class',title = "isogeny class")}} label</th>
+    <th align="left">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass coefficients') }}</th>
+  </tr>
+  {% for curve in info.results: %}
+  <tr>
+    <td class="center"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{curve.short_label}}</a></td>
+    <td class="center">
+      {{ curve.field_knowl|safe }}
+    </td>
+    <td class="center">{{curve.conductor_norm}}</td>
+    <td class="center">{{curve.conductor_label}}</td>
+    <td class="center"><a href="{{ url_for('.show_ecnf_isoclass',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label) }} ">{{curve.short_class_label}}</a></td>
+    <td class="left"><a href="{{ url_for('.show_ecnf',nf=curve.field_label,conductor_label=curve.conductor_label,class_label=curve.iso_label,number=curve.number) }} ">{{info.web_ainvs(curve.field_label,curve.ainvs)}}</a></td>
+  </tr>
+  {% endfor %}
 </table>
-
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</A>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-{% endif %}
-
-<!-- Download Data!! Whoohooo!! -->
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="hidden" name="download" value="1"/>
-<input type="hidden" name="query" value="{{info.query}}"/>
-</form>
-
-
 
 <!-- Debugging! -->
 {% if DEBUG %}

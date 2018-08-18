@@ -1,7 +1,6 @@
 # Functions for getting info about elliptic curves and related modular forms
 
-from pymongo import ASCENDING
-from lmfdb.elliptic_curves.web_ec import db_ec
+from lmfdb.db_backend import db
 
 # TODO These should perhaps be defined in the elliptic curves codebase
 
@@ -14,15 +13,13 @@ def isogeny_class_table(Nmin, Nmax):
     query = {'number': 1, 'conductor': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
-    cursor = db_ec().find(query,{'_id':False,'conductor':True,'lfmdb_label':True,'lmfdb_iso':True})
-    res = cursor.sort([('conductor', ASCENDING), ('lmfdb_label', ASCENDING)])
-
-    iso_list = [E['lmfdb_iso'].split('.') for E in res]
+    res = db.ec_curves.search(query, 'lmfdb_iso')
+    iso_list = [iso.split('.') for iso in res]
 
     return iso_list
-    
+
 def isogeny_class_cm(label):
-    return db_ec().find_one({'lmfdb_iso':label},{'_id':False,'cm':True})['cm']
+    return db.ec_curves.lucky({'lmfdb_iso':label}, projection='cm')
 
 def EC_from_modform(level, iso):
     ''' The inverse to modform_from_EC
@@ -31,16 +28,15 @@ def EC_from_modform(level, iso):
 
 
 # DEPRECATED
-#from lmfdb.ecnf.WebEllipticCurve import db_ecnf
 #from lmfdb.elliptic_curves.web_ec import lmfdb_label_regex
 #def nr_of_EC_in_isogeny_class(long_isogeny_class_label, field_label = "1.1.1.1"):
 #    ''' Returns the number of elliptic curves in the isogeny class
 #     with given label.
 #    '''
 #    if field_label == "1.1.1.1":
-#        return db_ec().find({'lmfdb_iso':long_isogeny_class_label}).count()
+#        return db.ec_curves.count({'lmfdb_iso':long_isogeny_class_label})
 #    else:
-#        return db_ecnf().find({'class_label':field_label + "." + long_isogeny_class_label}).count()
+#        return db.ec_nfcurves.count({'class_label':field_label + "." + long_isogeny_class_label})
 #
 #def modform_from_EC(label):
 #    ''' Returns the level and label for the cusp form corresponding

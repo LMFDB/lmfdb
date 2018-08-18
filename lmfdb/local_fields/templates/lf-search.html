@@ -43,7 +43,6 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -57,21 +56,11 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -87,14 +76,14 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </thead>
 <tbody>
 
-{% for field in info.fields: %}
+{% for field in info.results: %}
 <tr>
 <td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
 <td>{{field.c}}</td>
-<td>{{info.group_display(field.gal)}}</td>
+<td>{{info.group_display(field.n, field.gal)}}</td>
 <td>$ {{info.slopedisp(field.slopes, field.t, field.u)}}$</td>
 </tr>
 
@@ -102,19 +91,10 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-{% endif %}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

@@ -266,7 +266,7 @@ function decrease_start_by_count_and_submit_form(form_id) {
   if (typeof pagingelem != 'undefined')
     pagingelem.val(1);
   $('form[id='+form_id+']').submit()
-}
+};
 function increase_start_by_count_and_submit_form(form_id) {
   startelem = $('input[name=start]');
   count = parseInt($('input[name=count]').val());
@@ -275,4 +275,24 @@ function increase_start_by_count_and_submit_form(form_id) {
   if (typeof pagingelem != 'undefined')
     pagingelem.val(1);
   $('form[id='+form_id+']').submit()
-}
+};
+
+function get_count_of_results() {
+    var address = window.location.href
+    $("#result-count").html("computing...");
+    $("#download-msg").html("Computing number of results...");
+    if (address.slice(-1) === "#")
+        address = address.slice(0,-1);
+    address += "&result_count=1";
+    $.ajax({url: address, success: get_count_callback});
+};
+
+function get_count_callback(res) {
+    $('#result-count').html(res['nres']);
+    if (parseInt(res, 10) > 100000) {
+        $("#download-msg").html("There are too many search results for downloading.");
+    } else {
+        $("#download-msg").html("");
+        $("#download-form").show();
+    }
+};

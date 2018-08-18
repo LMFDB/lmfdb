@@ -41,68 +41,30 @@
 </table>
 </form>
 
-{% if info.err is defined %}
-    <h2>Error</h2>
-    <div>
-    <!--  {{ info.err|safe }}-->
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-    </div>
-{% else %}
-    {% if info.report == "no matches" %}
-        <h2> No matches</h2>
-    {% else %}
-        <h2> Results ({{info.report}})
-        {% if info.start > 0 %}
-            <a href="#" class="navlink"
-               onclick="decrease_start_by_count_and_submit_form('re-search');return
-                        false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-        {% endif %}
-        </h2>
-
-        <table>
-        <tr>
-        <th>{{ KNOWL('rep_galois_modl.label', title='Label') }}</th>
-        <th>{{ KNOWL('rep_galois_modl.dimension', title='Dimension') }}</th>
-        <th>{{ KNOWL('rep_galois_modl.determinant', title='Determinant') }}</th>
-        <th>{{ KNOWL('rep_galois_modl.level', title='Level')}}</th>
-        <th>{{ KNOWL('rep_galois_modl.gram', title='Gram Matrix') }}</th>
-        </tr>
-        {% for l in info.rep_galois_modls %}
-            <tr>
-            <td align='left'><a href="{{url_for('rep_galois_modl.render_rep_galois_modl_webpage', label=l.label)}}">{{l.label}} </a></td>
-            <td>{{l.dim}}</td>
-            <td>{{l.det}}</td>
-            <td>{{l.level}}</td>
-            <td>${{l.gram}}$</td>
-            </tr>
-        {% endfor %}
-        </table>
-        <hr>
-        {% if info.start > 0 %}
-            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-        {% endif %}
-        <br>
-
-        <form>
-        Download all search results for
-        <input type="submit" name="submit" value="gp">
-        <input type="submit" name="submit" value="sage">
-        <input type="submit" name="submit" value="magma">
-        <input type="hidden" name="download" value="1"/>
-        <input type="hidden" name="query" value="{{info.query}}"/>
-        </form>
-    {% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
+<table>
+  <tr>
+    <th>{{ KNOWL('rep_galois_modl.label', title='Label') }}</th>
+    <th>{{ KNOWL('rep_galois_modl.dimension', title='Dimension') }}</th>
+    <th>{{ KNOWL('rep_galois_modl.determinant', title='Determinant') }}</th>
+    <th>{{ KNOWL('rep_galois_modl.level', title='Level')}}</th>
+    <th>{{ KNOWL('rep_galois_modl.gram', title='Gram Matrix') }}</th>
+  </tr>
+  {% for l in info.results %}
+  <tr>
+    <td align='left'><a href="{{url_for('rep_galois_modl.render_rep_galois_modl_webpage', label=l.label)}}">{{l.label}} </a></td>
+    <td>{{l.dim}}</td>
+    <td>{{l.det}}</td>
+    <td>{{l.level}}</td>
+    <td>${{l.gram}}$</td>
+  </tr>
+  {% endfor %}
+</table>
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-<!--<br>-->
-<!--{% if DEBUG %}-->
-<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
-
-<!--{% endif %}-->
+{% include 'debug_info.html' %}
 
 {% endblock %}

@@ -25,65 +25,65 @@ table.ntdata a {
               <tr>
                 <td> <select name='parity'>
  {% if info.parity=='1' %}
-                   <option value=''>All</option>
+                   <option value='Any'>All</option>
                    <option value='-1'>Odd</option>
                    <option selected='yes' value='1'>Even</option>
  {% elif info.parity=='-1' %}
-                   <option value=''>All</option>
+                   <option value='Any'>All</option>
                    <option selected='yes' value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% else %}
-                   <option selected='yes' value=''>All</option>
+                   <option selected='yes' value='Any'>All</option>
                    <option value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='cyc'>
- {% if info.cyc=='1' %}
-                   <option value=''>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.cyc=='-1' %}
-                   <option value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.cyc=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.cyc=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='solv'>
- {% if info.solv=='1' %}
-                   <option value=''>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.solv=='-1' %}
-                   <option value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.solv=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.solv=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='prim'>
- {% if info.prim=='1' %}
-                   <option value=''>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.prim=='-1' %}
-                   <option value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.prim=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.prim=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value=''>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
@@ -122,14 +122,13 @@ table.ntdata a {
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
     <td>
       Search by {{KNOWL('gg.label',title="label")}}
-      <input type="text" name="jump_to" value="{{info.label}}"">
+      <input type="text" name="jump_to" value="{{info.label}}">
       <button type="submit" value="Find">Find</button>
     </td>
     <td>
@@ -138,21 +137,11 @@ table.ntdata a {
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -170,11 +159,11 @@ table.ntdata a {
 </thead>
 <tbody>
 
-{% for group in info.groups: %}
+{% for group in info.results: %}
 {% set wgg = info.wgg(group) %}
 <tr>
 <td><a href="/GaloisGroup/{{group.label}}">{{group.label}}</a></td>
-<td>{{info.group_display([group.n, group.t])}}</td>
+<td>{{info.group_display(group.n, group.t)}}</td>
 <td align="right">{{group.order}}</td>
 <td align="right">{{group.parity}}</td>
 <td align="center">{{info.yesno(group.solv)}}</td>
@@ -188,18 +177,12 @@ table.ntdata a {
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-{% endif %}
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 <p>
 Results are complete for degrees $\leq 23$.
 {% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

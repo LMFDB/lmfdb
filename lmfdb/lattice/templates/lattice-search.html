@@ -43,72 +43,34 @@
 </table>
 </form>
 
-{% if info.err is defined %}
-    <h2>Error</h2>
-    <div>
-    <!--  {{ info.err|safe }}-->
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-    </div>
-{% else %}
-    {% if info.report == "no matches" %}
-        <h2> No matches</h2>
-    {% else %}
-        <h2> Results ({{info.report}})
-        {% if info.start > 0 %}
-            <a href="#" class="navlink"
-               onclick="decrease_start_by_count_and_submit_form('re-search');return
-                        false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-        {% endif %}
-        </h2>
-
-        <table>
-        <tr>
-        <th>{{ KNOWL('lattice.label', title='Label') }}</th>
-        <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
-        <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
-        <th>{{ KNOWL('lattice.level', title='Level')}}</th>
-        <th>{{ KNOWL('lattice.class_number', title='Class number')}}</th>
-        <th>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}}</th>
-        <th>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</th>
-        </tr>
-        {% for l in info.lattices %}
-            <tr>
-            <td align='center'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
-            <td align='center'>{{l.dim}}</td>
-            <td align='center'>{{l.det}}</td>
-            <td align='center'>{{l.level}}</td>
-            <td align='center'>{{l.class_number}}</td>
-            <td align='center'>{{l.min}}</td>
-            <td align='center'>{{l.aut}}</td>
-            </tr>
-        {% endfor %}
-        </table>
-        <hr>
-        {% if info.start > 0 %}
-            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-        {% endif %}
-        <br>
-
-        <form>
-        Download all search results for
-        <input type="submit" name="submit" value="gp">
-        <input type="submit" name="submit" value="sage">
-        <input type="submit" name="submit" value="magma">
-        <input type="hidden" name="download" value="1"/>
-        <input type="hidden" name="query" value="{{info.query}}"/>
-        </form>
-    {% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
+<table>
+  <tr>
+    <th>{{ KNOWL('lattice.label', title='Label') }}</th>
+    <th>{{ KNOWL('lattice.dimension', title='Dimension') }}</th>
+    <th>{{ KNOWL('lattice.determinant', title='Determinant') }}</th>
+    <th>{{ KNOWL('lattice.level', title='Level')}}</th>
+    <th>{{ KNOWL('lattice.class_number', title='Class number')}}</th>
+    <th>{{ KNOWL('lattice.minimal_vector', title='Minimal vector')}}</th>
+    <th>{{ KNOWL('lattice.group_order', title='Aut. group order') }}</th>
+  </tr>
+  {% for l in info.results %}
+  <tr>
+    <td align='center'><a href="{{url_for('lattice.render_lattice_webpage', label=l.label)}}">{{l.label}} </a></td>
+    <td align='center'>{{l.dim}}</td>
+    <td align='center'>{{l.det}}</td>
+    <td align='center'>{{l.level}}</td>
+    <td align='center'>{{l.class_number}}</td>
+    <td align='center'>{{l.min}}</td>
+    <td align='center'>{{l.aut}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-<!--<br>-->
-<!--{% if DEBUG %}-->
-<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
-
-<!--{% endif %}-->
+{% include 'debug_info.html' %}
 
 {% endblock %}

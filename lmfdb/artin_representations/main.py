@@ -2,15 +2,13 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-import pymongo
-ASC = pymongo.ASCENDING
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 
 from lmfdb.artin_representations import artin_representations_page
-from lmfdb.utils import to_dict, random_object_from_collection
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_galgrp, parse_ints, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, clean_input
+from lmfdb.search_wrapper import search_wrap
 
 from math_classes import ArtinRepresentation
 from lmfdb.transitive_group import group_display_knowl
@@ -18,7 +16,6 @@ from lmfdb.transitive_group import group_display_knowl
 from sage.all import ZZ
 
 import re, random
-
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -50,68 +47,41 @@ def index():
                 ('Artin representations labels', url_for(".labels_page"))]
         return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
     else:
-        return artin_representation_search(**args)
+        return artin_representation_search(args)
 
-def artin_representation_search(**args):
-    info = to_dict(args)
-    if 'natural' in info:
-        label = info['natural']
-        # test if it is ok
-        try:
-            label = parse_artin_label(label)
-        except ValueError as err:
-            flash(Markup("Error: %s" % (err)), "error")
-            bread = get_bread([('Search Results','')])
-            return search_input_error({'err':''}, bread)
-        return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
-
-    title = 'Artin Representation Search Results'
-    bread = [('Artin Representations', url_for(".index")), ('Search Results', ' ')]
-    sign_code = 0
-    query = {'Hide': 0}
+def artin_representation_jump(info):
+    label = info['natural']
+    # test if it is ok
     try:
-        parse_primes(info,query,"unramified",name="Unramified primes",
-                     qfield="BadPrimes",mode="complement",to_string=True)
-        parse_primes(info,query,"ramified",name="Ramified primes",
-                     qfield="BadPrimes",mode="append",to_string=True)
-        parse_restricted(info,query,"root_number",qfield="GaloisConjugates.Sign",
-                         allowed=[1,-1],process=int)
-        parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
-                         allowed=[1,0,-1],process=int)
-        parse_galgrp(info,query,"group",name="Group",qfield="Galois_nt",use_bson=False)
-        parse_ints(info,query,'dimension',qfield='Dim')
-        parse_ints(info,query,'conductor',qfield='Conductor_key', parse_singleton=make_cond_key)
-        #parse_paired_fields(info,query,field1='conductor',qfield1='Conductor_key',parse1=parse_ints,kwds1={'parse_singleton':make_cond_key},
-                                       #field2='dimension',qfield2='Dim', parse2=parse_ints)
-    except ValueError:
-        return search_input_error(info, bread)
+        label = parse_artin_label(label)
+    except ValueError as err:
+        flash(Markup("Error: %s" % (err)), "error")
+        bread = get_bread([('Search Results','')])
+        return search_input_error({'err':''}, bread)
+    return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-    count = parse_count(info,10)
-    start = parse_start(info)
-
-    data = ArtinRepresentation.collection().find(query).sort([("Dim", ASC), ("Conductor_key", ASC)])
-    nres = data.count()
-    data = data.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-    if nres == 1:
-        report = 'unique match'
-    else:
-        if nres > count or start != 0:
-            report = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            report = 'displaying all %s matches' % nres
-    if nres == 0:
-        report = 'no matches'
-
-
-    initfunc = ArtinRepresentation
-
-    return render_template("artin-representation-search.html", req=info, data=data, title=title, bread=bread, query=query, start=start, report=report, nres=nres, initfunc=initfunc, sign_code=sign_code)
-
+@search_wrap(template="artin-representation-search.html",
+             table=db.artin_reps,
+             title='Artin Representation Search Results',
+             err_title='Artin Representation Search Error',
+             per_page=10,
+             shortcuts={'natural':artin_representation_jump},
+             bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
+             initfunc=lambda:ArtinRepresentation)
+def artin_representation_search(info, query):
+    query['Hide'] = 0
+    info['sign_code'] = 0
+    parse_primes(info,query,"unramified",name="Unramified primes",
+                 qfield="BadPrimes",mode="complement")
+    parse_primes(info,query,"ramified",name="Ramified primes",
+                 qfield="BadPrimes",mode="append")
+    parse_element_of(info,query,"root_number",qfield="GalConjSigns")
+    parse_restricted(info,query,"frobenius_schur_indicator",qfield="Indicator",
+                     allowed=[1,0,-1],process=int)
+    parse_container(info,query, 'container',qfield='Container', name="Smallest permutation representation")
+    parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
+    parse_ints(info,query,'dimension',qfield='Dim')
+    parse_ints(info,query,'conductor',qfield='Conductor')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
@@ -143,11 +113,9 @@ def render_artin_representation_webpage(label):
     except:
         flash(Markup("Error: <span style='color:black'>%s</span> is not the label of an Artin representation in the database." % (label)), "error")
         return search_input_error({'err':''}, bread)
-              
 
     extra_data = {} # for testing?
-    C = getDBConnection()
-    extra_data['galois_knowl'] = group_display_knowl(5,3,C) # for testing?
+    extra_data['galois_knowl'] = group_display_knowl(5,3) # for testing?
     #artin_logger.info("Found %s" % (the_rep._data))
 
 
@@ -190,10 +158,9 @@ def render_artin_representation_webpage(label):
         if cc.modulus == 1 and cc.number == 1:
             friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
         else:
-            lfuncdb = getDBConnection().Lfunctions.instances
             # looking for Lhash dirichlet_L_modulus.number
             mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
-            lres = lfuncdb.find_one({'Lhash': mylhash})
+            lres = db.lfunc_instances.lucky({'Lhash': mylhash})
             if lres is not None:
                 friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
 
@@ -215,8 +182,8 @@ def render_artin_representation_webpage(label):
 
 @artin_representations_page.route("/random")
 def random_representation():
-    rep = random_object_from_collection(ArtinRepresentation.collection())
-    num = random.randrange(0, len(rep['GaloisConjugates']))
+    rep = db.artin_reps.random(projection=2)
+    num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 

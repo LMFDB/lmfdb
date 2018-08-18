@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import make_logger, web_latex, encode_plot
-from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, parse_ainvs, db_ec
+from lmfdb.utils import web_latex, encode_plot
+from lmfdb.elliptic_curves import ec_logger
+from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb.db_backend import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
-
-logger = make_logger("ec")
 
 class ECisog_class(object):
     """
@@ -18,7 +18,7 @@ class ECisog_class(object):
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of ECisog_class")
+        ec_logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -34,13 +34,13 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 label = ".".join([N,iso])
-            data = db_ec().find_one({"lmfdb_iso" : label, 'number':1})
+            data = db.ec_curves.lucky({"lmfdb_iso" : label, 'number':1})
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
-                data = db_ec().find_one({"iso" : label, 'number':1})
+                data = db.ec_curves.lucky({"iso" : label, 'number':1})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -55,14 +55,14 @@ class ECisog_class(object):
         # Extract the size of the isogeny class from the database
         ncurves = self.class_size
         # Create a list of the curves in the class from the database
-        self.curves = [db_ec().find_one({'iso':self.iso, 'lmfdb_number': i+1})
+        self.curves = [db.ec_curves.lucky({'iso':self.iso, 'lmfdb_number': i+1})
                           for i in range(ncurves)]
 
         # Set optimality flags.  The optimal curve is number 1 except
         # in one case which is labeled differently in the Cremona tables
         for c in self.curves:
             c['optimal'] = (c['number']==(3 if self.label == '990h' else 1))
-            c['ai'] = parse_ainvs(c['xainvs'])
+            c['ai'] = c['ainvs']
             c['url'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
 
         from sage.matrix.all import Matrix

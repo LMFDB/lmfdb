@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-from pymongo import DESCENDING
-import lmfdb.base
 from lmfdb.base import app
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, comma
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
+from sage.misc.cachefunc import cached_method
 
 logger = make_logger("modlmfs")
 
@@ -31,36 +28,22 @@ class modlmf_stats(object):
     """
     Class for creating and displaying statistics for integral modlmfs
     """
-
-    def __init__(self):
-        logger.debug("Constructing an instance of modlmf_stats")
-        self.modlmf = lmfdb.base.getDBConnection().mod_l_eigenvalues.modlmf
-        self._counts = {}
-        self._stats = {}
-
+    @cached_method
     def counts(self):
-        self.init_modlmf_count()
-        return self._counts
-
-    def stats(self):
-        self.init_modlmf_count()
-        self.init_modlmf_stats()
-        return self._stats
-
-    def init_modlmf_count(self):
-        if self._counts:
-            return
         logger.debug("Computing modlmf counts...")
-        modlmf = self.modlmf
         counts = {}
-        nmodlmf = modlmf.count()
+        nmodlmf = db.modlmf_forms.count()
         counts['nmodlmf']  = nmodlmf
         counts['nmodlmf_c']  = comma(nmodlmf)
-        max_level = modlmf.find().sort('level', DESCENDING).limit(1)[0]['level']
+        max_level = db.modlmf_forms.max('level')
         counts['max_level'] = max_level
         counts['max_level_c'] = comma(max_level)
-        max_weight = modlmf.find().sort('weight_grading', DESCENDING).limit(1)[0]['weight_grading']
+        max_weight = db.modlmf_forms.max('weight_grading')
         counts['max_weight'] = max_weight
         counts['max_weight_c'] = comma(max_weight)
-        self._counts  = counts
         logger.debug("... finished computing modlmf counts.")
+        return counts
+
+    @cached_method
+    def stats(self):
+        raise NotImplementedError

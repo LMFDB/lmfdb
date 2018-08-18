@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import app
-from lmfdb.utils import comma, make_logger
-from lmfdb.elliptic_curves.web_ec import db_ecstats
+from lmfdb.utils import comma, make_logger, format_percentage
+from lmfdb.db_backend import db
 from flask import url_for
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
 
 logger = make_logger("ec")
 
@@ -34,7 +31,6 @@ class ECstats(object):
 
     def __init__(self):
         logger.debug("Constructing an instance of ECstats")
-        self.ecdbstats = db_ecstats()
         self._counts = {}
         self._stats = {}
 
@@ -51,16 +47,16 @@ class ECstats(object):
         if self._counts:
             return
         logger.debug("Computing elliptic curve counts...")
-        ecdbstats = self.ecdbstats
+        ecdbstats = db.ec_curves.stats
         counts = {}
-        rankstats = ecdbstats.find_one({'_id':'rank'})
+        rankstats = ecdbstats.get_oldstat('rank')
         ncurves = rankstats['total']
         counts['ncurves']  = ncurves
         counts['ncurves_c'] = comma(ncurves)
-        nclasses = ecdbstats.find_one({'_id':'class/rank'})['total']
+        nclasses = ecdbstats.get_oldstat('class/rank')['total']
         counts['nclasses'] = nclasses
         counts['nclasses_c'] = comma(nclasses)
-        max_N = ecdbstats.find_one({'_id':'conductor'})['max']
+        max_N = ecdbstats.get_oldstat('conductor')['max']
         # round up to nearest multiple of 1000
         max_N = 1000*((max_N/1000)+1)
         # NB while we only have the Cremona database, the upper bound
@@ -79,12 +75,12 @@ class ECstats(object):
         if self._stats:
             return
         logger.debug("Computing elliptic curve stats...")
-        ecdbstats = self.ecdbstats
+        ecdbstats = db.ec_curves.stats
         counts = self._counts
         stats = {}
         rank_counts = []
-        rdict = dict(ecdbstats.find_one({'_id':'rank'})['counts'])
-        crdict = dict(ecdbstats.find_one({'_id':'class/rank'})['counts'])
+        rdict = dict(ecdbstats.get_oldstat('rank')['counts'])
+        crdict = dict(ecdbstats.get_oldstat('class/rank')['counts'])
         for r in range(counts['max_rank']+1):
             try:
                 ncu = rdict[str(r)]
@@ -98,8 +94,8 @@ class ECstats(object):
         tor_counts = []
         tor_counts2 = []
         ncurves = counts['ncurves']
-        tdict = dict(ecdbstats.find_one({'_id':'torsion'})['counts'])
-        tsdict = dict(ecdbstats.find_one({'_id':'torsion_structure'})['counts'])
+        tdict = dict(ecdbstats.get_oldstat('torsion')['counts'])
+        tsdict = dict(ecdbstats.get_oldstat('torsion_structure')['counts'])
         for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
             try:
                 ncu = tdict[t]
@@ -124,7 +120,7 @@ class ECstats(object):
                 tor_counts.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
         stats['tor_counts'] = tor_counts+tor_counts2
 
-        shadict = dict(ecdbstats.find_one({'_id':'sha'})['counts'])
+        shadict = dict(ecdbstats.get_oldstat('sha')['counts'])
         stats['max_sha'] = max([int(s) for s in shadict])
         sha_counts = []
         from sage.misc.functional import isqrt
