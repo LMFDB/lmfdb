@@ -45,7 +45,6 @@ def init_nf_count():
         max_deg = db.nf_fields.max('degree')
         init_nf_flag = True
 
-
 def group_cclasses_data(n, t):
     return flask.Markup(group_cclasses_knowl_guts(n, t))
 
