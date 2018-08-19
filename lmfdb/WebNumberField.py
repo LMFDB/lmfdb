@@ -163,7 +163,7 @@ def nf_knowl_guts(label):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t())
-    out += '<br>Class number: %s ' % str(wnf.class_number())
+    out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
     out += '</div>'
@@ -549,10 +549,15 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            return str(AbelianGroup(cg_list)) + ', order ' + str(self._data['class_number'])
+            return str(AbelianGroup(cg_list)) + ', order ' + self.class_number_latex()
         return na_text()
 
     def class_number(self):
+        if self.haskey('class_number'):
+            return self._data['class_number']
+        return na_text()
+
+    def class_number_latex(self):
         if self.haskey('class_number'):
             return '$%s$'%str(self._data['class_number'])
         return na_text()

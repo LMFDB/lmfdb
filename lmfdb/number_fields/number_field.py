@@ -341,7 +341,7 @@ def render_field_webpage(args):
 
     info['wnf'] = nf
     data['degree'] = nf.degree()
-    data['class_number'] = nf.class_number()
+    data['class_number'] = nf.class_number_latex()
     ram_primes = nf.ramified_primes()
     t = nf.galois_t()
     n = nf.degree()
