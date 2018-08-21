@@ -26,8 +26,8 @@ def make_curve_latex(crv_str):
     R = PolynomialRing(R0,2,'x,y')
     F = FractionField(R)
     sides = crv_str.split("=")
-    lhs = latex(F(sides[0])).replace('(','\\left(').replace(')','\\right)')
-    rhs = latex(F(sides[1])).replace('(','\\left(').replace(')','\\right)')
+    lhs = latex(F(sides[0]))
+    rhs = latex(F(sides[1]))
     eqn_str = lhs + '=' + rhs
     return eqn_str
 
