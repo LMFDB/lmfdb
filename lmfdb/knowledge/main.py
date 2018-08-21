@@ -520,7 +520,7 @@ def index():
     cur_cat = request.args.get("category", "")
 
 
-    filtermode = "filtered" in request.args
+    filtermode = request.args.get("filtered")
     from knowl import knowl_qualities
     if request.method == 'POST':
         qualities = [quality for quality in knowl_qualities if request.form.get(quality, "") == "on"]
