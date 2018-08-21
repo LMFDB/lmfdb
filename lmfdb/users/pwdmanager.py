@@ -104,7 +104,7 @@ class PostgresUserTable(PostgresBase):
         return new_user
 
     def change_password(self, uid, newpwd):
-        if self.rw_userd():
+        if self._rw_userdb:
             bcpass = self.bchash(newpwd)
             #TODO: use identifiers
             updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
@@ -196,7 +196,7 @@ class PostgresUserTable(PostgresBase):
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
 
     def create_tokens(self, tokens):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             return;
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
@@ -214,7 +214,7 @@ class PostgresUserTable(PostgresBase):
         return cur.rowcount == 1
 
     def delete_old_tokens(self):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             logger.info("no attempt to delete old tokens, not enough privileges")
             return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
@@ -224,7 +224,7 @@ class PostgresUserTable(PostgresBase):
         self._execute(deletor, [cutoff])
 
     def delete_token(self, token):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])
