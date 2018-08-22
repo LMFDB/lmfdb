@@ -47,6 +47,7 @@ class HomePageTest(LmfdbTest):
             elif 'Connection refused' in str(e): # not every error comes with a errno
                 pass;
             else:
+                print e
                 print e.errno
                 raise
 
