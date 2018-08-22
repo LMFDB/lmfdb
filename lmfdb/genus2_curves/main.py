@@ -261,7 +261,7 @@ def download_search(info):
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(res))
+    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(labels))
     s += c + ' Below are two lists, one called labels, and one called curves (in matching order).\n'
     s += c + ' Each entry in the curves list has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
