@@ -192,9 +192,10 @@ class PostgresBase(object):
         """
         if not isinstance(query, Composable):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
-        cur = self.conn.cursor()
 
         try:
+            cur = self.conn.cursor()
+
             t = time.time()
             if values_list:
                 execute_values(cur, query.as_string(self.conn), values, template)
