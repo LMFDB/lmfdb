@@ -44,7 +44,10 @@ class HomePageTest(LmfdbTest):
         except urllib2.URLError, e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass;
+            elif 'Connection refused' in str(e): # not every error comes with a errno
+                pass;
             else:
+                print e.errno
                 raise
 
         self.check_external(homepage,
