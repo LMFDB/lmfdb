@@ -2,6 +2,13 @@
 {% import 'color.css' as color %}
 {% block content %}
 
+
+<div style="color: red; font-weight: bold; font-size: 150%;">
+    Warning: This legacy server and it is connected to a stale database.<br>
+    Please do not perform any additions or edits on this server, as these not be replicated to the current version of the LMFDB!
+    Please use <a href="http://beta.lmfdb.org">beta.lmfdb.org</a> to edit knowls.
+  </div>
+
 {% if lock %}
     <div style="color: {{color.red}}; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
 
