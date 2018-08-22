@@ -270,7 +270,7 @@ def download_search(info):
     s += c + ' ' + download_make_data_comment[lang] + '\n'
     s += '\n'
     s += download_labels_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join(str(r) for r in labels)) # list of curve labels
+    s += str(',\n'.join('"'+str(r)+'"' for r in labels)) # list of curve labels
     s += download_assignment_end[lang]
     s += '\n\n'
     s += download_curves_assignment_start[lang] + '\\\n'
