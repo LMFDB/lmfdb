@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback, datetime, getpass
 from collections import defaultdict, Counter
-from psycopg2 import connect, DatabaseError
+from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
@@ -210,7 +210,7 @@ class PostgresBase(object):
                     self.logger.info(query + " ran in %ss" % (t,))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
-        except DatabaseError:
+        except (DatabaseError, InterfaceError):
             if self.conn.closed != 0:
                 # If reissued, we need to raise since we're recursing.
                 if reissued:
