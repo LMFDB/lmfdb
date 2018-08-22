@@ -254,7 +254,7 @@ def download_search(info):
     mydate = time.strftime("%d %B %Y")
     # reissue query here
     try:
-        res = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='eqn'))
+        res = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection=['label','eqn']))
     except Exception as err:
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
@@ -262,8 +262,8 @@ def download_search(info):
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
     s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(res))
     s += c + ' Below is a list called data. Each entry has the form:\n'
-    s += c + '   [[f coeffs],[h coeffs]]\n'
-    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
+    s += c + '   [* lmfdb-label, [[f coeffs],[h coeffs]] *]\n'
+    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x) with the specified lmfdb-label\n'
     s += c + '\n'
     s += c + ' ' + download_make_data_comment[lang] + '\n'
     s += '\n'
