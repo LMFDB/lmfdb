@@ -262,7 +262,7 @@ def download_search(info):
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
     s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(labels))
-    s += c + ' Below are two lists, one called labels, and one called curves (in matching order).\n'
+    s += c + ' Below are two lists, one called labels, and one called data (in matching order).\n'
     s += c + ' Each entry in the curves list has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
     s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x).\n'
@@ -273,7 +273,7 @@ def download_search(info):
     s += str(',\n'.join('"'+str(r)+'"' for r in labels)) # list of curve labels
     s += download_assignment_end[lang]
     s += '\n\n'
-    s += download_curves_assignment_start[lang] + '\\\n'
+    s += download_data_assignment_start[lang] + '\\\n'
     s += str(',\n'.join(str(r) for r in curves)) # list of curve equations
     s += download_assignment_end[lang]
     s += '\n\n'
@@ -405,7 +405,7 @@ class G2C_stats(object):
 download_languages = ['magma', 'sage', 'gp', 'text']
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
 download_labels_assignment_start = {'magma':'labels :=[','sage':'labels =[','gp':'labels = {[','text':'labels - ['}
-download_curves_assignment_start = {'magma':'curves :=[','sage':'curves =[','gp':'curves = {[','text':'curves - ['}
+download_data_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
 download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
