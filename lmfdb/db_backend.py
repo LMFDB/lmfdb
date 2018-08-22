@@ -38,7 +38,7 @@ from lmfdb.utils import make_logger, format_percentage
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
-SLOW_CUTOFF = 1
+SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
 types_whitelist = set([
@@ -2646,7 +2646,7 @@ class PostgresStatsTable(PostgresBase):
         """
         if col == "id":
             # We just use the count in this case
-            return self.count() - 1
+            return self.count()
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
@@ -3349,7 +3349,7 @@ class PostgresDatabase(PostgresBase):
         """
         uid = self.login()
         inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
-        self._execute(inserter, [uid, datetime.utcnow(), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
 
     def fetch_userpassword(self, options):
         if 'user' not in options:

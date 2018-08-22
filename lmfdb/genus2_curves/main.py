@@ -254,21 +254,27 @@ def download_search(info):
     mydate = time.strftime("%d %B %Y")
     # reissue query here
     try:
-        res = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='eqn'))
+        labels = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='label'))
+        curves = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='eqn'))
     except Exception as err:
         return "Unable to parse query: %s"%err
     c = download_comment_prefix[lang]
     s =  '\n'
     s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(res))
-    s += c + ' Below is a list called data. Each entry has the form:\n'
+    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(labels))
+    s += c + ' Below are two lists, one called labels, and one called data (in matching order).\n'
+    s += c + ' Each entry in the curves list has the form:\n'
     s += c + '   [[f coeffs],[h coeffs]]\n'
-    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x)\n'
+    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x).\n'
     s += c + '\n'
     s += c + ' ' + download_make_data_comment[lang] + '\n'
     s += '\n'
-    s += download_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join(str(r) for r in res)) # list of curve equations
+    s += download_labels_assignment_start[lang] + '\\\n'
+    s += str(',\n'.join('"'+str(r)+'"' for r in labels)) # list of curve labels
+    s += download_assignment_end[lang]
+    s += '\n\n'
+    s += download_data_assignment_start[lang] + '\\\n'
+    s += str(',\n'.join(str(r) for r in curves)) # list of curve equations
     s += download_assignment_end[lang]
     s += '\n\n'
     s += download_make_data[lang]
@@ -398,7 +404,8 @@ class G2C_stats(object):
 
 download_languages = ['magma', 'sage', 'gp', 'text']
 download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
+download_labels_assignment_start = {'magma':'labels :=[','sage':'labels =[','gp':'labels = {[','text':'labels - ['}
+download_data_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
 download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
 download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
 download_make_data = {
