@@ -198,7 +198,7 @@ class PostgresBase(object):
 
             t = time.time()
             if values_list:
-                execute_values(cur, query.as_string(self.conn), values, template)
+                execute_values(cur, query.as_string(self.conn), values, template.as_string(self.conn))
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
@@ -1689,7 +1689,7 @@ class PostgresTable(PostgresBase):
                 cases.append((self.extra_table, extras_data))
             now = time.time()
             for table, L in cases:
-                template = SQL("({0})").format(map(Placeholder, L[0].keys()))
+                template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0].keys())))
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
                 inserter = inserter.format(Identifier(table),
                                            SQL(", ").join(map(Identifier, L[0].keys())))
