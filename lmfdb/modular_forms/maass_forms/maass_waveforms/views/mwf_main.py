@@ -355,9 +355,6 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
             row['k'] = k
         ##
         chi = f.get('Character', 0)
-        conrey = f.get('Conrey', 0)
-        if conrey == 0:  # we need to change to conrey's notation
-            chi = maass_db.getDircharConrey(N, chi)
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
@@ -376,7 +373,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
         row['symmetry'] = st
         er = f.get('Error', 0)
         if er > 0:
-            er = "{0:1.0e}".format(er)
+            er = "{0:1.0e}".format(float(er))
         else:
             er = "unknown"
         row['err'] = er
@@ -402,7 +399,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
                 s = 'n/a'
             row['cuspevs'] = s
 
-        url = url_for('mwf.render_one_maass_waveform', maass_id=f.get('_id'))
+        url = url_for('mwf.render_one_maass_waveform', maass_id=f.get('maass_id'))
         row['url'] = url
         nrows += 1
         if twodarray:
