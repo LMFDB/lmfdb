@@ -198,7 +198,9 @@ class PostgresBase(object):
 
             t = time.time()
             if values_list:
-                execute_values(cur, query.as_string(self.conn), values, template.as_string(self.conn))
+                if template is not None:
+                    template = template.as_string(self.conn)
+                execute_values(cur, query.as_string(self.conn), values, template)
             else:
                 #print query.as_string(self.conn)
                 cur.execute(query, values)
