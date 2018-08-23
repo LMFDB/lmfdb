@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Higher Genus Curves
-# Authors: Jen Paulhus, Lex Martin, David Neill Asanza
+# Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Albert Ford, Ngi Nho
 # (initial code copied from John Jones Local Fields)
 
 
@@ -164,7 +164,8 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    group_stats = db_hgcwa_stats().find_one({'_id':'bygenus/' + genus + '/group'})
+    #JEN NOT SURE ABOUT LUCKY
+    group_stats = db_hgcwa_stats().lucky({'_id':'bygenus/' + genus + '/group'})
 
     # Redirect to 404 if statistic is not found
     if not group_stats:
@@ -198,10 +199,8 @@ def topological_action(fam, cc):
     cc_list = cc_to_list(cc)
     representative = fam + '.' + cc[2:]
     
-    C = base.getDBConnection()
-    
     #Get the equivalence class
-    topo_class = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
+    topo_class = db.hgcwa_passports.search({'label': fam, 'topological': cc_list})
 
     g = topo_class[0]['genus']
     GG = ast.literal_eval(topo_class[0]['group'])
@@ -423,7 +422,7 @@ def add_group_order_range(query, expr):
     elif len(raw_parts) == 1:
         condition = ""
 
-        if query_range.find('..') != -1:
+        if query_range.search('..') != -1:
             if query_range.index("..") == 0:
                 condition = "$lte"
             else:
@@ -502,7 +501,7 @@ def higher_genus_w_automorphisms_search(info, query):
         if err is not None:
             flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
 #<<<<<<< HEAD JEN ISSUE 8/18???
-    res = C.curve_automorphisms.passports.find(query).sort([
+    res = db.hgcwa_poassports.search(query).sort([
         ('genus', ASC), ('g0', ASC), ('dim', ASC), ('group_order', ASC), ('cc.0', ASC)])
 
     nres = res.count()
@@ -919,7 +918,7 @@ def hgcwa_code_download(**args):
     if label_is_one_vector(label):
         fam, cc_1, cc_2 = split_vector_label(label)
         cc_list = [int(cc_1), int(cc_2)]
-        data = C.curve_automorphisms.passports.find({'label': fam, 'topological': cc_list})
+        data = db.hgcwa_poassports.search({'label': fam, 'topological': cc_list})
     
     elif label_is_one_passport(label):
         search_data =  list(db.hgcwa_passports.search({"passport_label" : label}))
@@ -990,7 +989,7 @@ def hgcwa_code_download(**args):
     cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
     nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
-<<<<<<< HEAD
+#<<<<<<< HEAD
    
     #Action for all vectors and action for just representatives
     if lang == args['download_type'] or args['download_type']=='rep_magma' or args['download_type']=='rep_gap':
