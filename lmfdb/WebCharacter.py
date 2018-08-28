@@ -920,7 +920,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codeinducing(self):
-        return { 'sage': 'sage: chi.primitive_character()',
+        return { 'sage': 'chi.primitive_character()',
                  'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
 
     @property
