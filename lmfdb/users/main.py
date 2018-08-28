@@ -191,6 +191,10 @@ def housekeeping(fn):
     return decorated_view
 
 
+@login_page.route("/register")
+def register_new():
+    return ""
+
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
 @admin_required
@@ -203,6 +207,7 @@ def register(N=10):
     resp = make_response('\n'.join(urls))
     resp.headers['Content-type'] = 'text/plain'
     return resp
+
 
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
