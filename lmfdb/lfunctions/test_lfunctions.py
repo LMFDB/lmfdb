@@ -332,10 +332,6 @@ class LfunctionTest(LmfdbTest):
         print str(L)
         assert 'OK' in str(L)
 
-    def test_LdedekindZeros(self):
-        L = self.tc.get('/L/Zeros/NumberField/3.1.23.1/')
-        assert '5.1156833288' in L.data
-
     def test_LartinPlot(self):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2.2e2_17.4t3.2c1/')
         assert 'OK' in str(L)
