@@ -238,7 +238,7 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
-        next = request.form["next"]
+        #next = request.form["next"]
 
         if userdb.user_exists(name):
             flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
