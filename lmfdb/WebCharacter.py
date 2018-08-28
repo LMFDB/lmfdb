@@ -843,8 +843,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
-        return ( self._char_desc(num, prim=prim) for num in orbit )
+        orbit = (power_mod(num, k, mod) for k in xsrange(1, order + 1)
+                 if gcd(k, order) == 1)
+        return (self._char_desc(num, prim=prim) for num in orbit)
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
