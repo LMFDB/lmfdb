@@ -107,7 +107,7 @@ class PostgresUserTable(PostgresBase):
         if self._rw_userdb:
             bcpass = self.bchash(newpwd)
             #TODO: use identifiers
-            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
             self._execute(updater, [bcpass, uid])
             logger.info("password for %s changed!" % uid)
         else:
@@ -150,7 +150,7 @@ class PostgresUserTable(PostgresBase):
                         logger.info("user " + uid  +  " logged in with old style password, trying to update")
                         try:
                             #TODO: use identifiers
-                            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+                            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
                             self._execute(updater, [bcpass, uid])
                             logger.info("password update for " + uid + " succeeded")
                         except Exception:
@@ -177,7 +177,7 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
+        updater = SQL("UPDATE userdb.users SET ({0}) = ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
         self._execute(updater, list(values) + [uid])
 
     def lookup(self, uid):
