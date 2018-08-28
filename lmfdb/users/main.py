@@ -244,15 +244,15 @@ def register_token(token):
             flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
             return flask.redirect(url_for(".register_new"))
 
-        newuser = userdb.new_user(name, pw1)
-        newuser.full_name = full_name
-        newuser.save()
+        newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
+        userdb.delete_token(token)
+        #newuser.full_name = full_name
+        #newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
-        userdb.delete_token(token)
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
-        return flask.redirect(next or url_for(".info"))
+        return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/change_password", methods=['POST'])

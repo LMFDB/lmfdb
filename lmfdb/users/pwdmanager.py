@@ -177,7 +177,7 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), Placeholder() * len(values))
+        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
         self._execute(updater, list(values) + [uid])
 
     def lookup(self, uid):
