@@ -98,12 +98,12 @@ def by_url_full_gammma1_space_label(level, weight):
 
 @emf.route("/<int:level>/<int:weight>/<int:char_orbit>/")
 def by_url_space_label(level, weight, char_orbit):
-    label = str(level)+"."+str(weight)+".o"+str(char_orbit)
+    label = str(level)+"."+str(weight)+"."+str(char_orbit)
     return render_space_webpage(label)
 
 @emf.route("/<int:level>/<int:weight>/<int:char_orbit>/hecke_orbit/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
-    label = str(level)+"."+str(weight)+".o"+str(char_orbit)+"."+hecke_orbit
+    label = str(level)+"."+str(weight)+"."+str(char_orbit)+"."+hecke_orbit
     return render_newform_webpage(label)
 
 def url_for_newform_label(label):
