@@ -713,9 +713,9 @@ class Lfunction_EC(Lfunction):
             if self.conductor <= 101:
                 lorigins.append(
                    ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
-                       url_for("emf.render_elliptic_modular_forms",
+                       url_for("emf.by_url_newform_label",
                        level=self.conductor, weight=2,
-                       character=1, label=self.isogeny_class_label)
+                       char_orbit=1, hecke_orbit=self.isogeny_class_label)
                    ))
             else:
                 lorigins.append(('Modular form ' + (self.long_isogeny_class_label)

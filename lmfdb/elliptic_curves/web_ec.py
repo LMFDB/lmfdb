@@ -285,7 +285,7 @@ class WebEC(object):
 
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
         data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
+        self.newform_link = url_for("emf.by_url_newform_label", level=cond, weight=2, char_orbit=1, hecke_orbit=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
         self._code = None
 

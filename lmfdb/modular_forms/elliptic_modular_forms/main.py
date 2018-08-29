@@ -69,6 +69,35 @@ def render_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
+def render_full_gamma1_space_webpage(label):
+    ##### NEED TO WRITE THIS
+    try:
+        space = WebModformSpace.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404, err.args)
+    return render_template("emf_full_gamma1_space.html",
+                           space=space,
+                           properties=space.properties,
+                           credit=credit(),
+                           bread=space.bread,
+                           learnmore=learnmore_list(),
+                           title=space.title,
+                           friends=space.friends)
+
+@emf.route("/<int:level>/")
+def by_url_level(level):
+    return newform_search(query={'level' : level})
+
+@emf.route("/<int:level>/<int:weight>/")
+def by_url_full_gammma1_space_label(level, weight):
+    label = str(level)+"."+str(weight)
+    return render_full_gamma1_space_webpage(label)
+
+@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/")
+def by_url_space_label(level, weight, char_orbit):
+    label = str(level)+"."+str(weight)+".o"+str(char_orbit)
+    return render_space_webpage(label)
+
 @emf.route("/<int:level>/<int:weight>/<int:char_orbit>/hecke_orbit/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
     label = str(level)+"."+str(weight)+".o"+str(char_orbit)+"."+hecke_orbit
@@ -79,7 +108,7 @@ def url_for_newform_label(label):
     return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:], hecke_orbit=slabel[3])
 
 # TODO unused, will be for space_jump
-def url_for_newspace_label(label):
+def url_for_space_label(label):
     slabel = label.split(".")
     return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:])
 
