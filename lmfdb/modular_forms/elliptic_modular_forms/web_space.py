@@ -34,6 +34,7 @@ class WebNewformSpace(object):
     def make_object(self, newspace, newforms, oldspaces):
         from lmfdb.modular_forms.elliptic_modular_forms.main import url_for_newspace_label # TODO remove if unused
 
+        # TODO use self._dict.update like david does!
         data = self.data = {}
 
         data['label'] = newspace['label']
@@ -77,4 +78,4 @@ class WebNewformSpace(object):
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
-        return "\oplus".join("S_{{{k}}}^{{\mathrm{{new}}}}({N}, [\chi_{{{chi_modulus}}}({chi_index}, \cdot))^{{\oplus 2}}"%(k=old['weight'], N=old['level'], chi_modulus=old['level'], chi_index=old['minimal_conrey']) for old in self.data['oldspaces'])
+        return "\oplus".join("S_{{{k}}}^{{\mathrm{{new}}}}({N}, [\chi_{{{chi_modulus}}}({chi_index}, \cdot)^{{\oplus 2}}".format(k=old['weight'], N=old['level'], chi_modulus=old['level'], chi_index=old['minimal_conrey']) for old in self.data['oldspaces'])
