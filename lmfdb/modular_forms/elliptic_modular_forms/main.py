@@ -1,13 +1,12 @@
 # See views/emf_main.py, genus2_curves/main.py
 
-from flask import render_template, redirect, abort
+from flask import render_template, url_for, redirect, abort
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebModformSpace
-
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -26,7 +25,7 @@ def credit():
 def index():
     info = {}
     bread = [] # Fix
-    return render_template("browse.html",
+    return render_template("emf_browse.html",
                            info=info,
                            credit=credit(),
                            title="Holomorphic Cusp Forms",
@@ -46,7 +45,7 @@ def render_newform_webpage(label):
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
-    return render_template("newform.html",
+    return render_template("emf_newform.html",
                            newform=newform,
                            properties=newform.properties,
                            credit=credit(),
@@ -60,7 +59,7 @@ def render_space_webpage(label):
         space = WebModformSpace.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
-    return render_template("space.html",
+    return render_template("emf_space.html",
                            space=space,
                            properties=space.properties,
                            credit=credit(),
@@ -132,6 +131,10 @@ def space_jump(info):
     pass
 
 def download_exact(info):
+    # FIXME
+    pass
+
+def download_complex(info):
     # FIXME
     pass
 
