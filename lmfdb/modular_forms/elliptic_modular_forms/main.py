@@ -23,7 +23,7 @@ def index():
     bread = [] # Fix
     return render_template("browse.html",
                            info=info,
-                           credit=credit_string,
+                           credit=credit(),
                            title="Holomorphic Cusp Forms",
                            learnmore=learnmore_list(),
                            bread=bread)
@@ -64,12 +64,45 @@ def render_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
+@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/hecke_orbit/")
+def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
+    label = str(level)+"."+str(weight)+".o"+str(char_orbit)+"."+hecke_orbit
+    return render_newform_webpage(label)
+
+def url_for_newform_label(label):
+    slabel = label.split(".")
+    return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:], hecke_orbit=slabel[3])
+
+# TODO unused, will be for space_jump
+def url_for_newspace_label(label):
+    slabel = label.split(".")
+    return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:])
+
 def newform_jump(info):
-    # FIXME
-    pass
+    jump = info["jump"].strip()
+    if re.match(r'^\d+\.\d+\.o\d+\.[a-z]+$',jump):
+        return redirect(url_for_newform_label(jump), 301)
+    else:
+        errmsg = "%s is not a valid genus newform orbit label"
+    flash_error (errmsg, jump)
+    return redirect(url_for(".index"))
 
 def space_jump(info):
     # FIXME
+    #    if re.match(r'^\d+\.[a-z]+$', jump):
+    #        return redirect(url_for_isogeny_class_label(jump), 301)
+    #    else:
+    #        # Handle direct Lhash input
+    #        if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+    #            c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
+    #            if c:
+    #                return redirect(url_for_isogeny_class_label(c), 301)
+    #            else:
+    #                errmsg = "hash %s not found"
+    #        else:
+    #            errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+    #flash_error (errmsg, jump)
+    #return redirect(url_for(".index"))
     pass
 
 def download_exact(info):
