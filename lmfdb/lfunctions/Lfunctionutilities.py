@@ -11,7 +11,7 @@ from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
 from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
 from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import is_newform_in_db
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
