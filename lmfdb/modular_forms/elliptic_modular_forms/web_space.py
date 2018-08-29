@@ -4,7 +4,7 @@
 
 from lmfdb.db_backend import db
 
-class WebModformSpace(object):
+class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         pass
