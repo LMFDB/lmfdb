@@ -19,7 +19,7 @@ emf_version = 1.3
 
 EMF_TOP = "Holomorphic Cusp Forms"  # The name to use for the top of this catergory
 EMF = "emf"  # The current blueprint name
-emf = flask.Blueprint(EMF, __name__, template_folder="views/templates", static_folder="views/static")
+emf = flask.Blueprint(EMF, __name__, template_folder="templates")
 emf_logger = make_logger(emf)
 #emf_logger.info("Initializing elliptic modular forms blueprint with Sage version %s, emf version %s" % (SAGE_VERSION, emf_version))
 
@@ -36,7 +36,16 @@ N_max_extra_comp = 500
 ## https://github.com/LMFDB/lmfdb/pull/1409#issuecomment-220733555
 use_cache = False
 
-import views
-assert views
-from backend import WebNewForm, WebModFormSpace
-assert WebNewForm and WebModFormSpace
+import main
+assert main
+
+import web_newform
+assert web_newform
+
+import web_space
+assert web_space
+
+#import views
+#assert views
+#from backend import WebNewForm, WebModFormSpace
+#assert WebNewForm and WebModFormSpace

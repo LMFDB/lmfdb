@@ -3,7 +3,7 @@ from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import newform_label, is_newform_in_db
 from lmfdb.db_backend import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -78,7 +78,7 @@ class ECisog_class(object):
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
         self.newform_label = newform_label(N,2,1,iso)
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
+        self.newform_link = url_for("emf.by_url_newform_label", level=N, weight=2, char_orbit=1, hecke_orbit=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
