@@ -10,7 +10,7 @@
 
 {% if newform.has_exact_qexp %}
 <div id="qexp">
-  <h2> Exact Hecke Eigenvalue Data</h2>
+  <h2>Exact Hecke Eigenvalue Data</h2>
   {% if newform.degree > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <div>
@@ -33,7 +33,7 @@
     <div class="emptyspace"><br></div>
     <button id="morebutton">Show more coefficients</button>
     <button id="lessbutton">Show fewer coefficients</button>
-    <br>
+    <br />
     <button id="download_exact">Download all</button>
   </form>
 </div>
@@ -154,11 +154,21 @@
 <p>This newform is not a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}.</p>
 {% endif %}
 
-{% if newform.is_twist_minimal %}
-<p>It is {{ KNOWL('mf.elliptic.minimal',title='minimal') }}</p>
-{% else %}
-<p>It is not {{ KNOWL('mf.elliptic.minimal',title='minimal') }}</p>
+<p>This newform is
+{% if not newform.is_twist_minimal %}
+not
 {% endif %}
+{{ KNOWL('mf.elliptic.minimal',title='minimal') }}.</p>
+
+{# TODO we might wish to have some disclaimer here about provability #}
+<p>This newform
+{% if newform.is_inner_twist %}
+has
+{% else %}
+does not have
+{% endif %}
+an
+{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 
 {% if newform.character == 1 %}
 <p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>

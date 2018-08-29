@@ -55,7 +55,7 @@ class WebNewform(object):
         INPUT:
 
         - ``m`` -- an integer, specifying which embedding to use.
-        - ``p`` -- a prime, specifyying which a_p.
+        - ``p`` -- a prime, specifying which a_p.
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
