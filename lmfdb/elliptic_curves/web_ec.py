@@ -5,7 +5,7 @@ import yaml
 from flask import url_for
 from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import newform_label, is_newform_in_db
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, string2list
