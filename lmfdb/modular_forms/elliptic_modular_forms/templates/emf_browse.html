@@ -9,4 +9,27 @@ Info was: {{info}}
 </div>
 {% endif %}
 
+<div>
+{{ KNOWL_INC('dq.mf.elliptic.extent') }}
+</div>
+
+<h2> Browse {{ KNOWL('mf.elliptic',title='holomorphic modular forms for $\GL(2)$')}} over $\Q$</h2>
+
+<p>
+By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
+{% for weight in info.weight_list %}
+<a href="?weight={{weight}}">{{weight}}</a>
+{% endfor %}
+</p>
+<p>
+By {{ KNOWL('mf.elliptic.level', title="level")}}:
+{% for level in info.level %}
+<a href="?level={{level}}">{{level}}</a>
+{% endfor %}
+</p>
+
+A <a href={{url_for('.random_form')}}>random newform</a> from the database
+</p>
+
+
 {% endblock %}

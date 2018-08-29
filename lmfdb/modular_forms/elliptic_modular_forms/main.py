@@ -1,6 +1,6 @@
 # See views/emf_main.py, genus2_curves/main.py
 
-from flask import render_template, url_for, redirect, abort
+from flask import render_template, url_for, redirect, abort, request
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
@@ -23,7 +23,11 @@ def credit():
 
 @emf.route("/")
 def index():
+    if len(request.args) > 0:
+        return newform_search(request.args)
     info = {}
+    info["weight_list"] = ('1-1', '2-9', '10-99','100-999')
+    info["level_list"] = ('2-2', '3-4', '5-9')
     bread = [] # Fix
     return render_template("emf_browse.html",
                            info=info,
@@ -138,14 +142,14 @@ def download_complex(info):
     # FIXME
     pass
 
-@search_wrap(template="newform_search_results.html",
+@search_wrap(template="emf_newform_search_results.html",
              table=db.mf_newforms,
              title='Newform Search Results',
              err_title='Newform Search Input Error',
              shortcuts={'jump':newform_jump,
                         'download_exact':download_exact,
                         'download_complex':download_complex},
-             bread=[], # FIXME
+             bread=lambda:[], # FIXME
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
@@ -155,14 +159,14 @@ def newform_search(info, query):
     info['CC_highm'] = 10 # Actually may need min(10, number of embeddings)
     info['CC_prec'] = 6
     parse_ints(info, query, 'weight')
-    # ADD MORE
+    parse_ints(info, query, 'level')
 
-@search_wrap(template="space_search_results.html",
+@search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
              shortcuts={'jump':space_jump},
-             bread=[], # FIXME
+             bread=lambda:[], # FIXME
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):
