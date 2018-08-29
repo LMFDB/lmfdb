@@ -1,4 +1,3 @@
-
 # See views/emf_main.py, genus2_curves/main.py
 
 from flask import render_template, redirect, abort
