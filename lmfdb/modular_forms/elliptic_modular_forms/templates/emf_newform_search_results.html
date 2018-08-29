@@ -46,11 +46,11 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Hecke Field') }}</th>
     <th>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
 </tr>
-{% for mfs in info.results: %}
+{% for mf in info.results: %}
 <tr>
-    <td> <a href = "{{info.url_for_newform_label(mf.label)}}"> {{mf.label}} </a> </td>
+    <td> {{mf.label}} </td>
     <td> {{mf.dim}} </td>
-    <td> {{ curve.field_knowl|safe }} </td>
+    <td> {{ mf.field_knowl|safe }} </td>
     <td> </td>
 </tr>
 {% endfor %}
