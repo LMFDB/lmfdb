@@ -11,7 +11,7 @@
 {% if newform.has_exact_qexp %}
 <div id="qexp">
   <h2>Exact Hecke Eigenvalue Data</h2>
-  {% if newform.degree > 1 %}
+  {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <div>
     {{ place_code('coefficient_field') }}
