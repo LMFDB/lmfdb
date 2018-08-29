@@ -74,9 +74,9 @@ def an_list(euler_factor_polynomial_fn,
     return result
 
 
-def coeff_to_poly(c):
+def coeff_to_poly(c, var='x'):
     """
-    Convert a string representation of a polynomial to a sage polynomial.
+    Convert a list or string representation of a polynomial to a sage polynomial.
 
     Examples:
     >>> coeff_to_poly("1 - 3x + x^2")
@@ -85,8 +85,14 @@ def coeff_to_poly(c):
     x**2 - 3*x + 1
     """
     from sage.all import PolynomialRing, QQ
-    return PolynomialRing(QQ, 'x')(c)
+    return PolynomialRing(QQ, var)(c)
 
+def coeff_to_power_series(c, var='q', prec=None):
+    """
+    Convert a list or dictionary giving coefficients to a sage power series.
+    """
+    from sage.all import PowerSeriesRing, QQ
+    return PowerSeriesRing(QQ, var)(c, prec)
 
 def display_multiset(mset, formatter=str, *args):
     """

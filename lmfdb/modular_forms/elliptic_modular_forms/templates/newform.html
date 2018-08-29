@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(newform.level,newform.weight,newform.character,newform.orbit) %}
+{% set KNOWL_ID = "mf.%s"|format(newform.label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
 <!-- Hecke field and algebraic q-expansion data -->
@@ -16,7 +16,7 @@
   <div>
     {{ place_code('coefficient_field') }}
   </div>
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }}: {{ newform.field_display() }}</p>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
   <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
   <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
   {% endif %}
@@ -25,10 +25,10 @@
   </div>
   <form id="qexp">
     <div class="smalloutput">
-      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_smalldisplay">\(f(q) = {{ newform.qexp(all=False) | safe }}\)</span>
+      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_smalldisplay">\(f(q) = {{ newform.q_expansion(format='short') | safe }}\)</span>
     </div>
     <div class="largeoutput">
-      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_largedisplay">\(f(q) = {{ newform.qexp(all=True) | safe }}\)</span>
+      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_largedisplay">\(f(q) = {{ newform.q_expansion(format='all') | safe }}\)</span>
     </div>
     <div class="emptyspace"><br></div>
     <button id="morebutton">Show more coefficients</button>
@@ -42,7 +42,7 @@
 <div>
   {{ place_code('coefficient_field') }}
 </div>
-<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }} is defined by {{ newform.field_poly() }}.</p>
+<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }} has KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}.</p>
 <p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
 {% endif %}
 
@@ -66,11 +66,13 @@
 <table class="ntdata">
   <thead>
     <tr>
-      <th>\(m\)</th>
       {% if newform.num_characters > 1 %}
       <th>Conrey label</th>
       {% endif %}
+      {% if newform.has_exact_qexp %}
       <th>\(\iota_m(\alpha)\)</th>
+      {% endif %}
+      <th>\(m\)</th>
       {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
       <th>\( {{ newform.embed_header(n, format=info.format) }} \)</th>
       {% endfor %}
@@ -79,13 +81,13 @@
   <tbody>
     {% for m in range(info.CC_lowm, info.CC_highm) %}
     <tr>
-      <td>{{ m }}</td>
       {% if newform.num_characters > 1 %}
       <td>{{ newform.conrey_from_embedding(m) }}</td>
       {% endif %}
-      <td style="border-right:solid black 1px">
-        {{ newform.embedding(m,prec=info.CC_prec,format=info.format) }}
-      </td>
+      {% if newform.has_exact_qexp %}
+      <td>{{ newform.embedding(m,prec=info.CC_prec,format=info.format) }}</td>
+      {% endif %}
+      <td style="border-right:solid black 1px">{{ m }}</td>
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
       {% for n in newform.embed_range(info.CC_lown, info.CC_highn) %}
       <td style="white-space:nowrap;" align=right>
