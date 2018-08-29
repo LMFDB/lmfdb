@@ -148,11 +148,10 @@
 
 <h2>Further Properties</h2>
 
-{% if newform.is_cm %}
-<p>This newform is a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }} with CM by {{ newform.cm_field_knowl() }}.</p>
-{% else %}
-<p>This newform is not a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}.</p>
-{% endif %}
+<p>This newform is
+{% if not newform.is_cm %} not {% endif %}
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() }}{% endif %}.
+This property has {% if not newform.cm_proved %}<b>not</b>{% endif %} been rigorously proved.</p>
 
 <p>This newform is
 {% if not newform.is_twist_minimal %}
