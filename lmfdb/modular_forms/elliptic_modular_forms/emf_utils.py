@@ -27,7 +27,6 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
 logger = emf_logger
 from sage.all import vector, QQ, Matrix, cached_method
 from sage.misc.cachefunc import cached_function 
-from plot_dom import draw_fundamental_domain
 import lmfdb.base
 import re
 from lmfdb.search_parsing import parse_range
