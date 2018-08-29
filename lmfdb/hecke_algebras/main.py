@@ -271,7 +271,7 @@ def render_hecke_algebras_webpage(**args):
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight'])]
     if info['num_orbits']!=0:
-        info['friends'] = [('Newforms space ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+        info['friends'] = [('Newforms space ' + info['label'], url_for("emf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit=1))]
     else:
         info['friends'] = []
     t = "Hecke Algebra %s" % info['label']
@@ -368,7 +368,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         ('Weight', '%s' %info['weight']),
         ('Characteristic', '%s' %info['ell']),
         ('Orbit label', '%s' %info['orbit_label'])]
-    info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit=1))]
 
     t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])

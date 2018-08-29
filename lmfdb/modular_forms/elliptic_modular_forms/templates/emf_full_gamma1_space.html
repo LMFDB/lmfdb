@@ -1,0 +1,44 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Dimensions </h2>
+
+<p> \({{ space.mf_latex() }}\): {{ space.mf_dim }}</p>
+<p> \({{ space.eis_latex() }}: {{ space.eis_dim }}</p>
+<p> \({{ space.cusp_latex() }}\): {{ space.cusp_dim }}</p>
+<p> \({{ space.new_latex() }}\): {{ space.new_dim }}</p>
+<p> \({{ space.old_latex() }}\): {{ space.old_dim }}</p>
+
+{% if space.new_dim > 0 %}
+<h2> Decomposition of \({{ space.new_space_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
+
+<table class="newforms">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('mf.elliptic.label',title='Label')}}</th>
+      <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
+      <th>{{ KNOWL('mf.elliptic.coefficient_field',title='Field')}}</th>
+      <th align="left">{{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion of eigenform')}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      {% for label, url, dim, field, qexp in space.decomposition() %}
+      <td> <a href="{{ url }}">{{ label }}</a> </td>
+      <td> {{ dim }} </td>
+      <td> {{ field }} </td> <!-- Need to add pretty printing and knowls -->
+      <td> {{ qexp }} </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Definitions for coefficient fields -->
+
+{% if space.old_dim > 0 %}
+<h2> Decomposition \({{ space.old_space_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+
+\( {{ space.old_space_latex() }} \cong {{ space.oldspace_decomposition() | safe }} \)
+{% endif %}
+
+{% endblock %}

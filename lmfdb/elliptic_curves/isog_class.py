@@ -78,7 +78,7 @@ class ECisog_class(object):
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
         self.newform_label = newform_label(N,2,1,iso)
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
+        self.newform_link = url_for("emf.by_url_newform_label", level=N, weight=2, char_orbit=1, hecke_orbit=iso)
         self.newform_exists_in_db = is_newform_in_db(self.newform_label)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
