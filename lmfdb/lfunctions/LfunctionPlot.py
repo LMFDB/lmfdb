@@ -3,8 +3,8 @@
 import math
 from flask import url_for
 from lmfdb.db_backend import db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
