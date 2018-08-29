@@ -6,6 +6,10 @@ from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.utils import coeff_to_poly
+import re
+LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o currently
+def valid_label(label):
+    return bool(LABEL_RE.match(label))
 
 class WebNewform(object):
     def __init__(self, data, space=None):
@@ -32,7 +36,12 @@ class WebNewform(object):
 
     @staticmethod
     def by_label(label):
-        return WebNewform(db.mf_newforms.lookup(label))
+        if not valid_label(label):
+            raise ValueError("Invalid newform label %s." % label)
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            raise ValueError("Newform %s not found" % label)
+        return WebNewform(data)
 
     def field_display(self):
         # display the coefficient field
