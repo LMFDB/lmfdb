@@ -26,6 +26,8 @@ def index():
     if len(request.args) > 0:
         return newform_search(request.args)
     info = {}
+    newform_labels = ('1.12.o1.a',)
+    info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
     info["weight_list"] = ('1-1', '2-9', '10-99','100-999')
     info["level_list"] = ('2-2', '3-4', '5-9')
     bread = [] # Fix
@@ -101,19 +103,19 @@ def by_url_space_label(level, weight, char_orbit):
     label = str(level)+"."+str(weight)+".o"+str(char_orbit)
     return render_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/hecke_orbit/")
+@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
     label = str(level)+"."+str(weight)+".o"+str(char_orbit)+"."+hecke_orbit
     return render_newform_webpage(label)
 
 def url_for_newform_label(label):
     slabel = label.split(".")
-    return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:], hecke_orbit=slabel[3])
+    return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:], hecke_orbit=slabel[3])
 
 # TODO unused, will be for space_jump
 def url_for_space_label(label):
     slabel = label.split(".")
-    return url_for(".render_newform_webpage", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:])
+    return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:])
 
 def newform_jump(info):
     jump = info["jump"].strip()

@@ -28,8 +28,24 @@ By {{ KNOWL('mf.elliptic.level', title="level")}}:
 {% endfor %}
 </p>
 
-A <a href={{url_for('.random_form')}}>random newform</a> from the database
+<p>
+A <a href={{url_for('.random_form')}}>random newform</a> from the database.
 </p>
+
+<p>
+Some interesting curves:
+{% for newform in info.newform_list %}
+<a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
+{% endfor %}
+</p>
+
+<h2> Find a specific curve by {{ KNOWL('g2c.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='169.a.169.1'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 169.a.169.1 </span>
+</form>
 
 
 {% endblock %}
