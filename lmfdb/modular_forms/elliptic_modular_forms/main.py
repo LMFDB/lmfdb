@@ -9,9 +9,15 @@ from lmfdb.search_wrapper import search_wrap
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebModformSpace
 
+
 def learnmore_list():
-    # FIXME
-    pass
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Holomorphic newform labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def credit():
     # FIXME
@@ -134,15 +140,22 @@ def space_search(info, query):
 
 @emf.route("/Completeness")
 def completeness_page():
-    # FIXME
-    pass
+    t = 'Completeness of $\GL_2$ holomorphic newform data over $\Q$'
+    bread = (('Holomorphic Newforms', url_for(".index")), ('Completeness',''))
+    return render_template("single.html", kid='dq.mf.elliptic.extent',
+                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
 
 @emf.route("/Source")
 def how_computed_page():
-    # FIXME
-    pass
+    t = 'Source of $\GL_2$ holomorphic newform data over $\Q$'
+    bread = (('Holomorphic Newforms', url_for(".index")) ,('Source',''))
+    return render_template("single.html", kid='dq.mf.elliptic.source',
+                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @emf.route("/Labels")
 def labels_page():
-    # FIXME
-    pass
+    t = 'Labels for $\GL_2$ holomorphic newforms over $\Q$'
+    bread = (('Holomorphic Newforms', url_for(".index")), ('Labels',''))
+    return render_template("single.html", kid='mf.elliptic.label',
+                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
