@@ -89,18 +89,10 @@ def newform_jump(info):
 
 def space_jump(info):
     # FIXME
-    #    if re.match(r'^\d+\.[a-z]+$', jump):
-    #        return redirect(url_for_isogeny_class_label(jump), 301)
-    #    else:
-    #        # Handle direct Lhash input
-    #        if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-    #            c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
-    #            if c:
-    #                return redirect(url_for_isogeny_class_label(c), 301)
-    #            else:
-    #                errmsg = "hash %s not found"
-    #        else:
-    #            errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+    #if re.match(r'^\d+\.\d+\.o\d+$',jump):
+    #    return redirect(url_for_isogeny_class_label(jump), 301)
+    #else:
+    #    errmsg = "%s is not a valid newspace label"
     #flash_error (errmsg, jump)
     #return redirect(url_for(".index"))
     pass
