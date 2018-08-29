@@ -1,0 +1,188 @@
+{% extends 'homepage.html' %}
+<!-- Old version: views/templates/emf_web_newform.html -->
+
+{% block content %}
+
+{% set KNOWL_ID = "mf.%s.%s.%s.%s"|format(newform.level,newform.weight,newform.character,newform.orbit) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+
+<!-- Hecke field and algebraic q-expansion data -->
+
+{% if newform.has_exact_qexp %}
+<div id="qexp">
+  <h2> Exact Hecke Eigenvalue Data</h2>
+  {% if newform.degree > 1 %}
+  <!-- Coefficient code depends on existence of form -->
+  <div>
+    {{ place_code('coefficient_field') }}
+  </div>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }}: {{ newform.field_display() }}</p>
+  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
+  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
+  {% endif %}
+  <div>
+    {{ place_code('qexp') }}
+  </div>
+  <form id="qexp">
+    <div class="smalloutput">
+      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_smalldisplay">\(f(q) = {{ newform.qexp(all=False) | safe }}\)</span>
+    </div>
+    <div class="largeoutput">
+      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_largedisplay">\(f(q) = {{ newform.qexp(all=True) | safe }}\)</span>
+    </div>
+    <div class="emptyspace"><br></div>
+    <button id="morebutton">Show more coefficients</button>
+    <button id="lessbutton">Show fewer coefficients</button>
+    <br>
+    <button id="download_exact">Download all</button>
+  </form>
+</div>
+{% else %}
+<h3>Hecke field</h3>
+<div>
+  {{ place_code('coefficient_field') }}
+</div>
+<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }} is defined by {{ newform.field_poly() }}.</p>
+<p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
+{% endif %}
+
+<!-- Complex embeddings and Satake parameters -->
+
+{% newform.has_complex_qexp %}
+{% if info.format == 'embed' %}
+<h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
+<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
+{% elif info.format == 'analytic_embed' %}
+<h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
+<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
+{% elif info.format == 'satake' %}
+<h2>{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }}</h2>
+<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
+{% else %}
+<h2>{{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}}</h2>
+<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
+{% endif %}
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>\(m\)</th>
+      {% if newform.num_characters > 1 %}
+      <th>Conrey label</th>
+      {% endif %}
+      <th>\(\iota_m(\alpha)\)</th>
+      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
+      <th>\( {{ newform.embed_header(n, format=info.format) }} \)</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for m in range(info.CC_lowm, info.CC_highm) %}
+    <tr>
+      <td>{{ m }}</td>
+      {% if newform.num_characters > 1 %}
+      <td>{{ newform.conrey_from_embedding(m) }}</td>
+      {% endif %}
+      <td style="border-right:solid black 1px">
+        {{ newform.embedding(m,prec=info.CC_prec,format=info.format) }}
+      </td>
+      {% if info.format == 'embed' or info.format == 'analytic_embed' %}
+      {% for n in newform.embed_range(info.CC_lown, info.CC_highn) %}
+      <td style="white-space:nowrap;" align=right>
+        {{ newform.embedding(m,n,prec=info.CC_prec,format=info.format) }}
+      </td>
+      {% endfor %}
+      {% else %}
+      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
+      <td style="white-space:nowrap;" align=right>
+        {{ newform.satake(m,n,prec=info.CC_prec,format=info.format) }}
+      </td>
+      {% endfor %}
+      </tr><tr><td></td><td></td>{% if newform.num_characters > 1 %}<td></td>{% endif %}
+      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
+      <td style="white-space:nowrap;" align=right>
+        {{ newform.satake(m,n,prec=info.CC_prec,format=info.format) }}
+      </td>
+      {% endfor %}
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<form id='complex_embeddings'>
+  <table>
+    <tr>
+      <td>\(n\): </td>
+      <td><input type='text' name='n' size=10 value="{{info.CC_lown}}-{{info.CC_highn}}"></td>
+    </tr>
+    <tr>
+      <td>\(m\): </td>
+      <td><input type='text' name='m' size=10 value="{{info.CC_lowm}}-{{info.CC_highm}}"></td>
+    </tr>
+    <tr>
+      <td>Precision: </td>
+      <td><input type='text' name='prec' size=10 value="{{info.CC_prec}}"></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
+      <td><select name='format'>
+          {% if newform.degree > 1 %}
+          <option value='embed' {% if info.format == 'embed' %}selected{% endif %}>Complex embeddings</option>
+          {% endif %}
+          <option value='analytic_embed' {% if info.format == 'analytic_embed' %}selected{% endif %}>Normalized embeddings</option>
+          <option value='satake' {% if info.format == 'satake' %}selected{% endif %}>Satake parameters</option>
+          <option value='satake_angle' {% if info.format == 'satake_angle' %}selected{% endif %}>Satake angles</option>
+      </select></td>
+    </tr>
+  </table>
+  <button id="refresh_complex">Refresh table</button>
+  <button id="download_complex">Download all</button>
+</form>
+
+{% endif %}
+
+<!-- Removed old code on special values that didn't seem to be used -->
+
+<!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
+
+<h2>Further Properties</h2>
+
+{% if newform.is_cm %}
+<p>This newform is a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }} with CM by {{ newform.cm_field_knowl() }}.</p>
+{% else %}
+<p>This newform is not a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}.</p>
+{% endif %}
+
+{% if newform.is_twist_minimal %}
+<p>It is {{ KNOWL('mf.elliptic.minimal',title='minimal') }}</p>
+{% else %}
+<p>It is not {{ KNOWL('mf.elliptic.minimal',title='minimal') }}</p>
+{% endif %}
+
+{% if newform.character == 1 %}
+<p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th> \( Q \) </th>
+      <th> Cusp </th>
+      <th>Eigenvalue
+    </tr>
+  </thead>
+  <tbody>
+    {% for Q,c,ev in newform.atkinlehner_data() %}
+    <tr>
+      <th> {{ Q }} </th>
+      <th> {{ c }} </th>
+      <td> {{ ev }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+
+<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
+
+{% endblock %}
