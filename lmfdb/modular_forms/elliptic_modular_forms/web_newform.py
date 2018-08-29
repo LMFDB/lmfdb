@@ -4,12 +4,19 @@
 from sage.all import prime_range
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
+from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.utils import coeff_to_poly
 
 class WebNewform(object):
-    def __init__(self, data):
+    def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
+        if space is None:
+            # Need character info from spaces table
+            chardata = db.mf_newspaces.lookup(self.space_label,['conrey_labels','cyc_degree'])
+            self.__dict__.update(chardata)
+        else:
+            self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
         eigenvals = db.mf_hecke_nf.search({'orbit':self.orbit_code}, ['n','an'], sort=['n'])
         if eigenvals:
             self.has_exact_qexp = True
@@ -21,6 +28,7 @@ class WebNewform(object):
         else:
             self.has_exact_qexp = False
         angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
+        self.angles = {data['embedding']:data['angles'] for data in angles}
 
     @staticmethod
     def by_label(label):
@@ -62,7 +70,7 @@ class WebNewform(object):
 
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
-        pass
+        return self.conrey_labels[(m-1) // self.cyc_degree]
 
     def embedding(self, m, n=None, prec=6, format='embed'):
         """
@@ -99,8 +107,7 @@ class WebNewform(object):
 
     def cm_field_knowl(self):
         # The knowl for the CM field, with appropriate title
-        pass
-
-    def atkinlehner_data(self):
-        # A list of triples (Q, c, ev).  I'm not sure what these are exactly...
-        pass
+        if self.cm_disc == 0:
+            raise ValueError("Not CM")
+        cm_label = "2.0.%s.1"%(-self.cm_disc)
+        return nf_display_knowl(cm_label, field_pretty(cm_label))

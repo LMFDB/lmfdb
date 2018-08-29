@@ -47,7 +47,7 @@
 {% endif %}
 
 <!-- Complex embeddings and Satake parameters -->
-
+<!--
 {% newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
@@ -144,6 +144,8 @@
 
 {% endif %}
 
+-->
+
 <!-- Removed old code on special values that didn't seem to be used -->
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
@@ -176,16 +178,14 @@ an
 <table class="ntdata">
   <thead>
     <tr>
-      <th> \( Q \) </th>
-      <th> Cusp </th>
+      <th> \( p \) </th>
       <th>Eigenvalue
     </tr>
   </thead>
   <tbody>
-    {% for Q,c,ev in newform.atkinlehner_data() %}
+    {% for p, ev in newform.atkin_lehner_eigenvals %}
     <tr>
-      <th> {{ Q }} </th>
-      <th> {{ c }} </th>
+      <td> {{ p }} </td>
       <td> {{ ev }}</td>
     </tr>
     {% endfor %}
