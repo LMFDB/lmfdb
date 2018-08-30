@@ -63,15 +63,15 @@ Download all search results for&nbsp;
         {% endif %}
         {# TODO do we want a knowl here ? #}
     </td>
-    <td>\({{ mf.trace_display[0] }}\)</td>
-    <td>\({{ mf.trace_display[1] }}\)</td>
-    <td>\({{ mf.trace_display[2] }}\)</td>
-    <td>\({{ mf.trace_display[3] }}\)</td>
+    <td align="right">\({{ mf.trace_display[0] }}\)</td>
+    <td align="right">\({{ mf.trace_display[1] }}\)</td>
+    <td align="right">\({{ mf.trace_display[2] }}\)</td>
+    <td align="right">\({{ mf.trace_display[3] }}\)</td>
     <td>
         {% if mf.qexp_display %}
         \({{ mf.qexp_display }}\)
         {% else %}
-        No data.
+        -
         {% endif %}
     </td>
 </tr>
