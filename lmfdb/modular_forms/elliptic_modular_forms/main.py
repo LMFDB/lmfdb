@@ -9,7 +9,7 @@ from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -66,7 +66,7 @@ def render_newform_webpage(label):
 def render_space_webpage(label):
     try:
         space = WebNewformSpace.by_label(label)
-    except (KeyError,ValueError) as err:
+    except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
     return render_template("emf_space.html",
                            space=space,
@@ -78,10 +78,9 @@ def render_space_webpage(label):
                            friends=space.friends)
 
 def render_full_gamma1_space_webpage(label):
-    ##### NEED TO WRITE THIS
     try:
-        space = WebModformSpace.by_label(label)
-    except (KeyError,ValueError) as err:
+        space = WebGamma1Space.by_label(label)
+    except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
     return render_template("emf_full_gamma1_space.html",
                            space=space,
@@ -171,6 +170,8 @@ def newform_search(info, query):
     parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
     #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
+    parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
+    parse_bool(info, query, 'inner_twist',name='has an inner twist')
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
     info["nf_pretty"] = lambda label: field_pretty(label)
