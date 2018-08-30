@@ -1,10 +1,12 @@
 # See views/emf_main.py, genus2_curves/main.py
 
 from flask import render_template, url_for, redirect, abort, request
+import re
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
 from lmfdb.search_wrapper import search_wrap
+from lmfdb.utils import flash_error
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 
@@ -53,7 +55,7 @@ def render_newform_webpage(label):
         return abort(404, err.args)
     return render_template("emf_newform.html",
                            newform=newform,
-                           properties=newform.properties,
+                           properties2=newform.properties,
                            credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
@@ -119,16 +121,16 @@ def url_for_space_label(label):
 
 def newform_jump(info):
     jump = info["jump"].strip()
-    if re.match(r'^\d+\.\d+\.o\d+\.[a-z]+$',jump):
+    if re.match(r'^\d+\.\d+\.\d+\.[a-z]+$',jump):
         return redirect(url_for_newform_label(jump), 301)
     else:
-        errmsg = "%s is not a valid genus newform orbit label"
+        errmsg = "%s is not a valid newform orbit label"
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
 def space_jump(info):
     # FIXME
-    #if re.match(r'^\d+\.\d+\.o\d+$',jump):
+    #if re.match(r'^\d+\.\d+\.\d+$',jump):
     #    return redirect(url_for_isogeny_class_label(jump), 301)
     #else:
     #    errmsg = "%s is not a valid newspace label"
