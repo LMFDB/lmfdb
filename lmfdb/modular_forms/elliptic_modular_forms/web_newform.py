@@ -42,7 +42,13 @@ class WebNewform(object):
 #        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
 #        self.angles = {data['embedding']:data['angles'] for data in angles}
 
-        self.properties = [] # properties box
+        self.properties = [('Label', self.label), 
+                           ('Weight', '%s' % self.weight),
+                           ('Character Orbit', '%s' % self.char_orbit),
+                           ('Dimension', '%s' % self.dim)]
+        if self.__dict__.get('is_CM'):
+            self.properties += [('CM', '%s' % self.is_CM)] # properties box
+        
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
         self.friends = []

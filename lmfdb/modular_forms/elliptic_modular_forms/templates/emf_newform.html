@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 <!-- Old version: views/templates/emf_web_newform.html -->
 
 {% block content %}
@@ -12,9 +11,6 @@
 {% if newform.has_exact_qexp %}
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
-  <div>
-    {{ place_code('qexp') }}
-  </div>
   <form id="qexp">
     <div class="smalloutput">
       <span id="qexp_largedisplay">\(f(q) =\) {{ newform.q_expansion(format='short') | safe }}</span>

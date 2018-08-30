@@ -53,7 +53,7 @@ def render_newform_webpage(label):
         return abort(404, err.args)
     return render_template("emf_newform.html",
                            newform=newform,
-                           properties=newform.properties,
+                           properties2=newform.properties,
                            credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
