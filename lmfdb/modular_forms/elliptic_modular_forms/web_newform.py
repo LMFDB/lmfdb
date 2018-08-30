@@ -33,6 +33,10 @@ class WebNewform(object):
             self.has_exact_qexp = False
         angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
         self.angles = {data['embedding']:data['angles'] for data in angles}
+        self.properties = [] # properties box
+        self.bread = [] # bread
+        self.title = "Newform %s"%(self.label)
+        self.friends = []
 
     @staticmethod
     def by_label(label):

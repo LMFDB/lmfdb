@@ -62,7 +62,7 @@ def render_newform_webpage(label):
 
 def render_space_webpage(label):
     try:
-        space = WebModformSpace.by_label(label)
+        space = WebNewformSpace.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     return render_template("emf_space.html",

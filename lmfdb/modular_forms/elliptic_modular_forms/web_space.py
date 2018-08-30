@@ -2,7 +2,7 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from lmfdb.web_newform import WebNewform
+from web_newform import WebNewform
 from sage.all import latex, ZZ
 import re
 LABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$") # not putting in o currently
@@ -23,12 +23,16 @@ class WebNewformSpace(object):
             N, k, i = map(int, valid_label(old_label).groups())
             self.oldspaces.append((N, k, i, conrey))
         self.old_dim = self.cusp_dim - self.dim
+        self.properties = [] # properties box
+        self.bread = [] # bread
+        self.title = "Newform Space S_%d(%d,[%d])"%(self.weight, self.level, self.conrey_labels[0])
+        self.friends = []
 
     @staticmethod
     def by_label(label):
         """
         Searches for a specific modular forms space by its label.
-        Constructs the WebModformSpace object if the space is found, raises an error otherwise
+        Constructs the WebNewformSpace object if the space is found, raises an error otherwise
         """
         if not valid_label(label):
             raise ValueError("Invalid modular forms space label %s." % label)
