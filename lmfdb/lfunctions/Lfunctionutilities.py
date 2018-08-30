@@ -44,7 +44,6 @@ def p2sage(s):
 
 def string2number(s):
     # a start to replace p2sage (used for the paramters in the FE)
-
     strs = str(s).replace(' ','')
     try:
         if 'e' in strs:
@@ -57,6 +56,8 @@ def string2number(s):
                 return CDF(exp(2*pi*I*q))
         if 'I' in strs:
             return CDF(strs)
+        elif (type(s) is list or type(s) is tuple) and len(s) == 2:
+            return CDF(tuple(s))
         elif '/' in strs:
             return Rational(strs)
         elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
@@ -926,6 +927,7 @@ def name_and_object_from_url(url):
         name = 'Isogeny class ' + label_isogeny_class;
 
     elif url_split[0] == "ModularForm":
+        return None, None #FIXME
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
                 # ModularForm/GL2/Q/holomorphic/14/2/1/a

@@ -84,38 +84,38 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data['Lhash'];
-    L.algebraic = data['algebraic']
-    L.degree = data['degree']
-    L.level = data['conductor']
-    central_character = data['central_character']
+    L.Lhash = data.get('Lhash', None);
+    L.algebraic = data.get('algebraic', None)
+    L.degree = data.get('degree', None)
+    L.level = data.get('conductor', None)
+    central_character = data.get('central_character', None)
     L.charactermodulus, L.characternumber = central_character.split(".")
     L.charactermodulus = int(L.charactermodulus)
     L.characternumber = int(L.characternumber)
-    L.primitive = data['primitive']
-    L.selfdual = data['self_dual']
-    if 'root_number' in data:
-        L.sign = string2number(data['root_number'])
+    L.primitive = data.get('primitive', None)
+    L.selfdual = data.get('self_dual', None)
+    if data.get('root_number', None) is not None:
+        L.sign = string2number(data.get('root_number', None))
     else:
-        L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
-    L.st_group = data['st_group']
-    L.order_of_vanishing = data['order_of_vanishing']
+        assert data.get('sign_arg', None) is not None
+        L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
+    L.st_group = data.get('st_group', '')
+    L.order_of_vanishing = data.get('order_of_vanishing', None)
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
-        L.mu_fe.append(string2number(data['analytic_normalization']) +
+        L.mu_fe.append(string2number(data.get('analytic_normalization', None)) +
                        string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
     for i in range(0,len(data['gamma_factors'][1])):
-        L.nu_fe.append(string2number(data['analytic_normalization']) +
+        L.nu_fe.append(string2number(data.get('analytic_normalization', None)) +
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # Optional properties
-    if 'motivic_weight' in data:
-        L.motivic_weight = data['motivic_weight']
-    else:
+    L.motivic_weight = data.get('motivic_weight', None)
+    if L.motivic_weight is None:
         L.motivic_weight = ''
 
     if hasattr(L, 'base_field'):
@@ -127,17 +127,17 @@ def makeLfromdata(L):
     # Convert L.motivic_weight from python 'int' type to sage integer type.
     # This is necessary because later we need to do L.motivic_weight/2
     # when we write Gamma-factors in the arithmetic normalization.
-    L.motivic_weight = ZZ(data['motivic_weight'])
-    if 'credit' in data.keys():
-        L.credit = data['credit']
+    L.motivic_weight = ZZ(data.get('motivic_weight', None))
+    if data.get('credit', None) is not None:
+        L.credit = data.get('credit', None)
 
     # Dirichlet coefficients
-    if 'dirichlet_coefficients' in data:
-        L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
-    else:
+    if data.get('dirichlet_coefficients', None) is not None:
+        L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
+    elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
         L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
-            data['euler_factors']), 2*L.degree*L.numcoeff)
+            data.get('euler_factors', None)), 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
         count = 0;
@@ -148,28 +148,31 @@ def makeLfromdata(L):
                     L.dirichlet_coefficients_arithmetic = \
                         L.dirichlet_coefficients_arithmetic[:i];
                     break;
+    else:
+        print [ string2number(data['a' + str(i)]) for i in range(2, 11)]
+        L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)] 
 
-    L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
-    L.normalize_by = string2number(data['analytic_normalization'])
-    for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
-        an = L.dirichlet_coefficients_arithmetic[n]
+
+    L.dirichlet_coefficients = [None]*len(L.dirichlet_coefficients_arithmetic)
+    L.normalize_by = float(data.get('analytic_normalization', None))
+    for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         if L.normalize_by > 0:
-            L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+            L.dirichlet_coefficients[n] = an/(n+1)**L.normalize_by
         else:
             L.dirichlet_coefficients[n] = an
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
-        convert_dirichlet_Lfunction_coefficients(L, data['coeff_info'])
+        convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
 
-    L.localfactors = p2sage(data['euler_factors'])
+    L.localfactors = p2sage(data.get('euler_factors', None))
     # Currently the database stores the bad_lfactors as a list and the euler_factors
     # as a string.  Those should be the same.  Once that change is made, either the
     # line above or the line below will break.  (DF and SK, Aug 4, 2015)
-    L.bad_lfactors = data['bad_lfactors']
+    L.bad_lfactors = data.get('bad_lfactors', None)
 
     # Configure the data for the zeros
     if 'accuracy' in data:
-        L.accuracy = data['accuracy'];
+        L.accuracy = data.get('accuracy', None);
     else:
         L.accuracy = None
 
@@ -188,7 +191,7 @@ def makeLfromdata(L):
     if L.selfdual:
         L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.positive_zeros]
     else:
-        dual_L_label = data['conjugate']
+        dual_L_label = data.get('conjugate', None)
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.negative_zeros = ["&minus;" + str(pos_zero) for pos_zero in
                             dual_L_data['positive_zeros']]
@@ -202,16 +205,18 @@ def makeLfromdata(L):
         L.negative_zeros = L.negative_zeros + ", "
 
     # Configure the data for the plot
-    pos_plot = [[j * string2number(data['plot_delta']),
-                 string2number(data['plot_values'][j])]
-                          for j in range(len(data['plot_values']))]
+    plot_delta = string2number(data['plot_delta'])
+    pos_plot = [[j * plot_delta,
+                 string2number(elt)]
+                          for j, elt in enumerate( data['plot_values'] )]
     if L.selfdual:
-        neg_plot = [ [-1*pt[0], string2number(data['root_number']) * pt[1]]
+        neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
-        neg_plot = [[-j * string2number(dual_L_data['plot_delta']),
-                 string2number(dual_L_data['plot_values'][j])]
-                          for j in range(1,len(dual_L_data['plot_values']))]
+        dual_plot_delta = string2number(dual_L_data['plot_delta'])
+        neg_plot = [[-j * dual_plot_delta,
+                 string2number(elt)]
+                 for j, elt in enumerate(dual_L_data['plot_values'][1:]) ]
     neg_plot.reverse()
     L.plotpoints = neg_plot[:] + pos_plot[:]
 
@@ -713,9 +718,9 @@ class Lfunction_EC(Lfunction):
             if self.conductor <= 101:
                 lorigins.append(
                    ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
-                       url_for("emf.by_url_newform_label",
+                       url_for("emf.render_elliptic_modular_forms",
                        level=self.conductor, weight=2,
-                       char_orbit=1, hecke_orbit=self.isogeny_class_label)
+                       character=1, label=self.isogeny_class_label)
                    ))
             else:
                 lorigins.append(('Modular form ' + (self.long_isogeny_class_label)
@@ -946,7 +951,7 @@ class Lfunction_Maass(Lfunction):
 
             # Specific properties
             if not self.selfdual:
-                self.dual_link = '/L' + self.lfunc_data['conjugate']
+                self.dual_link = '/L' + self.lfunc_data.get('conjugate', None)
             title_end = " on $%s$" % (self.group)
 
         else:   # Generate from Maass form
