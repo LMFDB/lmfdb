@@ -57,9 +57,9 @@
   </div>
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
   <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
-  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
+  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_ring_index }}</p>
   {% else %}
   <p> The form has coefficients in {{ newform.field_display() | safe }}.</p>
   {% endif %}
