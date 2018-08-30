@@ -45,10 +45,12 @@ class WebNewform(object):
         self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]    
                      # label is the distinguished column in mf_newspaces,
                      # and the space label is called "label" in mf_newspaces
+        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
 
         self.properties = [('Label', self.label), 
                            ('Weight', '%s' % self.weight),
                            ('Character Orbit', '%s' % self.char_orbit),
+                           ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.__dict__.get('is_CM'):
             self.properties += [('CM', '%s' % self.is_CM)] # properties box
