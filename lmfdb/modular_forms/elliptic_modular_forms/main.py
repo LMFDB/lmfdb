@@ -171,6 +171,8 @@ def newform_search(info, query):
     parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
     #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
+    parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
+    parse_bool(info, query, 'inner_twist',name='has an inner twist')
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
     info["nf_pretty"] = lambda label: field_pretty(label)

@@ -53,7 +53,7 @@ Some interesting newforms:
 <form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
-<td>{{ KNOWL('mf.elliptic.weight', title='weight') }}</td>
+<td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
 <td><input type='text' name='weight' placeholder='2' size=10></td>
 <td><span class="formexample"> e.g. 2, 10-14 </span></td>
 
@@ -66,7 +66,7 @@ Some interesting newforms:
 </tr>
 
 <tr>
-<td>{{ KNOWL('mf.elliptic.level', title='level') }}</td>
+<td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
 <td><input type='text' name='level' placeholder='4' size=10></td>
 <td><span class="formexample"> e.g. 4, 1-20</td>
 
@@ -117,8 +117,10 @@ Some interesting newforms:
 <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
 <td><select name='is_cm' width="122" style="width: 122px">
                    <option ></option>
-                   <option value='True'>True</option>
-                   <option value='False'>False</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
+</select></td>
+<td></td>
 
 <td>{{ KNOWL('g2c.locally_solvable', title='locally solvable') }}</td>
 <td><select name='locally_solvable' width="122" style="width: 122px">
@@ -142,15 +144,19 @@ Some interesting newforms:
 </tr>
 
 <tr>
-<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
-<td><input type='text' name='analytic_rank' placeholder='1' size=10></td>
-<td><span class="formexample"> e.g. 1 </span></td>
-
-<td>{{ KNOWL('ag.geom_simple', title='geometrically simple') }}</td>
-<td><select name='is_simple_geom' width="122" style="width: 122px">
+<td>{{ KNOWL('mf.elliptic,minimal', title='Twist minimal') }}</td>
+<td><select name='inner_twist' width="122" style="width: 122px">
                    <option ></option>
-                   <option value='True'>True</option>
-                   <option value='False'>False</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
+</select></td>
+<td></td>
+
+<td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+<td><select name='inner_twist' width="122" style="width: 122px">
+                   <option ></option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
 </select></td>
 </tr>
 
