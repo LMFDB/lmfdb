@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 <!-- Old version: views/templates/emf_web_newform.html -->
 
 {% block content %}
@@ -9,12 +8,38 @@
 
 <!-- Hecke field and algebraic q-expansion data -->
 
+<h3> Defining parameters </h3>
+
+<table>
+    <tr>
+        <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+        <td> \( N \) </td>
+        <td>=</td>
+        <td>\( {{ newform.level }} \)</td>
+    </tr>
+    <tr>
+        <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+        <td> \( k \) </td>
+        <td>=</td>
+        <td>\( {{ newform.weight }} \)</td>
+    </tr>
+    <tr>
+        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit: </td>
+        <td> index(\([\chi]\)) </td>
+        <td>=</td>
+        <td>\( {{ newform.char_orbit }} \)</td>
+    </tr>
+    <tr>
+        <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
+        <td> \( \chi \) </td>
+        <td>=</td>
+        <td>\( {{ newform.char_conrey_str }} \) (minimal Conrey label in orbit)</td>
+    </tr>
+</table>
+
 {% if newform.has_exact_qexp %}
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
-  <div>
-    {{ place_code('qexp') }}
-  </div>
   <form id="qexp">
     <div class="smalloutput">
       <span id="qexp_largedisplay">\(f(q) =\) {{ newform.q_expansion(format='short') | safe }}</span>
@@ -32,9 +57,17 @@
   </div>
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
-  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
-  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
+  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke ring') }}: {{ newform.order_basis() }}</p>
+  {% if newform.hecke_ring_index_proven %} 
+    {% if newform.hecke_ring_index == 1 %}
+    <p> The {{ KNOWL('mf.elliptic.hecke_order',title='order') }} is maximal. </p>
+    {% else %}
+    <p> The index of the {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is equal to {{ newform.hecke_ring_index }}. </p>
+    {% endif %}
+  {% else %}
+    <p> The index of the {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is a multiple of {{ newform.hecke_ring_index }}. </p>
+  {% endif %}
   {% else %}
   <p> The form has coefficients in {{ newform.field_display() | safe }}.</p>
   {% endif %}
@@ -152,12 +185,12 @@
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
-<h2>Further Properties</h2>
+<h2>Further properties</h2>
 
 <p>This newform is
 {% if not newform.is_cm %} not {% endif %}
 a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() }}{% endif %}.
-This property has {% if not newform.cm_proved %}<b>not</b>{% endif %} been rigorously proved.</p>
+This property has {% if not newform.cm_proved %}not{% endif %} been rigorously proved.</p>
 
 <p>This newform is
 {% if not newform.is_twist_minimal %}
