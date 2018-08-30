@@ -1894,7 +1894,7 @@ class PostgresTable(PostgresBase):
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = (columns[0] == 'id')
+                    addid = ('id' in columns)
                 else:
                     addid = False
 
@@ -3571,7 +3571,7 @@ class PostgresDatabase(PostgresBase):
                                          SQL(", ").join(extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
+            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")
