@@ -78,6 +78,7 @@ class WebNewform(object):
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
         self.friends = []
+        #self.friends += [ ('Newspace {}'.format(sum(self.label.split('.')[:-1])),self.newspace_url)]
 
     @staticmethod
     def by_label(label):

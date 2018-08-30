@@ -204,7 +204,7 @@ function show_qexp(qstyle) {
 
 <p>This newform is
 {% if not newform.is_cm %} not {% endif %}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() }}{% endif %}.
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
 This property has {% if not newform.cm_proved %}not{% endif %} been rigorously proved.</p>
 
 <p>This newform is
