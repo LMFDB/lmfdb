@@ -24,19 +24,24 @@ class WebNewform(object):
         else:
             self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
-        if eigenvals:
+        if eigenvals:  # this will always be true
             self.has_exact_qexp = True
             zero = [0] * self.dim
             self.qexp = [zero]
             for i, ev in enumerate(eigenvals):
                 if ev['n'] != i+1:
                     raise ValueError("Missing eigenvalue")
+                if not ev.get('an'):
+                    # only had traces 
+                    self.has_exact_qexp = False
+                    break
                 self.qexp.append(ev['an'])
             self.qexp_prec = len(self.qexp)-1
         else:
             self.has_exact_qexp = False
 #        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
 #        self.angles = {data['embedding']:data['angles'] for data in angles}
+
         self.properties = [] # properties box
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
