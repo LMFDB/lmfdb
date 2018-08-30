@@ -23,7 +23,7 @@ import random
 from sage.all import AlphabeticStrings, gcd, Mod
 from flask import jsonify, flash, Markup
 from lmfdb.utils import web_latex, ajax_url
-from lmfdb.modular_forms.elliptic_modular_forms import emf_logger, emf_version
+from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
 logger = emf_logger
 from sage.all import vector, QQ, Matrix, cached_method
 from sage.misc.cachefunc import cached_function 
@@ -116,6 +116,6 @@ def is_newform_in_db(newform_label):
        level,weight,character,label = t
     elif len(t)==5:
         level,weight,character,label,emb = t
-    search = {'level':level,'weight':weight,'character':character,'label':label,'version':float(emf_version)}
+    search = {'level':level,'weight':weight,'character':character,'label':label}
     return WebNewForm._find_document_in_db_collection(search).count() > 0
 
