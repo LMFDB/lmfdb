@@ -1,4 +1,5 @@
 {% extends 'homepage.html' %}
+{% import 'color.css' as color %}
 <!-- Old version: views/templates/emf_web_newform.html -->
 
 {% block content %}
@@ -6,11 +7,17 @@
 {% set KNOWL_ID = "mf.%s"|format(newform.label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
+<style>
+.toggle {margin-top:5px; margin-left:20px;}
+div.properties-body table tr td.label { vertical-align: top; }
+#content > h2.subhead { color:{{color.black}};}
+</style>
+
 <!-- Hecke field and algebraic q-expansion data -->
 
 {% if newform.has_exact_qexp %}
 <div id="qexp">
-  <h2>Exact Hecke Eigenvalue Data</h2>
+  <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <div>
@@ -25,10 +32,7 @@
   </div>
   <form id="qexp">
     <div class="smalloutput">
-      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_smalldisplay">\(f(q) = {{ newform.q_expansion(format='short') | safe }}\)</span>
-    </div>
-    <div class="largeoutput">
-      {{ KNOWL('mf.elliptic.q-expansion',title='q-expansion')}}: <span id="qexp_largedisplay">\(f(q) = {{ newform.q_expansion(format='all') | safe }}\)</span>
+      <span id="qexp_largedisplay">\(f(q) =\) {{ newform.q_expansion(format='short') | safe }}</span>
     </div>
     <div class="emptyspace"><br></div>
     <button id="morebutton">Show more coefficients</button>
@@ -38,7 +42,7 @@
   </form>
 </div>
 {% else %}
-<h3>Hecke field</h3>
+<h3>Coefficient field</h3>
 <div>
   {{ place_code('coefficient_field') }}
 </div>
@@ -46,9 +50,11 @@
 <p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
 {% endif %}
 
+<h2>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}</h2>
+
 <!-- Complex embeddings and Satake parameters -->
 <!--
-{% newform.has_complex_qexp %}
+{% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
 <p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
