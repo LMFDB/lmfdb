@@ -2249,7 +2249,7 @@ class PostgresTable(PostgresBase):
                 print "Dropped {0}".format(table)
 
     def max_id(self):
-        return db._execute(SQL("SELECT MAX(id) FROM {}".format(self.seach_table))).fetchone()[0]
+        return db._execute(SQL("SELECT MAX(id) FROM {}".format(self.search_table))).fetchone()[0]
 
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
