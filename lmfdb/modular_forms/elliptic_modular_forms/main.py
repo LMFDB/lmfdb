@@ -6,6 +6,7 @@ from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
 from lmfdb.search_wrapper import search_wrap
+from lmfdb.utils import flash_error
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 
