@@ -5,7 +5,7 @@ from sage.all import prime_range
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.utils import coeff_to_poly
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex
 import re
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o currently
 def valid_label(label):
@@ -21,18 +21,22 @@ class WebNewform(object):
             self.__dict__.update(chardata)
         else:
             self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
-        eigenvals = db.mf_hecke_nf.search({'orbit':self.orbit_code}, ['n','an'], sort=['n'])
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
+        print self.hecke_orbit_code
         if eigenvals:
             self.has_exact_qexp = True
-            self.qexp = [0,1] # so that qexp[n] lines up
+            zero = [0] * self.dim
+            self.qexp = [zero]
             for i, ev in enumerate(eigenvals):
-                if ev['n'] != i+2:
+                print i, ev
+                if ev['n'] != i+1:
                     raise ValueError("Missing eigenvalue")
                 self.qexp.append(ev['an'])
+            self.qexp_prec = len(self.qexp)-1
         else:
             self.has_exact_qexp = False
-        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
-        self.angles = {data['embedding']:data['angles'] for data in angles}
+#        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
+#        self.angles = {data['embedding']:data['angles'] for data in angles}
         self.properties = [] # properties box
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
@@ -64,19 +68,28 @@ class WebNewform(object):
         return ", ".join(r"\(\beta_%s = %s\)"%(i+1, x) for i, x in enumerate(basis))
 
     def q_expansion(self, format):
-        # options for format: oneline, short, all
+        # options for format: 'oneline', 'short', 'all'
         # Display the q-expansion.  If all is False, truncate to a low precision (e.g. 10).  Will be inside \( \).
         # For now we ignore the format and just print on one line
         if self.has_exact_qexp:
-            prec = self.qexp_prec if all else min(self.qexp_prec, 10)
-            s = r"q \)"
+            if format == 'all':
+               prec = self.qexp_prec 
+            else:
+               prec = min(self.qexp_prec, 10)
             zero = [0] * self.dim
-            for n in range(2,prec):
-                term = self.qexp[n]
-                if term != zero:
-                    coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
-                    s += r" + \((%s) q^{%s}\)"%(coeff, n)
-            s += r" + \(O(q^{%s})"%(self.qexp_prec)
+            if self.dim == 1:
+                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
+                print s
+            else:
+                s = r"q \)"
+                for n in range(2,prec):
+                    term = self.qexp[n]
+                    if term != zero:
+                        coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
+                        s += r" + \((%s) q^{%s}\)"%(coeff, n)
+                s += r" + \(O(q^{%s})"%(self.qexp_prec)
+                print s
+                s.replace('\beta_{1}','')
             return s
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
