@@ -15,6 +15,8 @@ class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
+        print "self.nf_label", self.nf_label
+
         if space is None:
             # Need character info from spaces table
             chardata = db.mf_newspaces.lookup(self.space_label,['conrey_labels','cyc_degree'])
@@ -22,13 +24,11 @@ class WebNewform(object):
         else:
             self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
-        print self.hecke_orbit_code
         if eigenvals:
             self.has_exact_qexp = True
             zero = [0] * self.dim
             self.qexp = [zero]
             for i, ev in enumerate(eigenvals):
-                print i, ev
                 if ev['n'] != i+1:
                     raise ValueError("Missing eigenvalue")
                 self.qexp.append(ev['an'])
@@ -55,6 +55,8 @@ class WebNewform(object):
         # display the coefficient field
         if self.nf_label is None:
             return r"\(\Q(w)\)"
+        elif self.nf_label == u'1.1.1.1':  # rationals, special case
+            return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
             return nf_display_knowl(self.nf_label, name=r"\(\Q(w)\)")
 
@@ -79,7 +81,6 @@ class WebNewform(object):
             zero = [0] * self.dim
             if self.dim == 1:
                 s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
-                print s
             else:
                 s = r"q \)"
                 for n in range(2,prec):
@@ -88,7 +89,6 @@ class WebNewform(object):
                         coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
                         s += r" + \((%s) q^{%s}\)"%(coeff, n)
                 s += r" + \(O(q^{%s})"%(self.qexp_prec)
-                print s
                 s.replace('\beta_{1}','')
             return s
         else:
