@@ -1872,7 +1872,7 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, cur_count, header, kwds, adjust_schema=False):
+    def _copy_from(self, filename, table, columns, header, kwds, adjust_schema=False):
         """
         Helper function for ``copy_from`` and ``reload``.
 
@@ -1889,6 +1889,7 @@ class PostgresTable(PostgresBase):
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
         """
+        cur_count = self.max_id()
         sep = kwds.get("sep", u"\t")
         cur = self.conn.cursor()
         try:
@@ -1901,7 +1902,7 @@ class PostgresTable(PostgresBase):
 			columns = ["id"] + columns
                 else:
                     addid = False
-		
+
                 # We have to add quotes manually since copy_from doesn't accept
                 # psycopg2.sql.Identifiers
                 # None of our column names have double quotes in them. :-D
@@ -2247,6 +2248,9 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
+    def max_id(self):
+        return db._execute(SQL("SELECT MAX(id) FROM {}".format(self.seach_table))).fetchone()[0]
+
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
@@ -2271,9 +2275,9 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, self.stats.total, True, kwds)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, kwds)
             if extrafile is not None:
-                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, self.stats.total, True, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
                     raise ValueError("Different number of rows in searchfile and extrafile")
@@ -2949,6 +2953,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     level += 1
 
     def refresh_stats(self, total=True, suffix=''):
+        #FIXME total is not used
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
         table to determine which stats to recompute, and the rows with ``extra = True``
