@@ -30,7 +30,6 @@ def eigs_as_seqseq_to_qexp(eigseq):
         term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
         if term != 0:
              latexterm = latex(term*(q**j))
-             print latexterm
              if s <> '' and latexterm[0] <> '-':
                   latexterm = '+' + latexterm
              s += '\(' + latexterm + '\)'
@@ -108,11 +107,10 @@ class WebNewform(object):
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
         numerators = [coeff_to_poly(num, 'alpha')._latex_() for num in self.hecke_ring_numerators]
-        print numerators
         basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
         return ", ".join(r"\(\beta_%s = %s\)"%(i, x) for i, x in enumerate(basis))
 
-    def q_expansion(self, format):
+    def q_expansion(self, format, prec_max=10):
         # options for format: 'oneline', 'short', 'all'
         # Display the q-expansion.  If all is False, truncate to a low precision (e.g. 10).  Will be inside \( \).
         # For now we ignore the format and just print on one line
@@ -120,18 +118,11 @@ class WebNewform(object):
             if format == 'all':
                prec = self.qexp_prec 
             else:
-               prec = min(self.qexp_prec, 10)
+               prec = min(self.qexp_prec, prec_max)
             zero = [0] * self.dim
             if self.dim == 1:
                 s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
             else:
-#                s = r"\(q\)"
-#                for n in range(2,prec):
-#                    term = self.qexp[n]
-#                    if term != zero:
-#                        coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
-#                        s += r" + \((%s) q^{%s}\)"%(coeff, n)
-#                s += r" + \(O(q^{%s})"%(self.qexp_prec)
                 s = eigs_as_seqseq_to_qexp(self.qexp[:prec])
             return s
         else:
