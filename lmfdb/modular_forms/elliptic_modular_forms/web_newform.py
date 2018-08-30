@@ -105,7 +105,7 @@ class WebNewform(object):
         numerators = [coeff_to_poly(num, 'alpha')._latex_() for num in self.hecke_ring_numerators]
         print numerators
         basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
-        return ", ".join(r"\(\beta_%s = %s\)"%(i+1, x) for i, x in enumerate(basis))
+        return ", ".join(r"\(\beta_%s = %s\)"%(i, x) for i, x in enumerate(basis))
 
     def q_expansion(self, format):
         # options for format: 'oneline', 'short', 'all'
