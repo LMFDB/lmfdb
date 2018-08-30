@@ -1894,10 +1894,10 @@ class PostgresTable(PostgresBase):
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = ('id' in columns)
+                    addid = ('id' not in columns)
                 else:
                     addid = False
-
+		
                 # We have to add quotes manually since copy_from doesn't accept
                 # psycopg2.sql.Identifiers
                 # None of our column names have double quotes in them. :-D
