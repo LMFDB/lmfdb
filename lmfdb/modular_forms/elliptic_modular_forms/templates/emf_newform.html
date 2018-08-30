@@ -23,7 +23,7 @@ div.properties-body table tr td.label { vertical-align: top; }
   <div>
     {{ place_code('coefficient_field') }}
   </div>
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
   <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
   <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
   {% endif %}
