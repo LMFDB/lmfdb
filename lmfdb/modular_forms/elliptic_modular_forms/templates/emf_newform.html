@@ -18,15 +18,6 @@ div.properties-body table tr td.label { vertical-align: top; }
 {% if newform.has_exact_qexp %}
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
-  {% if newform.dim > 1 %}
-  <!-- Coefficient code depends on existence of form -->
-  <div>
-    {{ place_code('coefficient_field') }}
-  </div>
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
-  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
-  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
-  {% endif %}
   <div>
     {{ place_code('qexp') }}
   </div>
@@ -40,6 +31,19 @@ div.properties-body table tr td.label { vertical-align: top; }
     <br />
     <button id="download_exact">Download all</button>
   </form>
+
+  <h3> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} </h3>
+  <div>
+    {{ place_code('coefficient_field') }}
+  </div>
+  {% if newform.dim > 1 %}
+  <!-- Coefficient code depends on existence of form -->
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}</p>
+  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke order') }}: {{ newform.order_basis() }}</p>
+  <p> Index of {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }}: {{ newform.hecke_index }}</p>
+  {% else %}
+  <p> The form has coefficients in {{ newform.field_display() | safe }}.</p>
+  {% endif %}
 </div>
 {% else %}
 <h3>Coefficient field</h3>
@@ -49,8 +53,6 @@ div.properties-body table tr td.label { vertical-align: top; }
 <p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }} has KNOWL('nf.defining_polynomial',title='defining polynomial') {{ newform.defining_polynomial() }}.</p>
 <p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
 {% endif %}
-
-<h2>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}</h2>
 
 <!-- Complex embeddings and Satake parameters -->
 <!--
