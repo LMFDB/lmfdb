@@ -121,16 +121,16 @@ def url_for_space_label(label):
 
 def newform_jump(info):
     jump = info["jump"].strip()
-    if re.match(r'^\d+\.\d+\.o\d+\.[a-z]+$',jump):
+    if re.match(r'^\d+\.\d+\.\d+\.[a-z]+$',jump):
         return redirect(url_for_newform_label(jump), 301)
     else:
-        errmsg = "%s is not a valid genus newform orbit label"
+        errmsg = "%s is not a valid newform orbit label"
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
 def space_jump(info):
     # FIXME
-    #if re.match(r'^\d+\.\d+\.o\d+$',jump):
+    #if re.match(r'^\d+\.\d+\.\d+$',jump):
     #    return redirect(url_for_isogeny_class_label(jump), 301)
     #else:
     #    errmsg = "%s is not a valid newspace label"
