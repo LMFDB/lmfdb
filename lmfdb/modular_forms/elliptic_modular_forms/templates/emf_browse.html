@@ -23,7 +23,7 @@ By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
 </p>
 <p>
 By {{ KNOWL('mf.elliptic.level', title="level")}}:
-{% for level in info.level %}
+{% for level in info.level_list %}
 <a href="?level={{level}}">{{level}}</a>
 {% endfor %}
 </p>

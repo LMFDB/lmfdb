@@ -28,8 +28,8 @@ def index():
     info = {}
     newform_labels = ('1.12.o1.a',)
     info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
-    info["weight_list"] = ('1-1', '2-9', '10-99','100-999')
-    info["level_list"] = ('2-2', '3-4', '5-9')
+    info["weight_list"] = ('2', '3-4', '5-9', '10-50')
+    info["level_list"] = ('1', '2-9', '10-99', '100-1000')
     bread = [] # Fix
     return render_template("emf_browse.html",
                            info=info,
