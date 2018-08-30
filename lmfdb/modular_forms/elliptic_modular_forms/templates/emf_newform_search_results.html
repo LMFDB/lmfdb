@@ -43,12 +43,12 @@ Download all search results for&nbsp;
 <tr>
     <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
     <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dimension') }}</th>
-    <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Hecke Field') }}</th>
+    <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient Field') }}</th>
     <th>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
 </tr>
 {% for mf in info.results: %}
 <tr>
-    <td> {{mf.label}} </td>
+    <td> <a href="{{info.mf_url(mf.label)}}"> {{ mf.label}} </a> </td>
     <td> {{mf.dim}} </td>
     <td> {{ mf.field_knowl|safe }} </td>
     <td> </td>
@@ -60,5 +60,13 @@ Download all search results for&nbsp;
 {% include 'download_search_results.html' %}
 {% endif %}
 {% include 'debug_info.html' %}
+
+<!-- Debugging! -->
+{% if DEBUG %}
+<hr>
+<div>
+Info was: {{info}}
+</div>
+{% endif %}
 
 {% endblock %}
