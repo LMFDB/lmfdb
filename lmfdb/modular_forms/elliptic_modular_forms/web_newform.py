@@ -102,8 +102,9 @@ class WebNewform(object):
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        numerators = [coeff_to_poly(num, 'w')._latex_() for num in self.hecke_ring_numerators]
-        basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators)]
+        numerators = [coeff_to_poly(num, 'alpha')._latex_() for num in self.hecke_ring_numerators]
+        print numerators
+        basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
         return ", ".join(r"\(\beta_%s = %s\)"%(i+1, x) for i, x in enumerate(basis))
 
     def q_expansion(self, format):
