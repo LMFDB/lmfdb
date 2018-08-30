@@ -35,7 +35,6 @@ class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
-        print "self.nf_label", self.nf_label
 
         if space is None:
             # Need character info from spaces table
@@ -90,9 +89,10 @@ class WebNewform(object):
 
     def field_display(self):
         # display the coefficient field
-        if self.nf_label is None:
+        label = self.__dict__.get("nf_label")
+        if label is None:
             return r"\(\Q(\alpha)\)"
-        elif self.nf_label == u'1.1.1.1':  # rationals, special case
+        elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
             return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
