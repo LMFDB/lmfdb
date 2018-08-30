@@ -5,7 +5,7 @@ from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 import re
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o currently
 def valid_label(label):
@@ -118,7 +118,7 @@ class WebNewform(object):
                prec = min(self.qexp_prec, prec_max)
             zero = [0] * self.dim
             if self.dim == 1:
-                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
+                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
             else:
                 s = eigs_as_seqseq_to_qexp(self.qexp[:prec])
             return s
