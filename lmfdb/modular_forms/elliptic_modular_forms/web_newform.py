@@ -26,10 +26,12 @@ def eigs_as_seqseq_to_qexp(eigseq):
     for j in range(prec):
         term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
         if term != 0:
-             if s <> '':
-                  s += '+'
-             s += '\(' + latex(term*(q**j)) + '\)'
-    return s + '+\(O(q^{%s})\)' % prec
+             latexterm = latex(term*(q**j))
+             print latexterm
+             if s <> '' and latexterm[0] <> '-':
+                  latexterm = '+' + latexterm
+             s += '\(' + latexterm + '\)'
+    return s + '\(+O(q^{%s})\)' % prec
 
 class WebNewform(object):
     def __init__(self, data, space=None):
