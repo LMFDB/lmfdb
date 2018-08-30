@@ -24,7 +24,7 @@
         <td>\( {{ newform.weight }} \)</td>
     </tr>
     <tr>
-        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit: </td>
+        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit label: </td>
         <td> index(\([\chi]\)) </td>
         <td>=</td>
         <td>\( {{ newform.char_orbit }} \)</td>
@@ -38,16 +38,31 @@
 </table>
 
 {% if newform.has_exact_qexp %}
+
+<script>
+var cur_qexp = null;
+function show_qexp(qstyle) {
+    $('.smalloutput').hide();
+    $('.mediumoutput').hide();
+    $('.'+qstyle).show();
+  }
+</script>
+
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
   <form id="qexp">
     <div class="smalloutput">
-      <span id="qexp_largedisplay">\(f(q) =\) {{ newform.q_expansion(format='short') | safe }}</span>
+      <span id="qexp_display">\(f(q) =\) {{ newform.q_expansion(format='short', prec_max=10) | safe }}</span>
     </div>
-    <div class="emptyspace"><br></div>
-    <button id="morebutton">Show more coefficients</button>
-    <button id="lessbutton">Show fewer coefficients</button>
-    <br />
+    <div class="mediumoutput nodisplay">
+      <span id="qexp_display">\(f(q) =\) {{ newform.q_expansion(format='short', prec_max=100) | safe }}</span>
+    </div>
+<p>
+<div class="toggle">Display precision:
+    <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coeffs</a></span>
+    <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coeffs</a></span>
+</div>
+</p>
     <button id="download_exact">Download all</button>
   </form>
 
@@ -189,7 +204,7 @@
 
 <p>This newform is
 {% if not newform.is_cm %} not {% endif %}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() }}{% endif %}.
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
 This property has {% if not newform.cm_proved %}not{% endif %} been rigorously proved.</p>
 
 <p>This newform is
