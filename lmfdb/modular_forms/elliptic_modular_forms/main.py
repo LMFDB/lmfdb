@@ -163,6 +163,7 @@ def newform_search(info, query):
     parse_ints(info, query, 'weight')
     parse_ints(info, query, 'level')
     info["mf_url"] = lambda label: url_for_newform_label(label)
+    info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,

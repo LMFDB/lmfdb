@@ -48,9 +48,16 @@ Download all search results for&nbsp;
 </tr>
 {% for mf in info.results: %}
 <tr>
-    <td> <a href="{{info.mf_url(mf.label)}}"> {{ mf.label}} </a> </td>
-    <td> {{mf.dim}} </td>
-    <td> {{ mf.field_knowl|safe }} </td>
+    <td> <a href="{{info.mf_url(mf.label)}}"> {{ mf.label }} </a> </td>
+    <td> {{ mf.dim }} </td>
+    <td>
+        {% if mf.nf_label %}
+        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ mf.nf_label }} </a>
+        {% else %}
+        Not in LMFDB.
+        {# TODO make it clear we have poly #}
+        {% endif %}
+        {# TODO do we want a knowl here ? #}
     <td> </td>
 </tr>
 {% endfor %}
