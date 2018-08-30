@@ -11,7 +11,7 @@ from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
 from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
 from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import is_newform_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import is_mf_newform_in_db
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -927,13 +927,12 @@ def name_and_object_from_url(url):
         name = 'Isogeny class ' + label_isogeny_class;
 
     elif url_split[0] == "ModularForm":
-        return None, None #FIXME
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                # ModularForm/GL2/Q/holomorphic/14/2/1/a
-                full_label = ".".join(url_split[-4:])
-                name =  'Modular form ' + full_label;
-                obj_exists = is_newform_in_db(full_label);
+                # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
+                hecke_orbit_label = ".".join(url_split[-5:-1])
+                name =  'Modular form ' + hecke_orbit_label;
+                obj_exists = is_mf_newform_in_db(hecke_orbit_label);
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a

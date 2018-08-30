@@ -11,6 +11,9 @@ LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o cu
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
+def is_mf_newform_in_db(label):
+    return db.mf_newforms.exists({'label':label})
+
 def eigs_as_seqseq_to_qexp(eigseq):
     # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
     # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
