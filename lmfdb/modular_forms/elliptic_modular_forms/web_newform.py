@@ -15,6 +15,7 @@ class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
+        print "self.nf_label", self.nf_label
 
         if space is None:
             # Need character info from spaces table
@@ -40,6 +41,10 @@ class WebNewform(object):
             self.has_exact_qexp = False
 #        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
 #        self.angles = {data['embedding']:data['angles'] for data in angles}
+
+        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]    
+                     # label is the distinguished column in mf_newspaces,
+                     # and the space label is called "label" in mf_newspaces
 
         self.properties = [('Label', self.label), 
                            ('Weight', '%s' % self.weight),
