@@ -17,7 +17,7 @@ from Lfunctionutilities import (p2sage, string2number, get_bread,
                                 name_and_object_from_url)
 from LfunctionComp import EC_from_modform, isogeny_class_cm
 
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, getHmfData, getHgmData, getEllipticCurveData
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -561,6 +561,55 @@ class Lfunction_from_db(Lfunction):
         self.texnamecompleteds = "\\Lambda(s)"
         return
 
+    def _retrieve_lfunc_data_from_db(self):
+        self.lfunc_data = get_lfunction_by_url(self.url)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
+        return
+
+####################################################################################################
+
+class Lfunction_CMF(Lfunction_from_db):
+    """Class representing an classical modular form L-function
+
+    Compulsory parameters: weight
+                           level
+                           character
+                           label
+                           number
+    """
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct classical modular form L-function.',
+                               kwargs, 'weight','level','character','label','number')
+        validate_integer_args('Unable to construct classical modular form L-function.',
+                              kwargs, 'weight','level','character','number')
+        for key in ['weight','level','character','number']:
+            kwargs[key] = int(kwargs[key])
+
+        # Put the arguments in the object dictionary
+        self.__dict__.update(kwargs)
+        self.url  = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % (self.level,
+                                                        self.weight,
+                                                        self.character,
+                                                        self.label,
+                                                        self.number)
+        self._Ltype = "classical modular form"
+        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+
+        self.numcoeff = 10
+        self.langlands = True
+        self.instances = None
+
+
+    def _set_title(self):
+        chilatex = ("$\chi_{" + str(self.charactermodulus) +
+                        "} (" + str(self.characternumber) +", \cdot )$")
+        self.info['title_analytic'] = self.info['title_arithmetic'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
+            "with weight %s, level %s, and %s" % (
+            self.weight, self.level, chilatex))
+
 
 #############################################################################
 
@@ -781,127 +830,6 @@ class Lfunction_EC(Lfunction):
         # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
         return
 
-
-class Lfunction_EMF(Lfunction):
-    """Class representing an elliptic modular form L-function
-
-    Compulsory parameters: weight
-                           level
-                           character
-                           label
-                           number
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        validate_required_args('Unable to construct elliptic modular form L-function.',
-                               args, 'weight','level','character','label','number')
-        validate_integer_args('Unable to construct elliptic modular form L-function.',
-                              args, 'weight','level','character','number')
-
-        self._Ltype = "ellipticmodularform"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.weight = int(self.weight)
-        self.level = int(self.level)
-        self.character = int(self.character)
-        self.number = int(self.number)
-        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
-            self.weight * sqrt(self.level)))     # how to use more coefficients
-
-        # Create the modular form
-        try:
-            self.MF = WebNewForm(weight = self.weight, level = self.level,
-                                 character = self.character, label = self.label,
-                                 prec = self.numcoeff)
-            # Currently WebNewForm never generates an error so check that it has coefficients
-            test_if_loaded = self.MF.coefficient_embedding(1,self.number)
-            test_if_loaded = test_if_loaded # shut up pyflakes
-        except:
-            raise KeyError("The specified modular form does not appear to be in the database.")
-
-        # Mandatory properties
-        self.fromDB = False
-        self.coefficient_type = 0
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.quasidegree = 1
-        self.mu_fe = []
-        self.nu_fe = [Rational(self.weight - 1)/2]
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        self.algebraic = True
-        self.motivic_weight = self.weight - 1
-        self.automorphyexp = self.motivic_weight / 2.
-        # List of Dirichlet coefficients ################
-        self.dirichlet_coefficients_arithmetic = []
-        for n in range(1, self.numcoeff + 1):
-            self.dirichlet_coefficients_arithmetic.append(self.MF.coefficient_embedding(n,self.number))
-
-        self.dirichlet_coefficients = []
-        for n in range(1, len(self.dirichlet_coefficients_arithmetic) + 1):
-            self.dirichlet_coefficients.append(
-                self.dirichlet_coefficients_arithmetic[n-1] /
-                float(n ** self.automorphyexp))
-        # Determining the sign ########################
-        if self.level == 1:  # For level 1, sign = (-1)^(k/2)
-            self.sign = (-1)** (self.weight/2)
-        else:  # for level>1, calculate sign from Fricke involution and weight
-            if self.character > 0:
-                self.sign = signOfEmfLfunction(self.level, self.weight,
-                                               self.dirichlet_coefficients_arithmetic)
-            else:
-                self.AL = self.MF.atkin_lehner_eigenvalues()
-                self.sign = (self.AL[self.level]
-                             * (-1) ** (self.weight / 2.))
-        self.checkselfdual()
-
-        # Specific properties
-        # Get the data for the corresponding elliptic curve if possible
-        if self.weight == 2 and self.MF.is_rational:
-            self.ellipticcurve = EC_from_modform(self.level, self.label)
-            #self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.ellipticcurve)
-        else:
-            self.ellipticcurve = False
-
-        # Text for the web page
-        self.texname = "L(s,f)"
-        self.texnamecompleteds = "\\Lambda(s,f)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-
-        if self.character != 0:
-            characterName = (" character \(%s\)" %
-                             (self.MF.character.latex_name))
-        else:
-            characterName = " trivial character"
-        self.credit = 'Sage'
-
-        # Generate a function to do computations
-        if ( (self.number == 1 and (1 + self.level) * self.weight > 50) or
-               (self.number > 1 and self.level * self.weight > 50)):
-            self.sageLFunction = None
-        else:
-            generateSageLfunction(self)
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "mf"
-        self.info['label'] = '{0}.{1}.{2}.{3}.{4}'.format(str(self.level), str(self.weight),
-                                str(self.character), str(self.label), str(self.number))
-        self.info['title'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
-            "with weight %s, level %s, and %s" % (
-            self.weight, self.level, characterName))
-
-    def original_object(self):
-        return self.MF
 
 #############################################################################
 

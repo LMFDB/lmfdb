@@ -12,7 +12,8 @@ import numpy
 
 import LfunctionPlot
 
-from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunction_EC_Q,
+from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
+                       Lfunction_CMF,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
@@ -255,27 +256,27 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 
 # L-function of Cusp form ############################################
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/<number>/")
-def l_function_emf_page(level, weight, character, label, number):
+def l_function_cmf_page(level, weight, character, label, number):
     args = {'level': level, 'weight': weight, 'character': character,
             'label': label, 'number': number}
-    return render_single_Lfunction(Lfunction_EMF, args, request)
+    return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/")
-def l_function_emf_redirect_1(level, weight, character, label):
-    return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
+def l_function_cmf_redirect_1(level, weight, character, label):
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, label=label, number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/")
-def l_function_emf_redirect_2(level, weight, character):
-    return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
+def l_function_cmf_redirect_2(level, weight, character):
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, label='a', number='0'), code=301)
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/")
-def l_function_emf_redirect_3(level, weight):
-    return flask.redirect(url_for('.l_function_emf_page', level=level, weight=weight,
+def l_function_cmf_redirect_3(level, weight):
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character='1', label='a', number='0'), code=301)
 
 
@@ -934,7 +935,7 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
-        return Lfunction_EMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
+        return Lfunction_CMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)
