@@ -255,29 +255,29 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 
 
 # L-function of Cusp form ############################################
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/<number>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/<int:number>/")
 def l_function_cmf_page(level, weight, character, label, number):
     args = {'level': level, 'weight': weight, 'character': character,
             'label': label, 'number': number}
     return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/<label>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
 def l_function_cmf_redirect_1(level, weight, character, label):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label=label, number='0'), code=301)
+                                  character=character, label=label, number=1), code=301)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/<character>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_2(level, weight, character):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label='a', number='0'), code=301)
+                                  character=character, label='a', number=1), code=301)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<level>/<weight>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
 def l_function_cmf_redirect_3(level, weight):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character='1', label='a', number='0'), code=301)
+                                  character=1, label='a', number=1), code=301)
 
 
 # L-function of Hilbert modular form ###########################################
