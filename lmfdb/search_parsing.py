@@ -4,7 +4,7 @@
 
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -181,6 +181,7 @@ def parse_range2(arg, key, parse_singleton=int):
             q['$lte'] = parse_singleton(end)
         return [key, q]
     else:
+        print [key, parse_singleton(arg)]
         return [key, parse_singleton(arg)]
 
 # Like parse_range2, but to deal with strings which could be rational numbers
@@ -279,7 +280,7 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
-        raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):
