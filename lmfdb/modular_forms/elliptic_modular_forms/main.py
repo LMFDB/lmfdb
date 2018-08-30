@@ -4,7 +4,7 @@ from flask import render_template, url_for, redirect, abort, request
 import re
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
-from lmfdb.search_parsing import parse_ints, parse_bool, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
 from lmfdb.number_fields.number_field import field_pretty
@@ -168,7 +168,9 @@ def newform_search(info, query):
     parse_ints(info, query, 'char_orbit', name="Character orbit label")
     parse_ints(info, query, 'dim', name="Coefficient field dimension")
     parse_nf_string(info, query,'nf_label', name="Field")
-    parse_bool(info, query, 'is_cm','is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
+    parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
+    #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
+    parse_ints(info, query, 'cm_disc', name="CM discriminant")
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
     info["nf_pretty"] = lambda label: field_pretty(label)
