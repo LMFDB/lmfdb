@@ -1,7 +1,7 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range
+from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -11,11 +11,32 @@ LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o cu
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
+def eigs_as_seqseq_to_qexp(eigseq):
+    # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
+    # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
+    prec = len(eigseq)
+    if prec == 0:
+        return 'O(1)'
+    d = len(eigseq[0])
+    R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
+    Rgens = [1] + [g for g in R.gens()]
+    Rq = PowerSeriesRing(R, 'q')
+    q = Rq.gens()[0]
+    s = ''
+    for j in range(prec):
+        term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
+        if term != 0:
+             latexterm = latex(term*(q**j))
+             print latexterm
+             if s <> '' and latexterm[0] <> '-':
+                  latexterm = '+' + latexterm
+             s += '\(' + latexterm + '\)'
+    return s + '\(+O(q^{%s})\)' % prec
+
 class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
-        print "self.nf_label", self.nf_label
 
         if space is None:
             # Need character info from spaces table
@@ -70,21 +91,23 @@ class WebNewform(object):
 
     def field_display(self):
         # display the coefficient field
-        if self.nf_label is None:
-            return r"\(\Q(w)\)"
-        elif self.nf_label == u'1.1.1.1':  # rationals, special case
+        label = self.__dict__.get("nf_label")
+        if label is None:
+            return r"\(\Q(\alpha)\)"
+        elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
-            return nf_display_knowl(self.nf_label, name=r"\(\Q(w)\)")
+            return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
 
     def defining_polynomial(self):
         return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        numerators = [coeff_to_poly(num, 'w')._latex_() for num in self.hecke_ring_numerators]
-        basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators)]
-        return ", ".join(r"\(\beta_%s = %s\)"%(i+1, x) for i, x in enumerate(basis))
+        numerators = [coeff_to_poly(num, 'alpha')._latex_() for num in self.hecke_ring_numerators]
+        print numerators
+        basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
+        return ", ".join(r"\(\beta_%s = %s\)"%(i, x) for i, x in enumerate(basis))
 
     def q_expansion(self, format):
         # options for format: 'oneline', 'short', 'all'
@@ -99,14 +122,14 @@ class WebNewform(object):
             if self.dim == 1:
                 s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
             else:
-                s = r"q \)"
-                for n in range(2,prec):
-                    term = self.qexp[n]
-                    if term != zero:
-                        coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
-                        s += r" + \((%s) q^{%s}\)"%(coeff, n)
-                s += r" + \(O(q^{%s})"%(self.qexp_prec)
-                s.replace('\beta_{1}','')
+#                s = r"\(q\)"
+#                for n in range(2,prec):
+#                    term = self.qexp[n]
+#                    if term != zero:
+#                        coeff = " + ".join(r"%s \beta_{%s}"%(c,i+1) for i,c in enumerate(term) if c != 0)
+#                        s += r" + \((%s) q^{%s}\)"%(coeff, n)
+#                s += r" + \(O(q^{%s})"%(self.qexp_prec)
+                s = eigs_as_seqseq_to_qexp(self.qexp[:prec])
             return s
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()

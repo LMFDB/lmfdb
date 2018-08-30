@@ -4,9 +4,10 @@ from flask import render_template, url_for, redirect, abort, request
 import re
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
-from lmfdb.search_parsing import parse_ints # and more
+from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
+from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 
@@ -162,10 +163,17 @@ def newform_search(info, query):
     info['CC_lowm'] = 0
     info['CC_highm'] = 10 # Actually may need min(10, number of embeddings)
     info['CC_prec'] = 6
-    parse_ints(info, query, 'weight')
-    parse_ints(info, query, 'level')
+    parse_ints(info, query, 'weight', name="Weight")
+    parse_ints(info, query, 'level', name="Level")
+    parse_ints(info, query, 'char_orbit', name="Character orbit label")
+    parse_ints(info, query, 'dim', name="Coefficient field dimension")
+    parse_nf_string(info, query,'nf_label', name="Field")
+    parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
+    #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
+    parse_ints(info, query, 'cm_disc', name="CM discriminant")
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
+    info["nf_pretty"] = lambda label: field_pretty(label)
     info["web_newform"] = lambda label: WebNewform.by_label(label)
 
 @search_wrap(template="emf_space_search_results.html",

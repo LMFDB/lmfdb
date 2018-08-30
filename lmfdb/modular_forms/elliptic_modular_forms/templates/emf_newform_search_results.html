@@ -56,22 +56,22 @@ Download all search results for&nbsp;
     <td> {{ mf.dim }} </td>
     <td>
         {% if mf.nf_label %}
-        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ mf.nf_label }} </a>
+        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ info.nf_pretty(mf.nf_label) }} </a>
         {% else %}
         Not in LMFDB.
         {# TODO make it clear we have poly #}
         {% endif %}
         {# TODO do we want a knowl here ? #}
     </td>
-    <td>\({{ mf.trace_display[0] }}\)</td>
-    <td>\({{ mf.trace_display[1] }}\)</td>
-    <td>\({{ mf.trace_display[2] }}\)</td>
-    <td>\({{ mf.trace_display[3] }}\)</td>
+    <td align="right">\({{ mf.trace_display[0] }}\)</td>
+    <td align="right">\({{ mf.trace_display[1] }}\)</td>
+    <td align="right">\({{ mf.trace_display[2] }}\)</td>
+    <td align="right">\({{ mf.trace_display[3] }}\)</td>
     <td>
         {% if mf.qexp_display %}
         \({{ mf.qexp_display }}\)
         {% else %}
-        No data.
+        -
         {% endif %}
     </td>
 </tr>
