@@ -44,6 +44,10 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
     <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dimension') }}</th>
     <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient Field') }}</th>
+    <th>\(\operatorname{Tr}(a_2)\)</th>
+    <th>\(\operatorname{Tr}(a_3)\)</th>
+    <th>\(\operatorname{Tr}(a_5)\)</th>
+    <th>\(\operatorname{Tr}(a_7)\)</th>
     <th>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
 </tr>
 {% for mf in info.results: %}
@@ -59,7 +63,17 @@ Download all search results for&nbsp;
         {% endif %}
         {# TODO do we want a knowl here ? #}
     </td>
-    <td> {{ info.web_newform(mf.label).q_expansion(format='short') }}</td>
+    <td>\({{ mf.trace_display[0] }}\)</td>
+    <td>\({{ mf.trace_display[1] }}\)</td>
+    <td>\({{ mf.trace_display[2] }}\)</td>
+    <td>\({{ mf.trace_display[3] }}\)</td>
+    <td>
+        {% if mf.qexp_display %}
+        \({{ mf.qexp_display }}\)
+        {% else %}
+        No data.
+        {% endif %}
+    </td>
 </tr>
 {% endfor %}
 </table>
