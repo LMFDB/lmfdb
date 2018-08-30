@@ -1,6 +1,7 @@
 # See views/emf_main.py, genus2_curves/main.py
 
 from flask import render_template, url_for, redirect, abort, request
+import re
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
