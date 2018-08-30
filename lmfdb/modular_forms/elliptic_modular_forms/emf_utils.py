@@ -109,7 +109,8 @@ def parse_space_label(label):
 
 @cached_method
 def is_newform_in_db(newform_label):
-    from .web_newforms import WebNewForm
+    return
+    from .web_newform import WebNewform
     # first check that it is a valid label, otherwise raise ValueError
     t = parse_newform_label(newform_label)
     if len(t)==4:
@@ -117,5 +118,5 @@ def is_newform_in_db(newform_label):
     elif len(t)==5:
         level,weight,character,label,emb = t
     search = {'level':level,'weight':weight,'character':character,'label':label}
-    return WebNewForm._find_document_in_db_collection(search).count() > 0
+    return WebNewform._find_document_in_db_collection(search).count() > 0
 
