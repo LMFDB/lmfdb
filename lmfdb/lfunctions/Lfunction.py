@@ -101,15 +101,16 @@ def makeLfromdata(L):
         L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
     L.st_group = data.get('st_group', '')
     L.order_of_vanishing = data.get('order_of_vanishing', None)
+    L.analytic_normalization = float(data.get('analytic_normalization', None))
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
-        L.mu_fe.append(string2number(data.get('analytic_normalization', None)) +
+        L.mu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
     for i in range(0,len(data['gamma_factors'][1])):
-        L.nu_fe.append(string2number(data.get('analytic_normalization', None)) +
+        L.nu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
@@ -117,6 +118,11 @@ def makeLfromdata(L):
     L.motivic_weight = data.get('motivic_weight', None)
     if L.motivic_weight is None:
         L.motivic_weight = ''
+    else:
+        # Convert L.motivic_weight from python 'int' type to sage integer type.
+        # This is necessary because later we need to do L.motivic_weight/2
+        # when we write Gamma-factors in the arithmetic normalization.
+        L.motivic_weight = ZZ(L.motivic_weight)
 
     if hasattr(L, 'base_field'):
         field_degree = int(L.base_field().split('.')[0])
@@ -124,10 +130,8 @@ def makeLfromdata(L):
     else:
         #this assumes that the base field of the Galois representation is QQ
         L.st_link = st_link_by_name(L.motivic_weight, L.degree, L.st_group)
-    # Convert L.motivic_weight from python 'int' type to sage integer type.
-    # This is necessary because later we need to do L.motivic_weight/2
-    # when we write Gamma-factors in the arithmetic normalization.
-    L.motivic_weight = ZZ(data.get('motivic_weight', None))
+
+
     if data.get('credit', None) is not None:
         L.credit = data.get('credit', None)
 
@@ -149,15 +153,13 @@ def makeLfromdata(L):
                         L.dirichlet_coefficients_arithmetic[:i];
                     break;
     else:
-        print [ string2number(data['a' + str(i)]) for i in range(2, 11)]
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)] 
 
 
     L.dirichlet_coefficients = [None]*len(L.dirichlet_coefficients_arithmetic)
-    L.normalize_by = float(data.get('analytic_normalization', None))
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        if L.normalize_by > 0:
-            L.dirichlet_coefficients[n] = an/(n+1)**L.normalize_by
+        if L.analytic_normalization > 0:
+            L.dirichlet_coefficients[n] = an/(n+1)**L.analytic_normalization
         else:
             L.dirichlet_coefficients[n] = an
 
@@ -171,32 +173,33 @@ def makeLfromdata(L):
     L.bad_lfactors = data.get('bad_lfactors', None)
 
     # Configure the data for the zeros
-    if 'accuracy' in data:
-        L.accuracy = data.get('accuracy', None);
-    else:
-        L.accuracy = None
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
     L.positive_zeros = map(str, data['positive_zeros'][:zero_truncation])
+    L.accuracy = data.get('accuracy', None);
 
-    if L.accuracy is not None:
+    def convert_zeros(accuracy, list_zeros):
         two_power = 2 ** L.accuracy;
         # the zeros were stored with .str(truncate = false)
         # we recover all the bits
-        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in L.positive_zeros];
+        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros];
         # we convert them back to floats and we want to display their truncated version
-        L.positive_zeros = [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+        return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+
+    if L.accuracy is not None:
+        L.positive_zeros = convert_zeros(L.accuracy, L.positive_zeros)
 
     if L.selfdual:
-        L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.positive_zeros]
+        L.negative_zeros = L.positive_zeros[:]
     else:
-        dual_L_label = data.get('conjugate', None)
+        dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
-        L.negative_zeros = ["&minus;" + str(pos_zero) for pos_zero in
-                            dual_L_data['positive_zeros']]
-        L.negative_zeros = L.negative_zeros[:zero_truncation]
-
+        L.dual_accuracy = dual_L_data.get('accuracy', None);
+        L.negative_zeros = map(str, dual_L_data['positive_zeros'][:zero_truncation])
+        if L.dual_accuracy is not None:
+            L.negative_zeros = convert_zeros(L.dual_accuracy, L.negative_zeros)
+    L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.negative_zeros]
     L.negative_zeros.reverse()
     L.negative_zeros += ['0' for _ in range(data['order_of_vanishing'])]
     L.negative_zeros = ", ".join(L.negative_zeros)
@@ -205,20 +208,19 @@ def makeLfromdata(L):
         L.negative_zeros = L.negative_zeros + ", "
 
     # Configure the data for the plot
-    plot_delta = string2number(data['plot_delta'])
-    pos_plot = [[j * plot_delta,
-                 string2number(elt)]
+    plot_delta = float(data['plot_delta'])
+    pos_plot = [[j * plot_delta, string2number(elt)]
                           for j, elt in enumerate( data['plot_values'] )]
+
     if L.selfdual:
         neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
-        dual_plot_delta = string2number(dual_L_data['plot_delta'])
-        neg_plot = [[-j * dual_plot_delta,
-                 string2number(elt)]
-                 for j, elt in enumerate(dual_L_data['plot_values'][1:]) ]
+        dual_plot_delta = float(dual_L_data['plot_delta'])
+        neg_plot = [[-j * dual_plot_delta, string2number(elt)]
+                for j, elt in enumerate(dual_L_data['plot_values']) ][1:]
     neg_plot.reverse()
-    L.plotpoints = neg_plot[:] + pos_plot[:]
+    L.plotpoints = neg_plot + pos_plot
 
     L.fromDB = True
 
