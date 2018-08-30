@@ -7,6 +7,7 @@ from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
+from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace
 
@@ -166,6 +167,7 @@ def newform_search(info, query):
     parse_ints(info, query, 'level')
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
+    info["nf_pretty"] = lambda label: field_pretty(label)
     info["web_newform"] = lambda label: WebNewform.by_label(label)
 
 @search_wrap(template="emf_space_search_results.html",

@@ -56,7 +56,7 @@ Download all search results for&nbsp;
     <td> {{ mf.dim }} </td>
     <td>
         {% if mf.nf_label %}
-        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ mf.nf_label }} </a>
+        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ info.nf_pretty(mf.nf_label) }} </a>
         {% else %}
         Not in LMFDB.
         {# TODO make it clear we have poly #}
