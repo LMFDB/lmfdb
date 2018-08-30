@@ -1,6 +1,7 @@
 # See views/emf_main.py, genus2_curves/main.py
 
 from flask import render_template, url_for, redirect, abort, request
+import re
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints # and more
@@ -164,6 +165,7 @@ def newform_search(info, query):
     parse_ints(info, query, 'level')
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
+    info["web_newform"] = lambda label: WebNewform.by_label(label)
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,

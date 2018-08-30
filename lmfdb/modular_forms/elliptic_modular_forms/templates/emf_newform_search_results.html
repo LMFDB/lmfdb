@@ -58,7 +58,7 @@ Download all search results for&nbsp;
         {# TODO make it clear we have poly #}
         {% endif %}
         {# TODO do we want a knowl here ? #}
-    <td> </td>
+        <td> {{ info.web_newform(mf.label).q_expansion(format='short') }}</td>
 </tr>
 {% endfor %}
 </table>

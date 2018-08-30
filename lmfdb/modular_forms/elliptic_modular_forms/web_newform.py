@@ -15,7 +15,6 @@ class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
-        print "self.nf_label", self.nf_label
 
         if space is None:
             # Need character info from spaces table

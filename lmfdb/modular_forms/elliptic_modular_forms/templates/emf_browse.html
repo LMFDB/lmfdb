@@ -33,18 +33,18 @@ A <a href={{url_for('.random_form')}}>random newform</a> from the database.
 </p>
 
 <p>
-Some interesting curves:
+Some interesting newforms:
 {% for newform in info.newform_list %}
 <a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
 {% endfor %}
 </p>
 
-<h2> Find a specific curve by {{ KNOWL('g2c.label', title='label')}} </h2>
+<h2> Find a specific newform by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
 <form>
-<input type='text' name='jump' placeholder='169.a.169.1'>
+<input type='text' name='jump' placeholder='3.6.1.a'>
 <button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 169.a.169.1 </span>
+<br><span class="formexample">e.g. 3.6.1.a </span>
 </form>
 
 
