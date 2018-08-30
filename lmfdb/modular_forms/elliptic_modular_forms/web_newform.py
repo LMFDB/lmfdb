@@ -69,12 +69,13 @@ class WebNewform(object):
 
     def field_display(self):
         # display the coefficient field
-        if self.nf_label is None:
+        label = self.__dict__.get("nf_label")
+        if label is None:
             return r"\(\Q(w)\)"
-        elif self.nf_label == u'1.1.1.1':  # rationals, special case
-            return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
+        elif label == u'1.1.1.1':  # rationals, special case
+            return nf_display_knowl(label, name=r"\(\Q\)")
         else:
-            return nf_display_knowl(self.nf_label, name=r"\(\Q(w)\)")
+            return nf_display_knowl(label, name=r"\(\Q(w)\)")
 
     def defining_polynomial(self):
         return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
