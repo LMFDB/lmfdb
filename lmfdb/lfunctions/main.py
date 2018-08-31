@@ -441,7 +441,8 @@ def initLfunction(L, args, request):
     else:
         lcalcUrl = request.path + '&download=lcalcfile'
 
-    info['downloads'] = [('Lcalcfile', lcalcUrl)]
+    #FIXME, can we disable this?
+    #info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
@@ -462,6 +463,7 @@ def set_gaga_properties(L):
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
+    # FIXME
     # Disable until fixed
     # prim = 'Primitive' if L.primitive else 'Not primitive'
     # ans.append((None,        prim))
@@ -499,8 +501,8 @@ def set_bread_and_friends(L, request):
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.path)])
 
-    elif L.Ltype() == 'ellipticcurve':
-        bread = L.bread
+    elif L.Ltype() in ['ellipticcurve', "classical modular form", "general"]:
+        bread = L.bread + [(L.origin_label, request.path)]
         origins = L.origins
         friends = L.friends
         factors = L.factors
@@ -653,12 +655,6 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    elif L.Ltype() == "general":
-        bread = L.bread
-        origins = L.origins
-        friends = L.friends
-        factors = L.factors
-        instances = L.instances
 
     return (bread, origins, friends, factors, instances)
 

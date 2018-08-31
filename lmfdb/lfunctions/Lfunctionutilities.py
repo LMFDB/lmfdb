@@ -11,7 +11,6 @@ from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
 from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
 from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import is_mf_newform_in_db
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -378,16 +377,24 @@ def lfuncEPtex(L, fmt):
             ans = "\\begin{equation} \n " + L.texname_arithmetic + " = "
         else:
             ans = "\\begin{equation} \n " + L.texname + " = "
+
         if L.Ltype() == "riemann":
             ans += "\\prod_p (1 - p^{-s})^{-1}"
+
         elif L.Ltype() == "dirichlet":
             ans += "\\prod_p (1- \\chi(p) p^{-s})^{-1}"
-        elif L.Ltype() == "ellipticmodularform":
-            ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+
+        elif L.Ltype() == "classical modular form" and fmt == "arithmetic":
+                ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
+            #FIXME, this is consistent with G2C and EC
+            # but do we really want this?
+            #else:
+            #    ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s/2})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s/2} + \chi(p)p^{-s})^{-1}"
+
+
         elif L.Ltype() == "hilbertmodularform":
             ans += "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
-        #elif L.Ltype() == "ellipticcurveQ": # covered by lfuncEPhtml with ellipticcurve
-        #    ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + p^{-2s})^{-1}"
+
         elif L.Ltype() == "maass":
             if L.group == 'GL2':
                 ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s} + \chi(p)p^{-2s})^{-1}"
@@ -398,26 +405,28 @@ def lfuncEPtex(L, fmt):
                     "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
         elif L.Ltype() == "SymmetricPower":
             ans += lfuncEpSymPower(L)
+
         elif L.langlands:
             if L.degree > 1:
                 if fmt == "arithmetic":
                     ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
-                        "} (1 - \\alpha_{j,p}\\,  p^{" + str(L.motivic_weight) + "/2 - s})^{-1}"
+                        "} (1 - \\alpha_{j,p}\\,    p^{" + str(L.motivic_weight) + "/2 - s})^{-1}"
                 else:
                     ans += "\\prod_p \\ \\prod_{j=1}^{" + str(L.degree) + \
                         "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
+
         elif L.Ltype() == "general":
             return ("For information concerning the Euler product, see other "
                     "instances of this L-function.")
 
         else:
-            return("No information is available about the Euler product.")
+            return("\\text{No information is available about the Euler product.}")
         ans += " \n \\end{equation}"
         return(ans)
     else:
-        return("No information is available about the Euler product.")
+        return("\\text{No information is available about the Euler product.}")
 
 def lfuncEPhtml(L,fmt):
     """ Euler product as a formula and a table of local factors.
@@ -918,7 +927,6 @@ def name_and_object_from_url(url):
         if url_split[1] == 'Q':
             # EllipticCurve/Q/341641/a
             label_isogeny_class = ".".join(url_split[-2:]);
-            # count doesn't honor limit!
             obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
         else:
             # EllipticCurve/2.2.140.1/14.1/a
@@ -932,7 +940,9 @@ def name_and_object_from_url(url):
                 # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
                 hecke_orbit_label = ".".join(url_split[-5:-1])
                 name =  'Modular form ' + hecke_orbit_label;
-                obj_exists = is_mf_newform_in_db(hecke_orbit_label);
+                #FIXME call db
+                obj_exists = False
+                #obj_exists = is_mf_newform_in_db(hecke_orbit_label);
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a

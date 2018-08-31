@@ -460,26 +460,34 @@ class Lfunction_from_db(Lfunction):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct L-function from lhash.',
                                kwargs, 'Lhash')
-        self._Ltype = "general"
         self.numcoeff = 30
 
-        # this controls data on the Euler product, but is not stored
-        # systematically in the database. Default to False until this
-        # is retrievable from the database.
-        self.langlands = False
+        
 
         self.__dict__.update(kwargs)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
-        self._set_web_displaynames()
         self.info = self.general_webpagedata()
         self._set_title()
         self.credit = ''
         self.label = ''
 
+    def Ltype(self):
+        return "general"
+
+    @property
+    def langlands(self):
+        # this controls data on the Euler product, but is not stored
+        # systematically in the database. Default to True until this
+        # is retrievable from the database.
+        return True
     @property
     def bread(self):
         return [('L-functions', url_for('.l_function_top_page'))]
+
+    @property
+    def origin_label(self):
+        return self.Lhash
 
     @property
     def factors(self):
@@ -517,7 +525,7 @@ class Lfunction_from_db(Lfunction):
             if obj_exists:
                 lorigins.append((name, "/"+instance['url']))
             else:
-                name += '&nbsp;  n/a';
+                name = '(%s)' % (name)
                 lorigins.append((name, ""))
         return lorigins
 
@@ -531,10 +539,9 @@ class Lfunction_from_db(Lfunction):
         which includes the character. Otherwise, make a title without character.
         '''
         try:
-            chilatex = ("$\chi_{" + str(self.charactermodulus) +
-                        "} (" + str(self.characternumber) +", \cdot )$")
+            chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
         except KeyError:
-            chilatex = ''
+            chilatex = None
         if chilatex:
             title_end = (
                     " of degree {degree}, weight {weight},"
@@ -551,15 +558,35 @@ class Lfunction_from_db(Lfunction):
         self.info['title_analytic'] = ("L-function" + title_end)
         return
 
-    def _set_web_displaynames(self):
-        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
-        self.texname = "L(s)"
-        self.texname_arithmetic = "L(s)"
-        self.texnamecompleted1ms = "\\Lambda(1-s)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
-        self.texnamecompleteds = "\\Lambda(s)"
-        return
+    @property
+    def htmlname(self):
+        return "<em>L</em>(<em>s</em>)"
+
+    @property
+    def htmlname_arithmetic(self):
+        return self.htmlname
+
+    @property
+    def texname(self):
+        return "L(s)"
+
+    @property
+    def texname_arithmetic(self):
+        return self.texname
+
+    @property
+    def texnamecompleted1ms(self):
+        return "\\Lambda(1-s)"
+    @property
+    def texnamecompleted1ms_arithmetic(self):
+        return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
+
+    @property
+    def texnamecompleteds(self):
+        return  "\\Lambda(s)"
+    @property
+    def texnamecompleteds_arithmetic(self):
+        return self.texnamecompleteds
 
     def _retrieve_lfunc_data_from_db(self):
         self.lfunc_data = get_lfunction_by_url(self.url)
@@ -578,6 +605,7 @@ class Lfunction_CMF(Lfunction_from_db):
                            label
                            number
     """
+
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct classical modular form L-function.',
@@ -586,30 +614,51 @@ class Lfunction_CMF(Lfunction_from_db):
                               kwargs, 'weight','level','character','number')
         for key in ['weight','level','character','number']:
             kwargs[key] = int(kwargs[key])
-
+        self.kwargs = kwargs
         # Put the arguments in the object dictionary
         self.__dict__.update(kwargs)
-        self.url  = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % (self.level,
-                                                        self.weight,
-                                                        self.character,
-                                                        self.label,
-                                                        self.number)
-        self._Ltype = "classical modular form"
+        self.label_args = (self.level, self.weight, self.character, self.label, self.number)
+        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
         self.Lhash = get_instance_by_url(self.url)['Lhash']
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+        #self.label =  ".".join(map(str, self.label_args))
 
         self.numcoeff = 10
-        self.langlands = True
         self.instances = None
 
+    def Ltype(self):
+        return  "classical modular form"
+
+    @property
+    def origin_label(self):
+        return ".".join(map(str, (self.level, self.weight, self.character, self.label, self.number)))
+
+#    @property
+#    def htmlname(self):
+#        return "<em>L</em>(<em>s, f</em>)"
+#    @property
+#    def htmlname_arithmetic(self):
+#        return "<em>L</em>(<em>f, s</em>)"
+#    @property
+#    def texname(self):
+#        return "L(s, f)"
+#    @property
+#    def texname_arithmetic(self):
+#        return "L(f, s)"
+
+    @property
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
     def _set_title(self):
-        chilatex = ("$\chi_{" + str(self.charactermodulus) +
-                        "} (" + str(self.characternumber) +", \cdot )$")
-        self.info['title_analytic'] = self.info['title_arithmetic'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
-            "with weight %s, level %s, and %s" % (
-            self.weight, self.level, chilatex))
+        chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
+            self.weight, self.level, chilatex)
 
+        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+        #self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        #self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
+        #self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
 
 #############################################################################
 
@@ -647,7 +696,8 @@ class Lfunction_EC(Lfunction):
         self.poles = []
         self.residues = []
         self.degree = self.field_degree * 2;
-        self.langlands = self.is_langlands()
+        # this is only use for the display of the euler factors
+        self.langlands = True # self.is_langlands()
 
         self.initialize_webpage_data()
 
@@ -680,21 +730,9 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(2,
                     [
                       ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
-                      (self.label, url_for('.l_function_ec_page',
-                              conductor_label=self.conductor,
-                              isogeny_class_label = self.isogeny_class_label))
                     ])
         else:
-            lbread = get_bread(self.degree,
-                [
-                    # FIXME there is no .l_function_ecnf_browse_page
-                    #('Elliptic Curve', url_for('.l_function_ec_browse_page')),
-                    (self.label,
-                     url_for('.l_function_ecnf_page',
-                            field_label = self.field_label,
-                            conductor_label = self.conductor_label,
-                            isogeny_class_label = self.long_isogeny_class_label))
-                ])
+            lbread = get_bread(self.degree, [])
         return lbread
 
     @property
@@ -727,13 +765,13 @@ class Lfunction_EC(Lfunction):
         lfriends = []
         if self.base_field() == '1.1.1.1': #i.e. QQ
             # only show symmetric powers for non-CM curves
-            if not isogeny_class_cm(self.label):
+            if not isogeny_class_cm(self.origin_label):
                 lfriends.append(('Symmetric square L-function',
                                 url_for(".l_function_ec_sym_page_label",
-                                    power='2', label=self.label)))
+                                    power='2', label=self.origin_label)))
                 lfriends.append(('Symmetric cube L-function',
                                 url_for(".l_function_ec_sym_page_label",
-                                    power='3', label=self.label)))
+                                    power='3', label=self.origin_label)))
         return lfriends
 
     @property
@@ -743,11 +781,11 @@ class Lfunction_EC(Lfunction):
         return []
 
     @property
-    def label(self):
+    def origin_label(self):
         if self.field_degree == 1:
             llabel = self.long_isogeny_class_label
         else:
-            llabel = self.field_label + "." + self.long_isogeny_class_label
+            llabel = self.field_label + "-" + self.long_isogeny_class_label
         return llabel
 
     @property
@@ -762,7 +800,7 @@ class Lfunction_EC(Lfunction):
             if obj_exists:
                 lorigins.append((name, "/"+url));
             else:
-                name += '&nbsp;  n/a';
+                name = '(%s)' % name;
                 lorigins.append((name, ""));
         if self.base_field() == '1.1.1.1': #i.e. QQ
             #TODO replace classical modular forms origin by adding an object to the database
@@ -774,8 +812,8 @@ class Lfunction_EC(Lfunction):
                        character=1, label=self.isogeny_class_label)
                    ))
             else:
-                lorigins.append(('Modular form ' + (self.long_isogeny_class_label)
-                                .replace('.', '.2') +'&nbsp;  n/a', ""))
+                lorigins.append(('(Modular form ' + (self.long_isogeny_class_label)
+                                .replace('.', '.2') +')', ""))
         return lorigins
 
     def _parse_labels(self):
@@ -826,7 +864,7 @@ class Lfunction_EC(Lfunction):
         self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(%s-s)" % (self.motivic_weight + 1,)
         # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
         return
 
