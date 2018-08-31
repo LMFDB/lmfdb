@@ -14,9 +14,11 @@ def valid_label(label):
 def valid_gamma1(label):
     return GAMMA1_RE.match(label)
 
-def common_latex(level, weight, conrey=None, S="S", t=0, typ=""):
+def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     if conrey is None or conrey == 1:
         char = ""
+    elif symbolic_chi:
+        char = r", \chi"
     else:
         char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
     if typ:
@@ -97,16 +99,20 @@ class WebGamma1Space(object):
         self.level = level
         self.weight = weight
         #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'cyc_degree'], sort=[])
-        newspaces = db.mf_newspaces.search({'level':level, 'weight':weight})
+        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
         self.mf_dim = sum(space['mf_dim']*space['cyc_degree'] for space in newspaces)
         self.eis_dim = sum(space['eis_dim']*space['cyc_degree'] for space in newspaces)
         self.eis_new_dim = sum(space['eis_new_dim']*space['cyc_degree'] for space in newspaces)
         self.cusp_dim = sum(space['cusp_dim']*space['cyc_degree'] for space in newspaces)
         self.new_dim = sum(space['dim']*space['cyc_degree'] for space in newspaces)
-        self.old_dim = sum(space['old_dim']*space['cyc_degree'] for space in newspaces)
-        newforms = db.mf_newforms.search({'level':level, 'weight':weight})
+        self.old_dim = sum((space['cusp_dim']-space['dim'])*space['cyc_degree'] for space in newspaces)
+        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
+        #print "spaces", newspaces
+        #print "forms", newforms
+        #print "decomp", self.decomp
+        print self.decomposition()
         self.properties = [] # properties box
         self.bread = [] # bread
         self.title = r"Space of Modular Forms \(%s\)"%(self.mf_latex())
@@ -121,7 +127,7 @@ class WebGamma1Space(object):
         return WebGamma1Space(level, weight)
 
     def _vec(self):
-        return [self.weight, self.level, None]
+        return [self.level, self.weight, None]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M",1]))
@@ -141,6 +147,9 @@ class WebGamma1Space(object):
     def old_latex(self):
         return common_latex(*(self._vec() + ["S",1,"old"]))
 
+    def header_latex(self):
+        return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + '\)'
+
     def _link(self, N, i=None, typ="new", label=True):
         if label:
             if i is None:
@@ -151,11 +160,11 @@ class WebGamma1Space(object):
             t = 1 if i is None else 0
             name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ)
         if i is None:
-            url = url_for(".render_full_gamma1_space_webpage",
-                          label = "%s.%s" % (N, self.weight))
+            url = url_for(".by_url_full_gammma1_space_label",
+                          level=N, weight=self.weight)
         else:
-            url = url_for(".render_space_webpage",
-                          label = "%s.%s.%s" % (N, self.weight, i))
+            url = url_for(".by_url_space_label",
+                          level=N, weight=self.weight, char_orbit=i)
         return r"<a href={url}>{name}</a>".format(url=url, name=name)
 
     def oldspace_decomposition(self):
