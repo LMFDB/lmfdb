@@ -17,7 +17,7 @@ from Lfunctionutilities import (p2sage, string2number, get_bread,
                                 name_and_object_from_url)
 from LfunctionComp import EC_from_modform, isogeny_class_cm
 
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, getHmfData, getHgmData, getEllipticCurveData
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -84,39 +84,45 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data['Lhash'];
-    L.algebraic = data['algebraic']
-    L.degree = data['degree']
-    L.level = data['conductor']
-    central_character = data['central_character']
+    L.Lhash = data.get('Lhash', None);
+    L.algebraic = data.get('algebraic', None)
+    L.degree = data.get('degree', None)
+    L.level = data.get('conductor', None)
+    central_character = data.get('central_character', None)
     L.charactermodulus, L.characternumber = central_character.split(".")
     L.charactermodulus = int(L.charactermodulus)
     L.characternumber = int(L.characternumber)
-    L.primitive = data['primitive']
-    L.selfdual = data['self_dual']
-    if 'root_number' in data:
-        L.sign = string2number(data['root_number'])
+    L.primitive = data.get('primitive', None)
+    L.selfdual = data.get('self_dual', None)
+    if data.get('root_number', None) is not None:
+        L.sign = string2number(data.get('root_number', None))
     else:
-        L.sign = exp(2*pi*I*float(data['sign_arg'])).n()
-    L.st_group = data['st_group']
-    L.order_of_vanishing = data['order_of_vanishing']
+        assert data.get('sign_arg', None) is not None
+        L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
+    L.st_group = data.get('st_group', '')
+    L.order_of_vanishing = data.get('order_of_vanishing', None)
+    L.analytic_normalization = float(data.get('analytic_normalization', None))
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
-        L.mu_fe.append(string2number(data['analytic_normalization']) +
+        L.mu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][0][i]))
 
     L.nu_fe = []
     for i in range(0,len(data['gamma_factors'][1])):
-        L.nu_fe.append(string2number(data['analytic_normalization']) +
+        L.nu_fe.append(L.analytic_normalization +
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # Optional properties
-    if 'motivic_weight' in data:
-        L.motivic_weight = data['motivic_weight']
-    else:
+    L.motivic_weight = data.get('motivic_weight', None)
+    if L.motivic_weight is None:
         L.motivic_weight = ''
+    else:
+        # Convert L.motivic_weight from python 'int' type to sage integer type.
+        # This is necessary because later we need to do L.motivic_weight/2
+        # when we write Gamma-factors in the arithmetic normalization.
+        L.motivic_weight = ZZ(L.motivic_weight)
 
     if hasattr(L, 'base_field'):
         field_degree = int(L.base_field().split('.')[0])
@@ -124,20 +130,18 @@ def makeLfromdata(L):
     else:
         #this assumes that the base field of the Galois representation is QQ
         L.st_link = st_link_by_name(L.motivic_weight, L.degree, L.st_group)
-    # Convert L.motivic_weight from python 'int' type to sage integer type.
-    # This is necessary because later we need to do L.motivic_weight/2
-    # when we write Gamma-factors in the arithmetic normalization.
-    L.motivic_weight = ZZ(data['motivic_weight'])
-    if 'credit' in data.keys():
-        L.credit = data['credit']
+
+
+    if data.get('credit', None) is not None:
+        L.credit = data.get('credit', None)
 
     # Dirichlet coefficients
-    if 'dirichlet_coefficients' in data:
-        L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
-    else:
+    if data.get('dirichlet_coefficients', None) is not None:
+        L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
+    elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
         L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
-            data['euler_factors']), 2*L.degree*L.numcoeff)
+            data.get('euler_factors', None)), 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
         count = 0;
@@ -148,52 +152,54 @@ def makeLfromdata(L):
                     L.dirichlet_coefficients_arithmetic = \
                         L.dirichlet_coefficients_arithmetic[:i];
                     break;
+    else:
+        L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)] 
 
-    L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
-    L.normalize_by = string2number(data['analytic_normalization'])
-    for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
-        an = L.dirichlet_coefficients_arithmetic[n]
-        if L.normalize_by > 0:
-            L.dirichlet_coefficients[n] = float(an/(n+1)**L.normalize_by)
+
+    L.dirichlet_coefficients = [None]*len(L.dirichlet_coefficients_arithmetic)
+    for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
+        if L.analytic_normalization > 0:
+            L.dirichlet_coefficients[n] = an/(n+1)**L.analytic_normalization
         else:
             L.dirichlet_coefficients[n] = an
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
-        convert_dirichlet_Lfunction_coefficients(L, data['coeff_info'])
+        convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
 
-    L.localfactors = p2sage(data['euler_factors'])
+    L.localfactors = p2sage(data.get('euler_factors', None))
     # Currently the database stores the bad_lfactors as a list and the euler_factors
     # as a string.  Those should be the same.  Once that change is made, either the
     # line above or the line below will break.  (DF and SK, Aug 4, 2015)
-    L.bad_lfactors = data['bad_lfactors']
+    L.bad_lfactors = data.get('bad_lfactors', None)
 
     # Configure the data for the zeros
-    if 'accuracy' in data:
-        L.accuracy = data['accuracy'];
-    else:
-        L.accuracy = None
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
     L.positive_zeros = map(str, data['positive_zeros'][:zero_truncation])
+    L.accuracy = data.get('accuracy', None);
 
-    if L.accuracy is not None:
+    def convert_zeros(accuracy, list_zeros):
         two_power = 2 ** L.accuracy;
         # the zeros were stored with .str(truncate = false)
         # we recover all the bits
-        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in L.positive_zeros];
+        int_zeros = [ (RealNumber(elt) * two_power).round() for elt in list_zeros];
         # we convert them back to floats and we want to display their truncated version
-        L.positive_zeros = [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+        return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
+
+    if L.accuracy is not None:
+        L.positive_zeros = convert_zeros(L.accuracy, L.positive_zeros)
 
     if L.selfdual:
-        L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.positive_zeros]
+        L.negative_zeros = L.positive_zeros[:]
     else:
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
-        L.negative_zeros = ["&minus;" + str(pos_zero) for pos_zero in
-                            dual_L_data['positive_zeros']]
-        L.negative_zeros = L.negative_zeros[:zero_truncation]
-
+        L.dual_accuracy = dual_L_data.get('accuracy', None);
+        L.negative_zeros = map(str, dual_L_data['positive_zeros'][:zero_truncation])
+        if L.dual_accuracy is not None:
+            L.negative_zeros = convert_zeros(L.dual_accuracy, L.negative_zeros)
+    L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.negative_zeros]
     L.negative_zeros.reverse()
     L.negative_zeros += ['0' for _ in range(data['order_of_vanishing'])]
     L.negative_zeros = ", ".join(L.negative_zeros)
@@ -202,18 +208,19 @@ def makeLfromdata(L):
         L.negative_zeros = L.negative_zeros + ", "
 
     # Configure the data for the plot
-    pos_plot = [[j * string2number(data['plot_delta']),
-                 string2number(data['plot_values'][j])]
-                          for j in range(len(data['plot_values']))]
+    plot_delta = float(data['plot_delta'])
+    pos_plot = [[j * plot_delta, string2number(elt)]
+                          for j, elt in enumerate( data['plot_values'] )]
+
     if L.selfdual:
-        neg_plot = [ [-1*pt[0], string2number(data['root_number']) * pt[1]]
+        neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
-        neg_plot = [[-j * string2number(dual_L_data['plot_delta']),
-                 string2number(dual_L_data['plot_values'][j])]
-                          for j in range(1,len(dual_L_data['plot_values']))]
+        dual_plot_delta = float(dual_L_data['plot_delta'])
+        neg_plot = [[-j * dual_plot_delta, string2number(elt)]
+                for j, elt in enumerate(dual_L_data['plot_values']) ][1:]
     neg_plot.reverse()
-    L.plotpoints = neg_plot[:] + pos_plot[:]
+    L.plotpoints = neg_plot + pos_plot
 
     L.fromDB = True
 
@@ -453,26 +460,34 @@ class Lfunction_from_db(Lfunction):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct L-function from lhash.',
                                kwargs, 'Lhash')
-        self._Ltype = "general"
         self.numcoeff = 30
 
-        # this controls data on the Euler product, but is not stored
-        # systematically in the database. Default to False until this
-        # is retrievable from the database.
-        self.langlands = False
+        
 
         self.__dict__.update(kwargs)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
-        self._set_web_displaynames()
         self.info = self.general_webpagedata()
         self._set_title()
         self.credit = ''
         self.label = ''
 
+    def Ltype(self):
+        return "general"
+
+    @property
+    def langlands(self):
+        # this controls data on the Euler product, but is not stored
+        # systematically in the database. Default to True until this
+        # is retrievable from the database.
+        return True
     @property
     def bread(self):
         return [('L-functions', url_for('.l_function_top_page'))]
+
+    @property
+    def origin_label(self):
+        return self.Lhash
 
     @property
     def factors(self):
@@ -510,7 +525,7 @@ class Lfunction_from_db(Lfunction):
             if obj_exists:
                 lorigins.append((name, "/"+instance['url']))
             else:
-                name += '&nbsp;  n/a';
+                name = '(%s)' % (name)
                 lorigins.append((name, ""))
         return lorigins
 
@@ -524,10 +539,9 @@ class Lfunction_from_db(Lfunction):
         which includes the character. Otherwise, make a title without character.
         '''
         try:
-            chilatex = ("$\chi_{" + str(self.charactermodulus) +
-                        "} (" + str(self.characternumber) +", \cdot )$")
+            chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
         except KeyError:
-            chilatex = ''
+            chilatex = None
         if chilatex:
             title_end = (
                     " of degree {degree}, weight {weight},"
@@ -544,16 +558,107 @@ class Lfunction_from_db(Lfunction):
         self.info['title_analytic'] = ("L-function" + title_end)
         return
 
-    def _set_web_displaynames(self):
-        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"
-        self.texname = "L(s)"
-        self.texname_arithmetic = "L(s)"
-        self.texnamecompleted1ms = "\\Lambda(1-s)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
-        self.texnamecompleteds = "\\Lambda(s)"
+    @property
+    def htmlname(self):
+        return "<em>L</em>(<em>s</em>)"
+
+    @property
+    def htmlname_arithmetic(self):
+        return self.htmlname
+
+    @property
+    def texname(self):
+        return "L(s)"
+
+    @property
+    def texname_arithmetic(self):
+        return self.texname
+
+    @property
+    def texnamecompleted1ms(self):
+        return "\\Lambda(1-s)"
+    @property
+    def texnamecompleted1ms_arithmetic(self):
+        return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
+
+    @property
+    def texnamecompleteds(self):
+        return  "\\Lambda(s)"
+    @property
+    def texnamecompleteds_arithmetic(self):
+        return self.texnamecompleteds
+
+    def _retrieve_lfunc_data_from_db(self):
+        self.lfunc_data = get_lfunction_by_url(self.url)
+        if not self.lfunc_data:
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
         return
 
+####################################################################################################
+
+class Lfunction_CMF(Lfunction_from_db):
+    """Class representing an classical modular form L-function
+
+    Compulsory parameters: weight
+                           level
+                           character
+                           label
+                           number
+    """
+
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct classical modular form L-function.',
+                               kwargs, 'weight','level','character','label','number')
+        validate_integer_args('Unable to construct classical modular form L-function.',
+                              kwargs, 'weight','level','character','number')
+        for key in ['weight','level','character','number']:
+            kwargs[key] = int(kwargs[key])
+        self.kwargs = kwargs
+        # Put the arguments in the object dictionary
+        self.__dict__.update(kwargs)
+        self.label_args = (self.level, self.weight, self.character, self.label, self.number)
+        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
+        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+        #self.label =  ".".join(map(str, self.label_args))
+
+        self.numcoeff = 10
+        self.instances = None
+
+    def Ltype(self):
+        return  "classical modular form"
+
+    @property
+    def origin_label(self):
+        return ".".join(map(str, (self.level, self.weight, self.character, self.label, self.number)))
+
+#    @property
+#    def htmlname(self):
+#        return "<em>L</em>(<em>s, f</em>)"
+#    @property
+#    def htmlname_arithmetic(self):
+#        return "<em>L</em>(<em>f, s</em>)"
+#    @property
+#    def texname(self):
+#        return "L(s, f)"
+#    @property
+#    def texname_arithmetic(self):
+#        return "L(f, s)"
+
+    @property
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+
+    def _set_title(self):
+        chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
+            self.weight, self.level, chilatex)
+
+        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+        #self.info['title'] = "$" + self.texname + "$" + ", " + title_end
+        #self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
+        #self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
 
 #############################################################################
 
@@ -591,7 +696,8 @@ class Lfunction_EC(Lfunction):
         self.poles = []
         self.residues = []
         self.degree = self.field_degree * 2;
-        self.langlands = self.is_langlands()
+        # this is only use for the display of the euler factors
+        self.langlands = True # self.is_langlands()
 
         self.initialize_webpage_data()
 
@@ -624,21 +730,9 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(2,
                     [
                       ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
-                      (self.label, url_for('.l_function_ec_page',
-                              conductor_label=self.conductor,
-                              isogeny_class_label = self.isogeny_class_label))
                     ])
         else:
-            lbread = get_bread(self.degree,
-                [
-                    # FIXME there is no .l_function_ecnf_browse_page
-                    #('Elliptic Curve', url_for('.l_function_ec_browse_page')),
-                    (self.label,
-                     url_for('.l_function_ecnf_page',
-                            field_label = self.field_label,
-                            conductor_label = self.conductor_label,
-                            isogeny_class_label = self.long_isogeny_class_label))
-                ])
+            lbread = get_bread(self.degree, [])
         return lbread
 
     @property
@@ -671,13 +765,13 @@ class Lfunction_EC(Lfunction):
         lfriends = []
         if self.base_field() == '1.1.1.1': #i.e. QQ
             # only show symmetric powers for non-CM curves
-            if not isogeny_class_cm(self.label):
+            if not isogeny_class_cm(self.origin_label):
                 lfriends.append(('Symmetric square L-function',
                                 url_for(".l_function_ec_sym_page_label",
-                                    power='2', label=self.label)))
+                                    power='2', label=self.origin_label)))
                 lfriends.append(('Symmetric cube L-function',
                                 url_for(".l_function_ec_sym_page_label",
-                                    power='3', label=self.label)))
+                                    power='3', label=self.origin_label)))
         return lfriends
 
     @property
@@ -687,11 +781,11 @@ class Lfunction_EC(Lfunction):
         return []
 
     @property
-    def label(self):
+    def origin_label(self):
         if self.field_degree == 1:
             llabel = self.long_isogeny_class_label
         else:
-            llabel = self.field_label + "." + self.long_isogeny_class_label
+            llabel = self.field_label + "-" + self.long_isogeny_class_label
         return llabel
 
     @property
@@ -706,20 +800,20 @@ class Lfunction_EC(Lfunction):
             if obj_exists:
                 lorigins.append((name, "/"+url));
             else:
-                name += '&nbsp;  n/a';
+                name = '(%s)' % name;
                 lorigins.append((name, ""));
         if self.base_field() == '1.1.1.1': #i.e. QQ
             #TODO replace classical modular forms origin by adding an object to the database
             if self.conductor <= 101:
                 lorigins.append(
                    ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
-                       url_for("emf.by_url_newform_label",
+                       url_for("emf.render_elliptic_modular_forms",
                        level=self.conductor, weight=2,
-                       char_orbit=1, hecke_orbit=self.isogeny_class_label)
+                       character=1, label=self.isogeny_class_label)
                    ))
             else:
-                lorigins.append(('Modular form ' + (self.long_isogeny_class_label)
-                                .replace('.', '.2') +'&nbsp;  n/a', ""))
+                lorigins.append(('(Modular form ' + (self.long_isogeny_class_label)
+                                .replace('.', '.2') +')', ""))
         return lorigins
 
     def _parse_labels(self):
@@ -770,131 +864,10 @@ class Lfunction_EC(Lfunction):
         self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
         self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
         self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(" + str(self.motivic_weight + 1) + "-s)"
+        self.texnamecompleted1ms_arithmetic = "\\Lambda(%s-s)" % (self.motivic_weight + 1,)
         # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
         return
 
-
-class Lfunction_EMF(Lfunction):
-    """Class representing an elliptic modular form L-function
-
-    Compulsory parameters: weight
-                           level
-                           character
-                           label
-                           number
-    """
-
-    def __init__(self, **args):
-        constructor_logger(self, args)
-
-        validate_required_args('Unable to construct elliptic modular form L-function.',
-                               args, 'weight','level','character','label','number')
-        validate_integer_args('Unable to construct elliptic modular form L-function.',
-                              args, 'weight','level','character','number')
-
-        self._Ltype = "ellipticmodularform"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.weight = int(self.weight)
-        self.level = int(self.level)
-        self.character = int(self.character)
-        self.number = int(self.number)
-        self.numcoeff = 20 + int(5 * math.ceil(  # Testing NB: Need to learn
-            self.weight * sqrt(self.level)))     # how to use more coefficients
-
-        # Create the modular form
-        try:
-            self.MF = WebNewForm(weight = self.weight, level = self.level,
-                                 character = self.character, label = self.label,
-                                 prec = self.numcoeff)
-            # Currently WebNewForm never generates an error so check that it has coefficients
-            test_if_loaded = self.MF.coefficient_embedding(1,self.number)
-            test_if_loaded = test_if_loaded # shut up pyflakes
-        except:
-            raise KeyError("The specified modular form does not appear to be in the database.")
-
-        # Mandatory properties
-        self.fromDB = False
-        self.coefficient_type = 0
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.degree = 2
-        self.quasidegree = 1
-        self.mu_fe = []
-        self.nu_fe = [Rational(self.weight - 1)/2]
-        self.compute_kappa_lambda_Q_from_mu_nu()
-        self.algebraic = True
-        self.motivic_weight = self.weight - 1
-        self.automorphyexp = self.motivic_weight / 2.
-        # List of Dirichlet coefficients ################
-        self.dirichlet_coefficients_arithmetic = []
-        for n in range(1, self.numcoeff + 1):
-            self.dirichlet_coefficients_arithmetic.append(self.MF.coefficient_embedding(n,self.number))
-
-        self.dirichlet_coefficients = []
-        for n in range(1, len(self.dirichlet_coefficients_arithmetic) + 1):
-            self.dirichlet_coefficients.append(
-                self.dirichlet_coefficients_arithmetic[n-1] /
-                float(n ** self.automorphyexp))
-        # Determining the sign ########################
-        if self.level == 1:  # For level 1, sign = (-1)^(k/2)
-            self.sign = (-1)** (self.weight/2)
-        else:  # for level>1, calculate sign from Fricke involution and weight
-            if self.character > 0:
-                self.sign = signOfEmfLfunction(self.level, self.weight,
-                                               self.dirichlet_coefficients_arithmetic)
-            else:
-                self.AL = self.MF.atkin_lehner_eigenvalues()
-                self.sign = (self.AL[self.level]
-                             * (-1) ** (self.weight / 2.))
-        self.checkselfdual()
-
-        # Specific properties
-        # Get the data for the corresponding elliptic curve if possible
-        if self.weight == 2 and self.MF.is_rational:
-            self.ellipticcurve = EC_from_modform(self.level, self.label)
-            #self.nr_of_curves_in_class = nr_of_EC_in_isogeny_class(self.ellipticcurve)
-        else:
-            self.ellipticcurve = False
-
-        # Text for the web page
-        self.texname = "L(s,f)"
-        self.texnamecompleteds = "\\Lambda(s,f)"
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s,f)"
-        else:
-            self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-
-        if self.character != 0:
-            characterName = (" character \(%s\)" %
-                             (self.MF.character.latex_name))
-        else:
-            characterName = " trivial character"
-        self.credit = 'Sage'
-
-        # Generate a function to do computations
-        if ( (self.number == 1 and (1 + self.level) * self.weight > 50) or
-               (self.number > 1 and self.level * self.weight > 50)):
-            self.sageLFunction = None
-        else:
-            generateSageLfunction(self)
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "mf"
-        self.info['label'] = '{0}.{1}.{2}.{3}.{4}'.format(str(self.level), str(self.weight),
-                                str(self.character), str(self.label), str(self.number))
-        self.info['title'] = ("$L(s,f)$, where $f$ is a holomorphic cusp form " +
-            "with weight %s, level %s, and %s" % (
-            self.weight, self.level, characterName))
-
-    def original_object(self):
-        return self.MF
 
 #############################################################################
 
@@ -946,7 +919,7 @@ class Lfunction_Maass(Lfunction):
 
             # Specific properties
             if not self.selfdual:
-                self.dual_link = '/L' + self.lfunc_data['conjugate']
+                self.dual_link = '/L' + self.lfunc_data.get('conjugate', None)
             title_end = " on $%s$" % (self.group)
 
         else:   # Generate from Maass form
