@@ -1737,6 +1737,8 @@ class PostgresTable(PostgresBase):
         - ``extra_table`` -- a string giving the name of the extra_table to be sorted.
             If None, will use ``self.extra_table``; another common input is ``self.extra_table + "_tmp"``.
         """
+        print "resorting disabled"
+        return
         with DelayCommit(self, silence=True):
             if self._id_ordered and (search_table is not None or self._out_of_order):
                 now = time.time()
@@ -1870,7 +1872,7 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, cur_count, header, kwds, adjust_schema=False):
+    def _copy_from(self, filename, table, columns, header, kwds, adjust_schema=False):
         """
         Helper function for ``copy_from`` and ``reload``.
 
@@ -1887,6 +1889,7 @@ class PostgresTable(PostgresBase):
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
         """
+        cur_count = self.max_id()
         sep = kwds.get("sep", u"\t")
         cur = self.conn.cursor()
         try:
@@ -1894,7 +1897,9 @@ class PostgresTable(PostgresBase):
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = (columns[0] == 'id')
+                    addid = ('id' not in columns)
+		    if addid:
+			columns = ["id"] + columns
                 else:
                     addid = False
 
@@ -2243,6 +2248,9 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
+    def max_id(self):
+        return db._execute(SQL("SELECT MAX(id) FROM {}".format(self.search_table))).fetchone()[0]
+
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
@@ -2267,9 +2275,9 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, self.stats.total, True, kwds)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, kwds)
             if extrafile is not None:
-                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, self.stats.total, True, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
                     raise ValueError("Different number of rows in searchfile and extrafile")
@@ -2945,6 +2953,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     level += 1
 
     def refresh_stats(self, total=True, suffix=''):
+        #FIXME total is not used
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
         table to determine which stats to recompute, and the rows with ``extra = True``
@@ -3571,7 +3580,7 @@ class PostgresDatabase(PostgresBase):
                                          SQL(", ").join(extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
+            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")
