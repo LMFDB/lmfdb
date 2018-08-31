@@ -98,11 +98,11 @@ class WebNewform(object):
         # display the coefficient field
         label = self.__dict__.get("nf_label")
         if label is None:
-            return r"\(\Q(\alpha)\)"
+            return r"\(\Q(\nu)\)"
         elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
-            return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
+            return r"\(\Q(\nu)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):

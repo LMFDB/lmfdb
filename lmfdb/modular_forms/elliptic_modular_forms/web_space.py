@@ -84,7 +84,7 @@ class WebNewformSpace(object):
         # returns a list of 5-tuples (label, url, dim, field, qexp)
         # Field may need to be augmented to support pretty printing, minimal poly, knowl, etc.
         for newform in self.newforms:
-            yield (newform.label, url_for_newform_label(newform.label), newform.dim, newform.nf_label, newform.q_expansion('oneline'))
+            yield (newform.label, url_for_newform_label(newform.label), newform.dim, newform.__dict__.get('nf_label') or "Not in LMFDB", newform.q_expansion('oneline'))
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.

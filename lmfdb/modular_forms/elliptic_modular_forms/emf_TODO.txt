@@ -6,11 +6,8 @@ CRITICAL (BUGS):
 * throughout: work with labels e.g. '11.2.a.a'
 * navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
 * navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
-* form pages: some fields not displaying KNOWL e.g. 17/4/1/c
 * form pages: q-expansion not displaying when it should e.g. 17/4/1/c 
-* browse page: jump not working
 * browse page: also browse to spaces 
-* browse/search page: search on twist minimal gives search on inner twist?
 * search page: put all of the search boxes in the refine search
 * form pages: get cc data to display
 * data: add cc data

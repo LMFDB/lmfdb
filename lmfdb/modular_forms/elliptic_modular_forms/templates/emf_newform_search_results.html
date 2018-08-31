@@ -42,8 +42,9 @@ Download all search results for&nbsp;
 <table class="ntdata">
 <tr>
     <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-    <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dimension') }}</th>
-    <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient Field') }}</th>
+    <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dim.') }}</th>
+    <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
+    <th>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
     <th>\(\operatorname{Tr}(a_2)\)</th>
     <th>\(\operatorname{Tr}(a_3)\)</th>
     <th>\(\operatorname{Tr}(a_5)\)</th>
@@ -63,6 +64,7 @@ Download all search results for&nbsp;
         {% endif %}
         {# TODO do we want a knowl here ? #}
     </td>
+    <td>{{ "Yes" if mf.is_cm else "No" }}</td>
     <td align="right">\({{ mf.trace_display[0] }}\)</td>
     <td align="right">\({{ mf.trace_display[1] }}\)</td>
     <td align="right">\({{ mf.trace_display[2] }}\)</td>
