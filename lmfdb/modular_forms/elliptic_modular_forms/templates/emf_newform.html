@@ -33,7 +33,8 @@
         <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
         <td> \( \chi \) </td>
         <td>=</td>
-        <td>{{ newform.char_conrey_link | safe }} (minimal Conrey label in orbit)</td>
+        <td>{{ newform.char_conrey_link | safe }} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+
     </tr>
 </table>
 
@@ -221,7 +222,7 @@ has
 does not have
 {% endif %}
 an
-{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}{% if newform.has_inner_twist %}, by the characters {% for c in newform.inner_twist %}\(\chi_{ {{newform.level}}}({{c}},\cdot)\), {% endfor %}{% endif %}.</p>{# TODO neaten this #}
+{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}{% if newform.has_inner_twist %}, by the characters {% for c in newform.inner_twist %}\(\chi_{ {{newform.level}}}({{c}},\cdot)\), {% endfor %}{% endif %}.</p>{# TODO neaten this, add knowls #}
 
 {% if newform.character == 1 %}
 <p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>
