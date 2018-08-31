@@ -9,6 +9,7 @@ from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 from lmfdb.characters.utils import url_character
 import re
+from sage.databases.cremona import cremona_letter_code
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
@@ -71,6 +72,7 @@ class WebNewform(object):
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
+        self.char_orbit_label = "\(" + str(self.level) + "\)." + cremona_letter_code(self.char_orbit - 1)
 
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
