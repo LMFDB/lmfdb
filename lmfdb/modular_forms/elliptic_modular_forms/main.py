@@ -176,7 +176,6 @@ def newform_search(info, query):
     info["mf_url"] = lambda label: url_for_newform_label(label)
     info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
     info["nf_pretty"] = lambda label: field_pretty(label)
-    info["web_newform"] = lambda label: WebNewform.by_label(label)
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,
