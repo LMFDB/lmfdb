@@ -27,13 +27,13 @@
         <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit label: </td>
         <td> index(\([\chi]\)) </td>
         <td>=</td>
-        <td>\( {{ newform.char_orbit }} \)</td>
+        <td>{{ newform.char_orbit_label }}</td>
     </tr>
     <tr>
         <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
         <td> \( \chi \) </td>
         <td>=</td>
-        <td>{{ newform.char_conrey_link | safe }} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+        <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a> (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
 
     </tr>
 </table>
@@ -216,15 +216,11 @@ not
 
 {# TODO we might wish to have some disclaimer here about provability #}
 <p>This newform
-{% if newform.has_inner_twist %}
-has
-{% else %}
-does not have
-{% endif %}
+{{ "has*" if newform.has_inner_twist else "does not have*" }}
 an
-{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}{% if newform.has_inner_twist %}, by the characters {% for c in newform.inner_twist %}\(\chi_{ {{newform.level}}}({{c}},\cdot)\), {% endfor %}{% endif %}.</p>{# TODO neaten this, add knowls #}
+{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.{#{% if newform.has_inner_twist %} TODO fix this, we changed to orbit labels not conrey indices , by the characters {% for c,link in newform.inner_twist %}<a href="{{ link }}">\(\chi_{ {{newform.level}}}({{c}},\cdot)\)</a>{{ ", " if not loop.last }}{% endfor %}{% endif %}.</p>  #}
 
-{% if newform.character == 1 %}
+{% if newform.char_orbit == 1 and newform.level != 1 %}
 <p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>
 <table class="ntdata">
   <thead>

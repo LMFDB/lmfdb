@@ -186,7 +186,7 @@ def newform_search(info, query):
     #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
-    parse_bool(info, query, 'inner_twist',name='has an inner twist')
+    parse_bool(info, query, 'has_inner_twist',name='has an inner twist')
     set_info_funcs(info)
 
 @search_wrap(template="emf_space_search_results.html",
