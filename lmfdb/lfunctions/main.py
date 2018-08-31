@@ -380,6 +380,8 @@ def l_function_lcalc_page():
 # L-function by hash ###########################################################
 @l_function_page.route("/lhash/<lhash>")
 @l_function_page.route("/lhash/<lhash>/")
+@l_function_page.route("/Lhash/<lhash>")
+@l_function_page.route("/Lhash/<lhash>/")
 def l_function_by_hash_page(lhash):
     args = {'Lhash': lhash}
     return render_single_Lfunction(Lfunction_from_db, args, request)

@@ -7,8 +7,11 @@ from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
+from lmfdb.characters.utils import url_character
 import re
-LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$") # not putting in o currently
+from sage.databases.cremona import cremona_letter_code
+
+LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
@@ -107,10 +110,9 @@ class WebNewform(object):
                      # label is the distinguished column in mf_newspaces,
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = '<a href="' + url_for('characters.render_Dirichletwebpage',
-                                                      modulus=self.level,
-                                                      number=self.char_conrey)
-        self.char_conrey_link += '">\({}\)</a>'.format(self.char_conrey_str)
+        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
+        self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
+        self.char_orbit_label = "\(" + str(self.level) + "\)." + cremona_letter_code(self.char_orbit - 1)
 
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),

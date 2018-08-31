@@ -13,8 +13,8 @@ CRITICAL (BUGS):
 * data: Need to create mf_oldsubs table
 
 IMPORTANT:
-* search page: include dim, isCM, and field as columns in the search results
 * search page: change the character search field: should give a letter (we should have a discussion about whether we require input of the form N.i that includes the level)
+* search_page: add order of character
 * space pages: add text explaining the dimensions
 * space pages: properties box should have something
 * Dirichlet char pages: list orbit labels

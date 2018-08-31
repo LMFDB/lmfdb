@@ -669,7 +669,7 @@ class WebChar(WebCharObject):
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
-            url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+            url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
         if self.type == 'Dirichlet':
