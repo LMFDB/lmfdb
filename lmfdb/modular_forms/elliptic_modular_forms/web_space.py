@@ -29,6 +29,44 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
+class DimGrid(object):
+    def __init__(self, grid=None):
+        if grid is None:
+            self._grid = {'M':{'all':0,'new':0,'old':0},
+                          'S':{'all':0,'new':0,'old':0},
+                          'E':{'all':0,'new':0,'old':0}}
+        else:
+            self._grid = grid
+
+    def __getitem__(self, X):
+        return self._grid[X]
+
+    def __add__(self, other):
+        if isinstance(other,int) and other == 0: # So that we can do sum(grids)
+            return self
+        elif isinstance(other,DimGrid):
+            grid = {}
+            for X in ['M','S','E']:
+                grid[X] = {}
+                for typ in ['all','new','old']:
+                    grid[X][typ] = self._grid[X][typ] + other._grid[X][typ]
+            return DimGrid(grid)
+        else:
+            raise TypeError
+
+    @staticmethod
+    def from_db(data):
+        grid = {'M':{'all':data['mf_dim'],
+                     'new':data['dim']+data['eis_new_dim'],
+                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
+                'S':{'all':data['cusp_dim'],
+                     'new':data['dim'],
+                     'old':data['cusp_dim']-data['dim']},
+                'E':{'all':data['eis_dim'],
+                     'new':data['eis_new_dim'],
+                     'old':data['eis_dim']-data['eis_new_dim']}}
+        return DimGrid(grid)
+
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
@@ -39,6 +77,7 @@ class WebNewformSpace(object):
         for old in oldspaces:
             N, k, i = old['new_label'].split('.')
             self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
+        self.dim_grid = DimGrid.from_db(data)
         self.old_dim = self.cusp_dim - self.dim
         self.eis_old_dim = self.eis_dim - self.eis_new_dim
         self.properties = [] # properties box

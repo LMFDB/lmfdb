@@ -15,44 +15,6 @@ LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
-class DimGrid(object):
-    def __init__(self, grid=None):
-        if grid is None:
-            self._grid = {'M':{'all':0,'new':0,'old':0},
-                          'S':{'all':0,'new':0,'old':0},
-                          'E':{'all':0,'new':0,'old':0}}
-        else:
-            self._grid = grid
-
-    def __getitem__(self, X):
-        return self._grid[X]
-
-    def __add__(self, other):
-        if isinstance(other,int) and other == 0: # So that we can do sum(grids)
-            return self
-        elif isinstance(other,DimGrid):
-            grid = {}
-            for X in ['M','S','E']:
-                grid[X] = {}
-                for typ in ['all','new','old']:
-                    grid[X][typ] = self._grid[X][typ] + other._grid[X][typ]
-            return DimGrid(grid)
-        else:
-            raise TypeError
-
-    @staticmethod
-    def from_db(data):
-        grid = {'M':{'all':data['mf_dim'],
-                     'new':data['dim']+data['eis_new_dim'],
-                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
-                'S':{'all':data['cusp_dim'],
-                     'new':data['dim'],
-                     'old':data['cusp_dim']-data['dim']},
-                'E':{'all':data['eis_dim'],
-                     'new':data['eis_new_dim'],
-                     'old':data['eis_dim']-data['eis_new_dim']}}
-        return DimGrid(grid)
-
 def eigs_as_seqseq_to_qexp(eigseq):
     # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
     # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
@@ -80,7 +42,6 @@ class WebNewform(object):
         self.__dict__.update(data)
         self._data = data
 
-        self.dim_grid = DimGrid.from_db(data)
         if space is None:
             # Need character info from spaces table
             chardata = db.mf_newspaces.lookup(self.space_label,['conrey_labels','cyc_degree'])

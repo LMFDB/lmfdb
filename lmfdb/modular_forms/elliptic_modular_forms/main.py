@@ -9,8 +9,8 @@ from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, pars
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, DimGrid
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid
 from sage.databases.cremona import class_to_int
 
 def learnmore_list():
@@ -40,7 +40,11 @@ def set_info_funcs(info):
 @emf.route("/")
 def index():
     if len(request.args) > 0:
-        return newform_search(request.args)
+        print request.args
+        if request.args.get('submit') == 'Dimensions':
+            return dimension_search(request.args)
+        else:
+            return newform_search(request.args)
     info = {}
     newform_labels = ('1.12.a.a','11.2.a.a')
     info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
@@ -206,15 +210,26 @@ def dimension_postprocess(res, info, query):
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
+    print "weight_list", info["weight_list"]
     info['level_list'] = integer_options(query['weight'], max_opts=2000)
+    print "level_list", info["level_list"]
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large")
+    if query.get('char_order') == 1:
+        def url_generator(N, k):
+            return url_for(".by_url_space_label", level=N, weight=k, char_orbit="a")
+    else:
+        def url_generator(N, k):
+            return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+    info['url_generator'] = url_generator
+    return dim_dict
 
 @search_wrap(template="emf_dimension_search_results.html",
              table=db.mf_newforms,
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
+             postprocess=dimension_postprocess,
              bread=lambda:[], # FIXME
              learnmore=learnmore_list,
              credit=credit)
