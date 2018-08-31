@@ -37,6 +37,7 @@ class WebNewform(object):
     def __init__(self, data, space=None):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
+        self._data = data
 
         if space is None:
             # Need character info from spaces table
@@ -98,11 +99,25 @@ class WebNewform(object):
         # display the coefficient field
         label = self.__dict__.get("nf_label")
         if label is None:
-            return r"\(\Q(\alpha)\)"
+            return r"\(\Q(\nu)\)"
         elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
-            return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
+            return r"\(\Q(\nu)\) = " + self.field_knowl()
+
+    def cm_field_knowl(self):
+        # The knowl for the CM field, with appropriate title
+        if self.cm_disc == 0:
+            raise ValueError("Not CM")
+        cm_label = "2.0.%s.1"%(-self.cm_disc)
+        return nf_display_knowl(cm_label, field_pretty(cm_label))
+
+    def field_knowl(self):
+        label = self.__dict__.get("nf_label")
+        if label:
+            return nf_display_knowl(label, field_pretty(label))
+        else:
+            return "Not in LMFDB"
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
@@ -111,9 +126,9 @@ class WebNewform(object):
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        numerators = [coeff_to_poly(num, 'alpha')._latex_() for num in self.hecke_ring_numerators]
+        numerators = [coeff_to_poly(num, 'nu')._latex_() for num in self.hecke_ring_numerators]
         basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
-        return ", ".join(r"\(\beta_%s = %s\)"%(i, x) for i, x in enumerate(basis))
+        return ", ".join(r"\(\beta_{%s} = %s\)"%(i, x) for i, x in enumerate(basis))
 
     def q_expansion(self, format, prec_max=10):
         # options for format: 'oneline', 'short', 'all'
@@ -169,10 +184,3 @@ class WebNewform(object):
             return range(a, b)
         else:
             return prime_range(a, b)
-
-    def cm_field_knowl(self):
-        # The knowl for the CM field, with appropriate title
-        if self.cm_disc == 0:
-            raise ValueError("Not CM")
-        cm_label = "2.0.%s.1"%(-self.cm_disc)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))

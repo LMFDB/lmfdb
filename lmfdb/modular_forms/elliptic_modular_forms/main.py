@@ -24,12 +24,23 @@ def credit():
     # FIXME
     return "???"
 
+def set_info_funcs(info):
+    info["mf_url"] = lambda mf: url_for_newform_label(mf['label'])
+    def nf_link(mf):
+        nf_label = mf.get('nf_label')
+        if nf_label:
+            return '<a href="{0}"> {1} </a>'.format(url_for("number_fields.by_label", label=nf_label),
+                                                    field_pretty(nf_label))
+        else:
+            return "Not in LMFDB"
+    info["nf_link"] = nf_link
+
 @emf.route("/")
 def index():
     if len(request.args) > 0:
         return newform_search(request.args)
     info = {}
-    newform_labels = ('1.12.1.a','11.2.1.a')
+    newform_labels = ('1.12.a.a','11.2.a.a')
     info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')
@@ -68,7 +79,10 @@ def render_space_webpage(label):
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
+    info = {'results':space.newforms} # so we can reuse search result code
+    set_info_funcs(info)
     return render_template("emf_space.html",
+                           info=info,
                            space=space,
                            properties=space.properties,
                            credit=credit(),
@@ -93,7 +107,7 @@ def render_full_gamma1_space_webpage(label):
 
 @emf.route("/<int:level>/")
 def by_url_level(level):
-    return newform_search(query={'level' : level})
+    return newform_search({'level' : level})
 
 @emf.route("/<int:level>/<int:weight>/")
 def by_url_full_gammma1_space_label(level, weight):
@@ -173,10 +187,7 @@ def newform_search(info, query):
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
     parse_bool(info, query, 'inner_twist',name='has an inner twist')
-    info["mf_url"] = lambda label: url_for_newform_label(label)
-    info["nf_url"] = lambda label: url_for("number_fields.by_label", label=label)
-    info["nf_pretty"] = lambda label: field_pretty(label)
-    info["web_newform"] = lambda label: WebNewform.by_label(label)
+    set_info_funcs(info)
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,

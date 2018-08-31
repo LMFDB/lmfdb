@@ -39,44 +39,7 @@ Download all search results for&nbsp;
 {% include 'matches.html' %}
 {% if info.number %}
 
-<table class="ntdata">
-<tr>
-    <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-    <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dimension') }}</th>
-    <th>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient Field') }}</th>
-    <th>\(\operatorname{Tr}(a_2)\)</th>
-    <th>\(\operatorname{Tr}(a_3)\)</th>
-    <th>\(\operatorname{Tr}(a_5)\)</th>
-    <th>\(\operatorname{Tr}(a_7)\)</th>
-    <th>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
-</tr>
-{% for mf in info.results: %}
-<tr>
-    <td> <a href="{{info.mf_url(mf.label)}}"> {{ mf.label }} </a> </td>
-    <td> {{ mf.dim }} </td>
-    <td>
-        {% if mf.nf_label %}
-        <a href="{{ info.nf_url(mf.nf_label) }}"> {{ info.nf_pretty(mf.nf_label) }} </a>
-        {% else %}
-        Not in LMFDB.
-        {# TODO make it clear we have poly #}
-        {% endif %}
-        {# TODO do we want a knowl here ? #}
-    </td>
-    <td align="right">\({{ mf.trace_display[0] }}\)</td>
-    <td align="right">\({{ mf.trace_display[1] }}\)</td>
-    <td align="right">\({{ mf.trace_display[2] }}\)</td>
-    <td align="right">\({{ mf.trace_display[3] }}\)</td>
-    <td>
-        {% if mf.qexp_display %}
-        \({{ mf.qexp_display }}\)
-        {% else %}
-        -
-        {% endif %}
-    </td>
-</tr>
-{% endfor %}
-</table>
+{% include 'emf_newform_list.html' %}
 
 {% include 'forward_back.html' %}
 {% include 'download_search_results.html' %}
