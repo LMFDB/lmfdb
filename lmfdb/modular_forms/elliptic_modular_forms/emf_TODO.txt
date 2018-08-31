@@ -28,6 +28,7 @@ IMPORTANT:
 * form pages: download to Sage/Magma/pari (using cutters)
 * space pages: download to Sage/Magma/pari
 * stats pages
+* disable or recompute: http://www.lmfdb.org/L/degree2/CuspForm/
 
 FORMATTING:
 * space pages: when space is empty but navigated to via URL box, handle it (David Roe: I think this is now fixed)
@@ -41,8 +42,6 @@ FORMATTING:
 * form pages: include CM in properties (Gaga) box
 * form pages: display relative degree
 * form pages: would the basis for the Hecke ring look better in a vertical table?
-* L-function pages: disable Euler product information 
-* L-function pages: weight should say motivic weight
 * L-function pages: fix fonts arithmetic/analytic normalization
 * L-function pages: Remove n/a from friends (just leave it unclickable)
 * L-function apges: is gray for negative values best? (why not two separate lists?)
