@@ -962,6 +962,14 @@ class PostgresTable(PostgresBase):
         """
         return self.lucky(query, projection=1) is not None
 
+    def label_exists(self, label, label_col=None):
+        if label_col is None:
+            label_col = self._label_col
+            if label_col is None:
+                raise ValueError("Lookup method not supported for tables with no label column")
+        return self.exists({label_col:label})
+
+
     def random(self, projection=0):
         """
         Return a random label or record from this table.

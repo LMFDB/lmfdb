@@ -2,7 +2,6 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from web_newform import WebNewform
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
 from sage.databases.cremona import cremona_letter_code
@@ -29,12 +28,11 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
-def character_orbit_index(weight, conrey_label):
+def character_orbit_index(level, weight, conrey_label):
     """
     Returns the character orbit index for the character given by conrey label and at the given weight
     """
-    N = int(conrey_label.split('.')[0])
-    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : N, 'weight' : weight}, projection = ['char_orbit'])
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : level, 'weight' : weight}, projection = ['char_orbit'])
     if res is not None:
         return int(res['char_orbit'])
     else:
@@ -47,8 +45,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = spacelabel_conrey.split('.')
-    conrey_label  = N + '.' + chi
-    char_orbit = character_orbit_index( int(k), conrey_label)
+    char_orbit = character_orbit_index( int(N), int(k), int(chi))
     if char_orbit is not None:
         return '.'.join([N, k, cremona_letter_code(char_orbit-1)])
     else:

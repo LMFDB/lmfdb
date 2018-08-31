@@ -2,7 +2,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
-from web_space import convert_spacelabel_from_conrey
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import convert_spacelabel_from_conrey
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -25,7 +25,9 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
     # drop the hecke orbit label
     nfsplit = newformlabel_conrey.split('.')
+    print "conrey_spacelabel = %s" % '.'.join(nfsplit[:-1])
     space_label = convert_spacelabel_from_conrey('.'.join(nfsplit[:-1]))
+    print "space_label = %s" % space_label
     if space_label is not None:
         return space_label + '.' + nfsplit[-1]
     else:
