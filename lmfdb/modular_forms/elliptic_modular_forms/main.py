@@ -40,7 +40,7 @@ def index():
     if len(request.args) > 0:
         return newform_search(request.args)
     info = {}
-    newform_labels = ('1.12.1.a','11.2.1.a')
+    newform_labels = ('1.12.a.a','11.2.a.a')
     info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')

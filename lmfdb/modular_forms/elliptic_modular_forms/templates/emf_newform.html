@@ -33,7 +33,8 @@
         <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
         <td> \( \chi \) </td>
         <td>=</td>
-        <td>{{ newform.char_conrey_link | safe }} (minimal Conrey label in orbit)</td>
+        <td>{{ newform.char_conrey_link | safe }} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+
     </tr>
 </table>
 
@@ -211,7 +212,7 @@ This property has {% if not newform.cm_proved %}not{% endif %} been rigorously p
 {% if not newform.is_twist_minimal %}
 not
 {% endif %}
-{{ KNOWL('mf.elliptic.minimal',title='minimal') }}.</p>
+{{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
 
 {# TODO we might wish to have some disclaimer here about provability #}
 <p>This newform
@@ -221,7 +222,7 @@ has
 does not have
 {% endif %}
 an
-{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
+{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}{% if newform.has_inner_twist %}, by the characters {% for c in newform.inner_twist %}\(\chi_{ {{newform.level}}}({{c}},\cdot)\), {% endfor %}{% endif %}.</p>{# TODO neaten this, add knowls #}
 
 {% if newform.character == 1 %}
 <p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>
