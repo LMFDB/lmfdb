@@ -110,7 +110,7 @@ class WebNewform(object):
              ('%s' % self.level, url_for(".by_url_level", level=self.level)),
              ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
              ('%s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
-             ('%s' % cremona_letter_code(self.hecke_orbit), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code, hecke_orbit=cremona_letter_code(self.hecke_orbit))),
+             ('%s' % cremona_letter_code(self.hecke_orbit - 1), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))),
              ]
 
         self.title = "Newform %s"%(self.label)
