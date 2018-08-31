@@ -72,6 +72,7 @@ class WebNewform(object):
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
+        self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.char_orbit_label = "\(" + str(self.level) + "\)." + cremona_letter_code(self.char_orbit - 1)
 
         self.properties = [('Label', self.label),
