@@ -177,8 +177,7 @@ class WebGamma1Space(object):
         # returns a list of 6-tuples chi_rep, num_chi, parity, space, dim, newform
         ans = []
         for space, forms in self.decomp:
-            chi_str = r"\( \chi_{{{N}}}({{chi_rep}}, \cdot) \)".format(N=space['level'],
-                                                                       chi_rep=space['conrey_labels'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_labels'][0])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
                                              number=space['conrey_labels'][0])
