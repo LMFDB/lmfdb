@@ -55,6 +55,13 @@
 {% endfor %}
 </p>
 
+{% if orbit_label %}
+<p>
+The {{KNOWL('character.dirichlet.galois_orbit_label', title='orbit label')}} for this Galois orbit
+is {{ modulus }}.{{ orbit_label }}.
+</p>
+{% endif %}
+
 
 {# Inducing character #}
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
+from sage.databases.cremona import cremona_letter_code
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
@@ -657,6 +658,11 @@ class WebChar(WebCharObject):
                 ("Primitive", [self.isprimitive])]
         if self.parity:
             f.append(("Parity", [self.parity]))
+        try:
+            formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
+            f.append(("Orbit Label", [formatted_orbit_label]))
+        except KeyError:
+            pass
         return f
 
     @property
@@ -844,7 +850,14 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         prim = self.isprimitive
         #beware this **must** be a generator
         orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
-        return ( self._char_desc(num, prim=prim) for num in orbit )
+        return list(self._char_desc(num, prim=prim) for num in orbit)
+
+    @property
+    def orbit_label(self):
+        orbit_info = self.galoisorbit
+        value = min(map(lambda info: info[1], orbit_info))
+        letter_value = cremona_letter_code(int(value))
+        return letter_value
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
@@ -889,7 +902,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label']
 
     def _compute(self):
         WebDirichlet._compute(self)
