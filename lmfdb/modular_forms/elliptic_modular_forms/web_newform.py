@@ -61,6 +61,7 @@ class WebNewform(object):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
         self._data = data
+        self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
 
         if space is None:
             # Need character info from spaces table
@@ -93,7 +94,7 @@ class WebNewform(object):
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
         self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
-        self.char_orbit_label = "\(" + str(self.level) + "\)." + cremona_letter_code(self.char_orbit - 1)
+        self.char_orbit_label = "\(" + str(self.level) + "\)." + self.char_orbit_code
 
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
@@ -103,7 +104,15 @@ class WebNewform(object):
         if self.__dict__.get('is_CM'):
             self.properties += [('CM', '%s' % self.is_CM)] # properties box
 
-        self.bread = [] # bread
+        # Breadcrumbs
+        self.bread = bread = [
+             ('Classical newforms', url_for(".index")),
+             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+             ('%s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
+             ('%s' % cremona_letter_code(self.hecke_orbit), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code, hecke_orbit=cremona_letter_code(self.hecke_orbit))),
+             ]
+
         self.title = "Newform %s"%(self.label)
         #self.friends += [ ('Newspace {}'.format(sum(self.label.split('.')[:-1])),self.newspace_url)]
 

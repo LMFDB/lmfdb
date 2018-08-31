@@ -61,12 +61,18 @@ class SearchWrapper(object):
             info['query'] = dict(query)
             return render_template(self.template, info=info, title=self.err_title, **template_kwds)
         else:
-            if self.cleaners:
-                for v in res:
-                    for name, func in self.cleaners.items():
-                        v[name] = func(v)
-            if self.postprocess is not None:
-                res = self.postprocess(res, info, query)
+            try:
+                if self.cleaners:
+                    for v in res:
+                        for name, func in self.cleaners.items():
+                            v[name] = func(v)
+                if self.postprocess is not None:
+                    res = self.postprocess(res, info, query)
+            except ValueError as err:
+                # Errors raised in postprocessing
+                info['err'] = str(err)
+                err_title = query.pop('__err_title__', self.err_title)
+                return render_template(self.template, info=info, title=err_title, **template_kwds)
             for key, func in self.longcuts.items():
                 if info.get(key,'').strip():
                     return func(res, info, query)

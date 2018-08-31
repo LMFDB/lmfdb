@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
+from sage.databases.cremona import cremona_letter_code
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
+from lmfdb.db_backend import db
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -657,6 +659,11 @@ class WebChar(WebCharObject):
                 ("Primitive", [self.isprimitive])]
         if self.parity:
             f.append(("Parity", [self.parity]))
+        try:
+            formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
+            f.append(("Orbit Label", [formatted_orbit_label]))
+        except KeyError:
+            pass
         return f
 
     @property
@@ -844,7 +851,19 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         prim = self.isprimitive
         #beware this **must** be a generator
         orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
-        return ( self._char_desc(num, prim=prim) for num in orbit )
+        return list(self._char_desc(num, prim=prim) for num in orbit)
+
+    @property
+    def orbit_label(self):
+        orbit_info = self.galoisorbit
+        if len(orbit_info) != 0:
+            value = min(map(lambda info: info[1], orbit_info))
+        else:
+            value = 1
+        # The -1 in the line below is because labels index at 1, while the
+        # cremona_letter_code indexes at 0
+        letter_value = cremona_letter_code(int(value) - 1)
+        return letter_value
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
@@ -889,7 +908,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label']
 
     def _compute(self):
         WebDirichlet._compute(self)

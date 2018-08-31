@@ -2,15 +2,16 @@
 
 from flask import render_template, url_for, redirect, abort, request
 import re
+from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
-from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string
+from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string, integer_options
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, character_orbit_index
-from sage.databases.cremona import cremona_letter_code
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, character_orbit_index
+from sage.databases.cremona import class_to_int, cremona_letter_code
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -39,7 +40,11 @@ def set_info_funcs(info):
 @emf.route("/")
 def index():
     if len(request.args) > 0:
-        return newform_search(request.args)
+        print request.args
+        if request.args.get('submit') == 'Dimensions':
+            return dimension_search(request.args)
+        else:
+            return newform_search(request.args)
     info = {}
     newform_labels = ('1.12.a.a','11.2.a.a')
     info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
@@ -80,7 +85,12 @@ def render_space_webpage(label):
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info = {'results':space.newforms} # so we can reuse search result code
+    info = {'results':space.newforms, # so we can reuse search result code
+            'CC_lown': 2,
+            'CC_highn': 10,
+            'CC_lowm': 0,
+            'CC_highm': 10, # Actually may need min(10, number of embeddings)
+            'CC_prec': 6}
     set_info_funcs(info)
     return render_template("emf_space.html",
                            info=info,
@@ -182,6 +192,18 @@ def download_complex(info):
     # FIXME
     pass
 
+def common_parse(info, query):
+    parse_ints(info, query, 'weight', name="Weight")
+    parse_ints(info, query, 'level', name="Level")
+    parse_ints(info, query, 'char_orbit', name="Character orbit label")
+    parse_ints(info, query, 'dim', name="Coefficient field dimension")
+    parse_nf_string(info, query,'nf_label', name="Field")
+    parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
+    #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
+    parse_ints(info, query, 'cm_disc', name="CM discriminant")
+    parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
+    parse_bool(info, query, 'has_inner_twist',name='has an inner twist')
+
 @search_wrap(template="emf_newform_search_results.html",
              table=db.mf_newforms,
              title='Newform Search Results',
@@ -193,22 +215,51 @@ def download_complex(info):
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
-    info['CC_lown'] = 2
-    info['CC_highn'] = 10
-    info['CC_lowm'] = 0
-    info['CC_highm'] = 10 # Actually may need min(10, number of embeddings)
-    info['CC_prec'] = 6
-    parse_ints(info, query, 'weight', name="Weight")
-    parse_ints(info, query, 'level', name="Level")
-    parse_ints(info, query, 'char_orbit', name="Character orbit label")
-    parse_ints(info, query, 'dim', name="Coefficient field dimension")
-    parse_nf_string(info, query,'nf_label', name="Field")
-    parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
-    #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
-    parse_ints(info, query, 'cm_disc', name="CM discriminant")
-    parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
-    parse_bool(info, query, 'has_inner_twist',name='has an inner twist')
+    common_parse(info, query)
     set_info_funcs(info)
+
+def dimension_postprocess(res, info, query):
+    dim_dict = defaultdict(DimGrid)
+    for form in res:
+        N = form['level']
+        k = form['weight']
+        dim_dict[N,k] += DimGrid.from_db(form)
+    info['weight_list'] = integer_options(query['weight'], max_opts=100)
+    if 'odd_weight' in query:
+        if query['odd_weight']:
+            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
+        else:
+            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
+    print "weight_list", info["weight_list"]
+    info['level_list'] = integer_options(query['weight'], max_opts=2000)
+    print "level_list", info["level_list"]
+    if len(info['weight_list']) * len(info['level_list']) > 10000:
+        raise ValueError("Table too large")
+    if query.get('char_order') == 1:
+        def url_generator(N, k):
+            return url_for(".by_url_space_label", level=N, weight=k, char_orbit="a")
+    else:
+        def url_generator(N, k):
+            return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+    info['url_generator'] = url_generator
+    return dim_dict
+
+@search_wrap(template="emf_dimension_search_results.html",
+             table=db.mf_newforms,
+             title='Dimension Search Results',
+             err_title='Dimension Search Input Error',
+             per_page=None,
+             postprocess=dimension_postprocess,
+             bread=lambda:[], # FIXME
+             learnmore=learnmore_list,
+             credit=credit)
+def dimension_search(info, query):
+    info.pop('per_page',None) # remove per_page so that we get all results
+    common_parse(info, query)
+    if 'weight' not in query:
+        query['weight'] = {'$gte': 1, '$lte': 12}
+    if 'level' not in query:
+        query['level'] = {'$gte': 1, '$lte': 24}
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,

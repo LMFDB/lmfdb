@@ -24,7 +24,7 @@
         <td>\( {{ newform.weight }} \)</td>
     </tr>
     <tr>
-        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit label: </td>
+      <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
         <td> index(\([\chi]\)) </td>
         <td>=</td>
         <td>{{ newform.char_orbit_label }}</td>
@@ -204,15 +204,11 @@ function show_qexp(qstyle) {
 <h2>Further properties</h2>
 
 <p>This newform is
-{% if not newform.is_cm %} not {% endif %}
+{{ "not" if not newform.is_cm }}
 a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
-This property has {% if not newform.cm_proved %}not{% endif %} been rigorously proved.</p>
+This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</p>
 
-<p>This newform is
-{% if not newform.is_twist_minimal %}
-not
-{% endif %}
-{{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
+<p>This newform is {{ "not" if not newform.is_twist_minimal }} {{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
 
 {# TODO we might wish to have some disclaimer here about provability #}
 <p>This newform

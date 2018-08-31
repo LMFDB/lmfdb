@@ -54,21 +54,65 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
 def spacelabel_conrey_exists(spacelabel_conrey):
     return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
 
+class DimGrid(object):
+    def __init__(self, grid=None):
+        if grid is None:
+            self._grid = {'M':{'all':0,'new':0,'old':0},
+                          'S':{'all':0,'new':0,'old':0},
+                          'E':{'all':0,'new':0,'old':0}}
+        else:
+            self._grid = grid
+
+    def __getitem__(self, X):
+        return self._grid[X]
+
+    def __add__(self, other):
+        if isinstance(other,int) and other == 0: # So that we can do sum(grids)
+            return self
+        elif isinstance(other,DimGrid):
+            grid = {}
+            for X in ['M','S','E']:
+                grid[X] = {}
+                for typ in ['all','new','old']:
+                    grid[X][typ] = self._grid[X][typ] + other._grid[X][typ]
+            return DimGrid(grid)
+        else:
+            raise TypeError
+
+    @staticmethod
+    def from_db(data):
+        grid = {'M':{'all':data['mf_dim'],
+                     'new':data['dim']+data['eis_new_dim'],
+                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
+                'S':{'all':data['cusp_dim'],
+                     'new':data['dim'],
+                     'old':data['cusp_dim']-data['dim']},
+                'E':{'all':data['eis_dim'],
+                     'new':data['eis_new_dim'],
+                     'old':data['eis_dim']-data['eis_new_dim']}}
+        return DimGrid(grid)
 
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
+        self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
         oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
         self.oldspaces = []
         for old in oldspaces:
             N, k, i = old['new_label'].split('.')
             self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
+        self.dim_grid = DimGrid.from_db(data)
         self.old_dim = self.cusp_dim - self.dim
         self.eis_old_dim = self.eis_dim - self.eis_new_dim
         self.properties = [] # properties box
-        self.bread = [] # bread
+        self.bread = [
+             ('Classical newforms', url_for(".index")),
+             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+             ('%s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
+        ]
         if self.conrey_labels[0] == 1:
             character_str = "trivial character"
         else:
@@ -142,7 +186,11 @@ class WebGamma1Space(object):
         #print "decomp", self.decomp
         print self.decomposition()
         self.properties = [] # properties box
-        self.bread = [] # bread
+        self.bread = [
+             ('Classical newforms', url_for(".index")),
+             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+        ]
         self.title = r"Space of Modular Forms \(%s\) of weight %s and level %s"%(self.mf_latex(), self.weight, self.level)
         self.friends = []
 

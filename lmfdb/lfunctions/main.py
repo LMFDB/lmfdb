@@ -262,8 +262,12 @@ def l_function_cmf_page(level, weight, character, label, number):
     return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<character>/<label>/")
 def l_function_cmf_redirect_1(level, weight, character, label):
+    if character.isdigit():
+        character = int(character)
+    #elif character.isalpha():
+    #    from lmfdb.
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, label=label, number=1), code=301)
 

@@ -8,6 +8,7 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
+<tr>
 <td>{{ KNOWL('ag.conductor', title='conductor') }}</td>
 <td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
 <td>{{ KNOWL('g2c.num_rat_pts', title='rational points') }}</td>
@@ -40,105 +41,57 @@
 <td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
 </tr>
 
-<tr>
 <td><select name='is_gl2_type' style="width: 110px">
   <option ></option>
-{% if info.is_gl2_type == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.is_gl2_type == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
+  <option value="True" {{ "selected" if info.is_gl2_type == 'True'}}>True</option>
+  <option value="False" {{ "selected" if info.is_gl2_type == 'False'}}>False</option>
 </select></td>
 
 <td><select name='st_group' style="width: 110px" >
     <option ></option>
     {% for G in info.st_group_list %}
-        {% if  G == info.st_group %}
-            <option value='{{G}}' selected>{{info.st_group_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.st_group_dict[G]}}</option>
-        {% endif %}
+        <option value='{{G}}' {{ "selected"  if G == info.st_group }}>{{info.st_group_dict[G]}}</option>
     {% endfor %}
 </select></td>
 
 <td><select name='real_geom_end_alg' style="width: 110px">
     <option ></option>
     {% for G in info.real_geom_end_alg_list %}
-        {% if G == info.real_geom_end_alg %}
-            <option value='{{G}}' selected>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
-        {% endif %}
+        <option value='{{G}}' {{ "selected" if G == info.real_geom_end_alg }}>{{info.real_geom_end_alg_to_ST0_dict[G]}}</option>
     {% endfor %}
 </select></td>
 
 <td><select name='aut_grp_id' style="width: 110px">
     <option ></option>
     {% for G in info.aut_grp_list %}
-        {% if G == info.aut_grp_id %}
-            <option value='{{G}}' selected>{{info.aut_grp_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.aut_grp_dict[G]}}</option>
-        {% endif %}
+        <option value='{{G}}' {{ "selected"  if G == info.aut_grp_id }}>{{info.aut_grp_dict[G]}}</option>
     {% endfor %}
 </select></td>
 
 <td><select name='geom_aut_grp_id' style="width: 110px">
     <option ></option>
     {% for G in info.geom_aut_grp_list %}
-        {% if G == info.geom_aut_grp_id %}
-            <option value='{{G}}' selected>{{info.geom_aut_grp_dict[G]}}</option>
-        {% else %}
-            <option value='{{G}}'>{{info.geom_aut_grp_dict[G]}}</option>
-        {% endif %}
+        <option value='{{G}}' {{ "selected" if G == info.geom_aut_grp_id }} >{{info.geom_aut_grp_dict[G]}}</option>
     {% endfor %}
 </select></td>
 
 <td><select name='locally_solvable' style="width: 110px">
   <option ></option>
-{% if info.locally_solvable == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.locally_solvable == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
+  <option value="True" {{ "selected" if info.locally_solvable == 'True'}}>True</option>
+  <option value="False" {{ "selected" if info.locally_solvable == 'False'}}>False</option>
 </select></td>
 
 <td><select name='has_square_sha' style="width: 110px">
   <option ></option>
-{% if info.has_square_sha == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.has_square_sha == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
+  <option value="True" {{ "selected" if info.has_square_sha == 'True'}}>True</option>
+  <option value="False" {{ "selected" if info.has_square_sha == 'False'}}>False</option>
 </select></td>
 
-<td><select name='is_simple_geom' width="110" style="width: 110px">
+
+<td><select name='is_simple_geom' style="width: 110px">
   <option ></option>
-{% if info.is_simple_geom == 'True' %}
-  <option value="True" selected>True</option>
-{% else %}
-  <option value="True">True</option>
-{% endif %}
-{% if info.is_simple_geom == 'False' %}
-  <option value="False" selected>False</option>
-{% else %}
-  <option value="False">False</option>
-{% endif %}
+  <option value="True" {{ "selected" if info.is_simple_geom == 'True'}}>True</option>
+  <option value="False" {{ "selected" if info.is_simple_geom == 'False'}}>False</option>
 </select></td>
 
 </tr>
