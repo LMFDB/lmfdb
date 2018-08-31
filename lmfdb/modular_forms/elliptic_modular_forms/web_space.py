@@ -2,7 +2,6 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from web_newform import WebNewform
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
 from sage.databases.cremona import cremona_letter_code
@@ -28,6 +27,32 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
         typ = "^{{{typ}}}".format(typ=typ)
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
+
+def character_orbit_index(level, weight, conrey_label):
+    """
+    Returns the character orbit index for the character given by conrey label and at the given weight
+    """
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : level, 'weight' : weight}, projection = ['char_orbit'])
+    if res is not None:
+        return int(res['char_orbit'])
+    else:
+        None
+
+def convert_spacelabel_from_conrey(spacelabel_conrey):
+    """
+    Returns the label for the space using the orbit index
+    eg:
+        N.k.c --> N.k.i
+    """
+    N, k, chi = map(int, spacelabel_conrey.split('.'))
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': chi}, 'level' : N, 'weight' : k}, projection = ['label'])
+    if res is not None:
+        return res['label']
+    else:
+        return None
+
+def spacelabel_conrey_exists(spacelabel_conrey):
+    return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
 
 class DimGrid(object):
     def __init__(self, grid=None):

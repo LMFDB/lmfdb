@@ -11,9 +11,6 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
-def is_bmf_in_db(label):
-    return db.bmf_forms.lookup(label, projection=0) is not None
-
 class WebBMF(object):
     """
     Class for an Bianchi Newform
