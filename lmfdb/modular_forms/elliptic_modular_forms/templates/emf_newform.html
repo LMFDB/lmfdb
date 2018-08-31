@@ -59,11 +59,11 @@ function show_qexp(qstyle) {
     </div>
 <p>
 <div class="toggle">Display precision:
-    <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coeffs</a></span>
-    <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coeffs</a></span>
+    <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
+    <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
 </div>
 </p>
-    <button id="download_exact">Download all</button>
+    <button id="download_exact">Download all {{ newform.qexp_prec }}</button>
   </form>
 
   <h3> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} </h3>

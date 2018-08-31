@@ -1,7 +1,4 @@
 CRITICAL (BUGS):
-* form pages: error 'WebNewform' object has no nf_label (e.g. 31/4/1)
-* gamma1 full space pages: WebGamma1Space object has no attribute 'old_space_latex'
-* navigation: need to handle /Holomorphic/Q/79/, giving search results on level 79 forms
 * form pages: need friends: whole space, L-functions for all embedded forms (Conrey labels and extra embeddings), elliptic curves
 * throughout: work with labels e.g. '11.2.a.a'
 * navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
@@ -17,15 +14,13 @@ CRITICAL (BUGS):
 * knowls: rigor, cande, completeness in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
 * L-function pages: make sure L-function links with orbits works
 * data: Hecke orbit label starts at b, not a
+* data: Need to create mf_oldsubs table
 
 IMPORTANT:
 * search page: include dim, isCM, and field as columns in the search results
-* space pages: use display q-expansions in list
-* space pages: field should be linked to nf database
 * space pages: add text explaining the dimensions
 * space pages: properties box should have something
 * Dirichlet char pages: list orbit labels
-* space pages: in list, newforms are misaligned and have wrong labels
 * space pages: use a multicell in the table style
 * space pages: breadcrumbs
 * gamma1 full space pages: breadcrumbs
@@ -38,21 +33,14 @@ IMPORTANT:
 * stats pages
 
 FORMATTING:
-* space pages: in title, say e.g. "of weight 4 and level 11"
-* space pages: when space is empty but navigated to via URL box, handle it
-* space pages: put orbit size later?
+* space pages: when space is empty but navigated to via URL box, handle it (David Roe: I think this is now fixed)
+* space pages: put orbit size later? (David Roe: moved it, but I'm not sure about the new location)
 * space pages: add dimension of whole space?
-* space pages: for symmetry, also list E_k^old
-* search page: when no q-expansion, just leave blank (no dash)
-* search page: no period after "field not in LMFDB"
 * form pages: minimal should be 'twist minimal'
 * L-function pages: should we use equals instead of colon?
-* form pages: use nu instead of alpha (to avoid conflict with Satake)
 * form pages: "Character orbit" and "(character) label" should be their own knowls
 * form pages: Conrey label should be a knowl, and say character orbit
-* form pages: coeffs -> coefficients, and say the number of them
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring'
-* form pages: in the betas, use curly brackets in the subscripts
 * form pages: include CM in properties (Gaga) box
 * form pages: display relative degree
 * form pages: would the basis for the Hecke ring look better in a vertical table?

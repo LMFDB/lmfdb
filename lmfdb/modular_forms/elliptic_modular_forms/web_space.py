@@ -3,22 +3,25 @@
 
 from lmfdb.db_backend import db
 from web_newform import WebNewform
+from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
+from sage.databases.cremona import cremona_letter_code
 from flask import url_for
 import re
 from collections import defaultdict
-LABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$") # not putting in o currently
+NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
+OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
 def valid_label(label):
-    return LABEL_RE.match(label)
+    return NEWLABEL_RE.match(label) or OLDLABEL_RE.match(label)
 def valid_gamma1(label):
     return GAMMA1_RE.match(label)
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
-    if conrey is None or conrey == 1:
-        char = ""
-    elif symbolic_chi:
+    if symbolic_chi:
         char = r", \chi"
+    elif conrey is None or conrey == 1:
+        char = ""
     else:
         char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
     if typ:
@@ -30,19 +33,21 @@ class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
-        newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
-        self.newforms = [WebNewform(data, self) for data in newforms]
+        self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
         oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
         self.oldspaces = []
         for old in oldspaces:
-            old_label = old['new_label']
-            conrey = old['new_minimal_conrey']
-            N, k, i = map(int, valid_label(old_label).groups())
-            self.oldspaces.append((N, k, i, conrey))
+            N, k, i = old['new_label'].split('.')
+            self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
         self.old_dim = self.cusp_dim - self.dim
+        self.eis_old_dim = self.eis_dim - self.eis_new_dim
         self.properties = [] # properties box
         self.bread = [] # bread
-        self.title = r"Space of Modular Forms \(%s\)"%(self.mf_latex())
+        if self.conrey_labels[0] == 1:
+            character_str = "trivial character"
+        else:
+            character_str = r"character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_labels[0])
+        self.title = r"Space of Modular Forms \(%s\) of weight %s, level %s and %s"%(self.mf_latex(), self.weight, self.level, character_str)
         self.friends = []
 
     @staticmethod
@@ -70,6 +75,9 @@ class WebNewformSpace(object):
     def eis_new_latex(self):
         return common_latex(*(self._vec() + ["E",0,"new"]))
 
+    def eis_old_latex(self):
+        return common_latex(*(self._vec() + ["E",0,"old"]))
+
     def cusp_latex(self):
         return common_latex(*(self._vec() + ["S"]))
 
@@ -79,20 +87,13 @@ class WebNewformSpace(object):
     def old_latex(self):
         return common_latex(*(self._vec() + ["S",0,"old"]))
 
-    def decomposition(self):
-        from lmfdb.modular_forms.elliptic_modular_forms.main import url_for_newform_label
-        # returns a list of 5-tuples (label, url, dim, field, qexp)
-        # Field may need to be augmented to support pretty printing, minimal poly, knowl, etc.
-        for newform in self.newforms:
-            yield (newform.label, url_for_newform_label(newform.label), newform.dim, newform.nf_label, newform.q_expansion('oneline'))
-
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
-        return r"\(\oplus\)".join(template.format(old=common_latex(N, k, conrey, typ="new"),
-                                                  url=url_for(".render_space_webpage",label="{N}.{k}.{i}".format(N=N, k=k, i=i)),
+        return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
+                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit=i),
                                                   mult=len(ZZ(self.level//N).divisors()))
-                             for N,k,i,conrey in self.oldspaces)
+                                  for N, i, conrey in self.oldspaces)
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):
@@ -103,6 +104,7 @@ class WebGamma1Space(object):
         self.mf_dim = sum(space['mf_dim']*space['cyc_degree'] for space in newspaces)
         self.eis_dim = sum(space['eis_dim']*space['cyc_degree'] for space in newspaces)
         self.eis_new_dim = sum(space['eis_new_dim']*space['cyc_degree'] for space in newspaces)
+        self.eis_old_dim = self.eis_dim - self.eis_new_dim
         self.cusp_dim = sum(space['cusp_dim']*space['cyc_degree'] for space in newspaces)
         self.new_dim = sum(space['dim']*space['cyc_degree'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim'])*space['cyc_degree'] for space in newspaces)
@@ -115,7 +117,7 @@ class WebGamma1Space(object):
         print self.decomposition()
         self.properties = [] # properties box
         self.bread = [] # bread
-        self.title = r"Space of Modular Forms \(%s\)"%(self.mf_latex())
+        self.title = r"Space of Modular Forms \(%s\) of weight %s and level %s"%(self.mf_latex(), self.weight, self.level)
         self.friends = []
 
     @staticmethod
@@ -138,6 +140,9 @@ class WebGamma1Space(object):
     def eis_new_latex(self):
         return common_latex(*(self._vec() + ["E",1,"new"]))
 
+    def eis_old_latex(self):
+        return common_latex(*(self._vec() + ["E",1,"old"]))
+
     def cusp_latex(self):
         return common_latex(*(self._vec() + ["S",1]))
 
@@ -150,28 +155,37 @@ class WebGamma1Space(object):
     def header_latex(self):
         return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + '\)'
 
-    def _link(self, N, i=None, typ="new", label=True):
+    def _link(self, N, i=None, form=None, typ="new", label=True):
+        if i is not None:
+            i = cremona_letter_code(i-1) # Should probably change definition of field to remove this -1
+        if form is not None:
+            form = cremona_letter_code(form)
         if label:
             if i is None:
                 name = "{N}.{k}".format(N=N, k=self.weight)
-            else:
+            elif form is None:
                 name = "{N}.{k}.{i}".format(N=N, k=self.weight, i=i)
+            else:
+                name = "{N}.{k}.{i}.{f}".format(N=N, k=self.weight, i=i, f=form)
         else:
             t = 1 if i is None else 0
             name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ)
         if i is None:
             url = url_for(".by_url_full_gammma1_space_label",
                           level=N, weight=self.weight)
-        else:
+        elif form is None:
             url = url_for(".by_url_space_label",
                           level=N, weight=self.weight, char_orbit=i)
+        else:
+            url = url_for(".by_url_newform_label",
+                          level=N, weight=self.weight, char_orbit=i, hecke_orbit=form)
         return r"<a href={url}>{name}</a>".format(url=url, name=name)
 
     def oldspace_decomposition(self):
         template = r"{link}\(^{{\oplus {mult}}}\)"
         return r"\(\oplus\)".join(template.format(link=self._link(N, label=False),
                                                   mult=len(ZZ(self.level//N).divisors()))
-                                  for N in ZZ(self.level).divisors())
+                                  for N in ZZ(self.level).divisors() if N != self.level)
 
     def decomposition(self):
         # returns a list of 6-tuples chi_rep, num_chi, parity, space, dim, newform
