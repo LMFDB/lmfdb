@@ -33,7 +33,7 @@
         <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
         <td> \( \chi \) </td>
         <td>=</td>
-        <td>{{ newform.char_conrey_link | safe }} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+        <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a> (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
 
     </tr>
 </table>
