@@ -139,7 +139,7 @@ Developer configuration
 
 1. Where do I put my passwords?
 
-   When you run `sage -python start_lmfdb.py` for the first time, it will create a configuration file
+   When you run `sage -python start-lmfdb.py` for the first time, it will create a configuration file
    `config.ini` in the lmfdb root directory.  In the `postgresql` section it will add the default
    username `lmfdb`, password `lmfdb`, host `devmirror.lmfdb.xyz`, and port `5432` which altogether
    allows for read access to the database.
