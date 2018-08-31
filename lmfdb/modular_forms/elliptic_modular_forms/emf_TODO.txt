@@ -16,6 +16,7 @@ CRITICAL (BUGS):
 * data: add cc data
 * knowls: rigor, cande, completeness in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
 * L-function pages: make sure L-function links with orbits works
+* data: Hecke orbit label starts at b, not a
 
 IMPORTANT:
 * search page: include dim, isCM, and field as columns in the search results
@@ -73,4 +74,4 @@ IT WOULD BE NICE IF:
 FUTURE WORK:
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
 * Review editorial review of CMFs to make sure issues have been addressed
-
+* Add more data, in particular for weight 2 and trivial character
