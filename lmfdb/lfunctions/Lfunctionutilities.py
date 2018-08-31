@@ -938,11 +938,12 @@ def name_and_object_from_url(url):
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
                 # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
-                hecke_orbit_label = ".".join(url_split[-5:-1])
-                name =  'Modular form ' + hecke_orbit_label;
-                #FIXME call db
+                conreynewform_label = ".".join(url_split[-5:-1])
+                name =  'Modular form ' + conreynewform_label;
+                newform_label = convert_newformlabel_from_conrey(conreynewform_label)
                 obj_exists = False
-                #obj_exists = is_mf_newform_in_db(hecke_orbit_label);
+                if newform_label is not None:
+                    obj_exists = db.mf_newforms.exists(newform_label)
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a

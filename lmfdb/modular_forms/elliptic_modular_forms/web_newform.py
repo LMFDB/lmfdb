@@ -2,6 +2,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
+from web_space import convert_spacelabel_from_conrey
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -11,6 +12,21 @@ import re
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$") # not putting in o currently
 def valid_label(label):
     return bool(LABEL_RE.match(label))
+
+
+def convert_newformlabel_from_conrey(newformlabel_conrey):
+    """
+    Returns the label for the newform using the orbit index
+    eg:
+        N.k.c.x --> N.k.i.x
+    """
+    # drop the hecke orbit label
+    nfsplit = newformlabel_conrey.split('.')
+    space_label = convert_spacelabel_from_conrey('.'.join(nfsplit[:-1]))
+    if space_label is not None:
+        return space_label + '.' + nfsplit[-1]
+    else:
+        return None
 
 def eigs_as_seqseq_to_qexp(eigseq):
     # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion

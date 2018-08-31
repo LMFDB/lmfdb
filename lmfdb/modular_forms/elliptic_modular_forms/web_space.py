@@ -29,6 +29,33 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
+def character_orbit_index(weight, conrey_label):
+    """
+    Returns the character orbit index for the character given by conrey label and at the given weight
+    """
+    N = int(conrey_label.split('.')[0])
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : N, 'weight' : weight}, projection = ['char_orbit'])
+    if res is not None:
+        return int(res['char_orbit'])
+    else:
+        None
+
+def convert_spacelabel_from_conrey(spacelabel_conrey):
+    """
+    Returns the label for the space using the orbit index
+    eg:
+        N.k.c --> N.k.i
+    """
+    N, k, chi = spacelabel_conrey.split('.')
+    conrey_label  = N + '.' + chi
+    char_orbit = character_orbit_index( int(k), conrey_label)
+    if char_orbit is not None:
+        return '.'.join([N, k, cremona_letter_code(char_orbit-1)])
+    else:
+        return None
+
+
+
 class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
