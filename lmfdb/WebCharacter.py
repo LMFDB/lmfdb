@@ -7,6 +7,7 @@ from flask import url_for
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
+from lmfdb.db_backend import db
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -855,8 +856,13 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def orbit_label(self):
         orbit_info = self.galoisorbit
-        value = min(map(lambda info: info[1], orbit_info))
-        letter_value = cremona_letter_code(int(value))
+        if len(orbit_info) != 0:
+            value = min(map(lambda info: info[1], orbit_info))
+        else:
+            value = 1
+        # The -1 in the line below is because labels index at 1, while the
+        # cremona_letter_code indexes at 0
+        letter_value = cremona_letter_code(int(value) - 1)
         return letter_value
 
     def symbol_numerator(self):
