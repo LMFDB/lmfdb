@@ -1,20 +1,20 @@
 CRITICAL (BUGS):
 * form pages: need friends: whole space, L-functions for all embedded forms (Conrey labels and extra embeddings), elliptic curves
-* throughout: work with labels e.g. '11.2.a.a'
 * navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
 * navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
-* form pages: q-expansion not displaying when it should e.g. 17/4/1/c 
-* browse page: also browse to spaces 
+* form pages: q-expansion not displaying when it should e.g. 17/4/1/c
+* browse page: also browse to spaces
+* browse page: dimension table from search query
 * search page: put all of the search boxes in the refine search
 * form pages: get cc data to display
 * data: add cc data
-* knowls: rigor, cande, completeness in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
+* knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
 * L-function pages: make sure L-function links with orbits works
-* data: Hecke orbit label starts at b, not a
 * data: Need to create mf_oldsubs table
 
 IMPORTANT:
 * search page: include dim, isCM, and field as columns in the search results
+* search page: change the character search field: should give a letter (we should have a discussion about whether we require input of the form N.i that includes the level)
 * space pages: add text explaining the dimensions
 * space pages: properties box should have something
 * Dirichlet char pages: list orbit labels
@@ -29,6 +29,7 @@ IMPORTANT:
 * space pages: download to Sage/Magma/pari
 * stats pages
 * disable or recompute: http://www.lmfdb.org/L/degree2/CuspForm/
+* Add asterisk to inner twist where it's displayed since our inner twist computations are not rigorous
 
 FORMATTING:
 * space pages: when space is empty but navigated to via URL box, handle it (David Roe: I think this is now fixed)
@@ -78,3 +79,6 @@ templates/checklist.html:<li><a href="{{ url_for('emf.render_elliptic_modular_fo
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render_elliptic_modular_forms')
+
+PROBABLY DONE:
+* throughout: work with labels e.g. '11.2.a.a'
