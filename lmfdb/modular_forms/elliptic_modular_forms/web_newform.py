@@ -8,7 +8,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 import re
-LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o currently
+LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$") # not putting in o currently
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
