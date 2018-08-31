@@ -100,14 +100,14 @@ def by_url_full_gammma1_space_label(level, weight):
     label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/")
+@emf.route("/<int:level>/<int:weight>/<char_orbit>/")
 def by_url_space_label(level, weight, char_orbit):
-    label = str(level)+"."+str(weight)+"."+str(char_orbit)
+    label = str(level)+"."+str(weight)+"."+char_orbit
     return render_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<int:char_orbit>/<hecke_orbit>/")
+@emf.route("/<int:level>/<int:weight>/<char_orbit>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
-    label = str(level)+"."+str(weight)+"."+str(char_orbit)+"."+hecke_orbit
+    label = str(level)+"."+str(weight)+"."+char_orbit+"."+hecke_orbit
     return render_newform_webpage(label)
 
 def url_for_newform_label(label):
@@ -121,7 +121,8 @@ def url_for_space_label(label):
 
 def newform_jump(info):
     jump = info["jump"].strip()
-    if re.match(r'^\d+\.\d+\.\d+\.[a-z]+$',jump):
+    # TODO use LABEL_RE from web_newform
+    if re.match(r'^\d+\.\d+\.[a-z]+\.[a-z]+$',jump):
         return redirect(url_for_newform_label(jump), 301)
     else:
         errmsg = "%s is not a valid newform orbit label"

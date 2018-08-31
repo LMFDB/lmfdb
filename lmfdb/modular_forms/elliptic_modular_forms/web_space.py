@@ -7,7 +7,7 @@ from sage.all import latex, ZZ
 from flask import url_for
 import re
 from collections import defaultdict
-LABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$") # not putting in o currently
+LABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$") # not putting in o currently
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
 def valid_label(label):
     return LABEL_RE.match(label)
