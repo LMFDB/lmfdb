@@ -9,7 +9,7 @@ from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 from lmfdb.characters.utils import url_character
 import re
-from sage.databases.cremona import class_to_int
+from sage.databases.cremona import cremona_letter_code, class_to_int
 from web_space import convert_spacelabel_from_conrey
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
@@ -57,6 +57,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
 
 class WebNewform(object):
     def __init__(self, data, space=None):
+        #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
         self._data = data
@@ -104,8 +105,21 @@ class WebNewform(object):
 
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
-        self.friends = []
         #self.friends += [ ('Newspace {}'.format(sum(self.label.split('.')[:-1])),self.newspace_url)]
+
+    @property
+    def friends(self):
+        res = []
+        base_label =  map(str, [self.level, self.weight])
+        hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
+        i = 0
+        for i, character in enumerate(self.conrey_labels):
+            for j in range(self.dim/self.cyc_degree):
+                label = base_label + [str(character), hecke_letter, str(j + 1)]
+                lfun_label = '.'.join(label)
+                lfun_url =  "/L/ModularForm/GL2/Q/holomorphic/" + '/'.join(label)
+                res.append(('L-function ' + lfun_label, lfun_url))
+        return res
 
     @staticmethod
     def by_label(label):

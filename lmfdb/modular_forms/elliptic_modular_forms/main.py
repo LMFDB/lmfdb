@@ -9,7 +9,8 @@ from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, character_orbit_index
+from sage.databases.cremona import cremona_letter_code
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -119,19 +120,39 @@ def by_url_space_label(level, weight, char_orbit):
     label = str(level)+"."+str(weight)+"."+char_orbit
     return render_space_webpage(label)
 
+@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
+def by_url_space_conreylabel(level, weight, conrey_label):
+    char_orbit = character_orbit_index(level, weight, conrey_label)
+    label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)
+    print label
+    return redirect(url_for_space_label(label), code=301)
+
 @emf.route("/<int:level>/<int:weight>/<char_orbit>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
     label = str(level)+"."+str(weight)+"."+char_orbit+"."+hecke_orbit
     return render_newform_webpage(label)
 
+@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
+def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
+    char_orbit = character_orbit_index(level, weight, conrey_label)
+    label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)+"."+hecke_orbit
+    return redirect(url_for_newform_label(label), code=301)
+
+@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>")
+def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
+    assert embedding > 0
+    return by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit)
+
+
+
 def url_for_newform_label(label):
     slabel = label.split(".")
     return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2], hecke_orbit=slabel[3])
 
-# TODO unused, will be for space_jump
 def url_for_space_label(label):
     slabel = label.split(".")
-    return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2][1:])
+    print slabel
+    return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2])
 
 def newform_jump(info):
     jump = info["jump"].strip()
