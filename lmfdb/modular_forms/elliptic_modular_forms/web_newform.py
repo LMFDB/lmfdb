@@ -2,7 +2,6 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import convert_spacelabel_from_conrey
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -10,7 +9,8 @@ from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 from lmfdb.characters.utils import url_character
 import re
-from sage.databases.cremona import cremona_letter_code
+from sage.databases.cremona import class_to_int
+from web_space import convert_spacelabel_from_conrey
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
@@ -22,16 +22,17 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
     Returns the label for the newform using the orbit index
     eg:
         N.k.c.x --> N.k.i.x
+    return None if N.k.i is not on the db
     """
-    # drop the hecke orbit label
-    nfsplit = newformlabel_conrey.split('.')
-    print "conrey_spacelabel = %s" % '.'.join(nfsplit[:-1])
-    space_label = convert_spacelabel_from_conrey('.'.join(nfsplit[:-1]))
-    print "space_label = %s" % space_label
-    if space_label is not None:
-        return space_label + '.' + nfsplit[-1]
+    N, k, chi, x = newformlabel_conrey.split('.')
+    newspace_label = convert_spacelabel_from_conrey('.'.join([N,k,chi]))
+    if newspace_label is not None:
+        return newspace_label + '.' + x
     else:
         return None
+
+def newform_conrey_exists(newformlabel_conrey):
+    return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
 def eigs_as_seqseq_to_qexp(eigseq):
     # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion

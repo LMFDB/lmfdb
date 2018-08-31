@@ -44,13 +44,15 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     eg:
         N.k.c --> N.k.i
     """
-    N, k, chi = spacelabel_conrey.split('.')
-    char_orbit = character_orbit_index( int(N), int(k), int(chi))
-    if char_orbit is not None:
-        return '.'.join([N, k, cremona_letter_code(char_orbit-1)])
+    N, k, chi = map(int, spacelabel_conrey.split('.'))
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': chi}, 'level' : N, 'weight' : k}, projection = ['label'])
+    if res is not None:
+        return res['label']
     else:
         return None
 
+def spacelabel_conrey_exists(spacelabel_conrey):
+    return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
 
 
 class WebNewformSpace(object):

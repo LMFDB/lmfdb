@@ -9,7 +9,7 @@ from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import convert_newformlabel_from_conrey
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import newform_conrey_exists
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -939,12 +939,7 @@ def name_and_object_from_url(url):
                 # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
                 conreynewform_label = ".".join(url_split[-5:-1])
                 name =  'Modular form ' + conreynewform_label;
-                print conreynewform_label
-                newform_label = convert_newformlabel_from_conrey(conreynewform_label)
-                print newform_label
-                obj_exists = False
-                if newform_label is not None:
-                    obj_exists = db.mf_newforms.label_exists(newform_label)
+                obj_exists = newform_conrey_exists(conreynewform_label)
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
