@@ -24,7 +24,7 @@
         <td>\( {{ newform.weight }} \)</td>
     </tr>
     <tr>
-        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit: </td>
+        <td> {{ KNOWL('mf.elliptic.character', title='Character') }} orbit label: </td>
         <td> index(\([\chi]\)) </td>
         <td>=</td>
         <td>\( {{ newform.char_orbit }} \)</td>
@@ -33,7 +33,7 @@
         <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
         <td> \( \chi \) </td>
         <td>=</td>
-        <td>\( {{ newform.char_conrey_str }} \) (minimal Conrey label in orbit)</td>
+        <td>{{ newform.char_conrey_link | safe }} (minimal Conrey label in orbit)</td>
     </tr>
 </table>
 
@@ -204,7 +204,7 @@ function show_qexp(qstyle) {
 
 <p>This newform is
 {% if not newform.is_cm %} not {% endif %}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() }}{% endif %}.
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
 This property has {% if not newform.cm_proved %}not{% endif %} been rigorously proved.</p>
 
 <p>This newform is

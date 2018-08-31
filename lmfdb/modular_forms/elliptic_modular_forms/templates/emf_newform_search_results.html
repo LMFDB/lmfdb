@@ -9,17 +9,17 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<td>{{ KNOWL('emf.level', title='level')}}</td>
-<td>{{ KNOWL('emf.weight', title='weight') }}</td>
-<td>{{ KNOWL('emf.dim', title='dimension') }}</td>
-<td>{{ KNOWL('emf.analytic_rank', title='analytic rank*')}}</td>
+<td>{{ KNOWL('mf.elliptic.level', title='level')}}</td>
+<td>{{ KNOWL('mf.elliptic.weight', title='weight') }}</td>
+<td>{{ KNOWL('mf.elliptic.hecke-orbit', title='hecke orbit dimension') }}</td>
+<td>{{ KNOWL('mf.elliptic.', title='coefficient field')}}</td>
 </tr>
 
 <tr>
-<td><input type='text' name='level' placeholder='11' style="width: 100px" value="{{info.level}}"></td>
-<td><input type='text' name='weight' placeholder='2' style="width: 100px" value="{{info.weight}}"></td>
+<td><input type='text' name='level' placeholder='10' style="width: 100px" value="{{info.level}}"></td>
+<td><input type='text' name='weight' placeholder='4' style="width: 100px" value="{{info.weight}}"></td>
 <td><input type='text' name='dim' placeholder='1'  style="width: 100px" value="{{info.dim}}">
-<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 100px" value="{{info.analytic_rank}}">
+<td><input type='text' name='nf_label' placeholder='1.1.1.1'  style="width: 100px" value="{{info.nf_label}}">
 </tr>
 
 <tr style="height:50px">

@@ -12,7 +12,7 @@
 <p> \({{ space.old_latex() }}\): {{ space.old_dim }}</p>
 
 {% if space.new_dim > 0 %}
-<h2> Decomposition of \({{ space.new_space_latex() }}\)</h2>
+<h2> Decomposition of \({{ space.new_latex() }}\)</h2>
 
 The space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }} of weight {{space.weight}} on $\Gamma_1({{space.level}})$ decomposes as
 \[
@@ -32,21 +32,22 @@ Within each space \( S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \ch
       <th>{{ KNOWL('character.dirichlet.galois_orbit',title='Representative') }} \(\chi\)</th>
       <th>{{ KNOWL('character.dirichlet.galois_orbit',title='Orbit size') }}</th>
       <th>{{ KNOWL('character.dirichlet.parity',title='parity') }}</th>
-      <th>{{ KNOWL('mf.elliptic.label',title='\(S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi)\)')}}</th>
+      <th>{{ KNOWL('mf.elliptic.label',title=space.header_latex()) }}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('mf.elliptic.newform',title='Newform') }}</th>
     </tr>
   </thead>
   <tbody>
+    {% for chi_rep, num_chi, parity, space, dim, newform in space.decomposition() %}
     <tr>
-      {% for chi_rep, num_chi, parity, space, dim, newform in space.decomposition() %}
       <td> {{ chi_rep | safe }} </td>
       <td> {{ num_chi }} </td>
       <td> {{ parity }} </td>
-      <td> {{ field }} </td> <!-- Need to add pretty printing and knowls -->
-      <td> {{ qexp }} </td>
-      {% endfor %}
+      <td> {{ space | safe }} </td>
+      <td> {{ dim | safe }} </td>
+      <td> {{ newform | safe }} </td>
     </tr>
+    {% endfor %}
   </tbody>
 </table>
 {% endif %}

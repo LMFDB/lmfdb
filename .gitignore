@@ -12,6 +12,7 @@ config.ini
 static/MathJax
 
 flasklog
+slow_queries.log
 
 # Testing files
 htmlcov

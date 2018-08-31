@@ -5,7 +5,8 @@ from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex
+from flask import url_for
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 import re
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+\.[a-z]+$") # not putting in o currently
 def valid_label(label):
@@ -55,7 +56,7 @@ class WebNewform(object):
                 if ev['n'] != i+1:
                     raise ValueError("Missing eigenvalue")
                 if not ev.get('an'):
-                    # only had traces 
+                    # only had traces
                     self.has_exact_qexp = False
                     break
                 self.qexp.append(ev['an'])
@@ -65,22 +66,27 @@ class WebNewform(object):
 #        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
 #        self.angles = {data['embedding']:data['angles'] for data in angles}
 
-        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]    
+        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]
                      # label is the distinguished column in mf_newspaces,
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.char_conrey_link = '<a href="' + url_for('characters.render_Dirichletwebpage',
+                                                      modulus=self.level,
+                                                      number=self.char_conrey)
+        self.char_conrey_link += '">\({}\)</a>'.format(self.char_conrey_str)
 
-        self.properties = [('Label', self.label), 
+        self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
                            ('Character Orbit', '%s' % self.char_orbit),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.__dict__.get('is_CM'):
             self.properties += [('CM', '%s' % self.is_CM)] # properties box
-        
+
         self.bread = [] # bread
         self.title = "Newform %s"%(self.label)
         self.friends = []
+        #self.friends += [ ('Newspace {}'.format(sum(self.label.split('.')[:-1])),self.newspace_url)]
 
     @staticmethod
     def by_label(label):
@@ -102,7 +108,9 @@ class WebNewform(object):
             return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
 
     def defining_polynomial(self):
-        return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
+        if self.__dict__.get('field_poly'):
+            return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
+        return None
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
@@ -116,12 +124,12 @@ class WebNewform(object):
         # For now we ignore the format and just print on one line
         if self.has_exact_qexp:
             if format == 'all':
-               prec = self.qexp_prec 
+               prec = self.qexp_prec
             else:
                prec = min(self.qexp_prec, prec_max)
             zero = [0] * self.dim
             if self.dim == 1:
-                s = web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=True)
+                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
             else:
                 s = eigs_as_seqseq_to_qexp(self.qexp[:prec])
             return s
