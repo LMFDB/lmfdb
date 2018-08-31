@@ -14,7 +14,6 @@ CRITICAL (BUGS):
 * data: Need to create mf_oldsubs table
 
 IMPORTANT:
-* search page: include dim, isCM, and field as columns in the search results
 * space pages: add text explaining the dimensions
 * space pages: properties box should have something
 * Dirichlet char pages: list orbit labels
@@ -29,6 +28,7 @@ IMPORTANT:
 * space pages: download to Sage/Magma/pari
 * stats pages
 * disable or recompute: http://www.lmfdb.org/L/degree2/CuspForm/
+* add to search, order of character
 
 FORMATTING:
 * space pages: when space is empty but navigated to via URL box, handle it (David Roe: I think this is now fixed)
