@@ -70,8 +70,11 @@ IT WOULD BE NICE IF:
 * form pages: if Hecke field is cyclotomic, use zeta instead
 * identify (if possible?) a more precise description of the twisting characters
 * L-function pages: sign could be recognized as a root of unity, when applicable
+* data: compute exact Hecke eigenvalues in pari, compare with computed in Magma
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
 
 FUTURE WORK:
+* data: compute much more using pari
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
 * Review editorial review of CMFs to make sure issues have been addressed
 * Add more data, in particular for weight 2 and trivial character
