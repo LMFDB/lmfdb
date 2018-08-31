@@ -105,7 +105,9 @@ class WebNewform(object):
             return r"\(\Q(\alpha)\) = " + nf_display_knowl(self.nf_label, name = self.nf_label)
 
     def defining_polynomial(self):
-        return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
+        if self.__dict__.get('field_poly'):
+            return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
+        return None
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
