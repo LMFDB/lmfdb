@@ -47,7 +47,7 @@ class EmfTest(LmfdbTest):
         #assert '0.5185' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/1/a/0/')
-        assert '0.7921' in page.data 
+        assert '0.7921' in page.data
 
     def test_level11(self):
         r"""
@@ -121,7 +121,7 @@ class EmfTest(LmfdbTest):
         assert 'The table below gives the dimensions of the space of' in page.data
         #page = self.tc.get("", follow_redirects=True)
         #assert '' in page.data
-        
+
     def test_character_parity(self):
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/99/3/?group=1',
                            follow_redirects=True)
@@ -181,7 +181,7 @@ class EmfTest(LmfdbTest):
 
     def test_label_finder(self):
         r"""
-        Test the function which finds a label for a newform in the database using input 
+        Test the function which finds a label for a newform in the database using input
         level, weight, character, field and coefficients
         """
         from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import find_newform_label
@@ -195,5 +195,5 @@ class EmfTest(LmfdbTest):
         with self.assertRaises(ValueError):
             ## check for wrong degree number field
             find_newform_label(71,2,1,[-4,1,1],{3:[1,0]})
-        
-            
+
+
