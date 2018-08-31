@@ -1,0 +1,76 @@
+CRITICAL (BUGS):
+* form pages: error 'WebNewform' object has no nf_label (e.g. 31/4/1)
+* gamma1 full space pages: WebGamma1Space object has no attribute 'old_space_latex'
+* navigation: need to handle /Holomorphic/Q/79/, giving search results on level 79 forms
+* form pages: need friends: whole space, L-functions for all embedded forms (Conrey labels and extra embeddings), elliptic curves
+* throughout: work with labels e.g. '11.2.a.a'
+* navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
+* navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
+* form pages: some fields not displaying KNOWL e.g. 17/4/1/c
+* form pages: q-expansion not displaying when it should e.g. 17/4/1/c 
+* browse page: jump not working
+* browse page: also browse to spaces 
+* browse/search page: search on twist minimal gives search on inner twist?
+* search page: put all of the search boxes in the refine search
+* form pages: get cc data to display
+* data: add cc data
+* knowls: rigor, cande, completeness in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
+* L-function pages: make sure L-function links with orbits works
+
+IMPORTANT:
+* search page: include dim, isCM, and field as columns in the search results
+* space pages: use display q-expansions in list
+* space pages: field should be linked to nf database
+* space pages: add text explaining the dimensions
+* space pages: properties box should have something
+* Dirichlet char pages: list orbit labels
+* space pages: in list, newforms are misaligned and have wrong labels
+* space pages: use a multicell in the table style
+* space pages: breadcrumbs
+* gamma1 full space pages: breadcrumbs
+* form pages: breadcrumbs
+* form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
+* form pages: get download coefficients to work, say total number of coefficients
+* form pages: display what the inner twists actually are (as orbits of characters)
+* form pages: download to Sage/Magma/pari (using cutters)
+* space pages: download to Sage/Magma/pari
+* stats pages
+
+FORMATTING:
+* space pages: in title, say e.g. "of weight 4 and level 11"
+* space pages: when space is empty but navigated to via URL box, handle it
+* space pages: put orbit size later?
+* space pages: add dimension of whole space?
+* space pages: for symmetry, also list E_k^old
+* search page: when no q-expansion, just leave blank (no dash)
+* search page: no period after "field not in LMFDB"
+* form pages: minimal should be 'twist minimal'
+* L-function pages: should we use equals instead of colon?
+* form pages: use nu instead of alpha (to avoid conflict with Satake)
+* form pages: "Character orbit" and "(character) label" should be their own knowls
+* form pages: Conrey label should be a knowl, and say character orbit
+* form pages: coeffs -> coefficients, and say the number of them
+* form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring'
+* form pages: in the betas, use curly brackets in the subscripts
+* form pages: include CM in properties (Gaga) box
+* form pages: display relative degree
+* form pages: would the basis for the Hecke ring look better in a vertical table?
+* L-function pages: disable Euler product information 
+* L-function pages: weight should say motivic weight
+* L-function pages: fix fonts arithmetic/analytic normalization
+* L-function pages: Remove n/a from friends (just leave it unclickable)
+* L-function apges: is gray for negative values best? (why not two separate lists?)
+
+IT WOULD BE NICE IF:
+* form pages: had code snippets
+* space pages: had code snippets
+* knowls: more
+* form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
+* form pages: if Hecke field is cyclotomic, use zeta instead
+* identify (if possible?) a more precise description of the twisting characters
+* L-function pages: sign could be recognized as a root of unity, when applicable
+
+FUTURE WORK:
+* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
+* Review editorial review of CMFs to make sure issues have been addressed
+
