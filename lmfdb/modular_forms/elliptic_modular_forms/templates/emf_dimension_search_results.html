@@ -1,8 +1,6 @@
-{% extends 'homepage.html' %}
+{% extends 'emf_refine_search.html' %}
 
-{% block content %}
-
-{% include 'emf_refine_search.html' %}
+{% block show_results %}
 
 {% if not info.one_type %}
 <script>
@@ -73,7 +71,5 @@
 </small>
 </p>
 {% endif %}
-
-{% include 'debug_info.html' %}
 
 {% endblock %}
