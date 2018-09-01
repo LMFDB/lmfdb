@@ -4,7 +4,7 @@
 from lmfdb.db_backend import db
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
-from sage.databases.cremona import cremona_letter_code
+from sage.databases.cremona import cremona_letter_code, class_to_int
 from flask import url_for
 import re
 from collections import defaultdict
@@ -32,11 +32,13 @@ def character_orbit_index(level, weight, conrey_label):
     """
     Returns the character orbit index for the character given by conrey label and at the given weight
     """
-    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : level, 'weight' : weight}, projection = ['char_orbit'])
-    if res is not None:
-        return int(res['char_orbit'])
-    else:
-        None
+    return db.mf_newspaces.lucky({'conrey_labels': {'$contains': conrey_label}, 'level': level, 'weight': weight}, projection='char_orbit')
+
+def minimal_conrey_in_character_orbit(level, weight, char_orbit):
+    if isinstance(char_orbit, basestring):
+        char_orbit = class_to_int(char_orbit) + 1
+    res = db.mf_newspaces.lucky({'level': level, 'weight': weight, 'char_orbit':char_orbit}, projection='conrey_labels')
+    return None if res is None else res[0]
 
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
@@ -45,11 +47,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
-    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': chi}, 'level' : N, 'weight' : k}, projection = ['label'])
-    if res is not None:
-        return res['label']
-    else:
-        return None
+    return db.mf_newspaces.lucky({'conrey_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 def spacelabel_conrey_exists(spacelabel_conrey):
     return convert_spacelabel_from_conrey(spacelabel_conrey) is not None

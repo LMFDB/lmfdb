@@ -11,31 +11,44 @@
 <h3> Defining parameters </h3>
 
 <table>
-    <tr>
-        <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
-        <td> \( N \) </td>
-        <td>=</td>
-        <td>\( {{ newform.level }} \)</td>
-    </tr>
-    <tr>
-        <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
-        <td> \( k \) </td>
-        <td>=</td>
-        <td>\( {{ newform.weight }} \)</td>
-    </tr>
-    <tr>
-      <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
-        <td> \([\chi]\) </td>
-        <td>=</td>
-        <td>{{ newform.char_orbit_label }}</td>
-    </tr>
-    <tr>
-        <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
-        <td> \( \chi \) </td>
-        <td>=</td>
-        <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a> (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
-
-    </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>=</td>
+    <td>\( {{ newform.level }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> \( k \) </td>
+    <td>=</td>
+    <td>\( {{ newform.weight }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
+    <td> \([\chi]\) </td>
+    <td>=</td>
+    <td>{{ newform.char_orbit_label }}</td>
+  </tr>
+  <tr>
+    <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
+    <td> \( \chi \) </td>
+    <td>=</td>
+    <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a> (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{{ newform.dim }}</td>
+  </tr>
+  {% if newform.cyc_degree > 1 %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.relative_dimension', title='Relative dimension') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{{ newform.rel_dim }} over {{ newform.cyc_display() | safe }}</td>
+  </tr>
+  {% endif %}
 </table>
 
 {% if newform.has_exact_qexp %}
@@ -76,11 +89,11 @@ function show_qexp(qstyle) {
   <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke ring') }}: {{ newform.order_basis() }}</p>
   {% if newform.hecke_ring_index_proven %} 
     {% if newform.hecke_ring_index == 1 %}
-    <p> The {{ KNOWL('mf.elliptic.hecke_order',title='order') }} is maximal. </p>
+    <p> The Hecke ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in its coefficient field. </p>
     {% else %}
-    <p> The index of the {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is equal to {{ newform.hecke_ring_index }}. </p>
+    <p> The index of the Hecke ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is equal to {{ newform.hecke_ring_index }}. </p>
     {% endif %}
-  {% else %}
+  {% elif newform.hecke_ring_index > 1 %}
     <p> The index of the {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is a multiple of {{ newform.hecke_ring_index }}. </p>
   {% endif %}
   {% else %}
@@ -88,7 +101,7 @@ function show_qexp(qstyle) {
   {% endif %}
 </div>
 {% else %}
-<h3>Coefficient field</h3>
+<h3>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}</h3>
 <div>
   {{ place_code('coefficient_field') }}
 </div>
@@ -97,7 +110,6 @@ function show_qexp(qstyle) {
 {% endif %}
 
 <!-- Complex embeddings and Satake parameters -->
-<!--
 {% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
@@ -115,45 +127,64 @@ function show_qexp(qstyle) {
 
 <table class="ntdata">
   <thead>
-    <tr>
-      {% if newform.num_characters > 1 %}
-      <th>Conrey label</th>
+    <tr class="dark">
+      {% if newform.dim > 1 %}
+      <th>\(m\)</th>
+      {% if newform.cyc_degree > 1 %}
+      <th>{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
       {% endif %}
       {% if newform.has_exact_qexp %}
       <th>\(\iota_m(\alpha)\)</th>
       {% endif %}
-      <th>\(m\)</th>
-      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
-      <th>\( {{ newform.embed_header(n, format=info.format) }} \)</th>
+      {% endif %}
+      {% for n in newform.an_range(info.CC_n, format=info.format) %}
+      <th class="center">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for m in range(info.CC_lowm, info.CC_highm) %}
+    {% for m in newform.m_range(info.CC_m) %}
     <tr>
-      {% if newform.num_characters > 1 %}
-      <td>{{ newform.conrey_from_embedding(m) }}</td>
+      {% if info.format == 'embed' or info.format == 'analytic_embed' %}
+      {% if newform.dim > 1 %}
+      <td{% if newform.cyc_degree == 1 and not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ m+1 }}</td>
+      {% if newform.cyc_degree > 1 %}
+      <td{% if not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ newform.conrey_from_embedding(m) }}</td>
       {% endif %}
       {% if newform.has_exact_qexp %}
-      <td>{{ newform.embedding(m,prec=info.CC_prec,format=info.format) }}</td>
+      <td class="middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
       {% endif %}
-      <td style="border-right:solid black 1px">{{ m }}</td>
-      {% if info.format == 'embed' or info.format == 'analytic_embed' %}
-      {% for n in newform.embed_range(info.CC_lown, info.CC_highn) %}
+      {% endif %}
+      {% for n in newform.an_range(info.CC_n, format=info.format) %}
       <td style="white-space:nowrap;" align=right>
-        {{ newform.embedding(m,n,prec=info.CC_prec,format=info.format) }}
+        \( {{ newform.embedding(m,n,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
       {% else %}
-      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
+      {% if loop.index is divisibleby(2) %}
+      {% set shade = 'dark ' %}
+      {% else %}
+      {% set shade = '' %}
+      {% endif %}
+      {% if newform.dim > 1 %}
+      <td rowspan="2" class="{{shade}}middle{% if newform.cyc_degree == 1 and not newform.has_exact_qexp %} border-right{% endif %}">{{ m+1 }}</td>
+      {% if newform.cyc_degree > 1 %}
+      <td rowspan="2" class="{{shade}}middle{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
+      {% endif %}
+      {% if newform.has_exact_qexp %}
+      <td rowspan="2" class="{{shade}}middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
+      {% endif %}
+      {% endif %}
+      {% for n in newform.an_range(info.CC_n, format=info.format) %}
       <td style="white-space:nowrap;" align=right>
-        {{ newform.satake(m,n,prec=info.CC_prec,format=info.format) }}
+        \( {{ newform.satake(m,n,0,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
-      </tr><tr><td></td><td></td>{% if newform.num_characters > 1 %}<td></td>{% endif %}
-      {% for n in newform.embed_range(info.CC_lown, info.CC_highn, format=info.format) %}
+    </tr>
+    <tr>
+      {% for n in newform.an_range(info.CC_n, format=info.format) %}
       <td style="white-space:nowrap;" align=right>
-        {{ newform.satake(m,n,prec=info.CC_prec,format=info.format) }}
+        \( {{ newform.satake(m,n,1,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
       {% endif %}
@@ -161,25 +192,30 @@ function show_qexp(qstyle) {
     {% endfor %}
   </tbody>
 </table>
+{% if info.err %}
+
+{% endif %}
 
 <form id='complex_embeddings'>
   <table>
     <tr>
       <td>\(n\): </td>
-      <td><input type='text' name='n' size=10 value="{{info.CC_lown}}-{{info.CC_highn}}"></td>
+      <td><input type='text' name='n' size=10 value="{{info.n}}"></td>
     </tr>
+    {% if newform.dim > 1 %}
     <tr>
       <td>\(m\): </td>
-      <td><input type='text' name='m' size=10 value="{{info.CC_lowm}}-{{info.CC_highm}}"></td>
+      <td><input type='text' name='m' size=10 value="{{info.m}}"></td>
     </tr>
+    {% endif %}
     <tr>
       <td>Precision: </td>
-      <td><input type='text' name='prec' size=10 value="{{info.CC_prec}}"></td>
+      <td><input type='text' name='prec' size=10 value="{{info.prec}}"></td>
     </tr>
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
       <td><select name='format'>
-          {% if newform.degree > 1 %}
+          {% if newform.dim > 1 %}
           <option value='embed' {% if info.format == 'embed' %}selected{% endif %}>Complex embeddings</option>
           {% endif %}
           <option value='analytic_embed' {% if info.format == 'analytic_embed' %}selected{% endif %}>Normalized embeddings</option>
@@ -194,8 +230,6 @@ function show_qexp(qstyle) {
 
 {% endif %}
 
--->
-
 <!-- Removed old code on special values that didn't seem to be used -->
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
@@ -207,7 +241,9 @@ function show_qexp(qstyle) {
 a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
 This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</p>
 
+{% if newform.is_twist_minimal is defined %}
 <p>This newform is {{ "not" if not newform.is_twist_minimal }} {{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
+{% endif %}
 
 {# TODO we might wish to have some disclaimer here about provability #}
 <p>This newform

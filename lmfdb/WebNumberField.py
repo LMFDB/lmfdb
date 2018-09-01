@@ -36,6 +36,17 @@ cycloinfo = {'4.0.125.1': 5, '6.0.16807.1': 7, '4.0.256.1': 8,
   '16.0.104976000000000000.1': 60,
   '24.0.42247883974617233597120303333376.1': 72,
   '24.0.711435861303500483618465120256.1': 84}
+# Reverse lookup for newforms
+cyclolookup = {n:label for label,n in cycloinfo.items()}
+cyclolookup[1] = '1.1.1.1'
+cyclolookup[3] = '2.0.3.1'
+cyclolookup[4] = '2.0.4.1'
+for n, label in cyclolookup.items():
+    if label.split('.')[0] == '24':
+        # LMFDB doesn't actually include fields of dimension 24
+        cyclolookup.pop(n)
+    elif n % 2 == 1:
+        cyclolookup[2*n] = label
 
 def na_text():
     return "Not computed"

@@ -1,17 +1,19 @@
 # See views/emf_main.py, genus2_curves/main.py
 
-from flask import render_template, url_for, redirect, abort, request
+from flask import render_template, url_for, redirect, abort, request, flash
+from markupsafe import Markup
 import re
 from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string, integer_options
 from lmfdb.search_wrapper import search_wrap
-from lmfdb.utils import flash_error
+from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, character_orbit_index
 from sage.databases.cremona import class_to_int, cremona_letter_code
+from sage.all import next_prime
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -36,6 +38,14 @@ def set_info_funcs(info):
         else:
             return "Not in LMFDB"
     info["nf_link"] = nf_link
+    def cm_link(mf):
+        if not mf['is_cm']:
+            return "No"
+        else:
+            cm_label = "2.0.%s.1"%(-mf['cm_disc'])
+            return '<a href="{0}"> {1} </a>'.format(url_for("number_fields.by_label", label=cm_label),
+                                                    field_pretty(cm_label))
+    info["cm_link"] = cm_link
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
                           'E':'Eisenstein series'}
@@ -51,7 +61,7 @@ def index():
         else:
             return newform_search(request.args)
     info = {}
-    newform_labels = ('1.12.a.a','11.2.a.a')
+    newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
     space_labels = ('20.5','60.2','55.3.d')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
@@ -78,7 +88,40 @@ def render_newform_webpage(label):
         newform = WebNewform.by_label(label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
+    info = to_dict(request.args)
+    info['format'] = info.get('format','embed' if newform.dim>1 else 'satake')
+    p, maxp = 2, 7
+    if info['format'] in ['satake', 'satake_angle']:
+        while p <= maxp:
+            if newform.level % p == 0:
+                maxp = next_prime(maxp)
+            p = next_prime(p)
+    info['n'] = info.get('n', '2-%s'%maxp)
+    info['m'] = info.get('m', '1-12')
+    errs = []
+    try:
+        info['CC_n'] = integer_options(info['n'], 1000)
+    except (ValueError, TypeError):
+        info['n'] = '2-7'
+        info['CC_n'] = range(2,8)
+        errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+    try:
+        info['CC_m'] = integer_options(info['m'], 1000)
+    except (ValueError, TypeError):
+        info['m'] = '1-12'
+        info['CC_m'] = range(1,13)
+        errs.append("<span style='color:black'>m</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+    try:
+        info['prec'] = int(info.get('prec',6))
+        if info['prec'] < 1 or info['prec'] > 15:
+            raise ValueError
+    except (ValueError, TypeError):
+        info['prec'] = 6
+        errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
+    if errs:
+        flash(Markup("<br>".join(errs)), "error")
     return render_template("emf_newform.html",
+                           info=info,
                            newform=newform,
                            properties2=newform.properties,
                            credit=credit(),
@@ -92,12 +135,7 @@ def render_space_webpage(label):
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info = {'results':space.newforms, # so we can reuse search result code
-            'CC_lown': 2,
-            'CC_highn': 10,
-            'CC_lowm': 0,
-            'CC_highm': 10, # Actually may need min(10, number of embeddings)
-            'CC_prec': 6}
+    info = {'results':space.newforms} # so we can reuse search result code
     set_info_funcs(info)
     return render_template("emf_space.html",
                            info=info,
@@ -217,7 +255,7 @@ def common_parse(info, query):
     #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
-    parse_bool(info, query, 'has_inner_twist',name='has an inner twist')
+    parse_ints(info, query, 'has_inner_twist',name='has an inner twist')
 
 @search_wrap(template="emf_newform_search_results.html",
              table=db.mf_newforms,
@@ -226,7 +264,8 @@ def common_parse(info, query):
              shortcuts={'jump':newform_jump,
                         'download_exact':download_exact,
                         'download_complex':download_complex},
-             bread=lambda:[], # FIXME
+             bread=lambda:[('Classical newforms', url_for(".index")),
+                           ('Search results', ' ')],
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
@@ -310,7 +349,8 @@ def dimension_form_postprocess(res, info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              postprocess=dimension_form_postprocess,
-             bread=lambda:[], # FIXME
+             bread=lambda:[('Classical newforms', url_for(".index")),
+                           ('Dimension table', ' ')],
              learnmore=learnmore_list,
              credit=credit)
 def dimension_form_search(info, query):
@@ -327,7 +367,8 @@ def dimension_form_search(info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              postprocess=dimension_space_postprocess,
-             bread=lambda:[], # FIXME
+             bread=lambda:[('Classical newforms', url_for(".index")),
+                           ('Dimension table', ' ')],
              learnmore=learnmore_list,
              credit=credit)
 def dimension_space_search(info, query):
@@ -343,7 +384,8 @@ def dimension_space_search(info, query):
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
              shortcuts={'jump':space_jump},
-             bread=lambda:[], # FIXME
+             bread=lambda:[('Classical newforms', url_for(".index")),
+                           ('Search results', ' ')],
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):

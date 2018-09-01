@@ -1,40 +1,37 @@
 CRITICAL (BUGS):
-* form pages: need friends: whole space, L-functions for all embedded forms (Conrey labels and extra embeddings), elliptic curves
-* navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
-* navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
-* form pages: q-expansion not displaying when it should e.g. 17.4.a.b
-* search page: fix twist-minimal search (broken by schema change)
-* form pages: get cc data to display
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
-* L-function pages: make sure L-function links with orbits works
-* data: Need to create mf_oldsubs table
+* Dirichlet character pages: The modular form 60.2.i.a claims the character label is 60.i, but the linked Dirichlet character page (for 60.17) says the orbit label is 60.q.
+* data: missing exact q-expansions, e.g. 17.4.a.b, 20.5.d.c
+* data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a
+* data: Need to create mf_oldsubs table (including for Gamma_1 if we want to not display empty spaces in decomposition)
+* data: populate embeddings column by computing roots of defining polynomials and matching with complex data
+* data: Add isogeny_class_label so that we can include friend links to elliptic curves
+* search results: next button not working
 
 IMPORTANT:
 * search page: change the character search field: should give a letter (we should have a discussion about whether we require input of the form N.i that includes the level)
 * search_page: add order of character
 * space pages: add text explaining the dimensions
 * space pages: properties box should have something
+* search results: Download search results
 * Dirichlet char pages: list orbit labels
-* space pages: use a multicell in the table style
-* space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
-* gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
-* form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
 * form pages: get download coefficients to work, say total number of coefficients
 * form pages: display what the inner twists actually are (as orbits of characters)
-* form pages: download to Sage/Magma/pari (using cutters)
+* form pages: download to Sage/Magma/pari (both stored coefficients and using cutters)
 * space pages: download to Sage/Magma/pari
 * stats pages
 * disable or recompute: http://www.lmfdb.org/L/degree2/CuspForm/
-* Add asterisk to inner twist where it's displayed since our inner twist computations are not rigorous
+* Add link on asterisk for inner twist explaining that our inner twist computations are not rigorous
+* knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
+* knowls: make sure top and bottom knowls, explicit formulas are ported over
 
 FORMATTING:
 * L-function pages: should we use equals instead of colon?
 * form pages: "Character orbit" and "(character) label" should be their own knowls
 * form pages: Conrey label should be a knowl, and say character orbit
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring'
-* form pages: include CM in properties (Gaga) box
-* form pages: display relative degree
+* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  We should probably limit the number of L-function links displayed.
 * form pages: would the basis for the Hecke ring look better in a vertical table?
 * space pages: add remark on empty spaces when ruled out by parity
 * L-function pages: fix fonts arithmetic/analytic normalization
@@ -76,3 +73,9 @@ modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render
 
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'
+* navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
+* navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
+* L-function pages: make sure L-function links with orbits works
+* space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
+* gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
+* form pages: breadcrumbs (Alex: done probably, someone else could check if they like)

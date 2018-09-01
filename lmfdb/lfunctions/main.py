@@ -262,21 +262,33 @@ def l_function_cmf_page(level, weight, character, label, number):
     return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<character>/<label>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
 def l_function_cmf_redirect_1(level, weight, character, label):
-    if character.isdigit():
-        character = int(character)
-    #elif character.isalpha():
-    #    from lmfdb.
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, label=label, number=1), code=301)
 
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit>/<label>/")
+def l_function_cmf_redirect_1a(level, weight, char_orbit, label):
+    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
+    character = minimal_conrey_in_character_orbit(level, weight, char_orbit)
+    if character is None:
+        return flask.abort(404)
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
+                                  character=character, label=label, number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_2(level, weight, character):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, label='a', number=1), code=301)
 
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit>/")
+def l_function_cmf_redirect_2a(level, weight, char_orbit):
+    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
+    character = minimal_conrey_in_character_orbit(level, weight, char_orbit)
+    if character is None:
+        return flask.abort(404)
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
+                                  character=character, label='a', number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
 def l_function_cmf_redirect_3(level, weight):

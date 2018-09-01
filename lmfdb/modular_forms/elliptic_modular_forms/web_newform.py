@@ -1,21 +1,24 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing
+from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF, ZZ
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm
 from lmfdb.characters.utils import url_character
 import re
+from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from web_space import convert_spacelabel_from_conrey
+from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
-
+EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
+EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
 
 def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
@@ -69,8 +72,9 @@ class WebNewform(object):
             self.__dict__.update(chardata)
         else:
             self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
+        print "cyc_degree", self.cyc_degree
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
-        if eigenvals:  # this will always be true
+        if eigenvals:  # this should always be true
             self.has_exact_qexp = True
             zero = [0] * self.dim
             self.qexp = [zero]
@@ -85,8 +89,41 @@ class WebNewform(object):
             self.qexp_prec = len(self.qexp)-1
         else:
             self.has_exact_qexp = False
-#        angles = db.mf_hecke_cc.search({'orbit':self.orbit_code}, ['embedding','angles'], sort=[])
-#        self.angles = {data['embedding']:data['angles'] for data in angles}
+        cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
+                                             projection=['embedding','an','angles'],
+                                             sort=['embedding']))
+        if cc_data:
+            self.has_complex_qexp = True
+            self.cqexp_prec = 10000
+        else:
+            self.has_complex_qexp = False
+        self.cc_data = []
+        self.rel_dim = self.dim // self.cyc_degree
+        for m, embedded_mf in enumerate(cc_data):
+            embedded_mf['conrey_label'] = self.conrey_labels[m // self.rel_dim]
+            embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
+            embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
+            embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
+            self.cc_data.append(embedded_mf)
+            self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
+        if cc_data:
+            self.analytic_shift = [None]
+            for n in range(1,self.cqexp_prec):
+                self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
+
+        self.character_values = defaultdict(list)
+        G = DirichletGroup_conrey(self.level)
+        chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_labels]
+        for p in prime_range(2, self.cqexp_prec):
+            if p.divides(self.level):
+                continue
+            for chi in chars:
+                c = chi.logvalue(p) * self.char_order
+        #for p, L in self.char_values:
+        #    for c in L:
+                angle = float(c / self.char_order)
+                value = CDF(0,2*CDF.pi()*angle).exp()
+                self.character_values[p].append((angle, value))
 
         self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]
                      # label is the distinguished column in mf_newspaces,
@@ -96,13 +133,16 @@ class WebNewform(object):
         self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.char_orbit_label = "\(" + str(self.level) + "\)." + self.char_orbit_code
 
+        # properties box
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
                            ('Character Orbit', '%s' % self.char_orbit_code),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
-        if self.__dict__.get('is_CM'):
-            self.properties += [('CM', '%s' % self.is_CM)] # properties box
+        if self.is_cm:
+            self.properties += [('CM discriminant', '%s' % self.cm_disc)]
+        else:
+            self.properties += [('CM', 'No')]
 
         # Breadcrumbs
         self.bread = bread = [
@@ -119,14 +159,28 @@ class WebNewform(object):
     @property
     def friends(self):
         res = []
+        base_label = [str(self.level)]
+        #if self.weight == 2 and self.dim == 1:
+        #    label = base_label + [self.isogeny_class_label]
+        #    ec_label = '.'.join(label)
+        #    ec_url = '/EllipticCurve/Q/' + '/'.join(label)
+        #    res.append(('Elliptic curve isogeny class ' + ec_label, ec_url))
+        base_label.append(str(self.weight))
+        cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         base_label =  map(str, [self.level, self.weight])
+        ns1_label = '.'.join(base_label)
+        ns1_url = cmf_base + '/'.join(base_label)
+        res.append(('Newspace ' + ns1_label, ns1_url))
+        char_letter = cremona_letter_code(self.char_orbit - 1)
+        ns_label = '.'.join(base_label + [char_letter])
+        ns_url = cmf_base + '/'.join(base_label + [char_letter])
+        res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        i = 0
-        for i, character in enumerate(self.conrey_labels):
+        for character in self.conrey_labels:
             for j in range(self.dim/self.cyc_degree):
                 label = base_label + [str(character), hecke_letter, str(j + 1)]
                 lfun_label = '.'.join(label)
-                lfun_url =  "/L/ModularForm/GL2/Q/holomorphic/" + '/'.join(label)
+                lfun_url =  '/L' + cmf_base + '/'.join(label)
                 res.append(('L-function ' + lfun_label, lfun_url))
         return res
 
@@ -157,11 +211,23 @@ class WebNewform(object):
         return nf_display_knowl(cm_label, field_pretty(cm_label))
 
     def field_knowl(self):
+        if self.rel_dim == 1:
+            return self.cyc_display()
         label = self.__dict__.get("nf_label")
         if label:
             return nf_display_knowl(label, field_pretty(label))
         else:
             return "Not in LMFDB"
+
+    def cyc_display(self):
+        if self.cyc_degree == 1:
+            name = r'\(\Q\)'
+        else:
+            name = r'\(\Q(\zeta_{%s})\)' % self.char_order
+        if self.cyc_degree < 24:
+            return nf_display_knowl(cyclolookup[self.char_order], name=name)
+        else:
+            return name
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
@@ -192,9 +258,47 @@ class WebNewform(object):
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
+    def embed_header(self, n, format='embed'):
+        if format == 'embed':
+            return 'a_{%s}'%n
+        elif format == 'analytic_embed':
+            if self.weight == 1:
+                return 'a_{%s}' % n
+            elif self.weight == 3:
+                return 'a_{%s}/%s' % (n, n)
+            else:
+                return r'\frac{a_{%s}}{%s^{%s}}'%(n, n, (ZZ(self.weight)-1)/2)
+        elif format == 'satake':
+            return r'\alpha_{%s}' % n
+        else:
+            return r'\theta_{%s}' % n
+
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
-        return self.conrey_labels[(m-1) // self.cyc_degree]
+        return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=(m%self.rel_dim)+1)
+
+    @staticmethod
+    def _display_float(x, prec):
+        if x == 0:
+            return "0"
+        s = "%#{}f".format(prec) % float(x)
+        s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
+        s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
+        return s
+
+    def _display_complex(self, x, y, prec):
+        if y == 0:
+            return self._display_float(x, prec)
+        if x == 0:
+            return self._display_float(y, prec) + "i"
+        x = self._display_float(x, prec)
+        if y < 0:
+            sign = " - "
+            y = -y
+        else:
+            sign = " + "
+        y = self._display_float(y, prec)
+        return x + sign + y + r"i"
 
     def embedding(self, m, n=None, prec=6, format='embed'):
         """
@@ -203,14 +307,24 @@ class WebNewform(object):
         INPUT:
 
         - ``m`` -- an integer, specifying which embedding to use.
-        - ``n`` -- an integer, specifying which a_n.  If None, returns the image of
+        - ``n`` -- a positive integer, specifying which a_n.  If None, returns the image of
             the generator of the field (i.e. the root corresponding to this embedding).
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
         """
-        pass
+        prec = min(prec,15)
+        if n is None:
+            return '?' # FIXME
+        x, y = self.cc_data[m]['an'][n]
+        if format == 'analytic_embed':
+            x *= self.analytic_shift[n]
+            y *= self.analytic_shift[n]
+        if self.cc_data[m]['real']:
+            return self._display_float(x, prec)
+        else:
+            return self._display_complex(x, y, prec)
 
-    def satake(self, m, p, prec=6, format='satake'):
+    def satake(self, m, p, i, prec=6, format='satake'):
         """
         Return a Satake parameter.
 
@@ -218,13 +332,38 @@ class WebNewform(object):
 
         - ``m`` -- an integer, specifying which embedding to use.
         - ``p`` -- a prime, specifying which a_p.
+        - ``i`` -- either 0 or 1, indicating which root of the quadratic.
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
-        pass
-
-    def embed_range(self, a, b, format='embed'):
-        if format in ['embed', 'analytic_embed']:
-            return range(a, b)
+        prec = min(prec, 15)
+        theta = self.cc_data[m]['angles'][p]
+        chiang, chival = self.character_values[p][m // self.rel_dim]
+        if format == 'satake':
+            ppow = CDF(p)**((ZZ(self.weight)-1)/2)
+            unit = CDF(0,2*CDF.pi()*theta).exp()
+            if i == 0:
+                alpha = ppow * unit
+            else:
+                alpha = ppow * chival / unit
+            return self._display_complex(alpha.real(), alpha.imag(), prec)
         else:
-            return prime_range(a, b)
+            if i == 1:
+                theta = chiang - theta
+                if theta > 0.5:
+                    theta -= 1
+                elif theta <= -0.5:
+                    theta += 1
+            s = self._display_float(2*theta, prec)
+            if s != "0":
+                s += r'\pi'
+            return s
+
+    def an_range(self, L, format='embed'):
+        if format in ['embed', 'analytic_embed']:
+            return [n for n in L if n >= 2 and n < self.cqexp_prec]
+        else:
+            return [p for p in L if p >= 2 and p < self.cqexp_prec and ZZ(p).is_prime() and not ZZ(p).divides(self.level)]
+
+    def m_range(self, L):
+        return [m-1 for m in L if m >= 1 and m <= self.dim]

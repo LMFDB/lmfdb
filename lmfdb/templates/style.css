@@ -927,8 +927,17 @@ table.ntdata tr.first {
 table.ntdata .border-right {
   border-right: 2px solid {{ color.table_ntdata_border }};
 }
-table.ntdata td.center {
+table.ntdata .center {
     text-align: center;
+}
+table.ntdata .middle {
+    vertical-align: middle;
+}
+table.ntdata td.dark {
+    background: {{color.table_ntdata_background_2}};
+}
+table.ntdata tr.dark {
+    background: {{color.table_ntdata_background_2}};
 }
 table.euler {
     margin-left:auto;
