@@ -217,7 +217,16 @@ def common_parse(info, query):
     #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
-    parse_bool(info, query, 'has_inner_twist',name='has an inner twist')
+    if 'has_inner_twist' in info:
+        hit = info['has_inner_twist']
+        if hit == 'yes':
+            query['has_inner_twist'] = 1
+        elif hit == 'not_no':
+            query['has_inner_twist'] = {'$gt' : -1}
+        elif hit == 'not_yes':
+            query['has_inner_twist'] = {'$lt' : 1}
+        elif hit == 'no':
+            query['has_inner_twist'] = -1
 
 @search_wrap(template="emf_newform_search_results.html",
              table=db.mf_newforms,

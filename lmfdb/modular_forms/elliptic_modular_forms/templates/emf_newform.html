@@ -211,7 +211,7 @@ This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</
 
 {# TODO we might wish to have some disclaimer here about provability #}
 <p>This newform
-{{ "has*" if newform.has_inner_twist else "does not have*" }}
+{{ "has*" if newform.has_inner_twist==1 else "does not have*" if newform.has_inner_twist==-1 else "is not known to either have or not have" }}
 an
 {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.{#{% if newform.has_inner_twist %} TODO fix this, we changed to orbit labels not conrey indices , by the characters {% for c,link in newform.inner_twist %}<a href="{{ link }}">\(\chi_{ {{newform.level}}}({{c}},\cdot)\)</a>{{ ", " if not loop.last }}{% endfor %}{% endif %}.</p>  #}
 
