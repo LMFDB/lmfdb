@@ -208,8 +208,8 @@ class WebGamma1Space(object):
         self.properties = [] # properties box
         self.bread = [
              ('Classical newforms', url_for(".index")),
-             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
-             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+             ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
         ]
         self.title = r"Space of Modular Forms \(%s\) of weight %s and level %s"%(self.mf_latex(), self.weight, self.level)
         self.friends = []
