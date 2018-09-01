@@ -126,9 +126,9 @@ class WebNewformSpace(object):
         self.properties = [] # properties box
         self.bread = [
              ('Classical newforms', url_for(".index")),
-             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
-             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-             ('%s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
+             ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+             ('Character orbit %s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
         ]
         if self.conrey_labels[0] == 1:
             character_str = "trivial character"
