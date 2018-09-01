@@ -171,6 +171,10 @@ body.checklist {
  font-size: 70%;
 }
 
+span.disable-links {
+  pointer-events: none;
+}
+
 a:visited { color: {{color.a_text_visited}}; }
 a:hover {
     color: {{color.a_text_hover}};

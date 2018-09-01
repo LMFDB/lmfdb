@@ -40,9 +40,11 @@ def set_info_funcs(info):
 @emf.route("/")
 def index():
     if len(request.args) > 0:
-        print request.args
         if request.args.get('submit') == 'Dimensions':
-            return dimension_search(request.args)
+            for key in newform_only_fields:
+                if key in request.args:
+                    return dimension_form_search(request.args)
+            return dimension_space_search(request.args)
         else:
             return newform_search(request.args)
     info = {}
@@ -172,6 +174,7 @@ def download_complex(info):
     # FIXME
     pass
 
+newform_only_fields = ['dim','nf_label','is_cm','cm_disc','is_twist_minimal','has_inner_twist']
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
     parse_ints(info, query, 'level', name="Level")
@@ -198,30 +201,75 @@ def newform_search(info, query):
     common_parse(info, query)
     set_info_funcs(info)
 
-def dimension_postprocess(res, info, query):
-    dim_dict = defaultdict(DimGrid)
-    for form in res:
-        N = form['level']
-        k = form['weight']
-        dim_dict[N,k] += DimGrid.from_db(form)
-    info['weight_list'] = integer_options(query['weight'], max_opts=100)
+def set_rows_cols(info, query):
+    """
+    Sets weight_list and level_list, which are the row and column headers
+    """
+    info['weight_list'] = integer_options(info['weight'], max_opts=100)
     if 'odd_weight' in query:
         if query['odd_weight']:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
-    print "weight_list", info["weight_list"]
-    info['level_list'] = integer_options(query['weight'], max_opts=2000)
-    print "level_list", info["level_list"]
+    info['level_list'] = integer_options(info['level'], max_opts=2000)
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large")
+
+def has_data(N, k):
+    return k > 1 and N*k*k <= 500
+def dimension_space_postprocess(res, info, query):
+    set_rows_cols(info, query)
+    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
+    for space in res:
+        dims = DimGrid.from_db(space)
+        N = space['level']
+        k = space['weight']
+        dim_dict[N,k] += dims
     if query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit="a")
     else:
         def url_generator(N, k):
             return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+    def pick_table(entry, X, typ):
+        return entry[X][typ]
+    def switch_text(X, typ):
+        space_type = {'M':' modular forms',
+                      'S':' cusp forms',
+                      'E':' Eisenstein series'}
+        return typ.capitalize() + space_type[X]
+    info['pick_table'] = pick_table
+    info['cusp_types'] = ['M','S','E']
+    info['newness_types'] = ['all','new','old']
+    info['one_type'] = False
+    info['switch_text'] = switch_text
     info['url_generator'] = url_generator
+    info['has_data'] = has_data
+    return dim_dict
+def dimension_form_postprocess(res, info, query):
+    urlgen_info = dict(info)
+    urlgen_info['count'] = 50
+    set_rows_cols(info, query)
+    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
+    for form in res:
+        N = form['level']
+        k = form['weight']
+        dim_dict[N,k] += form['dim']
+    def url_generator(N, k):
+        info_copy = dict(urlgen_info)
+        info_copy['submit'] = 'Search'
+        info_copy['level'] = str(N)
+        info_copy['weight'] = str(k)
+        return url_for(".index", **info_copy)
+    def pick_table(entry, X, typ):
+        # Only support one table
+        return entry
+    info['pick_table'] = pick_table
+    info['cusp_types'] = ['S']
+    info['newness_types'] = ['new']
+    info['one_type'] = True
+    info['url_generator'] = url_generator
+    info['has_data'] = has_data
     return dim_dict
 
 @search_wrap(template="emf_dimension_search_results.html",
@@ -229,17 +277,34 @@ def dimension_postprocess(res, info, query):
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
-             postprocess=dimension_postprocess,
+             postprocess=dimension_form_postprocess,
              bread=lambda:[], # FIXME
              learnmore=learnmore_list,
              credit=credit)
-def dimension_search(info, query):
-    info.pop('per_page',None) # remove per_page so that we get all results
+def dimension_form_search(info, query):
+    info.pop('count',None) # remove per_page so that we get all results
+    if 'weight' not in info:
+        info['weight'] = '1-12'
+    if 'level' not in info:
+        info['level'] = '1-24'
     common_parse(info, query)
-    if 'weight' not in query:
-        query['weight'] = {'$gte': 1, '$lte': 12}
-    if 'level' not in query:
-        query['level'] = {'$gte': 1, '$lte': 24}
+
+@search_wrap(template="emf_dimension_search_results.html",
+             table=db.mf_newspaces,
+             title='Dimension Search Results',
+             err_title='Dimension Search Input Error',
+             per_page=None,
+             postprocess=dimension_space_postprocess,
+             bread=lambda:[], # FIXME
+             learnmore=learnmore_list,
+             credit=credit)
+def dimension_space_search(info, query):
+    info.pop('count',None) # remove per_page so that we get all results
+    if 'weight' not in info:
+        info['weight'] = '1-12'
+    if 'level' not in info:
+        info['level'] = '1-24'
+    common_parse(info, query)
 
 @search_wrap(template="emf_space_search_results.html",
              table=db.mf_newspaces,
