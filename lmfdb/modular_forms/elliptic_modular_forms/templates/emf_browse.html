@@ -117,10 +117,12 @@ Info was: {{info}}
 
 <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
 <td><select name='has_inner_twist' width="122" style="width: 122px">
-                   <option ></option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
-</select></td>
+        <option value="yes">yes</option>
+        <option value="not_no">yes or unknown</option>
+        <option value="" selected>unrestricted</option>
+        <option value="not_yes">no or unknown</option>
+        <option value="no">no</option>
+    </select></td>
 </tr>
 
 <tr>

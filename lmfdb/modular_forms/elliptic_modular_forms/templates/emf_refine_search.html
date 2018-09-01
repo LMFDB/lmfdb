@@ -49,10 +49,12 @@
 </select></td>
 
 <td><select name='has_inner_twist' style="width: 110px">
-  <option></option>
-  <option value="1" {{ "selected" if info.has_inner_twist == '1'}}>True</option>
-  <option value="-1" {{ "selected" if info.has_inner_twist == '-1'}}>False</option>
-</select></td>
+        <option value="" {{ "selected" if info.has_inner_twist == ''}}>unrestricted</option>
+        <option value="yes" {{ "selected" if info.has_inner_twist == 'yes'}}>yes</option>
+        <option value="not_no" {{ "selected" if info.has_inner_twist == 'not_no'}}>yes or unknown</option>
+        <option value="not_yes" {{ "selected" if info.has_inner_twist == 'not_yes'}}>no or unknown</option>
+        <option value="no" {{ "selected" if info.has_inner_twist == 'no'}}>no</option>
+    </select></td>
 
 </tr>
 
