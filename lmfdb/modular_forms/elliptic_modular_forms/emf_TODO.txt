@@ -19,9 +19,9 @@ IMPORTANT:
 * space pages: properties box should have something
 * Dirichlet char pages: list orbit labels
 * space pages: use a multicell in the table style
-* space pages: breadcrumbs
-* gamma1 full space pages: breadcrumbs
-* form pages: breadcrumbs
+* space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
+* gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
+* form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
 * form pages: get download coefficients to work, say total number of coefficients
 * form pages: display what the inner twists actually are (as orbits of characters)

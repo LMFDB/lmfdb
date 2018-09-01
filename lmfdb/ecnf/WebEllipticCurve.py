@@ -7,7 +7,6 @@ from lmfdb.db_backend import db
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -521,10 +520,10 @@ class ECNF(object):
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                if is_bmf_in_db(self.bmf_label):
+                if db.bmf_forms.label_exists(self.bmf_label):
                     self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi Modular Form %s)' % self.bmf_label, '')]
 
         if 'Lfunction' in self.urls:
             self.friends += [('L-function', self.urls['Lfunction'])]

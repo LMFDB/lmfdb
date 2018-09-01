@@ -633,19 +633,6 @@ class Lfunction_CMF(Lfunction_from_db):
     def origin_label(self):
         return ".".join(map(str, (self.level, self.weight, self.character, self.label, self.number)))
 
-#    @property
-#    def htmlname(self):
-#        return "<em>L</em>(<em>s, f</em>)"
-#    @property
-#    def htmlname_arithmetic(self):
-#        return "<em>L</em>(<em>f, s</em>)"
-#    @property
-#    def texname(self):
-#        return "L(s, f)"
-#    @property
-#    def texname_arithmetic(self):
-#        return "L(f, s)"
-
     @property
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
@@ -716,12 +703,6 @@ class Lfunction_EC(Lfunction):
         self.credit = ''
         self._set_knowltype()
         return
-
-    def is_langlands(self):
-        if self.field_degree == 1 or \
-                (self.field_degree == 2 and self.field_real_signature == 2):
-            return True
-        return False
 
     @property
     def bread(self):

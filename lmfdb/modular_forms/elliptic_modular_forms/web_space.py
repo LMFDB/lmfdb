@@ -2,7 +2,6 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from web_newform import WebNewform
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
 from sage.databases.cremona import cremona_letter_code
@@ -28,6 +27,32 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
         typ = "^{{{typ}}}".format(typ=typ)
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
+
+def character_orbit_index(level, weight, conrey_label):
+    """
+    Returns the character orbit index for the character given by conrey label and at the given weight
+    """
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': conrey_label}, 'level' : level, 'weight' : weight}, projection = ['char_orbit'])
+    if res is not None:
+        return int(res['char_orbit'])
+    else:
+        None
+
+def convert_spacelabel_from_conrey(spacelabel_conrey):
+    """
+    Returns the label for the space using the orbit index
+    eg:
+        N.k.c --> N.k.i
+    """
+    N, k, chi = map(int, spacelabel_conrey.split('.'))
+    res = db.mf_newspaces.lucky({'conrey_labels' : {'$contains': chi}, 'level' : N, 'weight' : k}, projection = ['label'])
+    if res is not None:
+        return res['label']
+    else:
+        return None
+
+def spacelabel_conrey_exists(spacelabel_conrey):
+    return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
 
 class DimGrid(object):
     def __init__(self, grid=None):
@@ -71,6 +96,7 @@ class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
+        self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
         oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
         self.oldspaces = []
@@ -81,7 +107,12 @@ class WebNewformSpace(object):
         self.old_dim = self.cusp_dim - self.dim
         self.eis_old_dim = self.eis_dim - self.eis_new_dim
         self.properties = [] # properties box
-        self.bread = [] # bread
+        self.bread = [
+             ('Classical newforms', url_for(".index")),
+             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+             ('%s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
+        ]
         if self.conrey_labels[0] == 1:
             character_str = "trivial character"
         else:
@@ -155,7 +186,11 @@ class WebGamma1Space(object):
         #print "decomp", self.decomp
         print self.decomposition()
         self.properties = [] # properties box
-        self.bread = [] # bread
+        self.bread = [
+             ('Classical newforms', url_for(".index")),
+             ('%s' % self.level, url_for(".by_url_level", level=self.level)),
+             ('%s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
+        ]
         self.title = r"Space of Modular Forms \(%s\) of weight %s and level %s"%(self.mf_latex(), self.weight, self.level)
         self.friends = []
 

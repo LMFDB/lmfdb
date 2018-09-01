@@ -9,8 +9,7 @@ from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
-from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
-from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import newform_conrey_exists
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -938,23 +937,21 @@ def name_and_object_from_url(url):
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
                 # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
-                hecke_orbit_label = ".".join(url_split[-5:-1])
-                name =  'Modular form ' + hecke_orbit_label;
-                #FIXME call db
-                obj_exists = False
-                #obj_exists = is_mf_newform_in_db(hecke_orbit_label);
+                conreynewform_label = ".".join(url_split[-5:-1])
+                name =  'Modular form ' + conreynewform_label;
+                obj_exists = newform_conrey_exists(conreynewform_label)
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
                 label = url_split[-1];
                 name =  'Hilbert modular form ' + label;
-                obj_exists = is_hmf_in_db(label);
+                obj_exists = db.hmf_forms.label_exists(label);
 
             elif url_split[2] ==  'ImaginaryQuadratic':
                 # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                 label = '-'.join(url_split[-3:])
                 name = 'Bianchi modular form ' + label;
-                obj_exists = is_bmf_in_db(label);
+                obj_exists = db.bmf_forms.label_exists(label);
     return name, obj_exists
 
 def get_bread(degree, breads=[]):
