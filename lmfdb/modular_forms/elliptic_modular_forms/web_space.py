@@ -79,6 +79,20 @@ class DimGrid(object):
         else:
             raise TypeError
 
+    def __mul__(self, other):
+        if isinstance(other, int):
+            grid = {}
+            for X in ['M','S','E']:
+                grid[X] = {}
+                for typ in ['all','new','old']:
+                    grid[X][typ] = other * self._grid[X][typ]
+            return DimGrid(grid)
+        else:
+            raise TypeError
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
     @staticmethod
     def from_db(data):
         grid = {'M':{'all':data['mf_dim'],

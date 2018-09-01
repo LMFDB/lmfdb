@@ -7,7 +7,6 @@ CRITICAL (BUGS):
 * browse page: dimension table from search query
 * search page: put all of the search boxes in the refine search
 * form pages: get cc data to display
-* data: add cc data
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
 * L-function pages: make sure L-function links with orbits works
 * data: Need to create mf_oldsubs table
