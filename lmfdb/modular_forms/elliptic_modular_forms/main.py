@@ -27,7 +27,7 @@ def credit():
     return "???"
 
 def set_info_funcs(info):
-    info["mf_url"] = lambda mf: url_for_newform_label(mf['label'])
+    info["mf_url"] = lambda mf: url_for_label(mf['label'])
     def nf_link(mf):
         nf_label = mf.get('nf_label')
         if nf_label:
@@ -36,6 +36,9 @@ def set_info_funcs(info):
         else:
             return "Not in LMFDB"
     info["nf_link"] = nf_link
+    info["space_type"] = {'M':'Modular forms',
+                          'S':'Cusp forms',
+                          'E':'Eisenstein series'}
 
 @emf.route("/")
 def index():
@@ -49,7 +52,9 @@ def index():
             return newform_search(request.args)
     info = {}
     newform_labels = ('1.12.a.a','11.2.a.a')
-    info["newform_list"] = [ {'label':label,'url':url_for_newform_label(label)} for label in newform_labels ]
+    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
+    space_labels = ('20.5','60.2','55.3.d')
+    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')
     bread = [] # Fix
@@ -63,7 +68,7 @@ def index():
 @emf.route("/random")
 def random_form():
     label = db.mf_newforms.random()
-    return redirect(url_for_newform_label(label), 307)
+    return redirect(url_for_label(label), 307)
 
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
@@ -109,7 +114,10 @@ def render_full_gamma1_space_webpage(label):
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
+    info={}
+    set_info_funcs(info)
     return render_template("emf_full_gamma1_space.html",
+                           info=info,
                            space=space,
                            properties=space.properties,
                            credit=credit(),
@@ -137,7 +145,7 @@ def by_url_space_conreylabel(level, weight, conrey_label):
     char_orbit = character_orbit_index(level, weight, conrey_label)
     label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)
     print label
-    return redirect(url_for_space_label(label), code=301)
+    return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<char_orbit>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
@@ -148,7 +156,7 @@ def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
     char_orbit = character_orbit_index(level, weight, conrey_label)
     label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)+"."+hecke_orbit
-    return redirect(url_for_newform_label(label), code=301)
+    return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>")
 def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
@@ -157,20 +165,24 @@ def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke
 
 
 
-def url_for_newform_label(label):
+def url_for_label(label):
     slabel = label.split(".")
-    return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2], hecke_orbit=slabel[3])
-
-def url_for_space_label(label):
-    slabel = label.split(".")
-    print slabel
-    return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2])
+    if len(slabel) == 4:
+        return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2], hecke_orbit=slabel[3])
+    elif len(slabel) == 3:
+        return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2])
+    elif len(slabel) == 2:
+        return url_for(".by_url_full_gammma1_space_label", level=slabel[0], weight=slabel[1])
+    elif len(slabel) == 1:
+        return url_for(".by_url_level", level=slabel[0])
+    else:
+        raise ValueError("Invalid label")
 
 def newform_jump(info):
     jump = info["jump"].strip()
     # TODO use LABEL_RE from web_newform
     if re.match(r'^\d+\.\d+\.[a-z]+\.[a-z]+$',jump):
-        return redirect(url_for_newform_label(jump), 301)
+        return redirect(url_for_label(jump), 301)
     else:
         errmsg = "%s is not a valid newform orbit label"
     flash_error (errmsg, jump)

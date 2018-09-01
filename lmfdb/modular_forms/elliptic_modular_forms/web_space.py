@@ -90,6 +90,9 @@ class DimGrid(object):
         else:
             raise TypeError
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __rmul__(self, other):
         return self.__mul__(other)
 
@@ -185,6 +188,9 @@ class WebGamma1Space(object):
         self.weight = weight
         #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'cyc_degree'], sort=[])
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
+        if not newspaces:
+            raise ValueError("Space not in database")
+        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
         self.mf_dim = sum(space['mf_dim'] for space in newspaces)
         self.eis_dim = sum(space['eis_dim'] for space in newspaces)
         self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
@@ -276,9 +282,10 @@ class WebGamma1Space(object):
                                   for N in ZZ(self.level).divisors() if N != self.level)
 
     def decomposition(self):
-        # returns a list of 6-tuples chi_rep, num_chi, parity, space, dim, newform
+        # returns a list of 6-tuples chi_rep, num_chi, parity, space, firstform, firstdim, forms
         ans = []
-        for space, forms in self.decomp:
+        for i, (space, forms) in enumerate(self.decomp):
+            rowtype = "oddrow" if i%2 else "evenrow"
             chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_labels'][0])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
@@ -289,12 +296,9 @@ class WebGamma1Space(object):
             parity = "even" if space['parity'] == 1 else "odd"
             link = self._link(space['level'], space['char_orbit'])
             if not forms:
-                ans.append((chi_rep, num_chi, parity, link, 0, "No newforms"))
+                ans.append((rowtype, chi_rep, num_chi, parity, link, "No newforms", "", []))
             else:
-                form = forms[0]
-                ans.append((chi_rep, num_chi, parity, link, form['dim'],
-                            self._link(form['level'], form['char_orbit'], form['hecke_orbit'])))
-                for form in forms[1:]:
-                    ans.append(("", "", "", "", form['dim'],
-                                self._link(form['level'], form['char_orbit'], form['hecke_orbit'])))
+                dims = [form['dim'] for form in forms]
+                forms = [self._link(form['level'], form['char_orbit'], form['hecke_orbit']) for form in forms]
+                ans.append((rowtype, chi_rep, num_chi, parity, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
         return ans

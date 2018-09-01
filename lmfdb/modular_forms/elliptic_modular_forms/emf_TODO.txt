@@ -2,10 +2,8 @@ CRITICAL (BUGS):
 * form pages: need friends: whole space, L-functions for all embedded forms (Conrey labels and extra embeddings), elliptic curves
 * navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
 * navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
-* form pages: q-expansion not displaying when it should e.g. 17/4/1/c
-* browse page: also browse to spaces
-* browse page: dimension table from search query
-* search page: put all of the search boxes in the refine search
+* form pages: q-expansion not displaying when it should e.g. 17.4.a.b
+* search page: fix twist-minimal search (broken by schema change)
 * form pages: get cc data to display
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
 * L-function pages: make sure L-function links with orbits works
@@ -31,10 +29,6 @@ IMPORTANT:
 * Add asterisk to inner twist where it's displayed since our inner twist computations are not rigorous
 
 FORMATTING:
-* space pages: when space is empty but navigated to via URL box, handle it (David Roe: I think this is now fixed)
-* space pages: put orbit size later? (David Roe: moved it, but I'm not sure about the new location)
-* space pages: add dimension of whole space?
-* form pages: minimal should be 'twist minimal'
 * L-function pages: should we use equals instead of colon?
 * form pages: "Character orbit" and "(character) label" should be their own knowls
 * form pages: Conrey label should be a knowl, and say character orbit
@@ -42,6 +36,7 @@ FORMATTING:
 * form pages: include CM in properties (Gaga) box
 * form pages: display relative degree
 * form pages: would the basis for the Hecke ring look better in a vertical table?
+* space pages: add remark on empty spaces when ruled out by parity
 * L-function pages: fix fonts arithmetic/analytic normalization
 * L-function pages: Remove n/a from friends (just leave it unclickable)
 * L-function apges: is gray for negative values best? (why not two separate lists?)

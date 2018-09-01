@@ -4,13 +4,28 @@
 
 <h2> Dimensions </h2>
 
-<p> \({{ space.mf_latex() }}\): {{ space.mf_dim }}</p>
-<p> \({{ space.eis_latex() }}\): {{ space.eis_dim }}</p>
-<p> \({{ space.eis_new_latex() }}\): {{ space.eis_new_dim }}</p>
-<p> \({{ space.eis_old_latex() }}\): {{ space.eis_old_dim }}</p>
-<p> \({{ space.cusp_latex() }}\): {{ space.cusp_dim }}</p>
-<p> \({{ space.new_latex() }}\): {{ space.new_dim }}</p>
-<p> \({{ space.old_latex() }}\): {{ space.old_dim }}</p>
+<p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
+
+<table class="dimgrid">
+  <thead>
+    <tr>
+      <th class="blank"></th>
+      <th> Total </th>
+      <th> New </th>
+      <th> Old </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for X in ['M', 'S', 'E'] %}
+    <tr>
+      <th class="left"> {{info.space_type[X]}} </td>
+      {% for typ in ['all','new','old'] %}
+      <td> {{ space.dim_grid[X][typ] }} </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 {% if space.new_dim > 0 %}
 <h2> Decomposition of \({{ space.new_latex() }}\)</h2>
@@ -27,11 +42,11 @@ is not the same as the parity of the weight.
 
 Within each space \( S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi) \) we list the newforms together with their dimension.
 
-<table class="ntdata">
+<table class="mfdata">
   <thead>
-    <tr>
-      <th> \(\chi\)</th>
+    <tr class="oddrow">
       <th>{{ KNOWL('mf.elliptic.label',title=space.header_latex()) }}</th>
+      <th> \(\chi\)</th>
       <th>{{ KNOWL('character.dirichlet.parity',title='Parity') }}</th>
       <th>{{ KNOWL('mf.elliptic.newform',title='Newform') }}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
@@ -39,15 +54,21 @@ Within each space \( S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \ch
     </tr>
   </thead>
   <tbody>
-    {% for chi_rep, num_chi, parity, space, dim, newform in space.decomposition() %}
-    <tr>
-      <td> {{ chi_rep | safe }} </td>
-      <td> {{ space | safe }} </td>
-      <td> {{ parity }} </td>
-      <td> {{ newform | safe }} </td>
-      <td> {{ dim | safe }} </td>
-      <td> {{ num_chi }} </td>
+    {% for rowtype, chi_rep, num_chi, parity, space, firstform, firstdim, others in space.decomposition() %}
+    <tr class="{{rowtype}}">
+      <td rowspan="{{others|length + 1}}"> {{ space | safe }} </td>
+      <td rowspan="{{others|length + 1}}"> {{ chi_rep | safe }} </td>
+      <td rowspan="{{others|length + 1}}"> {{ parity }} </td>
+      <td> {{ firstform | safe }} </td>
+      <td> {{ firstdim }} </td>
+      <td rowspan="{{others|length + 1}}"> {{ num_chi }} </td>
     </tr>
+    {% for newform, dim in others %}
+    <tr class="{{rowtype}}">
+      <td> {{ newform | safe }} </td>
+      <td> {{ dim }} </td>
+    </tr>
+    {% endfor %}
     {% endfor %}
   </tbody>
 </table>

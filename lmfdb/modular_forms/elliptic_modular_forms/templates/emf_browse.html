@@ -16,27 +16,41 @@ Info was: {{info}}
 <h2> Browse {{ KNOWL('mf.elliptic',title='holomorphic modular forms for $\GL(2)$')}} over $\Q$</h2>
 
 <p>
-By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
-{% for weight in info.weight_list %}
-<a href="?weight={{weight}}">{{weight}}</a>
-{% endfor %}
+  By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?weight={{weight}}">{{weight}}</a>
+  {% endfor %}
 </p>
 <p>
-By {{ KNOWL('mf.elliptic.level', title="level")}}:
-{% for level in info.level_list %}
-<a href="?level={{level}}">{{level}}</a>
-{% endfor %}
+  By {{ KNOWL('mf.elliptic.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?level={{level}}">{{level}}</a>
+  {% endfor %}
+</p>
+<p>
+  Using a <a href="?submit=Dimensions">table</a> of dimensions
 </p>
 
 <p>
-A <a href={{url_for('.random_form')}}>random newform</a> from the database.
+  Some interesting newforms:
+  {% for newform in info.newform_list %}
+  <a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
+  {% endfor %}
 </p>
 
 <p>
-Some interesting newforms:
-{% for newform in info.newform_list %}
-<a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
-{% endfor %}
+  Some interesting spaces:
+  {% for space in info.space_list %}
+  <a href = "{{ space.url }}"> {{ space.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  A <a href="?submit=Dimensions&dim=1">table</a> of newforms with rational \(q\)-expansion
+</p>
+
+<p>
+  A <a href={{url_for('.random_form')}}>random newform</a> from the database
 </p>
 
 <h2> Find a specific newform by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>

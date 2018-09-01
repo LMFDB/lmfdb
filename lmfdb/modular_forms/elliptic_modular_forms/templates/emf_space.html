@@ -4,13 +4,28 @@
 
 <h2> Dimensions </h2>
 
-<p> \({{ space.mf_latex() }}\): {{ space.mf_dim }}</p>
-<p> \({{ space.eis_latex() }}\): {{ space.eis_dim }}</p>
-<p> \({{ space.eis_new_latex() }}\): {{ space.eis_new_dim }}</p>
-<p> \({{ space.eis_old_latex() }}\): {{ space.eis_old_dim }}</p>
-<p> \({{ space.cusp_latex() }}\): {{ space.cusp_dim }}</p>
-<p> \({{ space.new_latex() }}\): {{ space.dim }}</p>
-<p> \({{ space.old_latex() }}\): {{ space.old_dim }}</p>
+<p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
+
+<table class="dimgrid">
+  <thead>
+    <tr>
+      <th class="blank"></th>
+      <th> Total </th>
+      <th> New </th>
+      <th> Old </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for X in ['M', 'S', 'E'] %}
+    <tr>
+      <th class="left"> {{info.space_type[X]}} </td>
+      {% for typ in ['all','new','old'] %}
+      <td> {{ space.dim_grid[X][typ] }} </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 {% if space.dim > 0 %}
 <h2> Decomposition of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>

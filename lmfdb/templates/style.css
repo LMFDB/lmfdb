@@ -861,6 +861,41 @@ body.knowl table.ntdata tr:nth-child(even) {
     background: {{color.white}};
 }
 
+
+table.mfdata {
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+table.mfdata thead tr {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.mfdata td {
+    vertical-align: middle;
+}
+
+table.mfdata tr.oddrow {
+    background: {{color.table_ntdata_background_2}};
+}
+table.mfdata tr.evenrow {
+    background: {{color.white}};
+}
+
+table.dimgrid thead tr {
+    background: {{color.table_ntdata_background_2}};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.dimgrid thead tr th.blank {
+    background: {{color.white}};
+    border-bottom: 2px solid {{color.table_ntdata_background_2}} ;
+}
+table.dimgrid tbody tr th.left {
+    border-right: 2px solid {{ color.table_ntdata_border }};
+    background: {{color.table_ntdata_background_2}};
+}
+
 table.ntdata th.left {
     border-right: 2px solid {{color.table_ntdata_border}};
     background: {{color.table_ntdata_background_2}};
