@@ -244,7 +244,7 @@ def dimension_space_postprocess(res, info, query):
         dims = DimGrid.from_db(space)
         N = space['level']
         k = space['weight']
-        dim_dict[N,k] += space['cyc_degree'] * dims
+        dim_dict[N,k] += dims
     if query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit="a")

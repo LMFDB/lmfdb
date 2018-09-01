@@ -185,13 +185,13 @@ class WebGamma1Space(object):
         self.weight = weight
         #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'cyc_degree'], sort=[])
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
-        self.mf_dim = sum(space['mf_dim']*space['cyc_degree'] for space in newspaces)
-        self.eis_dim = sum(space['eis_dim']*space['cyc_degree'] for space in newspaces)
-        self.eis_new_dim = sum(space['eis_new_dim']*space['cyc_degree'] for space in newspaces)
+        self.mf_dim = sum(space['mf_dim'] for space in newspaces)
+        self.eis_dim = sum(space['eis_dim'] for space in newspaces)
+        self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
         self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        self.cusp_dim = sum(space['cusp_dim']*space['cyc_degree'] for space in newspaces)
-        self.new_dim = sum(space['dim']*space['cyc_degree'] for space in newspaces)
-        self.old_dim = sum((space['cusp_dim']-space['dim'])*space['cyc_degree'] for space in newspaces)
+        self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
+        self.new_dim = sum(space['dim'] for space in newspaces)
+        self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
