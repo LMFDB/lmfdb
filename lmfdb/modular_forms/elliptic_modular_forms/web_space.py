@@ -247,7 +247,7 @@ class WebGamma1Space(object):
         if i is not None:
             i = cremona_letter_code(i-1) # Should probably change definition of field to remove this -1
         if form is not None:
-            form = cremona_letter_code(form)
+            form = cremona_letter_code(form - 1)
         if label:
             if i is None:
                 name = "{N}.{k}".format(N=N, k=self.weight)
