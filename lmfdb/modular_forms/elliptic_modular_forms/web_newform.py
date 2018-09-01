@@ -98,7 +98,7 @@ class WebNewform(object):
 
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
-                           ('Character Orbit', '%s' % self.char_orbit),
+                           ('Character Orbit', '%s' % self.char_orbit_code),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.__dict__.get('is_CM'):
