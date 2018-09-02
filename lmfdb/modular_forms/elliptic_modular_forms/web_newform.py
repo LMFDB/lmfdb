@@ -145,6 +145,7 @@ class WebNewform(object):
 
         # Breadcrumbs
         self.bread = bread = [
+             ('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical newforms', url_for(".index")),
              ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
              ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
