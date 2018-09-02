@@ -72,7 +72,6 @@ class WebNewform(object):
             self.__dict__.update(chardata)
         else:
             self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
-        print "cyc_degree", self.cyc_degree
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
         if eigenvals:  # this should always be true
             self.has_exact_qexp = True
@@ -279,17 +278,17 @@ class WebNewform(object):
 
     @staticmethod
     def _display_float(x, prec):
-        if x == 0:
+        if abs(x) < 10**(-prec):
             return "0"
-        s = "%#{}f".format(prec) % float(x)
+        s = "%.{}f".format(prec) % float(x)
         s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
         s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
         return s
 
     def _display_complex(self, x, y, prec):
-        if y == 0:
+        if abs(y) < 10**(-prec):
             return self._display_float(x, prec)
-        if x == 0:
+        if abs(x) < 10**(-prec):
             return self._display_float(y, prec) + "i"
         x = self._display_float(x, prec)
         if y < 0:
@@ -312,7 +311,6 @@ class WebNewform(object):
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
         """
-        prec = min(prec,15)
         if n is None:
             return '?' # FIXME
         x, y = self.cc_data[m]['an'][n]
@@ -336,7 +334,6 @@ class WebNewform(object):
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
-        prec = min(prec, 15)
         theta = self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][m // self.rel_dim]
         if format == 'satake':

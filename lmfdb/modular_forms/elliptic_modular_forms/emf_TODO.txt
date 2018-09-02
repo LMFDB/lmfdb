@@ -10,12 +10,10 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * search page: change the character search field: should give a letter (we should have a discussion about whether we require input of the form N.i that includes the level)
-* search_page: add order of character
 * space pages: add text explaining the dimensions
-* space pages: properties box should have something
+* space pages: properties box should have something (what?)
 * search results: Download search results
 * Dirichlet char pages: list orbit labels
-* form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
 * form pages: get download coefficients to work, say total number of coefficients
 * form pages: display what the inner twists actually are (as orbits of characters)
 * form pages: download to Sage/Magma/pari (both stored coefficients and using cutters)
@@ -36,14 +34,13 @@ FORMATTING:
 * space pages: add remark on empty spaces when ruled out by parity
 * L-function pages: fix fonts arithmetic/analytic normalization
 * L-function pages: Remove n/a from friends (just leave it unclickable)
-* L-function apges: is gray for negative values best? (why not two separate lists?)
+* L-function pages: is gray for negative values best? (why not two separate lists?) (David: I like the gray for negatives)
 
 IT WOULD BE NICE IF:
 * form pages: had code snippets
 * space pages: had code snippets
 * knowls: more
 * form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
-* form pages: if Hecke field is cyclotomic, use zeta instead
 * identify (if possible?) a more precise description of the twisting characters
 * L-function pages: sign could be recognized as a root of unity, when applicable
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma
@@ -79,3 +76,4 @@ PROBABLY DONE:
 * space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
+* form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known

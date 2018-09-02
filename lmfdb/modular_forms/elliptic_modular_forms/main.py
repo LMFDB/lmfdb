@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
-from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string, integer_options
+from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
@@ -182,7 +182,6 @@ def by_url_space_label(level, weight, char_orbit):
 def by_url_space_conreylabel(level, weight, conrey_label):
     char_orbit = character_orbit_index(level, weight, conrey_label)
     label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)
-    print label
     return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<char_orbit>/<hecke_orbit>/")
@@ -244,15 +243,41 @@ def download_complex(info):
     # FIXME
     pass
 
+@search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
+def parse_character(inp, query, qfield, level_field='level', conrey_field='conrey_labels'):
+    pair = inp.split('.')
+    if len(pair) != 2:
+        raise ValueError("It must be of the form N.i")
+    level, orbit = pair
+    level = int(level)
+    if level_field in query and query[level_field] != level:
+        raise ValueError("Inconsistent level")
+    query[level_field] = level
+    if orbit.isalpha():
+        query[qfield] = class_to_int(orbit) + 1
+    else:
+        if conrey_field is None:
+            raise ValueError("You must use the orbit label when searching by primitive character")
+        query[conrey_field] = {'$contains': int(orbit)}
+
 newform_only_fields = ['dim','nf_label','is_cm','cm_disc','is_twist_minimal','has_inner_twist']
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
+    if 'weight_parity' in info:
+        parity=info['weight_parity']
+        if parity == 'even':
+            query['odd_weight'] = False
+        elif parity == 'odd':
+            query['odd_weight'] = True
     parse_ints(info, query, 'level', name="Level")
-    parse_ints(info, query, 'char_orbit', name="Character orbit label")
+    if 'prim_character' in info and info['prim_character'] == 'yes':
+        parse_character(info, query, 'char_label', qfield='prim_orbit', level_field='char_conductor', conrey_field=None)
+    else:
+        parse_character(info, query, 'char_label', qfield='char_orbit')
+    parse_ints(info, query, 'char_order', name="Character order")
     parse_ints(info, query, 'dim', name="Coefficient field dimension")
     parse_nf_string(info, query,'nf_label', name="Field")
     parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
-    #parse_signed_ints(info, query, 'cm_disc', name="CM disciminant")
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
     if 'has_inner_twist' in info:

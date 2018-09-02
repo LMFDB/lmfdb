@@ -28,7 +28,7 @@ Info was: {{info}}
   {% endfor %}
 </p>
 <p>
-  Using a <a href="?submit=Dimensions">table</a> of dimensions
+  Using a <a href="?submit=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial character.
 </p>
 
 <p>
@@ -67,7 +67,7 @@ Info was: {{info}}
 <form id='search' onsubmit="cleanSubmit(this.id)">
 <table>
 <tr>
-<td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
+<td>{{ KNOWL('mf.elliptic.weight', title='Weight') }} &nbsp &nbsp <select name="weight_parity"><option></option><option value="even">even only</option><option value="odd">odd only</option></select> </td>
 <td><input type='text' name='weight' placeholder='2' size=10></td>
 <td><span class="formexample"> e.g. 2, 10-14 </span></td>
 
@@ -79,8 +79,19 @@ Info was: {{info}}
 
 <tr>
 <td>{{ KNOWL('mf.elliptic.character', title='Character orbit label') }}</td>
-<td><input type='text' name='char_orbit' placeholder='4' size=10></td>
-<td><span class="formexample"> e.g. 4, 1-20</td>
+<td><input type='text' name='char_label' placeholder='20.d' size=10></td>
+<td><span class="formexample"> e.g. 20.d, 1.1 </td>
+<td>Primitive label</td>
+<td><select name='prim_character' width="122" style="width: 122px">
+    <option></option>
+    <option value='yes'>Yes</option>
+</select></td>
+</tr>
+
+<tr>
+<td>Character order</td>
+<td><input type='text' name='char_order' placeholder='1' size=10></td>
+<td><span class="formexample"> e.g. 1, 2-4</td>
 </tr>
 
 <tr>

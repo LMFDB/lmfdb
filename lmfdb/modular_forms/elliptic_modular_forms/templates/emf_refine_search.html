@@ -9,32 +9,45 @@
 <input type="hidden" name="count" value="{{info.count}}"/>
 
 <table>
-<tr>
+  <tr>
 
-<td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
-<td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-<td>{{ KNOWL('mf.elliptic.character', title='Character orbit label') }}</td>
-<td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit dimension') }}</td>
-<td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-<td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
+    <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
+      <select name="weight_parity">
+        <option></option>
+        <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
+        <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
+      </select></td>
+    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+    <td>{{ KNOWL('mf.elliptic.character', title='Character') }} &nbsp <input type='checkbox' name='prim_character' value='yes'{{ 'checked="checked"' if info.prim_character == 'yes'}}> primitive </td>
 </tr>
 
 <tr>
 <td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
 <td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
-<td><input type='text' name='char_orbit' placeholder='4' size=10 value='{{info.char_orbit}}'></td>
-<td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
-<td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
-<td><input type='text' name='cm_disc' placeholder='-3' size=10 value='{{info.cm_disc}}'></td>
+<td><input type='text' name='char_label' placeholder='4' size=10 value='{{info.char_label}}'></td>
 </tr>
 
 <tr>
+<td>Character order</td>
+<td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit dimension') }}</td>
+<td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+</tr>
+
+<tr>
+<td><input type='text' name='char_order' placeholder='1' size=10 value='{{info.char_order}}'></td>
+<td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
+<td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
+</tr>
+
+<tr>
+<td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
 <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
 <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
 <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
 </tr>
 
 <tr>
+<td><input type='text' name='cm_disc' placeholder='-3' size=10 value='{{info.cm_disc}}'></td>
 
 <td><select name='is_cm' style="width: 110px">
   <option></option>
