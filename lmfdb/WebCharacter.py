@@ -850,11 +850,15 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order + 1)
+                  if gcd(k, order) == 1) # use xsrange not xrange
         return list(self._char_desc(num, prim=prim) for num in orbit)
 
     @property
     def orbit_label(self):
+        # Shortcut the trivial character, which behaves differently
+        if self.conductor == 1:
+            return 'a'
         orbit_dict = {}
         ordered_orbits = self.H._galois_orbits()
         for n, orbit in enumerate(ordered_orbits, 1):  # index at 1
