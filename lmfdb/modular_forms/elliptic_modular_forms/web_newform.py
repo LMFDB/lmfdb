@@ -140,7 +140,7 @@ class WebNewform(object):
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.is_cm:
-            self.properties += [('CM discriminant', '%s' % self.cm_disc)]
+            self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
         else:
             self.properties += [('CM', 'No')]
 
