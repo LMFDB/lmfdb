@@ -39,8 +39,10 @@ def set_info_funcs(info):
             return "Not in LMFDB"
     info["nf_link"] = nf_link
     def cm_link(mf):
-        if not mf['is_cm']:
+        if mf['is_cm'] == -1:
             return "No"
+        elif mf['is_cm'] == 0:
+            return ""
         else:
             cm_label = "2.0.%s.1"%(-mf['cm_disc'])
             return '<a href="{0}"> {1} </a>'.format(url_for("number_fields.by_label", label=cm_label),

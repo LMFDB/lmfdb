@@ -139,9 +139,9 @@ class WebNewform(object):
                            ('Character Orbit', '%s' % self.char_orbit_code),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
-        if self.is_cm:
+        if self.is_cm == 1:
             self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
-        else:
+        elif self.is_cm == -1:
             self.properties += [('CM', 'No')]
 
         # Breadcrumbs
@@ -206,7 +206,7 @@ class WebNewform(object):
 
     def cm_field_knowl(self):
         # The knowl for the CM field, with appropriate title
-        if self.cm_disc == 0:
+        if self.__dict__.get('cm_disc', 0) == 0:
             raise ValueError("Not CM")
         cm_label = "2.0.%s.1"%(-self.cm_disc)
         return nf_display_knowl(cm_label, field_pretty(cm_label))
