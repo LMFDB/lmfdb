@@ -129,7 +129,8 @@ class WebNewform(object):
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
-        self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
+        if self.has_inner_twist:
+            self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.char_orbit_label = "\(" + str(self.level) + "\)." + self.char_orbit_code
 
         # properties box
@@ -145,6 +146,7 @@ class WebNewform(object):
 
         # Breadcrumbs
         self.bread = bread = [
+             ('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical newforms', url_for(".index")),
              ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
              ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),

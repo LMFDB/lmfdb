@@ -67,13 +67,16 @@ def index():
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')
-    bread = [] # Fix
+    bread = [
+            ('Modular Forms', url_for('mf.modular_form_main_page')),
+            ('Classical newforms', url_for(".index")),
+            ]
     return render_template("emf_browse.html",
-                           info=info,
-                           credit=credit(),
-                           title="Holomorphic Cusp Forms",
-                           learnmore=learnmore_list(),
-                           bread=bread)
+            info=info,
+            credit=credit(),
+            title="Holomorphic Cusp Forms",
+            learnmore=learnmore_list(),
+            bread=bread)
 
 @emf.route("/random")
 def random_form():
@@ -429,7 +432,7 @@ def space_search(info, query):
 @emf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of $\GL_2$ holomorphic newform data over $\Q$'
-    bread = (('Holomorphic Newforms', url_for(".index")), ('Completeness',''))
+    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")), ('Completeness',''))
     return render_template("single.html", kid='dq.mf.elliptic.extent',
                            credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
@@ -437,13 +440,13 @@ def completeness_page():
 @emf.route("/Source")
 def how_computed_page():
     t = 'Source of $\GL_2$ holomorphic newform data over $\Q$'
-    bread = (('Holomorphic Newforms', url_for(".index")) ,('Source',''))
+    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")) ,('Source',''))
     return render_template("single.html", kid='dq.mf.elliptic.source',
                            credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @emf.route("/Labels")
 def labels_page():
     t = 'Labels for $\GL_2$ holomorphic newforms over $\Q$'
-    bread = (('Holomorphic Newforms', url_for(".index")), ('Labels',''))
+    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")), ('Labels',''))
     return render_template("single.html", kid='mf.elliptic.label',
                            credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
