@@ -113,11 +113,11 @@ class WebNewformSpace(object):
         self.__dict__.update(data)
         self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
-        oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
+        #oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
         self.oldspaces = []
-        for old in oldspaces:
-            N, k, i = old['new_label'].split('.')
-            self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
+        #for old in oldspaces:
+        #    N, k, i = old['new_label'].split('.')
+        #    self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
         self.dim_grid = DimGrid.from_db(data)
         self.old_dim = self.cusp_dim - self.dim
         self.eis_old_dim = self.eis_dim - self.eis_new_dim
