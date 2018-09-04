@@ -392,6 +392,8 @@ body > .debug {
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
+  max-height: 206px; /* 10 items with padding: 21 + 20*9 + 5 */
+  overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
   border-top-left-radius: 10px;
