@@ -855,15 +855,14 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def orbit_label(self):
-        orbit_info = self.galoisorbit
-        if len(orbit_info) != 0:
-            value = min(map(lambda info: info[1], orbit_info))
-        else:
-            value = 1
+        orbit_dict = {}
+        ordered_orbits = self.H._galois_orbits()
+        for n, orbit in enumerate(ordered_orbits, 1):  # index at 1
+            for character_number in orbit:
+                orbit_dict[character_number] = n
         # The -1 in the line below is because labels index at 1, while the
         # cremona_letter_code indexes at 0
-        letter_value = cremona_letter_code(int(value) - 1)
-        return letter_value
+        return cremona_letter_code(orbit_dict[self.number] - 1)
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
