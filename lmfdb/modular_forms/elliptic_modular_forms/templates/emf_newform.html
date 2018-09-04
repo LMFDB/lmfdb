@@ -236,10 +236,12 @@ function show_qexp(qstyle) {
 
 <h2>Further properties</h2>
 
+{% if newform.is_cm != 0 %}
 <p>This newform is
-{{ "not" if not newform.is_cm }}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
+{{ "not" if newform.is_cm == -1 }}
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form') }}{% if newform.is_cm == 1 %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.
 This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</p>
+{% endif %}
 
 {% if newform.is_twist_minimal is defined %}
 <p>This newform is {{ "not" if not newform.is_twist_minimal }} {{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
