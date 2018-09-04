@@ -1,59 +1,67 @@
 CRITICAL (BUGS):
-* knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical)
-* Dirichlet character pages: The modular form 60.2.i.a claims the character label is 60.i, but the linked Dirichlet character page (for 60.17) says the orbit label is 60.q.
-* data: missing exact q-expansions, e.g. 17.4.a.b, 20.5.d.c
-* data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a
-* data: Need to create mf_oldsubs table (including for Gamma_1 if we want to not display empty spaces in decomposition)
-* data: populate embeddings column by computing roots of defining polynomials and matching with complex data
-* data: Add isogeny_class_label so that we can include friend links to elliptic curves
-* search results: next button not working
+* knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
+* Dirichlet character pages: The modular form 60.2.i.a claims the character label is 60.i, but the linked Dirichlet character page (for 60.17) says the orbit label is 60.q. (David L-D)
+* data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a (Edgar)
+* data: Need to create mf_gamma1_subspaces table (Drew)
+* data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
+* data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
+* search results: next button not working (David, David L-D)
 
 IMPORTANT:
-* search page: change the character search field: should give a letter (we should have a discussion about whether we require input of the form N.i that includes the level)
-* space pages: add text explaining the dimensions
-* space pages: properties box should have something (what?)
-* search results: Download search results
-* Dirichlet char pages: list orbit labels
-* form pages: get download coefficients to work, say total number of coefficients
-* form pages: display what the inner twists actually are (as orbits of characters)
-* form pages: download to Sage/Magma/pari (both stored coefficients and using cutters)
-* space pages: download to Sage/Magma/pari
-* stats pages
-* disable or recompute: http://www.lmfdb.org/L/degree2/CuspForm/
-* Add link on asterisk for inner twist explaining that our inner twist computations are not rigorous
+* form pages: pictures from q-expansion (Drew, John Cremona)
+* search page: search by analytic rank, parity and is_real on character, change labels for character search (David)
+* data: add analytic rank (Edgar)
+* space pages: properties box should have something (level, weight, character, newspace dimension, character field, sturm bound, trace bound) (David)
+* search results: Download search results (David)
+* Dirichlet char pages: list orbit labels (David L-D)
+* form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
+* form pages: display prime factorization of the level (David)
+* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)
+* stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
+* verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
+* knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
+* form pages: Label headers for complex eigenvalues: chi, m (David)
+* full_level pages: New table for oldspace decomposition (Drew, David)
+* bug: http://localhost:37777/ModularForm/GL2/Q/holomorphic/37/5/d/a/ (Edgar)
+* data: add weight 1 cc data (Edgar)
+* form pages: weight 1 link to Artin rep (Edgar)
+* data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
+* move everything to classical_modular_forms (David) and e-mail
+
+GOOD:
+
+* form pages: download to Sage/Magma/pari (stored coefficients)
+* space pages: download to Sage/Magma/pari (download all the data)
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
+* knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+* Formatting of dimension grid
+* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
 
 FORMATTING:
-* L-function pages: should we use equals instead of colon?
-* form pages: "Character orbit" and "(character) label" should be their own knowls
-* form pages: Conrey label should be a knowl, and say character orbit
-* form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring'
-* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  We should probably limit the number of L-function links displayed.
-* form pages: would the basis for the Hecke ring look better in a vertical table?
-* space pages: add remark on empty spaces when ruled out by parity
-* L-function pages: fix fonts arithmetic/analytic normalization
-* L-function pages: Remove n/a from friends (just leave it unclickable)
-* L-function pages: is gray for negative values best? (why not two separate lists?) (David: I like the gray for negatives)
+* form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
+* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
+* form pages: would the basis for the Hecke ring look better in a vertical table? (David)
+* space pages: add remark on empty spaces when ruled out by parity.  Don't show in list; add comment to text (David)
 
 IT WOULD BE NICE IF:
-* form pages: had code snippets
-* space pages: had code snippets
+* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* form pages: add code snippets
+* space pages: add code snippets
 * knowls: more
 * form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
 * identify (if possible?) a more precise description of the twisting characters
-* L-function pages: sign could be recognized as a root of unity, when applicable
-* data: compute exact Hecke eigenvalues in pari, compare with computed in Magma
 * data: download data from old version and compare to see matches (at least with traces) and identify other problems
+* form pages: download to Sage/Magma/pari (using cutters)
+* L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
 
 FUTURE WORK:
 * data: compute much more using pari
-* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
 * Review editorial review of CMFs to make sure issues have been addressed
 * data: make friends with GL_2-type genus 2 curves and base changes to HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 
-STABILITY CHECKS:
+STABILITY CHECKS (EDGAR):
 * verify that all links to modular forms elsewhere.  Including:
 bianchi_modular_forms/web_BMF.py:            bc_urls = [url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso) for cond, iso, num in curve_bc_parts]
 elliptic_curves/isog_class.py:        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
