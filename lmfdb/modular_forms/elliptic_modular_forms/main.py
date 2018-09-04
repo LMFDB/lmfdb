@@ -321,7 +321,7 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large")
 
 def has_data(N, k):
-    return k > 1 and N*k*k <= 500
+    return k > 1 and N*k*k <= 1000
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
