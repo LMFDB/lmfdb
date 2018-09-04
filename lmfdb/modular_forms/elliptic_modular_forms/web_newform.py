@@ -105,24 +105,23 @@ class WebNewform(object):
             embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
             self.cc_data.append(embedded_mf)
             self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
+        self.character_values = defaultdict(list)
         if cc_data:
             self.analytic_shift = [None]
             for n in range(1,self.cqexp_prec):
                 self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
 
-        self.character_values = defaultdict(list)
-        G = DirichletGroup_conrey(self.level)
-        chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_labels]
-        for p in prime_range(2, self.cqexp_prec):
-            if p.divides(self.level):
-                continue
-            for chi in chars:
-                c = chi.logvalue(p) * self.char_order
-        #for p, L in self.char_values:
-        #    for c in L:
-                angle = float(c / self.char_order)
-                value = CDF(0,2*CDF.pi()*angle).exp()
-                self.character_values[p].append((angle, value))
+
+            G = DirichletGroup_conrey(self.level)
+            chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_labels]
+            for p in prime_range(2, self.cqexp_prec):
+                if p.divides(self.level):
+                    continue
+                for chi in chars:
+                    c = chi.logvalue(p) * self.char_order
+                    angle = float(c / self.char_order)
+                    value = CDF(0,2*CDF.pi()*angle).exp()
+                    self.character_values[p].append((angle, value))
 
         self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]
                      # label is the distinguished column in mf_newspaces,
