@@ -850,20 +850,23 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order + 1)
+                  if gcd(k, order) == 1) # use xsrange not xrange
         return list(self._char_desc(num, prim=prim) for num in orbit)
 
     @property
     def orbit_label(self):
-        orbit_info = self.galoisorbit
-        if len(orbit_info) != 0:
-            value = min(map(lambda info: info[1], orbit_info))
-        else:
-            value = 1
+        # Shortcut the trivial character, which behaves differently
+        if self.conductor == 1:
+            return 'a'
+        orbit_dict = {}
+        ordered_orbits = self.H._galois_orbits()
+        for n, orbit in enumerate(ordered_orbits, 1):  # index at 1
+            for character_number in orbit:
+                orbit_dict[character_number] = n
         # The -1 in the line below is because labels index at 1, while the
         # cremona_letter_code indexes at 0
-        letter_value = cremona_letter_code(int(value) - 1)
-        return letter_value
+        return cremona_letter_code(orbit_dict[self.number] - 1)
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
