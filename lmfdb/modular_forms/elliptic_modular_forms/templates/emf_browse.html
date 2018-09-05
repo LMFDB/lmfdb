@@ -65,87 +65,117 @@ Info was: {{info}}
 
 <h2> Search </h2>
 <form id='search' onsubmit="cleanSubmit(this.id)">
-<table>
-<tr>
-<td>{{ KNOWL('mf.elliptic.weight', title='Weight') }} &nbsp &nbsp <select name="weight_parity"><option></option><option value="even">even only</option><option value="odd">odd only</option></select> </td>
-<td><input type='text' name='weight' placeholder='2' size=10></td>
-<td><span class="formexample"> e.g. 2, 10-14 </span></td>
+  <table>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
+      <td>
+        <select name="weight_parity">
+          <option></option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' name='weight' placeholder='2' size=10></td>
+      <td><span class="formexample"> e.g. 2, 10-14 </span></td>
 
+      <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td><input type='text' name='level' placeholder='4' size=10></td>
+      <td><span class="formexample"> e.g. 4, 1-20</td>
+    </tr>
 
-<td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-<td><input type='text' name='level' placeholder='4' size=10></td>
-<td><span class="formexample"> e.g. 4, 1-20</td>
-</tr>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
+      <td>
+        <select name="char_parity">
+          <option></option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' name='char_label' placeholder='20.d' size=10></td>
+      <td><span class="formexample"> e.g. 20.d, 1.1 </td>
 
-<tr>
-<td>{{ KNOWL('mf.elliptic.character', title='Character orbit label') }}</td>
-<td><input type='text' name='char_label' placeholder='20.d' size=10></td>
-<td><span class="formexample"> e.g. 20.d, 1.1 </td>
-<td>Primitive label</td>
-<td><select name='prim_character' width="122" style="width: 122px">
-    <option></option>
-    <option value='yes'>Yes</option>
-</select></td>
-</tr>
+      <td>Primitive character</td>
+      <td><input type='text' name='prim_label' placeholder='1.1' size=10></td>
+      <td><span class="formexample"> e.g. 20.d, 1.1 </td>
+    </tr>
 
-<tr>
-<td>Character order</td>
-<td><input type='text' name='char_order' placeholder='1' size=10></td>
-<td><span class="formexample"> e.g. 1, 2-4</td>
-</tr>
+    <tr>
+      <td>Character order</td>
+      <td></td>
+      <td><input type='text' name='char_order' placeholder='1' size=10></td>
+      <td><span class="formexample"> e.g. 1, 2-4</td>
+      <td>Character is real</td>
 
-<tr>
-<td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
-<td><input type='text' name='dim' placeholder='1' size=10></td>
-<td><span class="formexample"> e.g. 2, 1-6 </span></td>
-<td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-<td><input type='text' name='nf_label' placeholder='1.1.1.1'></td>
-<td><span class="formexample"> e.g. 1.1.1.1, 4.0.144.1, Qsqrt5 </span></td>
-</tr>
+      <td>
+        <select name='char_is_real'>
+          <option ></option>
+          <option value='True'>Yes</option>
+          <option value='False'>No</option>
+        </select>
+      </td>
+    </tr>
 
-<tr>
-<td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-<td><input type='text' name='cm_disc' placeholder='-3' size=10></td>
-<td><span class="formexample"> e.g. -3 </span></td>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
+      <td></td>
+      <td><input type='text' name='dim' placeholder='1' size=10></td>
+      <td><span class="formexample"> e.g. 2, 1-6 </span></td>
 
-<td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
-<td><select name='is_cm' width="122" style="width: 122px">
-                   <option ></option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
-</select></td>
-<td></td>
-</tr>
+      <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+      <td><input type='text' name='nf_label' placeholder='1.1.1.1'></td>
+      <td><span class="formexample"> e.g. 1.1.1.1, 4.0.144.1, Qsqrt5 </span></td>
+    </tr>
 
-<tr>
-<td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
-<td><select name='is_twist_minimal' width="122" style="width: 122px">
-                   <option ></option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
-</select></td>
-<td></td>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
+      <td></td>
+      <td><input type='text' name='cm_disc' placeholder='-3' size=10></td>
+      <td><span class="formexample"> e.g. -3 </span></td>
 
-<td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
-<td><select name='has_inner_twist' width="122" style="width: 122px">
-        <option value="yes">yes</option>
-        <option value="not_no">yes or unknown</option>
-        <option value="" selected>unrestricted</option>
-        <option value="not_yes">no or unknown</option>
-        <option value="no">no</option>
-    </select></td>
-</tr>
+      <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
+      <td>
+        <select name='is_cm' width="122" style="width: 122px">
+          <option ></option>
+          <option value='True'>Yes</option>
+          <option value='False'>No</option>
+        </select>
+      </td>
+    </tr>
 
-<tr>
-<td>Maximum number of newforms to display</td>
-<td><input type='text' name='count' value=50 size=10></td>
-<td><span class="formexample"> &nbsp;</td>
-</tr>
-<tr>
-  <td><button type='submit' name='submit' value='List'>List</button> &nbsp &nbsp <button type='submit' name='submit' value='Dimensions'>Dimension Table</button></td>
-</tr>
-</table>
+    <tr>
+      <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
+      <td></td>
+      <td><select name='is_twist_minimal' width="122" style="width: 122px">
+          <option ></option>
+          <option value='True'>Yes</option>
+          <option value='False'>No</option>
+        </select>
+      </td>
+      <td></td>
 
+      <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+      <td></td>
+      <td>
+        <select name='has_inner_twist' width="122" style="width: 122px">
+          <option value="yes">yes</option>
+          <option value="not_no">yes or unknown</option>
+          <option value="" selected>unrestricted</option>
+          <option value="not_yes">no or unknown</option>
+          <option value="no">no</option>
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td align=left colspan=4>Maximum number of newforms to display
+      <input type='text' name='count' value=50 size=10></td>
+    </tr>
+  </table>
+  <p>
+    <button type='submit' name='submit' value='List'>List</button> &nbsp &nbsp
+    <button type='submit' name='submit' value='Dimensions'>Dimension Table</button>
+  </p>
 </form>
 
 
