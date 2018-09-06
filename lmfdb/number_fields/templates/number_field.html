@@ -39,7 +39,7 @@ table.ntdata a {
   {% if info.is_abelian %}
             <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
                 <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
-            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet group") }}:
+            <tr><td>{{ KNOWL('nf.dirichlet_group', title="Dirichlet character group") }}:
                 <td>&nbsp;&nbsp;<td>
                 {% if info.dirichlet_group is defined %}
                 {{info.dirichlet_group|safe}}
@@ -60,7 +60,7 @@ table.ntdata a {
         <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} </h2>
 {% endif %}
 {% if info.degree!=1 %}
-        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.field_generator', title='field generator') }} \(a\))</h2>
+        <p><h2> {{ KNOWL('nf.integral_basis', title='Integral basis') }} (with respect to {{ KNOWL('nf.generator', title='field generator') }} \(a\))</h2>
 {% endif %}
         <p>
             {{ info.integral_basis }}

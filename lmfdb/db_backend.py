@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback, datetime, getpass
 from collections import defaultdict, Counter
-from psycopg2 import connect, DatabaseError
+from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
@@ -38,7 +38,7 @@ from lmfdb.utils import make_logger, format_percentage
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
-SLOW_CUTOFF = 1
+SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
 types_whitelist = set([
@@ -192,11 +192,14 @@ class PostgresBase(object):
         """
         if not isinstance(query, Composable):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
-        cur = self.conn.cursor()
 
         try:
+            cur = self.conn.cursor()
+
             t = time.time()
             if values_list:
+                if template is not None:
+                    template = template.as_string(self.conn)
                 execute_values(cur, query.as_string(self.conn), values, template)
             else:
                 #print query.as_string(self.conn)
@@ -210,7 +213,7 @@ class PostgresBase(object):
                     self.logger.info(query + " ran in %ss" % (t,))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
-        except DatabaseError:
+        except (DatabaseError, InterfaceError):
             if self.conn.closed != 0:
                 # If reissued, we need to raise since we're recursing.
                 if reissued:
@@ -1688,7 +1691,7 @@ class PostgresTable(PostgresBase):
                 cases.append((self.extra_table, extras_data))
             now = time.time()
             for table, L in cases:
-                template = SQL("({0})").format(map(Placeholder, L[0].keys()))
+                template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0].keys())))
                 inserter = SQL("INSERT INTO {0} ({1}) VALUES %s")
                 inserter = inserter.format(Identifier(table),
                                            SQL(", ").join(map(Identifier, L[0].keys())))
@@ -1734,6 +1737,8 @@ class PostgresTable(PostgresBase):
         - ``extra_table`` -- a string giving the name of the extra_table to be sorted.
             If None, will use ``self.extra_table``; another common input is ``self.extra_table + "_tmp"``.
         """
+        print "resorting disabled"
+        return
         with DelayCommit(self, silence=True):
             if self._id_ordered and (search_table is not None or self._out_of_order):
                 now = time.time()
@@ -1867,7 +1872,7 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, cur_count, header, kwds, adjust_schema=False):
+    def _copy_from(self, filename, table, columns, header, kwds, adjust_schema=False):
         """
         Helper function for ``copy_from`` and ``reload``.
 
@@ -1884,6 +1889,7 @@ class PostgresTable(PostgresBase):
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
         """
+        cur_count = self.max_id()
         sep = kwds.get("sep", u"\t")
         cur = self.conn.cursor()
         try:
@@ -1891,7 +1897,9 @@ class PostgresTable(PostgresBase):
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = (columns[0] == 'id')
+                    addid = ('id' not in columns)
+		    if addid:
+			columns = ["id"] + columns
                 else:
                     addid = False
 
@@ -2240,6 +2248,9 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
+    def max_id(self):
+        return db._execute(SQL("SELECT MAX(id) FROM {}".format(self.search_table))).fetchone()[0]
+
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
@@ -2264,9 +2275,9 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_indexes()
             now = time.time()
-            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, self.stats.total, True, kwds)
+            search_addid, search_count = self._copy_from(searchfile, self.search_table, self._search_cols, True, kwds)
             if extrafile is not None:
-                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, self.stats.total, True, kwds)
+                extra_addid, extra_count = self._copy_from(extrafile, self.extra_table, self._extra_cols, True, kwds)
                 if search_count != extra_count:
                     self.conn.rollback()
                     raise ValueError("Different number of rows in searchfile and extrafile")
@@ -2646,7 +2657,7 @@ class PostgresStatsTable(PostgresBase):
         """
         if col == "id":
             # We just use the count in this case
-            return self.count() - 1
+            return self.count()
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
@@ -2942,6 +2953,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     level += 1
 
     def refresh_stats(self, total=True, suffix=''):
+        #FIXME total is not used
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
         table to determine which stats to recompute, and the rows with ``extra = True``
@@ -3349,7 +3361,7 @@ class PostgresDatabase(PostgresBase):
         """
         uid = self.login()
         inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
-        self._execute(inserter, [uid, datetime.utcnow(), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
 
     def fetch_userpassword(self, options):
         if 'user' not in options:
@@ -3568,7 +3580,7 @@ class PostgresDatabase(PostgresBase):
                                          SQL(", ").join(extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint)')
+            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")

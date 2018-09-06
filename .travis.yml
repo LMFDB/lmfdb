@@ -38,8 +38,10 @@ install:
     # install the latest coveralls
     - pip install coveralls --user
     - export PATH=${HOME}/.local/bin/:${PATH}
+
     # install SAGE with GAP already built in
-    - export SAGE_VERSION=8.1
+    # see: https://github.com/edgarcosta/binary-pkg
+    - export SAGE_VERSION=8.3
     - export SAGE_DIR=${HOME}/SageMath
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
@@ -47,6 +49,7 @@ install:
     - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
     # travis_wait extends the default 10 minute timeout to 30 minutes
     - travis_wait 30 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log
     # assert that we have GAP

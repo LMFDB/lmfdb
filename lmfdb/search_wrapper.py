@@ -58,6 +58,7 @@ class SearchWrapper(object):
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
             info['err'] = str(err)
+            info['query'] = dict(query)
             return render_template(self.template, info=info, title=self.err_title, **template_kwds)
         else:
             if self.cleaners:

@@ -68,6 +68,7 @@ class MaassDB(object):
         return None if ff is None else loads(str(ff))
 
     def count(self, query={}):
+        query = arg_to_search_parameters(query)
         return db.mwf_forms.count(query)
 
     def levels(self):
