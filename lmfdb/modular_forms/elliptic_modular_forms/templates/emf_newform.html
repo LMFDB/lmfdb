@@ -15,7 +15,7 @@
     <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>=</td>
-    <td>\( {{ newform.level }} \)</td>
+    <td>\( {{ newform.level }}{{ newform.factored_level }} \)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
@@ -41,7 +41,7 @@
     <td> </td>
     <td>{{ newform.dim }}</td>
   </tr>
-  {% if newform.cyc_degree > 1 %}
+  {% if newform.char_degree > 1 %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.relative_dimension', title='Relative dimension') }}: </td>
     <td> </td>
@@ -130,7 +130,7 @@ function show_qexp(qstyle) {
     <tr class="dark">
       {% if newform.dim > 1 %}
       <th>\(m\)</th>
-      {% if newform.cyc_degree > 1 %}
+      {% if newform.char_degree > 1 %}
       <th>{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
       {% endif %}
       {% if newform.has_exact_qexp %}
@@ -147,8 +147,8 @@ function show_qexp(qstyle) {
     <tr>
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
       {% if newform.dim > 1 %}
-      <td{% if newform.cyc_degree == 1 and not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ m+1 }}</td>
-      {% if newform.cyc_degree > 1 %}
+      <td{% if newform.char_degree == 1 and not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ m+1 }}</td>
+      {% if newform.char_degree > 1 %}
       <td{% if not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ newform.conrey_from_embedding(m) }}</td>
       {% endif %}
       {% if newform.has_exact_qexp %}
@@ -167,8 +167,8 @@ function show_qexp(qstyle) {
       {% set shade = '' %}
       {% endif %}
       {% if newform.dim > 1 %}
-      <td rowspan="2" class="{{shade}}middle{% if newform.cyc_degree == 1 and not newform.has_exact_qexp %} border-right{% endif %}">{{ m+1 }}</td>
-      {% if newform.cyc_degree > 1 %}
+      <td rowspan="2" class="{{shade}}middle{% if newform.char_degree == 1 and not newform.has_exact_qexp %} border-right{% endif %}">{{ m+1 }}</td>
+      {% if newform.char_degree > 1 %}
       <td rowspan="2" class="{{shade}}middle{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
       {% endif %}
       {% if newform.has_exact_qexp %}
@@ -248,12 +248,13 @@ This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</
 {% endif %}
 
 {# TODO we might wish to have some disclaimer here about provability #}
-<p>This newform
-{{ "has*" if newform.has_inner_twist==1 else "does not have*" if newform.has_inner_twist==-1 else "is not known to either have or not have" }}
-an
-{{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.{#{% if newform.has_inner_twist %} TODO fix this, we changed to orbit labels not conrey indices , by the characters {% for c,link in newform.inner_twist %}<a href="{{ link }}">\(\chi_{ {{newform.level}}}({{c}},\cdot)\)</a>{{ ", " if not loop.last }}{% endfor %}{% endif %}.</p>  #}
+{% if newform.has_inner_twist == 1 %}
+<p>This newform admits {{ newform.inner_twist | length }} nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}</p>
+{% elif newform.has_inner_twist == -1 %}
+<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}</p>
+{% endif %}
 
-{% if newform.char_orbit == 1 and newform.level != 1 %}
+{% if newform.char_orbit_index == 1 and newform.level != 1 %}
 <p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} eigenvalues given by</p>
 <table class="ntdata">
   <thead>

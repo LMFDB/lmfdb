@@ -11,7 +11,7 @@ from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, character_orbit_index
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, character_orbit_label
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
 
@@ -178,26 +178,26 @@ def by_url_full_gammma1_space_label(level, weight):
     label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<char_orbit>/")
-def by_url_space_label(level, weight, char_orbit):
-    label = str(level)+"."+str(weight)+"."+char_orbit
+@emf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
+def by_url_space_label(level, weight, char_orbit_label):
+    label = str(level)+"."+str(weight)+"."+char_orbit_label
     return render_space_webpage(label)
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
 def by_url_space_conreylabel(level, weight, conrey_label):
-    char_orbit = character_orbit_index(level, weight, conrey_label)
-    label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)
+    char_orbit_label = character_orbit_label(level, weight, conrey_label)
+    label = str(level)+"."+str(weight)+"."+char_orbit_label
     return redirect(url_for_label(label), code=301)
 
-@emf.route("/<int:level>/<int:weight>/<char_orbit>/<hecke_orbit>/")
-def by_url_newform_label(level, weight, char_orbit, hecke_orbit):
-    label = str(level)+"."+str(weight)+"."+char_orbit+"."+hecke_orbit
+@emf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
+    label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
     return render_newform_webpage(label)
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
-    char_orbit = character_orbit_index(level, weight, conrey_label)
-    label = str(level)+"."+str(weight)+"."+cremona_letter_code(char_orbit - 1)+"."+hecke_orbit
+    char_orbit_label = character_orbit_label(level, weight, conrey_label)
+    label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
     return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>")
@@ -210,9 +210,9 @@ def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke
 def url_for_label(label):
     slabel = label.split(".")
     if len(slabel) == 4:
-        return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2], hecke_orbit=slabel[3])
+        return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit_label=slabel[2], hecke_orbit=slabel[3])
     elif len(slabel) == 3:
-        return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit=slabel[2])
+        return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit_label=slabel[2])
     elif len(slabel) == 2:
         return url_for(".by_url_full_gammma1_space_label", level=slabel[0], weight=slabel[1])
     elif len(slabel) == 1:
@@ -249,7 +249,7 @@ def download_complex(info):
     pass
 
 @search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
-def parse_character(inp, query, qfield, level_field='level', conrey_field='conrey_labels'):
+def parse_character(inp, query, qfield, level_field='level', conrey_field='char_labels'):
     pair = inp.split('.')
     if len(pair) != 2:
         raise ValueError("It must be of the form N.i")
@@ -259,7 +259,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='conre
         raise ValueError("Inconsistent level")
     query[level_field] = level
     if orbit.isalpha():
-        query[qfield] = class_to_int(orbit) + 1
+        query[qfield] = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
     else:
         if conrey_field is None:
             raise ValueError("You must use the orbit label when searching by primitive character")
@@ -274,11 +274,17 @@ def common_parse(info, query):
             query['odd_weight'] = False
         elif parity == 'odd':
             query['odd_weight'] = True
+    if 'char_parity' in info:
+        parity=info['char_parity']
+        if parity == 'even':
+            query['char_parity'] = 1
+        elif parity == 'odd':
+            query['char_parity'] = -1
     parse_ints(info, query, 'level', name="Level")
     if 'prim_character' in info and info['prim_character'] == 'yes':
-        parse_character(info, query, 'char_label', qfield='prim_orbit', level_field='char_conductor', conrey_field=None)
+        parse_character(info, query, 'char_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     else:
-        parse_character(info, query, 'char_label', qfield='char_orbit')
+        parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_ints(info, query, 'char_order', name="Character order")
     parse_ints(info, query, 'dim', name="Coefficient field dimension")
     parse_nf_string(info, query,'nf_label', name="Field")
@@ -337,7 +343,7 @@ def dimension_space_postprocess(res, info, query):
         dim_dict[N,k] += dims
     if query.get('char_order') == 1:
         def url_generator(N, k):
-            return url_for(".by_url_space_label", level=N, weight=k, char_orbit="a")
+            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
     else:
         def url_generator(N, k):
             return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)

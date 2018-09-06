@@ -64,14 +64,21 @@ class WebNewform(object):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
         self.__dict__.update(data)
         self._data = data
-        self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
 
-        if space is None:
-            # Need character info from spaces table
-            chardata = db.mf_newspaces.lookup(self.space_label,['conrey_labels','cyc_degree'])
-            self.__dict__.update(chardata)
+        if self.level == 1 or ZZ(self.level).is_prime():
+            self.factored_level = ''
         else:
-            self.conrey_labels, self.cyc_degree = space.conrey_labels, space.cyc_degree
+            self.factored_level = ' = ' + self.level.factor()._latex_()
+        if self.inner_twist_proved:
+            if len(self.inner_twist == 1):
+                self.star_twist = 'inner twist'
+            else:
+                self.star_twist = 'inner twists'
+        elif len(self.inner_twist == 1):
+            self.star_twist = 'inner twist*'
+        else:
+            self.star_twist = 'inner twists*'
+
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
         if eigenvals:  # this should always be true
             self.has_exact_qexp = True
@@ -97,7 +104,7 @@ class WebNewform(object):
         else:
             self.has_complex_qexp = False
         self.cc_data = []
-        self.rel_dim = self.dim // self.cyc_degree
+        self.rel_dim = self.dim // self.char_degree
         for m, embedded_mf in enumerate(cc_data):
             embedded_mf['conrey_label'] = self.conrey_labels[m // self.rel_dim]
             embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
@@ -130,12 +137,12 @@ class WebNewform(object):
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
         if self.has_inner_twist:
             self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
-        self.char_orbit_label = "\(" + str(self.level) + "\)." + self.char_orbit_code
+        self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         # properties box
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
-                           ('Character Orbit', '%s' % self.char_orbit_code),
+                           ('Character Orbit', '%s' % self.char_orbit_label),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:
@@ -149,8 +156,8 @@ class WebNewform(object):
              ('Classical newforms', url_for(".index")),
              ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
              ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-             ('Character orbit %s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
-             ('Hecke orbit %s' % cremona_letter_code(self.hecke_orbit - 1), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))),
+             ('Character orbit %s' % self.char_orbit_label, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)),
+             ('Hecke orbit %s' % cremona_letter_code(self.hecke_orbit - 1), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))),
              ]
 
         self.title = "Newform %s"%(self.label)
@@ -171,13 +178,13 @@ class WebNewform(object):
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
         res.append(('Newspace ' + ns1_label, ns1_url))
-        char_letter = cremona_letter_code(self.char_orbit - 1)
+        char_letter = self.char_orbit_label
         ns_label = '.'.join(base_label + [char_letter])
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
         for character in self.conrey_labels:
-            for j in range(self.dim/self.cyc_degree):
+            for j in range(self.dim/self.char_degree):
                 label = base_label + [str(character), hecke_letter, str(j + 1)]
                 lfun_label = '.'.join(label)
                 lfun_url =  '/L' + cmf_base + '/'.join(label)
@@ -220,11 +227,11 @@ class WebNewform(object):
             return "Not in LMFDB"
 
     def cyc_display(self):
-        if self.cyc_degree == 1:
+        if self.char_degree == 1:
             name = r'\(\Q\)'
         else:
             name = r'\(\Q(\zeta_{%s})\)' % self.char_order
-        if self.cyc_degree < 24:
+        if self.char_degree < 24:
             return nf_display_knowl(cyclolookup[self.char_order], name=name)
         else:
             return name

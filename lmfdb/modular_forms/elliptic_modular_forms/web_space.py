@@ -28,16 +28,16 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
-def character_orbit_index(level, weight, conrey_label):
+def character_orbit_label(level, weight, conrey_label):
     """
-    Returns the character orbit index for the character given by conrey label and at the given weight
+    Returns the character orbit label for the character given by conrey label and at the given weight
     """
-    return db.mf_newspaces.lucky({'conrey_labels': {'$contains': conrey_label}, 'level': level, 'weight': weight}, projection='char_orbit')
+    return db.mf_newspaces.lucky({'char_labels': {'$contains': conrey_label}, 'level': level, 'weight': weight}, projection='char_orbit_label')
 
 def minimal_conrey_in_character_orbit(level, weight, char_orbit):
     if isinstance(char_orbit, basestring):
         char_orbit = class_to_int(char_orbit) + 1
-    res = db.mf_newspaces.lucky({'level': level, 'weight': weight, 'char_orbit':char_orbit}, projection='conrey_labels')
+    res = db.mf_newspaces.lucky({'level': level, 'weight': weight, 'char_orbit_index':char_orbit}, projection='char_labels')
     return None if res is None else res[0]
 
 def convert_spacelabel_from_conrey(spacelabel_conrey):
@@ -47,7 +47,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'conrey_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    return db.mf_newspaces.lucky({'char_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 def spacelabel_conrey_exists(spacelabel_conrey):
     return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
@@ -111,7 +111,6 @@ class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
-        self.char_orbit_code = cremona_letter_code(self.char_orbit - 1)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
         #oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
         self.oldspaces = []
@@ -127,12 +126,12 @@ class WebNewformSpace(object):
              ('Classical newforms', url_for(".index")),
              ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
              ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-             ('Character orbit %s' % self.char_orbit_code, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit=self.char_orbit_code)),
+             ('Character orbit %s' % self.char_orbit_label, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)),
         ]
-        if self.conrey_labels[0] == 1:
+        if self.char_labels[0] == 1:
             character_str = "trivial character"
         else:
-            character_str = r"character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_labels[0])
+            character_str = r"character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
         self.title = r"Space of Modular Forms \(%s\) of weight %s, level %s and %s"%(self.mf_latex(), self.weight, self.level, character_str)
         self.friends = []
 
@@ -150,7 +149,7 @@ class WebNewformSpace(object):
         return WebNewformSpace(data)
 
     def _vec(self):
-        return [self.level, self.weight, self.conrey_labels[0]]
+        return [self.level, self.weight, self.char_labels[0]]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -177,7 +176,7 @@ class WebNewformSpace(object):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
         return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
-                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit=i),
+                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=i),
                                                   mult=len(ZZ(self.level//N).divisors()))
                                   for N, i, conrey in self.oldspaces)
 
@@ -185,7 +184,7 @@ class WebGamma1Space(object):
     def __init__(self, level, weight):
         self.level = level
         self.weight = weight
-        #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'cyc_degree'], sort=[])
+        #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'char_degree'], sort=[])
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
         if not newspaces:
             raise ValueError("Space not in database")
@@ -197,7 +196,7 @@ class WebGamma1Space(object):
         self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
-        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit', 'hecke_orbit']))
+        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
         #print "spaces", newspaces
@@ -250,8 +249,6 @@ class WebGamma1Space(object):
         return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + '\)'
 
     def _link(self, N, i=None, form=None, typ="new", label=True):
-        if i is not None:
-            i = cremona_letter_code(i-1) # Should probably change definition of field to remove this -1
         if form is not None:
             form = cremona_letter_code(form - 1)
         if label:
@@ -269,10 +266,10 @@ class WebGamma1Space(object):
                           level=N, weight=self.weight)
         elif form is None:
             url = url_for(".by_url_space_label",
-                          level=N, weight=self.weight, char_orbit=i)
+                          level=N, weight=self.weight, char_orbit_label=i)
         else:
             url = url_for(".by_url_newform_label",
-                          level=N, weight=self.weight, char_orbit=i, hecke_orbit=form)
+                          level=N, weight=self.weight, char_orbit_label=i, hecke_orbit=form)
         return r"<a href={url}>{name}</a>".format(url=url, name=name)
 
     def oldspace_decomposition(self):
@@ -286,19 +283,19 @@ class WebGamma1Space(object):
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
-            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_labels'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['char_labels'][0])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
-                                             number=space['conrey_labels'][0])
+                                             number=space['char_labels'][0])
             chi_rep += '">\({}\)</a>'.format(chi_str)
 
-            num_chi = space['cyc_degree']
-            parity = "even" if space['parity'] == 1 else "odd"
-            link = self._link(space['level'], space['char_orbit'])
+            num_chi = space['char_degree']
+            parity = "even" if space['char_parity'] == 1 else "odd"
+            link = self._link(space['level'], space['char_orbit_label'])
             if not forms:
                 ans.append((rowtype, chi_rep, num_chi, parity, link, "No newforms", "", []))
             else:
                 dims = [form['dim'] for form in forms]
-                forms = [self._link(form['level'], form['char_orbit'], form['hecke_orbit']) for form in forms]
+                forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
                 ans.append((rowtype, chi_rep, num_chi, parity, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
         return ans
