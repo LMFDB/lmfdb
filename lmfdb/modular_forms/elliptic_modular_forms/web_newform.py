@@ -68,13 +68,13 @@ class WebNewform(object):
         if self.level == 1 or ZZ(self.level).is_prime():
             self.factored_level = ''
         else:
-            self.factored_level = ' = ' + self.level.factor()._latex_()
+            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
         if self.inner_twist_proved:
             if len(self.inner_twist == 1):
                 self.star_twist = 'inner twist'
             else:
                 self.star_twist = 'inner twists'
-        elif len(self.inner_twist == 1):
+        elif len(self.inner_twist) == 1:
             self.star_twist = 'inner twist*'
         else:
             self.star_twist = 'inner twists*'
@@ -106,7 +106,7 @@ class WebNewform(object):
         self.cc_data = []
         self.rel_dim = self.dim // self.char_degree
         for m, embedded_mf in enumerate(cc_data):
-            embedded_mf['conrey_label'] = self.conrey_labels[m // self.rel_dim]
+            embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
             embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
             embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
             embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
@@ -120,7 +120,7 @@ class WebNewform(object):
 
 
             G = DirichletGroup_conrey(self.level)
-            chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_labels]
+            chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
             for p in prime_range(2, self.cqexp_prec):
                 if p.divides(self.level):
                     continue
@@ -130,7 +130,7 @@ class WebNewform(object):
                     value = CDF(0,2*CDF.pi()*angle).exp()
                     self.character_values[p].append((angle, value))
 
-        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'conrey_labels')[0]
+        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'char_labels')[0]
                      # label is the distinguished column in mf_newspaces,
                      # and the space label is called "label" in mf_newspaces
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
@@ -183,7 +183,7 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        for character in self.conrey_labels:
+        for character in self.char_labels:
             for j in range(self.dim/self.char_degree):
                 label = base_label + [str(character), hecke_letter, str(j + 1)]
                 lfun_label = '.'.join(label)

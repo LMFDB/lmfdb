@@ -15,8 +15,6 @@ IMPORTANT:
 * search results: Download search results (David)
 * Dirichlet char pages: list orbit labels (David L-D)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
-* form pages: display prime factorization of the level (David)
-* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)
 * stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
@@ -85,3 +83,6 @@ PROBABLY DONE:
 * gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
+
+* form pages: display prime factorization of the level (David)
+* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)

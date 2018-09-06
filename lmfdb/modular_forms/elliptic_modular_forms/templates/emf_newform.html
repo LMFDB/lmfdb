@@ -86,15 +86,15 @@ function show_qexp(qstyle) {
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
-  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='Hecke ring') }}: {{ newform.order_basis() }}</p>
+  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='coefficient ring') }}: {{ newform.order_basis() }}</p>
   {% if newform.hecke_ring_index_proven %} 
     {% if newform.hecke_ring_index == 1 %}
-    <p> The Hecke ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in its coefficient field. </p>
+    <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
     {% else %}
-    <p> The index of the Hecke ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is equal to {{ newform.hecke_ring_index }}. </p>
+    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is equal to {{ newform.hecke_ring_index }}. </p>
     {% endif %}
   {% elif newform.hecke_ring_index > 1 %}
-    <p> The index of the {{ KNOWL('mf.elliptic.hecke_order',title='order') }} in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} is a multiple of {{ newform.hecke_ring_index }}. </p>
+    <p> The index of the coefficient ring in {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a multiple of {{ newform.hecke_ring_index }}. </p>
   {% endif %}
   {% else %}
   <p> The form has coefficients in {{ newform.field_display() | safe }}.</p>
@@ -105,7 +105,7 @@ function show_qexp(qstyle) {
 <div>
   {{ place_code('coefficient_field') }}
 </div>
-<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Hecke field') }} has {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}.</p>
+<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} has {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}.</p>
 <p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
 {% endif %}
 
@@ -113,16 +113,16 @@ function show_qexp(qstyle) {
 {% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
 {% elif info.format == 'analytic_embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
 {% elif info.format == 'satake' %}
 <h2>{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }}</h2>
-<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
 {% else %}
 <h2>{{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}}</h2>
-<p>For each embedding \(\iota_m\) of the Hecke field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
 {% endif %}
 
 <table class="ntdata">
