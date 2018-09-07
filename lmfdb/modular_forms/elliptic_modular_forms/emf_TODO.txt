@@ -1,24 +1,20 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* Dirichlet character pages: The modular form 60.2.i.a claims the character label is 60.i, but the linked Dirichlet character page (for 60.17) says the orbit label is 60.q. (David L-D)
 * data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a (Edgar)
 * data: Need to create mf_gamma1_subspaces table (Drew)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
-* search results: next button not working (David, David L-D)
 
 IMPORTANT:
 * form pages: pictures from q-expansion (Drew, John Cremona)
 * data: add analytic rank (Edgar)
 * search results: Download search results (David)
-* Dirichlet char pages: list orbit labels (David L-D)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
 * stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (Edgar, David)
 * full_level pages: New table for oldspace decomposition (Drew, David)
-* bug: http://localhost:37777/ModularForm/GL2/Q/holomorphic/37/5/d/a/ (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
@@ -39,6 +35,7 @@ FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
 * form pages: would the basis for the Hecke ring look better in a vertical table? (David)
+* form pages: disable further properties if there is nothing to show
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
@@ -72,6 +69,46 @@ templates/checklist.html:<li><a href="{{ url_for('emf.render_elliptic_modular_fo
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render_elliptic_modular_forms')
+
+ADDITIONAL CURIOSITIES:
+Here are some things I (Alex) found while browsing, some minor, some serious, some already fixed by now, and probably some that are already on peoples radars which I mostly wrote down for myself. Sorry they are not ordered by seriousness or anything but I hope it's still helpful:
+
+* http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ displays nothing at the bottom decomposition, the dims dont match but we have no old data here
+  same for http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/10/6/a/
+  where presumably the two oldforms come from http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/5/6/a/
+
+* Bread for http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/ is broken
+
+* whats up with the Z-function on http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2/ it looks cool!
+
+* what is relation between http://127.0.0.1:37777/L/EllipticCurve/Q/11/a/ and http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/, for example, these should look the same right (and eventually merged?)
+
+* For http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ are the traces really 0!?
+
+* When the box saying what dimension we are displaying is not there in dimension table results (e.g. when we search on dim =1), maybe we should say this is just cusp newspace dim displayed somwhere
+  http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/?count=None&weight=1-12&level=1-24&dim=1&submit=Dimensions
+
+* I think pages like http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/55/2/a/ should say something like we have a q-exp click to view, rather than blank?
+
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
+
+* Has inner twist box in wrong place on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/
+  I also don't like the placement of some boxes on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/11/ at the header like the primitive checkbox
+
+* Re-search for character is real doesn't work
+
+* http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/49/2/g/a/ is busted due to AttributeError: 'WebNewform' object has no attribute 'inner_twist_proved
+
+* http://127.0.0.1:37777/L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (I think Edgar is on top of this already)
+
+* Is listing fricke eigenvalues of use to people? (it makes sense in this context right?) I trust most mathematicians can multiply a string of -1's but it might be useful to be able to search on?
+
+Not EMF stuff:
+* bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
+* http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+
+
+
 
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'

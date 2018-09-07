@@ -69,15 +69,17 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
-        if self.inner_twist_proved:
-            if len(self.inner_twist == 1):
-                self.star_twist = 'inner twist'
+
+        if self.has_inner_twist != 0:
+            if self.inner_twist_proved:
+                if len(self.inner_twist == 1):
+                    self.star_twist = 'inner twist'
+                else:
+                    self.star_twist = 'inner twists'
+            elif len(self.inner_twist) == 1:
+                self.star_twist = 'inner twist*'
             else:
-                self.star_twist = 'inner twists'
-        elif len(self.inner_twist) == 1:
-            self.star_twist = 'inner twist*'
-        else:
-            self.star_twist = 'inner twists*'
+                self.star_twist = 'inner twists*'
 
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
         if eigenvals:  # this should always be true
@@ -140,7 +142,7 @@ class WebNewform(object):
         # properties box
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
-                           ('Character Orbit', '%s' % self.char_orbit_label),
+                           ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:

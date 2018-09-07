@@ -3,7 +3,6 @@ from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
-from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import newform_label, is_newform_in_db
 from lmfdb.db_backend import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
