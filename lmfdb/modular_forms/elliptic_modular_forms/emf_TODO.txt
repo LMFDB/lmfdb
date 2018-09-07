@@ -74,6 +74,42 @@ tensor_products/templates/tensor_products_index.html:    <option value={{url_for
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render_elliptic_modular_forms')
 
+ADDITIONAL CURIOSITIES:
+Here are some things I (Alex) found while browsing, some minor, some serious, some already fixed by now, and probably some that are already on peoples radars which I mostly wrote down for myself. Sorry they are not ordered by seriousness or anything but I hope it's still helpful:
+
+* http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ displays nothing at the bottom decomposition, the dims dont match but we have no old data here
+  same for http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/10/6/a/
+  where presumably the two oldforms come from http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/5/6/a/
+
+* Bread for http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/ is broken
+
+* whats up with the Z-function on http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2/ it looks cool!
+
+* what is relation between http://127.0.0.1:37777/L/EllipticCurve/Q/11/a/ and http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/, for example, these should look the same right (and eventually merged?)
+
+* For http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ are the traces really 0!?
+
+* When the box saying what dimension we are displaying is not there in dimension table results (e.g. when we search on dim =1), maybe we should say this is just cusp newspace dim displayed somwhere
+  http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/?count=None&weight=1-12&level=1-24&dim=1&submit=Dimensions
+
+* I think pages like http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/55/2/a/ should say something like we have a q-exp click to view, rather than blank?
+
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
+
+* Has inner twist box in wrong place on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/
+  I also don't like the placement of some boxes on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/11/ at the header like the primitive checkbox
+
+* Re-search for character is real doesn't work
+
+* http://127.0.0.1:37777/L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (I think Edgar is on top of this already)
+
+Not EMF stuff:
+* bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
+* http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+
+
+
+
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'
 * navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
