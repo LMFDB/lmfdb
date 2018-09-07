@@ -105,6 +105,8 @@ Here are some things I (Alex) found while browsing, some minor, some serious, so
 
 * http://127.0.0.1:37777/L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (I think Edgar is on top of this already)
 
+* Is listing fricke eigenvalues of use to people? (it makes sense in this context right?) I trust most mathematicians can multiply a string of -1's but it might be useful to be able to search on?
+
 Not EMF stuff:
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
