@@ -28,12 +28,6 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
-def character_orbit_label(level, weight, conrey_label):
-    """
-    Returns the character orbit label for the character given by conrey label and at the given weight
-    """
-    return db.mf_newspaces.lucky({'char_labels': {'$contains': conrey_label}, 'level': level, 'weight': weight}, projection='char_orbit_label')
-
 def minimal_conrey_in_character_orbit(level, weight, char_orbit):
     if isinstance(char_orbit, basestring):
         char_orbit = class_to_int(char_orbit) + 1

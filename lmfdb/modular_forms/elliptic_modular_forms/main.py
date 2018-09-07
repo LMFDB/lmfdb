@@ -10,8 +10,8 @@ from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, pars
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, character_orbit_label
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
 
@@ -185,8 +185,7 @@ def by_url_space_label(level, weight, char_orbit_label):
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
 def by_url_space_conreylabel(level, weight, conrey_label):
-    char_orbit_label = character_orbit_label(level, weight, conrey_label)
-    label = str(level)+"."+str(weight)+"."+char_orbit_label
+    label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label))
     return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
@@ -196,8 +195,7 @@ def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
-    char_orbit_label = character_orbit_label(level, weight, conrey_label)
-    label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
+    label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
 @emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>")
