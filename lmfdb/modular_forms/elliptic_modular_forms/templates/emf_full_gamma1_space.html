@@ -2,7 +2,24 @@
 
 {% block content %}
 
-<h2> Dimensions </h2>
+<h3> Defining parameters </h3>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>=</td>
+    <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> \( k \) </td>
+    <td>=</td>
+    <td>\( {{ space.weight }} \)</td>
+  </tr>
+</table>
+
+<h3> Dimensions </h3>
 
 <p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
 
@@ -30,35 +47,32 @@
 {% if space.new_dim > 0 %}
 <h2> Decomposition of \({{ space.new_latex() }}\)</h2>
 
-The space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }} of weight {{space.weight}} on $\Gamma_1({{space.level}})$ decomposes as
+<p>The space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }} of weight {{space.weight}} on $\Gamma_1({{space.level}})$ decomposes as
 \[
-S_{ {{space.weight}} }^{new}(\Gamma_1({{space.level}}))
-= \bigoplus_{\chi \bmod {{space.level}} } S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi)
+{{space.new_latex()}}
+= \bigoplus_{\chi \bmod {{space.level}} } {{ space.summand_latex() }}
 \]
 where the direct sum is over all {{ KNOWL('character.dirichlet',title='Dirichlet characters') }} mod \({{space.level}}\).  If $\chi$ and $\chi'$ are in the same {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
-then $S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi)$ and $S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi')$
-are Galois conjugate and we only list it once below (choosing the character in the orbit with minimal Conrey label).  Further, note that the dimension is automatically zero if the {{KNOWL('character.dirichlet.parity',title='parity')}} of the character
-is not the same as the parity of the weight.
+then \({{space.summand_latex()}}\) and \({{space.summand_latex("\chi'")}}\)
+  are Galois conjugate and we only list it once below (choosing the character in the orbit with minimal Conrey label).  Further, we only show spaces with {{KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.</p>
 
-Within each space \( S_{ {{space.weight}} }^{new}(\Gamma_0({{space.level}}), \chi) \) we list the newforms together with their dimension.
+<p>Within each space \( {{space.summand_latex() }} \) we list the newforms together with their dimension.</p>
 
 <table class="mfdata">
   <thead>
     <tr class="oddrow">
       <th>{{ KNOWL('mf.elliptic.label',title=space.header_latex()) }}</th>
       <th> \(\chi\)</th>
-      <th>{{ KNOWL('character.dirichlet.parity',title='Parity') }}</th>
-      <th>{{ KNOWL('mf.elliptic.newform',title='Newform') }}</th>
+      <th>{{ KNOWL('mf.elliptic.newform',title='Newforms') }}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('character.dirichlet.galois_orbit',title='Orbit size') }}</th>
     </tr>
   </thead>
   <tbody>
-    {% for rowtype, chi_rep, num_chi, parity, space, firstform, firstdim, others in space.decomposition() %}
+    {% for rowtype, chi_rep, num_chi, space, firstform, firstdim, others in space.decomposition() %}
     <tr class="{{rowtype}}">
       <td rowspan="{{others|length + 1}}"> {{ space | safe }} </td>
       <td rowspan="{{others|length + 1}}"> {{ chi_rep | safe }} </td>
-      <td rowspan="{{others|length + 1}}"> {{ parity }} </td>
       <td> {{ firstform | safe }} </td>
       <td> {{ firstdim }} </td>
       <td rowspan="{{others|length + 1}}"> {{ num_chi }} </td>

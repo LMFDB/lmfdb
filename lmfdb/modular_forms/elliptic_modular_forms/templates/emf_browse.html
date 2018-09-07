@@ -2,7 +2,7 @@
 {% block content %}
 
 <!-- Debugging! -->
-{% if DEBUG %}
+{% if false %}
 <hr>
 <div>
 Info was: {{info}}
@@ -69,14 +69,14 @@ Info was: {{info}}
     <tr>
       <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
       <td>
-        <select name="weight_parity">
+        <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
           <option></option>
           <option value="even">even only</option>
           <option value="odd">odd only</option>
         </select>
       </td>
       <td><input type='text' name='weight' placeholder='2' size=10></td>
-      <td><span class="formexample"> e.g. 2, 10-14 </span></td>
+      <td><span class="formexample"> e.g. 2, 4-8 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
       <td><input type='text' name='level' placeholder='4' size=10></td>
@@ -86,23 +86,22 @@ Info was: {{info}}
     <tr>
       <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
       <td>
-        <select name="char_parity">
+        <select class="simult_select" name="char_parity" onchange="simult_change(event);">
           <option></option>
           <option value="even">even only</option>
           <option value="odd">odd only</option>
         </select>
       </td>
       <td><input type='text' name='char_label' placeholder='20.d' size=10></td>
-      <td><span class="formexample"> e.g. 20.d, 1.1 </td>
+      <td><span class="formexample"> e.g. 20.d </td>
 
       <td>Primitive character</td>
-      <td><input type='text' name='prim_label' placeholder='1.1' size=10></td>
-      <td><span class="formexample"> e.g. 20.d, 1.1 </td>
+      <td><input type='text' name='prim_label' placeholder='1.a' size=10></td>
+      <td><span class="formexample"> e.g. 1.a </td>
     </tr>
 
     <tr>
-      <td>Character order</td>
-      <td></td>
+      <td colspan=2>Character order</td>
       <td><input type='text' name='char_order' placeholder='1' size=10></td>
       <td><span class="formexample"> e.g. 1, 2-4</td>
       <td>Character is real</td>
@@ -117,35 +116,34 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
-      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
       <td><input type='text' name='dim' placeholder='1' size=10></td>
       <td><span class="formexample"> e.g. 2, 1-6 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-      <td><input type='text' name='nf_label' placeholder='1.1.1.1'></td>
-      <td><span class="formexample"> e.g. 1.1.1.1, 4.0.144.1, Qsqrt5 </span></td>
+      <td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10></td>
+      <td><span class="formexample"> e.g. 4.0.144.1, Qsqrt5 </span></td>
     </tr>
 
     <tr>
-      <td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
       <td><input type='text' name='cm_disc' placeholder='-3' size=10></td>
       <td><span class="formexample"> e.g. -3 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
       <td>
         <select name='is_cm' width="122" style="width: 122px">
-          <option ></option>
-          <option value='True'>Yes</option>
-          <option value='False'>No</option>
+          <option value="yes">yes</option>
+          <option value="not_no">yes or unknown</option>
+          <option value="" selected>unrestricted</option>
+          <option value="not_yes">no or unknown</option>
+          <option value="no">no</option>
         </select>
       </td>
     </tr>
 
     <tr>
-      <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
-      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
       <td><select name='is_twist_minimal' width="122" style="width: 122px">
           <option ></option>
           <option value='True'>Yes</option>
@@ -155,7 +153,6 @@ Info was: {{info}}
       <td></td>
 
       <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
-      <td></td>
       <td>
         <select name='has_inner_twist' width="122" style="width: 122px">
           <option value="yes">yes</option>
@@ -165,6 +162,12 @@ Info was: {{info}}
           <option value="no">no</option>
         </select>
       </td>
+    </tr>
+
+    <tr>
+      <td colspan=2>Analytic rank</td>
+      <td><input type='text' name='analytic_rank' placeholder='1' size=10></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
     </tr>
 
     <tr>

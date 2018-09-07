@@ -658,9 +658,9 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None: process = lambda x: x
-    if inp in ["True", "1"]:
+    if inp in ["True", "yes", "1"]:
         query[qfield] = process(True)
-    elif inp in ["False", "-1", "0"]:
+    elif inp in ["False", "no", "-1", "0"]:
         query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
@@ -668,6 +668,17 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     else:
         raise ValueError("It must be True or False.")
 
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_bool_unknown(inp, query, qfield):
+    # yes, no, not_no, not_yes
+    if inp == 'yes':
+        query[qfield] = 1
+    elif inp == 'not_no':
+        query[qfield] = {'$gt' : -1}
+    elif inp == 'not_yes':
+        query[qfield] = {'$lt' : 1}
+    elif inp == 'no':
+        query[qfield] = -1
 
 @search_parser
 def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):

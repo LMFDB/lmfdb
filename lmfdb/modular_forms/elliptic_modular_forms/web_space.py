@@ -5,6 +5,7 @@ from lmfdb.db_backend import db
 from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
 from sage.databases.cremona import cremona_letter_code, class_to_int
+from lmfdb.characters.utils import url_character
 from flask import url_for
 import re
 from collections import defaultdict
@@ -17,9 +18,13 @@ def valid_gamma1(label):
     return GAMMA1_RE.match(label)
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
-    if symbolic_chi:
+    if conrey is None:
+        char = ""
+    elif symbolic_chi is True:
         char = r", \chi"
-    elif conrey is None or conrey == 1:
+    elif symbolic_chi:
+        char = ", " + symbolic_chi
+    elif conrey == 1:
         char = ""
     else:
         char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
@@ -111,16 +116,30 @@ class WebNewformSpace(object):
     def __init__(self, data):
         # Need to set mf_dim, eis_dim, cusp_dim, new_dim, old_dim
         self.__dict__.update(data)
+        if self.level == 1 or ZZ(self.level).is_prime():
+            self.factored_level = ''
+        else:
+            self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.char_conrey = self.char_labels[0]
+        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
-        #oldspaces = db.mf_oldsubs.search({'space_label':self.label}, ['new_label', 'new_minimal_conrey'])
-        self.oldspaces = []
-        #for old in oldspaces:
-        #    N, k, i = old['new_label'].split('.')
-        #    self.oldspaces.append((int(N), i, old['new_minimal_conrey']))
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit', 'sub_char_labels', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
-        self.old_dim = self.cusp_dim - self.dim
-        self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        self.properties = [] # properties box
+        #self.old_dim = self.cusp_dim - self.dim
+        #self.eis_old_dim = self.eis_dim - self.eis_new_dim
+        self.properties = [
+            ('Label',self.label),
+            ('Level',str(self.level)),
+            ('Weight',str(self.weight)),
+            ('Character Orbit',self.char_orbit_label),
+            ('Representative Character',r'\(%s\)'%self.char_conrey_str),
+            ('Character Field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Dimension',str(self.dim)),
+            ('Sturm Bound',str(self.sturm_bound)),
+            ('Trace Bound',self.__dict__.get('trace_bound','?'))
+        ]
         self.bread = [
              ('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical newforms', url_for(".index")),
@@ -129,10 +148,10 @@ class WebNewformSpace(object):
              ('Character orbit %s' % self.char_orbit_label, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)),
         ]
         if self.char_labels[0] == 1:
-            character_str = "trivial character"
+            character_str = "Trivial Character"
         else:
-            character_str = r"character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
-        self.title = r"Space of Modular Forms \(%s\) of weight %s, level %s and %s"%(self.mf_latex(), self.weight, self.level, character_str)
+            character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
+        self.title = r"Space of Cuspidal Newforms of Weight %s, Level %s and %s"%(self.weight, self.level, character_str)
         self.friends = []
 
     @staticmethod
@@ -166,28 +185,44 @@ class WebNewformSpace(object):
     def cusp_latex(self):
         return common_latex(*(self._vec() + ["S"]))
 
+    def cusp_latex_symbolic(self):
+        return common_latex(*(self._vec() + ["S"]), symbolic_chi=True)
+
     def new_latex(self):
         return common_latex(*(self._vec() + ["S",0,"new"]))
 
     def old_latex(self):
         return common_latex(*(self._vec() + ["S",0,"old"]))
 
+    def old_latex_symbolic(self):
+        return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
+
+    def subspace_latex(self, new=False):
+        return common_latex("M", self.weight, self.char_labels[0], "S", 0, "new" if new else "", symbolic_chi=True)
+
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
         return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
-                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=i),
-                                                  mult=len(ZZ(self.level//N).divisors()))
-                                  for N, i, conrey in self.oldspaces)
+                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=cremona_letter_code(i-1)),
+                                                  mult=mult)
+                                  for N, i, conrey, mult in self.oldspaces)
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):
         self.level = level
         self.weight = weight
-        #dirchars = db.char_dir_orbits.search({'modulus':level},['orbit_index', 'parity', 'galois_orbit', 'char_degree'], sort=[])
-        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
+        self.odd_weight = bool(self.weight % 2)
+        self.label = '%s.%s'%(self.level, self.weight)
+        if level == 1 or ZZ(level).is_prime():
+            self.factored_level = ''
+        else:
+            self.factored_level = ' = ' + ZZ(level).factor()._latex_()
+        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
             raise ValueError("Space not in database")
+        #oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'weight':weight}, ['sub_level','sub_mult'])
+        #self.oldspaces = [old['sub_level'],old['sub_mult'] for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
         self.mf_dim = sum(space['mf_dim'] for space in newspaces)
         self.eis_dim = sum(space['eis_dim'] for space in newspaces)
@@ -199,18 +234,19 @@ class WebGamma1Space(object):
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
-        #print "spaces", newspaces
-        #print "forms", newforms
-        #print "decomp", self.decomp
-        print self.decomposition()
-        self.properties = [] # properties box
+        self.properties = [
+            ('Label',self.label),
+            ('Level',str(self.level)),
+            ('Weight',str(self.weight)),
+            ('Dimension',str(self.new_dim)),
+        ]
         self.bread = [
              ('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical newforms', url_for(".index")),
              ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
              ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
         ]
-        self.title = r"Space of Modular Forms \(%s\) of weight %s and level %s"%(self.mf_latex(), self.weight, self.level)
+        self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
         self.friends = []
 
     @staticmethod
@@ -241,6 +277,9 @@ class WebGamma1Space(object):
 
     def new_latex(self):
         return common_latex(*(self._vec() + ["S",1,"new"]))
+
+    def summand_latex(self,symbolic_chi=True):
+        return common_latex(self.level, self.weight, 1, "S", 0, "new", symbolic_chi=symbolic_chi)
 
     def old_latex(self):
         return common_latex(*(self._vec() + ["S",1,"old"]))
@@ -279,7 +318,7 @@ class WebGamma1Space(object):
                                   for N in ZZ(self.level).divisors() if N != self.level)
 
     def decomposition(self):
-        # returns a list of 6-tuples chi_rep, num_chi, parity, space, firstform, firstdim, forms
+        # returns a list of 6-tuples chi_rep, num_chi, space, firstform, firstdim, forms
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
@@ -290,12 +329,11 @@ class WebGamma1Space(object):
             chi_rep += '">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']
-            parity = "even" if space['char_parity'] == 1 else "odd"
             link = self._link(space['level'], space['char_orbit_label'])
             if not forms:
-                ans.append((rowtype, chi_rep, num_chi, parity, link, "No newforms", "", []))
+                ans.append((rowtype, chi_rep, num_chi, link, "No newforms", "", []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
-                ans.append((rowtype, chi_rep, num_chi, parity, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
+                ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
         return ans

@@ -2,7 +2,60 @@
 
 {% block content %}
 
-<h2> Dimensions </h2>
+<h3> Defining parameters </h3>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>=</td>
+    <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> \( k \) </td>
+    <td>=</td>
+    <td>\( {{ space.weight }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
+    <td> \([\chi]\) </td>
+    <td>=</td>
+    <td>{{ space.char_orbit_label }}</td>
+  </tr>
+  <tr>
+    <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
+    <td> \( \chi \) </td>
+    <td>=</td>
+    <td><a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> ({% if space.char_orbit_index == 1 %}trivial character{% else %}minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit{% endif %})</td>
+  </tr>
+{% if space.char_orbit_index != 1 %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.order', title='order') }}: </td>
+    <td> \(\operatorname{ord}(\chi)\) </td>
+    <td>=</td>
+    <td>\( {{ space.char_order }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
+    <td> \(\operatorname{cond}(\chi)\) </td>
+    <td>=</td>
+    <td>\( {{ space.char_conductor }} \)</td>
+  </tr>
+{% endif %}
+</table>
+
+<h3> Dimensions </h3>
+
+{% if space.odd_weight and space.char_parity == 1 %}
+
+<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+
+{% elif (not space.odd_weight) and space.char_parity == -1 %}
+
+<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+
+{% else %}
 
 <p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
 
@@ -27,6 +80,8 @@
   </tbody>
 </table>
 
+{% endif %}
+
 {% if space.dim > 0 %}
 <h2> Decomposition of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
 
@@ -36,10 +91,23 @@
 
 <!-- Definitions for coefficient fields -->
 
-{% if space.old_dim > 0 %}
+{% if space.dim_grid.S.old > 0 %}
 <h2> Decomposition of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 
-\( {{ space.old_latex() }} \cong {{ space.oldspace_decomposition() | safe }} \)
+<p>
+  There are natural inclusion maps from lower level; the old subspace is the span of their images.  For \(M\) dividing \(N={{space.level}}\){% if space.char_conductor != 1 %} and divisible by \(\operatorname{cond}(\chi)={{space.char_conductor}}\){% endif %}, and for \(t\) dividing \(\frac{N}{M}\), the maps
+  \begin{align}
+  \alpha_{M, t} : {{ space.subspace_latex() }} & \to {{ space.cusp_latex_symbolic() }} \\
+  f(q) & \mapsto f(q^t)
+  \end{align}
+  induce an isomorphism
+  \[
+  {{ space.old_latex_symbolic() }} \cong \bigoplus_{M,t} \alpha_{M,t}\left({{ space.subspace_latex(new=True) }}\right).
+  \]
+  Removing zero dimensional summands yields
+</p>
+
+\( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
 {% endif %}
 
 {% endblock %}

@@ -9,16 +9,14 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * form pages: pictures from q-expansion (Drew, John Cremona)
-* search page: search by analytic rank, parity and is_real on character, change labels for character search (David)
 * data: add analytic rank (Edgar)
-* space pages: properties box should have something (level, weight, character, newspace dimension, character field, sturm bound, trace bound) (David)
 * search results: Download search results (David)
 * Dirichlet char pages: list orbit labels (David L-D)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
 * stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
-* form pages: Label headers for complex eigenvalues: chi, m (David)
+* form pages: Label headers for complex eigenvalues: chi, m (Edgar, David)
 * full_level pages: New table for oldspace decomposition (Drew, David)
 * bug: http://localhost:37777/ModularForm/GL2/Q/holomorphic/37/5/d/a/ (Edgar)
 * data: add weight 1 cc data (Edgar)
@@ -28,6 +26,7 @@ IMPORTANT:
 
 GOOD:
 
+* data: add data for is_twist_minimal, char_is_real
 * form pages: download to Sage/Magma/pari (stored coefficients)
 * space pages: download to Sage/Magma/pari (download all the data)
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
@@ -40,10 +39,10 @@ FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
 * form pages: would the basis for the Hecke ring look better in a vertical table? (David)
-* space pages: add remark on empty spaces when ruled out by parity.  Don't show in list; add comment to text (David)
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* LMFDB-wide: equal signs consistent in terms of math-mode or not
 * form pages: add code snippets
 * space pages: add code snippets
 * knowls: more
@@ -84,5 +83,4 @@ PROBABLY DONE:
 * form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
 
-* form pages: display prime factorization of the level (David)
 * form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)

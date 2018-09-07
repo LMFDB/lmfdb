@@ -73,7 +73,6 @@ def an_list(euler_factor_polynomial_fn,
             k += 1
     return result
 
-
 def coeff_to_poly(c, var='x'):
     """
     Convert a list or string representation of a polynomial to a sage polynomial.
@@ -419,6 +418,50 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     A = A.replace('+\) \(O','+O')
     return A
 
+def bigint_knowl(n, cutoff=8, sides=2):
+    if abs(n) >= 10**cutoff:
+        short = str(n)
+        short = short[:sides] + r'\dots' + short[-sides:]
+        return r'<a title="[bigint]" knowl="bigint" kwargs="%s">\(%s\)</a>'%(n, short)
+    else:
+        return r'\(%s\)'%n
+
+def web_latex_bigint_poly(coeffs, var='x'):
+    plus = r"\mathstrut +\mathstrut \) "
+    minus = r"\mathstrut -\mathstrut \) "
+    m = len(coeffs)
+    while m and coeffs[m-1] == 0:
+        m -= 1
+    if m == 0:
+        return r"\(0\)"
+    s = ""
+    for n in reversed(xrange(m)):
+        c = coeffs[n]
+        if n == 1:
+            varpow = r"\(" + var
+        elif n > 1:
+            varpow = r"\(%s^{%s}"%(var, n)
+        else:
+            if c > 0:
+                s += plus + bigint_knowl(c)
+            elif c < 0:
+                s += minus + bigint_knowl(-c)
+            break
+        if c > 0:
+            s += plus
+        elif c < 0:
+            s += minus
+        else:
+            continue
+        if abs(c) != 1:
+            s += bigint_knowl(abs(c)) + " "
+        s += varpow
+    if coeffs[0] == 0:
+        s += r"\)"
+    if s.startswith(plus):
+        return s[len(plus):]
+    else:
+        return r"\(-\)" + s[len(minus):]
 
 # make latex matrix from list of lists
 def list_to_latex_matrix(li):
