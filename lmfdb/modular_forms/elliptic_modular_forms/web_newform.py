@@ -142,7 +142,7 @@ class WebNewform(object):
         # properties box
         self.properties = [('Label', self.label),
                            ('Weight', '%s' % self.weight),
-                           ('Character Orbit', '%s' % self.char_orbit_label),
+                           ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
                            ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:
