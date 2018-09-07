@@ -4,7 +4,6 @@ CRITICAL (BUGS):
 * data: Need to create mf_gamma1_subspaces table (Drew)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
-* search results: next button not working (David, David L-D)
 
 IMPORTANT:
 * form pages: pictures from q-expansion (Drew, John Cremona)
