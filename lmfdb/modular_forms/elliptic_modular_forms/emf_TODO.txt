@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* Dirichlet character pages: The modular form 60.2.i.a claims the character label is 60.i, but the linked Dirichlet character page (for 60.17) says the orbit label is 60.q. (David L-D)
 * data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a (Edgar)
 * data: Need to create mf_gamma1_subspaces table (Drew)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
@@ -13,7 +12,6 @@ IMPORTANT:
 * data: add analytic rank (Edgar)
 * space pages: properties box should have something (level, weight, character, newspace dimension, character field, sturm bound, trace bound) (David)
 * search results: Download search results (David)
-* Dirichlet char pages: list orbit labels (David L-D)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
 * stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
