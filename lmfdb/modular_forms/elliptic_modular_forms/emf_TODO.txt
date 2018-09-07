@@ -20,7 +20,6 @@ IMPORTANT:
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (David)
 * full_level pages: New table for oldspace decomposition (Drew, David)
-* bug: http://localhost:37777/ModularForm/GL2/Q/holomorphic/37/5/d/a/ (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
