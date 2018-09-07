@@ -17,7 +17,6 @@ IMPORTANT:
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (David)
 * full_level pages: New table for oldspace decomposition (Drew, David)
-* bug: http://localhost:37777/ModularForm/GL2/Q/holomorphic/37/5/d/a/ (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
@@ -38,6 +37,7 @@ FORMATTING:
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
 * form pages: would the basis for the Hecke ring look better in a vertical table? (David)
 * space pages: add remark on empty spaces when ruled out by parity.  Don't show in list; add comment to text (David)
+* form pages: disable further properties if there is nothing to show
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
