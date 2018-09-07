@@ -5,7 +5,6 @@ import yaml
 from flask import url_for
 from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
-from lmfdb.modular_forms.elliptic_modular_forms.emf_utils import newform_label, is_newform_in_db
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, string2list
@@ -284,9 +283,9 @@ class WebEC(object):
         self.make_torsion_growth()
 
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
-        data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
-        self.newform_link = url_for("emf.by_url_newform_label", level=cond, weight=2, char_orbit=1, hecke_orbit=iso)
-        self.newform_exists_in_db = is_newform_in_db(self.newform_label)
+        data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
+        self.newform_link = url_for("emf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
+        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         self._code = None
 
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
