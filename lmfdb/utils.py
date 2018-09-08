@@ -940,7 +940,7 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
         for a in fig.axes:
-            a.axis('off') 
+            a.axis('off')
     if pad is not None:
         fig.tight_layout(pad=pad)
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
