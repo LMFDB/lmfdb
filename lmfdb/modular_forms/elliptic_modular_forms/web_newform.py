@@ -1,12 +1,12 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF, ZZ
+from sage.all import complex_plot, exp, prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF, Infinity, ZZ
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -140,11 +140,14 @@ class WebNewform(object):
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         # properties box
-        self.properties = [('Label', self.label),
-                           ('Weight', '%s' % self.weight),
-                           ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
-                           ('Representative Character', '\(%s\)' % self.char_conrey_str),
-                           ('Dimension', '%s' % self.dim)]
+        self.properties = [('Label', self.label)]
+        if cc_data:
+            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+
+        self.properties += [('Weight', '%s' % self.weight),
+                            ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
+                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
+                            ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:
             self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
         elif self.is_cm == -1:
@@ -375,3 +378,18 @@ class WebNewform(object):
 
     def m_range(self, L):
         return [m-1 for m in L if m >= 1 and m <= self.dim]
+
+    @property
+    def plot(self):
+        # perhaps this should be read directly from "Plot/ModularForm/GL2/Q/holomorphic/1/12/a/a/"
+        # same idea in genus 2 would save 0.5 s
+        I = CDF(0,1)
+        DtoH = lambda x: (-I *x + 1)/(x - I)
+        Htoq = lambda x: exp(2*CDF.pi()*I*x)
+        Dtoq = lambda x: Htoq(DtoH(CDF(x)))
+        absasphase = lambda x: Htoq(x.abs() + 0.6)
+        R = PolynomialRing(CDF, "q");
+        #FIXME increase precision and points
+        f = R([CDF(tuple(elt)) for elt in self.cc_data[0]['an'][:30] ])
+        plot = complex_plot(lambda x: +Infinity if abs(x) >= 0.99 else 16*absasphase(f(Dtoq(x))), (-1,1),(-1,1), plot_points=200, aspect_ratio = 1, axes=False)
+        return encode_plot(plot, pad_inches=0, bbox_inches = 'tight', remove_axes = True)

@@ -36,6 +36,7 @@ FORMATTING:
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
 * form pages: would the basis for the Hecke ring look better in a vertical table? (David)
 * form pages: disable further properties if there is nothing to show
+* properties box: should every nonarticle world be capitalized (as the titles) or just the first word?
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
