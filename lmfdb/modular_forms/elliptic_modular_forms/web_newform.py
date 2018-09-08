@@ -380,12 +380,15 @@ class WebNewform(object):
 
     @property
     def plot(self):
+        # perhaps this should be read directly from "Plot/ModularForm/GL2/Q/holomorphic/1/12/a/a/"
+        # same idea in genus 2 would save 0.5 s
         I = CDF(0,1)
         DtoH = lambda x: (-I *x + 1)/(x - I)
         Htoq = lambda x: exp(2*CDF.pi()*I*x)
         Dtoq = lambda x: Htoq(DtoH(CDF(x)))
         absasphase = lambda x: Htoq(x.abs() + 0.6)
         R = PolynomialRing(CDF, "q");
-        f = R([CDF(tuple(elt)) for elt in self.cc_data[0]['an'][:50] ])
-        plot = complex_plot(lambda x: +Infinity if abs(x) >= 0.99 else 10*absasphase(f(Dtoq(x))), (-1,1),(-1,1), plot_points=300, aspect_ratio = 1, axes=False)
+        #FIXME increase precision and points
+        f = R([CDF(tuple(elt)) for elt in self.cc_data[0]['an'][:30] ])
+        plot = complex_plot(lambda x: +Infinity if abs(x) >= 0.99 else 16*absasphase(f(Dtoq(x))), (-1,1),(-1,1), plot_points=200, aspect_ratio = 1, axes=False)
         return encode_plot(plot, pad_inches=0, bbox_inches = 'tight', remove_axes = True)
