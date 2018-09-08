@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms import emf
-from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_nf_string, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
@@ -145,7 +145,7 @@ def render_space_webpage(label):
     return render_template("emf_space.html",
                            info=info,
                            space=space,
-                           properties=space.properties,
+                           properties2=space.properties,
                            credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
@@ -162,7 +162,7 @@ def render_full_gamma1_space_webpage(label):
     return render_template("emf_full_gamma1_space.html",
                            info=info,
                            space=space,
-                           properties=space.properties,
+                           properties2=space.properties,
                            credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
@@ -279,26 +279,17 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['char_parity'] = -1
     parse_ints(info, query, 'level', name="Level")
-    if 'prim_character' in info and info['prim_character'] == 'yes':
-        parse_character(info, query, 'char_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
-    else:
-        parse_character(info, query, 'char_label', qfield='char_orbit_index')
+    parse_character(info, query, 'char_label', qfield='char_orbit_index')
+    parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
-    parse_ints(info, query, 'dim', name="Coefficient field dimension")
-    parse_nf_string(info, query,'nf_label', name="Field")
-    parse_bool(info, query, 'is_cm',name='is CM') # TODO think more about provability here, should things when should we include things which are _possibly_ cm but probably not.
+    parse_bool(info, query, 'char_is_real', name="Character is real")
+    parse_ints(info, query, 'dim', name="Dimension")
+    parse_nf_string(info, query,'nf_label', name="Coefficient field")
+    parse_bool_unknown(info, query, 'is_cm',name='CM form')
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
-    parse_bool(info, query, 'is_twist_minimal',name='is twist minimal')
-    if 'has_inner_twist' in info:
-        hit = info['has_inner_twist']
-        if hit == 'yes':
-            query['has_inner_twist'] = 1
-        elif hit == 'not_no':
-            query['has_inner_twist'] = {'$gt' : -1}
-        elif hit == 'not_yes':
-            query['has_inner_twist'] = {'$lt' : 1}
-        elif hit == 'no':
-            query['has_inner_twist'] = -1
+    parse_bool(info, query, 'is_twist_minimal')
+    parse_bool_unknown(info, query, 'has_inner_twist')
+    parse_ints(info, query, 'analytic_rank')
 
 @search_wrap(template="emf_newform_search_results.html",
              table=db.mf_newforms,

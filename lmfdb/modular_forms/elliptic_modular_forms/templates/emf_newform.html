@@ -27,7 +27,7 @@
     <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td>{{ newform.char_orbit_label }}</td>
+    <td>{{ newform.level }}.{{ newform.char_orbit_label }}</td>
   </tr>
   <tr>
     <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
@@ -63,6 +63,9 @@ function show_qexp(qstyle) {
 
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
+  {% if newform.dim > 1 %}
+  <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section.</p>
+  {% endif %}
   <form id="qexp">
     <div class="smalloutput">
       <span id="small_qexp_display">\(f(q) =\) {{ newform.q_expansion(format='short', prec_max=10) | safe }}</span>
@@ -85,8 +88,8 @@ function show_qexp(qstyle) {
   </div>
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
-  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
-  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='coefficient ring') }}: {{ newform.order_basis() }}</p>
+  <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: &nbsp &nbsp {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
+  <p> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='coefficient ring') }}: {{ newform.order_basis() | safe}}</p>
   {% if newform.hecke_ring_index_proven %} 
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
@@ -249,9 +252,9 @@ This property has {{ "not" if not newform.cm_proved }} been rigorously proved.</
 
 {# TODO we might wish to have some disclaimer here about provability #}
 {% if newform.has_inner_twist == 1 %}
-<p>This newform admits {{ newform.inner_twist | length }} nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}</p>
+<p>This newform admits {{ newform.inner_twist | length }} nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}.</p>
 {% elif newform.has_inner_twist == -1 %}
-<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}</p>
+<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}.</p>
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}

@@ -7,7 +7,7 @@ from lmfdb.db_backend import db
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset
+from lmfdb.search_parsing import parse_ints, parse_string_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown
 from lmfdb.search_wrapper import search_wrap
 from search_parsing import parse_newton_polygon
 from isog_class import validate_label, AbvarFq_isoclass
@@ -162,36 +162,10 @@ def download_search(info):
 def abelian_variety_search(info, query):
     parse_ints(info,query,'q',name='base field')
     parse_ints(info,query,'g',name='dimension')
-    if 'simple' in info:
-        if info['simple'] == 'yes':
-            query['is_simp'] = True
-        elif info['simple'] == 'no':
-            query['is_simp'] = False
-    if 'primitive' in info:
-        if info['primitive'] == 'yes':
-            query['is_prim'] = True
-        elif info['primitive'] == 'no':
-            query['is_prim'] = False
-    if 'jacobian' in info:
-        jac = info['jacobian']
-        if jac == 'yes':
-            query['is_jac'] = 1
-        elif jac == 'not_no':
-            query['is_jac'] = {'$gt' : -1}
-        elif jac == 'not_yes':
-            query['is_jac'] = {'$lt' : 1}
-        elif jac == 'no':
-            query['is_jac'] = -1
-    if 'polarizable' in info:
-        pol = info['polarizable']
-        if pol == 'yes':
-            query['is_pp'] = 1
-        elif pol == 'not_no':
-            query['is_pp'] = {'$gt' : -1}
-        elif pol == 'not_yes':
-            query['is_pp'] = {'$lt' : 1}
-        elif pol == 'no':
-            query['is_pp'] = -1
+    parse_bool(info,query,'simple',qfield='is_simp')
+    parse_bool(info,query,'primitive',qfield='is_prim')
+    parse_bool_unknown(info, query, 'jacobian', qfield='is_jac')
+    parse_bool_unknown(info, query, 'polarizable', qfield='is_pp')
     parse_ints(info,query,'p_rank')
     parse_ints(info,query,'ang_rank')
     parse_newton_polygon(info,query,'newton_polygon',qfield='slps')

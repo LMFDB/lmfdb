@@ -164,8 +164,13 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    // cached? (no kwargs or empty string AND kid in cache)
-    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+    if(knowl_id == "bigint") {
+      log("bigint: " + kwargs);
+      $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+      MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
+      MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
+    } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+      // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
@@ -295,4 +300,9 @@ function get_count_callback(res) {
         $("#download-msg").html("");
         $("#download-form").show();
     }
+};
+
+function simult_change(event) {
+    // simultaneously change all selects to the same value
+    $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
 };

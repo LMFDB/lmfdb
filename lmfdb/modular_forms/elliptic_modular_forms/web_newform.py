@@ -6,7 +6,7 @@ from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -132,9 +132,7 @@ class WebNewform(object):
                     value = CDF(0,2*CDF.pi()*angle).exp()
                     self.character_values[p].append((angle, value))
 
-        self.char_conrey = db.mf_newspaces.lookup(self.space_label, 'char_labels')[0]
-                     # label is the distinguished column in mf_newspaces,
-                     # and the space label is called "label" in mf_newspaces
+        self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
         if self.has_inner_twist:
@@ -142,6 +140,7 @@ class WebNewform(object):
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         # properties box
+<<<<<<< HEAD
         self.properties = [('Label', self.label)]
         if cc_data:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
@@ -150,6 +149,13 @@ class WebNewform(object):
                             ('Character Orbit', '%s' % self.char_orbit_label),
                             ('Representative Character', '\(%s\)' % self.char_conrey_str),
                             ('Dimension', '%s' % self.dim)]
+=======
+        self.properties = [('Label', self.label),
+                           ('Weight', '%s' % self.weight),
+                           ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
+                           ('Representative Character', '\(%s\)' % self.char_conrey_str),
+                           ('Dimension', '%s' % self.dim)]
+>>>>>>> 6a3d531b198a57b061e2e902b40052c2c0dc08ce
         if self.is_cm == 1:
             self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
         elif self.is_cm == -1:
@@ -166,17 +172,16 @@ class WebNewform(object):
              ]
 
         self.title = "Newform %s"%(self.label)
-        #self.friends += [ ('Newspace {}'.format(sum(self.label.split('.')[:-1])),self.newspace_url)]
 
     @property
     def friends(self):
         res = []
         base_label = [str(self.level)]
-        #if self.weight == 2 and self.dim == 1:
-        #    label = base_label + [self.isogeny_class_label]
-        #    ec_label = '.'.join(label)
-        #    ec_url = '/EllipticCurve/Q/' + '/'.join(label)
-        #    res.append(('Elliptic curve isogeny class ' + ec_label, ec_url))
+        if self.weight == 2 and self.dim == 1:
+            label = self.isogeny_class_label.split('.')
+            ec_label = '.'.join(label)
+            ec_url = '/EllipticCurve/Q/' + '/'.join(label)
+            res.append(('Elliptic curve isogeny class ' + ec_label, ec_url))
         base_label.append(str(self.weight))
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         base_label =  map(str, [self.level, self.weight])
@@ -243,14 +248,18 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
-            return r"\( %s \)"%(coeff_to_poly(self.field_poly)._latex_())
+            return web_latex_split_on_pm(coeff_to_poly(self.field_poly))
         return None
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        numerators = [coeff_to_poly(num, 'nu')._latex_() for num in self.hecke_ring_numerators]
-        basis = [num if den == 1 else r"\frac{%s}{%s}"%(num, den) for num, den in zip(numerators, self.hecke_ring_denominators)]
-        return ", ".join(r"\(\beta_{%s} = %s\)"%(i, x) for i, x in enumerate(basis))
+        numerators = [web_latex_bigint_poly(num, r'\nu') for num in self.hecke_ring_numerators]
+        basis = [num if den == 1 else r"(%s)/%s"%(num, bigint_knowl(den)) for num, den in zip(numerators, self.hecke_ring_denominators)]
+        basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(i, r"\ " if (len(basis) > 10 and i < 10) else "", x) for i, x in enumerate(basis)]
+        if len(basis) > 3 or any(d > 1 for d in self.hecke_ring_denominators):
+            return ",</p>\n<p>".join(basis)
+        else:
+            return ", ".join(basis)
 
     def q_expansion(self, format, prec_max=10):
         # options for format: 'oneline', 'short', 'all'

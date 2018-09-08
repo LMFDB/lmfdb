@@ -10,72 +10,95 @@
 
 <table>
   <tr>
-
     <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
-      <select name="weight_parity">
+      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
         <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
         <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
-      </select></td>
+      </select>
+    </td>
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }} &nbsp <input type='checkbox' name='prim_character' value='yes'{{ 'checked="checked"' if info.prim_character == 'yes'}}> primitive </td>
-</tr>
+    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
+      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+        <option></option>
+        <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
+        <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
+      </select>
+    </td>
+    <td>Primitive character</td>
+  </tr>
 
-<tr>
-<td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
-<td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
-<td><input type='text' name='char_label' placeholder='4' size=10 value='{{info.char_label}}'></td>
-</tr>
+  <tr>
+    <td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
+    <td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
+    <td><input type='text' name='char_label' placeholder='20.d' size=10 value='{{info.char_label}}'></td>
+    <td><input type='text' name='prim_label' placeholder='1.a' size=10 value='{{info.prim_label}}'></td>
+  </tr>
 
-<tr>
-<td>Character order</td>
-<td>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit dimension') }}</td>
-<td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-</tr>
+  <tr>
+    <td>Character order</td>
+    <td>Is real?</td>
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
+    <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+  </tr>
 
-<tr>
-<td><input type='text' name='char_order' placeholder='1' size=10 value='{{info.char_order}}'></td>
-<td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
-<td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
-</tr>
+  <tr>
+    <td><input type='text' name='char_order' placeholder='1' size=10 value='{{info.char_order}}'></td>
+    <td>
+      <select name='char_is_real'>
+	<option ></option>
+	<option value='True'{{ "selected" if info.char_is_real == 'True'}}>Yes</option>
+	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
+      </select>
+    </td>
+    <td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
+    <td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
+  </tr>
 
-<tr>
-<td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-<td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
-<td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
-<td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
-</tr>
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
+    <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
+    <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
+    <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+  </tr>
 
-<tr>
-<td><input type='text' name='cm_disc' placeholder='-3' size=10 value='{{info.cm_disc}}'></td>
-
-<td><select name='is_cm' style="width: 110px">
-  <option></option>
-  <option value="True" {{ "selected" if info.is_cm == 'True'}}>True</option>
-  <option value="False" {{ "selected" if info.is_cm == 'False'}}>False</option>
-</select></td>
-
-<td><select name='is_twist_minimal' style="width: 110px">
-  <option></option>
-  <option value="True" {{ "selected" if info.is_twist_minimal == 'True'}}>True</option>
-  <option value="False" {{ "selected" if info.is_twist_minimal == 'False'}}>False</option>
-</select></td>
-
-<td><select name='has_inner_twist' style="width: 110px">
+  <tr>
+    <td><input type='text' name='cm_disc' placeholder='-3' size=10 value='{{info.cm_disc}}'></td>
+    <td>
+      <select name='is_cm' style="width: 110px">
+        <option value="" {{ "selected" if info.is_cm == ''}}>unrestricted</option>
+        <option value="yes" {{ "selected" if info.is_cm == 'yes'}}>yes</option>
+        <option value="not_no" {{ "selected" if info.is_cm == 'not_no'}}>yes or unknown</option>
+        <option value="not_yes" {{ "selected" if info.is_cm == 'not_yes'}}>no or unknown</option>
+        <option value="no" {{ "selected" if info.is_cm == 'no'}}>no</option>
+      </select>
+    </td>
+    <td>
+      <select name='is_twist_minimal' style="width: 110px">
+	<option></option>
+	<option value="True" {{ "selected" if info.is_twist_minimal == 'True'}}>True</option>
+	<option value="False" {{ "selected" if info.is_twist_minimal == 'False'}}>False</option>
+      </select>
+    </td>
+    <td>
+      <select name='has_inner_twist' style="width: 110px">
         <option value="" {{ "selected" if info.has_inner_twist == ''}}>unrestricted</option>
         <option value="yes" {{ "selected" if info.has_inner_twist == 'yes'}}>yes</option>
         <option value="not_no" {{ "selected" if info.has_inner_twist == 'not_no'}}>yes or unknown</option>
         <option value="not_yes" {{ "selected" if info.has_inner_twist == 'not_yes'}}>no or unknown</option>
         <option value="no" {{ "selected" if info.has_inner_twist == 'no'}}>no</option>
-    </select></td>
-
-</tr>
-
-
-<tr style="height:50px">
-<td class="button"><button type='submit' name='submit' value='{{info.submit}}' style="width: 110px">Search again</button></td>
-</tr>
-
+      </select>
+    </td>
+  </tr>
+  <tr>
+    <td>Analytic rank</td>
+  </tr>
+  <tr>
+    <td><input type='text' name='analytic_rank' placeholder='1' size=10 value='{{info.analytic_rank}}'></td>
+  </tr>
+  <tr style="height:50px">
+    <td class="button"><button type='submit' name='submit_again' value='{{info.submit}}' style="width: 110px">Search again</button></td>
+  </tr>
 </table>
 </form>
 

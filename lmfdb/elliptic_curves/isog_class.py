@@ -76,9 +76,11 @@ class ECisog_class(object):
 
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
-        self.newform_label = ".".join( [str(N), str(2), 'a', iso] )
-        self.newform_link =  url_for("emf.by_url_newform_label", level=N, weight=2, char_orbit_label='a', hecke_orbit=iso)
-        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
+        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'isogeny_class_label':'%s.%s'%(N,iso)},'label')
+        self.newform_exists_in_db = self.newform_label is not None
+        if self.newform_label is not None:
+            char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
+            self.newform_link = url_for("emf.by_url_newform_label", level=N, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
 
