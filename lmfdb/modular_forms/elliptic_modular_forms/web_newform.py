@@ -145,7 +145,7 @@ class WebNewform(object):
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
         self.properties += [('Weight', '%s' % self.weight),
-                            ('Character Orbit Label', '%s' % self.char_orbit_label),
+                            ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
                             ('Representative Character', '\(%s\)' % self.char_conrey_str),
                             ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:
