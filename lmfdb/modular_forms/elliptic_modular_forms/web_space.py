@@ -118,8 +118,8 @@ class WebNewformSpace(object):
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
         self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit', 'sub_char_labels', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         #self.old_dim = self.cusp_dim - self.dim
         #self.eis_old_dim = self.eis_dim - self.eis_new_dim
@@ -132,7 +132,7 @@ class WebNewformSpace(object):
             ('Character Field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm Bound',str(self.sturm_bound)),
-            ('Trace Bound',self.__dict__.get('trace_bound','?'))
+            ('Trace Bound',str(self.trace_bound))
         ]
         self.bread = [
              ('Modular Forms', url_for('mf.modular_form_main_page')),
@@ -215,8 +215,8 @@ class WebGamma1Space(object):
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
             raise ValueError("Space not in database")
-        #oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'weight':weight}, ['sub_level','sub_mult'])
-        #self.oldspaces = [old['sub_level'],old['sub_mult'] for old in oldspaces]
+        oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
+        self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
         self.mf_dim = sum(space['mf_dim'] for space in newspaces)
         self.eis_dim = sum(space['eis_dim'] for space in newspaces)
@@ -272,6 +272,9 @@ class WebGamma1Space(object):
     def new_latex(self):
         return common_latex(*(self._vec() + ["S",1,"new"]))
 
+    def subspace_latex(self, new=False):
+        return common_latex("M", self.weight, None, "S", 1, "new" if new else "")
+
     def summand_latex(self,symbolic_chi=True):
         return common_latex(self.level, self.weight, 1, "S", 0, "new", symbolic_chi=symbolic_chi)
 
@@ -308,8 +311,8 @@ class WebGamma1Space(object):
     def oldspace_decomposition(self):
         template = r"{link}\(^{{\oplus {mult}}}\)"
         return r"\(\oplus\)".join(template.format(link=self._link(N, label=False),
-                                                  mult=len(ZZ(self.level//N).divisors()))
-                                  for N in ZZ(self.level).divisors() if N != self.level)
+                                                  mult=mult)
+                                  for N, mult in self.oldspaces)
 
     def decomposition(self):
         # returns a list of 6-tuples chi_rep, num_chi, space, firstform, firstdim, forms

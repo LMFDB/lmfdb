@@ -237,18 +237,35 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
-            return web_latex_split_on_pm(coeff_to_poly(self.field_poly))
+            return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
         return None
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        numerators = [web_latex_bigint_poly(num, r'\nu') for num in self.hecke_ring_numerators]
-        basis = [num if den == 1 else r"(%s)/%s"%(num, bigint_knowl(den)) for num, den in zip(numerators, self.hecke_ring_denominators)]
+        basis = []
+        for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
+            numsize = sum(len(str(c)) for c in num if c)
+            if numsize > 80:
+                num = web_latex_bigint_poly(num, r'\nu')
+                if den == 1:
+                    basis.append(num)
+                elif den < 10**8:
+                    basis.append(r"\((\)%s\()/%s\)"%(num, den))
+                else:
+                    basis.append(r"\((\)%s\()/\)%s"%(num, bigint_knowl(den)))
+            else:
+                num = web_latex(coeff_to_poly(num, 'nu'), enclose=(den == 1))
+                if den == 1:
+                    basis.append(num)
+                elif den < 10**8:
+                    basis.append(r"\((%s)/%s\)"%(num, den))
+                else:
+                    basis.append(r"\((%s)/\)%s"%(num, bigint_knowl(den)))
         basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(i, r"\ " if (len(basis) > 10 and i < 10) else "", x) for i, x in enumerate(basis)]
         if len(basis) > 3 or any(d > 1 for d in self.hecke_ring_denominators):
-            return ",</p>\n<p>".join(basis)
+            return ',</p>\n<p class="short">'.join([""]+basis)
         else:
-            return ", ".join(basis)
+            return ', '.join(basis)
 
     def q_expansion(self, format, prec_max=10):
         # options for format: 'oneline', 'short', 'all'

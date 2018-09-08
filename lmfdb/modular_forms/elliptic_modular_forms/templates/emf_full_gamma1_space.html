@@ -93,6 +93,19 @@ then \({{space.summand_latex()}}\) and \({{space.summand_latex("\chi'")}}\)
 {% if space.old_dim > 0 %}
 <h2> Decomposition \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 
+<p>
+  There are natural inclusion maps from lower level; the old subspace is the span of their images.  For \(M\) dividing \(N={{space.level}}\) and for \(t\) dividing \(\frac{N}{M}\), the maps
+  \begin{align}
+  \alpha_{M, t} : {{ space.subspace_latex() }} & \to {{ space.cusp_latex() }} \\
+  f(q) & \mapsto f(q^t)
+  \end{align}
+  induce an isomorphism
+  \[
+  {{ space.old_latex() }} \cong \bigoplus_{M,t} \alpha_{M,t}\left({{ space.subspace_latex(new=True) }}\right).
+  \]
+  Removing zero dimensional summands yields
+</p>
+
 \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
 {% endif %}
 

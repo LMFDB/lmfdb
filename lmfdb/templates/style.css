@@ -2001,3 +2001,7 @@ table.box td.content ul.list {
 }
 
 /*End table boxes front page*/
+
+p.short {
+  margin: 0px;
+}

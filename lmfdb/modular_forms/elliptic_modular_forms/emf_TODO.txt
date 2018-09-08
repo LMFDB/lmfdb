@@ -14,7 +14,6 @@ IMPORTANT:
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (Edgar, David)
-* full_level pages: New table for oldspace decomposition (Drew, David)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
@@ -30,11 +29,11 @@ GOOD:
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
 * Formatting of dimension grid
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
+* form pages: Add Sturm bound and trace bound to the main body and explain them
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
-* form pages: would the basis for the Hecke ring look better in a vertical table? (David)
 * form pages: disable further properties if there is nothing to show
 
 IT WOULD BE NICE IF:

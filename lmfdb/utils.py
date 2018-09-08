@@ -421,7 +421,7 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
 def bigint_knowl(n, cutoff=8, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
-        short = short[:sides] + r'\dots' + short[-sides:]
+        short = short[:sides] + r'\!\cdots\!' + short[-sides:]
         return r'<a title="[bigint]" knowl="bigint" kwargs="%s">\(%s\)</a>'%(n, short)
     else:
         return r'\(%s\)'%n

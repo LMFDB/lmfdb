@@ -85,6 +85,8 @@
 {% if space.dim > 0 %}
 <h2> Decomposition of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
 
+<p>The {{ KNOWL('mf.elliptic.hecke-operator', title='Hecke algebra') }} acts on \({{ space.new_latex() }}\), breaking it up into irreducible pieces.  Each piece is spanned by a set of conjugate eigenforms with Fourier coefficients in a number field of degree equal to the dimension of the subspace.  We refer to the irreducible orbit as a newform, and list the newforms in \({{ space.new_latex() }}\) below.</p>
+
 {% include 'emf_newform_list.html' %}
 
 {% endif %}
