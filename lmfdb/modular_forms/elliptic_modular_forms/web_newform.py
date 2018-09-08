@@ -140,22 +140,14 @@ class WebNewform(object):
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         # properties box
-<<<<<<< HEAD
         self.properties = [('Label', self.label)]
         if cc_data:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
         self.properties += [('Weight', '%s' % self.weight),
-                            ('Character Orbit', '%s' % self.char_orbit_label),
+                            ('Character Orbit Label', '%s' % self.char_orbit_label),
                             ('Representative Character', '\(%s\)' % self.char_conrey_str),
                             ('Dimension', '%s' % self.dim)]
-=======
-        self.properties = [('Label', self.label),
-                           ('Weight', '%s' % self.weight),
-                           ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
-                           ('Representative Character', '\(%s\)' % self.char_conrey_str),
-                           ('Dimension', '%s' % self.dim)]
->>>>>>> 6a3d531b198a57b061e2e902b40052c2c0dc08ce
         if self.is_cm == 1:
             self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
         elif self.is_cm == -1:
