@@ -17,6 +17,32 @@ def valid_label(label):
 def valid_gamma1(label):
     return GAMMA1_RE.match(label)
 
+def get_bread(**kwds):
+    # Should be called with either search=True or an initial segment of the links below
+    links = [('level', 'Level %s', '.by_url_level'),
+             ('weight', 'Weight %s', '.by_url_full_gammma1_space_label'),
+             ('char_orbit_label', 'Character orbit %s', '.by_url_space_label'),
+             ('hecke_orbit', 'Hecke orbit %s', '.by_url_newform_label')]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Classical newforms', url_for(".index"))]
+    if 'search' in kwds:
+        return bread + [('Search results', ' ')]
+    elif 'dim' in kwds:
+        return bread + [('Dimension table', ' ')]
+    elif 'other' in kwds:
+        return bread + [(kwds[other], ' ')]
+    url_kwds = {}
+    for key, display, link in links:
+        if key not in kwds:
+            return bread
+        url_kwds[key] = kwds[key]
+        bread.append((display % kwds[key], url_for(link, **url_kwds)))
+    return bread
+def get_search_bread():
+    return get_bread(search=True)
+def get_dim_bread():
+    return get_bread(dim=True)
+
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     if conrey is None:
         char = ""
@@ -134,13 +160,7 @@ class WebNewformSpace(object):
             ('Sturm Bound',str(self.sturm_bound)),
             ('Trace Bound',str(self.trace_bound))
         ]
-        self.bread = [
-             ('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Classical newforms', url_for(".index")),
-             ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
-             ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-             ('Character orbit %s' % self.char_orbit_label, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)),
-        ]
+        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
         if self.char_labels[0] == 1:
             character_str = "Trivial Character"
         else:
@@ -234,12 +254,7 @@ class WebGamma1Space(object):
             ('Weight',str(self.weight)),
             ('Dimension',str(self.new_dim)),
         ]
-        self.bread = [
-             ('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Classical newforms', url_for(".index")),
-             ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
-             ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-        ]
+        self.bread = get_bread(level=self.level, weight=self.weight)
         self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
         self.friends = []
 

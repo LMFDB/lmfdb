@@ -11,7 +11,7 @@ from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
-from web_space import convert_spacelabel_from_conrey
+from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
@@ -19,6 +19,20 @@ def valid_label(label):
     return bool(LABEL_RE.match(label))
 EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
 EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
+
+def decode_hecke_orbit(code):
+    level = str(code % 2**24)
+    weight = str((code >> 24) % 2**12)
+    char_orbit_label = cremona_letter_code((code >> 36) % 2**16)
+    hecke_orbit_label = cremona_letter_code(code >> 52)
+    return '.'.join([level, weight, char_orbit_label, hecke_orbit_label])
+def encode_hecke_orbit(label):
+    level, weight, char_orbit_label, hecke_orbit_label = label.split('.')
+    level = int(level)
+    weight = int(weight)
+    char_orbit = class_to_int(char_orbit_label)
+    hecke_orbit = class_to_int(hecke_orbit_label)
+    return level + (weight << 24) + (char_orbit << 36) + (hecke_orbit << 52)
 
 def convert_newformlabel_from_conrey(newformlabel_conrey):
     """
@@ -98,8 +112,8 @@ class WebNewform(object):
         else:
             self.has_exact_qexp = False
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['embedding','an','angles'],
-                                             sort=['embedding']))
+                                             projection=['embedding_index','an','angles'],
+                                             sort=['embedding_index']))
         if cc_data:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
@@ -154,14 +168,16 @@ class WebNewform(object):
             self.properties += [('CM', 'No')]
 
         # Breadcrumbs
-        self.bread = bread = [
-             ('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Classical newforms', url_for(".index")),
-             ('Level %s' % self.level, url_for(".by_url_level", level=self.level)),
-             ('Weight %s' % self.weight, url_for(".by_url_full_gammma1_space_label", level=self.level, weight=self.weight)),
-             ('Character orbit %s' % self.char_orbit_label, url_for(".by_url_space_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)),
-             ('Hecke orbit %s' % cremona_letter_code(self.hecke_orbit - 1), url_for(".by_url_newform_label", level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))),
-             ]
+        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+
+        # Downloads
+        self.downloads = []
+        if self.has_exact_qexp:
+            self.downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', code=self.hecke_orbit_code)))
+            self.downloads.append(('Download coefficient ring basis', url_for('.download_hecke_ring', label=self.label)))
+        if self.has_complex_qexp:
+            self.downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+        self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
 
         self.title = "Newform %s"%(self.label)
 

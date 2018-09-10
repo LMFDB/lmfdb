@@ -1,17 +1,18 @@
 # See views/emf_main.py, genus2_curves/main.py
 
-from flask import render_template, url_for, redirect, abort, request, flash
+from flask import render_template, url_for, redirect, abort, request, flash, make_response
 from markupsafe import Markup
 import re
 from collections import defaultdict
 from lmfdb.db_backend import db
+from lmfdb.db_encoding import Json
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey
+from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
 
@@ -69,16 +70,13 @@ def index():
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')
-    bread = [
-            ('Modular Forms', url_for('mf.modular_form_main_page')),
-            ('Classical newforms', url_for(".index")),
-            ]
+    bread = get_bread()
     return render_template("emf_browse.html",
-            info=info,
-            credit=credit(),
-            title="Holomorphic Cusp Forms",
-            learnmore=learnmore_list(),
-            bread=bread)
+                           info=info,
+                           credit=credit(),
+                           title="Holomorphic Cusp Forms",
+                           learnmore=learnmore_list(),
+                           bread=get_bread())
 
 @emf.route("/random")
 def random_form():
@@ -218,6 +216,130 @@ def url_for_label(label):
     else:
         raise ValueError("Invalid label")
 
+def _get_hecke_nf(label):
+    try:
+        code = encode_hecke_orbit(label)
+    except ValueError:
+        return abort(404, "Invalid label: %s"%label)
+    eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n','an','trace_an'], sort=['n'])
+    if not eigenvals:
+        return abort(404, "No form found for %s"%(label))
+    data = []
+    for i, ev in enumerate(eigenvals):
+        if ev['n'] != i+1:
+            return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
+        data.append((ev.get('an'),ev.get('trace_an')))
+    return data
+
+@emf.route("/download_qexp/<label>")
+def download_qexp(label):
+    data = _get_hecke_nf(label)
+    if not isinstance(data,list):
+        return data
+    dim = None
+    qexp = []
+    for an, trace_an in data:
+        if not an:
+            # only had traces
+            return abort(404, "No q-expansion found for %s"%(label))
+        if dim is None:
+            dim = len(an)
+            qexp.append([0] * dim)
+        qexp.append(an)
+    if dim == 1:
+        s = Json.dumps([an[0] for an in qexp])
+    else:
+        # Spacing helps distingish different levels
+        s = "[" + ", ".join("[" + ",".join(str(c) for c in an) + "]" for an in qexp) + "]"
+    response = make_response(s)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@emf.route("/download_traces/<label>")
+def download_traces(label):
+    data = _get_hecke_nf(label)
+    if not isinstance(data,list):
+        return data
+    qexp = [0] + [trace_an for an, trace_an in data]
+    response = make_response(Json.dumps(qexp))
+    response.headers['Context-type'] = 'text/plain'
+    return response
+
+def _get_hecke_cc(label):
+    try:
+        code = encode_hecke_orbit(label)
+    except ValueError:
+        return abort(404, "Invalid label: %s"%label)
+    eigenvals = db.mf_hecke_cc.search({'hecke_orbit_code':code}, ['lfunction_label','embedding_root_real', 'embedding_root_imag', 'an', 'angles'])#, sort=['conrey_label','embedding_index'])
+    if not eigenvals:
+        return abort(404, "No form found for %s"%(label))
+    return [(ev.get('lfunction_label'), [ev.get('embedding_root_real'), ev.get('embedding_root_imag')], ev.get('an'), ev.get('angles')) for ev in eigenvals]
+
+@emf.route("/download_cc_data/<label>")
+def download_cc_data(label):
+    data = _get_hecke_cc(label)
+    if not isinstance(data,list):
+        return data
+    down = []
+    for label, root, an, angles in data:
+        D = {'label':label,
+             'an':an}
+        if root != [None,None]:
+            D['root'] = root
+        down.append(Json.dumps(D))
+    response = make_response('\n\n'.join(down))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@emf.route("/download_satake_angles/<label>")
+def download_satake_angles(label):
+    data = _get_hecke_cc(label)
+    if not isinstance(data,list):
+        return data
+    down = []
+    for label, root, an, angles in data:
+        D = {'label':label,
+             'angles':angles}
+        if root != [None,None]:
+            D['root'] = root
+        down.append(Json.dumps(D))
+    response = make_response('\n\n'.join(down))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@emf.route("/download_newform/<label>")
+def download_newform(label):
+    data = db.mf_newforms.lookup(label)
+    if data is None:
+        return abort(404, "Label not found: %s"%label)
+    cc_data = _get_hecke_cc(label)
+    if not isinstance(cc_data, list):
+        return cc_data
+    embedding_list = []
+    for label, root, an, angles in data:
+        D = {'label': label,
+             'an': an,
+             'angles': angles}
+        if root != [None, None]:
+            D['root'] = root
+        embedding_list.append(D)
+    data['complex_embeddings'] = embedding_list
+    nf_data = _get_hecke_nf(label)
+    if not isinstance(nf_data, list):
+        return nf_data
+    qexp = [[0] * data['dim']]
+    traces = [0]
+    for an, trace_an in data:
+        if an:
+            qexp.append(an)
+        traces.append(trace_an)
+    if len(qexp) > 1:
+        data['qexp'] = qexp
+    data['traces'] = traces
+    response = make_response(Json.dumps(data))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 def newform_jump(info):
     jump = info["jump"].strip()
     # TODO use LABEL_RE from web_newform
@@ -298,8 +420,7 @@ def common_parse(info, query):
              shortcuts={'jump':newform_jump,
                         'download_exact':download_exact,
                         'download_complex':download_complex},
-             bread=lambda:[('Classical newforms', url_for(".index")),
-                           ('Search results', ' ')],
+             bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
@@ -383,8 +504,7 @@ def dimension_form_postprocess(res, info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              postprocess=dimension_form_postprocess,
-             bread=lambda:[('Classical newforms', url_for(".index")),
-                           ('Dimension table', ' ')],
+             bread=get_dim_bread,
              learnmore=learnmore_list,
              credit=credit)
 def dimension_form_search(info, query):
@@ -401,8 +521,7 @@ def dimension_form_search(info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              postprocess=dimension_space_postprocess,
-             bread=lambda:[('Classical newforms', url_for(".index")),
-                           ('Dimension table', ' ')],
+             bread=get_dim_bread,
              learnmore=learnmore_list,
              credit=credit)
 def dimension_space_search(info, query):
@@ -418,8 +537,7 @@ def dimension_space_search(info, query):
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
              shortcuts={'jump':space_jump},
-             bread=lambda:[('Classical newforms', url_for(".index")),
-                           ('Search results', ' ')],
+             bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):
@@ -429,21 +547,24 @@ def space_search(info, query):
 @emf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of $\GL_2$ holomorphic newform data over $\Q$'
-    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")), ('Completeness',''))
     return render_template("single.html", kid='dq.mf.elliptic.extent',
-                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           credit=credit(), title=t,
+                           bread=get_bread(other='Completeness'),
+                           learnmore=learnmore_list_remove('Completeness'))
 
 
 @emf.route("/Source")
 def how_computed_page():
     t = 'Source of $\GL_2$ holomorphic newform data over $\Q$'
-    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")) ,('Source',''))
     return render_template("single.html", kid='dq.mf.elliptic.source',
-                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+                           credit=credit(), title=t,
+                           bread=get_bread(other='Source'),
+                           learnmore=learnmore_list_remove('Source'))
 
 @emf.route("/Labels")
 def labels_page():
     t = 'Labels for $\GL_2$ holomorphic newforms over $\Q$'
-    bread = (('Modular Forms', url_for('mf.modular_form_main_page')),('Holomorphic Newforms', url_for(".index")), ('Labels',''))
     return render_template("single.html", kid='mf.elliptic.label',
-                           credit=credit(), title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+                           credit=credit(), title=t,
+                           bread=get_bread(other='Labels'),
+                           learnmore=learnmore_list_remove('labels'))
