@@ -9,10 +9,11 @@ from lmfdb.db_encoding import Json
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
-from lmfdb.utils import flash_error, to_dict
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl
+from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread
+from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, cm_format
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
 
@@ -63,7 +64,7 @@ def index():
             return dimension_space_search(request.args)
         else:
             return newform_search(request.args)
-    info = {}
+    info = {"stats": EMF_stats()}
     newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
     space_labels = ('20.5','60.2','55.3.d')
@@ -568,3 +569,43 @@ def labels_page():
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
+
+class EMF_stats(StatsDisplay):
+    """
+    Class for creating and displaying statistics for genus 2 curves over Q
+    """
+    def __init__(self):
+        nforms = comma(db.mf_newforms.count())
+        nspaces = comma(db.mf_newspaces.count())
+        Nk2bound = 1000 # should be added to dq_extent table?
+        weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
+        level_knowl = display_knowl('mf.elliptic.level', title='level')
+        stats_url = url_for(".statistics")
+        self.short_summary = r'The database currently contains %s newforms of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, weight_knowl, level_knowl, Nk2bound, stats_url)
+        self.summary = r"The database currently contains %s newforms and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, nspaces, weight_knowl, level_knowl, Nk2bound)
+
+    table = db.mf_newforms
+    baseurl_func = ".index"
+
+    stat_list = [
+        {'cols': [],
+         'buckets':{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]},
+         'row_title':'dimension',
+         'knowl':'mf.elliptic.dimension'},
+        {'cols': 'cm_disc',
+         'top_title':'complex multiplication',
+         'row_title':'CM by',
+         'knowl':'mf.elliptic.cm_form',
+         'formatter':cm_format},
+        {'cols':'has_inner_twist',
+         'top_title':'inner twisting',
+         'row_title':'has inner twist',
+         'knowl':'mf.elliptic.inner_twist',
+         'formatter':boolean_unknown_format}
+        #{'cols':['analytic_rank'],'top_title':'analytic ranks','row_title':'analytic rank','knowl':'mf.elliptic.analytic_rank','avg':True},
+    ]
+
+@emf.route("/stats")
+def statistics():
+    title = 'Cupsidal Newforms: Statistics'
+    return render_template("display_stats.html", info=EMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())

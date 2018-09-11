@@ -1,0 +1,41 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ info.summary | safe }}
+</div>
+
+{% for d in info.distributions %}
+<h2> Distribution of {{KNOWL(d.attribute.knowl, title = d.attribute.top_title)}} </h2>
+<div>
+<table border=1>
+{% for r in d.rows %}
+<tr>
+<th>{{d.attribute.row_title}}</th>
+{% for c in r %}
+<td>{{c.value|safe}}</td>
+{% endfor %}
+</tr>
+<tr>
+<th>number of curves</th>
+{% for c in r %}
+<td><a href='{{c.query}}'>{{c.count}}</a></td>
+{% endfor %}
+</tr>
+<tr>
+<th>proportion</th>
+{% for c in r %}
+<td>{{c.proportion}}%</td>
+{% endfor %}
+</tr>
+<tr height = 10px></tr>
+{% endfor %}
+
+</table>
+</div>
+{% endfor %}
+
+<p>
+</p>
+
+{% endblock %}

@@ -2728,7 +2728,10 @@ class PostgresStatsTable(PostgresBase):
                     expanded_buckets[-1].append({col:{"$gt" if gt else "$gte": b,
                                                       "$lt" if lt else "$lte": c}})
         for X in cartesian_product_iterator(expanded_buckets):
-            bucketed_constraint = dict(constraint) # copy
+            if constraint is None:
+                bucketed_constraint = {}
+            else:
+                bucketed_constraint = dict(constraint) # copy
             for D in X:
                 bucketed_constraint.update(D)
             yield bucketed_constraint
@@ -3066,14 +3069,14 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             for i, x in enumerate(allcols):
                 if x in constraint:
                     selecter_constraints.append(SQL("values->{0} = %s".format(i)))
-                    selecter_values.append(constraint[x])
+                    selecter_values.append(Json(constraint[x]))
         else:
             selecter_values = [cols]
             positions = range(len(cols))
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
 
-    def _get_total_avg(self, cols, constraint, include_avg):
+    def _get_total_avg(self, cols, constraint, avg):
         """
         Utility function used in ``display_data``.
 
@@ -3083,7 +3086,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         - ``cols`` -- a list of columns
         - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
-        - ``include_avg`` -- boolean, whether to compute the average.
+        - ``avg`` -- boolean, whether to compute the average.
 
         OUTPUT:
 
@@ -3102,7 +3105,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
         total = cur_total.fetchone()[0]
-        if include_avg:
+        if avg:
             # Modify totaler_values in place since query for avg is very similar
             totaler_values[1] = "avg"
             cur_avg = self._execute(totaler, values=totaler_values)
@@ -3111,7 +3114,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, include_avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3121,7 +3124,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``base_url`` -- a base url, to which col=value tags are appended.
         - ``constraint`` -- a dictionary giving constraints on other columns.
             Only rows satsifying those constraints are included in the counts.
-        - ``include_avg`` -- whether to include the average value of cols[0]
+        - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
         - ``formatter`` -- a function applied to the tuple of values for display.
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
@@ -3140,43 +3143,55 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``query`` -- a url resulting in a list of entries with the given tuple of values.
         - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
         """
-        if formatter is None:
-            formatter = lambda x: x
+        if isinstance(cols, basestring):
+            cols = [cols]
         if len(cols) == 1 and buckets is None:
             if query_formatter is None:
                 query_formatter = lambda x: str(x)
             col = cols[0]
-            total, avg = self._get_total_avg(cols, constraint, include_avg)
+            total, avg = self._get_total_avg(cols, constraint, avg)
             data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint)]
             data.sort()
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
-            if include_avg:
+            if avg:
                 raise ValueError
-            if query_formatter is None:
-                def query_formatter(x):
-                    if isinstance(x, dict):
-                        a = x.get('$gte',x['$gt']+1)
-                        b = x.get('$lte',x['$lt']-1)
+            def range_formatter(x):
+                if isinstance(x, dict):
+                    a = x['$gte'] if ('$gte' in x) else x['$gt']+1
+                    b = x['$lte'] if ('$lte' in x) else x['$lt']+1
+                    if a == b:
+                        return str(a)
+                    else:
                         return "{0}-{1}".format(a,b)
-                    return str(x)
+                return str(x)
+            if query_formatter is None:
+                query_formatter = range_formatter
+            if formatter is None:
+                formatter = range_formatter
             col = buckets.keys()[0]
             total = 0
             data = []
             for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
                 L = self._get_values_counts(cols, bucketed_constraint)
-                if len(L) != 1:
+                if len(L) == 0:
+                    # No results in this bucket
+                    cnt = 0
+                elif len(L) == 1:
+                    cnt = L[0][1]
+                else:
                     raise RuntimeError
-                cnt = L[0][1]
                 data.append((bucketed_constraint[col], cnt))
                 total += cnt
         else:
             raise NotImplementedError
+        if formatter is None:
+            formatter = lambda x: x
         data = [{'value':formatter(value),
                  count_key:count,
                  'query':"{0}?{1}={2}".format(base_url, col, query_formatter(value)),
                  'proportion':format_percentage(count, total)}
                 for value, count in data]
-        if include_avg:
+        if avg:
             data.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
                          count_key:total,
                          'query':"{0}?{1}".format(base_url, cols[0]),

@@ -25,12 +25,8 @@ def get_bread(**kwds):
              ('hecke_orbit', 'Hecke orbit %s', '.by_url_newform_label')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical newforms', url_for(".index"))]
-    if 'search' in kwds:
-        return bread + [('Search results', ' ')]
-    elif 'dim' in kwds:
-        return bread + [('Dimension table', ' ')]
-    elif 'other' in kwds:
-        return bread + [(kwds[other], ' ')]
+    if 'other' in kwds:
+        return bread + [(kwds['other'], ' ')]
     url_kwds = {}
     for key, display, link in links:
         if key not in kwds:
@@ -39,9 +35,9 @@ def get_bread(**kwds):
         bread.append((display % kwds[key], url_for(link, **url_kwds)))
     return bread
 def get_search_bread():
-    return get_bread(search=True)
+    return get_bread(other='Search results')
 def get_dim_bread():
-    return get_bread(dim=True)
+    return get_bread(other='Dimension table')
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     if conrey is None:

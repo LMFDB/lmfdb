@@ -14,6 +14,7 @@ import math
 import cmath
 import sage
 from types import GeneratorType
+from urllib import urlencode
 
 from sage.all import latex, CC
 from copy import copy
@@ -417,6 +418,32 @@ def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
     A = A.replace('( ','(')
     A = A.replace('+\) \(O','+O')
     return A
+
+def display_knowl(kid, title=None, kwargs={}):
+    """
+    Allows for the construction of knowls from python code
+    (to be displayed using the ``safe`` flag in jinja);
+    the only difference with the KNOWL macro is that
+    there will be no edit link for authenticated users.
+    """
+    from lmfdb.knowledge.knowl import knowl_title
+    ktitle = knowl_title(kid)
+    if ktitle is None:
+        # Knowl not found
+        if title is None:
+            return """<span class="knowl knowl-error">'%s'</span>""" % kid
+        else:
+            return title
+    else:
+        if title is None:
+            if len(ktitle) == 0:
+                title = kid
+            else:
+                title = ktitle
+        if len(title) > 0:
+            return '<a title="{0} [{1}]" knowl="{1}" kwargs="{2}">{3}</a>'.format(ktitle, kid, urlencode(kwargs), title)
+        else:
+            return ''
 
 def bigint_knowl(n, cutoff=8, sides=2):
     if abs(n) >= 10**cutoff:
