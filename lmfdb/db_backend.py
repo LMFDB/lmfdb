@@ -1898,8 +1898,8 @@ class PostgresTable(PostgresBase):
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
                     addid = ('id' not in columns)
-		            if addid:
-			            columns = ["id"] + columns
+                    if addid:
+                        columns = ["id"] + columns
                 else:
                     addid = False
 
