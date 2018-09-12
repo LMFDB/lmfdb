@@ -1894,7 +1894,9 @@ class PostgresTable(PostgresBase):
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = (columns[0] == 'id')
+                    addid = ('id' not in columns)
+		    if addid:
+			columns = ["id"] + columns
                 else:
                     addid = False
 
