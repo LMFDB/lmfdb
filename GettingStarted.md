@@ -50,6 +50,16 @@ Installation
     ```
       sage -pip install -r requirements.txt --upgrade
     ```
+    
+  - In case the last step fails by is Mac OSX with the error 
+  ```
+  Error: pg_config executable not found.
+  ```
+  we recommend to installing PostgreSQL by doing
+  ```
+  brew install postgresql
+  ```
+  and performing the last step again.
 
   - In case the last step fails due to some missing SSL library,
     (this may be the case on osX) follow these steps
