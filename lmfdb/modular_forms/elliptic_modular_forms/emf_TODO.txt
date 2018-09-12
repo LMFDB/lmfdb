@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a (Edgar)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
 
@@ -32,7 +31,6 @@ GOOD:
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
-* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
 * form pages: disable further properties if there is nothing to show
 * properties box: should every nonarticle world be capitalized (as the titles) or just the first word?
 
