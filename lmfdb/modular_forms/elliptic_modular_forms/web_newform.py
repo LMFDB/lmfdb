@@ -172,12 +172,12 @@ class WebNewform(object):
 
         # Downloads
         self.downloads = []
-        if self.has_exact_qexp:
-            self.downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', code=self.hecke_orbit_code)))
-            self.downloads.append(('Download coefficient ring basis', url_for('.download_hecke_ring', label=self.label)))
-        if self.has_complex_qexp:
-            self.downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
-        self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        #if self.has_exact_qexp:
+        #    self.downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
+        #    self.downloads.append(('Download coefficient ring basis', url_for('.download_hecke_ring', label=self.label)))
+        #if self.has_complex_qexp:
+        #    self.downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+        #self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
 
         self.title = "Newform %s"%(self.label)
 

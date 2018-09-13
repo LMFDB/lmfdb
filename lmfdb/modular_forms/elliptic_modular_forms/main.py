@@ -9,11 +9,12 @@ from lmfdb.db_encoding import Json
 from lmfdb.modular_forms.elliptic_modular_forms import emf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
+from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
 from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread
-from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, cm_format
+from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
 
@@ -361,13 +362,10 @@ def space_jump(info):
     #return redirect(url_for(".index"))
     pass
 
-def download_exact(info):
-    # FIXME
-    pass
+class EMF_download(Downloader):
+    table = db.mf_newforms
+    title = 'Cuspidal newforms'
 
-def download_complex(info):
-    # FIXME
-    pass
 
 @search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, level_field='level', conrey_field='char_labels'):
@@ -570,6 +568,15 @@ def labels_page():
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
 
+def cm_format(D):
+    if D == 1:
+        return 'Not CM'
+    elif D == 0:
+        return 'Unknown'
+    else:
+        cm_label = "2.0.%s.1"%(-D)
+        return nf_display_knowl(cm_label, field_pretty(cm_label))
+
 class EMF_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for genus 2 curves over Q
@@ -596,13 +603,19 @@ class EMF_stats(StatsDisplay):
          'top_title':'complex multiplication',
          'row_title':'CM by',
          'knowl':'mf.elliptic.cm_form',
+         'reverse':True,
          'formatter':cm_format},
         {'cols':'has_inner_twist',
          'top_title':'inner twisting',
          'row_title':'has inner twist',
          'knowl':'mf.elliptic.inner_twist',
-         'formatter':boolean_unknown_format}
-        #{'cols':['analytic_rank'],'top_title':'analytic ranks','row_title':'analytic rank','knowl':'mf.elliptic.analytic_rank','avg':True},
+         'formatter':boolean_unknown_format},
+        #{'cols':'analytic_rank','row_title':'analytic rank','knowl':'mf.elliptic.analytic_rank','avg':True},
+        {'cols':'num_forms',
+         'table':db.mf_newspaces,
+         'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
+         'row_title': 'newforms',
+         'knowl': 'mf.elliptic.galois-orbits'},
     ]
 
 @emf.route("/stats")

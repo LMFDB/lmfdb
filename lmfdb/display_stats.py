@@ -13,13 +13,6 @@ def boolean_unknown_format(value):
     else:
         return 'Unknown'
 
-def cm_format(D):
-    if D == 0:
-        return 'Not CM'
-    else:
-        cm_label = "2.0.%s.1"%(-D)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
-
 class StatsDisplay(UniqueRepresentation):
     """
     A class for displaying statistics in a uniform way.
@@ -47,7 +40,7 @@ class StatsDisplay(UniqueRepresentation):
         dists = []
         for attr in self.stat_list:
             kwds = {}
-            for key in ['constraint', 'avg', 'formatter', 'buckets', 'include_upper', 'query_formatter']:
+            for key in ['constraint', 'avg', 'formatter', 'buckets', 'include_upper', 'query_formatter', 'reverse']:
                 if key in attr:
                     kwds[key] = attr[key]
             # default value for top_title from row_title
@@ -55,7 +48,8 @@ class StatsDisplay(UniqueRepresentation):
                 attr['top_title'] = attr['row_title']
                 if not attr['top_title'].endswith('s'):
                     attr['top_title'] += 's'
-            counts = self.table.stats.display_data(attr["cols"], url_for(self.baseurl_func), **kwds)
+            table = attr.get('table',self.table)
+            counts = table.stats.display_data(attr["cols"], url_for(self.baseurl_func), **kwds)
             rows = [counts[i:i+10] for i in range(0,len(counts),10)]
             dists.append({'attribute':attr,'rows':rows})
         return dists
