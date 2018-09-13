@@ -418,7 +418,7 @@ def common_parse(info, query):
              err_title='Newform Search Input Error',
              shortcuts={'jump':newform_jump,
                         #'download_exact':download_exact,
-                        'download_complex':download_complex},
+                        #'download_complex':download_complex},
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
