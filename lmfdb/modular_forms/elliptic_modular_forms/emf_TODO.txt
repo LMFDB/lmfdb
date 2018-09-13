@@ -4,11 +4,11 @@ CRITICAL (BUGS):
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
 
 IMPORTANT:
-* form pages: pictures from q-expansion (Drew, John Cremona)
+* form pages: pictures from q-expansion (Drew, John Cremona, Edgar, David)
 * data: add analytic rank (Edgar)
+* add analytic rank to form and stats pages (David)
 * search results: Download search results (David)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
-* stats pages (David) - by dim, cm_disc, has_inner_twist, analytic_rank, num_forms (space, later)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (Edgar, David)
@@ -16,6 +16,7 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
 * move everything to classical_modular_forms (David) and e-mail
+* make space search work; update links in stats page (David)
 
 GOOD:
 

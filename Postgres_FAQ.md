@@ -483,3 +483,25 @@ Statistics
 
    If you want to add counts for many sets of columns (in order to provide counts for common
    queries that have a large number of results), `add_stats_auto` may be useful.
+
+1. How can I easily add a statistics page?
+
+   Create a statistics object inheriting from `StatsDisplay` in `lmfdb/display_stats.py`.
+   It should have attributes
+
+   - `short_summary` (which can be displayed at the top of your browse page),
+   - `summary` (which will be displayed at the top of the statistics page),
+   - `table` (the postgres table on which statistics are computed),
+   - `baseurl_func` (the function giving your browse page, e.g. `'.index'`),
+   - `stat_list` (a list of dictionaries giving the statistics to be displayed;
+      `'cols'`, `'row_title'` and `'knowl'` are required arguments, and other
+      optional arguments allow you to adjust the default behavior)
+
+   Once you've created such an object, you can call its `setup()` method from a sage prompt
+   (with editor privileges) in order to collect the relevant statistics.  You should also
+   create a view using the `display_stats.html` template, passing your object in as the `info` parameter.
+   Note that `DisplayStats` inherits from Sage's `UniqueRepresentation, so it will only be created once.
+
+1. How do I display statistics from multiple tables on one page?
+
+   You can use the `'table'` and `'query_formatter'` keys.  See classical modular forms for an example.

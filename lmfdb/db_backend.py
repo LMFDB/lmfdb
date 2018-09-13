@@ -3114,7 +3114,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, reverse=False, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3133,6 +3133,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             are grouped based on which bucket they fall into.
         - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
         - ``query_formatter`` -- a function for encoding the values into the url.
+        - ``reverse`` -- whether to sort in reverse order.
         - ``count_key`` -- the key to use for counts in the returned dictionaries.
 
         OUTPUT:
@@ -3151,7 +3152,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             col = cols[0]
             total, avg = self._get_total_avg(cols, constraint, avg)
             data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint)]
-            data.sort()
+            data.sort(reverse=reverse)
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
             if avg:
                 raise ValueError

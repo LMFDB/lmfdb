@@ -11,6 +11,7 @@ from lmfdb.db_backend import db
 from lmfdb.utils import to_dict, comma, flash_error, display_knowl
 from lmfdb.search_parsing import parse_ints, parse_bracketed_posints
 from lmfdb.search_wrapper import search_wrap
+from lmfdb.downloader import Downloader
 from lmfdb.display_stats import StatsDisplay, boolean_format
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
@@ -235,6 +236,17 @@ def belyi_jump(info):
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
+class Belyi_download(Downloader):
+    table = db.belyi_galmaps
+    title = 'Belyi maps'
+    columns = 'triples'
+    data_format = ['permutation_triples']
+    data_description = ['where the permutation triples are in one line notation']
+    function_body = {'magma':['deg := #(data[1][1][1]);',
+                              'return [[[Sym(deg) ! t: t in s]: s in triples]: triples in data];'],
+                     'sage':['deg = len(data[0][0][0])',
+                             'return [[map(SymmetricGroup(deg), s) for s in triples] for triples in data]']}
+
 def download_search(info):
     download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
     download_assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
@@ -304,7 +316,7 @@ def download_search(info):
              title='Belyi map search results',
              err_title='Belyi Maps Search Input Error',
              shortcuts={'jump':belyi_jump,
-                        'download':download_search},
+                        'download':Belyi_download()},
              projection=['label', 'group', 'deg', 'g', 'orbit_size', 'geomtype'],
              cleaners={'geomtype': lambda v:geometry_types_dict[v['geomtype']]},
              bread=lambda:[('Belyi Maps', url_for(".index")), ('Search Results', '.')],

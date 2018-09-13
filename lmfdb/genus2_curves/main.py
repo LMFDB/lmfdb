@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import StringIO
 from ast import literal_eval
 import re
-import time
 from operator import mul
-from flask import render_template, url_for, request, redirect, send_file, abort
+from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 from sage.misc.cachefunc import cached_method
 
@@ -13,6 +11,7 @@ from lmfdb.db_backend import db
 from lmfdb.utils import to_dict, comma, flash_error, display_knowl
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
 from lmfdb.search_wrapper import search_wrap
+from lmfdb.downloader import Downloader
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
 from lmfdb.sato_tate_groups.main import st_link_by_name
@@ -231,47 +230,24 @@ def genus2_jump(info):
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
-def download_search(info):
-    lang = info.get('Submit','text').strip()
-    filename = 'genus2_curves' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue query here
-    try:
-        labels = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='label'))
-        curves = list(db.g2c_curves.search(literal_eval(info.get('query','{}')),projection='eqn'))
-    except Exception as err:
-        return "Unable to parse query: %s"%err
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Genus 2 curves downloaded from the LMFDB downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d curves.\n\n' %(str(info.get('query')), len(labels))
-    s += c + ' Below are two lists, one called labels, and one called data (in matching order).\n'
-    s += c + ' Each entry in the curves list has the form:\n'
-    s += c + '   [[f coeffs],[h coeffs]]\n'
-    s += c + ' defining the hyperelliptic curve y^2+h(x)y=f(x).\n'
-    s += c + '\n'
-    s += c + ' ' + download_make_data_comment[lang] + '\n'
-    s += '\n'
-    s += download_labels_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join('"'+str(r)+'"' for r in labels)) # list of curve labels
-    s += download_assignment_end[lang]
-    s += '\n\n'
-    s += download_data_assignment_start[lang] + '\\\n'
-    s += str(',\n'.join(str(r) for r in curves)) # list of curve equations
-    s += download_assignment_end[lang]
-    s += '\n\n'
-    s += download_make_data[lang]
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+class G2C_download(Downloader):
+    table = db.g2c_curves
+    title = 'Genus 2 curves'
+    columns = 'eqn'
+    data_format = ['[[f coeffs],[h coeffs]]']
+    data_description = 'defining the hyperelliptic curve y^2+h(x)y=f(x).'
+    function_body = {'magma':['R<x>:=PolynomialRing(Rationals());',
+                              'return [HyperellipticCurve(R!r[1],R!r[2]):r in data];'],
+                     'sage':['R.<x>=PolynomialRing(QQ)',
+                             'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
+                     'gp':['[apply(Polrev,c)|c<-data];']}
 
 @search_wrap(template="g2c_search_results.html",
              table=db.g2c_curves,
              title='Genus 2 Curve Search Results',
              err_title='Genus 2 Curves Search Input Error',
              shortcuts={'jump':genus2_jump,
-                        'download':download_search},
+                        'download':G2C_download()},
              projection=['label','eqn','st_group','is_gl2_type','is_simple_geom','analytic_rank'],
              cleaners={"class": lambda v: class_from_curve_label(v["label"]),
                        "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
@@ -415,23 +391,7 @@ def statistics():
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index_Q")), ('Statistics', ' '))
     return render_template("display_stats.html", info=G2C_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
-download_languages = ['magma', 'sage', 'gp', 'text']
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-download_labels_assignment_start = {'magma':'labels :=[','sage':'labels =[','gp':'labels = {[','text':'labels - ['}
-download_data_assignment_start = {'magma':'data :=[','sage':'data =[','gp':'data = {[','text':'data - ['}
-download_assignment_end = {'magma':'];','sage':']','gp':']}','text':']'}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
-download_make_data = {
-'magma':'function make_data()\n  R<x>:=PolynomialRing(Rationals());\n  return [HyperellipticCurve(R!r[1],R!r[2]):r in data];\nend function;\n',
-'sage':'def make_data():\n\tR.<x>=PolynomialRing(QQ)\n\treturn [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]\n\n',
-'gp':'make_data()=[apply(Polrev,c)|c<-data];\n\n',
-'text':''
-}
-download_make_data_comment = {
-        'magma': 'To create a list of curves, type "curves:= make_data();"',
-        'sage':'To create a list of curves, type "curves = make_data()"',
-        'gp':'To create a list of curves [f,h], type "curves = make_data()"',
-        'text':''}
+
 
 @g2c_page.route("/Completeness")
 def completeness_page():
