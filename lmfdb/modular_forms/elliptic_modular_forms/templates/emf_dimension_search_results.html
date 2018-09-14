@@ -2,7 +2,9 @@
 
 {% block show_results %}
 
-{% if not info.one_type %}
+{% if info.one_type %}
+<p>The dimensions shown below are for the space of cuspidal newforms in each weight and level satisfying the specified conditions.</p>
+{% else %}
 <script>
   function switch_space(newspace, title) {
   $('.table_hidable').hide();

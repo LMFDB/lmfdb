@@ -32,7 +32,10 @@ Info was: {{info}}
   {% endfor %}
 </p>
 <p>
-  Using a <a href="?submit=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial character.
+  Using a <a href="?submit=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial character
+</p>
+<p>
+  As a <a href="?submit=Spaces&dim=1-">list of spaces</a>
 </p>
 
 <p>
@@ -57,12 +60,12 @@ Info was: {{info}}
   A <a href={{url_for('.random_form')}}>random newform</a> from the database
 </p>
 
-<h2> Find a specific newform by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
+<h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
 <form>
 <input type='text' name='jump' placeholder='3.6.1.a'>
 <button type='submit'>Search by label</button>
-<br><span class="formexample">e.g. 3.6.1.a </span>
+<br><span class="formexample">e.g. 3.6.1.a, 55.3.d or 20.5 </span>
 </form>
 
 {# SEARCHING #}

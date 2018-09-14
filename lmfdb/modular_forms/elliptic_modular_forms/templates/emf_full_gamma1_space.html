@@ -45,23 +45,14 @@
 </table>
 
 {% if space.new_dim > 0 %}
-<h2> Decomposition of \({{ space.new_latex() }}\)</h2>
+<h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
 
-<p>The space of {{ KNOWL('mf.elliptic.newform',title='Newforms') }} of weight {{space.weight}} on $\Gamma_1({{space.level}})$ decomposes as
-\[
-{{space.new_latex()}}
-= \bigoplus_{\chi \bmod {{space.level}} } {{ space.summand_latex() }}
-\]
-where the direct sum is over all {{ KNOWL('character.dirichlet',title='Dirichlet characters') }} mod \({{space.level}}\).  If $\chi$ and $\chi'$ are in the same {{ KNOWL('character.dirichlet.galois_orbit',title='Galois orbit')}},
-then \({{space.summand_latex()}}\) and \({{space.summand_latex("\chi'")}}\)
-  are Galois conjugate and we only list it once below (choosing the character in the orbit with minimal Conrey label).  Further, we only show spaces with {{KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.</p>
-
-<p>Within each space \( {{space.summand_latex() }} \) we list the newforms together with their dimension.</p>
+<p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( {{space.summand_latex() }} \) we list the newforms together with their dimension.</p>
 
 <table class="mfdata">
   <thead>
     <tr class="oddrow">
-      <th>{{ KNOWL('mf.elliptic.label',title=space.header_latex()) }}</th>
+      <th>{{ KNOWL('mf.elliptic.label',title='Label') }}</th>
       <th> \(\chi\)</th>
       <th>{{ KNOWL('mf.elliptic.newform',title='Newforms') }}</th>
       <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
@@ -91,22 +82,11 @@ then \({{space.summand_latex()}}\) and \({{space.summand_latex("\chi'")}}\)
 <!-- Definitions for coefficient fields -->
 
 {% if space.old_dim > 0 %}
-<h2> Decomposition \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+<h2> {{ KNOWL('mf.elliptic.decomposition.old.gamma1', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 
-<p>
-  There are natural inclusion maps from lower level; the old subspace is the span of their images.  For \(M\) dividing \(N={{space.level}}\) and for \(t\) dividing \(\frac{N}{M}\), the maps
-  \begin{align}
-  \alpha_{M, t} : {{ space.subspace_latex() }} & \to {{ space.cusp_latex() }} \\
-  f(q) & \mapsto f(q^t)
-  \end{align}
-  induce an isomorphism
-  \[
-  {{ space.old_latex() }} \cong \bigoplus_{M,t} \alpha_{M,t}\left({{ space.subspace_latex(new=True) }}\right).
-  \]
-  Removing zero dimensional summands yields
-</p>
-
-\( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
+<div class="center">
+  \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
+</div>
 {% endif %}
 
 {% endblock %}

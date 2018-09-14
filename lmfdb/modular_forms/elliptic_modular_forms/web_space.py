@@ -139,7 +139,7 @@ class WebNewformSpace(object):
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
-        self.newforms = db.mf_newforms.search({'space_label':self.label}, projection=2)
+        self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
@@ -149,12 +149,12 @@ class WebNewformSpace(object):
             ('Label',self.label),
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
-            ('Character Orbit',self.char_orbit_label),
-            ('Representative Character',r'\(%s\)'%self.char_conrey_str),
-            ('Character Field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Character orbit',self.char_orbit_label),
+            ('Representative character',r'\(%s\)'%self.char_conrey_str),
+            ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
-            ('Sturm Bound',str(self.sturm_bound)),
-            ('Trace Bound',str(self.trace_bound))
+            ('Sturm bound',str(self.sturm_bound)),
+            ('Trace bound',str(self.trace_bound))
         ]
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
         if self.char_labels[0] == 1:
@@ -339,7 +339,7 @@ class WebGamma1Space(object):
             num_chi = space['char_degree']
             link = self._link(space['level'], space['char_orbit_label'])
             if not forms:
-                ans.append((rowtype, chi_rep, num_chi, link, "No newforms", "", []))
+                ans.append((rowtype, chi_rep, num_chi, link, "None", 0, []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]

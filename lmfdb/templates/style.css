@@ -930,6 +930,12 @@ table.ntdata .border-right {
 table.ntdata .center {
     text-align: center;
 }
+div.center {
+    text-align: center;
+}
+table.ntdata .right {
+    text-align: right;
+}
 table.ntdata .middle {
     vertical-align: middle;
 }
