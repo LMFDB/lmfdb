@@ -21,28 +21,32 @@ IMPORTANT:
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
 * move everything to classical_modular_forms (David) and e-mail
 * make space search work; update links in stats page (David)
+* Bread for L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/ is broken (Edgar)
+* Problem with Z-function plots (e.g. L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2) (Edgar)
+* L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (Edgar)
+* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
+* form pages: download to Sage/Magma/pari (stored coefficients) (David)
+* space pages: download to Sage/Magma/pari (download all the data) (David)
 
 GOOD:
 * Should we say that we sort results by Nk^2?
+* In lists of newforms, if dimension is bigger than 2, should way say something like "q-expansion available on page" rather than leaving it blank?
 * Make sure our description of labels is correct
 * form pages: display trace form
 * Figure out why the AL-signs are opposite the traces of the corresponding a_p
 * Knowls for number fields in search results, blank if dim>20, else smarter (David)
-* data: add data for is_twist_minimal, char_is_real
-* form pages: download to Sage/Magma/pari (stored coefficients)
-* space pages: download to Sage/Magma/pari (download all the data)
+* data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
 * Formatting of dimension grid
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
-* form pages: Add Sturm bound and trace bound to the main body and explain them
+* Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
+* Is listing fricke eigenvalues of use to people? (it makes sense in this context right?) I trust most mathematicians can multiply a string of -1's but it might be useful to be able to search on?
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
-* form pages: disable further properties if there is nothing to show
-* properties box: should every nonarticle world be capitalized (as the titles) or just the first word?
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
@@ -56,6 +60,7 @@ IT WOULD BE NICE IF:
 * form pages: download to Sage/Magma/pari (using cutters)
 * L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
 * Atkin-Lehner dimension decomposition for the space
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
 
 FUTURE WORK:
 * data: compute much more using pari
@@ -72,51 +77,15 @@ hecke_algebras/main.py:        info['friends'] = [('Newforms space ' + info['lab
 hecke_algebras/main.py:    info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
 hilbert_modular_forms/hilbert_modular_form.py:            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('emf.render_elliptic_modular_forms')
 lfunctions/Lfunction.py:                       url_for("emf.render_elliptic_modular_forms",
-templates/checklist.html:<a href="{{ url_for("emf.render_elliptic_modular_forms", level=11, weight=2, character=1, label='a')}}"> 
+templates/checklist.html:<a href="{{ url_for("emf.render_elliptic_modular_forms", level=11, weight=2, character=1, label='a')}}">
 templates/checklist.html:<li><a href="{{ url_for('emf.render_elliptic_modular_forms', level = 11, weight = 6, character = 1,label = "b")}}"> Cuspidal newform 11.6.1b </a> and
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('emf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render_elliptic_modular_forms')
 
-ADDITIONAL CURIOSITIES:
-Here are some things I (Alex) found while browsing, some minor, some serious, some already fixed by now, and probably some that are already on peoples radars which I mostly wrote down for myself. Sorry they are not ordered by seriousness or anything but I hope it's still helpful:
-
-* http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ displays nothing at the bottom decomposition, the dims dont match but we have no old data here
-  same for http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/10/6/a/
-  where presumably the two oldforms come from http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/5/6/a/
-
-* Bread for http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/ is broken
-
-* whats up with the Z-function on http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2/ it looks cool!
-
-* what is relation between http://127.0.0.1:37777/L/EllipticCurve/Q/11/a/ and http://127.0.0.1:37777/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/, for example, these should look the same right (and eventually merged?)
-
-* For http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/60/2/j/ are the traces really 0!?
-
-* When the box saying what dimension we are displaying is not there in dimension table results (e.g. when we search on dim =1), maybe we should say this is just cusp newspace dim displayed somwhere
-  http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/?count=None&weight=1-12&level=1-24&dim=1&submit=Dimensions
-
-* I think pages like http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/55/2/a/ should say something like we have a q-exp click to view, rather than blank?
-
-* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
-
-* Has inner twist box in wrong place on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/
-  I also don't like the placement of some boxes on http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/11/ at the header like the primitive checkbox
-
-* Re-search for character is real doesn't work
-
-* http://127.0.0.1:37777/ModularForm/GL2/Q/holomorphic/49/2/g/a/ is busted due to AttributeError: 'WebNewform' object has no attribute 'inner_twist_proved
-
-* http://127.0.0.1:37777/L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (I think Edgar is on top of this already)
-
-* Is listing fricke eigenvalues of use to people? (it makes sense in this context right?) I trust most mathematicians can multiply a string of -1's but it might be useful to be able to search on?
-
-Not EMF stuff:
+NOT EMF STUFF:
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
-
-
-
 
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'
@@ -127,5 +96,4 @@ PROBABLY DONE:
 * gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
-
 * form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)
