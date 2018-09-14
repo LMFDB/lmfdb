@@ -2343,14 +2343,14 @@ class PostgresTable(PostgresBase):
                 if filename is None:
                     continue
                 now = time.time()
-                cols = ['"' + col + '"' for col in cols]
                 if addid:
                     cols = ["id"] + cols
+                cols_wquotes = ['"' + col + '"' for col in cols]
                 cur = self.conn.cursor()
                 with open(filename, "w") as F:
                     try:
                         self._write_header_lines(F, cols, sep=sep)
-                        cur.copy_to(F, table, columns=cols, **kwds)
+                        cur.copy_to(F, table, columns=cols_wquotes, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
