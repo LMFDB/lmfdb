@@ -5,6 +5,9 @@ CRITICAL (BUGS):
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
 
 IMPORTANT:
+* Check definition of trace bound mf.elliptic.trace_bound (Drew)
+* Picture of space (Drew)
+* Use inverse matrix when dimension is large (Drew, David)
 * form pages: pictures from q-expansion (Drew, John Cremona, Edgar, David)
 * data: add analytic rank (Edgar)
 * add analytic rank to form and stats pages (David)
@@ -20,7 +23,11 @@ IMPORTANT:
 * make space search work; update links in stats page (David)
 
 GOOD:
-
+* Should we say that we sort results by Nk^2?
+* Make sure our description of labels is correct
+* form pages: display trace form
+* Figure out why the AL-signs are opposite the traces of the corresponding a_p
+* Knowls for number fields in search results, blank if dim>20, else smarter (David)
 * data: add data for is_twist_minimal, char_is_real
 * form pages: download to Sage/Magma/pari (stored coefficients)
 * space pages: download to Sage/Magma/pari (download all the data)
@@ -48,6 +55,7 @@ IT WOULD BE NICE IF:
 * data: download data from old version and compare to see matches (at least with traces) and identify other problems
 * form pages: download to Sage/Magma/pari (using cutters)
 * L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
+* Atkin-Lehner dimension decomposition for the space
 
 FUTURE WORK:
 * data: compute much more using pari

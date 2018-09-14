@@ -90,7 +90,7 @@ function show_qexp(qstyle) {
   <!-- Coefficient code depends on existence of form -->
   <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: &nbsp &nbsp {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
   <p class="short"> Basis of {{ KNOWL('mf.elliptic.hecke_order',title='coefficient ring') }}: {{ newform.order_basis() | safe}}</p>
-  {% if newform.hecke_ring_index_proven %} 
+  {% if newform.hecke_ring_index_proven %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
     {% else %}
@@ -104,12 +104,8 @@ function show_qexp(qstyle) {
   {% endif %}
 </div>
 {% else %}
-<h3>{{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}</h3>
-<div>
-  {{ place_code('coefficient_field') }}
-</div>
-<p>The {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} has {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}.</p>
-<p>The degree and weight are sufficiently large that we do not store an algebraic \(q\)-expansion.</p>
+<h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
+<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion.</p>
 {% endif %}
 
 <!-- Complex embeddings and Satake parameters -->
@@ -237,6 +233,7 @@ function show_qexp(qstyle) {
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
+{% if newform.has_further_properties %}
 <h2>Further properties</h2>
 
 {% if newform.is_cm != 0 %}
@@ -274,6 +271,7 @@ a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.cm_proved
     {% endfor %}
   </tbody>
 </table>
+{% endif %}
 {% endif %}
 
 

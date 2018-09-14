@@ -18,6 +18,18 @@
       </select>
     </td>
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
+    <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+  </tr>
+
+  <tr>
+    <td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
+    <td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
+    <td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
+    <td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
+  </tr>
+
+  <tr>
     <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
       <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
@@ -26,23 +38,13 @@
       </select>
     </td>
     <td>Primitive character</td>
-  </tr>
-
-  <tr>
-    <td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
-    <td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
-    <td><input type='text' name='char_label' placeholder='20.d' size=10 value='{{info.char_label}}'></td>
-    <td><input type='text' name='prim_label' placeholder='1.a' size=10 value='{{info.prim_label}}'></td>
-  </tr>
-
-  <tr>
     <td>Character order</td>
     <td>Is real?</td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
-    <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
   </tr>
 
   <tr>
+    <td><input type='text' name='char_label' placeholder='20.d' size=10 value='{{info.char_label}}'></td>
+    <td><input type='text' name='prim_label' placeholder='1.a' size=10 value='{{info.prim_label}}'></td>
     <td><input type='text' name='char_order' placeholder='1' size=10 value='{{info.char_order}}'></td>
     <td>
       <select name='char_is_real'>
@@ -51,8 +53,6 @@
 	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
       </select>
     </td>
-    <td><input type='text' name='dim' placeholder='1' size=10 value='{{info.dim}}'></td>
-    <td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10 value='{{info.nf_label}}'></td>
   </tr>
 
   <tr>

@@ -2,6 +2,94 @@
 
 {% block content %}
 
-<!-- Display search results and inputs to search again -->
+<h2>Refine search </h2>
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table>
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
+      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+        <option></option>
+        <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
+        <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
+      </select>
+    </td>
+    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+    <td>Cusp. new dim.</td>
+    <td>Num. {{ KNOWL('mf.elliptic.newform', title='newforms') }}</td>
+  </tr>
+
+  <tr>
+    <td><input type='text' name='weight' placeholder='2' size=10 value='{{info.weight}}'></td>
+    <td><input type='text' name='level' placeholder='4' size=10 value='{{info.level}}'></td>
+    <td><input type='text' name='dim' placeholder='1-4' size=10 value='{{info.dim}}'></td>
+    <td><input type='text' name='num_forms' placeholder='3' size=10 value='{{info.num_forms}}'></td>
+  </tr>
+
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
+      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+        <option></option>
+        <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
+        <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
+      </select>
+    </td>
+    <td>Primitive character</td>
+    <td>Character order</td>
+    <td>Is real?</td>
+  </tr>
+
+  <tr>
+    <td><input type='text' name='char_label' placeholder='20.d' size=10 value='{{info.char_label}}'></td>
+    <td><input type='text' name='prim_label' placeholder='1.a' size=10 value='{{info.prim_label}}'></td>
+    <td><input type='text' name='char_order' placeholder='1' size=10 value='{{info.char_order}}'></td>
+    <td>
+      <select name='char_is_real'>
+	<option ></option>
+	<option value='True'{{ "selected" if info.char_is_real == 'True'}}>Yes</option>
+	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
+      </select>
+    </td>
+  </tr>
+
+  <tr style="height:50px">
+    <td class="button"><button type='submit' name='submit_again' value='Spaces' style="width: 110px">Search again</button></td>
+  </tr>
+</table>
+</form>
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
+      <th>Dim.</th>
+      <th>\(\chi\)</th>
+      <th>{{ KNOWL('character.dirichlet.order', title='Char. order') }}</th>
+      <th>Num. newforms</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for space in info.results %}
+    <tr>
+      <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
+      <td> {{ space.dim }} </td>
+      <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
+      <td> {{ space.char_order }} </td>
+      <td> {{ space.num_forms }} </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

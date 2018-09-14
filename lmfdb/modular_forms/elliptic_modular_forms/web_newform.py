@@ -153,14 +153,16 @@ class WebNewform(object):
             self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
+        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1)
+
         # properties box
         self.properties = [('Label', self.label)]
         if cc_data:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
         self.properties += [('Weight', '%s' % self.weight),
-                            ('Character Orbit Label', '%s.%s' % (self.level, self.char_orbit_label)),
-                            ('Representative Character', '\(%s\)' % self.char_conrey_str),
+                            ('Character orbit label', '%s.%s' % (self.level, self.char_orbit_label)),
+                            ('Representative character', '\(%s\)' % self.char_conrey_str),
                             ('Dimension', '%s' % self.dim)]
         if self.is_cm == 1:
             self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
@@ -282,9 +284,23 @@ class WebNewform(object):
                     basis.append(r"\((%s)/\)%s"%(num, bigint_knowl(den)))
         basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(i, r"\ " if (len(basis) > 10 and i < 10) else "", x) for i, x in enumerate(basis)]
         if len(basis) > 3 or any(d > 1 for d in self.hecke_ring_denominators):
-            return ',</p>\n<p class="short">'.join([""]+basis)
+            return '</p>\n<p class="short">'.join([""]+basis)
         else:
             return ', '.join(basis)
+
+    def order_basis_table(self):
+        s = '<table class="ntdata">\n  <tr>\n'
+        for i in range(self.dim):
+            s += r'    <td>\(\nu^{%s}\)</td>\n'%i
+        s += '    <td>Denominator</td>\n  </tr>\n'
+        for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
+            s += '  <tr>\n'
+            for coeff in num:
+                s += '    <td>%s</td>\n' % (bigint_knowl(coeff))
+            s += '    <td>%s</td>\n' % (bigint_knowl(den))
+            s += '  </tr>\n'
+        s += '</table>'
+        return s
 
     def q_expansion(self, format, prec_max=10):
         # options for format: 'oneline', 'short', 'all'

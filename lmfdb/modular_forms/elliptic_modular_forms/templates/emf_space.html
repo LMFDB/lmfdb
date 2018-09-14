@@ -42,7 +42,26 @@
     <td>=</td>
     <td>\( {{ space.char_conductor }} \)</td>
   </tr>
-{% endif %}
+  {% endif %}
+  <tr>
+  <tr>
+    <td> {{ KNOWL('character.dirichlet.value_field', title='Character field') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \(\Q{% if space.char_degree != 1 %}(\zeta_{ {{space.char_order}} }){% endif %}\) </td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.sturm_bound', title='Sturm bound') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \({{ space.sturm_bound }}\) </td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \({{ space.trace_bound }}\) </td>
+  </tr>
 </table>
 
 <h3> Dimensions </h3>
@@ -83,9 +102,7 @@
 {% endif %}
 
 {% if space.dim > 0 %}
-<h2> Decomposition of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
-
-<p>The {{ KNOWL('mf.elliptic.hecke-operator', title='Hecke algebra') }} acts on \({{ space.new_latex() }}\), breaking it up into irreducible pieces.  Each piece is spanned by a set of conjugate eigenforms with Fourier coefficients in a number field of degree equal to the dimension of the subspace.  We refer to the irreducible orbit as a newform, and list the newforms in \({{ space.new_latex() }}\) below.</p>
+<h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
 
 {% include 'emf_newform_list.html' %}
 
@@ -94,22 +111,11 @@
 <!-- Definitions for coefficient fields -->
 
 {% if space.dim_grid.S.old > 0 %}
-<h2> Decomposition of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+<h2> {{ KNOWL('mf.elliptic.decomposition.old.gamma0chi', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
 
-<p>
-  There are natural inclusion maps from lower level; the old subspace is the span of their images.  For \(M\) dividing \(N={{space.level}}\){% if space.char_conductor != 1 %} and divisible by \(\operatorname{cond}(\chi)={{space.char_conductor}}\){% endif %}, and for \(t\) dividing \(\frac{N}{M}\), the maps
-  \begin{align}
-  \alpha_{M, t} : {{ space.subspace_latex() }} & \to {{ space.cusp_latex_symbolic() }} \\
-  f(q) & \mapsto f(q^t)
-  \end{align}
-  induce an isomorphism
-  \[
-  {{ space.old_latex_symbolic() }} \cong \bigoplus_{M,t} \alpha_{M,t}\left({{ space.subspace_latex(new=True) }}\right).
-  \]
-  Removing zero dimensional summands yields
-</p>
-
-\( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
+<div class="center">
+  \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
+</div>
 {% endif %}
 
 {% endblock %}

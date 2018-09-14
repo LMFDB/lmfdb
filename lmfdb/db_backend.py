@@ -3114,7 +3114,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, reverse=False, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, reverse=False, url_extras=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3134,6 +3134,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
         - ``query_formatter`` -- a function for encoding the values into the url.
         - ``reverse`` -- whether to sort in reverse order.
+        - ``url_extras`` -- an optional string to add to the base_url after the ?
         - ``count_key`` -- the key to use for counts in the returned dictionaries.
 
         OUTPUT:
@@ -3187,9 +3188,12 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             raise NotImplementedError
         if formatter is None:
             formatter = lambda x: x
+        base_url = base_url + '?'
+        if url_extras:
+            base_url += url_extras
         data = [{'value':formatter(value),
                  count_key:count,
-                 'query':"{0}?{1}={2}".format(base_url, col, query_formatter(value)),
+                 'query':"{0}{1}={2}".format(base_url, col, query_formatter(value)),
                  'proportion':format_percentage(count, total)}
                 for value, count in data]
         if avg:

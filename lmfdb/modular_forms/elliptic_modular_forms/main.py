@@ -13,7 +13,7 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread
+from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
@@ -54,17 +54,32 @@ def set_info_funcs(info):
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
                           'E':'Eisenstein series'}
+    def display_AL(results):
+        if not results:
+            return False
+        N = results[0]['level']
+        if not all(mf['level'] == N for mf in results):
+            return False
+        return all(mf['char_order'] == 1 for mf in results)
+    info["display_AL"] = display_AL
 
 @emf.route("/")
 def index():
     if len(request.args) > 0:
-        if request.args.get('submit') == 'Dimensions':
+        info = to_dict(request.args)
+        if 'submit_again' in info:
+            # We had to use submit_again because submit broke
+            # the Next button for some reason.
+            info['submit'] = info['submit_again']
+        if info.get('submit') == 'Dimensions':
             for key in newform_only_fields:
-                if key in request.args:
-                    return dimension_form_search(request.args)
-            return dimension_space_search(request.args)
+                if key in info:
+                    return dimension_form_search(info)
+            return dimension_space_search(info)
+        elif info.get('submit') == 'Spaces':
+            return space_search(info)
         else:
-            return newform_search(request.args)
+            return newform_search(info)
     info = {"stats": EMF_stats()}
     newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
@@ -342,25 +357,16 @@ def download_newform(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-def newform_jump(info):
+def jump_box(info):
     jump = info["jump"].strip()
-    # TODO use LABEL_RE from web_newform
-    if re.match(r'^\d+\.\d+\.[a-z]+\.[a-z]+$',jump):
+    if OLD_SPACE_LABEL_RE.match(jump):
+        jump = convert_spacelabel_from_conrey(jump)
+    try:
         return redirect(url_for_label(jump), 301)
-    else:
-        errmsg = "%s is not a valid newform orbit label"
+    except ValueError:
+        errmsg = "%s is not a valid newform or space label"
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
-
-def space_jump(info):
-    # FIXME
-    #if re.match(r'^\d+\.\d+\.\d+$',jump):
-    #    return redirect(url_for_isogeny_class_label(jump), 301)
-    #else:
-    #    errmsg = "%s is not a valid newspace label"
-    #flash_error (errmsg, jump)
-    #return redirect(url_for(".index"))
-    pass
 
 class EMF_download(Downloader):
     table = db.mf_newforms
@@ -384,7 +390,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
             raise ValueError("You must use the orbit label when searching by primitive character")
         query[conrey_field] = {'$contains': int(orbit)}
 
-newform_only_fields = ['dim','nf_label','is_cm','cm_disc','is_twist_minimal','has_inner_twist']
+newform_only_fields = ['dim','nf_label','is_cm','cm_disc','is_twist_minimal','has_inner_twist','analytic_rank']
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
@@ -404,6 +410,9 @@ def common_parse(info, query):
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
     parse_bool(info, query, 'char_is_real', name="Character is real")
+
+def newform_parse(info, query):
+    common_parse(info, query)
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool_unknown(info, query, 'is_cm',name='CM form')
@@ -416,7 +425,7 @@ def common_parse(info, query):
              table=db.mf_newforms,
              title='Newform Search Results',
              err_title='Newform Search Input Error',
-             shortcuts={'jump':newform_jump,
+             shortcuts={'jump':jump_box,
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
@@ -424,7 +433,7 @@ def common_parse(info, query):
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
-    common_parse(info, query)
+    newform_parse(info, query)
     set_info_funcs(info)
 
 def set_rows_cols(info, query):
@@ -513,7 +522,7 @@ def dimension_form_search(info, query):
         info['weight'] = '1-12'
     if 'level' not in info:
         info['level'] = '1-24'
-    common_parse(info, query)
+    newform_parse(info, query)
 
 @search_wrap(template="emf_dimension_search_results.html",
              table=db.mf_newspaces,
@@ -536,13 +545,14 @@ def dimension_space_search(info, query):
              table=db.mf_newspaces,
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
-             shortcuts={'jump':space_jump},
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):
-    parse_ints(info, query, 'weight')
-    # ADD MORE
+    common_parse(info, query)
+    parse_ints(info, query, 'dim', name='Dimension')
+    parse_ints(info, query, 'num_forms', name='Number of newforms')
+    set_info_funcs(info)
 
 @emf.route("/Completeness")
 def completeness_page():
@@ -580,7 +590,7 @@ def cm_format(D):
 
 class EMF_stats(StatsDisplay):
     """
-    Class for creating and displaying statistics for genus 2 curves over Q
+    Class for creating and displaying statistics for cuspidal newforms
     """
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
@@ -590,7 +600,7 @@ class EMF_stats(StatsDisplay):
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         stats_url = url_for(".statistics")
         self.short_summary = r'The database currently contains %s newforms of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, weight_knowl, level_knowl, Nk2bound, stats_url)
-        self.summary = r"The database currently contains %s newforms and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, nspaces, weight_knowl, level_knowl, Nk2bound)
+        self.summary = r"The database currently contains %s (Galois orbits of) newforms and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, nspaces, weight_knowl, level_knowl, Nk2bound)
 
     table = db.mf_newforms
     baseurl_func = ".index"
@@ -616,7 +626,8 @@ class EMF_stats(StatsDisplay):
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
          'row_title': 'newforms',
-         'knowl': 'mf.elliptic.galois-orbits'},
+         'knowl': 'mf.elliptic.galois-orbits',
+         'url_extras': 'submit=Spaces&'},
     ]
 
 @emf.route("/stats")
