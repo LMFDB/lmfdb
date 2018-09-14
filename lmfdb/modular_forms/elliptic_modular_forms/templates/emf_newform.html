@@ -24,6 +24,12 @@
     <td>\( {{ newform.weight }} \)</td>
   </tr>
   <tr>
+    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
+    <td> \(A\) </td>
+    <td>=</td>
+    <td>{{ newform.Nk2 }}</td>
+  </tr>
+  <tr>
     <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
@@ -51,8 +57,6 @@
   {% endif %}
 </table>
 
-{% if newform.has_exact_qexp %}
-
 <script>
 function show_qexp(qstyle) {
     $('.smalloutput').hide();
@@ -60,6 +64,7 @@ function show_qexp(qstyle) {
     $('.'+qstyle).show();
   }
 </script>
+{% if newform.has_exact_qexp %}
 
 <div id="qexp">
   <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
@@ -68,18 +73,27 @@ function show_qexp(qstyle) {
   {% endif %}
   <form id="qexp">
     <div class="smalloutput">
-      <span id="small_qexp_display">\(f(q) =\) {{ newform.q_expansion(format='short', prec_max=10) | safe }}</span>
+      <span id="small_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=10) | safe }}</span>
     </div>
     <div class="mediumoutput nodisplay">
-      <span id="medium_qexp_display">\(f(q) =\) {{ newform.q_expansion(format='short', prec_max=100) | safe }}</span>
+      <span id="medium_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=100) | safe }}</span>
     </div>
-<p>
-<div class="toggle">Display precision:
-    <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
-    <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
-</div>
-</p>
-    <button id="download_exact">Download all {{ newform.qexp_prec }}</button>
+    {% if newform.dim > 1 %}
+    <h4> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h4>
+    <div class="smalloutput">
+      <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
+    </div>
+    <div class="mediumoutput nodisplay">
+      <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
+    </div>
+    {% endif %}
+
+    <p>
+      <div class="toggle">Display precision:
+        <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
+        <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
+      </div>
+    </p>
   </form>
 
   <h3> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} </h3>
@@ -106,6 +120,23 @@ function show_qexp(qstyle) {
 {% else %}
 <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
 <p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion.</p>
+
+<form id="qexp">
+  <h4> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h4>
+  <div class="smalloutput">
+    <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
+  </div>
+  <div class="mediumoutput nodisplay">
+    <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
+  </div>
+
+  <p>
+    <div class="toggle">Display precision:
+      <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
+      <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
+    </div>
+  </p>
+</form>
 {% endif %}
 
 <!-- Complex embeddings and Satake parameters -->
