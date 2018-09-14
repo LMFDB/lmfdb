@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: sometimes all angles are zero in hecke_mf_cc, e.g. 11.2.a.a, 1.12.a.a, 17.4.a.b and 17.4.a.a (Edgar)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
 
