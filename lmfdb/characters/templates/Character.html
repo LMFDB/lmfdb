@@ -39,6 +39,7 @@
   <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
 </table>
 
+{% if galoisorbit %}
 
 {# Galois Orbits #}
 
@@ -54,6 +55,7 @@
 </a>
 {% endfor %}
 </p>
+{% endif %} {# galoisorbit #}
 
 {% if orbit_label %}
 <p>
