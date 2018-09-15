@@ -847,13 +847,12 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def galoisorbit(self):
-        if self.modulus > 10000:
-            return
         order = self.order
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order + 1)
+        upper_limit = min(200, order + 1)
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
                   if gcd(k, order) == 1) # use xsrange not xrange
         ret = list(self._char_desc(num, prim=prim) for num in orbit)
         return ret
