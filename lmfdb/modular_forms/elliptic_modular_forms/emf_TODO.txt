@@ -12,7 +12,6 @@ IMPORTANT:
 * form pages: pictures from q-expansion (Drew, John Cremona, Edgar, David)
 * data: add analytic rank (Edgar)
 * add analytic rank to form and stats pages (David)
-* search results: Download search results (David)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
 * verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
@@ -21,29 +20,24 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
 * move everything to classical_modular_forms (David) and e-mail
-* make space search work; update links in stats page (David)
 * Bread for L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/ is broken (Edgar)
 * Problem with Z-function plots (e.g. L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2) (Edgar)
 * L/Plot/ModularForm/GL2/Q/holomorphic/1/18/1/a/1/ doesn't work (Edgar)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
+* search results: Download search results (David)
 * form pages: download to Sage/Magma/pari (stored coefficients) (David)
 * space pages: download to Sage/Magma/pari (download all the data) (David)
+* Knowls for number fields in search results, blank if dim>20, else smarter (David)
+* Knowl expansion is wonky in the search results header, since we've split the header into two rows. (David)
 
 GOOD:
-* Should we say that we sort results by Nk^2?
-* In lists of newforms, if dimension is bigger than 2, should way say something like "q-expansion available on page" rather than leaving it blank?
 * Make sure our description of labels is correct
-* form pages: display trace form
-* Figure out why the AL-signs are opposite the traces of the corresponding a_p
-* Knowls for number fields in search results, blank if dim>20, else smarter (David)
 * data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
-* Formatting of dimension grid
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
-* Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
-* Is listing fricke eigenvalues of use to people? (it makes sense in this context right?) I trust most mathematicians can multiply a string of -1's but it might be useful to be able to search on?
+* Add fricke eigenvalue to mf_newforms and display it.
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
@@ -52,6 +46,7 @@ FORMATTING:
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
+* LMFDB-wide: change sort order in search results
 * form pages: add code snippets
 * space pages: add code snippets
 * knowls: more
@@ -87,6 +82,10 @@ modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('emf.render
 NOT EMF STUFF:
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+
+TO THINK ABOUT:
+* Figure out why the AL-signs are opposite the traces of the corresponding a_p
+* Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
 
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'

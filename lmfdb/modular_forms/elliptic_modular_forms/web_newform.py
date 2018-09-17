@@ -95,20 +95,23 @@ class WebNewform(object):
             else:
                 self.star_twist = 'inner twists*'
 
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an'], sort=['n'])
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an','trace_an'], sort=['n'])
         if eigenvals:  # this should always be true
             self.has_exact_qexp = True
             zero = [0] * self.dim
             self.qexp = [zero]
+            self.texp = [0]
             for i, ev in enumerate(eigenvals):
                 if ev['n'] != i+1:
                     raise ValueError("Missing eigenvalue")
-                if not ev.get('an'):
+                self.texp.append(ev['trace_an'])
+                if ev.get('an'):
+                    self.qexp.append(ev['an'])
+                else:
                     # only had traces
                     self.has_exact_qexp = False
-                    break
-                self.qexp.append(ev['an'])
             self.qexp_prec = len(self.qexp)-1
+            self.texp_prec = len(self.texp)-1
         else:
             self.has_exact_qexp = False
         self.character_values = defaultdict(list)
@@ -159,12 +162,14 @@ class WebNewform(object):
         if cc_data:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
-        self.properties += [('Weight', '%s' % self.weight),
+        self.properties += [('Level', str(self.level)),
+                            ('Weight', str(self.weight)),
+                            ('Analytic Conductor', str(self.Nk2)),
                             ('Character orbit label', '%s.%s' % (self.level, self.char_orbit_label)),
                             ('Representative character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', '%s' % self.dim)]
+                            ('Dimension', str(self.dim))]
         if self.is_cm == 1:
-            self.properties += [('CM discriminant', '%s' % self.__dict__.get('cm_disc'))]
+            self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:
             self.properties += [('CM', 'No')]
 
@@ -301,15 +306,10 @@ class WebNewform(object):
         s += '</table>'
         return s
 
-    def q_expansion(self, format, prec_max=10):
-        # options for format: 'oneline', 'short', 'all'
-        # Display the q-expansion.  If all is False, truncate to a low precision (e.g. 10).  Will be inside \( \).
-        # For now we ignore the format and just print on one line
+    def q_expansion(self, prec_max=10):
+        # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
-            if format == 'all':
-               prec = self.qexp_prec
-            else:
-               prec = min(self.qexp_prec, prec_max)
+            prec = min(self.qexp_prec, prec_max)
             zero = [0] * self.dim
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
@@ -318,6 +318,10 @@ class WebNewform(object):
             return s
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
+
+    def trace_expansion(self, prec_max=10):
+        prec = min(self.texp_prec, prec_max)
+        return web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':

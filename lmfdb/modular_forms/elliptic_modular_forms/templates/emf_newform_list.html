@@ -6,6 +6,7 @@
     <tr class="middle dark">
       <th rowspan=2>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dim.') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='$Nk^2$') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
       <th colspan=4 class="center">Traces</th>
@@ -15,7 +16,7 @@
       {% endif %}
       <th rowspan=2>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
     </tr>
-    <tr>
+    <tr class="dark">
       <th class="right">\(a_2\)</th>
       <th class="right">\(a_3\)</th>
       <th class="right">\(a_5\)</th>
@@ -32,6 +33,7 @@
     <tr>
       <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
       <td> {{ mf.dim }} </td>
+      <td> {{ mf.Nk2 }} </td>
       <td> {{ info.nf_link(mf) | safe }} </td>
       <td> {{ info.cm_link(mf) | safe }}</td>
       <td class="right">\({{ mf.trace_display[0] }}\)</td>
@@ -45,8 +47,14 @@
       {% endfor %}
       {% endif %}
       <td>
+        {% if mf.dim <= 20 %}
+        <a href="{{info.mf_url(mf)}}">
         {% if mf.qexp_display %}
         \({{ mf.qexp_display }}\)
+        {% else %}
+        \(q + \cdots\)
+        {% endif %}
+        </a>
         {% endif %}
       </td>
     </tr>
