@@ -87,7 +87,7 @@ def makeLfromdata(L):
     L.Lhash = data.get('Lhash', None);
     L.algebraic = data.get('algebraic', None)
     L.degree = data.get('degree', None)
-    L.level = data.get('conductor', None)
+    L.level = int(data.get('conductor', None))
     central_character = data.get('central_character', None)
     L.charactermodulus, L.characternumber = central_character.split(".")
     L.charactermodulus = int(L.charactermodulus)

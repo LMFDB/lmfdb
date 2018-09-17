@@ -116,7 +116,7 @@ class WebNewform(object):
             self.has_exact_qexp = False
         self.character_values = defaultdict(list)
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['embedding_index','an','angles'],
+                                             projection=['embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
                                              sort=['embedding_index']))
         if not cc_data:
             self.has_complex_qexp = False
@@ -130,6 +130,7 @@ class WebNewform(object):
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
                 embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
+
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
             self.analytic_shift = [None]
@@ -378,11 +379,15 @@ class WebNewform(object):
         - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
         """
         if n is None:
-            return '?' # FIXME
-        x, y = self.cc_data[m]['an'][n]
-        if format == 'analytic_embed':
-            x *= self.analytic_shift[n]
-            y *= self.analytic_shift[n]
+            x = self.cc_data[m].get('embedding_root_real', None)
+            y = self.cc_data[m].get('embedding_root_imag', None)
+            if x is None or y is None:
+                return '?' # we should never see this if we have an exact qexp
+        else:
+            x, y = self.cc_data[m]['an'][n]
+            if format == 'analytic_embed':
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
         if self.cc_data[m]['real']:
             return self._display_float(x, prec)
         else:
