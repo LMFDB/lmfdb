@@ -111,25 +111,24 @@ class WebNewform(object):
             self.qexp_prec = len(self.qexp)-1
         else:
             self.has_exact_qexp = False
+        self.character_values = defaultdict(list)
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
                                              projection=['embedding_index','an','angles'],
                                              sort=['embedding_index']))
-        if cc_data:
+        if not cc_data:
+            self.has_complex_qexp = False
+        else:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
-        else:
-            self.has_complex_qexp = False
-        self.cc_data = []
-        self.rel_dim = self.dim // self.char_degree
-        for m, embedded_mf in enumerate(cc_data):
-            embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
-            embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
-            embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
-            embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
-            self.cc_data.append(embedded_mf)
-            self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
-        self.character_values = defaultdict(list)
-        if cc_data:
+            self.cc_data = []
+            self.rel_dim = self.dim // self.char_degree
+            for m, embedded_mf in enumerate(cc_data):
+                embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
+                embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
+                embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
+                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
+                self.cc_data.append(embedded_mf)
+                self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
             self.analytic_shift = [None]
             for n in range(1,self.cqexp_prec):
                 self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
