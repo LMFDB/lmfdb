@@ -24,7 +24,7 @@ from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex
 
 import sage
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -54,7 +54,13 @@ def constructor_logger(object, args):
 
 # Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
-    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
+    if type(euler_factors[0][0]) is list:
+        R = CC;
+    else:
+        R = QQ
+
+    PP = PowerSeriesRing(R, 'x', Integer(upperbound).nbits())
+
     result = upperbound * [1]
 
     for i in range(0,len(euler_factors)):
@@ -462,8 +468,6 @@ class Lfunction_from_db(Lfunction):
                                kwargs, 'Lhash')
         self.numcoeff = 30
 
-        
-
         self.__dict__.update(kwargs)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
@@ -501,7 +505,7 @@ class Lfunction_from_db(Lfunction):
                     if obj_exists:
                         lfactors.append((name,  "/" + url))
                     else:
-                        name += '&nbsp;  n/a';
+                        name = '(%s)' % (name)
                         lfactors.append((name, ""))
         return lfactors
 
@@ -602,14 +606,14 @@ class Lfunction_CMF(Lfunction_from_db):
     Compulsory parameters: weight
                            level
                            character
-                           label
+                           hecke_orbit
                            number
     """
 
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct classical modular form L-function.',
-                               kwargs, 'weight','level','character','label','number')
+                               kwargs, 'weight','level','character','hecke_orbit','number')
         validate_integer_args('Unable to construct classical modular form L-function.',
                               kwargs, 'weight','level','character','number')
         for key in ['weight','level','character','number']:
@@ -617,13 +621,12 @@ class Lfunction_CMF(Lfunction_from_db):
         self.kwargs = kwargs
         # Put the arguments in the object dictionary
         self.__dict__.update(kwargs)
-        self.label_args = (self.level, self.weight, self.character, self.label, self.number)
+        self.label_args = (self.level, self.weight, self.character, self.hecke_orbit, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
         self.Lhash = get_instance_by_url(self.url)['Lhash']
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
-        #self.label =  ".".join(map(str, self.label_args))
 
-        self.numcoeff = 10
+        self.numcoeff = 30
         self.instances = None
 
     def Ltype(self):
@@ -631,7 +634,7 @@ class Lfunction_CMF(Lfunction_from_db):
 
     @property
     def origin_label(self):
-        return ".".join(map(str, (self.level, self.weight, self.character, self.label, self.number)))
+        return ".".join(map(str, (self.level, self.weight, self.character, self.hecke_orbit, self.number)))
 
     @property
     def bread(self):
@@ -643,11 +646,58 @@ class Lfunction_CMF(Lfunction_from_db):
             self.weight, self.level, chilatex)
 
         self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-        #self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        #self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
-        #self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+
 
 #############################################################################
+
+class Lfunction_CMF_orbit(Lfunction_from_db):
+    """Class representing an classical modular form L-function
+
+    Compulsory parameters: weight
+                           level
+                           char_orbit_label
+                           hecke_orbit
+    """
+
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct classical modular form L-function.',
+                               kwargs, 'weight','level','char_orbit_label','hecke_orbit')
+        validate_integer_args('Unable to construct classical modular form L-function.',
+                              kwargs, 'weight','level')
+        for key in ['weight','level','character','number']:
+            kwargs[key] = int(kwargs[key])
+        self.kwargs = kwargs
+        # Put the arguments in the object dictionary
+        self.__dict__.update(kwargs)
+        self.label_args = (self.level, self.weight, self.char_orbit_label, self.hecke_orbit)
+        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args
+        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+        #self.label =  ".".join(map(str, self.label_args))
+
+        self.numcoeff = 30
+        self.instances = None
+
+    def Ltype(self):
+        return  "classical modular form"
+
+    @property
+    def origin_label(self):
+        return ".".join(map(str, (self.level, self.weight, self.character, self.hecke_orbit, self.number)))
+
+    @property
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+
+    def _set_title(self):
+        chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s, level %s, and %s" % (
+            self.weight, self.level, chilatex)
+
+        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+
+#################################################################################################
 
 
 class Lfunction_EC(Lfunction):

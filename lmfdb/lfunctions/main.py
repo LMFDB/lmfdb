@@ -255,31 +255,31 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 
 
 # L-function of Cusp form ############################################
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/<int:number>/")
-def l_function_cmf_page(level, weight, character, label, number):
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
+def l_function_cmf_page(level, weight, character, hecke_orbit, number):
     args = {'level': level, 'weight': weight, 'character': character,
-            'label': label, 'number': number}
+            'hecke_orbit': hecke_orbit, 'number': number}
     return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
-def l_function_cmf_redirect_1(level, weight, character, label):
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
+def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label=label, number=1), code=301)
+                                  character=character, hecke_orbit=hecke_orbit, number=1), code=301)
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<label>/")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
 def l_function_cmf_redirect_1a(level, weight, char_orbit_label, label):
     from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
     character = minimal_conrey_in_character_orbit(level, weight, char_orbit_label)
     if character is None:
         return flask.abort(404)
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label=label, number=1), code=301)
+                                  character=character, hecke_orbit=hecke_orbit, number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_2(level, weight, character):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label='a', number=1), code=301)
+                                  character=character, hecke_orbit='a', number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
 def l_function_cmf_redirect_2a(level, weight, char_orbit_label):
@@ -288,12 +288,12 @@ def l_function_cmf_redirect_2a(level, weight, char_orbit_label):
     if character is None:
         return flask.abort(404)
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label='a', number=1), code=301)
+                                  character=character, hecke_orbit='a', number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
 def l_function_cmf_redirect_3(level, weight):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=1, label='a', number=1), code=301)
+                                  character=1, hecke_orbit='a', number=1), code=301)
 
 
 # L-function of Hilbert modular form ###########################################

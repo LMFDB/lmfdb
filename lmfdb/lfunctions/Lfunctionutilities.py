@@ -936,10 +936,21 @@ def name_and_object_from_url(url):
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
-                conreynewform_label = ".".join(url_split[-5:-1])
-                name =  'Modular form ' + conreynewform_label;
-                obj_exists = newform_conrey_exists(conreynewform_label)
+                if len(url_split) == 9:
+                    # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
+                    conrey_newform_label = ".".join(url_split[-5:-1])
+                    name =  'Modular form ' + conrey_newform_label + "." + url_split[-1];
+                    obj_exists = newform_conrey_exists(conrey_newform_label)
+                elif len(url_split) == 8:
+                    # ModularForm/GL2/Q/holomorphic/24/2/f/a/
+                    newform_label = ".".join(url_split[-4:])
+                    name =  'Modular form ' + newform_label;
+                    obj_exists = db.mf_newforms.label_exists(newform_label)
+                else:
+                    obj_exists = False
+                    name = "??"
+
+
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a

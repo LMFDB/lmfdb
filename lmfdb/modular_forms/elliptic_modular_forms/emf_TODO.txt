@@ -1,9 +1,8 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: conductor type must be changed from bigint to numeric (Edgar)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
-* data: L/ModularForm/GL2/Q/holomorphic/49/2/8/b/1/ the conjugate is wrong (Edgar)
+* data: L/ModularForm/GL2/Q/holomorphic/29/2/4/a/1/, L/ModularForm/GL2/Q/holomorphic/49/2/8/b/1/ the conjugate is wrong (Edgar)
 
 IMPORTANT:
 * Check definition of trace bound mf.elliptic.trace_bound (Drew)
