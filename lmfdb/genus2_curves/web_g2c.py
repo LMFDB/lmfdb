@@ -119,7 +119,6 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
     outstr = ''
-    x = var('x')
     for v in sfacts_fc:
         this_poly = v[0]
         # if the factor is -1+T^2, replace it by 1-T^2
@@ -129,8 +128,8 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T'):
             v[0] = this_poly
         if galois:
             this_degree = this_poly.degree()
-                # hack because currently sage only handles monic polynomials:
-            this_poly = expand(x**this_degree*this_poly.substitute(T=1/x))
+            # hack because currently sage only handles monic polynomials:
+            this_poly = this_poly.reverse()
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
             this_t_number = this_gal.group().__pari__()[2].sage()

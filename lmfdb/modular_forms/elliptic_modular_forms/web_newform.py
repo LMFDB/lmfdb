@@ -208,6 +208,8 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
+        #FIXME, only if dim small enough
+        res.append(('L-function ' + self.label, '/L' + ns_url + '/' + hecke_letter))
         for character in self.char_labels:
             for j in range(self.dim/self.char_degree):
                 label = base_label + [str(character), hecke_letter, str(j + 1)]
@@ -381,6 +383,8 @@ class WebNewform(object):
         if n is None:
             x = self.cc_data[m].get('embedding_root_real', None)
             y = self.cc_data[m].get('embedding_root_imag', None)
+            #FIXME
+            prec = 4
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:

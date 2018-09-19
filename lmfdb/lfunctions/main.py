@@ -2,7 +2,7 @@
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import plot, srange, spline, line
+from sage.all import plot, srange, spline, line, latex, is_prime, golden_ratio
 
 import tempfile
 import os
@@ -13,7 +13,7 @@ import numpy
 import LfunctionPlot
 
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
-                       Lfunction_CMF,
+                       Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
@@ -268,32 +268,27 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
                                   character=character, hecke_orbit=hecke_orbit, number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
-def l_function_cmf_redirect_1a(level, weight, char_orbit_label, label):
-    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
-    character = minimal_conrey_in_character_orbit(level, weight, char_orbit_label)
-    if character is None:
-        return flask.abort(404)
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, hecke_orbit=hecke_orbit, number=1), code=301)
+def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
+    args = {'level': level,
+            'weight': weight,
+            'char_orbit_label': char_orbit_label,
+            'hecke_orbit': hecke_orbit}
+    return render_single_Lfunction(Lfunction_CMF_orbit, args, request)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
-def l_function_cmf_redirect_2(level, weight, character):
+def l_function_cmf_redirect_a1(level, weight, character):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
                                   character=character, hecke_orbit='a', number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
-def l_function_cmf_redirect_2a(level, weight, char_orbit_label):
-    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
-    character = minimal_conrey_in_character_orbit(level, weight, char_orbit_label)
-    if character is None:
-        return flask.abort(404)
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, hecke_orbit='a', number=1), code=301)
+def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
+    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                                  char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
-def l_function_cmf_redirect_3(level, weight):
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=1, hecke_orbit='a', number=1), code=301)
+def l_function_cmf_orbit_redirecit_aa(level, weight):
+    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                                  char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
 # L-function of Hilbert modular form ###########################################
@@ -470,7 +465,16 @@ def set_gaga_properties(L):
     '''
     ans = [('Degree', str(L.degree))]
 
-    ans.append(('Conductor', str(L.level)))
+    if not is_prime(int(L.level)):
+        if hasattr(L, 'level_factored'):
+            conductor_str = latex(L.level_factored)
+        else:
+            conductor_str =  latex(factor(int(L.level)))
+        conductor_str = "$ %s $" % conductor_str
+    else:
+        conductor_str = str(L.level)
+
+    ans.append(('Conductor', conductor_str))
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
@@ -851,6 +855,9 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         return ""
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
+        # decrease maximal plotrange for high degree
+        if pythonL.degree > 4:
+            plotrange /= pythonL.degree/4
         F = p2sage(pythonL.plotpoints)
         plotrange = min(plotrange, F[-1][0]) #  F[-1][0] is the highest t-coordinated that we have a value for L
     else:
@@ -859,7 +866,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         if not hasattr(L, "hardy_z_function"):
             return None
         plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve"]:
+        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve", "classical modular form", "classical modular form orbit"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
     interpolation = spline(F)
@@ -879,6 +886,13 @@ def styleLfunctionPlot(p, fontsize):
     p.axes_color((0.5,0.5,0.5))
     p.tick_label_color((0.5,0.5,0.5))
     p.axes_width(0.2)
+    xwidth = p.xmax() - p.xmin()
+    ywidth = p.ymax() - p.ymin()
+    ratio = ywidth/xwidth
+    if ratio*golden_ratio > 1:
+        p.ymin(-xwidth/(2*golden_ratio))
+        p.ymax(xwidth/(2*golden_ratio))
+
 
 
 def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
@@ -949,7 +963,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
-        return Lfunction_CMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
+        if arg9 is not None:
+            return Lfunction_CMF(level=arg5, weight=arg6, character=arg7, hecke_orbit=arg8, number=arg9)
+        else:
+            return Lfunction_CMF_orbit(level=arg5, weight=arg6, char_orbit_label=arg7, hecke_orbit=arg8)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)

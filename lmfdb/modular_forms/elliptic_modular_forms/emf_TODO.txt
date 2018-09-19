@@ -28,6 +28,7 @@ IMPORTANT:
 * space pages: download to Sage/Magma/pari (download all the data) (David)
 * Knowls for number fields in search results, blank if dim>20, else smarter (David)
 * Knowl expansion is wonky in the search results header, since we've split the header into two rows. (David)
+* the root embedding only has 6 decimal digits, we should display them accordingly (Edgar)
 
 GOOD:
 * Make sure our description of labels is correct
@@ -40,7 +41,7 @@ GOOD:
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
-* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
+* figure out how to display euler factors of large degree
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)

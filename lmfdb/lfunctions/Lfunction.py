@@ -24,7 +24,7 @@ from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex
 
 import sage
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -54,11 +54,10 @@ def constructor_logger(object, args):
 
 # Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
-    if type(euler_factors[0][0]) is list:
-        R = CC;
+    if type(euler_factors[0][0]) is int:
+        R = ZZ
     else:
-        R = QQ
-
+        R = euler_factors[0][0].parent()
     PP = PowerSeriesRing(R, 'x', Integer(upperbound).nbits())
 
     result = upperbound * [1]
@@ -90,10 +89,12 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data.get('Lhash', None);
-    L.algebraic = data.get('algebraic', None)
-    L.degree = data.get('degree', None)
-    L.level = int(data.get('conductor', None))
+    L.Lhash = data.get('Lhash');
+    L.algebraic = data.get('algebraic')
+    L.degree = data.get('degree')
+    L.level = int(data.get('conductor'))
+    L.level_factored = factor(L.level)
+
     central_character = data.get('central_character', None)
     L.charactermodulus, L.characternumber = central_character.split(".")
     L.charactermodulus = int(L.charactermodulus)
@@ -105,6 +106,8 @@ def makeLfromdata(L):
     else:
         assert data.get('sign_arg', None) is not None
         L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
+    if L.selfdual:
+        L.sign = int(real_part(L.sign))
     L.st_group = data.get('st_group', '')
     L.order_of_vanishing = data.get('order_of_vanishing', None)
     L.analytic_normalization = float(data.get('analytic_normalization', None))
@@ -121,6 +124,7 @@ def makeLfromdata(L):
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # Optional properties
+    L.coefficient_field = data.get('coefficient_field', None)
     L.motivic_weight = data.get('motivic_weight', None)
     if L.motivic_weight is None:
         L.motivic_weight = ''
@@ -141,13 +145,22 @@ def makeLfromdata(L):
     if data.get('credit', None) is not None:
         L.credit = data.get('credit', None)
 
+
     # Dirichlet coefficients
+    L.localfactors = data.get('euler_factors', None)
+    L.bad_lfactors = data.get('bad_lfactors', None)
+    if L.coefficient_field == "CDF":
+        # convert pairs of doubles to CDF
+        pairtoCDF = lambda x: CDF(tuple(x))
+        L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
+        L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
+
+
     if data.get('dirichlet_coefficients', None) is not None:
         L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
-        L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
-            data.get('euler_factors', None)), 2*L.degree*L.numcoeff)
+        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
         count = 0;
@@ -172,11 +185,7 @@ def makeLfromdata(L):
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
 
-    L.localfactors = p2sage(data.get('euler_factors', None))
-    # Currently the database stores the bad_lfactors as a list and the euler_factors
-    # as a string.  Those should be the same.  Once that change is made, either the
-    # line above or the line below will break.  (DF and SK, Aug 4, 2015)
-    L.bad_lfactors = data.get('bad_lfactors', None)
+    
 
     # Configure the data for the zeros
 
@@ -215,16 +224,24 @@ def makeLfromdata(L):
 
     # Configure the data for the plot
     plot_delta = float(data['plot_delta'])
-    pos_plot = [[j * plot_delta, string2number(elt)]
-                          for j, elt in enumerate( data['plot_values'] )]
+    if type(data['plot_values'][0]) is str:
+        plot_values = [string2number(elt) for elt in data['plot_values']]
+    else:
+        plot_values = data['plot_values']
+    pos_plot = [[j * plot_delta, elt]
+                          for j, elt in enumerate( plot_values )]
 
     if L.selfdual:
         neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
+        if type(dual_L_data['plot_values'][0]) is str:
+            dual_plot_values = [string2number(elt) for elt in dual_L_data['plot_values']]
+        else:
+            dual_plot_values = dual_L_data['plot_values']
         dual_plot_delta = float(dual_L_data['plot_delta'])
-        neg_plot = [[-j * dual_plot_delta, string2number(elt)]
-                for j, elt in enumerate(dual_L_data['plot_values']) ][1:]
+        neg_plot = [[-j * dual_plot_delta, elt]
+                for j, elt in enumerate(dual_plot_values) ][1:]
     neg_plot.reverse()
     L.plotpoints = neg_plot + pos_plot
 
@@ -542,6 +559,7 @@ class Lfunction_from_db(Lfunction):
         If `charactermodulus` and `characternumber` are defined, make a title
         which includes the character. Otherwise, make a title without character.
         '''
+        conductor_str = "$ %s $" % latex(self.level_factored)
         try:
             chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
         except KeyError:
@@ -551,13 +569,13 @@ class Lfunction_from_db(Lfunction):
                     " of degree {degree}, weight {weight},"
                     " conductor {conductor}, and character {character}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=self.level, character=chilatex)
+                            conductor=conductor_str, character=chilatex)
         else:
             title_end = (
                     " of degree {degree}, weight {weight},"
                     " and conductor {conductor}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=self.level)
+                            conductor=conductor_str)
         self.info['title_arithmetic'] = ("L-function" + title_end)
         self.info['title_analytic'] = ("L-function" + title_end)
         return
@@ -665,7 +683,7 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
                                kwargs, 'weight','level','char_orbit_label','hecke_orbit')
         validate_integer_args('Unable to construct classical modular form L-function.',
                               kwargs, 'weight','level')
-        for key in ['weight','level','character','number']:
+        for key in ['weight','level']:
             kwargs[key] = int(kwargs[key])
         self.kwargs = kwargs
         # Put the arguments in the object dictionary
@@ -674,26 +692,26 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args
         self.Lhash = get_instance_by_url(self.url)['Lhash']
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
-        #self.label =  ".".join(map(str, self.label_args))
 
         self.numcoeff = 30
         self.instances = None
 
     def Ltype(self):
-        return  "classical modular form"
+        return  "classical modular form orbit"
 
     @property
     def origin_label(self):
-        return ".".join(map(str, (self.level, self.weight, self.character, self.hecke_orbit, self.number)))
+        return ".".join(map(str, (self.level, self.weight, self.char_orbit_label, self.hecke_orbit)))
 
     @property
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
     def _set_title(self):
+        conductor_str = "$ %s $" % latex(self.level_factored)
         chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
         title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s, level %s, and %s" % (
-            self.weight, self.level, chilatex)
+            self.weight, conductor_str, chilatex)
 
         self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
 
