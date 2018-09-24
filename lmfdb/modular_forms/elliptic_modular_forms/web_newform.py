@@ -118,13 +118,13 @@ class WebNewform(object):
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
                                              projection=['embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
                                              sort=['embedding_index']))
+        self.rel_dim = self.dim // self.char_degree
         if not cc_data:
             self.has_complex_qexp = False
         else:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
             self.cc_data = []
-            self.rel_dim = self.dim // self.char_degree
             for m, embedded_mf in enumerate(cc_data):
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
@@ -208,12 +208,15 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        for character in self.char_labels:
-            for j in range(self.dim/self.char_degree):
-                label = base_label + [str(character), hecke_letter, str(j + 1)]
-                lfun_label = '.'.join(label)
-                lfun_url =  '/L' + cmf_base + '/'.join(label)
-                res.append(('L-function ' + lfun_label, lfun_url))
+        #FIXME, only if dim small enough
+        res.append(('L-function ' + self.label, '/L' + ns_url + '/' + hecke_letter))
+        if self.dim > 1:
+            for character in self.char_labels:
+                for j in range(self.dim/self.char_degree):
+                    label = base_label + [str(character), hecke_letter, str(j + 1)]
+                    lfun_label = '.'.join(label)
+                    lfun_url =  '/L' + cmf_base + '/'.join(label)
+                    res.append(('L-function ' + lfun_label, lfun_url))
         return res
 
     @staticmethod

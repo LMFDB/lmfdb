@@ -1,6 +1,7 @@
 # Functions for fetching L-function data from databases
 
 from lmfdb.db_backend import db
+from sage.all import RealField
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
@@ -26,10 +27,15 @@ def get_lfunction_by_url(url):
     return Ldata
 
 def fix_Ldata(Ldata):
-    if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
-        central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
+    leading_term = Ldata.get('leading_term', None)
+    if Ldata['order_of_vanishing'] > 1:
+        value =  0
+    elif leading_term is not None:
+        value =  Ldata['leading_term']
     else:
-        central_value = [0.5 + 0.5*Ldata['motivic_weight'], Ldata['leading_term']]
+        # we use the plot_values
+        value = Ldata['plot_values'][0]
+    central_value = [0.5 + 0.5*Ldata['motivic_weight'], value]
     if 'values' not in Ldata:
         Ldata['values'] = [ central_value ]
     else:

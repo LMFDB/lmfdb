@@ -182,7 +182,9 @@ function show_qexp(qstyle) {
       <td{% if not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ newform.conrey_from_embedding(m) }}</td>
       {% endif %}
       {% if newform.has_exact_qexp %}
-      <td class="middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
+      <td class="middle border-right">
+        \( {{ newform.embedding(m,prec=info.prec,format=info.format) }} \)
+      </td>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}

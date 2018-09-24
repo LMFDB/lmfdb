@@ -1,9 +1,8 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: conductor type must be changed from bigint to numeric (Edgar)
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar)
-* data: L/ModularForm/GL2/Q/holomorphic/49/2/8/b/1/ the conjugate is wrong (Edgar)
+* data: L/ModularForm/GL2/Q/holomorphic/29/2/4/a/1/, L/ModularForm/GL2/Q/holomorphic/49/2/8/b/1/ the conjugate is wrong (Edgar)
 
 IMPORTANT:
 * Check definition of trace bound mf.elliptic.trace_bound (Drew)
@@ -29,6 +28,7 @@ IMPORTANT:
 * space pages: download to Sage/Magma/pari (download all the data) (David)
 * Knowls for number fields in search results, blank if dim>20, else smarter (David)
 * Knowl expansion is wonky in the search results header, since we've split the header into two rows. (David)
+* the root embedding only has 6 decimal digits, we should display them accordingly (Edgar)
 
 GOOD:
 * Make sure our description of labels is correct
@@ -41,7 +41,7 @@ GOOD:
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
-* form pages: when dimension large, the related objects sidebar runs into the complex eigenvalues (e.g. 83.2.c.a).  Make the related objects have a max height so that it scrolls (Edgar)
+* figure out how to display euler factors of large degree
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
