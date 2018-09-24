@@ -233,7 +233,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
                   # yes, em is not the right tag, but it is styled with CSS
         else:
             if seriescoefftype == "series":
-                return(ans + truncate_number(ip, precision) + "i " + seriesvar(index, seriestype))
+                return(ans + "+" + truncate_number(ip, precision) + "i " + seriesvar(index, seriestype))
             elif seriescoefftype == "serieshtml":
                 return(ans + " + " + truncate_number(ip, precision) + "<em>i</em> " + "&middot;" + seriesvar(index, seriestype))
             elif seriescoefftype == "signed":
@@ -374,7 +374,8 @@ def lfuncEPtex(L, fmt):
     """ Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
-    if L.Ltype() in ["genus2curveQ", "ellipticcurve", "classical modular form", "classical modular form orbit"] and fmt == "arithmetic":
+    from Lfunction import Lfunction_from_db
+    if (L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db)) and fmt == "arithmetic":
         return lfuncEPhtml(L, fmt)
 
     ans = ""
