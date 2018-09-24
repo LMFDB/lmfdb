@@ -523,12 +523,29 @@ def set_bread_and_friends(L, request):
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.path)])
 
-    elif L.Ltype() in ['ellipticcurve', "classical modular form", "general"]:
+    elif isinstance(L, Lfunction_from_db):
         bread = L.bread + [(L.origin_label, request.path)]
         origins = L.origins
         friends = L.friends
         factors = L.factors
         instances = L.instances
+
+        def numerically_sort(pair):
+            name, url = pair
+            def try_int(foo):
+                try:
+                    return int(foo)
+                except:
+                    return foo
+
+            name_split = name.split(' ')
+            category = ' '.join(name_split[:-1])
+            label = map(try_int, name_split[-1].split('.'))
+            return category, label
+
+        for elt in [origins, friends, factors, instances]:
+            if elt is not None:
+                elt.sort(key=numerically_sort)
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -855,11 +872,17 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         return ""
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
-        # decrease maximal plotrange for high degree
-        if pythonL.degree > 4:
-            plotrange /= pythonL.degree/4
         F = p2sage(pythonL.plotpoints)
         plotrange = min(plotrange, F[-1][0]) #  F[-1][0] is the highest t-coordinated that we have a value for L
+        # aim to display at most 25 axis crossings
+        if hasattr(pythonL, 'positive_zeros'):
+            # we stored them ready to display
+            zeros = map(float, pythonL.positive_zeros.split(","))
+            if len(zeros) >= 25:
+                zero_range = zeros[24]
+            else:
+                zero_range = zeros[-1]*25/len(zeros)
+            plotrange = min(plotrange, zero_range)
     else:
      # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
@@ -869,10 +892,10 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve", "classical modular form", "classical modular form orbit"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
+
     interpolation = spline(F)
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     p = line(F_interp)
-#    p = line(F)    # temporary hack while the correct interpolation is being implemented
 
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
@@ -886,12 +909,6 @@ def styleLfunctionPlot(p, fontsize):
     p.axes_color((0.5,0.5,0.5))
     p.tick_label_color((0.5,0.5,0.5))
     p.axes_width(0.2)
-    xwidth = p.xmax() - p.xmin()
-    ywidth = p.ymax() - p.ymin()
-    ratio = ywidth/xwidth
-    if ratio*golden_ratio > 1:
-        p.ymin(-xwidth/(2*golden_ratio))
-        p.ymax(xwidth/(2*golden_ratio))
 
 
 
