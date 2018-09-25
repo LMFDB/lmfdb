@@ -18,7 +18,7 @@ IMPORTANT:
 * form pages: pictures from q-expansion (Drew, John Cremona, Edgar, David)
 * add analytic rank to form and stats pages (David)
 * form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
-* verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Edgar)
+* fix and verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues, think about whether to truncate or round (David)
 * form pages: Label headers for complex eigenvalues: chi, m (Edgar, David)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (Drew)
@@ -93,8 +93,6 @@ TO THINK ABOUT:
 
 PROBABLY DONE:
 * throughout: work with labels e.g. '11.2.a.a'
-* navigation: reroute N/k/(conrey char label)/(Hecke orbit label)/(embedding)/ -> N/k/(char orbit label)/(Hecke orbit label)/
-* navigation: reroute L/../N/k/(char orbit label)/(Hecke orbit label)/ -> L/../N/k/(min conrey char label)/(Hecke orbit label)/1/
 * L-function pages: make sure L-function links with orbits works
 * space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
