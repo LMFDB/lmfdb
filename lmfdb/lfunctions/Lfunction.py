@@ -589,7 +589,7 @@ class Lfunction_from_db(Lfunction):
                     " of degree {degree}, weight {weight},"
                     " conductor {conductor}, and {character}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=conductor_str, character=chilatex)
+                            conductor=conductor_str, character=self.chilatex)
         else:
             title_end = (
                     " of degree {degree}, weight {weight},"
