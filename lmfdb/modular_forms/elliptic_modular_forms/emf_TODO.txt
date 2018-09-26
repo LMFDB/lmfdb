@@ -47,10 +47,10 @@ GOOD:
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * Change q+... in search results to something better
-* horizontal scroll on the euler factors box or knowl
-* move show more to the left of the euler factors box
+* horizontal scroll on the euler factors box or knowl  (Edgar)
+* move show more to the left of the euler factors box  (Edgar)
 * Euler factors sometimes have a dot, other times they don't (Edgar)
-* do not display L-plot's for high enough degree
+* do not display L-plot's for high enough degree (Edgar)
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
