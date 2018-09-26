@@ -21,7 +21,7 @@ from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, ge
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, key_for_numerically_sort
 
 import sage
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part
@@ -526,19 +526,7 @@ class Lfunction_from_db(Lfunction):
                     else:
                         name = '(%s)' % (name)
                         lfactors.append((name, ""))
-        def numerically_sort(pair):
-            name, url = pair
-            def try_int(foo):
-                try:
-                    return int(foo)
-                except:
-                    return foo
-
-            name_split = name.split(' ')
-            category = ' '.join(name_split[:-1])
-            label = map(try_int, name_split[-1].split('.'))
-            return category, label
-        lfactors.sort(key=numerically_sort)
+        lfactors.sort(key=lambda x: key_for_numerically_sort(x[0]))
         return lfactors
 
 

@@ -32,6 +32,15 @@ from lmfdb.base import app, ctx_proc_userdata
 #   number utilities
 ################################################################################
 
+def try_int(foo):
+    try:
+        return int(foo)
+    except Exception:
+        return foo
+
+def key_for_numerically_sort(elt):
+    return map(try_int, elt.split("."))
+
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=sage.rings.all.RationalField()):
     """

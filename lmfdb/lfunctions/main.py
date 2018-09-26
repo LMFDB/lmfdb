@@ -23,11 +23,10 @@ from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
-from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
-from lmfdb.utils import signtocolour, rgbtohex
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -530,22 +529,9 @@ def set_bread_and_friends(L, request):
         factors = L.factors
         instances = L.instances
 
-        def numerically_sort(pair):
-            name, url = pair
-            def try_int(foo):
-                try:
-                    return int(foo)
-                except:
-                    return foo
-
-            name_split = name.split(' ')
-            category = ' '.join(name_split[:-1])
-            label = map(try_int, name_split[-1].split('.'))
-            return category, label
-
         for elt in [origins, friends, factors, instances]:
             if elt is not None:
-                elt.sort(key=numerically_sort)
+                elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
