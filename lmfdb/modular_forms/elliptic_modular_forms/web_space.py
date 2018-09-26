@@ -6,6 +6,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from sage.all import latex, ZZ
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
+from lmfdb.utils import key_for_numerically_sort
 from flask import url_for
 import re
 from collections import defaultdict
@@ -231,6 +232,7 @@ class WebGamma1Space(object):
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
             raise ValueError("Space not in database")
+        newspaces.sort(key = lambda x : x['label'])
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)

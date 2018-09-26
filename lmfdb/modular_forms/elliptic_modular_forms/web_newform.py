@@ -208,8 +208,9 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        #FIXME, only if dim small enough
-        res.append(('L-function ' + self.label, '/L' + ns_url + '/' + hecke_letter))
+        nf_url = ns_url + '/' + hecke_letter
+        if db.lfunc_instances.exists({'url': nf_url}):
+            res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
             for character in self.char_labels:
                 for j in range(self.dim/self.char_degree):
