@@ -2,7 +2,7 @@
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import plot, srange, spline, line, latex, is_prime, golden_ratio
+from sage.all import plot, srange, spline, line, latex, is_prime,  factor
 
 import tempfile
 import os
@@ -450,12 +450,11 @@ def initLfunction(L, args, request):
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
-    if len(request.args) == 0:
-        lcalcUrl = request.path + '?download=lcalcfile'
-    else:
-        lcalcUrl = request.path + '&download=lcalcfile'
-
     #FIXME, can we disable this?
+    #if len(request.args) == 0:
+    #    lcalcUrl = request.path + '?download=lcalcfile'
+    #else:
+    #    lcalcUrl = request.path + '&download=lcalcfile'
     #info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 

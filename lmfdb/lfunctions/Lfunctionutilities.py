@@ -4,7 +4,7 @@ import re
 from lmfdb.lfunctions import logger
 from flask import url_for
 import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
@@ -409,7 +409,7 @@ def lfuncEPhtml(L,fmt):
         bad_primes.append(lf[0])
     eulerlim = 25
     good_primes = []
-    for p in primes_first_n(25):
+    for p in primes_first_n(eulerlim):
         if p not in bad_primes:
             good_primes.append(p)
 
@@ -616,10 +616,10 @@ def lfuncFEtex(L, fmt):
         ans += "("
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
-                prec = len(str(L.mu_fe[mu]))
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", 3) + ", "
-            prec = len(str(L.mu_fe[-1]))
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", 3)
+                prec = len(str(L.mu_fe[mu]).split('.')[-1])
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", prec) + ", "
+            prec = len(str(L.mu_fe[-1]).split('.')[-1])
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", prec)
         else:
             ans += "\\ "
         ans += ":"
@@ -686,10 +686,10 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
     if hasattr(L,"lfunc_data"):
         s_alg = s + p2sage(L.lfunc_data['analytic_normalization'])
         if 'values' in L.lfunc_data.keys():
-            for x in p2sage(L.lfunc_data['values']):
+            for x in L.lfunc_data['values']:
             # the numbers here are always half integers
             # so this comparison is exact
-                if x[0] == s_alg:
+                if p2sage(x[0]) == s_alg:
                     val = x[1]
                     break
     if val is None:
@@ -697,20 +697,22 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
             val = "not computed"
         else:
             val = L.sageLfunction.value(s)
-    # We must test for NaN first, since it would show as zero otherwise
-    # Try "RR(NaN) < float(1e-10)" in sage -- GT
 
     lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
     lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
-
     try:
-        if CC(val).real().is_NaN():
+        ccval = CDF(string2number(val))
+        # We must test for NaN first, since it would show as zero otherwise
+        # Try "RR(NaN) < float(1e-10)" in sage -- GT
+        if ccval.real().is_NaN():
             Lval = "\\infty"
-        elif val.abs() < 10**(-number_of_decimals):
+        elif ccval.abs() < 10**(-number_of_decimals):
             Lval = "0"
         else:
-            Lval = latex(round(val.real(), number_of_decimals)
-                         + round(val.imag(), number_of_decimals) * I)
+            if type(val) is str and '.' in val and "I" not in val:
+                val_decimals = len(val.rstrip(' ').split('.')[-1])
+                number_of_decimals = min(number_of_decimals, val_decimals)
+            Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
     except (TypeError, NameError):
         Lval = val    # if val is text
 
