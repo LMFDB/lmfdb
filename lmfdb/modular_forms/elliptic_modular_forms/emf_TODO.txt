@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 * knowls: rigor, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
-* data: L/ModularForm/GL2/Q/holomorphic/29/2/4/a/1/, L/ModularForm/GL2/Q/holomorphic/49/2/8/b/1/, L/ModularForm/GL2/Q/holomorphic/31/4/28/a/2 the conjugate is wrong (Edgar)
 
 
 On data updates:
@@ -51,6 +50,7 @@ FORMATTING:
 * move show more to the left of the euler factors box  (Edgar)
 * Euler factors sometimes have a dot, other times they don't (Edgar)
 * do not display L-plot's for high enough degree (Edgar)
+* do we really want to skip the orbits that are empty by parity reasons, is a bit odd to see "c" missing here:http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/25/2/
 
 IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)

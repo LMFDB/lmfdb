@@ -27,6 +27,7 @@ from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
+from lmfdb.base import is_debug_mode
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -404,7 +405,8 @@ def render_single_Lfunction(Lclass, args, request):
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
     except (ValueError, KeyError, TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         raise
-        return render_lfunction_exception(err)
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.path)
@@ -842,7 +844,9 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     try:
         data = getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
-        return render_lfunction_exception(err)
+        raise
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
         return flask.abort(404)
@@ -904,7 +908,9 @@ def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg
     try:
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     except Exception as err:
-        return render_lfunction_exception(err)
+        raise
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
 
     if not L:
         return flask.abort(404)
