@@ -660,8 +660,9 @@ class WebChar(WebCharObject):
         if self.parity:
             f.append(("Parity", [self.parity]))
         try:
-            formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
-            f.append(("Orbit Label", [formatted_orbit_label]))
+            if self.orbit_label:
+                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
+                f.append(("Orbit Label", [formatted_orbit_label]))
         except KeyError:
             pass
         return f
@@ -850,12 +851,16 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order + 1)
+        upper_limit = min(200, order + 1)
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
                   if gcd(k, order) == 1) # use xsrange not xrange
-        return list(self._char_desc(num, prim=prim) for num in orbit)
+        ret = list(self._char_desc(num, prim=prim) for num in orbit)
+        return ret
 
     @property
     def orbit_label(self):
+        if self.modulus > 10000:
+            return
         # Shortcut the trivial character, which behaves differently
         if self.conductor == 1:
             return 'a'

@@ -2,7 +2,7 @@
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import plot, srange, spline, line
+from sage.all import plot, srange, spline, line, latex, is_prime,  factor
 
 import tempfile
 import os
@@ -13,7 +13,7 @@ import numpy
 import LfunctionPlot
 
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
-                       Lfunction_CMF,
+                       Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
@@ -23,11 +23,11 @@ from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
-from lmfdb.utils import to_dict
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
-from lmfdb.utils import signtocolour, rgbtohex
+from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
+from lmfdb.base import is_debug_mode
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -255,45 +255,40 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 
 
 # L-function of Cusp form ############################################
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/<int:number>/")
-def l_function_cmf_page(level, weight, character, label, number):
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
+def l_function_cmf_page(level, weight, character, hecke_orbit, number):
     args = {'level': level, 'weight': weight, 'character': character,
-            'label': label, 'number': number}
+            'hecke_orbit': hecke_orbit, 'number': number}
     return render_single_Lfunction(Lfunction_CMF, args, request)
 
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<label>/")
-def l_function_cmf_redirect_1(level, weight, character, label):
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
+def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label=label, number=1), code=301)
+                                  character=character, hecke_orbit=hecke_orbit, number=1), code=301)
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<label>/")
-def l_function_cmf_redirect_1a(level, weight, char_orbit_label, label):
-    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
-    character = minimal_conrey_in_character_orbit(level, weight, char_orbit_label)
-    if character is None:
-        return flask.abort(404)
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label=label, number=1), code=301)
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
+    args = {'level': level,
+            'weight': weight,
+            'char_orbit_label': char_orbit_label,
+            'hecke_orbit': hecke_orbit}
+    return render_single_Lfunction(Lfunction_CMF_orbit, args, request)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
-def l_function_cmf_redirect_2(level, weight, character):
+def l_function_cmf_redirect_a1(level, weight, character):
     return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label='a', number=1), code=301)
+                                  character=character, hecke_orbit='a', number=1), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<char_orbit_label>/")
-def l_function_cmf_redirect_2a(level, weight, char_orbit_label):
-    from lmfdb.modular_forms.elliptic_modular_forms.web_space import minimal_conrey_in_character_orbit
-    character = minimal_conrey_in_character_orbit(level, weight, char_orbit_label)
-    if character is None:
-        return flask.abort(404)
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=character, label='a', number=1), code=301)
+def l_function_cmf_orbit_redirecit_a(level, weight, char_orbit_label):
+    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                                  char_orbit_label=char_orbit_label, hecke_orbit="a", ), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/")
-def l_function_cmf_redirect_3(level, weight):
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight,
-                                  character=1, label='a', number=1), code=301)
+def l_function_cmf_orbit_redirecit_aa(level, weight):
+    return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                                  char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
 # L-function of Hilbert modular form ###########################################
@@ -410,7 +405,8 @@ def render_single_Lfunction(Lclass, args, request):
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
     except (ValueError, KeyError, TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
         raise
-        return render_lfunction_exception(err)
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
             return render_lcalcfile(L, request.path)
@@ -454,12 +450,11 @@ def initLfunction(L, args, request):
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
-    if len(request.args) == 0:
-        lcalcUrl = request.path + '?download=lcalcfile'
-    else:
-        lcalcUrl = request.path + '&download=lcalcfile'
-
     #FIXME, can we disable this?
+    #if len(request.args) == 0:
+    #    lcalcUrl = request.path + '?download=lcalcfile'
+    #else:
+    #    lcalcUrl = request.path + '&download=lcalcfile'
     #info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
@@ -470,7 +465,16 @@ def set_gaga_properties(L):
     '''
     ans = [('Degree', str(L.degree))]
 
-    ans.append(('Conductor', str(L.level)))
+    if not is_prime(int(L.level)):
+        if hasattr(L, 'level_factored'):
+            conductor_str = latex(L.level_factored)
+        else:
+            conductor_str =  latex(factor(int(L.level)))
+        conductor_str = "$ %s $" % conductor_str
+    else:
+        conductor_str = str(L.level)
+
+    ans.append(('Conductor', conductor_str))
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
     if L.selfdual:
@@ -519,12 +523,16 @@ def set_bread_and_friends(L, request):
             friends.append(('Dual L-function', L.dual_link))
         bread = get_bread(1, [(charname, request.path)])
 
-    elif L.Ltype() in ['ellipticcurve', "classical modular form", "general"]:
+    elif isinstance(L, Lfunction_from_db):
         bread = L.bread + [(L.origin_label, request.path)]
         origins = L.origins
         friends = L.friends
         factors = L.factors
         instances = L.instances
+
+        for elt in [origins, friends, factors, instances]:
+            if elt is not None:
+                elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
 
     elif L.Ltype() == 'ellipticmodularform':
         friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
@@ -835,7 +843,9 @@ def render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8
     try:
         data = getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     except Exception as err: # depending on the arguments, we may get an exception or we may get a null return, we need to handle both cases
-        return render_lfunction_exception(err)
+        raise
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
     if not data:
         # see note about missing "hardy_z_function" in plotLfunction()
         return flask.abort(404)
@@ -853,19 +863,28 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
         plotrange = min(plotrange, F[-1][0]) #  F[-1][0] is the highest t-coordinated that we have a value for L
+        # aim to display at most 25 axis crossings
+        if hasattr(pythonL, 'positive_zeros'):
+            # we stored them ready to display
+            zeros = map(float, pythonL.positive_zeros.split(","))
+            if len(zeros) >= 25:
+                zero_range = zeros[24]
+            else:
+                zero_range = zeros[-1]*25/len(zeros)
+            plotrange = min(plotrange, zero_range)
     else:
      # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
         plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve"]:
+        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve", "classical modular form", "classical modular form orbit"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
+
     interpolation = spline(F)
     F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     p = line(F_interp)
-#    p = line(F)    # temporary hack while the correct interpolation is being implemented
 
     styleLfunctionPlot(p, 10)
     fn = tempfile.mktemp(suffix=".png")
@@ -881,13 +900,16 @@ def styleLfunctionPlot(p, fontsize):
     p.axes_width(0.2)
 
 
+
 def render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9):
     ''' Renders the first few zeros of the L-function with the given arguments.
     '''
     try:
         L = generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, to_dict(request.args))
     except Exception as err:
-        return render_lfunction_exception(err)
+        raise
+        if not is_debug_mode():
+            return render_lfunction_exception(err)
 
     if not L:
         return flask.abort(404)
@@ -949,7 +971,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
         return Lfunction_EC(field_label=arg2, conductor_label=arg3, isogeny_class_label=arg4)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'Q' and arg4 == 'holomorphic':  # this has args: one for weight and one for level
-        return Lfunction_CMF(level=arg5, weight=arg6, character=arg7, label=arg8, number=arg9)
+        if arg9 is not None:
+            return Lfunction_CMF(level=arg5, weight=arg6, character=arg7, hecke_orbit=arg8, number=arg9)
+        else:
+            return Lfunction_CMF_orbit(level=arg5, weight=arg6, char_orbit_label=arg7, hecke_orbit=arg8)
 
     elif arg1 == 'ModularForm' and arg2 == 'GL2' and arg3 == 'TotallyReal' and arg5 == 'holomorphic':  # Hilbert modular form
         return Lfunction_HMF(label=arg6, character=arg7, number=arg8)

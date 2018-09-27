@@ -6,7 +6,7 @@ from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -114,25 +114,25 @@ class WebNewform(object):
             self.texp_prec = len(self.texp)-1
         else:
             self.has_exact_qexp = False
+        self.character_values = defaultdict(list)
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['embedding_index','an','angles'],
+                                             projection=['embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
                                              sort=['embedding_index']))
-        if cc_data:
+        self.rel_dim = self.dim // self.char_degree
+        if not cc_data:
+            self.has_complex_qexp = False
+        else:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
-        else:
-            self.has_complex_qexp = False
-        self.cc_data = []
-        self.rel_dim = self.dim // self.char_degree
-        for m, embedded_mf in enumerate(cc_data):
-            embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
-            embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
-            embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
-            embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
-            self.cc_data.append(embedded_mf)
-            self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
-        self.character_values = defaultdict(list)
-        if cc_data:
+            self.cc_data = []
+            for m, embedded_mf in enumerate(cc_data):
+                embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
+                embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
+                embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
+                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
+
+                self.cc_data.append(embedded_mf)
+                self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
             self.analytic_shift = [None]
             for n in range(1,self.cqexp_prec):
                 self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
@@ -208,12 +208,17 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        for character in self.char_labels:
-            for j in range(self.dim/self.char_degree):
-                label = base_label + [str(character), hecke_letter, str(j + 1)]
-                lfun_label = '.'.join(label)
-                lfun_url =  '/L' + cmf_base + '/'.join(label)
-                res.append(('L-function ' + lfun_label, lfun_url))
+        nf_url = ns_url + '/' + hecke_letter
+        # without the leading /
+        if db.lfunc_instances.exists({'url': nf_url[1:]}):
+            res.append(('L-function ' + self.label, '/L' + nf_url))
+        if self.dim > 1:
+            for character in self.char_labels:
+                for j in range(self.dim/self.char_degree):
+                    label = base_label + [str(character), hecke_letter, str(j + 1)]
+                    lfun_label = '.'.join(label)
+                    lfun_url =  '/L' + cmf_base + '/'.join(label)
+                    res.append(('L-function ' + lfun_label, lfun_url))
         return res
 
     @staticmethod
@@ -343,28 +348,6 @@ class WebNewform(object):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=(m%self.rel_dim)+1)
 
-    @staticmethod
-    def _display_float(x, prec):
-        if abs(x) < 10**(-prec):
-            return "0"
-        s = "%.{}f".format(prec) % float(x)
-        s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
-        s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
-        return s
-
-    def _display_complex(self, x, y, prec):
-        if abs(y) < 10**(-prec):
-            return self._display_float(x, prec)
-        if abs(x) < 10**(-prec):
-            return self._display_float(y, prec) + "i"
-        x = self._display_float(x, prec)
-        if y < 0:
-            sign = " - "
-            y = -y
-        else:
-            sign = " + "
-        y = self._display_float(y, prec)
-        return x + sign + y + r"i"
 
     def embedding(self, m, n=None, prec=6, format='embed'):
         """
@@ -379,15 +362,19 @@ class WebNewform(object):
         - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
         """
         if n is None:
-            return '?' # FIXME
-        x, y = self.cc_data[m]['an'][n]
-        if format == 'analytic_embed':
-            x *= self.analytic_shift[n]
-            y *= self.analytic_shift[n]
-        if self.cc_data[m]['real']:
-            return self._display_float(x, prec)
+            x = self.cc_data[m].get('embedding_root_real', None)
+            y = self.cc_data[m].get('embedding_root_imag', None)
+            if x is None or y is None:
+                return '?' # we should never see this if we have an exact qexp
         else:
-            return self._display_complex(x, y, prec)
+            x, y = self.cc_data[m]['an'][n]
+            if format == 'analytic_embed':
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
+        if self.cc_data[m]['real']:
+            return display_float(x, prec)
+        else:
+            return display_complex(x, y, prec)
 
     def satake(self, m, p, i, prec=6, format='satake'):
         """
@@ -410,7 +397,7 @@ class WebNewform(object):
                 alpha = ppow * unit
             else:
                 alpha = ppow * chival / unit
-            return self._display_complex(alpha.real(), alpha.imag(), prec)
+            return display_complex(alpha.real(), alpha.imag(), prec)
         else:
             if i == 1:
                 theta = chiang - theta
@@ -418,7 +405,7 @@ class WebNewform(object):
                     theta -= 1
                 elif theta <= -0.5:
                     theta += 1
-            s = self._display_float(2*theta, prec)
+            s = display_float(2*theta, prec)
             if s != "0":
                 s += r'\pi'
             return s

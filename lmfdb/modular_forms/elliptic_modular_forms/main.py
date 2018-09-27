@@ -213,7 +213,7 @@ def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>")
+@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>/")
 def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
     assert embedding > 0
     return by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit)

@@ -32,6 +32,15 @@ from lmfdb.base import app, ctx_proc_userdata
 #   number utilities
 ################################################################################
 
+def try_int(foo):
+    try:
+        return int(foo)
+    except Exception:
+        return foo
+
+def key_for_numerically_sort(elt):
+    return map(try_int, elt.split("."))
+
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=sage.rings.all.RationalField()):
     """
@@ -168,28 +177,86 @@ def to_dict(args):
     return d
 
 
-def truncate_number(num, precision):
+def display_float(x, prec, method = "truncate"):
+    if abs(x) < 10**(-prec):
+        return "0"
+    if method == "truncate":
+        s = truncate_float(x, prec)
+    else:
+        s = "%.{}f".format(prec) % float(x)
+        s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
+        s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
+    return s
+
+def display_complex(x, y, prec, method = "truncate", parenthesis = False):
     """
-    Truncate `num` to show `precision` characters (as a string). If `num` is
-    nearly an integer or half-integer, return that integer or
+    Examples:
+    >>> display_complex(1.0001, 0, 3, parenthesis = True)
+    '1'
+    >>> display_complex(1.0, -1, 3, parenthesis = True)
+    '(1 - i)'
+    >>> display_complex(0, -1, 3, parenthesis = True)
+    '-i'
+    >>> display_complex(0, 1, 3, parenthesis = True)
+    'i'
+    >>> display_complex(0.49999, -1.001, 3, parenthesis = True)
+    '(0.5 - i)'
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = True)
+    '-1.123i'
+    """
+    if abs(y) < 10**(-prec):
+        return display_float(x, prec, method = method)
+    if abs(x) < 10**(-prec):
+        x = ""
+    else:
+        x = display_float(x, prec, method = method)
+    if y < 0:
+        y = -y
+        if x == "":
+            sign = "-"
+        else:
+            sign = " - "
+    else:
+        if x == "":
+            sign = ""
+        else:
+            sign = " + "
+    y = display_float(y, prec, method = method)
+    if y == "1":
+        y = "";
+    res = x + sign + y + r"i"
+    if parenthesis and x != "":
+        res = "(" + res + ")"
+    return res
+
+def truncate_float(num, precision):
+    """
+    Truncate `num` to show `precision` digits after the dot (as a string).
+    If `num` is nearly an integer or half-integer, return that integer or
     half-integer instead.
 
     Examples:
-    >>> truncate_number(1.0001, 4)
+    >>> truncate_float(1.0001, 4)
     '1'
-    >>> truncate_number(1.1234567, 4)
-    '1.12'
+    >>> truncate_float(1.1234567, 4)
+    '1.1234'
+    >>> truncate_float(1.4999999, 4)
+    '1.5'
     """
-    local_precision = precision
+    truncation = float(10 ** -precision)
+    res = ""
     if num < 0:
-        local_precision = local_precision + 1
-    truncation = float(10 ** (-1.0 * local_precision))
+        res += "-"
+        num = -num
     test = round_to_half_int(num)
     if float(abs(num - test)) < truncation:
         if int(test) == test:
-            return str(int(test))
-        return str(test)
-    return(str(num)[0:int(local_precision)])
+            test = int(test)
+        res += str(test)
+    else:
+        res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
+    return res
+
 
 
 def splitcoeff(coeff):

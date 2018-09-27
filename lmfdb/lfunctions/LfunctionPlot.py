@@ -377,7 +377,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
-            WS = WebModFormSpace(level = x, weight = y)
+            WS = WebNewformSpace(level = x, weight = y)
             numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
@@ -388,7 +388,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             numminuslabels = 0
             for label in thelabels:  # looping over Galois orbit
                 linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/" + label
-                MF = WebNewForm(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
+                MF = WebNewform(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
                 numberwithlabel = MF.dimension  # number of forms in the Galois orbit
                 if x == 1:  # For level 1, the sign is always plus
                     signfe = 1
@@ -817,7 +817,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
+            WS = WebNewformSpace(level = x, weight = y)  # space of modular forms of weight y, level x
             galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -864,7 +864,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewForm(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewform(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1

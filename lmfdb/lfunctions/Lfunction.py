@@ -11,25 +11,22 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, string2number, get_bread,
+from Lfunctionutilities import (string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
-                                signOfEmfLfunction,
                                 name_and_object_from_url)
-from LfunctionComp import EC_from_modform, isogeny_class_cm
+from LfunctionComp import isogeny_class_cm
 
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, key_for_numerically_sort
 
-import sage
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
@@ -54,7 +51,12 @@ def constructor_logger(object, args):
 
 # Compute Dirichlet coefficients from Euler factors.
 def an_from_data(euler_factors,upperbound=30):
-    PP = sage.rings.all.PowerSeriesRing(sage.rings.all.RationalField(), 'x', Integer(upperbound).nbits())
+    if type(euler_factors[0][0]) is int:
+        R = ZZ
+    else:
+        R = euler_factors[0][0].parent()
+    PP = PowerSeriesRing(R, 'x', Integer(upperbound).nbits())
+
     result = upperbound * [1]
 
     for i in range(0,len(euler_factors)):
@@ -84,10 +86,12 @@ def makeLfromdata(L):
     data = L.lfunc_data
 
     # Mandatory properties
-    L.Lhash = data.get('Lhash', None);
-    L.algebraic = data.get('algebraic', None)
-    L.degree = data.get('degree', None)
-    L.level = data.get('conductor', None)
+    L.Lhash = data.get('Lhash');
+    L.algebraic = data.get('algebraic')
+    L.degree = data.get('degree')
+    L.level = int(data.get('conductor'))
+    L.level_factored = factor(L.level)
+
     central_character = data.get('central_character', None)
     L.charactermodulus, L.characternumber = central_character.split(".")
     L.charactermodulus = int(L.charactermodulus)
@@ -99,6 +103,8 @@ def makeLfromdata(L):
     else:
         assert data.get('sign_arg', None) is not None
         L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
+    if L.selfdual:
+        L.sign = int(real_part(L.sign))
     L.st_group = data.get('st_group', '')
     L.order_of_vanishing = data.get('order_of_vanishing', None)
     L.analytic_normalization = float(data.get('analytic_normalization', None))
@@ -115,6 +121,7 @@ def makeLfromdata(L):
     L.compute_kappa_lambda_Q_from_mu_nu()
 
     # Optional properties
+    L.coefficient_field = data.get('coefficient_field', None)
     L.motivic_weight = data.get('motivic_weight', None)
     if L.motivic_weight is None:
         L.motivic_weight = ''
@@ -125,7 +132,7 @@ def makeLfromdata(L):
         L.motivic_weight = ZZ(L.motivic_weight)
 
     if hasattr(L, 'base_field'):
-        field_degree = int(L.base_field().split('.')[0])
+        field_degree = int(L.base_field.split('.')[0])
         L.st_link = st_link_by_name(L.motivic_weight, L.degree // field_degree, L.st_group)
     else:
         #this assumes that the base field of the Galois representation is QQ
@@ -135,13 +142,22 @@ def makeLfromdata(L):
     if data.get('credit', None) is not None:
         L.credit = data.get('credit', None)
 
+
     # Dirichlet coefficients
+    L.localfactors = data.get('euler_factors', None)
+    L.bad_lfactors = data.get('bad_lfactors', None)
+    if L.coefficient_field == "CDF":
+        # convert pairs of doubles to CDF
+        pairtoCDF = lambda x: CDF(tuple(x))
+        L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
+        L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
+
+
     if data.get('dirichlet_coefficients', None) is not None:
         L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
-        L.dirichlet_coefficients_arithmetic = an_from_data(p2sage(
-            data.get('euler_factors', None)), 2*L.degree*L.numcoeff)
+        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
 
         # get rid of extra coeff
         count = 0;
@@ -166,11 +182,7 @@ def makeLfromdata(L):
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
 
-    L.localfactors = p2sage(data.get('euler_factors', None))
-    # Currently the database stores the bad_lfactors as a list and the euler_factors
-    # as a string.  Those should be the same.  Once that change is made, either the
-    # line above or the line below will break.  (DF and SK, Aug 4, 2015)
-    L.bad_lfactors = data.get('bad_lfactors', None)
+    
 
     # Configure the data for the zeros
 
@@ -209,16 +221,24 @@ def makeLfromdata(L):
 
     # Configure the data for the plot
     plot_delta = float(data['plot_delta'])
-    pos_plot = [[j * plot_delta, string2number(elt)]
-                          for j, elt in enumerate( data['plot_values'] )]
+    if type(data['plot_values'][0]) is str:
+        plot_values = [string2number(elt) for elt in data['plot_values']]
+    else:
+        plot_values = data['plot_values']
+    pos_plot = [[j * plot_delta, elt]
+                          for j, elt in enumerate( plot_values )]
 
     if L.selfdual:
         neg_plot = [ [-1*pt[0], L.sign * pt[1]]
                      for pt in pos_plot ][1:]
     else:
+        if type(dual_L_data['plot_values'][0]) is str:
+            dual_plot_values = [string2number(elt) for elt in dual_L_data['plot_values']]
+        else:
+            dual_plot_values = dual_L_data['plot_values']
         dual_plot_delta = float(dual_L_data['plot_delta'])
-        neg_plot = [[-j * dual_plot_delta, string2number(elt)]
-                for j, elt in enumerate(dual_L_data['plot_values']) ][1:]
+        neg_plot = [[-j * dual_plot_delta, elt]
+                for j, elt in enumerate(dual_plot_values) ][1:]
     neg_plot.reverse()
     L.plotpoints = neg_plot + pos_plot
 
@@ -462,17 +482,17 @@ class Lfunction_from_db(Lfunction):
                                kwargs, 'Lhash')
         self.numcoeff = 30
 
-        
-
         self.__dict__.update(kwargs)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
         self.info = self.general_webpagedata()
+        self._set_knowltype()
         self._set_title()
         self.credit = ''
         self.label = ''
 
-    def Ltype(self):
+    @property
+    def _Ltype(self):
         return "general"
 
     @property
@@ -501,18 +521,11 @@ class Lfunction_from_db(Lfunction):
                     if obj_exists:
                         lfactors.append((name,  "/" + url))
                     else:
-                        name += '&nbsp;  n/a';
+                        name = '(%s)' % (name)
                         lfactors.append((name, ""))
+        lfactors.sort(key=lambda x: key_for_numerically_sort(x[0]))
         return lfactors
 
-    @property
-    def instances(self):
-        linstances = []
-        for instance in sorted(get_instances_by_Lhash(self.Lhash),
-                               key=lambda elt: elt['url']):
-            url = instance['url']
-            linstances.append((str(url), "/L/" + url))
-        return linstances
 
     @property
     def origins(self):
@@ -530,30 +543,45 @@ class Lfunction_from_db(Lfunction):
         return lorigins
 
     @property
+    #FIXME, what is the difference between origins and instances?
+    def instances(self):
+        return []
+
+    @property
     def friends(self):
         return []
+
+    @property
+    def chilatex(self):
+        try:
+            if int(self.characternumber) != 1:
+                return "character $\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
+            else:
+                return "trivial character"
+        except KeyError:
+            return None
+
 
     def _set_title(self):
         '''
         If `charactermodulus` and `characternumber` are defined, make a title
         which includes the character. Otherwise, make a title without character.
         '''
-        try:
-            chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
-        except KeyError:
-            chilatex = None
-        if chilatex:
+        conductor_str = "$ %s $" % latex(self.level_factored)
+
+        if self.chilatex is not None:
             title_end = (
                     " of degree {degree}, weight {weight},"
-                    " conductor {conductor}, and character {character}"
+                    " conductor {conductor}, and {character}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=self.level, character=chilatex)
+                            conductor=conductor_str, character=self.chilatex)
         else:
             title_end = (
                     " of degree {degree}, weight {weight},"
                     " and conductor {conductor}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
-                            conductor=self.level)
+                            conductor=conductor_str)
+        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
         self.info['title_arithmetic'] = ("L-function" + title_end)
         self.info['title_analytic'] = ("L-function" + title_end)
         return
@@ -594,6 +622,14 @@ class Lfunction_from_db(Lfunction):
             raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
         return
 
+    @property
+    def knowltype(self):
+        return None
+
+    def _set_knowltype(self):
+        if self.knowltype is not None:
+            self.info['knowltype'] = self.knowltype
+
 ####################################################################################################
 
 class Lfunction_CMF(Lfunction_from_db):
@@ -602,55 +638,103 @@ class Lfunction_CMF(Lfunction_from_db):
     Compulsory parameters: weight
                            level
                            character
-                           label
+                           hecke_orbit
                            number
     """
 
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
         validate_required_args('Unable to construct classical modular form L-function.',
-                               kwargs, 'weight','level','character','label','number')
+                               kwargs, 'weight','level','character','hecke_orbit','number')
         validate_integer_args('Unable to construct classical modular form L-function.',
                               kwargs, 'weight','level','character','number')
         for key in ['weight','level','character','number']:
             kwargs[key] = int(kwargs[key])
+        # self.level is the conductor
+        self.modform_level = kwargs['level']
         self.kwargs = kwargs
         # Put the arguments in the object dictionary
         self.__dict__.update(kwargs)
-        self.label_args = (self.level, self.weight, self.character, self.label, self.number)
+        self.label_args = (self.modform_level, self.weight, self.character, self.hecke_orbit, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
         self.Lhash = get_instance_by_url(self.url)['Lhash']
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
-        #self.label =  ".".join(map(str, self.label_args))
 
-        self.numcoeff = 10
-        self.instances = None
+        self.numcoeff = 30
 
-    def Ltype(self):
+    @property
+    def _Ltype(self):
         return  "classical modular form"
 
     @property
     def origin_label(self):
-        return ".".join(map(str, (self.level, self.weight, self.character, self.label, self.number)))
+        return ".".join(map(str, self.label_args))
 
     @property
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
     def _set_title(self):
-        chilatex = "$\chi_{%s} (%s, \cdot)$" % (self.charactermodulus, self.characternumber)
         title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
-            self.weight, self.level, chilatex)
+            self.weight, self.level, self.chilatex)
 
         self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-        #self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        #self.info['title_arithmetic'] = "$" + self.texname_arithmetic + "$" + ", " + title_end
-        #self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
+
 
 #############################################################################
 
+class Lfunction_CMF_orbit(Lfunction_from_db):
+    """Class representing an classical modular form L-function
 
-class Lfunction_EC(Lfunction):
+    Compulsory parameters: weight
+                           level
+                           char_orbit_label
+                           hecke_orbit
+    """
+
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+        validate_required_args('Unable to construct classical modular form L-function.',
+                               kwargs, 'weight','level','char_orbit_label','hecke_orbit')
+        validate_integer_args('Unable to construct classical modular form L-function.',
+                              kwargs, 'weight','level')
+        for key in ['weight','level']:
+            kwargs[key] = int(kwargs[key])
+        # self.level is the conductor
+        self.modform_level = kwargs['level']
+        self.kwargs = kwargs
+        # Put the arguments in the object dictionary
+        self.__dict__.update(kwargs)
+        self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit)
+        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args
+        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+
+        self.numcoeff = 30
+
+    @property
+    def _Ltype(self):
+        return  "classical modular form orbit"
+
+    @property
+    def origin_label(self):
+        return ".".join(map(str, self.label_args))
+
+    @property
+    def bread(self):
+        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+
+    def _set_title(self):
+        conductor_str = "$ %s $" % latex(self.modform_level)
+        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
+            self.weight, conductor_str)
+
+        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+
+#################################################################################################
+
+
+class Lfunction_EC(Lfunction_from_db):
     """
     Class representing an elliptic curve L-function
     over a number field, possibly QQ.
@@ -664,8 +748,6 @@ class Lfunction_EC(Lfunction):
         validate_required_args('Unable to construct elliptic curve L-function.',
                                kwargs, 'field_label', 'conductor_label',
                                'isogeny_class_label')
-        self._Ltype = "ellipticcurve"
-        self.numcoeff = 30
 
         # Put the arguments into the object dictionary
         self.__dict__.update(kwargs)
@@ -673,129 +755,24 @@ class Lfunction_EC(Lfunction):
         # Set field, conductor, isogeny information from labels
         self._parse_labels()
 
-        self._retrieve_lfunc_data_from_db()
-        # Extract the data
-        makeLfromdata(self)
+        self.url = "EllipticCurve/%s/%s/%s" % (self.field,
+                                                        self.conductor_label,
+                                                        self.isogeny_class_label)
 
-        # Mandatory properties
-        self.coefficient_period = 0
-        self.coefficient_type = 2
-        self.poles = []
-        self.residues = []
-        self.degree = self.field_degree * 2;
-        # this is only use for the display of the euler factors
-        self.langlands = True # self.is_langlands()
+        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
 
-        self.initialize_webpage_data()
+        self.numcoeff = 30
 
+    @property
+    def _Ltype(self):
+        return "ellipticcurve"
+
+    @property
     def base_field(self):
         """base_field of the EC"""
         return self.field_label
 
-    def ground_field(self):
-        """Field of the Dirichlet coefficients"""
-        return 'Q'
-
-    def initialize_webpage_data(self):
-        self._set_web_displaynames()
-        self.info = self.general_webpagedata()
-        self._set_title()
-        self.credit = ''
-        self._set_knowltype()
-        return
-
-    @property
-    def bread(self):
-        """breadcrumbs for webpage"""
-        if self.base_field() == '1.1.1.1': #i.e. QQ
-            lbread = get_bread(2,
-                    [
-                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
-                    ])
-        else:
-            lbread = get_bread(self.degree, [])
-        return lbread
-
-    @property
-    def factors(self):
-        """
-        If L-function factors as a product of other L-functions, this is a list
-        of those factors. Otherwise, this is an empty list.
-        """
-        lfactors = []
-        if "," in self.Lhash:
-            for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash),
-                                       key=lambda elt: elt['url']):
-                    url = instance['url']
-                    name, obj_exists = name_and_object_from_url(url)
-                    if obj_exists:
-                        lfactors.append((name,  "/" + url))
-                    else:
-                        name += '&nbsp;  n/a';
-                        lfactors.append((name, ""))
-        return lfactors
-
-    @property
-    def field(self):
-        return "Q" if self.field_degree == 1 else self.field_label
-
-    @property
-    def friends(self):
-        """The 'friends' to show on webpage."""
-        lfriends = []
-        if self.base_field() == '1.1.1.1': #i.e. QQ
-            # only show symmetric powers for non-CM curves
-            if not isogeny_class_cm(self.origin_label):
-                lfriends.append(('Symmetric square L-function',
-                                url_for(".l_function_ec_sym_page_label",
-                                    power='2', label=self.origin_label)))
-                lfriends.append(('Symmetric cube L-function',
-                                url_for(".l_function_ec_sym_page_label",
-                                    power='3', label=self.origin_label)))
-        return lfriends
-
-    @property
-    def instances(self):
-        # Currently elliptic curve L-fns don't track other instances of the
-        # L-fn, but the website expects this property to exist.
-        return []
-
-    @property
-    def origin_label(self):
-        if self.field_degree == 1:
-            llabel = self.long_isogeny_class_label
-        else:
-            llabel = self.field_label + "-" + self.long_isogeny_class_label
-        return llabel
-
-    @property
-    def origins(self):
-        lorigins = []
-        for instance in sorted(get_instances_by_Lhash(self.Lhash),
-                               key=lambda elt: elt['url']):
-            url = instance['url'];
-            name, obj_exists = name_and_object_from_url(url);
-            if not name:
-                name = ''
-            if obj_exists:
-                lorigins.append((name, "/"+url));
-            else:
-                name = '(%s)' % name;
-                lorigins.append((name, ""));
-        if self.base_field() == '1.1.1.1': #i.e. QQ
-            #TODO replace classical modular forms origin by adding an object to the database
-            if self.conductor <= 101:
-                lorigins.append(
-                   ('Modular form ' + (self.long_isogeny_class_label).replace('.', '.2'),
-                       url_for("emf.render_elliptic_modular_forms",
-                       level=self.conductor, weight=2,
-                       character=1, label=self.isogeny_class_label)
-                   ))
-            else:
-                lorigins.append(('(Modular form ' + (self.long_isogeny_class_label)
-                                .replace('.', '.2') +')', ""))
-        return lorigins
 
     def _parse_labels(self):
         """Set field, conductor, isogeny information from labels."""
@@ -812,42 +789,53 @@ class Lfunction_EC(Lfunction):
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
         return
 
-
-    def _retrieve_lfunc_data_from_db(self):
-        isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field,
-                                                        self.conductor_label,
-                                                        self.isogeny_class_label)
-        self.lfunc_data = get_lfunction_by_url(isogeny_class_url)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
-        return
-
-    def _set_knowltype(self):
-        if self.field_degree == 1:
-            self.info['knowltype'] = "ec.q"
+    @property
+    def bread(self):
+        """breadcrumbs for webpage"""
+        if self.base_field == '1.1.1.1': #i.e. QQ
+            lbread = get_bread(2,
+                    [
+                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
+                    ])
         else:
-            self.info['knowltype'] = "ec.nf"
-        return
+            lbread = get_bread(self.degree, [])
+        return lbread
 
-    def _set_title(self):
-        title_end = (" of degree %d, weight 1, conductor %d,"
-                     " and trivial character" % (self.degree, self.conductor))
-        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = "L-function "  + title_end
-        self.info['title_analytic'] = "L-function " + title_end
-        return
 
-    def _set_web_displaynames(self):
-        self.texname = "L(s)"  # "L(s,E)"
-        self.htmlname = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>s,E</em>)"
-        self.texname_arithmetic = "L(s)"  # "L(E,s)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>s</em>)"  # "<em>L</em>(<em>E,s</em>)"
-        self.texnamecompleteds = "\\Lambda(s)"  # "\\Lambda(s,E)"
-        self.texnamecompleted1ms = "\\Lambda(1-s)"  # "\\Lambda(1-s,E)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(s)"  # "\\Lambda(E,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(%s-s)" % (self.motivic_weight + 1,)
-        # "\\Lambda(E, " + str(self.motivic_weight + 1) + "-s)"
-        return
+    @property
+    def field(self):
+        return "Q" if self.field_degree == 1 else self.field_label
+
+    @property
+    def friends(self):
+        """The 'friends' to show on webpage."""
+        lfriends = []
+        if self.base_field == '1.1.1.1': #i.e. QQ
+            # only show symmetric powers for non-CM curves
+            if not isogeny_class_cm(self.origin_label):
+                lfriends.append(('Symmetric square L-function',
+                                url_for(".l_function_ec_sym_page_label",
+                                    power='2', label=self.origin_label)))
+                lfriends.append(('Symmetric cube L-function',
+                                url_for(".l_function_ec_sym_page_label",
+                                    power='3', label=self.origin_label)))
+        return lfriends
+
+
+    @property
+    def origin_label(self):
+        if self.field_degree == 1:
+            llabel = self.long_isogeny_class_label
+        else:
+            llabel = self.field_label + "-" + self.long_isogeny_class_label
+        return llabel
+    @property
+    def knowltype(self):
+        if self.field_degree == 1:
+            return "ec.q"
+        else:
+            return "ec.nf"
+
 
 
 #############################################################################

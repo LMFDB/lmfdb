@@ -1,9 +1,10 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from lmfdb.utils import truncate_number
+from lmfdb.utils import truncate_float
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
-from sage.all import Gamma0, CC
+from sage.all import Gamma0, CC, ComplexNumber
 from lmfdb.db_backend import db
+from lmfdb.utils import display_complex
 
 class MaassFormTable(MFDataTable):
     r"""
@@ -336,55 +337,24 @@ class WebMaassForm(object):
         mwf_logger.debug("realnumc={0}".format(realnumc))
 
 
-import sage
-
-
-def pretty_coeff(c, digits=10, prec=9):
+def pretty_coeff(c, prec=9):
     '''
     Format the complex coefficient `c` for display on the website.
     '''
     if isinstance(c, complex):
         x = c.real
         y = c.imag
-    elif isinstance(c, (complex, sage.rings.complex_number.ComplexNumber)):
+    elif isinstance(c, (complex, ComplexNumber)):
         x = c.real()
         y = c.imag()
     else:
         x = c
         y = 0
 
-    x_trunc = float(truncate_number(x, precision=prec))
-    y_trunc = float(truncate_number(y, precision=prec))
-    xs = format_num(x_trunc, digits=digits)
-    ys = format_num(y_trunc, digits=digits)
+    res =  display_complex(x, y, precision = prec)
 
-    if xs == '0' and ys == '0':
+    if res == '0':
         return '&nbsp;0'
-    if ys == '0':
-        return xs
-    if xs == '0':
-        return ys + 'i'
-
-    return xs + ' + ' + ys + 'i'
-
-
-def format_num(x, digits=10):
-    '''
-    Format real number x for website display.
-    '''
-    if x == 0:
-        return '0'
-    d2 = digits
-    d1 = digits + 1
-    if abs(x) < 10.0 ** -digits:
-        if x > 0:
-            xs = '{0:<2.1g}'.format(float(x))
-        else:
-            xs = '{0:<3.1g}'.format(float(x))
     else:
-        x = round(x, digits)
-        if x > 0:
-            xs = '&nbsp;{x:<{width}.{digs}}'.format(width=d2, digs=d2, x=float(x))
-        elif x < 0:
-            xs = '{x:<{width}.{digs}}'.format(width=d2, digs=d1, x=float(x))
-    return xs
+        return res
+
