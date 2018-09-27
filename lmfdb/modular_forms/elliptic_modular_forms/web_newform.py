@@ -209,7 +209,8 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
         nf_url = ns_url + '/' + hecke_letter
-        if db.lfunc_instances.exists({'url': nf_url}):
+        # without the leading /
+        if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
             for character in self.char_labels:
