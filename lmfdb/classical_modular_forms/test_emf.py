@@ -3,10 +3,10 @@
 from lmfdb.base import LmfdbTest
 import unittest2
 
-from . import emf_logger
-emf_logger.setLevel(100)
+from . import cmf_logger
+cmf_logger.setLevel(100)
 
-class EmfTest(LmfdbTest):
+class CmfTest(LmfdbTest):
 
     def runTest():
         pass
@@ -178,22 +178,3 @@ class EmfTest(LmfdbTest):
         assert "ModularForm/GL2/Q/holomorphic/5/4/4" in page.data
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/5/4/4/')
         assert "There are no newforms" in page.data
-
-    def test_label_finder(self):
-        r"""
-        Test the function which finds a label for a newform in the database using input
-        level, weight, character, field and coefficients
-        """
-        from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import find_newform_label
-        ## Two successful searches
-        self.assertTrue(find_newform_label(9,16,1,[-119880,0,1],{2:[0,1]})=='e')
-        self.assertTrue(find_newform_label(71,2,1,[-3,-4,1,1],{3:[0,-1,0]})=='a')
-
-        with self.assertRaises(ArithmeticError):
-            ## check for wrong a(3)
-            find_newform_label(71,2,1,[-3,-4,1,1],{3:[1,-1,0]})
-        with self.assertRaises(ValueError):
-            ## check for wrong degree number field
-            find_newform_label(71,2,1,[-4,1,1],{3:[1,0]})
-
-

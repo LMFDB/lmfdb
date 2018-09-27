@@ -1,19 +1,17 @@
-# See views/emf_main.py, genus2_curves/main.py
-
 from flask import render_template, url_for, redirect, abort, request, flash, make_response
 from markupsafe import Markup
 import re
 from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
-from lmfdb.modular_forms.elliptic_modular_forms import emf
+from lmfdb.classical_modular_forms import cmf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
-from lmfdb.modular_forms.elliptic_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
+from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import next_prime
@@ -63,7 +61,7 @@ def set_info_funcs(info):
         return all(mf['char_order'] == 1 for mf in results)
     info["display_AL"] = display_AL
 
-@emf.route("/")
+@cmf.route("/")
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
@@ -80,7 +78,7 @@ def index():
             return space_search(info)
         else:
             return newform_search(info)
-    info = {"stats": EMF_stats()}
+    info = {"stats": CMF_stats()}
     newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
     space_labels = ('20.5','60.2','55.3.d')
@@ -88,14 +86,14 @@ def index():
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
     info["level_list"] = ('1', '2-9', '10-99', '100-1000')
     bread = get_bread()
-    return render_template("emf_browse.html",
+    return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
                            title="Holomorphic Cusp Forms",
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
-@emf.route("/random")
+@cmf.route("/random")
 def random_form():
     label = db.mf_newforms.random()
     return redirect(url_for_label(label), 307)
@@ -140,7 +138,7 @@ def render_newform_webpage(label):
         errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
     if errs:
         flash(Markup("<br>".join(errs)), "error")
-    return render_template("emf_newform.html",
+    return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
                            properties2=newform.properties,
@@ -157,7 +155,7 @@ def render_space_webpage(label):
         return abort(404, err.args)
     info = {'results':space.newforms} # so we can reuse search result code
     set_info_funcs(info)
-    return render_template("emf_space.html",
+    return render_template("cmf_space.html",
                            info=info,
                            space=space,
                            properties2=space.properties,
@@ -174,7 +172,7 @@ def render_full_gamma1_space_webpage(label):
         return abort(404, err.args)
     info={}
     set_info_funcs(info)
-    return render_template("emf_full_gamma1_space.html",
+    return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
                            properties2=space.properties,
@@ -184,36 +182,36 @@ def render_full_gamma1_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
-@emf.route("/<int:level>/")
+@cmf.route("/<int:level>/")
 def by_url_level(level):
     return newform_search({'level' : level})
 
-@emf.route("/<int:level>/<int:weight>/")
+@cmf.route("/<int:level>/<int:weight>/")
 def by_url_full_gammma1_space_label(level, weight):
     label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
 def by_url_space_label(level, weight, char_orbit_label):
     label = str(level)+"."+str(weight)+"."+char_orbit_label
     return render_space_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
+@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
 def by_url_space_conreylabel(level, weight, conrey_label):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label))
     return redirect(url_for_label(label), code=301)
 
-@emf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
     return render_newform_webpage(label)
 
-@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
+@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-@emf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>/")
+@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>/")
 def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
     assert embedding > 0
     return by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit)
@@ -248,7 +246,7 @@ def _get_hecke_nf(label):
         data.append((ev.get('an'),ev.get('trace_an')))
     return data
 
-@emf.route("/download_qexp/<label>")
+@cmf.route("/download_qexp/<label>")
 def download_qexp(label):
     data = _get_hecke_nf(label)
     if not isinstance(data,list):
@@ -272,7 +270,7 @@ def download_qexp(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@emf.route("/download_traces/<label>")
+@cmf.route("/download_traces/<label>")
 def download_traces(label):
     data = _get_hecke_nf(label)
     if not isinstance(data,list):
@@ -292,7 +290,7 @@ def _get_hecke_cc(label):
         return abort(404, "No form found for %s"%(label))
     return [(ev.get('lfunction_label'), [ev.get('embedding_root_real'), ev.get('embedding_root_imag')], ev.get('an'), ev.get('angles')) for ev in eigenvals]
 
-@emf.route("/download_cc_data/<label>")
+@cmf.route("/download_cc_data/<label>")
 def download_cc_data(label):
     data = _get_hecke_cc(label)
     if not isinstance(data,list):
@@ -308,7 +306,7 @@ def download_cc_data(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@emf.route("/download_satake_angles/<label>")
+@cmf.route("/download_satake_angles/<label>")
 def download_satake_angles(label):
     data = _get_hecke_cc(label)
     if not isinstance(data,list):
@@ -324,7 +322,7 @@ def download_satake_angles(label):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-@emf.route("/download_newform/<label>")
+@cmf.route("/download_newform/<label>")
 def download_newform(label):
     data = db.mf_newforms.lookup(label)
     if data is None:
@@ -368,7 +366,7 @@ def jump_box(info):
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
-class EMF_download(Downloader):
+class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Cuspidal newforms'
 
@@ -421,7 +419,7 @@ def newform_parse(info, query):
     parse_bool_unknown(info, query, 'has_inner_twist')
     parse_ints(info, query, 'analytic_rank')
 
-@search_wrap(template="emf_newform_search_results.html",
+@search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
              title='Newform Search Results',
              err_title='Newform Search Input Error',
@@ -507,7 +505,7 @@ def dimension_form_postprocess(res, info, query):
     info['has_data'] = has_data
     return dim_dict
 
-@search_wrap(template="emf_dimension_search_results.html",
+@search_wrap(template="cmf_dimension_search_results.html",
              table=db.mf_newforms,
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
@@ -524,7 +522,7 @@ def dimension_form_search(info, query):
         info['level'] = '1-24'
     newform_parse(info, query)
 
-@search_wrap(template="emf_dimension_search_results.html",
+@search_wrap(template="cmf_dimension_search_results.html",
              table=db.mf_newspaces,
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
@@ -541,7 +539,7 @@ def dimension_space_search(info, query):
         info['level'] = '1-24'
     common_parse(info, query)
 
-@search_wrap(template="emf_space_search_results.html",
+@search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
@@ -554,7 +552,7 @@ def space_search(info, query):
     parse_ints(info, query, 'num_forms', name='Number of newforms')
     set_info_funcs(info)
 
-@emf.route("/Completeness")
+@cmf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of $\GL_2$ holomorphic newform data over $\Q$'
     return render_template("single.html", kid='dq.mf.elliptic.extent',
@@ -563,7 +561,7 @@ def completeness_page():
                            learnmore=learnmore_list_remove('Completeness'))
 
 
-@emf.route("/Source")
+@cmf.route("/Source")
 def how_computed_page():
     t = 'Source of $\GL_2$ holomorphic newform data over $\Q$'
     return render_template("single.html", kid='dq.mf.elliptic.source',
@@ -571,7 +569,7 @@ def how_computed_page():
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 
-@emf.route("/Labels")
+@cmf.route("/Labels")
 def labels_page():
     t = 'Labels for $\GL_2$ holomorphic newforms over $\Q$'
     return render_template("single.html", kid='mf.elliptic.label',
@@ -588,7 +586,7 @@ def cm_format(D):
         cm_label = "2.0.%s.1"%(-D)
         return nf_display_knowl(cm_label, field_pretty(cm_label))
 
-class EMF_stats(StatsDisplay):
+class CMF_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for cuspidal newforms
     """
@@ -630,7 +628,7 @@ class EMF_stats(StatsDisplay):
          'url_extras': 'submit=Spaces&'},
     ]
 
-@emf.route("/stats")
+@cmf.route("/stats")
 def statistics():
     title = 'Cupsidal Newforms: Statistics'
-    return render_template("display_stats.html", info=EMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
+    return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())

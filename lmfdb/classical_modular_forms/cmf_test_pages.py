@@ -2,8 +2,8 @@
 
 from lmfdb.base import LmfdbTest, getDBConnection
 
-from . import emf_logger
-emf_logger.setLevel(100)
+from . import cmf_logger
+cmf_logger.setLevel(100)
 
 version=1.3
 
@@ -13,7 +13,7 @@ def anum(a):
 def check_orbit_list(a):
     return set([anum(c) for c in a]) == set(range(1,len(a)+1))
 
-class EmfTest(LmfdbTest):
+class CmfTest(LmfdbTest):
 
     def runTest():
         pass

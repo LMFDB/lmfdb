@@ -6,7 +6,7 @@ def check_orbit_list(a):
 
 version = 1.3
 trivial_only = False
-print "Statistics for emf version %.1f with trivial character" % version
+print "Statistics for cmf version %.1f with trivial character" % version
 from pymongo import MongoClient
 conn = MongoClient(host='localhost',port=int(37010))
 assert conn.admin.authenticate('lmfdb','lmfdb')

@@ -23,8 +23,8 @@ import random
 from sage.all import AlphabeticStrings, gcd, Mod
 from flask import jsonify, flash, Markup
 from lmfdb.utils import web_latex, ajax_url
-from lmfdb.modular_forms.elliptic_modular_forms import emf_logger
-logger = emf_logger
+from lmfdb.classical_modular_forms import cmf_logger
+logger = cmf_logger
 from sage.all import vector, QQ, Matrix, cached_method
 from sage.misc.cachefunc import cached_function 
 import lmfdb.base
@@ -33,7 +33,7 @@ from lmfdb.search_parsing import parse_range
 try:
     from dirichlet_conrey import DirichletGroup, DirichletGroup_conrey, DirichletCharacter_conrey
 except:
-    emf_logger.critical("Could not import dirichlet_conrey!")
+    cmf_logger.critical("Could not import dirichlet_conrey!")
 
 def newform_label(level, weight, character, label, embedding=None, make_cache_label=False):
     r"""
@@ -41,7 +41,7 @@ def newform_label(level, weight, character, label, embedding=None, make_cache_la
     """
     l = ''
     if make_cache_label:
-        l = 'emf.'
+        l = 'cmf.'
     if embedding is None:
         l += "{0}.{1}.{2}.{3}".format(level, weight, character, label)
     else:
@@ -91,7 +91,7 @@ def parse_newform_label(label):
 def space_label(level, weight, character, make_cache_label=False):
     l = ''
     if make_cache_label:
-        l = 'emf.'
+        l = 'cmf.'
     return l+"{0}.{1}.{2}".format(level, weight, character)
 
 def parse_space_label(label):

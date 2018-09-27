@@ -25,8 +25,8 @@ sage: V3.local_euler_factor(43)
 sage: V3.algebraic_coefficients(10)
 
 
-sage: from lmfdb.modular_forms.elliptic_modular_forms import WebNewForm
-sage: F = WebNewForm(11,10,fi=1)
+sage: from lmfdb.classical_modular_forms import WebNewform
+sage: F = WebNewform.by_label('11.10.a.a')
 sage: V4 = GaloisRepresentation([F,0])
 sage: V4.sign
 sage: V4.algebraic_coefficients(10)
@@ -127,7 +127,7 @@ class GaloisRepresentation( Lfunction):
 
         elif (isinstance(thingy, list) and
               len(thingy) == 2 and
-              isinstance(thingy[0],lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms.WebNewForm) and
+              isinstance(thingy[0],lmfdb.classical_modular_forms.web_newform.WebNewform) and
               isinstance(thingy[1],sage.rings.integer.Integer) ):
             self.init_elliptic_modular_form(thingy[0],thingy[1])
 
@@ -302,24 +302,24 @@ class GaloisRepresentation( Lfunction):
         self.original_object = [[F,number]]
         self.object_type = "Elliptic Modular newform"
         self.dim = 2
-        self.weight = ZZ(F.weight())
-        self.motivic_weight = ZZ(F.weight()) - 1
-        self.conductor = ZZ(F.level())
+        self.weight = ZZ(F.weight)
+        self.motivic_weight = ZZ(F.weight) - 1
+        self.conductor = ZZ(F.level)
         self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
         # should be including primes of bad red that are pot good
         # however I don't know how to recognise them
         self.bad_pot_good = []
         self.langlands = True
         self.mu_fe = []
-        self.nu_fe = [ZZ(F.weight()-1)/ZZ(2)]
+        self.nu_fe = [ZZ(F.weight-1)/ZZ(2)]
         self.primitive = True
         self.selfdual = True
         self.coefficient_type = 2
         self.coefficient_period = 0
         self.sign = (-1) ** (self.weight / 2.)
         if self.conductor != 1:
-            AL = F.atkin_lehner_eigenvalues()
-            self.sign = AL[self.conductor] * self.sign
+            for p, ev in F.atkin_lehner_eigenvals:
+                self.sign *= ev**(self.conductor.valuation(p))
         self.gammaV = [0,1]
         self.set_dokchitser_Lfunction()
         self.set_number_of_coefficients()
@@ -329,6 +329,8 @@ class GaloisRepresentation( Lfunction):
             """
             Local euler factor
             """
+            # There was no function q_expansion_embeddings before the transition to postgres
+            # so I'm not sure what this is supposed to do.
             ans = F.q_expansion_embeddings(p + 1)
             K = ComplexField()
             R = PolynomialRing(K, "T")
