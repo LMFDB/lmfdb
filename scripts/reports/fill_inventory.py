@@ -97,13 +97,13 @@ def show_collections():
     if file_output: fh.close()
 
 def generate_inventory():
+    raise NotImplementedError
     global action
     action = True
 
     start_lmfdb_connection()
-    connection = jdbs.getDBConnection()
     result = jdbs.parse_lmfdb_to_json(collections = selected_collections,
-        databases = selected_dbs, connection = connection)
+        databases = selected_dbs)
 
     if file_output:
         fh = open(file_output, 'w')
@@ -113,7 +113,7 @@ def generate_inventory():
         invdb = connection['inventory']
         for db in result:
           for coll in result[db]:
-              iud.upload_collection_structure(invdb, db, coll, result)
+              iud.upload_table_structure(invdb, db, coll, result)
               iud.upload_collection_indices(invdb, db, coll, result)
 
 if __name__ == '__main__':
