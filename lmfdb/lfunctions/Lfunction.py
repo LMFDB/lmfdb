@@ -11,11 +11,10 @@ import re
 
 from flask import url_for
 
-from Lfunctionutilities import (p2sage, string2number, get_bread,
+from Lfunctionutilities import (string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
-                                signOfEmfLfunction,
                                 name_and_object_from_url)
-from LfunctionComp import EC_from_modform, isogeny_class_cm
+from LfunctionComp import isogeny_class_cm
 
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 import LfunctionLcalc
@@ -23,13 +22,11 @@ from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, key_for_numerically_sort
 
-import sage
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.WebNumberField import WebNumberField
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import WebNewform
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
