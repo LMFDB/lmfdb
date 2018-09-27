@@ -27,6 +27,7 @@ IMPORTANT:
 * space pages: download to Sage/Magma/pari (download all the data) (David)
 * Knowls for number fields in search results, blank if dim>20, else smarter (David)
 * Knowl expansion is wonky in the search results header, since we've split the header into two rows. (David)
+* Layout of search boxes: should be flush as in genus 2 curves. (David)
 
 GOOD:
 * Make sure our description of labels is correct

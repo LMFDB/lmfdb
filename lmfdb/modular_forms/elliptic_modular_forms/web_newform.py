@@ -165,9 +165,9 @@ class WebNewform(object):
 
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
-                            ('Analytic Conductor', str(self.Nk2)),
-                            ('Character orbit label', '%s.%s' % (self.level, self.char_orbit_label)),
-                            ('Representative character', '\(%s\)' % self.char_conrey_str),
+                            ('Analytic conductor', str(self.Nk2)),
+                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
+                            ('Rep. character', '\(%s\)' % self.char_conrey_str),
                             ('Dimension', str(self.dim))]
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
