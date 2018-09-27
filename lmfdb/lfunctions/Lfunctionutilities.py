@@ -8,8 +8,9 @@ from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, Poly
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
-from lmfdb.utils import truncate_number
+from lmfdb.utils import display_complex
 from lmfdb.modular_forms.elliptic_modular_forms.web_newform import newform_conrey_exists
+
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -101,20 +102,27 @@ def styleTheSign(sign):
         logger.debug(1 - sign)
         if sign == 0:
             return "unknown"
-        return(seriescoeff(sign, 0, "literal", "", -6, 5))
+        return seriescoeff(sign, 0, "literal", "", 3)
     except:
         logger.debug("no styling of sign")
         return str(sign)
 
 
-def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precision):
-  # seriescoefftype can be: series, serieshtml, signed, literal, factor
-#  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
-#  precision is used to truncate decimal numbers
-    truncation = float(10 ** truncationexp)
+def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
+    # seriescoefftype can be: series, serieshtml, signed, literal, factor
+    #  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
+    #  precision is used to truncate decimal numbers
+    #truncation = float(10 ** truncationexp)
     try:
         if isinstance(coeff,str) or isinstance(coeff,unicode):
-            coeff = string2number(coeff)
+            if coeff == "I":
+                rp = 0
+                ip = 1
+            elif coeff == "-I":
+                rp = 0
+                ip = -1
+            else:
+                coeff = string2number(coeff)
         if type(coeff) == complex:
             rp = coeff.real
             ip = coeff.imag
@@ -123,143 +131,59 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
             ip = imag_part(coeff)
     except TypeError:     # mostly a hack for Dirichlet L-functions
         if seriescoefftype == "serieshtml":
-            if coeff == "I":
-                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype)
-            elif coeff == "-I":
-                return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
-            else:
-                return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
+            return " +" + coeff + "&middot;" + seriesvar(index, seriestype)
         else:
             return coeff
-# below we use float(abs()) instead of abs() to avoid a sage bug
-    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):  # has a real and an imaginary part
-        ans = ""
-        if seriescoefftype == "series" or seriescoefftype == "signed":
-            ans += "+"
-            ans += "("
-            ans += truncate_number(rp, precision)
-        elif seriescoefftype == "serieshtml":
-            ans += " + "
-            ans += "("
-            if rp > 0:
-                ans += truncate_number(rp, precision)
-            else:
-                ans += "&minus;"+truncate_number(float(abs(rp)), precision)
-        elif seriescoefftype == "factor":
-            ans += "("
-            ans += truncate_number(rp, precision)
-        else:
-            ans += truncate_number(rp, precision)
-        if ip > 0:
-            ans += " + "
-        if seriescoefftype == "series" or seriescoefftype == "signed":
-            ans += truncate_number(ip, precision) + " i"
-        elif seriescoefftype == "serieshtml":
-            if ip > 0:
-                ans += truncate_number(ip, precision)
-            else:
-                ans += " &minus; "+truncate_number(float(abs(ip)), precision)
-            ans += "<em>i</em>"
-        elif seriescoefftype == "factor":
-            ans += truncate_number(ip, precision) + "i" + ")"
-        else:
-            ans += truncate_number(ip, precision) + "i"
-        if seriescoefftype == "series" or seriescoefftype == "serieshtml" or seriescoefftype == "signed":
-            return(ans + ")" + " " + seriesvar(index, seriestype))
-        else:
-            return(ans)
-
-    elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
-        if seriescoefftype != "literal":
-            return("")
-        else:
-            return("0")
-# if we get this far, either pure real or pure imaginary
     ans = ""
-    if rp > truncation:
-        if float(abs(rp - 1)) < truncation:
-            if seriescoefftype == "literal":
-                return("1")
-            elif seriescoefftype == "signed":
-                return("+1")
-            elif seriescoefftype == "factor":
-                return("")
-            elif seriescoefftype == "series" or seriescoefftype == "serieshtml":
-                return(ans + " + " + seriesvar(index, seriestype))
-        else:
-            if seriescoefftype == "series" or seriescoefftype == "serieshtml":
-                return(" + " + ans + truncate_number(rp, precision) + "&middot;" + seriesvar(index, seriestype))
-            elif seriescoefftype == "signed":
-                return(ans + "+" + truncate_number(rp, precision))
-            elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncate_number(rp, precision))
-    elif rp < -1 * truncation:
-        if float(abs(rp + 1)) < truncation:
-            if seriescoefftype == "literal":
-                return("-1" + seriesvar(index, seriestype))
-            elif seriescoefftype == "signed":
-                return("-1" + seriesvar(index, seriestype))
-            elif seriescoefftype == "factor":
-                return("-" + seriesvar(index, seriestype))
-            elif seriescoefftype == "series":  # adding space between minus sign and value
-                return(" - " + seriesvar(index, seriestype))
-            elif seriescoefftype == "serieshtml":  # adding space between minus sign and value
-                return(" &minus; " + seriesvar(index, seriestype))
-            else:
-                return("-" + seriesvar(index, seriestype))
-        else:
-            if seriescoefftype == "series":
-                return(ans + " - " + truncate_number(-1*rp, precision) + seriesvar(index, seriestype))
-            elif seriescoefftype == "signed":
-                return(ans + "-" + truncate_number(-1*rp, precision))
-            elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncate_number(-1*rp, precision) + "&middot;" +  seriesvar(index, seriestype))
-            elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncate_number(rp, precision))
-
-# if we get this far, it is pure imaginary
-    elif ip > truncation:
-        if float(abs(ip - 1)) < truncation:
-            if seriescoefftype == "literal":
-                return("i")
-            elif seriescoefftype == "signed":
-                return("+i")
-            elif seriescoefftype == "factor":
-                return("i")
-            elif seriescoefftype == "series":
-                return(ans + " + i" + seriesvar(index, seriestype))
-            elif seriescoefftype == "serieshtml":
-                return(ans + " + <em>i</em>" + "&middot;" + seriesvar(index, seriestype))
-                  # yes, em is not the right tag, but it is styled with CSS
-        else:
-            if seriescoefftype == "series":
-                return(ans + "+" + truncate_number(ip, precision) + "i " + seriesvar(index, seriestype))
-            elif seriescoefftype == "serieshtml":
-                return(ans + " + " + truncate_number(ip, precision) + "<em>i</em> " + "&middot;" + seriesvar(index, seriestype))
-            elif seriescoefftype == "signed":
-                return(ans + "+" + truncate_number(ip, precision) + "i")
-            elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncate_number(ip, precision) + "i")
-    elif ip < -1 * truncation:
-        if float(abs(ip + 1)) < truncation:
-            if seriescoefftype == "factor": #assumes that factor is used in math mode
-                return("- i \cdot" + seriesvar(index, seriestype))
-            elif seriescoefftype == "serieshtml":
-                return(" &minus; <em>i</em> &middot;" + seriesvar(index, seriestype))
-            else:
-                return("- i" + seriesvar(index, seriestype))
-        else:
-            if seriescoefftype == "series":
-                return(ans + truncate_number(ip, precision) + "i" + seriesvar(index, seriestype))
-            elif seriescoefftype == "serieshtml":
-                return(ans + " &minus; " + truncate_number(float(abs(ip)), precision) + "<em>i</em>" + "&middot;" + seriesvar(index, seriestype))
-            elif seriescoefftype == "signed":
-                return(ans + truncate_number(ip, precision) + " i")
-            elif seriescoefftype == "literal" or seriescoefftype == "factor":
-                return(ans + truncate_number(ip, precision) + "i")
-
+    if seriescoefftype in ["series", "serieshtml", "signed", "factor"]:
+        parenthesis = True
     else:
-        return(latex(coeff) + seriesvar(index, seriestype))
+        parenthesis = False
+    coeff_display =  display_complex(rp, ip, precision, method="truncate", parenthesis=parenthesis)
+
+    # deal with the zero case
+    if coeff_display == "0":
+        if seriescoefftype=="literal":
+            return "0"
+        else:
+            return ""
+
+    if seriescoefftype=="literal":
+        return coeff_display
+
+    if seriescoefftype == "factor":
+        if coeff_display == "1":
+            return ""
+        elif coeff_display == "-1":
+            return "-"
+
+    #add signs and fix spacing
+    if seriescoefftype in ["series", "serieshtml"]:
+        if coeff_display == "1":
+            coeff_display = " + "
+        elif coeff_display == "-1":
+            coeff_display = " - "
+        # purely real or complex number that starts with -
+        elif coeff_display[0] == '-':
+            # add spacings around the minus
+            coeff_display = coeff_display.replace('-',' - ')
+        else:
+            ans += " + "
+    elif seriescoefftype == 'signed' and coeff_display[0] != '-':
+        # add the plus without the spaces
+        ans += "+"
+
+    ans += coeff_display
+
+
+    if seriescoefftype == "serieshtml":
+        ans = ans.replace('i',"<em>i</em>").replace('-',"&minus;")
+        if coeff_display[-1] not in [')', ' ']:
+            ans += "&middot;"
+    if seriescoefftype in ["series", "serieshtml", "signed"]:
+        ans += " " + seriesvar(index, seriestype)
+
+    return ans
 
 
 def seriesvar(index, seriestype):
@@ -337,10 +261,10 @@ def lfuncDShtml(L, fmt):
         for n in range(1, ds_length):
             if fmt == "arithmetic":
                 tmp = seriescoeff(L.dirichlet_coefficients_arithmetic[n], n + 1,
-                    "serieshtml", "dirichlethtml", -6, 5)
+                    "serieshtml", "dirichlethtml", 3)
             else:
                 tmp = seriescoeff(L.dirichlet_coefficients[n], n + 1,
-                    "serieshtml", "dirichlethtml", -6, 5)
+                    "serieshtml", "dirichlethtml", 3)
             if tmp != "":
                 nonzeroterms += 1
             ans = ans + " <span class='term'>" + tmp + "</span> "
@@ -503,7 +427,7 @@ def lfuncEPhtml(L,fmt):
             if elt is None:
                 out += "O(%s)" % (seriesvar(i, "polynomial"),)
             elif i > 0:
-                out += seriescoeff(elt, i, "series", "polynomial", -6, 5)
+                out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
 
 
@@ -649,40 +573,37 @@ def lfuncFEtex(L, fmt):
         if L.level > 1:
             # ans+=latex(L.level)+"^{\\frac{s}{2}}"
             ans += latex(L.level) + "^{s/2}"
-        # set up to accommodate multiplicity of Gamma factors
-        old_mu = ""
-        curr_mu_exp = 0
-        for mu in mu_list:
-            if mu == old_mu:
-                curr_mu_exp += 1
-            else:
-                old_mu = mu
-                if curr_mu_exp > 1:
-                    ans += "^{" + str(curr_mu_exp) + "}"
-                curr_mu_exp = 1
-                ans += "\Gamma_{\R}(s" + seriescoeff(mu, 0, "signed", "", -6, 5) + ")"
-        if curr_mu_exp >= 2:
-            ans += "^{" + str(curr_mu_exp) + "}"
-        # set up to accommodate multiplicity of Gamma factors
-        old_nu = ""
-        curr_nu_exp = 0
-        for nu in nu_list:
-            if nu == old_nu:
-                curr_nu_exp += 1
-            else:
-                old_nu = nu
-                if curr_nu_exp > 1:
-                    ans += "^{" + str(curr_nu_exp) + "}"
-                curr_nu_exp = 1
-                ans += "\Gamma_{\C}(s" + seriescoeff(nu, 0, "signed", "", -6, 5) + ")"
-        if curr_nu_exp >= 2:
-            ans += "^{" + str(curr_nu_exp) + "}"
-        ans += " \\cdot " + texname + "\\cr\n"
+            ans += " \\, "
+        def munu_str(factors_list, field):
+            assert field in ['\R','\C']
+            # set up to accommodate multiplicity of Gamma factors
+            old = ""
+            res = ""
+            curr_exp = 0
+            for elt in factors_list:
+                if elt == old:
+                    curr_exp += 1
+                else:
+                    old = elt
+                    if curr_exp > 1:
+                        res += "^{" + str(curr_exp) + "}"
+                    if curr_exp > 0:
+                        res += " \\, "
+                    curr_exp = 1
+                    res += "\Gamma_{" + field + "}(s" + seriescoeff(elt, 0, "signed", "", 3) + ")"
+            if curr_exp > 1:
+                res += "^{" + str(curr_exp) + "}"
+            if res != "":
+                res +=  " \\, "
+            return res
+        ans += munu_str(mu_list, '\R')
+        ans += munu_str(nu_list, '\C')
+        ans += texname + "\\cr\n"
         ans += "=\\mathstrut & "
         if L.sign == 0:
             ans += "\epsilon \cdot "
         else:
-            ans += seriescoeff(L.sign, 0, "factor", "", -6, 5)
+            ans += seriescoeff(L.sign, 0, "factor", "", 3) + "\\,"
         ans += tex_name_1ms
         if L.sign == 0 and L.degree == 1:
             ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
@@ -696,9 +617,9 @@ def lfuncFEtex(L, fmt):
         if L.mu_fe != []:
             for mu in range(len(L.mu_fe) - 1):
                 prec = len(str(L.mu_fe[mu]))
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", -6, prec) + ", "
+                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", 3) + ", "
             prec = len(str(L.mu_fe[-1]))
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", -6, prec)
+            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", 3)
         else:
             ans += "\\ "
         ans += ":"
@@ -709,7 +630,7 @@ def lfuncFEtex(L, fmt):
         else:
             ans += "\\ "
         ans += "),\\ "
-        ans += seriescoeff(L.sign, 0, "literal", "", -6, 5)
+        ans += seriescoeff(L.sign, 0, "literal", "", 3)
         ans += ")"
 
     return(ans)
