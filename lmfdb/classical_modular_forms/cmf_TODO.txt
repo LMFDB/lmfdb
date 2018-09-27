@@ -19,7 +19,6 @@ IMPORTANT:
 * knowls: add a precision knowl for complex eigenvalues (David)
 * form pages: Label headers for complex eigenvalues: chi, m (David)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* move everything to classical_modular_forms (David) and e-mail
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Knowls for number fields in search results, blank if dim>20, else smarter (truncate labels if long, display polynomial with knowl if not in LMFDB) (David)
 * search results: three rows in re-search instead of four (David)
