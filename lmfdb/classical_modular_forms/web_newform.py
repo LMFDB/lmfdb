@@ -158,9 +158,11 @@ class WebNewform(object):
 
         self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1)
 
+        self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
+
         # properties box
         self.properties = [('Label', self.label)]
-        if cc_data:
+        if self.plot is not None:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
         self.properties += [('Level', str(self.level)),
@@ -188,6 +190,7 @@ class WebNewform(object):
         self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
 
         self.title = "Newform %s"%(self.label)
+
 
     @property
     def friends(self):
@@ -420,17 +423,3 @@ class WebNewform(object):
     def m_range(self, L):
         return [m-1 for m in L if m >= 1 and m <= self.dim]
 
-    @property
-    def plot(self):
-        # perhaps this should be read directly from "Plot/ModularForm/GL2/Q/holomorphic/1/12/a/a/"
-        # same idea in genus 2 would save 0.5 s
-        I = CDF(0,1)
-        DtoH = lambda x: (-I *x + 1)/(x - I)
-        Htoq = lambda x: exp(2*CDF.pi()*I*x)
-        Dtoq = lambda x: Htoq(DtoH(CDF(x)))
-        absasphase = lambda x: Htoq(x.abs() + 0.6)
-        R = PolynomialRing(CDF, "q");
-        #FIXME increase precision and points
-        f = R([CDF(tuple(elt)) for elt in self.cc_data[0]['an'][:30] ])
-        plot = complex_plot(lambda x: +Infinity if abs(x) >= 0.99 else 16*absasphase(f(Dtoq(x))), (-1,1),(-1,1), plot_points=200, aspect_ratio = 1, axes=False)
-        return encode_plot(plot, pad_inches=0, bbox_inches = 'tight', remove_axes = True)
