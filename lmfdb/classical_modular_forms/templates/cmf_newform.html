@@ -148,16 +148,16 @@ function show_qexp(qstyle) {
 {% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
 {% elif info.format == 'analytic_embed' %}
 <h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
 {% elif info.format == 'satake' %}
 <h2>{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
 {% else %}
 <h2>{{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
+<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
 {% endif %}
 
 <div id="table-scroll-wrapper">

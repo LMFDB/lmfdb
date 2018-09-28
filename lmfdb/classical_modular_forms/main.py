@@ -54,8 +54,8 @@ def set_info_funcs(info):
             return ""
         else:
             cm_label = "2.0.%s.1"%(-mf['cm_disc'])
-            return '<a href="{0}"> {1} </a>'.format(url_for("number_fields.by_label", label=cm_label),
-                                                    field_pretty(cm_label))
+            cm_name = field_pretty(cm_label)
+            return nf_display_knowl(cm_label, cm_name)
     info["cm_link"] = cm_link
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
