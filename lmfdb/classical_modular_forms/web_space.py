@@ -146,12 +146,18 @@ class WebNewformSpace(object):
         self.dim_grid = DimGrid.from_db(data)
         #self.old_dim = self.cusp_dim - self.dim
         #self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        self.properties = [
-            ('Label',self.label),
+        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+
+        self.properties = [('Label',self.label)]
+
+        if self.plot is not None:
+            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+
+        self.properties +=[
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Character orbit',self.char_orbit_label),
-            ('Representative character',r'\(%s\)'%self.char_conrey_str),
+            ('Rep. character',r'\(%s\)'%self.char_conrey_str),
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm bound',str(self.sturm_bound)),
