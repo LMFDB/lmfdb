@@ -168,7 +168,8 @@ class WebNewform(object):
                             ('Analytic conductor', str(self.Nk2)),
                             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
                             ('Rep. character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', str(self.dim))]
+                            ('Dimension', str(self.dim)),
+                            ('Analytic rank', str(self.analytic_rank))]
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:

@@ -14,7 +14,6 @@ IMPORTANT:
 * Check definition of trace bound mf.elliptic.trace_bound (Drew)
 * Picture of space (Drew)
 * Use inverse matrix when dimension is large (Drew, David)
-* add analytic rank to form and stats pages (David)
 * fix and verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
 * form pages: Label headers for complex eigenvalues: chi, m (David)
@@ -39,7 +38,9 @@ GOOD:
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
-* Add fricke eigenvalue to mf_newforms and display it.
+* Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it.
+* Add analytic rank to search results?
+* Make sure the knowl for labels is correct.
 
 FORMATTING:
 * form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)

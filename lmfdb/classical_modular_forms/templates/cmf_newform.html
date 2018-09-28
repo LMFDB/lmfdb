@@ -54,6 +54,12 @@
     <td>{{ newform.rel_dim }} over {{ newform.cyc_display() | safe }}</td>
   </tr>
   {% endif %}
+  <tr>
+    <td> {{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{{ newform.analytic_rank }}</td>
+  </tr>
 </table>
 
 <script>
@@ -154,67 +160,59 @@ function show_qexp(qstyle) {
 <p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers{% if newform.character != 1 %} that preserves the character{% endif %}, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
 {% endif %}
 
+<div id="table-scroll-wrapper">
 <table class="ntdata">
   <thead>
-    <tr class="dark">
+    <tr>
       {% if newform.dim > 1 %}
-      <th>\(m\)</th>
-      {% if newform.char_degree > 1 %}
-      <th>{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
-      {% endif %}
+      <th class="sticky-head dark">{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
       {% if newform.has_exact_qexp %}
-      <th>\(\iota_m(\alpha)\)</th>
+      <th class="sticky-head1 dark">\(\iota_m(\alpha)\)</th>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <th class="center">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
+      <th class="center dark">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
     {% for m in newform.m_range(info.CC_m) %}
+    {% if loop.index is divisibleby(2) %}
+    {% set shade = 'dark' %}
+    {% else %}
+    {% set shade = 'light' %}
+    {% endif %}
     <tr>
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
       {% if newform.dim > 1 %}
-      <td{% if newform.char_degree == 1 and not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ m+1 }}</td>
-      {% if newform.char_degree > 1 %}
-      <td{% if not newform.has_exact_qexp %} class="border-right"{% endif %}>{{ newform.conrey_from_embedding(m) }}</td>
-      {% endif %}
+      <td class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
       {% if newform.has_exact_qexp %}
-      <td class="middle border-right">
+      <td class="{{shade}} middle border-right sticky-col1">
         \( {{ newform.embedding(m,prec=info.prec,format=info.format) }} \)
       </td>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td style="white-space:nowrap;" align=right>
+      <td class="nowrap" align=right>
         \( {{ newform.embedding(m,n,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
       {% else %}
-      {% if loop.index is divisibleby(2) %}
-      {% set shade = 'dark ' %}
-      {% else %}
-      {% set shade = '' %}
-      {% endif %}
       {% if newform.dim > 1 %}
-      <td rowspan="2" class="{{shade}}middle{% if newform.char_degree == 1 and not newform.has_exact_qexp %} border-right{% endif %}">{{ m+1 }}</td>
-      {% if newform.char_degree > 1 %}
-      <td rowspan="2" class="{{shade}}middle{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
-      {% endif %}
+      <td rowspan="2" class="{{shade}} sticky-col middle{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
       {% if newform.has_exact_qexp %}
-      <td rowspan="2" class="{{shade}}middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
+      <td rowspan="2" class="{{shade}} sticky-col1 middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td style="white-space:nowrap;" align=right>
+      <td class="nowrap" align=right>
         \( {{ newform.satake(m,n,0,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
     </tr>
     <tr>
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td style="white-space:nowrap;" align=right>
+      <td class="nowrap" align=right>
         \( {{ newform.satake(m,n,1,prec=info.prec,format=info.format) }} \)
       </td>
       {% endfor %}
@@ -223,6 +221,8 @@ function show_qexp(qstyle) {
     {% endfor %}
   </tbody>
 </table>
+</div>
+
 {% if info.err %}
 
 {% endif %}
@@ -231,21 +231,21 @@ function show_qexp(qstyle) {
   <table>
     <tr>
       <td>\(n\): </td>
-      <td><input type='text' name='n' size=10 value="{{info.n}}"></td>
+      <td><input type='text' name='n' style="width: 160px" value="{{info.n}}"></td>
     </tr>
     {% if newform.dim > 1 %}
     <tr>
       <td>\(m\): </td>
-      <td><input type='text' name='m' size=10 value="{{info.m}}"></td>
+      <td><input type='text' name='m' style="width: 160px" value="{{info.m}}"></td>
     </tr>
     {% endif %}
     <tr>
       <td>Precision: </td>
-      <td><input type='text' name='prec' size=10 value="{{info.prec}}"></td>
+      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}"></td>
     </tr>
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
-      <td><select name='format'>
+      <td><select name='format' style="width: 170px">
           {% if newform.dim > 1 %}
           <option value='embed' {% if info.format == 'embed' %}selected{% endif %}>Complex embeddings</option>
           {% endif %}

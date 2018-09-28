@@ -945,6 +945,9 @@ table.ntdata td.dark {
 table.ntdata tr.dark {
     background: {{color.table_ntdata_background_2}};
 }
+table.ntdata td.light {
+    background: {{color.body_background}};
+}
 table.euler {
     margin-left:auto;
     margin-right:auto;
@@ -2010,4 +2013,63 @@ table.box td.content ul.list {
 
 p.short {
   margin: 0px;
+}
+
+#table-scroll-wrapper {
+    height:200px;
+    overflow:auto;
+}
+
+#table-scroll-wrapper table {
+    margin: 0;
+    border-collapse: collapse;
+}
+#table-scroll-wrapper th {
+    position: sticky; top: 0;
+    z-index:1;
+    background:{{color.table_ntdata_background_2}};
+    background-clip: padding-box;
+}
+#table-scroll-wrapper thead tr {
+    border-bottom: 0; /* We need to put the border on th:after for scrolling */
+}
+#table-scroll-wrapper th:after {
+    content:'';
+    position:absolute;
+    left: 0;
+    bottom: 0;
+    width:100%;
+    border-bottom: 2px solid {{ color.table_ntdata_border}};
+}
+#table-scroll-wrapper td.border-right {
+    border-right: 0; /* We need to put the border on td:after for scrolling */
+}
+#table-scroll-wrapper td.border-right:after {
+    content:'';
+    position:absolute;
+    right: 0;
+    top: 0;
+    height:100%;
+    border-right: 2px solid {{ color.table_ntdata_border}};
+}
+#table-scroll-wrapper .sticky-col {
+    position: sticky; left: 0;
+    z-index:2;
+    background-clip: padding-box;
+}
+#table-scroll-wrapper .sticky-col1 {
+    position: sticky; left: 60px;
+    z-index:2;
+    background-clip: padding-box;
+}
+#table-scroll-wrapper th.sticky-head {
+    position: sticky; left: 0; top: 0;
+    z-index:3;
+}
+#table-scroll-wrapper th.sticky-head1 {
+    position: sticky; left: 60px; top: 0;
+    z-index:3;
+}
+td.nowrap {
+    white-space:no-wrap;
 }

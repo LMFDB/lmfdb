@@ -108,26 +108,26 @@ def render_newform_webpage(label):
         return abort(404, err.args)
     info = to_dict(request.args)
     info['format'] = info.get('format','embed' if newform.dim>1 else 'satake')
-    p, maxp = 2, 7
+    p, maxp = 2, 20
     if info['format'] in ['satake', 'satake_angle']:
         while p <= maxp:
             if newform.level % p == 0:
                 maxp = next_prime(maxp)
             p = next_prime(p)
     info['n'] = info.get('n', '2-%s'%maxp)
-    info['m'] = info.get('m', '1-12')
+    info['m'] = info.get('m', '1-20')
     errs = []
     try:
         info['CC_n'] = integer_options(info['n'], 1000)
     except (ValueError, TypeError):
-        info['n'] = '2-7'
-        info['CC_n'] = range(2,8)
+        info['n'] = '2-20'
+        info['CC_n'] = range(2,21)
         errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
     try:
         info['CC_m'] = integer_options(info['m'], 1000)
     except (ValueError, TypeError):
-        info['m'] = '1-12'
-        info['CC_m'] = range(1,13)
+        info['m'] = '1-20'
+        info['CC_m'] = range(1,21)
         errs.append("<span style='color:black'>m</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
     try:
         info['prec'] = int(info.get('prec',6))
@@ -619,7 +619,10 @@ class CMF_stats(StatsDisplay):
          'row_title':'has inner twist',
          'knowl':'mf.elliptic.inner_twist',
          'formatter':boolean_unknown_format},
-        #{'cols':'analytic_rank','row_title':'analytic rank','knowl':'mf.elliptic.analytic_rank','avg':True},
+        {'cols':'analytic_rank',
+         'row_title':'analytic rank',
+         'knowl':'lfunction.analytic_rank',
+         'avg':True},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
