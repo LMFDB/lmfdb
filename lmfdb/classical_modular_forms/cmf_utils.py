@@ -19,21 +19,9 @@ Utilities file for elliptic (holomorphic) modular forms.
 AUTHOR: Fredrik Strömberg
 
 """
-import random
-from sage.all import AlphabeticStrings, gcd, Mod
-from flask import jsonify, flash, Markup
-from lmfdb.utils import web_latex, ajax_url
 from lmfdb.classical_modular_forms import cmf_logger
 logger = cmf_logger
-from sage.all import vector, QQ, Matrix, cached_method
-from sage.misc.cachefunc import cached_function 
-import lmfdb.base
-import re
-from lmfdb.search_parsing import parse_range
-try:
-    from dirichlet_conrey import DirichletGroup, DirichletGroup_conrey, DirichletCharacter_conrey
-except:
-    cmf_logger.critical("Could not import dirichlet_conrey!")
+from sage.all import cached_method
 
 def newform_label(level, weight, character, label, embedding=None, make_cache_label=False):
     r"""

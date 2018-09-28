@@ -177,6 +177,8 @@ def to_dict(args):
     return d
 
 
+EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
+EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
 def display_float(x, prec, method = "truncate"):
     if abs(x) < 10**(-prec):
         return "0"

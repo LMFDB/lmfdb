@@ -1587,9 +1587,9 @@ class PostgresTable(PostgresBase):
                 updater = SQL("UPDATE {0} SET ({1}) = ({2}){3}")
             updater = updater.format(Identifier(self.search_table),
                                      SQL(", ").join(map(Identifier, changes.keys())),
-                                     SQL(", ").join(Placeholder() * len(dat)),
+                                     SQL(", ").join(Placeholder() * len(changes)),
                                      qstr)
-            cur = self._execute(updater, values + changes.values())
+            self._execute(updater, changes.values() + values)
             self._break_order()
             self._break_stats()
             if resort:
