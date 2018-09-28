@@ -1569,6 +1569,35 @@ class PostgresTable(PostgresBase):
                 self.stats.refresh_stats(total = False)
             self.log_db_change("delete", query=query, nrows=nrows)
 
+    def update(self, query, changes, resort=True, restat=True, commit=True):
+        for col in changes:
+            if col in self._extra_cols:
+                # Have to find the ids using the query, then update....
+                raise NotImplementedError
+        with DelayCommit(self, commit):
+            qstr, values = self._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+                values = []
+            else:
+                qstr = SQL(" WHERE {0}").format(qstr)
+            if len(changes) == 1:
+                updater = SQL("UPDATE {0} SET {1} = {2}{3}")
+            else:
+                updater = SQL("UPDATE {0} SET ({1}) = ({2}){3}")
+            updater = updater.format(Identifier(self.search_table),
+                                     SQL(", ").join(map(Identifier, changes.keys())),
+                                     SQL(", ").join(Placeholder() * len(dat)),
+                                     qstr)
+            cur = self._execute(updater, values + changes.values())
+            self._break_order()
+            self._break_stats()
+            if resort:
+                self.resort()
+            if restat:
+                self.stats.refresh_stats(total=False)
+            self.log_db_change("update", query=query, changes=changes)
+
     def upsert(self, query, data, commit=True):
         """
         Update the unique row satisfying the given query, or insert a new row if no such row exists.

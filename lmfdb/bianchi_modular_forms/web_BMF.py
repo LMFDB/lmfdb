@@ -142,7 +142,7 @@ class WebBMF(object):
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
-            bc_urls = [url_for("emf.by_url_newform_label", level=cond, weight=2, char_orbit=1, hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
+            bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
             bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
             bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
             self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]

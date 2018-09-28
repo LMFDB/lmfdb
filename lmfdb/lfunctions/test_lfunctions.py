@@ -97,7 +97,7 @@ class LfunctionTest(LmfdbTest):
 
 
 
-    def test_Lemf(self):
+    def test_Lcmf(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/1/a/0/')
         assert '0.3055149662' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/12/1/a/0/')
@@ -327,7 +327,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/56/a/')
         assert '2.791838' in L.data
 
-    def test_LemfPlot(self):
+    def test_LcmfPlot(self):
         L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/0/')
         print str(L)
         assert 'OK' in str(L)

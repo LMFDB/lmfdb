@@ -1104,12 +1104,12 @@
 
 /* Elliptic Modular Form */
 {% set exp_background = col_main_2 %} 
-{% set emf_background = col_main_ll %}
-{% set emf_table_background = col_main_ll %}
-{% set emf_table_background_off = white %}
-{% set emf_border = col_main_lg %}
-{% set emf_fundom_background = 'lightblue' %}
-{% set emf_fundom_text = white %}
+{% set cmf_background = col_main_ll %}
+{% set cmf_table_background = col_main_ll %}
+{% set cmf_table_background_off = white %}
+{% set cmf_border = col_main_lg %}
+{% set cmf_fundom_background = 'lightblue' %}
+{% set cmf_fundom_text = white %}
 
 /*Siegel modular forms*/
 {% set smf_background = col_main_ll%}

@@ -9,7 +9,7 @@ from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import display_complex
-from lmfdb.modular_forms.elliptic_modular_forms.web_newform import newform_conrey_exists
+from lmfdb.classical_modular_forms.web_newform import newform_conrey_exists
 
 
 ###############################################################

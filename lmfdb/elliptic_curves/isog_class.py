@@ -80,7 +80,7 @@ class ECisog_class(object):
         self.newform_exists_in_db = self.newform_label is not None
         if self.newform_label is not None:
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
-            self.newform_link = url_for("emf.by_url_newform_label", level=N, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
+            self.newform_link = url_for("cmf.by_url_newform_label", level=N, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
 

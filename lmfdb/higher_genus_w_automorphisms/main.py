@@ -17,7 +17,7 @@ from lmfdb.search_wrapper import search_wrap
 from sage.all import Permutation
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.sato_tate_groups.main import sg_pretty
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_hgcwa_stats
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
 # Determining what kind of label
@@ -128,7 +128,7 @@ def index():
     genus_list = range(2,genus_max+1)
     info = {'count': 20,
             'genus_list': genus_list,
-            'stats': get_stats_object().stats(),}
+            'stats': HGCWAstats().stats(),}
 
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page")),
@@ -145,7 +145,7 @@ def random_passport():
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': get_stats_object().stats(),
+        'stats': HGCWAstats().stats(),
     }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
@@ -153,7 +153,7 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    group_stats = db_hgcwa_stats().find_one({'_id':'bygenus/' + genus + '/group'})
+    group_stats = db.hgcwa_passports.stats.get_oldstat('bygenus/' + genus + '/group')
 
     # Redirect to 404 if statistic is not found
     if not group_stats:

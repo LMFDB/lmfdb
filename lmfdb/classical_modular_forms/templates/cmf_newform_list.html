@@ -1,0 +1,63 @@
+{%- from "knowl-defs.html" import KNOWL with context -%}
+{% set ALsigns = info.display_AL(info.results) %}
+
+<table class="ntdata">
+  <thead>
+    <tr class="middle dark">
+      <th rowspan=2>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dim.') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='$Nk^2$') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
+      <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
+      {% if ALsigns %}
+      <th rowspan=2></th>
+      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> A-L signs</th>
+      {% endif %}
+      <th rowspan=2>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
+    </tr>
+    <tr class="dark">
+      <th class="right">\(a_2\)</th>
+      <th class="right">\(a_3\)</th>
+      <th class="right">\(a_5\)</th>
+      <th class="right">\(a_7\)</th>
+      {% if ALsigns %}
+      {% for p, ev in info.results[0]['atkin_lehner_eigenvals'] %}
+      <th class="center">{{ p }}</th>
+      {% endfor %}
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for mf in info.results: %}
+    <tr>
+      <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
+      <td> {{ mf.dim }} </td>
+      <td> {{ mf.Nk2 }} </td>
+      <td> {{ info.nf_link(mf) | safe }} </td>
+      <td> {{ info.cm_link(mf) | safe }}</td>
+      <td class="right">\({{ mf.trace_display[0] }}\)</td>
+      <td class="right">\({{ mf.trace_display[1] }}\)</td>
+      <td class="right">\({{ mf.trace_display[2] }}\)</td>
+      <td class="right">\({{ mf.trace_display[3] }}\)</td>
+      {% if ALsigns %}
+      <td></td>
+      {% for p, ev in mf.atkin_lehner_eigenvals %}
+      <td class="center">\({{"+" if ev == 1 else "-"}}\)</td>
+      {% endfor %}
+      {% endif %}
+      <td>
+        {% if mf.dim <= 20 %}
+        <a href="{{info.mf_url(mf)}}">
+        {% if mf.qexp_display %}
+        \({{ mf.qexp_display }}\)
+        {% else %}
+        \(q + \cdots\)
+        {% endif %}
+        </a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

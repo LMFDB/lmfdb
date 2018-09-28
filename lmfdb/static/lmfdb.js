@@ -153,8 +153,24 @@ function knowl_click_handler($el) {
     // otherwise assume its sitting inside a <div> or <p>
     if(table_mode) {
       // assume we are in a td or th tag, go 2 levels up
-      var cols = $el.parent().parent().children().length;
-      $el.parent().parent().after(
+      var td_tag = $el.parent();
+      var tr_tag = td_tag.parent();
+      var tds = tr_tag.children();
+      var len = tds.length;
+      var cols = 0;
+      var max_rowspan = 0;
+      for (var i = 0; i < len; i++) {
+        log(tds[i]);
+        cols += $(tds[i]).prop("colSpan");
+        var rowspan = $(tds[i]).prop("rowSpan");
+        if (rowspan > max_rowspan)
+          max_rowspan = rowspan;
+      }
+      log("cols: " + cols);
+      log("max_rowspan: " + max_rowspan);
+      for (var i = 0; i < max_rowspan-1; i++)
+        tr_tag = tr_tag.next();
+      tr_tag.after(
           "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div></td></tr>");
     } else {
       $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
@@ -164,8 +180,8 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    if(knowl_id == "bigint") {
-      log("bigint: " + kwargs);
+    if(knowl_id == "dynamic_show") {
+      log("dynamic_show: " + kwargs);
       $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
       MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
       MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
