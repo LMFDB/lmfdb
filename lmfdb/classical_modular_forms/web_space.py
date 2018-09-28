@@ -157,7 +157,7 @@ class WebNewformSpace(object):
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Character orbit',self.char_orbit_label),
-            ('Representative character',r'\(%s\)'%self.char_conrey_str),
+            ('Rep. character',r'\(%s\)'%self.char_conrey_str),
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm bound',str(self.sturm_bound)),
