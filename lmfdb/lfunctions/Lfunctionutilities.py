@@ -473,11 +473,8 @@ def lfuncEPhtml(L,fmt):
         return out
     goodorbad = "bad"
     trclass = ""
-    ZZT = PolynomialRing(ZZ, "T")
     for lf in L.bad_lfactors:
-        # FIXME Hack to fix the length of the list
-        make_pyflakes_complain = "edgar"
-        eptable += row(trclass, goodorbad, lf[0], ZZT(lf[1]).list())
+        eptable += row(trclass, goodorbad, lf[0], lf[1])
         goodorbad = ""
         trclass = ""
     goodorbad = "good"
