@@ -240,6 +240,8 @@ def truncate_float(num, precision):
     '1'
     >>> truncate_float(1.1234567, 4)
     '1.1234'
+    >>> truncate_float(1.1234567, 5)
+    '1.12345'
     >>> truncate_float(1.4999999, 4)
     '1.5'
     """
