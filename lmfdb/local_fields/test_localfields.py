@@ -21,3 +21,11 @@ class LocalFieldTest(LmfdbTest):
 		L = self.tc.get('/LocalNumberField/11.6.4.2')
 		assert 'x^{2} - x + 7' in L.data # bad (not robust) test, but it's the best i was able to find...
 		assert 'x^{3} - 11 t' in L.data # bad (not robust) test, but it's the best i was able to find...
+
+    def test_global_splitting_models(self):
+	# The first one will have to change if we compute a GSM for it
+        L = self.tc.get('/LocalNumberField/163.8.7.2')
+        assert 'Not computed' in L.data
+        L = self.tc.get('/LocalNumberField/2.8.0.1')
+        assert 'Does not exist' in L.data
+
