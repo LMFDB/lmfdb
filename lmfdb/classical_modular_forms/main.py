@@ -8,7 +8,7 @@ from lmfdb.classical_modular_forms import cmf
 from lmfdb.search_parsing import parse_ints, parse_signed_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, OLDLABEL_RE as OLD_SPACE_LABEL_RE
@@ -34,10 +34,18 @@ def set_info_funcs(info):
     def nf_link(mf):
         nf_label = mf.get('nf_label')
         if nf_label:
-            return '<a href="{0}"> {1} </a>'.format(url_for("number_fields.by_label", label=nf_label),
-                                                    field_pretty(nf_label))
+            name = field_pretty(nf_label)
+            if name == nf_label and len(name) > 16:
+                # truncate if too long
+                parts = nf_label.split('.')
+                parts[2] = 'N'
+                name = '.'.join(parts)
+            return nf_display_knowl(nf_label, name)
         else:
-            return "Not in LMFDB"
+            poly = mf.get('field_poly')
+            if poly:
+                return polyquo_knowl(poly)
+            return ""
     info["nf_link"] = nf_link
     def cm_link(mf):
         if mf['is_cm'] == -1:

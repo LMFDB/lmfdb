@@ -516,9 +516,14 @@ def bigint_knowl(n, cutoff=8, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        return r'<a title="[bigint]" knowl="bigint" kwargs="%s">\(%s\)</a>'%(n, short)
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(n, short)
     else:
         return r'\(%s\)'%n
+
+def polyquo_knowl(f):
+    short = r'\mathbb{Q}[x]/(x^{%s} + \dots)'%(len(f) - 1)
+    long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_bigint_poly(coeffs, var='x'):
     plus = r"\mathstrut +\mathstrut \) "

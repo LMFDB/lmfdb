@@ -2073,3 +2073,10 @@ p.short {
 td.nowrap {
     white-space:no-wrap;
 }
+
+.float-right {
+    float:right;
+}
+.float-left {
+    float:left;
+}
