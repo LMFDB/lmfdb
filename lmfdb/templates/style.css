@@ -2018,7 +2018,7 @@ p.short {
 }
 
 #table-scroll-wrapper {
-    height:275px;
+    max-height:270px;
     overflow:auto;
 }
 

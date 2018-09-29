@@ -228,14 +228,17 @@ function show_qexp(qstyle) {
 {% endif %}
 
 <form id='complex_embeddings'>
+  {% if newform.dim <= 4 %}
+  <input type="hidden" name="m" value="{{info.m}}"/>
+  {% endif %}
   <table>
     <tr>
       <td>\(n\): </td>
       <td><input type='text' name='n' style="width: 160px" value="{{info.n}}"></td>
     </tr>
-    {% if newform.dim > 1 %}
+    {% if newform.dim > 4 %}
     <tr>
-      <td>\(m\): </td>
+      <td>Embeddings: </td>
       <td><input type='text' name='m' style="width: 160px" value="{{info.m}}"></td>
     </tr>
     {% endif %}

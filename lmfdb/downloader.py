@@ -43,6 +43,7 @@ class Downloader(object):
     languages = ['magma', 'sage', 'gp', 'text']
     comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
     assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
+    line_end = {'magma':';','sage':'','gp':'','text':''}
     delim_start = {'magma':'[*','sage':'[','gp':'[','text':' ['}
     delim_end = {'magma':'*]','sage':']','gp':']','text':' ]'}
     start_and_end = {'magma':['[*','*];'],'sage':['[',']'],'gp':['{[',']}'],'text':['[',']']}
@@ -65,12 +66,32 @@ class Downloader(object):
         else:
             return default
 
+    def _wrap(self, result, filebase, lang='text', title=None):
+        """
+        Adds the time downloaded as a comment, make into a flask response.
+        """
+        if title is None:
+            title = self.get('title', self.table.search_table)
+        filename = filebase + self.file_suffix[lang]
+        print lang, filename
+        c = self.comment_prefix[lang]
+        mydate = time.strftime("%d %B %Y")
+        s =  '\n'
+        s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
+        s += result
+        strIO = StringIO.StringIO()
+        strIO.write(str(s))
+        strIO.seek(0)
+        return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
     def __call__(self, info):
+        """
+        Generate download file for a list of search results determined by the
+        ``query`` field in ``info``.
+        """
         print info
         lang = info.get(self.lang_key,'text').strip()
         filename = self.get('filename_base', self.table.search_table)
-        filename += self.file_suffix[lang]
-        mydate = time.strftime("%d %B %Y")
         label_col = self.table._label_col
         title = self.get('title', self.table.search_table)
         short_name = self.get('short_name', title.split(' ')[-1].lower())
@@ -109,9 +130,7 @@ class Downloader(object):
         except Exception as err:
             return abort(404, "Unable to parse query: %s"%err)
         c = self.comment_prefix[lang]
-        s =  '\n'
-        s += c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
-        s += c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
+        s = c + ' Query "%s" returned %d %s.\n\n' %(str(info.get('query')), len(data), short_name if len(data) == 1 else short_name)
         if label_col:
             s += c + ' Below are two lists, one called labels, and one called data (in matching order).\n'
             s += c + ' Each entry in the data list has the form:\n'
@@ -145,8 +164,4 @@ class Downloader(object):
             s += '\n'.join(func_start) + '\n'
             s += '    ' + '\n    '.join(func_body) + '\n'
             s += '\n'.join(func_end)
-        print s
-        strIO = StringIO.StringIO()
-        strIO.write(str(s))
-        strIO.seek(0)
-        return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+        return self._wrap(s, filename, lang=lang)

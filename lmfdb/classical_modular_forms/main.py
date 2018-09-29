@@ -116,26 +116,29 @@ def render_newform_webpage(label):
         return abort(404, err.args)
     info = to_dict(request.args)
     info['format'] = info.get('format','embed' if newform.dim>1 else 'satake')
-    p, maxp = 2, 20
+    p, maxp = 2, 10
     if info['format'] in ['satake', 'satake_angle']:
         while p <= maxp:
             if newform.level % p == 0:
                 maxp = next_prime(maxp)
             p = next_prime(p)
     info['n'] = info.get('n', '2-%s'%maxp)
-    info['m'] = info.get('m', '1-20')
     errs = []
     try:
         info['CC_n'] = integer_options(info['n'], 1000)
+        if max(info['CC_n']) >= newform.cqexp_prec:
+            errs.append("Only a(n) up to %s are available"%(newform.cqexp_prec-1))
     except (ValueError, TypeError):
-        info['n'] = '2-20'
-        info['CC_n'] = range(2,21)
+        info['n'] = '2-%s'%maxp
+        info['CC_n'] = range(2,maxp+1)
         errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+    maxm = min(newform.dim, 10)
+    info['m'] = info.get('m', '1-%s'%maxm)
     try:
         info['CC_m'] = integer_options(info['m'], 1000)
     except (ValueError, TypeError):
-        info['m'] = '1-20'
-        info['CC_m'] = range(1,21)
+        info['m'] = '1-%s'%maxm
+        info['CC_m'] = range(1,maxm+1)
         errs.append("<span style='color:black'>m</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
     try:
         info['prec'] = int(info.get('prec',6))
@@ -150,6 +153,7 @@ def render_newform_webpage(label):
                            info=info,
                            newform=newform,
                            properties2=newform.properties,
+                           downloads=newform.downloads,
                            credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
@@ -239,130 +243,6 @@ def url_for_label(label):
     else:
         raise ValueError("Invalid label")
 
-def _get_hecke_nf(label):
-    try:
-        code = encode_hecke_orbit(label)
-    except ValueError:
-        return abort(404, "Invalid label: %s"%label)
-    eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n','an','trace_an'], sort=['n'])
-    if not eigenvals:
-        return abort(404, "No form found for %s"%(label))
-    data = []
-    for i, ev in enumerate(eigenvals):
-        if ev['n'] != i+1:
-            return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
-        data.append((ev.get('an'),ev.get('trace_an')))
-    return data
-
-@cmf.route("/download_qexp/<label>")
-def download_qexp(label):
-    data = _get_hecke_nf(label)
-    if not isinstance(data,list):
-        return data
-    dim = None
-    qexp = []
-    for an, trace_an in data:
-        if not an:
-            # only had traces
-            return abort(404, "No q-expansion found for %s"%(label))
-        if dim is None:
-            dim = len(an)
-            qexp.append([0] * dim)
-        qexp.append(an)
-    if dim == 1:
-        s = Json.dumps([an[0] for an in qexp])
-    else:
-        # Spacing helps distingish different levels
-        s = "[" + ", ".join("[" + ",".join(str(c) for c in an) + "]" for an in qexp) + "]"
-    response = make_response(s)
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
-@cmf.route("/download_traces/<label>")
-def download_traces(label):
-    data = _get_hecke_nf(label)
-    if not isinstance(data,list):
-        return data
-    qexp = [0] + [trace_an for an, trace_an in data]
-    response = make_response(Json.dumps(qexp))
-    response.headers['Context-type'] = 'text/plain'
-    return response
-
-def _get_hecke_cc(label):
-    try:
-        code = encode_hecke_orbit(label)
-    except ValueError:
-        return abort(404, "Invalid label: %s"%label)
-    eigenvals = db.mf_hecke_cc.search({'hecke_orbit_code':code}, ['lfunction_label','embedding_root_real', 'embedding_root_imag', 'an', 'angles'])#, sort=['conrey_label','embedding_index'])
-    if not eigenvals:
-        return abort(404, "No form found for %s"%(label))
-    return [(ev.get('lfunction_label'), [ev.get('embedding_root_real'), ev.get('embedding_root_imag')], ev.get('an'), ev.get('angles')) for ev in eigenvals]
-
-@cmf.route("/download_cc_data/<label>")
-def download_cc_data(label):
-    data = _get_hecke_cc(label)
-    if not isinstance(data,list):
-        return data
-    down = []
-    for label, root, an, angles in data:
-        D = {'label':label,
-             'an':an}
-        if root != [None,None]:
-            D['root'] = root
-        down.append(Json.dumps(D))
-    response = make_response('\n\n'.join(down))
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
-@cmf.route("/download_satake_angles/<label>")
-def download_satake_angles(label):
-    data = _get_hecke_cc(label)
-    if not isinstance(data,list):
-        return data
-    down = []
-    for label, root, an, angles in data:
-        D = {'label':label,
-             'angles':angles}
-        if root != [None,None]:
-            D['root'] = root
-        down.append(Json.dumps(D))
-    response = make_response('\n\n'.join(down))
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
-@cmf.route("/download_newform/<label>")
-def download_newform(label):
-    data = db.mf_newforms.lookup(label)
-    if data is None:
-        return abort(404, "Label not found: %s"%label)
-    cc_data = _get_hecke_cc(label)
-    if not isinstance(cc_data, list):
-        return cc_data
-    embedding_list = []
-    for label, root, an, angles in data:
-        D = {'label': label,
-             'an': an,
-             'angles': angles}
-        if root != [None, None]:
-            D['root'] = root
-        embedding_list.append(D)
-    data['complex_embeddings'] = embedding_list
-    nf_data = _get_hecke_nf(label)
-    if not isinstance(nf_data, list):
-        return nf_data
-    qexp = [[0] * data['dim']]
-    traces = [0]
-    for an, trace_an in data:
-        if an:
-            qexp.append(an)
-        traces.append(trace_an)
-    if len(qexp) > 1:
-        data['qexp'] = qexp
-    data['traces'] = traces
-    response = make_response(Json.dumps(data))
-    response.headers['Content-type'] = 'text/plain'
-    return response
-
 def jump_box(info):
     jump = info["jump"].strip()
     if OLD_SPACE_LABEL_RE.match(jump):
@@ -377,7 +257,177 @@ def jump_box(info):
 class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Cuspidal newforms'
+    columns = ['level','weight', 'dim', 'field_poly', 'nf_label', 'hecke_cutters']
+    data_description = 'where hecke_cutters is a list of pairs [p, F_p], with F_p a list of integers encoding a polynomial; the intersection of the kernels of F_p(T_p) is this newform as a subspace of S_k(Gamma_1(N)).'
 
+    def _get_hecke_nf(self, label):
+        try:
+            code = encode_hecke_orbit(label)
+        except ValueError:
+            return abort(404, "Invalid label: %s"%label)
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n','an','trace_an'], sort=['n'])
+        if not eigenvals:
+            return abort(404, "No form found for %s"%(label))
+        data = []
+        for i, ev in enumerate(eigenvals):
+            if ev['n'] != i+1:
+                return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
+            data.append((ev.get('an'),ev.get('trace_an')))
+        return data
+
+    def _get_hecke_cc(self, label):
+        try:
+            code = encode_hecke_orbit(label)
+        except ValueError:
+            return abort(404, "Invalid label: %s"%label)
+        eigenvals = db.mf_hecke_cc.search({'hecke_orbit_code':code}, ['lfunction_label','embedding_root_real', 'embedding_root_imag', 'an', 'angles'])#, sort=['conrey_label','embedding_index'])
+        if not eigenvals:
+            return abort(404, "No form found for %s"%(label))
+        return [(ev.get('lfunction_label'), [ev.get('embedding_root_real'), ev.get('embedding_root_imag')], ev.get('an'), ev.get('angles')) for ev in eigenvals]
+
+    qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
+                                   'f = R(poly_data)',
+                                   'K.<a> = NumberField(f)',
+                                   'betas = [K([c/den for c in num]) for num, den in basis_data]'
+                                   'S.<q> = PowerSeriesRing(K)',
+                                   'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
+    def download_qexp(self, label, lang='text'):
+        data = self._get_hecke_nf(label)
+        if not isinstance(data,list):
+            return data
+        filename = label + self.file_suffix[lang]
+        dim = None
+        qexp = []
+        for an, trace_an in data:
+            if not an:
+                # only had traces
+                return abort(404, "No q-expansion found for %s"%(label))
+            if dim is None:
+                dim = len(an)
+                qexp.append([0] * dim)
+            qexp.append(an)
+        c = self.comment_prefix[lang]
+        explain = '\n'
+        data = 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        if dim == 1:
+            data += ', '.join([an[0] for an in qexp])
+            data += self.start_and_end[lang][1]
+            explain += c + ' The q-expansion is given as a list of integers.\n'
+            explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
+            basis = poly = code = ''
+        else:
+            hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators','hecke_ring_denominators', 'field_poly'])
+            if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
+                return abort(404, "Missing coefficient ring information for %s"%label)
+            start = self.delim_start[lang]
+            end = self.delim_end[lang]
+            func_start = self.get('function_start',{}).get(lang,[])
+            func_body = self.get('qexp_function_body',{}).get(lang,[])
+            func_end = self.get('function_end',{}).get(lang,[])
+            data += ",\n".join(start + ",".join(str(c) for c in an) + end for an in qexp)
+            data += self.start_and_end[lang][1] + '\n'
+            explain += c + ' The q-expansion is given as a list of lists.\n'
+            explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
+            explain += c + ' Each a_n is given as a linear combination\n'
+            explain += c + ' of the following basis for the coefficient ring.\n'
+            basis = 'basis_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+            basis += ",\n".join(start + start + ",".join(str(c) for c in num) + end + ', %s' % den + end for num, den in zip(hecke_data['hecke_ring_numerators'], hecke_data['hecke_ring_denominators']))
+            basis += self.start_and_end[lang][1] + '\n'
+            if lang in ['sage']:
+                explain += c + ' To create the q-expansion as a power series, type "qexp %s make_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
+                code = '\n\n' + '\n'.join(func_start) + '\n'
+                code += '    ' + '\n    '.join(func_body) + '\n'
+                code += '\n'.join(func_end)
+            poly = 'poly_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+            poly += ', '.join(str(c) for c in hecke_data['field_poly'])
+            poly += self.start_and_end[lang][1] + '\n'
+        return self._wrap(explain + poly + basis + data + code,
+                          label,
+                          lang=lang,
+                          title='q-expansion of %s,'%(label))
+
+    def download_traces(self, label, lang='text'):
+        data = self._get_hecke_nf(label)
+        if isinstance(data,list):
+            return data
+        qexp = [0] + [trace_an for an, trace_an in data]
+        return self._wrap(Json.dumps(qexp))
+
+    def download_cc_data(self, label, lang='text'):
+        data = self._get_hecke_cc(label)
+        if not isinstance(data,list):
+            return data
+        down = []
+        for label, root, an, angles in data:
+            D = {'label':label,
+                 'an':an}
+            if root != [None,None]:
+                D['root'] = root
+            down.append(Json.dumps(D))
+        return self._wrap('\n\n'.join(down))
+
+    def download_satake_angles(self, label, lang='text'):
+        data = self._get_hecke_cc(label)
+        if not isinstance(data,list):
+            return data
+        down = []
+        for label, root, an, angles in data:
+            D = {'label':label,
+                 'angles':angles}
+            if root != [None,None]:
+                D['root'] = root
+            down.append(Json.dumps(D))
+        return self._wrap('\n\n'.join(down))
+
+    def download_newform(self, label, lang='text'):
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        cc_data = self._get_hecke_cc(label)
+        if not isinstance(cc_data, list):
+            return cc_data
+        embedding_list = []
+        for label, root, an, angles in data:
+            D = {'label': label,
+                 'an': an,
+                 'angles': angles}
+            if root != [None, None]:
+                D['root'] = root
+            embedding_list.append(D)
+        data['complex_embeddings'] = embedding_list
+        nf_data = self._get_hecke_nf(label)
+        if not isinstance(nf_data, list):
+            return nf_data
+        qexp = [[0] * data['dim']]
+        traces = [0]
+        for an, trace_an in data:
+            if an:
+                qexp.append(an)
+            traces.append(trace_an)
+        if len(qexp) > 1:
+            data['qexp'] = qexp
+        data['traces'] = traces
+        return self._wrap(Json.dumps(data))
+
+@cmf.route("/download_qexp/<label>")
+def download_qexp(label):
+    return CMF_download().download_qexp(label, lang='sage')
+
+@cmf.route("/download_traces/<label>")
+def download_traces(label):
+    return CMF_download().download_traces(label)
+
+@cmf.route("/download_cc_data/<label>")
+def download_cc_data(label):
+    return CMF_download().download_cc_data(label)
+
+@cmf.route("/download_satake_angles/<label>")
+def download_satake_angles(label):
+    return CMF_download().download_satake_angles(label)
+
+@cmf.route("/download_newform/<label>")
+def download_newform(label):
+    return CMF_download().download_newform(label)
 
 @search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, level_field='level', conrey_field='char_labels'):
