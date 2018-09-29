@@ -327,7 +327,10 @@ class CMF_download(Downloader):
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             explain += c + ' Each a_n is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
-            basis = 'basis_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+            basis = '\n' + c + ' The entries in the following list give a basis for the\n'
+            basis += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
+            basis += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
+            basis += 'basis_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
             basis += ",\n".join(start + start + ",".join(str(c) for c in num) + end + ', %s' % den + end for num, den in zip(hecke_data['hecke_ring_numerators'], hecke_data['hecke_ring_denominators']))
             basis += self.start_and_end[lang][1] + '\n'
             if lang in ['sage']:
@@ -335,7 +338,9 @@ class CMF_download(Downloader):
                 code = '\n\n' + '\n'.join(func_start) + '\n'
                 code += '    ' + '\n    '.join(func_body) + '\n'
                 code += '\n'.join(func_end)
-            poly = 'poly_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+            poly = '\n' + c + 'The following line give the coefficients of\n'
+            poly += c + ' the defining polynomial for the coefficient field.'
+            poly += 'poly_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0]
             poly += ', '.join(str(c) for c in hecke_data['field_poly'])
             poly += self.start_and_end[lang][1] + '\n'
         return self._wrap(explain + poly + basis + data + code,
