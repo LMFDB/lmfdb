@@ -82,11 +82,11 @@ Info was: {{info}}
           <option value="odd">odd only</option>
         </select>
       </td>
-      <td><input type='text' name='weight' placeholder='2' size=10></td>
+      <td><input type='text' style="width: 130px;" name='weight' placeholder='2'></td>
       <td><span class="formexample"> e.g. 2, 4-8 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-      <td><input type='text' name='level' placeholder='4' size=10></td>
+      <td><input type='text' style="width: 130px;" name='level' placeholder='4'></td>
       <td><span class="formexample"> e.g. 4, 1-20</td>
     </tr>
 
@@ -99,22 +99,22 @@ Info was: {{info}}
           <option value="odd">odd only</option>
         </select>
       </td>
-      <td><input type='text' name='char_label' placeholder='20.d' size=10></td>
+      <td><input type='text' style="width: 130px;" name='char_label' placeholder='20.d'></td>
       <td><span class="formexample"> e.g. 20.d </td>
 
       <td>Primitive character</td>
-      <td><input type='text' name='prim_label' placeholder='1.a' size=10></td>
+      <td><input type='text' style="width: 130px;" name='prim_label' placeholder='1.a'></td>
       <td><span class="formexample"> e.g. 1.a </td>
     </tr>
 
     <tr>
       <td colspan=2>Character order</td>
-      <td><input type='text' name='char_order' placeholder='1' size=10></td>
+      <td><input type='text' style="width: 130px;" name='char_order' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</td>
       <td>Character is real</td>
 
       <td>
-        <select name='char_is_real'>
+        <select name='char_is_real' style="width: 140px;">
           <option ></option>
           <option value='True'>Yes</option>
           <option value='False'>No</option>
@@ -124,22 +124,22 @@ Info was: {{info}}
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
-      <td><input type='text' name='dim' placeholder='1' size=10></td>
+      <td><input type='text' style="width: 130px;" name='dim' placeholder='1'></td>
       <td><span class="formexample"> e.g. 2, 1-6 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-      <td><input type='text' name='nf_label' placeholder='1.1.1.1' size=10></td>
+      <td><input type='text' style="width: 130px;" name='nf_label' placeholder='1.1.1.1'></td>
       <td><span class="formexample"> e.g. 4.0.144.1, Qsqrt5 </span></td>
     </tr>
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-      <td><input type='text' name='cm_disc' placeholder='-3' size=10></td>
+      <td><input type='text' style="width: 130px;" name='cm_disc' placeholder='-3'></td>
       <td><span class="formexample"> e.g. -3 </span></td>
 
       <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
       <td>
-        <select name='is_cm' width="122" style="width: 122px">
+        <select name='is_cm' style="width: 140px;">
           <option value="yes">yes</option>
           <option value="not_no">yes or unknown</option>
           <option value="" selected>unrestricted</option>
@@ -151,7 +151,7 @@ Info was: {{info}}
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
-      <td><select name='is_twist_minimal' width="122" style="width: 122px">
+      <td><select name='is_twist_minimal' style="width: 140px;">
           <option ></option>
           <option value='True'>Yes</option>
           <option value='False'>No</option>
@@ -161,7 +161,7 @@ Info was: {{info}}
 
       <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
       <td>
-        <select name='has_inner_twist' width="122" style="width: 122px">
+        <select name='has_inner_twist' style="width: 140px">
           <option value="yes">yes</option>
           <option value="not_no">yes or unknown</option>
           <option value="" selected>unrestricted</option>
@@ -173,13 +173,13 @@ Info was: {{info}}
 
     <tr>
       <td colspan=2>Analytic rank</td>
-      <td><input type='text' name='analytic_rank' placeholder='1' size=10></td>
+      <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</span></td>
     </tr>
 
     <tr>
-      <td align=left colspan=4>Maximum number of newforms to display
-      <input type='text' name='count' value=50 size=10></td>
+      <td align=left colspan=2>Newforms to display</td>
+      <td><input type='text' style="width: 130px;" name='count' value=50></td>
     </tr>
   </table>
   <p>

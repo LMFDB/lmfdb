@@ -1,12 +1,12 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import complex_plot, exp, prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF, Infinity, ZZ
+from sage.all import  prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF,  ZZ
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -17,8 +17,6 @@ from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
-EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
-EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
 
 def decode_hecke_orbit(code):
     level = str(code % 2**24)
@@ -158,9 +156,11 @@ class WebNewform(object):
 
         self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1)
 
+        self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
+
         # properties box
         self.properties = [('Label', self.label)]
-        if cc_data:
+        if self.plot is not None:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
 
         self.properties += [('Level', str(self.level)),
@@ -168,7 +168,12 @@ class WebNewform(object):
                             ('Analytic conductor', str(self.Nk2)),
                             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
                             ('Rep. character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', str(self.dim))]
+                            ('Dimension', str(self.dim)),]
+        try:
+            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+        except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
+            # no data for analytic rank
+            pass
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:
@@ -181,12 +186,14 @@ class WebNewform(object):
         self.downloads = []
         if self.has_exact_qexp:
             self.downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
-            # self.downloads.append(('Download coefficient ring basis', url_for('.download_hecke_ring', label=self.label))) FIXME
+        self.downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
         if self.has_complex_qexp:
             self.downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+            self.downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
         self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
 
         self.title = "Newform %s"%(self.label)
+
 
     @property
     def friends(self):
@@ -316,7 +323,6 @@ class WebNewform(object):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
-            zero = [0] * self.dim
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
             else:
@@ -419,17 +425,3 @@ class WebNewform(object):
     def m_range(self, L):
         return [m-1 for m in L if m >= 1 and m <= self.dim]
 
-    @property
-    def plot(self):
-        # perhaps this should be read directly from "Plot/ModularForm/GL2/Q/holomorphic/1/12/a/a/"
-        # same idea in genus 2 would save 0.5 s
-        I = CDF(0,1)
-        DtoH = lambda x: (-I *x + 1)/(x - I)
-        Htoq = lambda x: exp(2*CDF.pi()*I*x)
-        Dtoq = lambda x: Htoq(DtoH(CDF(x)))
-        absasphase = lambda x: Htoq(x.abs() + 0.6)
-        R = PolynomialRing(CDF, "q");
-        #FIXME increase precision and points
-        f = R([CDF(tuple(elt)) for elt in self.cc_data[0]['an'][:30] ])
-        plot = complex_plot(lambda x: +Infinity if abs(x) >= 0.99 else 16*absasphase(f(Dtoq(x))), (-1,1),(-1,1), plot_points=200, aspect_ratio = 1, axes=False)
-        return encode_plot(plot, pad_inches=0, bbox_inches = 'tight', remove_axes = True)

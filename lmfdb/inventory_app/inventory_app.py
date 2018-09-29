@@ -50,7 +50,6 @@ class BadNameError(KeyError):
 def show_edit_root():
     try:
         listing = inventory_viewer.retrieve_db_listing()
-        print listing
         lockout = inventory_live_data.get_lockout_state()
     except ih.ConnectOrAuthFail as e:
         linv.log_dest.error("Returning auth fail page")

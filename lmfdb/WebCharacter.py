@@ -7,7 +7,6 @@ from flask import url_for
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
-from lmfdb.db_backend import db
 from WebNumberField import WebNumberField
 try:
     from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
@@ -948,7 +947,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codeinducing(self):
-        return { 'sage': 'sage: chi.primitive_character()',
+        return { 'sage': 'chi.primitive_character()',
                  'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
 
     @property
@@ -1000,7 +999,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
-        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s. \)" % (val, chitex, deftex, g)
+        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
     @property
     def codegauss(self):
@@ -1023,7 +1022,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
         from sage.all import latex
-        return r"\( \displaystyle J(%s,%s) = %s = %s.\)" % (chitex, psitex, deftex, latex(jacobi_sum))
+        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
     @property
     def codejacobi(self):
@@ -1047,7 +1046,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
         = \sum_{r \in \Z/%s\Z}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
-        = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
     @property
     def codekloosterman(self):

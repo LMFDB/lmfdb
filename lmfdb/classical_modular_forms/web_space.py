@@ -2,14 +2,11 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from lmfdb.number_fields.number_field import field_pretty
-from sage.all import latex, ZZ
+from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
-from lmfdb.utils import key_for_numerically_sort
 from flask import url_for
 import re
-from collections import defaultdict
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
@@ -144,20 +141,29 @@ class WebNewformSpace(object):
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
-        #self.old_dim = self.cusp_dim - self.dim
-        #self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        self.properties = [
-            ('Label',self.label),
+        self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
+
+        # Properties
+        self.properties = [('Label',self.label)]
+        if self.plot is not None:
+            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+        self.properties +=[
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Character orbit',self.char_orbit_label),
-            ('Representative character',r'\(%s\)'%self.char_conrey_str),
+            ('Rep. character',r'\(%s\)'%self.char_conrey_str),
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm bound',str(self.sturm_bound)),
             ('Trace bound',str(self.trace_bound))
         ]
+
+        # Breadcrumbs
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
+
+        # Downloads
+        self.downloads = [('Download all stored data', url_for('.download_newspace', label=self.label))]
+
         if self.char_labels[0] == 1:
             character_str = "Trivial Character"
         else:
@@ -243,7 +249,7 @@ class WebGamma1Space(object):
         self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
-        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
+        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
         self.properties = [
@@ -253,6 +259,8 @@ class WebGamma1Space(object):
             ('Dimension',str(self.new_dim)),
         ]
         self.bread = get_bread(level=self.level, weight=self.weight)
+        # Downloads
+        self.downloads = [('Download all stored data', url_for('.download_full_space', label=self.label))]
         self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
         self.friends = []
 

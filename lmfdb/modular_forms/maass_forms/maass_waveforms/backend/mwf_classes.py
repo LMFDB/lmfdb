@@ -1,5 +1,4 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
-from lmfdb.utils import truncate_float
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
 from sage.all import Gamma0, CC, ComplexNumber
