@@ -11,8 +11,6 @@ On data updates:
 
 
 IMPORTANT:
-* Check definition of trace bound mf.elliptic.trace_bound (Drew)
-* Picture of space (Drew)
 * Use inverse matrix when dimension is large (Drew, David)
 * fix and verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
