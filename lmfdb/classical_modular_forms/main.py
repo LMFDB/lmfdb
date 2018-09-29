@@ -402,7 +402,6 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        data['plot'] = form.plot
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
@@ -418,7 +417,6 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         space = WebNewformSpace(data)
-        data['plot'] = space.plot
         data['newforms'] = [form['label'] for form in space.newforms]
         data['oldspaces'] = space.oldspaces
         return self._wrap(Json.dumps(data),

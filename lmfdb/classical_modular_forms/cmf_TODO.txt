@@ -21,7 +21,6 @@ IMPORTANT:
 * add tests
 * change new from italic to mathrm (mostly in knowls)
 * Switch back and forth between inverse and forward, include table (David)
-* 
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
 * switch to three column format for complex eigenvalues, general notation from Python (display in precision knowl) (David)
@@ -31,6 +30,7 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Edgar)
 * split dimension into Fricke plus (first) + minus (second), update knowl (David)
 * add a column for AL-dims, with knowl
+* When not showing all embeddings on initial load, add row with "and 25 more" link as a bottom row (David)
 
 GOOD:
 * form pages: provide downloads of q-expansions for Magma/pari (David)
