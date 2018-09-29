@@ -6,7 +6,7 @@ from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_poly, bigint_knowl, display_float, display_complex
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -281,10 +281,25 @@ class WebNewform(object):
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
         basis = []
+        forward_size = 0
+        inverse_size = 0
+        use_inverse =False
         for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
+            forward_size += sum(len(str(c)) for c in num if c) + len(str(den))
+        for num, den in zip(self.hecke_ring_inverse_numerators, self.hecke_ring_inverse_denominators):
+            inverse_size += sum(len(str(c)) for c in num if c) + len(str(den))
+        print "forward_size", forward_size
+        print "inverse_size", inverse_size
+        if len(self.hecke_ring_numerators) > 3 and forward_size > 240 and 2*inverse_size < forward_size:
+            use_inverse = True
+            nums, dens = self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:]
+        else:
+            use_inverse = False
+            nums, dens = self.hecke_ring_numerators, self.hecke_ring_denominators
+        for num, den in zip(nums, dens):
             numsize = sum(len(str(c)) for c in num if c)
-            if numsize > 80:
-                num = web_latex_bigint_poly(num, r'\nu')
+            if use_inverse or numsize > 80:
+                num = web_latex_poly(num, r'\beta' if use_inverse else r'\nu', not use_inverse, cutoff=40)
                 if den == 1:
                     basis.append(num)
                 elif den < 10**8:
@@ -299,7 +314,14 @@ class WebNewform(object):
                     basis.append(r"\((%s)/%s\)"%(num, den))
                 else:
                     basis.append(r"\((%s)/\)%s"%(num, bigint_knowl(den)))
-        basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(i, r"\ " if (len(basis) > 10 and i < 10) else "", x) for i, x in enumerate(basis)]
+        space = r"\ " if len(basis) > 10 else ""
+        if use_inverse:
+            basis = ([r"\(1%s =\mathstrut \beta_0\)"%space] +
+                     [r"\(\nu%s%s =\mathstrut \)%s"%("^{%s}"%(i+1), space if i < 10 else "", x)
+                      for i, x in enumerate(basis)])
+        else:
+            basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(r"\beta_{%s}"%i, space if i < 10 else "", x)
+                     for i, x in enumerate(basis)]
         if len(basis) > 3 or any(d > 1 for d in self.hecke_ring_denominators):
             return '</p>\n<p class="short">'.join([""]+basis)
         else:

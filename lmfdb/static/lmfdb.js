@@ -172,6 +172,8 @@ function knowl_click_handler($el) {
         tr_tag = tr_tag.next();
       tr_tag.after(
           "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div></td></tr>");
+      // For alternatinvg color tables
+      tr_tag.after("<tr class='hidden'></tr>")
     } else {
       $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
     }

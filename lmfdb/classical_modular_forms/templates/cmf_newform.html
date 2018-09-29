@@ -7,7 +7,7 @@
 
 <!-- Hecke field and algebraic q-expansion data -->
 
-<h3> Defining parameters </h3>
+<h2> Defining parameters </h2>
 
 <table>
   <tr>
@@ -72,9 +72,9 @@ function show_qexp(qstyle) {
 {% if newform.has_exact_qexp %}
 
 <div id="qexp">
-  <h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
+  <h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
   {% if newform.dim > 1 %}
-  <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section.</p>
+  <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section. {% if newform.dim > 1 %} Their {{ KNOWL('mf.elliptic.trace-expansion',title='traces') }} are integers. {% endif %}</p>
   {% endif %}
   <form id="qexp">
     <div class="smalloutput">
@@ -84,7 +84,6 @@ function show_qexp(qstyle) {
       <span id="medium_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=100) | safe }}</span>
     </div>
     {% if newform.dim > 1 %}
-    <h4> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h4>
     <div class="smalloutput">
       <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
     </div>
@@ -101,7 +100,7 @@ function show_qexp(qstyle) {
     </p>
   </form>
 
-  <h3> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} </h3>
+  <h2> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }} </h2>
   <div>
     {{ place_code('coefficient_field') }}
   </div>
@@ -123,7 +122,7 @@ function show_qexp(qstyle) {
   {% endif %}
 </div>
 {% else %}
-<h3> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h3>
+<h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
 <p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion.</p>
 
 <form id="qexp">
@@ -147,17 +146,17 @@ function show_qexp(qstyle) {
 <!-- Complex embeddings and Satake parameters -->
 {% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
-<h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
+<h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
 {% elif info.format == 'analytic_embed' %}
-<h2>{{ KNOWL('mf.elliptic.embeddings',title='Complex Embeddings') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
+<h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
 {% elif info.format == 'satake' %}
 <h2>{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
 {% else %}
 <h2>{{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}}</h2>
-<p>For each embedding \(\iota_m\) of the coefficient field into the field of complex numbers, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
 {% endif %}
 
 <div id="table-scroll-wrapper">
@@ -226,7 +225,6 @@ function show_qexp(qstyle) {
 {% if info.err %}
 
 {% endif %}
-
 <form id='complex_embeddings'>
   {% if newform.dim <= 4 %}
   <input type="hidden" name="m" value="{{info.m}}"/>
@@ -238,7 +236,7 @@ function show_qexp(qstyle) {
     </tr>
     {% if newform.dim > 4 %}
     <tr>
-      <td>Embeddings: </td>
+      <td>{{ KNOWL('mf.elliptic.embedding',title='Embeddings') }}: </td>
       <td><input type='text' name='m' style="width: 160px" value="{{info.m}}"></td>
     </tr>
     {% endif %}

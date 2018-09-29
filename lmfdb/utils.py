@@ -525,11 +525,23 @@ def bigint_knowl(n, cutoff=8, sides=2):
         return r'\(%s\)'%n
 
 def polyquo_knowl(f):
-    short = r'\mathbb{Q}[x]/(x^{%s} + \dots)'%(len(f) - 1)
+    short = r'\mathbb{Q}[x]/(x^{%s} + \cdots)'%(len(f) - 1)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
-def web_latex_bigint_poly(coeffs, var='x'):
+def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
+    """
+    Generate a web latex string for a given integral polynomial, or a linear combination
+    (using subscripts instead of exponents).  In either case, the constant term is printed
+    without a variable and bigint knowls are used if the coefficients are large enough.
+
+    INPUT:
+
+    - ``coeffs`` -- a list of integers
+    - ``var`` -- a variable name
+    - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
+    - ``cutoff`` -- the string length above which a knowl is used for a coefficient
+    """
     plus = r"\mathstrut +\mathstrut \) "
     minus = r"\mathstrut -\mathstrut \) "
     m = len(coeffs)
@@ -541,14 +553,20 @@ def web_latex_bigint_poly(coeffs, var='x'):
     for n in reversed(xrange(m)):
         c = coeffs[n]
         if n == 1:
-            varpow = r"\(" + var
+            if superscript:
+                varpow = r"\(" + var
+            else:
+                varpow = r"\(%s_{1}"%var
         elif n > 1:
-            varpow = r"\(%s^{%s}"%(var, n)
+            if superscript:
+                varpow = r"\(%s^{%s}"%(var, n)
+            else:
+                varpow = r"\(%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c)
+                s += plus + bigint_knowl(c, cutoff)
             elif c < 0:
-                s += minus + bigint_knowl(-c)
+                s += minus + bigint_knowl(-c, cutoff)
             break
         if c > 0:
             s += plus
@@ -557,7 +575,7 @@ def web_latex_bigint_poly(coeffs, var='x'):
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c)) + " "
+            s += bigint_knowl(abs(c), cutoff) + " "
         s += varpow
     if coeffs[0] == 0:
         s += r"\)"

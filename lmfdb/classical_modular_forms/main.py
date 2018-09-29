@@ -36,7 +36,7 @@ def set_info_funcs(info):
             if name == nf_label and len(name) > 16:
                 # truncate if too long
                 parts = nf_label.split('.')
-                parts[2] = 'N'
+                parts[2] = r'\(\cdots\)'
                 name = '.'.join(parts)
             return nf_display_knowl(nf_label, name)
         else:

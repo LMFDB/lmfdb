@@ -17,25 +17,25 @@ Info was: {{info}}
 {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse {{ KNOWL('mf.elliptic',title='holomorphic modular forms for $\GL(2)$')}} over $\Q$</h2>
+<h2> Browse {{ KNOWL('mf.elliptic',title='classical modular forms')}}</h2>
 
 <p>
   By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
   {% for weight in info.weight_list %}
-  <a href="?weight={{weight}}">{{weight}}</a>
+  <a href="?weight={{weight}}">{{weight}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
   By {{ KNOWL('mf.elliptic.level', title="level")}}:
   {% for level in info.level_list %}
-  <a href="?level={{level}}">{{level}}</a>
+  <a href="?level={{level}}">{{level}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
-  Using a <a href="?submit=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial character
+  Using a <a href="?submit=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
 </p>
 <p>
-  As a <a href="?submit=Spaces&dim=1-">list of spaces</a>
+  As a <a href="?submit=Spaces&dim=1-">list of {{ KNOWL('mf.elliptic.space', title='spaces') }}</a>
 </p>
 
 <p>
@@ -53,7 +53,7 @@ Info was: {{info}}
 </p>
 
 <p>
-  A <a href="?submit=Dimensions&dim=1">table</a> of newforms with rational \(q\)-expansion
+  A <a href="?submit=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
 </p>
 
 <p>
@@ -102,16 +102,16 @@ Info was: {{info}}
       <td><input type='text' style="width: 130px;" name='char_label' placeholder='20.d'></td>
       <td><span class="formexample"> e.g. 20.d </td>
 
-      <td>Primitive character</td>
+      <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
       <td><input type='text' style="width: 130px;" name='prim_label' placeholder='1.a'></td>
       <td><span class="formexample"> e.g. 1.a </td>
     </tr>
 
     <tr>
-      <td colspan=2>Character order</td>
+      <td colspan=2>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
       <td><input type='text' style="width: 130px;" name='char_order' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</td>
-      <td>Character is real</td>
+      <td>{{ KNOWL('character.dirichlet.real', title='Character is real') }}</td>
 
       <td>
         <select name='char_is_real' style="width: 140px;">
@@ -172,7 +172,7 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td colspan=2>Analytic rank</td>
+      <td colspan=2>{{ KNOWL('lfunction.analytic_rank',title='Analytic rank') }}</td>
       <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</span></td>
     </tr>
