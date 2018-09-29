@@ -12,13 +12,20 @@ On data updates:
 
 
 IMPORTANT:
+* plots for full gamma spaces (Drew)
+* add column Nk^2 for spaces (David)
 * On browse page, consistently use "classical modular forms", add know for newforms.  Also in "Modular forms" bread (David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * Download trace form bug (David)
 * make tests pass (Edgar)
+* add knowl label (Edgar)
+* fix scroll bar complex eigenvalues (Edgar)
+* check that the roots are all different (Edgar)
+* truncate the euler factors (Edgar)
+* do not display plots for large enough degree(Edgar)
 * add knowls to refine search page (David)
-* add tests
+* add tests (Edgar)
 * change new from italic to mathrm (mostly in knowls)
 * Switch back and forth between inverse and forward, include table (David)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -33,6 +40,7 @@ IMPORTANT:
 * When not showing all embeddings on initial load, add row with "and 25 more" link as a bottom row (David)
 
 GOOD:
+* show AL signs on table of spaces results
 * form pages: provide downloads of q-expansions for Magma/pari (David)
 * search results: What format should download search results take? (David)
 * How should download all data be specialized to Sage/Magma/pari (David)
@@ -56,6 +64,9 @@ FORMATTING:
 * do we really want to skip the orbits that are empty by parity reasons, is a bit odd to see "c" missing here:http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/25/2/
 
 IT WOULD BE NICE IF:
+* it would be nice if, if hecke field is cyclotomic don't use \zeta_3
+* show AL dimensions for old forms as long as new
+* +,- dimension for the fricke eigenvalues show the dimension as a sum of two values
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
