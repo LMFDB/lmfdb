@@ -90,7 +90,7 @@ def index():
     space_labels = ('20.5','60.2','55.3.d')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('2', '3-4', '5-9', '10-50')
-    info["level_list"] = ('1', '2-9', '10-99', '100-1000')
+    info["level_list"] = ('1', '2-9', '10-99', '100-2000')
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -549,7 +549,7 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large")
 
 def has_data(N, k):
-    return k > 1 and N*k*k <= 1000
+    return k > 1 and N*k*k <= 2000
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -693,7 +693,7 @@ class CMF_stats(StatsDisplay):
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
         nspaces = comma(db.mf_newspaces.count())
-        Nk2bound = 1000 # should be added to dq_extent table?
+        Nk2bound = 2000 # should be added to dq_extent table?
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         stats_url = url_for(".statistics")
