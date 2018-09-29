@@ -124,9 +124,9 @@ class Downloader(object):
             if label_col:
                 label_list = ['"' + str(res[label_col]) + '"' for res in data]
             if onecol:
-                res_list = [self.display([res[wo_label[0]]]) for res in data]
+                res_list = [self.display([res.get(wo_label[0])]) for res in data]
             else:
-                res_list = [start + self.display([res[col] for col in wo_label]) + end for res in data]
+                res_list = [start + self.display([res.get(col) for col in wo_label]) + end for res in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s"%err)
         c = self.comment_prefix[lang]

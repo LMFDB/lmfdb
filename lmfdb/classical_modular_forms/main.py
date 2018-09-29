@@ -168,6 +168,7 @@ def render_space_webpage(label):
                            info=info,
                            space=space,
                            properties2=space.properties,
+                           downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
@@ -185,6 +186,7 @@ def render_full_gamma1_space_webpage(label):
                            info=info,
                            space=space,
                            properties2=space.properties,
+                           downloads=space.downloads,
                            credit=credit(),
                            bread=space.bread,
                            learnmore=learnmore_list(),
@@ -285,9 +287,11 @@ class CMF_download(Downloader):
     qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
                                    'f = R(poly_data)',
                                    'K.<a> = NumberField(f)',
-                                   'betas = [K([c/den for c in num]) for num, den in basis_data]'
+                                   'betas = [K([c/den for c in num]) for num, den in basis_data]',
                                    'S.<q> = PowerSeriesRing(K)',
                                    'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
+    qexp_dim1_function_body = {'sage': ['S.<q> = PowerSeriesRing(QQ)',
+                                        'return S(data)']}
     def download_qexp(self, label, lang='text'):
         data = self._get_hecke_nf(label)
         if not isinstance(data,list):
@@ -304,23 +308,25 @@ class CMF_download(Downloader):
                 qexp.append([0] * dim)
             qexp.append(an)
         c = self.comment_prefix[lang]
+        func_start = self.get('function_start',{}).get(lang,[])
+        func_end = self.get('function_end',{}).get(lang,[])
         explain = '\n'
         data = 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        code = ''
         if dim == 1:
+            func_body = self.get('qexp_dim1_function_body',{}).get(lang,[])
             data += ', '.join([an[0] for an in qexp])
             data += self.start_and_end[lang][1]
             explain += c + ' The q-expansion is given as a list of integers.\n'
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
-            basis = poly = code = ''
+            basis = poly = ''
         else:
             hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators','hecke_ring_denominators', 'field_poly'])
             if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
                 return abort(404, "Missing coefficient ring information for %s"%label)
             start = self.delim_start[lang]
             end = self.delim_end[lang]
-            func_start = self.get('function_start',{}).get(lang,[])
             func_body = self.get('qexp_function_body',{}).get(lang,[])
-            func_end = self.get('function_end',{}).get(lang,[])
             data += ",\n".join(start + ",".join(str(c) for c in an) + end for an in qexp)
             data += self.start_and_end[lang][1] + '\n'
             explain += c + ' The q-expansion is given as a list of lists.\n'
@@ -334,26 +340,30 @@ class CMF_download(Downloader):
             basis += ",\n".join(start + start + ",".join(str(c) for c in num) + end + ', %s' % den + end for num, den in zip(hecke_data['hecke_ring_numerators'], hecke_data['hecke_ring_denominators']))
             basis += self.start_and_end[lang][1] + '\n'
             if lang in ['sage']:
-                explain += c + ' To create the q-expansion as a power series, type "qexp %s make_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
-                code = '\n\n' + '\n'.join(func_start) + '\n'
-                code += '    ' + '\n    '.join(func_body) + '\n'
-                code += '\n'.join(func_end)
-            poly = '\n' + c + 'The following line give the coefficients of\n'
-            poly += c + ' the defining polynomial for the coefficient field.'
+                explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
+            poly = '\n' + c + ' The following line gives the coefficients of\n'
+            poly += c + ' the defining polynomial for the coefficient field.\n'
             poly += 'poly_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0]
             poly += ', '.join(str(c) for c in hecke_data['field_poly'])
             poly += self.start_and_end[lang][1] + '\n'
+        if lang in ['sage']:
+            code = '\n\n' + '\n'.join(func_start) + '\n'
+            code += '    ' + '\n    '.join(func_body) + '\n'
+            code += '\n'.join(func_end)
         return self._wrap(explain + poly + basis + data + code,
-                          label,
+                          label + '.qexp',
                           lang=lang,
-                          title='q-expansion of %s,'%(label))
+                          title='q-expansion of newform %s,'%(label))
 
     def download_traces(self, label, lang='text'):
         data = self._get_hecke_nf(label)
         if isinstance(data,list):
             return data
         qexp = [0] + [trace_an for an, trace_an in data]
-        return self._wrap(Json.dumps(qexp))
+        return self._wrap(Json.dumps(qexp),
+                          label + '.trace',
+                          lang=lang,
+                          title='Trace form for %s,'%(label))
 
     def download_cc_data(self, label, lang='text'):
         data = self._get_hecke_cc(label)
@@ -366,7 +376,10 @@ class CMF_download(Downloader):
             if root != [None,None]:
                 D['root'] = root
             down.append(Json.dumps(D))
-        return self._wrap('\n\n'.join(down))
+        return self._wrap('\n\n'.join(down),
+                          label + '.cplx',
+                          lang=lang,
+                          title='Complex embeddings for newform %s,'%(label))
 
     def download_satake_angles(self, label, lang='text'):
         data = self._get_hecke_cc(label)
@@ -379,37 +392,55 @@ class CMF_download(Downloader):
             if root != [None,None]:
                 D['root'] = root
             down.append(Json.dumps(D))
-        return self._wrap('\n\n'.join(down))
+        return self._wrap('\n\n'.join(down),
+                          label + '.angles',
+                          lang=lang,
+                          title='Satake angles for newform %s,'%(label))
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
-        cc_data = self._get_hecke_cc(label)
-        if not isinstance(cc_data, list):
-            return cc_data
-        embedding_list = []
-        for label, root, an, angles in data:
-            D = {'label': label,
-                 'an': an,
-                 'angles': angles}
-            if root != [None, None]:
-                D['root'] = root
-            embedding_list.append(D)
-        data['complex_embeddings'] = embedding_list
-        nf_data = self._get_hecke_nf(label)
-        if not isinstance(nf_data, list):
-            return nf_data
-        qexp = [[0] * data['dim']]
-        traces = [0]
-        for an, trace_an in data:
-            if an:
-                qexp.append(an)
-            traces.append(trace_an)
-        if len(qexp) > 1:
-            data['qexp'] = qexp
-        data['traces'] = traces
-        return self._wrap(Json.dumps(data))
+        form = WebNewform(data)
+        data['plot'] = form.plot
+        if form.has_exact_qexp:
+            data['qexp'] = form.qexp
+            data['traces'] = form.texp
+        if form.has_complex_qexp:
+            data['complex_embeddings'] = form.cc_data
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Stored data for newform %s,'%(label))
+
+    def download_newspace(self, label, lang='text'):
+        data = db.mf_newspaces.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        space = WebNewformSpace(data)
+        data['plot'] = space.plot
+        data['newforms'] = [form['label'] for form in space.newforms]
+        data['oldspaces'] = space.oldspaces
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Stored data for newspace %s,'%(label))
+
+    def download_full_space(self, label, lang='text'):
+        try:
+            space = WebGamma1Space.by_label(label)
+        except ValueError:
+            return abort(404, "Label not found: %s"%label)
+        data = {}
+        for attr in ['level','weight','label','oldspaces']:
+            data[attr] = getattr(space, attr)
+        data['newspaces'] = [spc['label'] for spc, forms in space.decomp]
+        data['newforms'] = sum([[form['label'] for form in forms] for spc, forms in space.decomp], [])
+        data['dimgrid'] = space.dim_grid._grid
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Stored data for newspace %s,'%(label))
 
 @cmf.route("/download_qexp/<label>")
 def download_qexp(label):
@@ -430,6 +461,14 @@ def download_satake_angles(label):
 @cmf.route("/download_newform/<label>")
 def download_newform(label):
     return CMF_download().download_newform(label)
+
+@cmf.route("/download_newspace/<label>")
+def download_newspace(label):
+    return CMF_download().download_newspace(label)
+
+@cmf.route("/download_full_space/<label>")
+def download_full_space(label):
+    return CMF_download().download_full_space(label)
 
 @search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, level_field='level', conrey_field='char_labels'):
@@ -484,6 +523,7 @@ def newform_parse(info, query):
              title='Newform Search Results',
              err_title='Newform Search Input Error',
              shortcuts={'jump':jump_box,
+                        'download':CMF_download(),
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },

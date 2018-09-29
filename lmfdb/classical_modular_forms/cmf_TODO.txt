@@ -16,17 +16,15 @@ IMPORTANT:
 * Use inverse matrix when dimension is large (Drew, David)
 * fix and verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
-* form pages: Label headers for complex eigenvalues: chi, m (David)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
-* form pages: download to Sage/Magma/pari (stored coefficients) (David)
-* form pages: get download coefficients to work, say total number of coefficients; switch to downloads box and have versions for Sage/Magma/pari.  See EC/Q for examples.  (David)
 
 GOOD:
-* search results: Download search results (David)
-* space pages: download to Sage/Magma/pari (download all the data) (David)
+* form pages: provide downloads of q-expansions for Magma/pari (David)
+* search results: What format should download search results take? (David)
+* How should download all data be specialized to Sage/Magma/pari (David)
 * form pages: make pictures transparent (Drew)
 * Make sure our description of labels is correct
 * data: add data for is_twist_minimal
@@ -39,7 +37,6 @@ GOOD:
 * Make sure the knowl for labels is correct.
 
 FORMATTING:
-* form pages: replace 'Hecke' with 'coefficients' throughout, mention Hecke in knowl instead, replace 'order' with 'ring' (David)
 * Change q+... in search results to something better
 * horizontal scroll on the euler factors box or knowl  (Edgar)
 * move show more to the left of the euler factors box  (Edgar)
