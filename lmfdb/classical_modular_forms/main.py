@@ -708,12 +708,6 @@ class CMF_stats(StatsDisplay):
          'buckets':{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]},
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
-        {'cols': 'cm_disc',
-         'top_title':'complex multiplication',
-         'row_title':'CM by',
-         'knowl':'mf.elliptic.cm_form',
-         'reverse':True,
-         'formatter':cm_format},
         {'cols':'has_inner_twist',
          'top_title':'inner twisting',
          'row_title':'has inner twist',
@@ -729,6 +723,12 @@ class CMF_stats(StatsDisplay):
          'row_title': 'newforms',
          'knowl': 'mf.elliptic.galois-orbits',
          'url_extras': 'submit=Spaces&'},
+        {'cols': 'cm_disc',
+         'top_title':'complex multiplication',
+         'row_title':'CM by',
+         'knowl':'mf.elliptic.cm_form',
+         'reverse':True,
+         'formatter':cm_format},
     ]
 
 @cmf.route("/stats")
