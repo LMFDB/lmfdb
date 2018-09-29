@@ -1,12 +1,12 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import complex_plot, exp, prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF, Infinity, ZZ
+from sage.all import  prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF,  ZZ
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, encode_plot, web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_bigint_poly, bigint_knowl, display_float, display_complex
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -320,7 +320,6 @@ class WebNewform(object):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
-            zero = [0] * self.dim
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
             else:

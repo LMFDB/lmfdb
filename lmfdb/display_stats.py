@@ -1,5 +1,4 @@
 from sage.all import UniqueRepresentation, lazy_attribute
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from flask import url_for
 
 def boolean_format(value):

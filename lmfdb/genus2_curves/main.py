@@ -5,7 +5,6 @@ import re
 from operator import mul
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
-from sage.misc.cachefunc import cached_method
 
 from lmfdb.db_backend import db
 from lmfdb.utils import to_dict, comma, flash_error, display_knowl

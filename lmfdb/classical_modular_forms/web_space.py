@@ -2,14 +2,11 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from lmfdb.number_fields.number_field import field_pretty
-from sage.all import latex, ZZ
+from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
-from lmfdb.utils import key_for_numerically_sort
 from flask import url_for
 import re
-from collections import defaultdict
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")

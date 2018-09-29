@@ -11,6 +11,8 @@ On data updates:
 
 
 IMPORTANT:
+* make tests pass (Edgar)
+* add tests
 * Use inverse matrix when dimension is large (Drew, David)
 * fix and verify: http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
