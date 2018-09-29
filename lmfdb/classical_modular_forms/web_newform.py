@@ -17,8 +17,6 @@ from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
-EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
-EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
 
 def decode_hecke_orbit(code):
     level = str(code % 2**24)
@@ -170,8 +168,12 @@ class WebNewform(object):
                             ('Analytic conductor', str(self.Nk2)),
                             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
                             ('Rep. character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', str(self.dim)),
-                            ('Analytic rank', str(self.analytic_rank))]
+                            ('Dimension', str(self.dim)),]
+        try:
+            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+        except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
+            # no data for analytic rank
+            pass
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:
