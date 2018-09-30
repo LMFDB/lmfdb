@@ -22,7 +22,7 @@ def get_bread(**kwds):
              ('char_orbit_label', 'Character orbit %s', '.by_url_space_label'),
              ('hecke_orbit', 'Hecke orbit %s', '.by_url_newform_label')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Classical newforms', url_for(".index"))]
+             ('Classical', url_for(".index"))]
     if 'other' in kwds:
         return bread + [(kwds['other'], ' ')]
     url_kwds = {}
@@ -49,7 +49,7 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
     else:
         char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
     if typ:
-        typ = "^{{{typ}}}".format(typ=typ)
+        typ = r"^{\mathrm{%s}}"%(typ)
     ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
