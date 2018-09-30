@@ -107,7 +107,7 @@ function show_qexp(qstyle) {
   {% if newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <p> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: &nbsp &nbsp {{ newform.field_display() | safe }}, with {{ KNOWL('nf.defining_polynomial',title='defining polynomial') }} {{ newform.defining_polynomial() }}</p>
-  <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}: {{ newform.order_basis() | safe}}</p>
+  <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}:</p> {{ newform.order_basis() | safe}}
   {% if newform.hecke_ring_index_proven %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>

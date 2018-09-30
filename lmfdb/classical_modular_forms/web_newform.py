@@ -278,54 +278,77 @@ class WebNewform(object):
             return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
         return None
 
+    def _make_frac(self, num, den):
+        if den == 1:
+            return num
+        elif den < 10**8:
+            return r"\((\)%s\()/%s\)"%(num, den)
+        else:
+            return r"\((\)%s\()/\)%s"%(num, bigint_knowl(den))
+
+    def _make_table(self, basis):
+        s = '<table class="coeff_ring_basis">\n'
+        for LHS, RHS in basis:
+            s += r'<tr><td class="LHS">%s</td><td class="eq">\(=\)</td><td class="RHS">%s</td></tr>'%(LHS, RHS) + '\n'
+        return s + "</table>"
+
+    def _order_basis_forward(self):
+        basis = []
+        for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
+            numsize = sum(len(str(c)) for c in num if c)
+            if numsize > 80:
+                num = web_latex_poly(num, r'\nu', superscript=True, cutoff=8)
+            else:
+                num = web_latex(coeff_to_poly(num, 'nu'))
+            betai = r'\(\beta_{%s}\)'%i
+            basis.append((betai, self._make_frac(num, den)))
+        return self._make_table(basis)
+
+    def _order_basis_inverse(self):
+        basis = [('\(1\)', r'\(\beta_0\)')]
+        for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
+            num = web_latex_poly(num, r'\beta', superscript=False, cutoff=40)
+            if i == 0:
+                nupow = r'\(\nu\)'
+            else:
+                nupow = r'\(\nu^{%s}\)'%(i+1)
+            basis.append((nupow, self._make_frac(num, den)))
+        return self._make_table(basis)
+
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
         basis = []
         forward_size = 0
         inverse_size = 0
         use_inverse =False
+        html = r"""
+<script>
+function switch_basis(btype) {
+    $('.forward-basis').hide();
+    $('.inverse-basis').hide();
+    $('.'+btype).show();
+}
+</script>
+<div class="forward-basis%s">
+%s
+<div class="toggle">
+  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(\nu^j\) in terms of \(\beta_i\)</a>
+</div>
+</div>
+<div class="inverse-basis%s">
+%s
+<div class="toggle">
+  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(\nu^j\)</a>
+</div>
+</div>"""
         for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
             forward_size += sum(len(str(c)) for c in num if c) + len(str(den))
         for num, den in zip(self.hecke_ring_inverse_numerators, self.hecke_ring_inverse_denominators):
             inverse_size += sum(len(str(c)) for c in num if c) + len(str(den))
-        print "forward_size", forward_size
-        print "inverse_size", inverse_size
         if len(self.hecke_ring_numerators) > 3 and forward_size > 240 and 2*inverse_size < forward_size:
-            use_inverse = True
-            nums, dens = self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:]
+            return html % (" nodisplay", self._order_basis_forward(), "", self._order_basis_inverse())
         else:
-            use_inverse = False
-            nums, dens = self.hecke_ring_numerators, self.hecke_ring_denominators
-        for num, den in zip(nums, dens):
-            numsize = sum(len(str(c)) for c in num if c)
-            if use_inverse or numsize > 80:
-                num = web_latex_poly(num, r'\beta' if use_inverse else r'\nu', not use_inverse, cutoff=40)
-                if den == 1:
-                    basis.append(num)
-                elif den < 10**8:
-                    basis.append(r"\((\)%s\()/%s\)"%(num, den))
-                else:
-                    basis.append(r"\((\)%s\()/\)%s"%(num, bigint_knowl(den)))
-            else:
-                num = web_latex(coeff_to_poly(num, 'nu'), enclose=(den == 1))
-                if den == 1:
-                    basis.append(num)
-                elif den < 10**8:
-                    basis.append(r"\((%s)/%s\)"%(num, den))
-                else:
-                    basis.append(r"\((%s)/\)%s"%(num, bigint_knowl(den)))
-        space = r"\ " if len(basis) > 10 else ""
-        if use_inverse:
-            basis = ([r"\(1%s =\mathstrut \beta_0\)"%space] +
-                     [r"\(\nu%s%s =\mathstrut \)%s"%("^{%s}"%(i+1), space if i < 10 else "", x)
-                      for i, x in enumerate(basis)])
-        else:
-            basis = [r"\(\beta_{%s}%s =\mathstrut \)%s"%(r"\beta_{%s}"%i, space if i < 10 else "", x)
-                     for i, x in enumerate(basis)]
-        if len(basis) > 3 or any(d > 1 for d in self.hecke_ring_denominators):
-            return '</p>\n<p class="short">'.join([""]+basis)
-        else:
-            return ', '.join(basis)
+            return html % ("", self._order_basis_forward(), " nodisplay", self._order_basis_inverse())
 
     def order_basis_table(self):
         s = '<table class="ntdata">\n  <tr>\n'

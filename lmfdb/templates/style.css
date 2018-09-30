@@ -943,10 +943,13 @@ table.ntdata .right {
 table.ntdata .middle {
     vertical-align: middle;
 }
+table.ntdata tr.dark {
+    background: {{color.table_ntdata_background_2}};
+}
 table.ntdata td.dark {
     background: {{color.table_ntdata_background_2}};
 }
-table.ntdata tr.dark {
+table.ntdata thead.dark tr {
     background: {{color.table_ntdata_background_2}};
 }
 table.ntdata td.light {
@@ -2086,4 +2089,26 @@ td.nowrap {
 
 #complex_embeddings {
     padding-top: 10px;
+}
+
+table.coeff_ring_basis td {
+    vertical-align: top;
+}
+
+table.coeff_ring_basis td.LHS {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+}
+table.coeff_ring_basis td.eq {
+    text-align: center;
+    margin-right: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    padding-left: 2px;
+}
+table.coeff_ring_basis td.RHS {
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
 }

@@ -12,19 +12,15 @@ On data updates:
 
 
 IMPORTANT:
+* Update credit string
 * plots for full gamma spaces (Drew)
-* add column Nk^2 for spaces (David)
-* On browse page, consistently use "classical modular forms", add know for newforms.  Also in "Modular forms" bread (David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
-* Download trace form bug (David)
 * make tests pass (Edgar)
 * add knowl label (Edgar)
 * check that the roots are all different (Edgar)
 * do not display plots for large enough degree(Edgar)
-* add knowls to refine search page (David)
 * add tests (Edgar)
-* change new from italic to mathrm (mostly in knowls)
 * Switch back and forth between inverse and forward, include table (David)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * knowls: add a precision knowl for complex eigenvalues (David)
@@ -34,34 +30,33 @@ IMPORTANT:
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * split dimension into Fricke plus (first) + minus (second), update knowl (David)
-* add a column for AL-dims, with knowl
+* add a column for AL-dims, with knowl (David)
+* Atkin-Lehner dimension decomposition for the space (David)
+* When not showing all embeddings on initial load, add row with "and 25 more" link as a bottom row (David)
+* Move make_data function to top (David)
+* Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
+* List of AL-dimensions in the list of spaces; expands to knowl (David)
+* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version (Edgar)
+* L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
+* http://localhost:37777/ModularForm/GL2/Q/Maass/5411900eacf756021f2c6908 (Edgar)
+* http://localhost:37777/ModularForm/GL2/Q/Maass/4f5693d488aece2afe00000d (Edgar)
+* Add density of zero traces (Edgar)
 
 GOOD:
-* show AL signs on table of spaces results
-* form pages: provide downloads of q-expansions for Magma/pari (David)
-* search results: What format should download search results take? (David)
-* How should download all data be specialized to Sage/Magma/pari (David)
 * Make sure our description of labels is correct
 * data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
-* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version
-* Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it.
-* Add analytic rank to search results?
-* Make sure the knowl for labels is correct.
-* List of AL-dimensions in the list of spaces; expands to knowl
 
 FORMATTING:
-* Change q+... in search results to something better
 * horizontal scroll on the euler factors box or knowl  (Edgar)
 * move show more to the left of the euler factors box  (Edgar)
 * do not display L-plot's for high enough degree (Edgar)
-* do we really want to skip the orbits that are empty by parity reasons, is a bit odd to see "c" missing here:http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/25/2/
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
-* show AL dimensions for old forms as long as new
+* show AL dimensions for old forms as well as new
 * +,- dimension for the fricke eigenvalues show the dimension as a sum of two values
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
@@ -73,9 +68,8 @@ IT WOULD BE NICE IF:
 * identify (if possible?) a more precise description of the twisting characters
 * data: download data from old version and compare to see matches (at least with traces) and identify other problems
 * form pages: download to Sage/Magma/pari (using cutters)
-* L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
-* Atkin-Lehner dimension decomposition for the space
 * What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
+* form pages: provide downloads of q-expansions for Magma/pari
 
 FUTURE WORK:
 * data: compute much more using pari
@@ -93,7 +87,6 @@ NOT CMF STUFF:
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 
 TO THINK ABOUT:
-* Figure out why the AL-signs are opposite the traces of the corresponding a_p
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
 
 PROBABLY DONE:
