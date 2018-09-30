@@ -2024,7 +2024,7 @@ p.short {
 }
 
 #table-scroll-wrapper table {
-    margin: 0;
+    margin: 1px;
     border-collapse: collapse;
 }
 #table-scroll-wrapper th {
