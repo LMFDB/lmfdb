@@ -20,7 +20,6 @@ IMPORTANT:
 * Download trace form bug (David)
 * make tests pass (Edgar)
 * add knowl label (Edgar)
-* fix scroll bar complex eigenvalues (Edgar)
 * check that the roots are all different (Edgar)
 * truncate the euler factors (Edgar)
 * do not display plots for large enough degree(Edgar)
