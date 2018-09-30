@@ -45,8 +45,6 @@
             <a href="/">&#8962;</a>
            {% endif %}
         </div>
-      {# avoid an empty div.topright, which messes up the spacing #}
-      {% if user_is_admin  or user_is_authenticated or BETA %}
         <div class="topright">
 {# search box does not work (see Issue #2389)
           <form method="GET" action="{{ url_for('search') }}" id="search-topright">
@@ -62,12 +60,14 @@
               <a href="{{ url_for('users.info') }}">{{ username }}</a> 
               &middot;
               <a href="{{ url_for('users.logout') }}">Logout</a>
+              <br/>
             {%- else -%}
               {# <a href="{{ url_for('users.register_new') }}">Register</a>
               &middot; #}
               {% if BETA %}
               &middot;
               <a href="{{ url_for('users.info') }}">Login</a>
+              <br/>
               {% endif %}
             {%- endif %}
 <!--
@@ -76,9 +76,7 @@
               <span id="communication"></span>
             </span>
 -->
-        </div>
-      {% endif %}
-        <div class="undertopright">
+          <div class="undertopright">
             <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
               &middot;
             {% if g.show_menu %}
@@ -86,6 +84,7 @@
             {% else %}
                <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
             {% endif %}
+          </div>
         </div>
 {# deleting the confusing prev/next character links, 
    but leaving the code in case it is useful later
