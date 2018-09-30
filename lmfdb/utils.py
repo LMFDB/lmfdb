@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField
 from copy import copy
 from random import randint
 from functools import wraps
@@ -27,6 +27,83 @@ from werkzeug import cached_property
 from markupsafe import Markup
 
 from lmfdb.base import app, ctx_proc_userdata
+
+
+
+
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None):
+    """ Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
+    """
+    gal_list=[]
+    if len(s) == 1:
+        if galois:
+            return [str(s[0]), [[0,0]]]
+        return str(s[0])
+    sfacts = factor(PolynomialRing(ZZ, 'T')(s))
+    sfacts_fc = [[v[0],v[1]] for v in sfacts]
+    if sfacts.unit() == -1:
+        sfacts_fc[0][0] *= -1
+    outstr = ''
+    for v in sfacts_fc:
+        this_poly = v[0]
+        # if the factor is -1+T^2, replace it by 1-T^2
+        # this should happen an even number of times, mod powers
+        if this_poly.substitute(T=0) == -1:
+            this_poly = -1*this_poly
+            v[0] = this_poly
+        if galois:
+            this_degree = this_poly.degree()
+            # hack because currently sage only handles monic polynomials:
+            this_poly = this_poly.reverse()
+            this_number_field = NumberField(this_poly, "a")
+            this_gal = this_number_field.galois_group(type='pari')
+            this_t_number = this_gal.group().__pari__()[2].sage()
+            gal_list.append([this_degree, this_t_number])
+        vcf = v[0].list()
+        terms = 0
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += '('
+        for i in range(len(vcf)):
+            if vcf[i] != 0:
+                if terms > 0 and vcf[i] > 0:
+                    outstr += '+'
+                if i == 0:
+                    outstr += str(vcf[i])
+                else:
+                    if i == 1:
+                        variableterm = vari
+                    elif i > 1:
+                        variableterm = vari + '^{' + str(i) + '}'
+
+                    if terms == prec:
+                        if vcf[i] < 0:
+                            outstr += '+' # we haven't added the +
+                        outstr += 'O(%s)' % variableterm
+                        break;
+                    if vcf[i] == 1:
+                        outstr += variableterm
+                    elif abs(vcf[i]) != 1:
+                        outstr += str(vcf[i]) + variableterm
+                    elif vcf[i] == -1:
+                        outstr += '-' + variableterm
+                terms += 1
+
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += ')'
+        if v[1] > 1:
+            outstr += '^{' + str(v[1]) + '}'
+    if galois:
+        if galois and len(sfacts_fc)==2:
+            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
+                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+                if troubletest.is_square():
+                    gal_list=[[2,1]]
+        return [outstr, gal_list]
+    return outstr
 
 ################################################################################
 #   number utilities
