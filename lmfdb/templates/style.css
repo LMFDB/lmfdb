@@ -2091,7 +2091,7 @@ td.nowrap {
     padding-top: 10px;
 }
 
-table.coeff_ring_basis {
+table.coeff_ring_basis td {
     vertical-align: top;
 }
 
