@@ -1,4 +1,4 @@
-from scripts.reports.jsonify_db_structure import get_lmfdb_tables as glt
+#from scripts.reports.jsonify_db_structure import get_lmfdb_tables as glt
 import json
 from datetime import datetime
 import inventory_helpers as ih
