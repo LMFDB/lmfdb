@@ -184,6 +184,8 @@ class WebEC(object):
         data['equation'] = self.equation
         local_data = self.local_data
         D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
+        for ld in local_data:
+            ld['kod'] = ld['kod'].replace("\\\\","\\")
         data['disc'] = D
         Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
         Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
