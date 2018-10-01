@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3> Defining parameters </h3>
+<h2> Defining parameters </h2>
 
 <table>
   <tr>
@@ -64,7 +64,7 @@
   </tr>
 </table>
 
-<h3> Dimensions </h3>
+<h2> Dimensions </h2>
 
 {% if space.odd_weight and space.char_parity == 1 %}
 
@@ -76,7 +76,7 @@
 
 {% else %}
 
-<p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
+<p>The following table gives the dimensions of various {{ KNOWL('mf.elliptic.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
 
 <table class="dimgrid">
   <thead>
