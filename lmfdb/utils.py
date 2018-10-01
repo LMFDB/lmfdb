@@ -219,19 +219,6 @@ def pair2complex(pair):
     return [float(rp), float(ip)]
 
 
-def round_to_half_int(num, fraction=2):
-    """
-    Rounds input `num` to the nearest half-integer. The optional kwarg
-    `fraction` is used to round to the nearest `fraction`-part of an integer.
-
-    Examples:
-    >>> round_to_half_int(1.1)
-    1.0
-    >>> round_to_half_int(-0.9)
-    -1.0
-    """
-    return round(num * 1.0 * fraction) / fraction
-
 
 def to_dict(args):
     r"""
@@ -256,22 +243,24 @@ def to_dict(args):
 
 EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
 EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
-def display_float(x, prec, method = "truncate"):
-    if abs(x) < 10**(-prec):
+def display_float(x, prec, method = "truncate", extra_truncation_prec = 3):
+    if type(x) is int:
+        return '%d' % x
+    if abs(x) < 10.**(-prec - extra_truncation_prec):
         return "0"
     if method == "truncate":
-        s = truncate_float(x, prec)
+        s = truncate_float(x, prec, extra_truncation_prec = extra_truncation_prec)
     else:
         s = "%.{}f".format(prec) % float(x)
         s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
         s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
     return s
 
-def display_complex(x, y, prec, method = "truncate", parenthesis = False):
+def display_complex(x, y, prec, method = "truncate", parenthesis = False, extra_truncation_prec = 3):
     """
     Examples:
-    >>> display_complex(1.0001, 0, 3, parenthesis = True)
-    '1'
+        >>> display_complex(1.0001, 0, 3, parenthesis = True)
+    '1.000'
     >>> display_complex(1.0, -1, 3, parenthesis = True)
     '(1 - i)'
     >>> display_complex(0, -1, 3, parenthesis = True)
@@ -279,16 +268,22 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False):
     >>> display_complex(0, 1, 3, parenthesis = True)
     'i'
     >>> display_complex(0.49999, -1.001, 3, parenthesis = True)
-    '(0.5 - i)'
-    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = True)
+    '(0.500 - 1.000i)'
+    >>> display_complex(0.02586558415542463,0.9996654298095432, 3)
+    '0.025 + 0.999i
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 3)
+    '0.000 - 1.123i'
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 2)
+    '0.000 - 1.123i'
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 1)
     '-1.123i'
     """
-    if abs(y) < 10**(-prec):
+    if abs(y) < 10.**(-prec - extra_truncation_prec):
         return display_float(x, prec, method = method)
-    if abs(x) < 10**(-prec):
+    if abs(x) < 10.**(-prec - extra_truncation_prec):
         x = ""
     else:
-        x = display_float(x, prec, method = method)
+        x = display_float(x, prec, method = method, extra_truncation_prec = extra_truncation_prec)
     if y < 0:
         y = -y
         if x == "":
@@ -308,34 +303,48 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False):
         res = "(" + res + ")"
     return res
 
-def truncate_float(num, precision):
+def round_to_half_int(num, fraction=2):
+    """
+    Rounds input `num` to the nearest half-integer. The optional kwarg
+    `fraction` is used to round to the nearest `fraction`-part of an integer.
+
+    Examples:
+    >>> round_to_half_int(1.1)
+    1.0
+    >>> round_to_half_int(-0.9)
+    -1.0
+    """
+    return float(round(num * 1.0 * fraction) / fraction)
+
+
+
+def truncate_float(num, precision, extra_truncation_prec = 3):
     """
     Truncate `num` to show `precision` digits after the dot (as a string).
     If `num` is nearly an integer or half-integer, return that integer or
     half-integer instead.
 
     Examples:
+    >>> truncate_float(1.00000000001, 3)
+    '1.000'
     >>> truncate_float(1.0001, 4)
-    '1'
+    '1.0001'
     >>> truncate_float(1.1234567, 4)
     '1.1234'
     >>> truncate_float(1.1234567, 5)
     '1.12345'
-    >>> truncate_float(1.4999999, 4)
-    '1.5'
+    >>>  truncate_float(1.499999999, 4)
+    '1.5000'
     """
-    truncation = float(10 ** -precision)
+    truncation = 10. ** -precision
     res = ""
     if num < 0:
         res += "-"
         num = -num
     test = round_to_half_int(num)
-    if float(abs(num - test)) < truncation:
-        if int(test) == test:
-            test = int(test)
-        res += str(test)
-    else:
-        res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
+    if float(abs(num - test)) < truncation * 10.**( - extra_truncation_prec):
+        num = test
+    res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
     return res
 
 
