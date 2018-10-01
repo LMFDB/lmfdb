@@ -5,10 +5,9 @@ from lmfdb.lfunctions import logger
 from flask import url_for
 import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n
-from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
-from lmfdb.utils import display_complex
+from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
 from lmfdb.classical_modular_forms.web_newform import newform_conrey_exists
 
 
@@ -359,7 +358,7 @@ def lfuncEPtex(L, fmt):
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt):
+def lfuncEPhtml(L,fmt, prec = 12):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -389,7 +388,7 @@ def lfuncEPhtml(L,fmt):
     ans = ""
     ans += texform_gen + "where"
     if pgoodset is not None:
-        ans += ", for " + pgoodset 
+        ans += ", for " + pgoodset
     ans += ",\n"
     if L.motivic_weight == 1 and L.characternumber == 1 and L.degree in [2,4]:
         if L.degree == 4:
@@ -421,11 +420,12 @@ def lfuncEPhtml(L,fmt):
     if L.coefficient_field == "CDF":
         display_galois = False
 
-    def pretty_poly(poly):
+    def pretty_poly(poly, prec = None):
         out = "1"
         for i,elt in enumerate(poly):
-            if elt is None:
+            if elt is None or i == prec:
                 out += "O(%s)" % (seriesvar(i, "polynomial"),)
+                break;
             elif i > 0:
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
@@ -446,9 +446,9 @@ def lfuncEPhtml(L,fmt):
         out = ""
         try:
             if L.coefficient_field == "CDF" or None in poly:
-                factors = str(pretty_poly(poly))
+                factors = str(pretty_poly(poly, prec = prec))
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois)
+                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois)
             out += ("<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td><td>" +

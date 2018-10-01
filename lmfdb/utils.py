@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField
 from copy import copy
 from random import randint
 from functools import wraps
@@ -27,6 +27,83 @@ from werkzeug import cached_property
 from markupsafe import Markup
 
 from lmfdb.base import app, ctx_proc_userdata
+
+
+
+
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None):
+    """ Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
+    """
+    gal_list=[]
+    if len(s) == 1:
+        if galois:
+            return [str(s[0]), [[0,0]]]
+        return str(s[0])
+    sfacts = factor(PolynomialRing(ZZ, 'T')(s))
+    sfacts_fc = [[v[0],v[1]] for v in sfacts]
+    if sfacts.unit() == -1:
+        sfacts_fc[0][0] *= -1
+    outstr = ''
+    for v in sfacts_fc:
+        this_poly = v[0]
+        # if the factor is -1+T^2, replace it by 1-T^2
+        # this should happen an even number of times, mod powers
+        if this_poly.substitute(T=0) == -1:
+            this_poly = -1*this_poly
+            v[0] = this_poly
+        if galois:
+            this_degree = this_poly.degree()
+            # hack because currently sage only handles monic polynomials:
+            this_poly = this_poly.reverse()
+            this_number_field = NumberField(this_poly, "a")
+            this_gal = this_number_field.galois_group(type='pari')
+            this_t_number = this_gal.group().__pari__()[2].sage()
+            gal_list.append([this_degree, this_t_number])
+        vcf = v[0].list()
+        terms = 0
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += '('
+        for i in range(len(vcf)):
+            if vcf[i] != 0:
+                if terms > 0 and vcf[i] > 0:
+                    outstr += '+'
+                if i == 0:
+                    outstr += str(vcf[i])
+                else:
+                    if i == 1:
+                        variableterm = vari
+                    elif i > 1:
+                        variableterm = vari + '^{' + str(i) + '}'
+
+                    if terms == prec:
+                        if vcf[i] < 0:
+                            outstr += '+' # we haven't added the +
+                        outstr += 'O(%s)' % variableterm
+                        break;
+                    if vcf[i] == 1:
+                        outstr += variableterm
+                    elif abs(vcf[i]) != 1:
+                        outstr += str(vcf[i]) + variableterm
+                    elif vcf[i] == -1:
+                        outstr += '-' + variableterm
+                terms += 1
+
+        if len(sfacts) > 1 or v[1] > 1:
+            outstr += ')'
+        if v[1] > 1:
+            outstr += '^{' + str(v[1]) + '}'
+    if galois:
+        if galois and len(sfacts_fc)==2:
+            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
+                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+                if troubletest.is_square():
+                    gal_list=[[2,1]]
+        return [outstr, gal_list]
+    return outstr
 
 ################################################################################
 #   number utilities
@@ -142,19 +219,6 @@ def pair2complex(pair):
     return [float(rp), float(ip)]
 
 
-def round_to_half_int(num, fraction=2):
-    """
-    Rounds input `num` to the nearest half-integer. The optional kwarg
-    `fraction` is used to round to the nearest `fraction`-part of an integer.
-
-    Examples:
-    >>> round_to_half_int(1.1)
-    1.0
-    >>> round_to_half_int(-0.9)
-    -1.0
-    """
-    return round(num * 1.0 * fraction) / fraction
-
 
 def to_dict(args):
     r"""
@@ -179,22 +243,24 @@ def to_dict(args):
 
 EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
 EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
-def display_float(x, prec, method = "truncate"):
-    if abs(x) < 10**(-prec):
+def display_float(x, prec, method = "truncate", extra_truncation_prec = 3):
+    if type(x) is int:
+        return '%d' % x
+    if abs(x) < 10.**(-prec - extra_truncation_prec):
         return "0"
     if method == "truncate":
-        s = truncate_float(x, prec)
+        s = truncate_float(x, prec, extra_truncation_prec = extra_truncation_prec)
     else:
         s = "%.{}f".format(prec) % float(x)
         s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
         s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
     return s
 
-def display_complex(x, y, prec, method = "truncate", parenthesis = False):
+def display_complex(x, y, prec, method = "truncate", parenthesis = False, extra_truncation_prec = 3):
     """
     Examples:
-    >>> display_complex(1.0001, 0, 3, parenthesis = True)
-    '1'
+        >>> display_complex(1.0001, 0, 3, parenthesis = True)
+    '1.000'
     >>> display_complex(1.0, -1, 3, parenthesis = True)
     '(1 - i)'
     >>> display_complex(0, -1, 3, parenthesis = True)
@@ -202,16 +268,22 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False):
     >>> display_complex(0, 1, 3, parenthesis = True)
     'i'
     >>> display_complex(0.49999, -1.001, 3, parenthesis = True)
-    '(0.5 - i)'
-    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = True)
+    '(0.500 - 1.000i)'
+    >>> display_complex(0.02586558415542463,0.9996654298095432, 3)
+    '0.025 + 0.999i
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 3)
+    '0.000 - 1.123i'
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 2)
+    '0.000 - 1.123i'
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 1)
     '-1.123i'
     """
-    if abs(y) < 10**(-prec):
+    if abs(y) < 10.**(-prec - extra_truncation_prec):
         return display_float(x, prec, method = method)
-    if abs(x) < 10**(-prec):
+    if abs(x) < 10.**(-prec - extra_truncation_prec):
         x = ""
     else:
-        x = display_float(x, prec, method = method)
+        x = display_float(x, prec, method = method, extra_truncation_prec = extra_truncation_prec)
     if y < 0:
         y = -y
         if x == "":
@@ -231,34 +303,48 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False):
         res = "(" + res + ")"
     return res
 
-def truncate_float(num, precision):
+def round_to_half_int(num, fraction=2):
+    """
+    Rounds input `num` to the nearest half-integer. The optional kwarg
+    `fraction` is used to round to the nearest `fraction`-part of an integer.
+
+    Examples:
+    >>> round_to_half_int(1.1)
+    1.0
+    >>> round_to_half_int(-0.9)
+    -1.0
+    """
+    return float(round(num * 1.0 * fraction) / fraction)
+
+
+
+def truncate_float(num, precision, extra_truncation_prec = 3):
     """
     Truncate `num` to show `precision` digits after the dot (as a string).
     If `num` is nearly an integer or half-integer, return that integer or
     half-integer instead.
 
     Examples:
+    >>> truncate_float(1.00000000001, 3)
+    '1.000'
     >>> truncate_float(1.0001, 4)
-    '1'
+    '1.0001'
     >>> truncate_float(1.1234567, 4)
     '1.1234'
     >>> truncate_float(1.1234567, 5)
     '1.12345'
-    >>> truncate_float(1.4999999, 4)
-    '1.5'
+    >>>  truncate_float(1.499999999, 4)
+    '1.5000'
     """
-    truncation = float(10 ** -precision)
+    truncation = 10. ** -precision
     res = ""
     if num < 0:
         res += "-"
         num = -num
     test = round_to_half_int(num)
-    if float(abs(num - test)) < truncation:
-        if int(test) == test:
-            test = int(test)
-        res += str(test)
-    else:
-        res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
+    if float(abs(num - test)) < truncation * 10.**( - extra_truncation_prec):
+        num = test
+    res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
     return res
 
 

@@ -18,9 +18,7 @@ IMPORTANT:
 * Update know for newspaces and mf.elliptic.space (Drew)
 * make tests pass (Edgar)
 * add knowl label (Edgar)
-* fix scroll bar complex eigenvalues (Edgar)
 * check that the roots are all different (Edgar)
-* truncate the euler factors (Edgar)
 * do not display plots for large enough degree(Edgar)
 * add tests (Edgar)
 * Switch back and forth between inverse and forward, include table (David)
@@ -54,7 +52,6 @@ GOOD:
 FORMATTING:
 * horizontal scroll on the euler factors box or knowl  (Edgar)
 * move show more to the left of the euler factors box  (Edgar)
-* Euler factors sometimes have a dot, other times they don't (Edgar)
 * do not display L-plot's for high enough degree (Edgar)
 
 IT WOULD BE NICE IF:
