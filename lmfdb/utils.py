@@ -244,7 +244,7 @@ def to_dict(args):
 EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
 EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
 def display_float(x, prec, method = "truncate", extra_truncation_prec = 3):
-    if type(x) is int:
+    if x in ZZ:
         return '%d' % x
     if abs(x) < 10.**(-prec - extra_truncation_prec):
         return "0"
