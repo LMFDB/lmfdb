@@ -8,18 +8,16 @@ On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: populate analytic rank (Edgar)
 * data: per each newform, check that we have all the Lfunctions
+* check that the roots are all different (Edgar)
 
 
+TBD:
+* hecke_ring_index as factorization 
 
 IMPORTANT:
-* Update credit string
-* plots for full gamma spaces (Drew)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * make tests pass (Edgar)
-* add knowl label (Edgar)
-* check that the roots are all different (Edgar)
-* do not display plots for large enough degree(Edgar)
 * add tests (Edgar)
 * Switch back and forth between inverse and forward, include table (David)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -38,7 +36,7 @@ IMPORTANT:
 * List of AL-dimensions in the list of spaces; expands to knowl (David)
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version (Edgar)
 * L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
-* http://localhost:37777/ModularForm/GL2/Q/Maass/5411900eacf756021f2c6908 (Edgar)
+* http://localhost:37777/ModularForm/GL2/Q/Maass/5411900eacf756021f2c6908 (Edgar) half way there
 * http://localhost:37777/ModularForm/GL2/Q/Maass/4f5693d488aece2afe00000d (Edgar)
 * Add density of zero traces (Edgar)
 
