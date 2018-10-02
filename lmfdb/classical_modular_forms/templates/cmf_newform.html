@@ -160,21 +160,27 @@ function show_qexp(qstyle) {
 {% endif %}
 
 <div id="table-scroll-wrapper">
-<table class="ntdata">
+{% set single_columns = (info.format == 'satake_angle' or newform.is_real and info.format != 'satake') %}
+<table class="ntdata complex-cols">
   <thead>
     <tr>
       {% if newform.dim > 1 %}
       <th class="sticky-head dark">{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
       {% if newform.has_exact_qexp %}
-      <th class="sticky-head1 dark">\(\iota_m(\alpha)\)</th>
+      <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\alpha)\)</th>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <th class="center dark">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
+      <th class="center dark" colspan="{{1 if single_columns else 3}}">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
+    {% if info.format == 'satake' or info.format == 'satake_angle' %}
+    {% set headcol_rowspan = 2 %}
+    {% else %}
+    {% set headcol_rowspan = 1 %}
+    {% endif %}
     {% for m in newform.m_range(info.CC_m) %}
     {% if loop.index is divisibleby(2) %}
     {% set shade = 'dark' %}
@@ -182,42 +188,83 @@ function show_qexp(qstyle) {
     {% set shade = 'light' %}
     {% endif %}
     <tr>
+      {% if newform.dim > 1 %}
+      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
+      {% if loop.index == 1 and newform.has_exact_qexp %}
+      {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
+      <td rowspan = "{{2*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="left: 60px;">
+        <table class="sticky-embeddings">
+          {% for mm in newform.m_range(info.CC_m) %}
+          {% if loop.index is divisibleby(2) %}
+          {% set mmshade = 'dark' %}
+          {% else %}
+          {% set mmshade = 'light' %}
+          {% endif %}
+          <tr>
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap real">
+              {{ newform.embedding_re(mm,prec=info.prec) }}
+            </td>
+            {% if not newform.is_real %}
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} op">
+              {{ newform.embedding_op(mm,prec=info.prec) }}
+            </td>
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap imag">
+              {{ newform.embedding_im(mm,prec=info.prec) }}
+            </td>
+            {% endif %} {# newform.is_real #}
+            {% if headcol_rowspan == 2 %}
+            <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
+          </tr>
+          <tr>
+            <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
+            {% endif %} {# headcol_rowspan == 2 #}
+          </tr>
+          {% endfor %} {# mm loop #}
+        </table>
+      </td>
+      {% endif %} {# loop.index == 1 and newform.has_exact_qexp #}
+      {% endif %} {# newform.dim > 1 #}
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
-      {% if newform.dim > 1 %}
-      <td class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
-      {% if newform.has_exact_qexp %}
-      <td class="{{shade}} middle border-right sticky-col1">
-        \( {{ newform.embedding(m,prec=info.prec,format=info.format) }} \)
-      </td>
-      {% endif %}
-      {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td class="nowrap" align=right>
-        \( {{ newform.embedding(m,n,prec=info.prec,format=info.format) }} \)
+      <td class="nowrap real">
+        {{ newform.embedding_re(m,n,prec=info.prec,format=info.format) }}
       </td>
-      {% endfor %}
-      {% else %}
-      {% if newform.dim > 1 %}
-      <td rowspan="2" class="{{shade}} sticky-col middle{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
-      {% if newform.has_exact_qexp %}
-      <td rowspan="2" class="{{shade}} sticky-col1 middle border-right">{{ newform.embedding(m,prec=info.prec,format=info.format) }}</td>
-      {% endif %}
-      {% endif %}
+      {% if not newform.is_real %}
+      <td class="op">
+        {{ newform.embedding_op(m,n,prec=info.prec) }}
+      </td>
+      <td class="nowrap imag">
+        {{ newform.embedding_im(m,n,prec=info.prec,format=info.format) }}
+      </td>
+      {% endif %} {# not newform.is_real #}
+      {% endfor %} {# n loop #}
+      {% else %} {# info.format in ['satake', 'satake_angle'] #}
+      {% for i in [0,1] %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td class="nowrap" align=right>
-        \( {{ newform.satake(m,n,0,prec=info.prec,format=info.format) }} \)
+      {% if info.format == 'satake' %}
+      <td class="nowrap real">
+        {{ newform.satake_re(m,n,i,prec=info.prec) }}
       </td>
-      {% endfor %}
+      <td class="op">
+        {{ newform.satake_op(m,n,i) }}
+      </td>
+      <td class="imag">
+        {{ newform.satake_im(m,n,i,prec=info.prec) }}
+      </td>
+      {% else %} {# info.format == 'satake_angles' #}
+      <td class="nowrap middle">
+        {{ newform.satake_angle(m,n,i,prec=info.prec) }}
+      </td>
+      {% endif %} {# info.format #}
+      {% endfor %} {# n loop #}
+      {% if i == 0 %}
     </tr>
     <tr>
-      {% for n in newform.an_range(info.CC_n, format=info.format) %}
-      <td class="nowrap" align=right>
-        \( {{ newform.satake(m,n,1,prec=info.prec,format=info.format) }} \)
-      </td>
-      {% endfor %}
-      {% endif %}
+      {% endif %} {# i == 0 #}
+      {% endfor %} {# i loop #}
+      {% endif %} {# info.format #}
     </tr>
-    {% endfor %}
+    {% endfor %} {# m loop #}
   </tbody>
 </table>
 </div>
@@ -241,7 +288,7 @@ function show_qexp(qstyle) {
     </tr>
     {% endif %}
     <tr>
-      <td>Precision: </td>
+      <td>{{ KNOWL('dq.mf.elliptic.cc_prec', title='Significant digits') }}: </td>
       <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}"></td>
     </tr>
     <tr>

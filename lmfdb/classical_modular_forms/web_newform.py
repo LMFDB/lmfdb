@@ -121,12 +121,14 @@ class WebNewform(object):
             self.has_complex_qexp = False
         else:
             self.has_complex_qexp = True
+            self.is_real = True
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
+                if abs(embedded_mf['embedding_root_imag']) > 0.00000001:
+                    self.is_real = False
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
-                embedded_mf['real'] = all(z[1] == 0 for z in embedded_mf['an'])
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
 
                 self.cc_data.append(embedded_mf)
@@ -427,6 +429,60 @@ function switch_basis(btype) {
         else:
             return display_complex(x, y, prec)
 
+    def _display_re(self, x, prec):
+        if abs(x) < 10**(-prec):
+            return ""
+        return r"\(%s\)"%display_float(x, prec)
+
+    def _display_im(self, y, prec):
+        if abs(y) < 10**(-prec):
+            return ""
+        return r"\(%s i\)"%display_float(y, prec)
+
+    def _display_op(self, x, y, prec):
+        xiszero = abs(x) < 10**(-prec)
+        yiszero = abs(y) < 10**(-prec)
+        if xiszero and yiszero:
+            return r"\(0\)"
+        elif yiszero or (xiszero and y > 0):
+            return ""
+        elif y > 0:
+            return r"\(+\)"
+        elif y < 0:
+            return r"\(-\)"
+
+    def embedding_re(self, m, n=None, prec=6, format='embed'):
+        if n is None:
+            x = self.cc_data[m].get('embedding_root_real', None)
+            if x is None:
+                return '' # we should never see this if we have an exact qexp
+        else:
+            x, y = self.cc_data[m]['an'][n]
+            if format == 'analytic_embed':
+                x *= self.analytic_shift[n]
+        return self._display_re(x, prec)
+
+    def embedding_im(self, m, n=None, prec=6, format='embed'):
+        if n is None:
+            y = self.cc_data[m].get('embedding_root_imag', None)
+            if y is None:
+                return '' # we should never see this if we have an exact qexp
+        else:
+            x, y = self.cc_data[m]['an'][n]
+            if format == 'analytic_embed':
+                y *= self.analytic_shift[n]
+        return self._display_im(abs(y), prec) # sign is handled in embedding_op
+
+    def embedding_op(self, m, n=None, prec=6):
+        if n is None:
+            x = self.cc_data[m].get('embedding_root_real', None)
+            y = self.cc_data[m].get('embedding_root_imag', None)
+            if x is None or y is None:
+                return '?' # we should never see this if we have an exact qexp
+        else:
+            x, y = self.cc_data[m]['an'][n]
+        return self._display_op(x, y, prec)
+
     def satake(self, m, p, i, prec=6, format='satake'):
         """
         Return a Satake parameter.
@@ -439,27 +495,49 @@ function switch_basis(btype) {
         - ``prec`` -- the precision to display floating point values
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
-        theta = self.cc_data[m]['angles'][p]
-        chiang, chival = self.character_values[p][m // self.rel_dim]
         if format == 'satake':
-            ppow = CDF(p)**((ZZ(self.weight)-1)/2)
-            unit = CDF(0,2*CDF.pi()*theta).exp()
-            if i == 0:
-                alpha = ppow * unit
-            else:
-                alpha = ppow * chival / unit
+            alpha = self._get_alpha(m, p, i)
             return display_complex(alpha.real(), alpha.imag(), prec)
         else:
-            if i == 1:
-                theta = chiang - theta
-                if theta > 0.5:
-                    theta -= 1
-                elif theta <= -0.5:
-                    theta += 1
-            s = display_float(2*theta, prec)
-            if s != "0":
-                s += r'\pi'
-            return s
+            return self.satake_angle(m, p, i, prec)
+
+    def satake_angle(self, m, p, i, prec=6):
+        theta = self._get_theta(m, p, i)
+        s = display_float(2*theta, prec)
+        if s != "0":
+            s += r'\pi'
+        return r'\(%s\)'%s
+
+    def _get_alpha(self, m, p, i):
+        theta = self.cc_data[m]['angles'][p]
+        chiang, chival = self.character_values[p][m // self.rel_dim]
+        ppow = CDF(p)**((ZZ(self.weight)-1)/2)
+        unit = CDF(0,2*CDF.pi()*theta).exp()
+        if i == 0:
+            return ppow * unit
+        else:
+            return ppow * chival / unit
+
+    def _get_theta(self, m, p, i):
+        theta = self.cc_data[m]['angles'][p]
+        chiang, chival = self.character_values[p][m // self.rel_dim]
+        if i == 1:
+            theta = chiang - theta
+            if theta > 0.5:
+                theta -= 1
+            elif theta <= -0.5:
+                theta += 1
+        return theta
+
+    def satake_re(self, m, p, i, prec=6):
+        return self._display_re(self._get_alpha(m, p, i).real(), prec)
+
+    def satake_im(self, m, p, i, prec=6):
+        return self._display_im(abs(self._get_alpha(m, p, i).imag()), prec)
+
+    def satake_op(self, m, p, i, prec=6):
+        alpha = self._get_alpha(m, p, i)
+        return self._display_op(alpha.real(), alpha.imag(), prec)
 
     def an_range(self, L, format='embed'):
         if format in ['embed', 'analytic_embed']:

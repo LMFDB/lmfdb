@@ -953,7 +953,7 @@ table.ntdata thead.dark tr {
     background: {{color.table_ntdata_background_2}};
 }
 table.ntdata td.light {
-    background: {{color.body_background}};
+    background: white;
 }
 table.euler {
     margin-left:auto;
@@ -2027,7 +2027,8 @@ p.short {
 }
 
 #table-scroll-wrapper table {
-    margin: 0;
+    margin-right: 1px;
+    margin-bottom: 1px;
     border-collapse: collapse;
 }
 #table-scroll-wrapper th {
@@ -2063,17 +2064,8 @@ p.short {
     z-index:2;
     background-clip: padding-box;
 }
-#table-scroll-wrapper .sticky-col1 {
-    position: sticky; left: 60px;
-    z-index:2;
-    background-clip: padding-box;
-}
 #table-scroll-wrapper th.sticky-head {
     position: sticky; left: 0; top: 0;
-    z-index:3;
-}
-#table-scroll-wrapper th.sticky-head1 {
-    position: sticky; left: 60px; top: 0;
     z-index:3;
 }
 td.nowrap {
@@ -2111,4 +2103,37 @@ table.coeff_ring_basis td.RHS {
     text-align: left;
     margin-left: 0;
     padding-left: 0;
+}
+
+table.complex-cols td.real {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+}
+table.complex-cols td.imag {
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
+}
+table.complex-cols td.op {
+    text-align: center;
+    margin-right: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    padding-left: 2px;
+}
+
+table.ntdata td.embedding-wrap {
+    margin: 0;
+    padding: 0;
+}
+#table-scroll-wrapper table.sticky-embeddings {
+    margin: 0;
+    padding: 0;
+}
+table.sticky-embeddings td.vstrut {
+    margin-left: 0;
+    padding-left: 0;
+    margin-right: 0;
+    padding-right: 0;
 }
