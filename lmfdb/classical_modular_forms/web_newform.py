@@ -125,7 +125,7 @@ class WebNewform(object):
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                if abs(embedded_mf['embedding_root_imag']) > 0.00000001:
+                if abs(embedded_mf.get('embedding_root_imag',1)) > 0.00000001:
                     self.is_real = False
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
@@ -432,12 +432,12 @@ function switch_basis(btype) {
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
-        return r"\(%s\)"%display_float(x, prec)
+        return r"\(%s\)"%(display_float(x, prec).replace('e',r'\mathrm{e}'))
 
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
             return ""
-        return r"\(%s i\)"%display_float(y, prec)
+        return r"\(%s i\)"%(display_float(y, prec).replace('e',r'\mathrm{e}'))
 
     def _display_op(self, x, y, prec):
         xiszero = abs(x) < 10**(-prec)
