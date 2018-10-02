@@ -130,6 +130,8 @@ class WebNewform(object):
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
+                #as they are stored as a jsonb, large enough elements might be recognized as an integer
+                embedded_mf['an'] = [ [float(x), float(y)] for x,y in embedded_mf['an']]
 
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
