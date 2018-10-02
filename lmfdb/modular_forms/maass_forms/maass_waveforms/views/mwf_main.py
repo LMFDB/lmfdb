@@ -33,6 +33,7 @@ from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
+from bson.binary import Binary
 
 
 # this is a blueprint specific default for the tempate system.
@@ -172,7 +173,8 @@ def plot_maassform(maass_id):
     plot = maass_db.get_maassform_plot_by_id(maass_id)
     if not plot:
         return flask.abort(404)
-    response = make_response(loads(plot))
+
+    response = make_response(loads(Binary(str(plot), 0)))
     response.headers['Content-type'] = 'image/png'
     return response
 
