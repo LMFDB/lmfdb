@@ -186,7 +186,7 @@ a:hover {
 }
 
 #header {
-  min-height: 120px;
+  min-height: 60px;
   background: {{color.header_background}};
   -moz-box-shadow:     0px 5px 5px {{color.header_shadow}};
   -webkit-box-shadow:  0px 5px 5px {{color.header_shadow}};
@@ -202,9 +202,10 @@ body.knowl #header {
 
 #header #logo {
     float: left;
-    height: 120px;
     width: 200px;
     margin: 0px;
+    padding-top: 1px;
+    padding-left: 2px;
 }
 #header .right {
   margin-left: 210px;
@@ -216,7 +217,7 @@ body.knowl #header {
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    min-height: 82px;
+    min-height: 36px;
     position: relative;
     color: {{color.header_text_title}};
 }
@@ -261,6 +262,7 @@ body.knowl #header {
   padding: 4px;
 }
 #header .undertopright {
+  float: right;
   text-align: right;
   white-space:nowrap;
   color: {{color.header_text_topright}};
@@ -941,10 +943,13 @@ table.ntdata .right {
 table.ntdata .middle {
     vertical-align: middle;
 }
+table.ntdata tr.dark {
+    background: {{color.table_ntdata_background_2}};
+}
 table.ntdata td.dark {
     background: {{color.table_ntdata_background_2}};
 }
-table.ntdata tr.dark {
+table.ntdata thead.dark tr {
     background: {{color.table_ntdata_background_2}};
 }
 table.ntdata td.light {
@@ -2018,12 +2023,11 @@ p.short {
 }
 
 #table-scroll-wrapper {
-    max-height:270px;
     overflow:auto;
 }
 
 #table-scroll-wrapper table {
-    margin: 0;
+    margin: 1px;
     border-collapse: collapse;
 }
 #table-scroll-wrapper th {
@@ -2081,4 +2085,30 @@ td.nowrap {
 }
 .float-left {
     float:left;
+}
+
+#complex_embeddings {
+    padding-top: 10px;
+}
+
+table.coeff_ring_basis td {
+    vertical-align: top;
+}
+
+table.coeff_ring_basis td.LHS {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+}
+table.coeff_ring_basis td.eq {
+    text-align: center;
+    margin-right: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    padding-left: 2px;
+}
+table.coeff_ring_basis td.RHS {
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
 }

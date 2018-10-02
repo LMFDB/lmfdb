@@ -17,15 +17,15 @@ from sage.all import next_prime
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Holomorphic newform labels', url_for(".labels_page"))]
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Classical modular form labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def credit():
-    # FIXME
-    return "???"
+    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -36,7 +36,7 @@ def set_info_funcs(info):
             if name == nf_label and len(name) > 16:
                 # truncate if too long
                 parts = nf_label.split('.')
-                parts[2] = 'N'
+                parts[2] = r'\(\cdots\)'
                 name = '.'.join(parts)
             return nf_display_knowl(nf_label, name)
         else:
@@ -94,7 +94,7 @@ def index():
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
-                           title="Holomorphic Cusp Forms",
+                           title="Classical Modular Forms",
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
@@ -255,9 +255,9 @@ def jump_box(info):
 
 class CMF_download(Downloader):
     table = db.mf_newforms
-    title = 'Cuspidal newforms'
-    columns = ['level','weight', 'dim', 'field_poly', 'nf_label', 'hecke_cutters']
-    data_description = 'where hecke_cutters is a list of pairs [p, F_p], with F_p a list of integers encoding a polynomial; the intersection of the kernels of F_p(T_p) is this newform as a subspace of S_k(Gamma_1(N)).'
+    title = 'Classical modular forms'
+    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
+    columns = ['level','weight', 'dim', 'Nk2', 'field_poly', 'nf_label', 'cm_disc', 'trace_display']
 
     def _get_hecke_nf(self, label):
         try:
@@ -292,7 +292,7 @@ class CMF_download(Downloader):
                                    'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
     qexp_dim1_function_body = {'sage': ['S.<q> = PowerSeriesRing(QQ)',
                                         'return S(data)']}
-    def download_qexp(self, label, lang='text'):
+    def download_qexp(self, label, lang='sage'):
         data = self._get_hecke_nf(label)
         if not isinstance(data,list):
             return data
@@ -357,11 +357,11 @@ class CMF_download(Downloader):
 
     def download_traces(self, label, lang='text'):
         data = self._get_hecke_nf(label)
-        if isinstance(data,list):
+        if not isinstance(data,list):
             return data
         qexp = [0] + [trace_an for an, trace_an in data]
         return self._wrap(Json.dumps(qexp),
-                          label + '.trace',
+                          label + '.traces',
                           lang=lang,
                           title='Trace form for %s,'%(label))
 
@@ -402,7 +402,6 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        data['plot'] = form.plot
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
@@ -418,7 +417,6 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         space = WebNewformSpace(data)
-        data['plot'] = space.plot
         data['newforms'] = [form['label'] for form in space.newforms]
         data['oldspaces'] = space.oldspaces
         return self._wrap(Json.dumps(data),
@@ -654,7 +652,7 @@ def space_search(info, query):
 
 @cmf.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of $\GL_2$ holomorphic newform data over $\Q$'
+    t = 'Completeness of classical modular form data'
     return render_template("single.html", kid='dq.mf.elliptic.extent',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
@@ -663,7 +661,7 @@ def completeness_page():
 
 @cmf.route("/Source")
 def how_computed_page():
-    t = 'Source of $\GL_2$ holomorphic newform data over $\Q$'
+    t = 'Source of classical modular form data'
     return render_template("single.html", kid='dq.mf.elliptic.source',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
@@ -671,11 +669,19 @@ def how_computed_page():
 
 @cmf.route("/Labels")
 def labels_page():
-    t = 'Labels for $\GL_2$ holomorphic newforms over $\Q$'
+    t = 'Labels for classical modular forms'
     return render_template("single.html", kid='mf.elliptic.label',
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
+
+@cmf.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of classical modular form data'
+    return render_template("single.html", kid='dq.mf.elliptic.reliability',
+                           credit=credit(), title=t,
+                           bread=get_bread(other='Reliability'),
+                           learnmore=learnmore_list_remove('Reliability'))
 
 def cm_format(D):
     if D == 1:
@@ -688,7 +694,7 @@ def cm_format(D):
 
 class CMF_stats(StatsDisplay):
     """
-    Class for creating and displaying statistics for cuspidal newforms
+    Class for creating and displaying statistics for classical modular forms
     """
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
@@ -696,9 +702,10 @@ class CMF_stats(StatsDisplay):
         Nk2bound = 2000 # should be added to dq_extent table?
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
+        newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
         stats_url = url_for(".statistics")
-        self.short_summary = r'The database currently contains %s newforms of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, weight_knowl, level_knowl, Nk2bound, stats_url)
-        self.summary = r"The database currently contains %s (Galois orbits of) newforms and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, nspaces, weight_knowl, level_knowl, Nk2bound)
+        self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2bound, stats_url)
+        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2bound)
 
     table = db.mf_newforms
     baseurl_func = ".index"

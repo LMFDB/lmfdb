@@ -11,7 +11,7 @@ from lmfdb.base import app
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics
 
-from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
+from lmfdb.utils import list_to_factored_poly_otherorder
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
