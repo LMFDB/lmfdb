@@ -1,7 +1,7 @@
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
-from sage.all import Gamma0, CC, ComplexNumber
+from sage.all import Gamma0, CC, imag_part, real_part
 from lmfdb.db_backend import db
 from lmfdb.utils import display_complex
 
@@ -343,14 +343,11 @@ def pretty_coeff(c, prec=9):
     if isinstance(c, complex):
         x = c.real
         y = c.imag
-    elif isinstance(c, (complex, ComplexNumber)):
-        x = c.real()
-        y = c.imag()
     else:
-        x = c
-        y = 0
+        x = real_part(c)
+        y = imag_part(c)
 
-    res =  display_complex(x, y, precision = prec)
+    res =  display_complex(x, y, digits = prec)
 
     if res == '0':
         return '&nbsp;0'
