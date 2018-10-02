@@ -4,11 +4,12 @@ import math
 from flask import url_for
 from lmfdb.db_backend import db
 from lmfdb.classical_modular_forms.web_newform import WebNewform
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace
+from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
 from lmfdb.utils import signtocolour
+from sage.databases.cremona import cremona_letter_code
 
 
 ###############################################################################
@@ -374,11 +375,15 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
+        for y in range(int(kmin), int(kmax) + 1):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
-            WS = WebNewformSpace(level = x, weight = y)
-            numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
+            try:
+                WS = WebGamma1Space(level = x, weight = y)
+            except ValueError:
+                continue
+            newspaces = WS.decomp
+            numlabels = len(WS.decomp)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
             # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
@@ -386,69 +391,69 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             ybaseminus = y  # baseline y-coord for minus cases
             numpluslabels = 0
             numminuslabels = 0
-            for label in thelabels:  # looping over Galois orbit
-                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/" + label
-                MF = WebNewform(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
-                numberwithlabel = MF.dimension  # number of forms in the Galois orbit
-                if x == 1:  # For level 1, the sign is always plus
-                    signfe = 1
-                else:
-                    frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
-                    signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
-                xbase = x - signfe * (xdotspacing / 2.0)
-
-                if signfe > 0:  # go to right in BLUE if plus
-                    ybase = ybaseplus
-                    ybaseplus += ydotspacing
-                    thiscolour = colourplus
-                    numpluslabels += 1
-                else:  # go to the left in RED of minus
-                    ybase = ybaseminus
-                    ybaseminus += ydotspacing
-                    thiscolour = colourminus
-                    numminuslabels += 1
-
-                if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
-                    xbase += 1.5 * signfe * xdotspacing
-                    if signfe < 0:   # move over more to position numbers on minus side.
-                        xbase += signfe * xdotspacing
-                    ybase += -0.5 * ydotspacing
-                    if (signfe > 0 and numpluslabels > 1) or (signfe < 0 and numminuslabels > 1):
-                        ybase += ydotspacing
-                    ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
-
-#  TODO: Implement when there is more than maxdots forms
-
-                    ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
-                            str(height - float(ybase) * yfactor)[0:7] +
-                            "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
-                            + str(numberwithlabel) + "</text>\n")
-                    ans += "</a>\n"
-                    if signfe < 0:
-                        ybaseminus += 1.5 * ydotspacing
+            for newsp in newspaces:  # looping over Galois orbit
+                for MF in newsp[1]:
+                    linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
+                    numberwithlabel = MF['dim'] # number of forms in the Galois orbit
+                    if x == 1 or True:  # For level 1, the sign is always plus
+                        signfe = 1
                     else:
-                        ybaseplus += 1.5 * ydotspacing
-                else:  # otherwise, use one dot per form in orbit, connected with a line
-                    if numberwithlabel > 1:  # join dots if there are at least two
-# add lines first and then dots to prevent line from hiding link
-                        firstcenterx = xbase + signfe * xdotspacing
-                        firstcentery = ybase
-                        lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
-                        lastcentery = ybase
-                        ans += "<line x1='%s' " % str(float(firstcenterx) * xfactor)[0:7]
-                        ans += "y1='%s' " % str(float(height - firstcentery * yfactor))[0:7]
-                        ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
-                        ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
-                        ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
-                    for number in range(0, numberwithlabel):
-                        xbase += signfe * xdotspacing
-                        ans += "<a xlink:href='" + linkurl + "/" + str(number) + "' target='_top'>\n"
-                        ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
-                        ans += "' cy='" + str(height - float(ybase) * yfactor)[0:7]
-                        ans += "' r='" + str(radius)
-                        ans += "' style='fill:" + thiscolour + "'>"
-                        ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
-                        ans += "</circle></a>\n"
+                        frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
+                        signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
+                    xbase = x - signfe * (xdotspacing / 2.0)
+
+                    if signfe > 0:  # go to right in BLUE if plus
+                        ybase = ybaseplus
+                        ybaseplus += ydotspacing
+                        thiscolour = colourplus
+                        numpluslabels += 1
+                    else:  # go to the left in RED of minus
+                        ybase = ybaseminus
+                        ybaseminus += ydotspacing
+                        thiscolour = colourminus
+                        numminuslabels += 1
+
+                    if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
+                        xbase += 1.5 * signfe * xdotspacing
+                        if signfe < 0:   # move over more to position numbers on minus side.
+                            xbase += signfe * xdotspacing
+                        ybase += -0.5 * ydotspacing
+                        if (signfe > 0 and numpluslabels > 1) or (signfe < 0 and numminuslabels > 1):
+                            ybase += ydotspacing
+                        ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
+
+    #  TODO: Implement when there is more than maxdots forms
+
+                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
+                                str(height - float(ybase) * yfactor)[0:7] +
+                                "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
+                                + str(numberwithlabel) + "</text>\n")
+                        ans += "</a>\n"
+                        if signfe < 0:
+                            ybaseminus += 1.5 * ydotspacing
+                        else:
+                            ybaseplus += 1.5 * ydotspacing
+                    else:  # otherwise, use one dot per form in orbit, connected with a line
+                        if numberwithlabel > 1:  # join dots if there are at least two
+    # add lines first and then dots to prevent line from hiding link
+                            firstcenterx = xbase + signfe * xdotspacing
+                            firstcentery = ybase
+                            lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
+                            lastcentery = ybase
+                            ans += "<line x1='%s' " % str(float(firstcenterx) * xfactor)[0:7]
+                            ans += "y1='%s' " % str(float(height - firstcentery * yfactor))[0:7]
+                            ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
+                            ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
+                            ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
+                        for number in range(0, numberwithlabel):
+                            xbase += signfe * xdotspacing
+                            ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
+                            ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
+                            ans += "' cy='" + str(height - float(ybase) * yfactor)[0:7]
+                            ans += "' r='" + str(radius)
+                            ans += "' style='fill:" + thiscolour + "'>"
+                            ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
+                            ans += "</circle></a>\n"
 
     ans += "</svg>"
     return ans
@@ -817,8 +822,8 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebNewformSpace(level = x, weight = y)  # space of modular forms of weight y, level x
-            galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
+            WS = WebGamma1Space(level = x, weight = y)  # space of modular forms of weight y, level x
+            galois_orbits = WS.decomp # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
@@ -864,7 +869,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewform(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewform.by_label(label = label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1

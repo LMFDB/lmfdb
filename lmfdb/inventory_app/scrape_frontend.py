@@ -1,4 +1,4 @@
-import scripts.reports.jsonify_db_structure as jdbs
+#import scripts.reports.jsonify_db_structure as jdbs
 import inventory_upload_data as iud
 from scrape_progress_update import update_scrape_progress
 import threading
