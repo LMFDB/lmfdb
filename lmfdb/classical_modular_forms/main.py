@@ -347,10 +347,10 @@ class CMF_download(Downloader):
             poly += ', '.join(str(c) for c in hecke_data['field_poly'])
             poly += self.start_and_end[lang][1] + '\n'
         if lang in ['sage']:
-            code = '\n\n' + '\n'.join(func_start) + '\n'
+            code = '\n' + '\n'.join(func_start) + '\n'
             code += '    ' + '\n    '.join(func_body) + '\n'
             code += '\n'.join(func_end)
-        return self._wrap(explain + poly + basis + data + code,
+        return self._wrap(explain + code + poly + basis + data,
                           label + '.qexp',
                           lang=lang,
                           title='q-expansion of newform %s,'%(label))
