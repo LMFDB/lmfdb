@@ -16,7 +16,8 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField
+from sage.structure.element import Element
 from copy import copy
 from random import randint
 from functools import wraps
@@ -240,26 +241,37 @@ def to_dict(args):
             d[key] = values
     return d
 
+def is_exact(x):
+    return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
-EPLUS_RE = re.compile(r"e\+0*([1-9][0-9]*)")
-EMINUS_RE = re.compile(r"e\-0*([1-9][0-9]*)")
-def display_float(x, prec, method = "truncate", extra_truncation_prec = 3):
-    if type(x) is int:
-        return '%d' % x
-    if abs(x) < 10.**(-prec - extra_truncation_prec):
+#EPLUS_RE_python = re.compile(r"e\+0*([1-9][0-9]*)")
+#EMINUS_RE_python = re.compile(r"e\-0*([1-9][0-9]*)")
+#EPLUS_RE_mpfr = re.compile(r"e\+*([1-9][0-9]*)")
+#EMINUS_RE_mpfr = re.compile(r"e\-*([1-9][0-9]*)")
+def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
+    if is_exact(x):
+        return '%s' % x
+    if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     if method == "truncate":
-        s = truncate_float(x, prec, extra_truncation_prec = extra_truncation_prec)
+        k = round_to_half_int(x)
+        if float(abs(x - k)) < 10.**( - digits - extra_truncation_digits):
+            x = k
+        s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
+        #EPLUS_RE = EPLUS_RE_mpfr
+        #EMINUS_RE = EMINUS_RE_mpfr
     else:
-        s = "%.{}f".format(prec) % float(x)
-        s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
-        s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
+        s = "%.{}g".format(prec) % float(x)
+        #EPLUS_RE = EPLUS_RE_python
+        #EMINUS_RE = EMINUS_RE_python
+    #s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
+    #s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
     return s
 
-def display_complex(x, y, prec, method = "truncate", parenthesis = False, extra_truncation_prec = 3):
+def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
     """
     Examples:
-        >>> display_complex(1.0001, 0, 3, parenthesis = True)
+    >>> display_complex(1.0001, 0, 3, parenthesis = True)
     '1.000'
     >>> display_complex(1.0, -1, 3, parenthesis = True)
     '(1 - i)'
@@ -271,19 +283,19 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False, extra_
     '(0.500 - 1.000i)'
     >>> display_complex(0.02586558415542463,0.9996654298095432, 3)
     '0.025 + 0.999i
-    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 3)
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 3)
     '0.000 - 1.123i'
-    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 2)
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 2)
     '0.000 - 1.123i'
-    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_prec = 1)
+    >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 1)
     '-1.123i'
     """
-    if abs(y) < 10.**(-prec - extra_truncation_prec):
-        return display_float(x, prec, method = method)
-    if abs(x) < 10.**(-prec - extra_truncation_prec):
+    if abs(y) < 10.**(- digits - extra_truncation_digits):
+        return display_float(x, digits, method = method, extra_truncation_digits = extra_truncation_digits)
+    if abs(x) < 10.**(- digits - extra_truncation_digits):
         x = ""
     else:
-        x = display_float(x, prec, method = method, extra_truncation_prec = extra_truncation_prec)
+        x = display_float(x, digits, method = method, extra_truncation_digits = extra_truncation_digits)
     if y < 0:
         y = -y
         if x == "":
@@ -295,7 +307,7 @@ def display_complex(x, y, prec, method = "truncate", parenthesis = False, extra_
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, prec, method = method)
+    y = display_float(y, digits, method = method, extra_truncation_digits = extra_truncation_digits)
     if y == "1":
         y = "";
     res = x + sign + y + r"i"
@@ -310,42 +322,12 @@ def round_to_half_int(num, fraction=2):
 
     Examples:
     >>> round_to_half_int(1.1)
-    1.0
+    1
     >>> round_to_half_int(-0.9)
-    -1.0
+    -1
     """
-    return float(round(num * 1.0 * fraction) / fraction)
+    return round(num * 1.0 * fraction) / fraction
 
-
-
-def truncate_float(num, precision, extra_truncation_prec = 3):
-    """
-    Truncate `num` to show `precision` digits after the dot (as a string).
-    If `num` is nearly an integer or half-integer, return that integer or
-    half-integer instead.
-
-    Examples:
-    >>> truncate_float(1.00000000001, 3)
-    '1.000'
-    >>> truncate_float(1.0001, 4)
-    '1.0001'
-    >>> truncate_float(1.1234567, 4)
-    '1.1234'
-    >>> truncate_float(1.1234567, 5)
-    '1.12345'
-    >>>  truncate_float(1.499999999, 4)
-    '1.5000'
-    """
-    truncation = 10. ** -precision
-    res = ""
-    if num < 0:
-        res += "-"
-        num = -num
-    test = round_to_half_int(num)
-    if float(abs(num - test)) < truncation * 10.**( - extra_truncation_prec):
-        num = test
-    res += "%.{}f".format(precision) % float(int(num * 10 ** precision) * truncation)
-    return res
 
 
 
