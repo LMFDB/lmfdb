@@ -25,7 +25,7 @@ def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def credit():
-    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Lowry-Duda, David Roe, Andrew Sutherland, John Voight"
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
