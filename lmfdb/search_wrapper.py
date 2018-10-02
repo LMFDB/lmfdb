@@ -38,6 +38,8 @@ class SearchWrapper(object):
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
             return render_template(self.template, info=info, title=err_title, **template_kwds)
+        else:
+            err_title = query.pop('__err_title__', self.err_title)
         if errpage is not None:
             return errpage
         if 'result_count' in info:
@@ -71,7 +73,6 @@ class SearchWrapper(object):
             except ValueError as err:
                 # Errors raised in postprocessing
                 info['err'] = str(err)
-                err_title = query.pop('__err_title__', self.err_title)
                 return render_template(self.template, info=info, title=err_title, **template_kwds)
             for key, func in self.longcuts.items():
                 if info.get(key,'').strip():
