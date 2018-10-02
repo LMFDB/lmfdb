@@ -17,12 +17,12 @@ def valid_gamma1(label):
 
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
-    links = [('level', 'Level %s', '.by_url_level'),
-             ('weight', 'Weight %s', '.by_url_full_gammma1_space_label'),
-             ('char_orbit_label', 'Character orbit %s', '.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', '.by_url_newform_label')]
+    links = [('level', 'Level %s', 'cmf.by_url_level'),
+             ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
+             ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
+             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
-             ('Classical', url_for(".index"))]
+             ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
         return bread + [(kwds['other'], ' ')]
     url_kwds = {}
@@ -260,7 +260,7 @@ class WebGamma1Space(object):
         ]
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
-        self.downloads = [('Download all stored data', url_for('.download_full_space', label=self.label))]
+        self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]
         self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
         self.friends = []
 

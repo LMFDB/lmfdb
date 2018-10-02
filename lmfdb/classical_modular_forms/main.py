@@ -25,7 +25,7 @@ def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def credit():
-    return "Alex Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Lowry-Duda, David Roe, Andrew Sutherland, John Voight"
+    return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -347,10 +347,10 @@ class CMF_download(Downloader):
             poly += ', '.join(str(c) for c in hecke_data['field_poly'])
             poly += self.start_and_end[lang][1] + '\n'
         if lang in ['sage']:
-            code = '\n\n' + '\n'.join(func_start) + '\n'
+            code = '\n' + '\n'.join(func_start) + '\n'
             code += '    ' + '\n    '.join(func_body) + '\n'
             code += '\n'.join(func_end)
-        return self._wrap(explain + poly + basis + data + code,
+        return self._wrap(explain + code + poly + basis + data,
                           label + '.qexp',
                           lang=lang,
                           title='q-expansion of newform %s,'%(label))
