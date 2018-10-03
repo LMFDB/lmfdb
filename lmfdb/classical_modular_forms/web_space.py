@@ -252,8 +252,12 @@ class WebGamma1Space(object):
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
-        self.properties = [
-            ('Label',self.label),
+
+        self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
+        self.properties = [('Label',self.label),]
+        if self.plot is not None:
+            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+        self.properties +=[
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Dimension',str(self.new_dim)),
