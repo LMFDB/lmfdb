@@ -1,6 +1,8 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
+* data: primitive and characters are wrongly assigned for unprimitive lfun
+* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
 
 
 On data updates:
@@ -15,24 +17,24 @@ IMPORTANT:
 * Add info.format = embed for rational forms (David)
 * hecke_ring_index as factorization (Drew)
 * Display gamma1 portraits (Edgar)
+* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * make tests pass (Edgar)
 * add tests (Edgar)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
-* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
-* data: add weight 1 cc data (Edgar)
-* form pages: weight 1 link to Artin rep (Edgar)
 * split dimension into Fricke plus (first) + minus (second), update knowl (David)
 * add a column for AL-dims, with knowl (David)
 * Atkin-Lehner dimension decomposition for the space (David)
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
 * List of AL-dimensions in the list of spaces; expands to knowl (David)
-* Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version (Edgar)
 * Add density of zero traces (Edgar)
+* data: add weight 1 cc data (Edgar)
+* form pages: weight 1 link to Artin rep (Edgar)
+* link modular form history in Learn more about? (#1284) (Edgar)
+* LMFDB issues to be closed after done with the above: #2340, #1282, #1248, #1224, #873, #437 (Edgar)
 
 GOOD:
 * Make sure our description of labels is correct
