@@ -314,7 +314,8 @@ def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
     graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
 # To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "'
 # width='" + str(graphInfo['width']) +
-    image_url = url_for('static', filename='images/browseGraphHolo_22_14_5a.svg')
+    #image_url = url_for('static', filename='images/browseGraphHolo_22_14_5a.svg')
+    image_url = url_for('.browseGraphHolo', **{'Nmin':Nmin,'Nmax':Nmax,'kmin':kmin,'kmax':kmax})
     logger.debug(image_url)
     ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, str(graphInfo['width']), str(graphInfo['height'])) +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
