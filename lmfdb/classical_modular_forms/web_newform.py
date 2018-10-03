@@ -1,9 +1,9 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import  prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF,  ZZ
+from sage.all import  prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF,  ZZ, prod
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, factor_base_factorization_latex
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_poly, bigint_knowl, display_float, display_complex
@@ -73,7 +73,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
 class WebNewform(object):
     def __init__(self, data, space=None):
         #TODO validate data
-        # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_index, is_twist_minimal
+        # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
         self.__dict__.update(data)
         self._data = data
 
@@ -81,6 +81,14 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+
+        try:
+            if not isinstance(self.hecke_ring_index, list): #FIXME temporary data fix
+                self.hecke_ring_index = list(ZZ(self.hecke_ring_index).factor())
+            self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index)
+            self.hecke_ring_index = prod([ p**e for p,e in self.hecke_ring_index])
+        except AttributeError:
+            pass #  self.hecke_ring might be not set
 
         if self.has_inner_twist != 0:
             if self.inner_twist_proved:
@@ -121,12 +129,12 @@ class WebNewform(object):
             self.has_complex_qexp = False
         else:
             self.has_complex_qexp = True
-            self.is_real = True
+            self.is_real = False
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                if abs(embedded_mf['embedding_root_imag']) > 0.00000001:
-                    self.is_real = False
+                if 'embedding_root_imag' in embedded_mf and abs(embedded_mf['embedding_root_imag']) < 0.00000001:
+                    self.is_real = True
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
