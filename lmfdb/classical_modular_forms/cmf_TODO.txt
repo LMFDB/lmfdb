@@ -13,7 +13,7 @@ On data updates:
 IMPORTANT:
 * Add Hecke cutters to form page (David)
 * Add info.format = embed for rational forms (David)
-* hecke_ring_index as factorization (Drew, Edgar)
+* hecke_ring_index as factorization (Drew)
 * Display gamma1 portraits (Edgar)
 * Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
@@ -32,9 +32,6 @@ IMPORTANT:
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
 * List of AL-dimensions in the list of spaces; expands to knowl (David)
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version (Edgar)
-* L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
-* http://localhost:37777/ModularForm/GL2/Q/Maass/5411900eacf756021f2c6908 (Edgar) half way there
-* http://localhost:37777/ModularForm/GL2/Q/Maass/4f5693d488aece2afe00000d (Edgar)
 * Add density of zero traces (Edgar)
 
 GOOD:
@@ -47,7 +44,6 @@ GOOD:
 FORMATTING:
 * horizontal scroll on the euler factors box or knowl  (Edgar)
 * move show more to the left of the euler factors box  (Edgar)
-* do not display L-plot's for high enough degree (Edgar)
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
