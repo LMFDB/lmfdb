@@ -121,12 +121,9 @@ class WebNewform(object):
             self.has_complex_qexp = False
         else:
             self.has_complex_qexp = True
-            self.is_real = True
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                if abs(embedded_mf.get('embedding_root_imag',1)) > 0.00000001:
-                    self.is_real = False
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
@@ -158,7 +155,10 @@ class WebNewform(object):
             self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
-        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1)
+        # Make up for db_backend currently deleting Nones
+        if not hasattr(self, 'hecke_cutters'):
+            self.hecke_cutters = None
+        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -197,7 +197,6 @@ class WebNewform(object):
         self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
 
         self.title = "Newform %s"%(self.label)
-
 
     @property
     def friends(self):
@@ -276,6 +275,9 @@ class WebNewform(object):
             return nf_display_knowl(cyclolookup[self.char_order], name=name)
         else:
             return name
+
+    def display_hecke_cutters(self):
+        return " and ".join(web_latex_split_on_pm(coeff_to_poly(F, 'x')).replace('x','T_{%s}'%p) for (p,F) in self.hecke_cutters)
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
@@ -407,6 +409,8 @@ function switch_basis(btype) {
     def embedding(self, m, n=None, prec=6, format='embed'):
         """
         Return the value of the ``m``th embedding on a specified input.
+        Should only be used when all of the entries in this column are either real
+        or imaginary.
 
         INPUT:
 

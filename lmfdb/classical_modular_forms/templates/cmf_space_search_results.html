@@ -68,7 +68,7 @@
   <thead class="dark">
     <tr class="middle">
       <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-      <th>{{ KNOWL('mf.elliptic.display_dim', title='Dim.') }}</th>
+      <th class="center">{{ KNOWL('mf.elliptic.display_dim', title='Dim.') }}</th>
       <th>{{ KNOWL('mf.elliptic.analytic_conductor', title='$Nk^2$') }}</th>
       <th>{{ KNOWL('mf.elliptic.character', title='\(\chi\)') }}</th>
       <th>{{ KNOWL('character.dirichlet.order', title='\(\operatorname{ord}(\chi)\)') }}</th>
@@ -79,7 +79,7 @@
     {% for space in info.results %}
     <tr>
       <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
-      <td> \({{ space.dim }}\) </td>
+      <td class="center"> \({{ info.dim_str(space) }}\) </td>
       <td> \({{ space.Nk2 }}\) </td>
       <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
       <td> \({{ space.char_order }}\) </td>

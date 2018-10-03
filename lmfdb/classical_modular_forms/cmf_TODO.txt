@@ -11,8 +11,6 @@ On data updates:
 
 
 IMPORTANT:
-* Add Hecke cutters to form page (David)
-* Add info.format = embed for rational forms (David)
 * hecke_ring_index as factorization (Drew, Edgar)
 * Display gamma1 portraits (Edgar)
 * Self dual: search and display (Drew, David)
@@ -26,7 +24,6 @@ IMPORTANT:
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
-* split dimension into Fricke plus (first) + minus (second), update knowl (David)
 * add a column for AL-dims, with knowl (David)
 * Atkin-Lehner dimension decomposition for the space (David)
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
@@ -35,7 +32,7 @@ IMPORTANT:
 * L-function pages: fix fonts arithmetic/analytic normalization (Edgar: make issue on LMFDB)
 * http://localhost:37777/ModularForm/GL2/Q/Maass/5411900eacf756021f2c6908 (Edgar) half way there
 * http://localhost:37777/ModularForm/GL2/Q/Maass/4f5693d488aece2afe00000d (Edgar)
-* Add density of zero traces (Edgar)
+* Add density of zero traces (Drew, Edgar)
 
 GOOD:
 * Make sure our description of labels is correct

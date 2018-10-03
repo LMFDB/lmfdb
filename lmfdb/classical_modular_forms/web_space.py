@@ -2,7 +2,7 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from sage.all import ZZ
+from sage.all import ZZ, prod
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
 from flask import url_for
@@ -165,9 +165,18 @@ class WebNewformSpace(object):
         self.downloads = [('Download all stored data', url_for('.download_newspace', label=self.label))]
 
         if self.char_labels[0] == 1:
+            self.trivial_character = True
             character_str = "Trivial Character"
+            print self.label, self.AL_dims
+            self.plus_dim = sum(dim for eigs, dim in self.AL_dims if prod(ev for p,ev in eigs) == 1)
+            self.minus_dim = sum(dim for eigs, dim in self.AL_dims if prod(ev for (p,ev) in eigs) == -1)
+            print self.plus_dim, self.minus_dim
+            assert self.dim == self.plus_dim + self.minus_dim
+            self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
         else:
+            self.trivial_character = False
             character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
+            self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Cuspidal Newforms of Weight %s, Level %s and %s"%(self.weight, self.level, character_str)
         self.friends = []
 

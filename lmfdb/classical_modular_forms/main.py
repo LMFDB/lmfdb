@@ -64,8 +64,18 @@ def set_info_funcs(info):
         N = results[0]['level']
         if not all(mf['level'] == N for mf in results):
             return False
+        if N == 1:
+            return False
         return all(mf['char_order'] == 1 for mf in results)
     info["display_AL"] = display_AL
+    def dim_str(space):
+        plus_dim = space.get('plus_dim')
+        minus_dim = space.get('minus_dim')
+        if plus_dim is not None and minus_dim is not None:
+            return '%s + %s'%(plus_dim, minus_dim)
+        else:
+            return str(space['dim'])
+    info["dim_str"] = dim_str
 
 @cmf.route("/")
 def index():

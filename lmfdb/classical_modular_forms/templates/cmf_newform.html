@@ -83,6 +83,7 @@ function show_qexp(qstyle) {
     <div class="mediumoutput nodisplay">
       <span id="medium_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=100) | safe }}</span>
     </div>
+    <br>
     {% if newform.dim > 1 %}
     <div class="smalloutput">
       <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
@@ -168,7 +169,7 @@ function get_all_embeddings(num_embeddings) {
 </script>
 
 <div id="table-scroll-wrapper">
-{% set single_columns = (info.format == 'satake_angle' or newform.is_real and info.format != 'satake') %}
+{% set single_columns = (info.format == 'satake_angle') %}
 <table class="ntdata complex-cols">
   <thead>
     <tr>
@@ -212,14 +213,12 @@ function get_all_embeddings(num_embeddings) {
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap real">
               {{ newform.embedding_re(mm,prec=info.prec) }}
             </td>
-            {% if not newform.is_real %}
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} op">
               {{ newform.embedding_op(mm,prec=info.prec) }}
             </td>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap imag">
               {{ newform.embedding_im(mm,prec=info.prec) }}
             </td>
-            {% endif %} {# newform.is_real #}
             {% if headcol_rowspan == 2 %}
             <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
           </tr>
@@ -237,14 +236,12 @@ function get_all_embeddings(num_embeddings) {
       <td class="nowrap real">
         {{ newform.embedding_re(m,n,prec=info.prec,format=info.format) }}
       </td>
-      {% if not newform.is_real %}
       <td class="op">
         {{ newform.embedding_op(m,n,prec=info.prec) }}
       </td>
       <td class="nowrap imag">
         {{ newform.embedding_im(m,n,prec=info.prec,format=info.format) }}
       </td>
-      {% endif %} {# not newform.is_real #}
       {% endfor %} {# n loop #}
       {% else %} {# info.format in ['satake', 'satake_angle'] #}
       {% for i in [0,1] %}
@@ -276,7 +273,7 @@ function get_all_embeddings(num_embeddings) {
     {% if (newform.m_range(info.CC_m) | length) < newform.dim %}
     <tr>
       <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (newform.an_range(info.CC_n, format=info.format) | length)}}">
-        <a onclick="get_all_embeddings({{newform.dim}}); return false">See {{newform.dim - (newform.m_range(info.CC_m) | length)}} more embeddings</a>
+        <a onclick="get_all_embeddings({{newform.dim}}); return false" href="#">See {{newform.dim - (newform.m_range(info.CC_m) | length)}} more embeddings</a>
       </td>
     </tr>
     {% endif %}
@@ -309,9 +306,7 @@ function get_all_embeddings(num_embeddings) {
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
       <td><select name='format' style="width: 170px">
-          {% if newform.dim > 1 %}
           <option value='embed' {% if info.format == 'embed' %}selected{% endif %}>Complex embeddings</option>
-          {% endif %}
           <option value='analytic_embed' {% if info.format == 'analytic_embed' %}selected{% endif %}>Normalized embeddings</option>
           <option value='satake' {% if info.format == 'satake' %}selected{% endif %}>Satake parameters</option>
           <option value='satake_angle' {% if info.format == 'satake_angle' %}selected{% endif %}>Satake angles</option>
@@ -365,6 +360,10 @@ a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.cm_proved
     {% endfor %}
   </tbody>
 </table>
+{% endif %}
+
+{% if newform.hecke_cutters %}
+<p>This newform can be constructed as the {% if (newform.hecke_cutters | length) > 1 %}intersection of the kernels of the linear operators{% else %}kernel of the linear operator{% endif %} {{newform.display_hecke_cutters()}} acting on \(S_{{newform.weight}}(\Gamma_0({{newform.level}}){% if not newform.trivial_character %}, \chi{% endif %})\).
 {% endif %}
 {% endif %}
 
