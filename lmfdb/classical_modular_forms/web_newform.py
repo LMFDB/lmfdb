@@ -129,12 +129,12 @@ class WebNewform(object):
             self.has_complex_qexp = False
         else:
             self.has_complex_qexp = True
-            self.is_real = False
+            self.is_real = True
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                if 'embedding_root_imag' in embedded_mf and abs(embedded_mf['embedding_root_imag']) < 0.00000001:
-                    self.is_real = True
+                if abs(embedded_mf.get('embedding_root_imag',1)) > 0.00000001:
+                    self.is_real = False
                 embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
                 embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
@@ -442,12 +442,12 @@ function switch_basis(btype) {
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
-        return r"\(%s\)"%display_float(x, prec)
+        return r"\(%s\)"%(display_float(x, prec).replace('e',r'\mathrm{e}'))
 
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
             return ""
-        return r"\(%s i\)"%display_float(y, prec)
+        return r"\(%s i\)"%(display_float(y, prec).replace('e',r'\mathrm{e}'))
 
     def _display_op(self, x, y, prec):
         xiszero = abs(x) < 10**(-prec)

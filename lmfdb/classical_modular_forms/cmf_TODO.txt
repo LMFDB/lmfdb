@@ -10,10 +10,12 @@ On data updates:
 * check that the roots are all different (Edgar)
 
 
-TBD:
-* hecke_ring_index as factorization 
-
 IMPORTANT:
+* Add Hecke cutters to form page (David)
+* Add info.format = embed for rational forms (David)
+* hecke_ring_index as factorization (Drew, Edgar)
+* Display gamma1 portraits (Edgar)
+* Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * make tests pass (Edgar)
@@ -27,8 +29,6 @@ IMPORTANT:
 * split dimension into Fricke plus (first) + minus (second), update knowl (David)
 * add a column for AL-dims, with knowl (David)
 * Atkin-Lehner dimension decomposition for the space (David)
-* When not showing all embeddings on initial load, add row with "and 25 more" link as a bottom row (David)
-* Move make_data function to top (David)
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
 * List of AL-dimensions in the list of spaces; expands to knowl (David)
 * Review LMFDB issues to make sure we aren't reproducing them and that they are fixed in the new version (Edgar)

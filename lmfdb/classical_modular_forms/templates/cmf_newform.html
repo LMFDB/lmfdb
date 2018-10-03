@@ -159,6 +159,14 @@ function show_qexp(qstyle) {
 <p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
 {% endif %}
 
+<script>
+function get_all_embeddings(num_embeddings) {
+  m_inp = $('input[name=m]');
+  m_inp.val('1-'+num_embeddings);
+  $('form[id=complex_embeddings]').submit();
+};
+</script>
+
 <div id="table-scroll-wrapper">
 {% set single_columns = (info.format == 'satake_angle' or newform.is_real and info.format != 'satake') %}
 <table class="ntdata complex-cols">
@@ -192,7 +200,7 @@ function show_qexp(qstyle) {
       <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
       {% if loop.index == 1 and newform.has_exact_qexp %}
       {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
-      <td rowspan = "{{2*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
+      <td rowspan = "{{headcol_rowspan*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
         <table class="sticky-embeddings">
           {% for mm in newform.m_range(info.CC_m) %}
           {% if loop.index is divisibleby(2) %}
@@ -265,6 +273,13 @@ function show_qexp(qstyle) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
+    {% if (newform.m_range(info.CC_m) | length) < newform.dim %}
+    <tr>
+      <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (newform.an_range(info.CC_n, format=info.format) | length)}}">
+        <a onclick="get_all_embeddings({{newform.dim}}); return false">See {{newform.dim - (newform.m_range(info.CC_m) | length)}} more embeddings</a>
+      </td>
+    </tr>
+    {% endif %}
   </tbody>
 </table>
 </div>
