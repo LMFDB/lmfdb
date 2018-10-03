@@ -16,7 +16,6 @@ IMPORTANT:
 * Add Hecke cutters to form page (David)
 * Add info.format = embed for rational forms (David)
 * hecke_ring_index as factorization (Drew)
-* Display gamma1 portraits (Edgar)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
@@ -44,8 +43,6 @@ GOOD:
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
 
 FORMATTING:
-* horizontal scroll on the euler factors box or knowl  (Edgar)
-* move show more to the left of the euler factors box  (Edgar)
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3

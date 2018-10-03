@@ -492,15 +492,14 @@ def lfuncEPhtml(L,fmt, prec = 12):
         eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
         trclass = " class='more nodisplay'"
 
-    eptable += "<tr class='less toggle'><td></td><td></td><td> <a onclick='"
-    eptable += 'show_moreless("more"); return true' + "'"
-    eptable += ' href="#moreep" '
-    eptable += ">show more</a></td></tr>\n"
-    eptable += "<tr class='more toggle nodisplay'><td></td><td></td><td> <a onclick='"
-    eptable += 'show_moreless("less"); return true' + "'"
-    eptable += ' href="#eptable" '
-    eptable += ">show less</a></td></tr>\n"
-    eptable += "</table>\n"
+    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td><td></td>"""
+    if display_galois:
+        eptable +="<td></td>"
+    eptable += "</tr>"
+    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td><td></td>"""
+    if display_galois:
+        eptable +="<td></td>"
+    eptable += "</tr>\n</table>"
     ans += "\n" + eptable
     return(ans)
 
