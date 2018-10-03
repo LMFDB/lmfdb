@@ -99,7 +99,7 @@ def l_function_degree_page(degree):
 @l_function_page.route("/degree2/CuspForm/")
 def l_function_cuspform_browse_page():
     info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
-    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 13, 2, 12)]
+    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 7, 2, 12)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
 
 
