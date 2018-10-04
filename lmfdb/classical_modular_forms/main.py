@@ -32,8 +32,10 @@ def ALdims_knowl(al_dims):
     dim_dict = {}
     for vec, dim in al_dims:
         dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = ", ".join(str(dim_dict.get(vec,0)) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(ALdim_table(al_dims), short)
+    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
+    # We erase plus_dim and minus_dim if they're obvious
+    AL_table = ALdim_table(al_dims)
+    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -80,14 +82,6 @@ def set_info_funcs(info):
         # only called if display_AL has returned False
         return any(mf['char_order'] == 1 for mf in results)
     info["display_Fricke"] = display_Fricke
-    def dim_str(space):
-        plus_dim = space.get('plus_dim')
-        minus_dim = space.get('minus_dim')
-        if plus_dim is not None and minus_dim is not None:
-            return '%s + %s'%(plus_dim, minus_dim)
-        else:
-            return str(space['dim'])
-    info["dim_str"] = dim_str
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -101,14 +95,12 @@ def set_info_funcs(info):
             query = {'weight':space['weight'],
                      'char_label':'%s.%s'%(space['level'],space['char_orbit_label']),
                      'dim':dim}
+            short = '+'.join([r'\(%s\)'%dim]*count)
             if count == 1:
-                exp = ''
                 query['jump'] = 'yes'
-            else:
-                exp = r'^{%s}'%count
-            link = newform_search_link(r'\(%s%s\)'%(dim, exp), **query)
+            link = newform_search_link(short, **query)
             terms.append(link)
-        return r' \(\oplus\) '.join(terms)
+        return r'+'.join(terms)
     info['display_decomp'] = display_decomp
     def display_ALdims(space):
         al_dims = space.get('AL_dims')

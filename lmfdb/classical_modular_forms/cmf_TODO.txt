@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
 * why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
+* clicking Next on space search results takes you to newform search results (David)
 
 
 On data updates:
