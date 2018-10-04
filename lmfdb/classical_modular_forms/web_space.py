@@ -37,6 +37,11 @@ def get_search_bread():
 def get_dim_bread():
     return get_bread(other='Dimension table')
 
+def newform_search_link(text, **kwd):
+    query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
+    link = "%s?%s"%(url_for('.index'), query)
+    return '<a href="%s">%s</a>'%(link, text)
+
 def ALdim_table(al_dims):
     # Assume that the primes always appear in the same order
     header = []

@@ -10,7 +10,7 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
 from sage.all import next_prime, cartesian_product_iterator
@@ -98,18 +98,15 @@ def set_info_funcs(info):
             dim_dict[dim] += 1
         for dim in sorted(dim_dict.keys()):
             count = dim_dict[dim]
-            query = ['weight=%s'%(space['weight']),
-                     'char_label=%s.%s'%(space['level'],space['char_orbit_label']),
-                     'dim=%s'%(dim)]
+            query = {'weight':space['weight'],
+                     'char_label':'%s.%s'%(space['level'],space['char_orbit_label']),
+                     'dim':dim}
             if count == 1:
                 exp = ''
-                query.append('jump=yes')
+                query['jump'] = 'yes'
             else:
                 exp = r'^{%s}'%count
-            link = r'<a href="%s?%s">\(%s%s\)</a>'%(url_for('.index'),
-                                                    '&'.join(query),
-                                                    dim,
-                                                    exp)
+            link = newform_search_link(r'\(%s%s\)'%(dim, exp), **query)
             terms.append(link)
         return r' \(\oplus\) '.join(terms)
     info['display_decomp'] = display_decomp
