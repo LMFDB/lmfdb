@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
-* data: primitive and characters are wrongly assigned for unprimitive lfun
 * why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
 
 
@@ -28,7 +27,8 @@ IMPORTANT:
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
-* LMFDB issues to be closed after done with the above: #2340, #1282, #1248, #1224, #873, #437 (Edgar)
+
+
 
 GOOD:
 * Make sure our description of labels is correct
@@ -94,3 +94,29 @@ templates/checklist.html:<a href="{{ url_for('l_functions.l_function_cmf_orbit',
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('cmf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 tensor_products/templates/tensor_products_index.html:    <option value={{url_for('cmf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
 modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('cmf.index')
+
+
+LMFDB issues to be addressed:
+- Weight 1 cusp forms #437
+- Data quality for classical modular forms #460
+- Determine planned extent of classical modular forms #873
+- Source and extent of data for classical modular forms #1224
+- Fix errors in classical modular form data and verify its correctness #1248
+- Modular form history #1282
+
+
+ISSUES already addressed:
+- L-functions for modular forms should be in database #439
+- Make user adjust Fourier coefficient embeddings #653
+- Make pretty coefficients #654
+- Create separate page for each embedding of a newform #659
+- Search by analytic rank #1362
+- Plots of modular forms #1408
+- Random modular form #1434
+- Product L-functions for modular forms #1443
+- Sever error on classical modular form pages #1533
+- Resource intensive L-function zeros pages for classical modular forms #1680
+- Classical modular forms Gamma1(49) weight 3 #1991
+- Add Bober's modular form data #2196
+- no data for level = 100, k 7, chi = 99 #2340
+- Request for documentation on modular form web pages #2630
