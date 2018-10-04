@@ -8,10 +8,7 @@
 # version 2 of the License, or (at your option) any later version.
 
 import os
-import logging
-from time import sleep
-from flask import Flask, g, url_for, abort
-from os.path import dirname, join
+from flask import Flask, g, url_for
 
 # logfocus
 logfocus = None
