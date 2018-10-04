@@ -1,6 +1,5 @@
 import re
 import string
-import bson
 
 from lmfdb.db_backend import db
 
@@ -213,12 +212,6 @@ def character_table_display_knowl(n, t, name=None):
         name = 'Character table for '
         name += group_display_short(n, t)
     return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-
-## For storage in the database by other modules
-
-
-def make_galois_pair(n, t):
-    return bson.SON([('n', n), ('t', t)])
 
 
 def group_phrase(n, t):

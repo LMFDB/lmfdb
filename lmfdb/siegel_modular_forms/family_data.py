@@ -1,4 +1,4 @@
-# This data is loaded into the families collection in the siegel_modulur_forms mongo db
+# This data is loaded into the smf_families postgres table
 
 families = [
 {

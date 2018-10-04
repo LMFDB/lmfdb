@@ -1,4 +1,3 @@
-from pymongo import MongoClient
 import json
 import logging, logging.handlers
 

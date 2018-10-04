@@ -15,7 +15,6 @@ from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
 from bson import json_util
-from bson.objectid import ObjectId
 
 def pluck(n, list):
     return [_[n] for _ in list]
@@ -185,8 +184,6 @@ def api_query(table, id = None):
                     qval = int(qval[1:])
                 elif qval.startswith("f"):
                     qval = float(qval[1:])
-                elif qval.startswith("o"):
-                    qval = ObjectId(qval[1:])
                 elif qval.startswith("ls"):      # indicator, that it might be a list of strings
                     qval = qval[2].split(DELIM)
                 elif qval.startswith("li"):

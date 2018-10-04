@@ -94,8 +94,8 @@ def split_list(s):
 
 # This function can be used by modules to get a list of ints
 # or an iterator (xrange) that matches the results of parse_ints below
-# useful when a module wants to iterator over key values being
-# passed into a mongo query.  Input should be a string
+# useful when a module wants to iterate over key values being
+# passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
     if arg == None:
         return []
@@ -493,45 +493,37 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield, use_bson=True):
+def parse_galgrp(inp, query, qfield):
     from lmfdb.transitive_group import complete_group_codes
-    from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
     try:
         gcs = complete_group_codes(inp)
-        if isinstance(qfield, tuple): # temporary until everything is switched over to new Galois formatting.
-            nfield, tfield = qfield
-            if nfield in query:
-                gcs = [t for n,t in gcs if n == query[nfield]]
-                if len(gcs) == 0:
-                    raise ValueError("Degree inconsistent with Galois group.")
-                elif len(gcs) == 1:
-                    query[tfield] = gcs[0]
-                else:
-                    query[tfield] = {'$in': gcs}
+        nfield, tfield = qfield
+        if nfield in query:
+            gcs = [t for n,t in gcs if n == query[nfield]]
+            if len(gcs) == 0:
+                raise ValueError("Degree inconsistent with Galois group.")
+            elif len(gcs) == 1:
+                query[tfield] = gcs[0]
             else:
-                gcsdict = defaultdict(list)
-                for n,t in gcs:
-                    gcsdict[n].append(t)
-                if len(gcsdict) == 1:
-                    query[nfield] = n # left over from the loop
-                    if len(gcs) == 1:
-                        query[tfield] = t # left over from the loop
-                    else:
-                        query[tfield] = {'$in': gcsdict[n]}
-                else:
-                    options = []
-                    for n, T in gcsdict.iteritems():
-                        if len(T) == 1:
-                            options.append({nfield: n, tfield: T[0]})
-                        else:
-                            options.append({nfield: n, tfield: {'$in': T}})
-                    collapse_ors(['$or', options], query)
+                query[tfield] = {'$in': gcs}
         else:
-            make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
-            if len(gcs) == 1:
-                query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
-            elif len(gcs) > 1:
-                query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+            gcsdict = defaultdict(list)
+            for n,t in gcs:
+                gcsdict[n].append(t)
+            if len(gcsdict) == 1:
+                query[nfield] = n # left over from the loop
+                if len(gcs) == 1:
+                    query[tfield] = t # left over from the loop
+                else:
+                    query[tfield] = {'$in': gcsdict[n]}
+            else:
+                options = []
+                for n, T in gcsdict.iteritems():
+                    if len(T) == 1:
+                        options.append({nfield: n, tfield: T[0]})
+                    else:
+                        options.append({nfield: n, tfield: {'$in': T}})
+                collapse_ors(['$or', options], query)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 

@@ -169,7 +169,7 @@ def delete_table(db, tbl_name, check=True):
             #Capped tables, e.g rollback, can only be dropped, so try that
 
 def delete_all_tables(db):
-    """ Delete all tables specified by inv Note that other names can be present, see inv.validate_mongod"""
+    """ Delete all tables specified by inv. Note that other names can be present """
 
     tbls = inv.get_inv_table_names()
     for tbl in tbls:
