@@ -37,6 +37,22 @@ def get_search_bread():
 def get_dim_bread():
     return get_bread(other='Dimension table')
 
+def ALdim_table(al_dims):
+    # Assume that the primes always appear in the same order
+    header = []
+    for p, ev in al_dims[0][0]:
+        header.append(r'<th>\(%s\)</th>'%p)
+    header.append('<th>Dim.</th>')
+    rows = []
+    for vec, dim in al_dims:
+        row = []
+        for p, ev in vec:
+            row.append(r'<td>\(%s\)</td>'%('+' if ev == 1 else '-'))
+        row.append(r'<td>\(%s\)</td>'%(dim))
+        rows.append(''.join(row))
+    return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody><tr>%s</tr></tbody></table>" %
+            (''.join(header), '</tr><tr>'.join(rows)))
+
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     if conrey is None:
         char = ""

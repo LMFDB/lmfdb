@@ -1,5 +1,6 @@
 from flask import render_template, url_for, redirect, abort, request, flash, make_response
 from markupsafe import Markup
+from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
@@ -9,10 +10,10 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
-from sage.all import next_prime
+from sage.all import next_prime, cartesian_product_iterator
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -26,6 +27,13 @@ def learnmore_list_remove(matchstring):
 
 def credit():
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+
+def ALdims_knowl(al_dims):
+    dim_dict = {}
+    for vec, dim in al_dims:
+        dim_dict[tuple(ev for (p, ev) in vec)] = dim
+    short = ", ".join(str(dim_dict.get(vec,0)) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
+    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(ALdim_table(al_dims), short)
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -68,6 +76,10 @@ def set_info_funcs(info):
             return False
         return all(mf['char_order'] == 1 for mf in results)
     info["display_AL"] = display_AL
+    def display_Fricke(results):
+        # only called if display_AL has returned False
+        return any(mf['char_order'] == 1 for mf in results)
+    info["display_Fricke"] = display_Fricke
     def dim_str(space):
         plus_dim = space.get('plus_dim')
         minus_dim = space.get('minus_dim')
@@ -76,6 +88,38 @@ def set_info_funcs(info):
         else:
             return str(space['dim'])
     info["dim_str"] = dim_str
+    def display_decomp(space):
+        hecke_orbit_dims = space.get('hecke_orbit_dims')
+        if hecke_orbit_dims is None: # shouldn't happen
+            return 'unknown'
+        dim_dict = defaultdict(int)
+        terms = []
+        for dim in hecke_orbit_dims:
+            dim_dict[dim] += 1
+        for dim in sorted(dim_dict.keys()):
+            count = dim_dict[dim]
+            query = ['weight=%s'%(space['weight']),
+                     'char_label=%s.%s'%(space['level'],space['char_orbit_label']),
+                     'dim=%s'%(dim)]
+            if count == 1:
+                exp = ''
+                query.append('jump=yes')
+            else:
+                exp = r'^{%s}'%count
+            link = r'<a href="%s?%s">\(%s%s\)</a>'%(url_for('.index'),
+                                                    '&'.join(query),
+                                                    dim,
+                                                    exp)
+            terms.append(link)
+        return r' \(\oplus\) '.join(terms)
+    info['display_decomp'] = display_decomp
+    def display_ALdims(space):
+        al_dims = space.get('AL_dims')
+        if al_dims:
+            return ALdims_knowl(al_dims)
+        else:
+            return ''
+    info['display_ALdims'] = display_ALdims
 
 @cmf.route("/")
 def index():
@@ -253,13 +297,21 @@ def url_for_label(label):
         raise ValueError("Invalid label")
 
 def jump_box(info):
-    jump = info["jump"].strip()
+    jump = info.pop("jump").strip()
+    errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
-    try:
-        return redirect(url_for_label(jump), 301)
-    except ValueError:
-        errmsg = "%s is not a valid newform or space label"
+    elif jump == 'yes':
+        query = {}
+        newform_parse(info, query)
+        jump = db.mf_newforms.lucky(query, 'label')
+        if jump is None:
+            errmsg = "There are no newforms specified by the query %s"%(query)
+    if errmsg is None:
+        try:
+            return redirect(url_for_label(jump), 301)
+        except ValueError:
+            errmsg = "%s is not a valid newform or space label"
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
@@ -511,6 +563,7 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['char_parity'] = -1
     parse_ints(info, query, 'level', name="Level")
+    parse_ints(info, query, 'Nk2', name="Analytic conductor")
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")

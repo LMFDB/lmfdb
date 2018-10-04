@@ -20,7 +20,7 @@
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
     <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-    <td>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}</td>
+    <td>{{ KNOWL('lfunction.analytic_conductor', title='Analytic conductor') }}</td>
   </tr>
 
   <tr>
@@ -28,7 +28,7 @@
     <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
     <td><input type='text' style="width: 140px;" name='dim' placeholder='1' value='{{info.dim}}'></td>
     <td><input type='text' style="width: 140px;" name='nf_label' placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
+    <td><input type='text' style="width: 140px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
   </tr>
 
   <tr>
@@ -42,6 +42,7 @@
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
     <td>{{ KNOWL('character.dirichlet.real', title='Character is real?') }}</td>
+    <td>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}</td>
   </tr>
 
   <tr>
@@ -55,6 +56,7 @@
 	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
       </select>
     </td>
+    <td><input type='text' style="width: 140px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
   </tr>
 
   <tr>

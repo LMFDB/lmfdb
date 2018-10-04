@@ -1,5 +1,6 @@
 {%- from "knowl-defs.html" import KNOWL with context -%}
-{% set ALsigns = info.display_AL(info.results) %}
+{% set AL_signs = info.display_AL(info.results) %}
+{% set Fricke_sign = info.display_Fricke(info.results) %}
 
 <table class="ntdata">
   <thead>
@@ -10,9 +11,11 @@
       <th rowspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
-      {% if ALsigns %}
+      {% if AL_signs %}
       <th rowspan=2></th>
       <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> A-L signs</th>
+      {% elif Fricke_sign %}
+      <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.fricke', title='Fricke sign') }}</th>
       {% endif %}
       <th rowspan=2>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
     </tr>
@@ -21,7 +24,7 @@
       <th class="right">\(a_3\)</th>
       <th class="right">\(a_5\)</th>
       <th class="right">\(a_7\)</th>
-      {% if ALsigns %}
+      {% if AL_signs %}
       {% for p, ev in info.results[0]['atkin_lehner_eigenvals'] %}
       <th class="center">{{ p }}</th>
       {% endfor %}
@@ -40,11 +43,13 @@
       <td class="right">\({{ mf.trace_display[1] }}\)</td>
       <td class="right">\({{ mf.trace_display[2] }}\)</td>
       <td class="right">\({{ mf.trace_display[3] }}\)</td>
-      {% if ALsigns %}
+      {% if AL_signs %}
       <td></td>
       {% for p, ev in mf.atkin_lehner_eigenvals %}
       <td class="center">\({{"+" if ev == 1 else "-"}}\)</td>
       {% endfor %}
+      {% elif Fricke_sign %}
+      <td class="center">{% if 'fricke_eigenval' in mf and mf['fricke_eigenval'] %}\({{"+" if mf['fricke_eigenval'] == 1 else "-"}}\){% endif %}</td>
       {% endif %}
       <td>
         {% if mf.dim <= 20 %}

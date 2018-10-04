@@ -2069,7 +2069,10 @@ p.short {
     z-index:3;
 }
 td.nowrap {
-    white-space:no-wrap;
+    white-space:nowrap;
+}
+table.ntdata td.nowrap a {
+    display: inline;
 }
 
 .float-right {

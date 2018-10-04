@@ -100,6 +100,7 @@ class WebNewform(object):
                 self.star_twist = 'inner twist*'
             else:
                 self.star_twist = 'inner twists*'
+        self.has_analytic_rank = data.get('analytic_rank') is not None
 
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an','trace_an'], sort=['n'])
         if eigenvals:  # this should always be true

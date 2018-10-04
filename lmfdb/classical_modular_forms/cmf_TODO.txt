@@ -13,8 +13,6 @@ On data updates:
 
 
 IMPORTANT:
-* Add Hecke cutters to form page (David)
-* Add info.format = embed for rational forms (David)
 * hecke_ring_index as factorization (Drew)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Self dual: search and display (Drew, David)
@@ -24,10 +22,8 @@ IMPORTANT:
 * add tests (Edgar)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* add a column for AL-dims, with knowl (David)
 * Atkin-Lehner dimension decomposition for the space (David)
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
-* List of AL-dimensions in the list of spaces; expands to knowl (David)
 * Add density of zero traces (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)

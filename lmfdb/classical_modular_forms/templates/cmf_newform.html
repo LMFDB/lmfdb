@@ -26,7 +26,7 @@
     <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
     <td> \(A\) </td>
     <td>=</td>
-    <td>{{ newform.Nk2 }}</td>
+    <td>\({{ newform.Nk2 }}\)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
@@ -44,22 +44,32 @@
     <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.dim }}</td>
+    <td>\({{ newform.dim }}\)</td>
   </tr>
   {% if newform.char_degree > 1 %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.relative_dimension', title='Relative dimension') }}: </td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.rel_dim }} over {{ newform.cyc_display() | safe }}</td>
+    <td>\({{ newform.rel_dim }}\) over {{ newform.cyc_display() | safe }}</td>
   </tr>
   {% endif %}
+  {% if newform.char_order == 1 %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.fricke', title='Fricke eigenvalue') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>\({{ newform.fricke_eigenval }}\)</td>
+  </tr>
+  {% endif %}
+  {% if newform.has_analytic_rank %}
   <tr>
     <td> {{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}: </td>
     <td> </td>
     <td> </td>
     <td>{{ newform.analytic_rank }}</td>
   </tr>
+  {% endif %}
 </table>
 
 <script>
@@ -347,15 +357,15 @@ a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.cm_proved
 <table class="ntdata">
   <thead>
     <tr>
-      <th> \( p \) </th>
-      <th>Eigenvalue
+      <th class="center"> \( p \) </th>
+      <th class="center">Eigenvalue
     </tr>
   </thead>
   <tbody>
     {% for p, ev in newform.atkin_lehner_eigenvals %}
     <tr>
-      <td> {{ p }} </td>
-      <td> {{ ev }}</td>
+      <td class="center"> \({{ p }}\) </td>
+      <td class="center"> \({{ ev }}\)</td>
     </tr>
     {% endfor %}
   </tbody>
