@@ -20,9 +20,9 @@ from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, ge
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, key_for_numerically_sort
+from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part, CBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -94,21 +94,32 @@ def makeLfromdata(L):
     L.level_factored = factor(L.level)
 
     central_character = data.get('central_character', None)
-    L.charactermodulus, L.characternumber = central_character.split(".")
-    L.charactermodulus = int(L.charactermodulus)
-    L.characternumber = int(L.characternumber)
+    L.charactermodulus, L.characternumber = map(int, central_character.split("."))
     L.primitive = data.get('primitive', None)
     L.selfdual = data.get('self_dual', None)
     if data.get('root_number', None) is not None:
-        L.sign = string2number(data.get('root_number', None))
+        # we first need to convert from unicode to a regular strin
+        L.sign = CBF(str(data.get('root_number', None)))
     else:
-        assert data.get('sign_arg', None) is not None
-        L.sign = exp(2*pi*I*float(data.get('sign_arg', None))).n()
+        # this is a numeric convered to LMFDB_RealLiteral
+        L.sign = 2*RBF(str(data.get('sign_arg'))).exppii()
+    assert RIF(L.sign.abs()).unique_integer() == 1
     if L.selfdual:
-        L.sign = int(real_part(L.sign))
+        L.sign = RIF(L.sign.real()).unique_integer()
+    else:
+        L.sign = L.sign.mid()
     L.st_group = data.get('st_group', '')
     L.order_of_vanishing = data.get('order_of_vanishing', None)
-    L.analytic_normalization = float(data.get('analytic_normalization', None))
+
+    L.motivic_weight = data.get('motivic_weight', None)
+    if L.motivic_weight is not None:
+        L.motivic_weight = ZZ(L.motivic_weight)
+        L.analytic_normalization = QQ(L.motivic_weight)/2
+    else:
+        # this is a numeric convered to RealLiteral
+        L.analytic_normalization = round_to_half_int(data.get('analytic_normalization'))
+        L.motivic_weight = '' # ZZ(2*L.analytic_normalization)
+
 
     L.mu_fe = []
     for i in range(0,len(data['gamma_factors'][0])):
@@ -123,14 +134,6 @@ def makeLfromdata(L):
 
     # Optional properties
     L.coefficient_field = data.get('coefficient_field', None)
-    L.motivic_weight = data.get('motivic_weight', None)
-    if L.motivic_weight is None:
-        L.motivic_weight = ''
-    else:
-        # Convert L.motivic_weight from python 'int' type to sage integer type.
-        # This is necessary because later we need to do L.motivic_weight/2
-        # when we write Gamma-factors in the arithmetic normalization.
-        L.motivic_weight = ZZ(L.motivic_weight)
 
     if hasattr(L, 'base_field'):
         field_degree = int(L.base_field.split('.')[0])
@@ -144,17 +147,20 @@ def makeLfromdata(L):
         L.credit = data.get('credit', None)
 
 
+    #HERE
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
     L.bad_lfactors = data.get('bad_lfactors', None)
     if L.coefficient_field == "CDF":
-        # convert pairs of doubles to CDF
+        # convert pairs of doubles to CBF
         pairtoCDF = lambda x: CDF(tuple(x))
+        pairtoCDF = lambda x: CDF(*tuple(x))
         L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
         L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
 
 
-    if data.get('dirichlet_coefficients', None) is not None:
+    #FIXME the order
+    if data.get('dirichlet_coefficients', None):
         L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
@@ -173,12 +179,10 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)] 
 
 
-    L.dirichlet_coefficients = [None]*len(L.dirichlet_coefficients_arithmetic)
-    for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        if L.analytic_normalization > 0:
-            L.dirichlet_coefficients[n] = an/(n+1)**L.analytic_normalization
-        else:
-            L.dirichlet_coefficients[n] = an
+    if L.analytic_normalization == 0:
+        L.dirichlet_coefficients = L.dirichlet_coefficients_arithmetic[:]
+    else:
+        L.dirichlet_coefficients = [ an/(n+1)**L.analytic_normalization for n, an in enumerate(L.dirichlet_coefficients_arithmetic)]
 
     if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
         convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
@@ -276,11 +280,11 @@ def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
                     L.dirichlet_coefficients_arithmetic[n] = I
                     L.dirichlet_coefficients_analytic[n] = I
                 else:
-                    L.dirichlet_coefficients_arithmetic[n] = -1*I
-                    L.dirichlet_coefficients_analytic[n] = -1*I
+                    L.dirichlet_coefficients_arithmetic[n] = -I
+                    L.dirichlet_coefficients_analytic[n] = -I
             else:
                 L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
-                L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*float(an_power_int)/float(this_base_power_int)).n()
+                L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
 
     L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
