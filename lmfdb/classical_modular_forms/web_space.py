@@ -5,6 +5,7 @@ from lmfdb.db_backend import db
 from sage.all import ZZ, prod
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
+from lmfdb.utils import display_knowl
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -37,21 +38,40 @@ def get_search_bread():
 def get_dim_bread():
     return get_bread(other='Dimension table')
 
+def newform_search_link(text, **kwd):
+    query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
+    link = "%s?%s"%(url_for('.index'), query)
+    return '<a href="%s">%s</a>'%(link, text)
+
 def ALdim_table(al_dims):
     # Assume that the primes always appear in the same order
     header = []
+    num_primes = len(al_dims[0][0])
     for p, ev in al_dims[0][0]:
         header.append(r'<th>\(%s\)</th>'%p)
     header.append('<th>Dim.</th>')
     rows = []
-    for vec, dim in al_dims:
+    fricke = {1:0,-1:0}
+    for i, (vec, dim) in enumerate(al_dims):
         row = []
+        sign = 1
         for p, ev in vec:
+            sign *= ev
             row.append(r'<td>\(%s\)</td>'%('+' if ev == 1 else '-'))
         row.append(r'<td>\(%s\)</td>'%(dim))
-        rows.append(''.join(row))
-    return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody><tr>%s</tr></tbody></table>" %
-            (''.join(header), '</tr><tr>'.join(rows)))
+        fricke[sign] += dim
+        if i == len(al_dims) - 1 and len(vec) > 1:
+            tr = "<tr class='endsection'>"
+        else:
+            tr = "<tr>"
+        rows.append(tr + ''.join(row) + '</tr>')
+    if num_primes > 1:
+        plus_knowl = display_knowl('mf.elliptic.plus_space',title='Plus space').replace('"',"'")
+        minus_knowl = display_knowl('mf.elliptic.minus_space',title='Minus space').replace('"',"'")
+        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, fricke[1]))
+        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, fricke[-1]))
+    return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
+            (''.join(header), ''.join(rows)))
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     if conrey is None:
@@ -249,6 +269,9 @@ class WebNewformSpace(object):
                                                   url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=cremona_letter_code(i-1)),
                                                   mult=mult)
                                   for N, i, conrey, mult in self.oldspaces)
+
+    def ALdim_table(self):
+        return ALdim_table(self.AL_dims)
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):

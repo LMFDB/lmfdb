@@ -10,7 +10,7 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
 from sage.all import next_prime, cartesian_product_iterator
@@ -32,8 +32,10 @@ def ALdims_knowl(al_dims):
     dim_dict = {}
     for vec, dim in al_dims:
         dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = ", ".join(str(dim_dict.get(vec,0)) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(ALdim_table(al_dims), short)
+    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
+    # We erase plus_dim and minus_dim if they're obvious
+    AL_table = ALdim_table(al_dims)
+    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -80,14 +82,6 @@ def set_info_funcs(info):
         # only called if display_AL has returned False
         return any(mf['char_order'] == 1 for mf in results)
     info["display_Fricke"] = display_Fricke
-    def dim_str(space):
-        plus_dim = space.get('plus_dim')
-        minus_dim = space.get('minus_dim')
-        if plus_dim is not None and minus_dim is not None:
-            return '%s + %s'%(plus_dim, minus_dim)
-        else:
-            return str(space['dim'])
-    info["dim_str"] = dim_str
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -98,20 +92,15 @@ def set_info_funcs(info):
             dim_dict[dim] += 1
         for dim in sorted(dim_dict.keys()):
             count = dim_dict[dim]
-            query = ['weight=%s'%(space['weight']),
-                     'char_label=%s.%s'%(space['level'],space['char_orbit_label']),
-                     'dim=%s'%(dim)]
+            query = {'weight':space['weight'],
+                     'char_label':'%s.%s'%(space['level'],space['char_orbit_label']),
+                     'dim':dim}
+            short = '+'.join([r'\(%s\)'%dim]*count)
             if count == 1:
-                exp = ''
-                query.append('jump=yes')
-            else:
-                exp = r'^{%s}'%count
-            link = r'<a href="%s?%s">\(%s%s\)</a>'%(url_for('.index'),
-                                                    '&'.join(query),
-                                                    dim,
-                                                    exp)
+                query['jump'] = 'yes'
+            link = newform_search_link(short, **query)
             terms.append(link)
-        return r' \(\oplus\) '.join(terms)
+        return r'+'.join(terms)
     info['display_decomp'] = display_decomp
     def display_ALdims(space):
         al_dims = space.get('AL_dims')

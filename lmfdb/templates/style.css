@@ -695,8 +695,6 @@ table.ntdata thead tr {
   background: {{ color.table_ntdata_background }};
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
-table.ntdata tr {
-}
 
 table.ntdata th {
   text-align: left;
@@ -715,6 +713,9 @@ table.ntdata tr:nth-child(even) {
 
 table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
+}
+table.ntdata tr.endsection {
+    border-bottom: 1px solid {{color.table_ntdata_border}};
 }
 
 table.right_align_table td {

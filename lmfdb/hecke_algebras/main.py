@@ -252,8 +252,8 @@ def render_hecke_algebras_webpage(**args):
                 for key in ['Zbasis','discriminant','disc_fac','Qbasis','Qalg_gen']:
                     del v[key]
             else:
-                v['Zbasis'] = [[int(i) for i in j] for j in v['Zbasis']] # getDBConnection grep make ints in database
-                v['disc_fac'] = [[int(i) for i in j] for j in v['disc_fac']] # make ints in database
+                v['Zbasis'] = [[int(i) for i in j] for j in v['Zbasis']]
+                v['disc_fac'] = [[int(i) for i in j] for j in v['disc_fac']]
                 if dim > 4:
                     v['gen_display'] = []
                 elif dim == 1:

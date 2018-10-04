@@ -659,7 +659,10 @@ class Lfunction_CMF(Lfunction_from_db):
         self.__dict__.update(kwargs)
         self.label_args = (self.modform_level, self.weight, self.character, self.hecke_orbit, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
-        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        instance = get_instance_by_url(self.url)
+        if instance is None:
+            raise ValueError("L-function not in database") # caught by render_single_Lfunction
+        self.Lhash = instance['Lhash']
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
 
         self.numcoeff = 30

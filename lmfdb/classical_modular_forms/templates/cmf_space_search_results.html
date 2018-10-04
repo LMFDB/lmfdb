@@ -20,7 +20,7 @@
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.dimension', title='Cusp. new dim.') }}</td>
     <td>Num. {{ KNOWL('mf.elliptic.newform', title='newforms') }}</td>
-    <td>{{ KNOWL('lfunction.analytic_conductor', title='Analytic conductor') }}</td>
+    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
   </tr>
 
   <tr>
@@ -85,7 +85,7 @@
       <td> \({{ space.Nk2 }}\) </td>
       <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
       <td> \({{ space.char_order }}\) </td>
-      <td class="center"> \({{ info.dim_str(space) }}\) </td>
+      <td class="center"> \({{ space.dim }}\) </td>
       <td class="nowrap center">{{ info.display_decomp(space) | safe}}</td>
       <td class="nowrap center">{{ info.display_ALdims(space) | safe}}</td>
     </tr>

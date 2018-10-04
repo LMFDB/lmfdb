@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
 * why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
+* clicking Next on space search results takes you to newform search results (David)
 
 
 On data updates:
@@ -27,15 +28,27 @@ IMPORTANT:
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
-
+* redo test_emf.py (David)
 
 
 GOOD:
+* Add tests for display_float, etc
 * Make sure our description of labels is correct
 * data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+
+TEST FAILURES:
+
+* Satake parameters changed from old code for Delta: /ModularForm/GL2/Q/holomorphic/1/12/1/a/
+* Floating point precision: lmfdb.characters.test_characters, test_dirichletchar6000lfunc, '1.0766030216' in /L/Character/Dirichlet/6000/11
+* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_LDirichlet, '0.4813597784' in /L/Character/Dirichlet/19/9/
+* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_Lec, '0.2538418609' in /L/EllipticCurve/Q/11/a/
+* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_Lgl2maass, '1 + 4.54845492142i' in /L/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/
+* /L/EllipticCurve/Q/56/a/?download=lcalcfile, AttributeError: Lfunction_EC instance has no attribute 'coefficient_period'
+* /L/lhash/dirichlet_L_6253.458/, TypeError: unable to convert 'a^123' to an integer
+* lmfdb.lfunctions.test_lfunctions, test_errorMessages, 'Unable to convert parameter' in /L/ModularForm/GL2/Q/holomorphic/5/k/4/a/1/
 
 FORMATTING:
 

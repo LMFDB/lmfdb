@@ -62,25 +62,6 @@ class Configuration(object):
                 help = 'name of a logger to focus on',
                 default = argparse.SUPPRESS)
 
-        # MongoDB options
-        mongodbgroup = parser.add_argument_group('MongoDB options')
-        mongodbgroup.add_argument('--mongodb-host',
-                dest = 'mongodb_host',
-                metavar = 'HOST',
-                help = 'MongoDB server host [default: %(default)s]',
-                default = 'm0.lmfdb.xyz')
-        mongodbgroup.add_argument('--mongodb-port',
-                dest = 'mongodb_port',
-                metavar = 'PORT',
-                type = int,
-                help = 'MongoDB server port [default: %(default)d]',
-                default = 27017)
-        mongodbgroup.add_argument('--dbmon',
-                dest = 'mongodb_dbmon',
-                metavar = 'NAME',
-                help = 'monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)',
-                default = argparse.SUPPRESS)
-
         # PostgresSQL options
         postgresqlgroup = parser.add_argument_group('PostgreSQL options')
         postgresqlgroup.add_argument('--postgresql-host',
@@ -174,7 +155,6 @@ class Configuration(object):
             # create sections
             _cfgp.add_section('core')
             _cfgp.add_section('web')
-            _cfgp.add_section('mongodb')
             _cfgp.add_section('postgresql')
             _cfgp.add_section('logging')
 
@@ -224,13 +204,6 @@ class Configuration(object):
             if opt in args_dict:
                 self.flask_options[opt] = args_dict[opt]
 
-        self.mongodb_options = {
-                "port" : getint("mongodb", "port"),
-                "host" : get("mongodb", "host"),
-                "replicaset" : None}
-        if "mongodb_dbmon" in args_dict:
-            self.mongodb_options["mongodb_dbmon"] = args_dict["mongodb_dbmon"]
-
         self.postgresql_options = {
                 "port": getint("postgresql", "port"),
                 "host": get("postgresql", "host"),
@@ -248,13 +221,10 @@ class Configuration(object):
             self.logging_options["editor"] = get("logging", "editor")
 
     def get_all(self):
-        return { 'flask_options' : self.flask_options, 'mongodb_options' : self.mongodb_options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
+        return { 'flask_options' : self.flask_options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
 
     def get_flask(self):
         return self.flask_options
-
-    def get_mongodb(self):
-        return self.mongodb_options
 
     def get_postgresql(self):
         return self.postgresql_options

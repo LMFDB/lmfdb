@@ -404,8 +404,10 @@ def render_single_Lfunction(Lclass, args, request):
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
     except (ValueError, KeyError, TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
-        raise
-        if not is_debug_mode():
+        
+        if is_debug_mode():
+            raise
+        else:
             return render_lfunction_exception(err)
     try:
         if temp_args['download'] == 'lcalcfile':
