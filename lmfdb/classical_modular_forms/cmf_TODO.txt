@@ -2,8 +2,6 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (ongoing)
 * why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
-* clicking Next on space search results takes you to newform search results (David)
-
 
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
@@ -21,8 +19,6 @@ IMPORTANT:
 * add tests (Edgar)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* Atkin-Lehner dimension decomposition for the space (David)
-* Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Add density of zero traces (Edgar)
 * data: add weight 1 cc data (Edgar)
@@ -32,6 +28,8 @@ IMPORTANT:
 
 
 GOOD:
+* Update Nk2 search and display to use the actual analytic conductor
+* Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
 * Add tests for display_float, etc
 * Make sure our description of labels is correct
 * data: add data for is_twist_minimal
@@ -94,7 +92,7 @@ PROBABLY DONE:
 * gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
 * form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
-* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field (David)
+* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field
 * The following external links should work, but it may be worth checking:
 elliptic_curves/isog_class.py:        self.newform_link = url_for("cmf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
 hecke_algebras/main.py:        info['friends'] = [('Newforms space ' + info['label'], url_for("cmf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], char_orbit_label='a'))]

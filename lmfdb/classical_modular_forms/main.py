@@ -114,16 +114,13 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        if 'submit_again' in info:
-            # We had to use submit_again because submit broke
-            # the Next button for some reason.
-            info['submit'] = info['submit_again']
-        if info.get('submit') == 'Dimensions':
+        search_type = info.get('search_type',info.get('submit','List'))
+        if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:
                     return dimension_form_search(info)
             return dimension_space_search(info)
-        elif info.get('submit') == 'Spaces':
+        elif search_type == 'Spaces':
             return space_search(info)
         else:
             return newform_search(info)
