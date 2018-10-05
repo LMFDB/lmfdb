@@ -41,12 +41,14 @@ def get_dim_bread():
 def newform_search_link(text, **kwd):
     query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
     link = "%s?%s"%(url_for('.index'), query)
-    return '<a href="%s">%s</a>'%(link, text)
+    return "<a href='%s'>%s</a>"%(link, text)
 
-def ALdim_table(al_dims):
+def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
+    al_dims = sorted(al_dims, key=lambda x:tuple(-ev for (p,ev) in x[0]))
     header = []
-    num_primes = len(al_dims[0][0])
+    primes = [p for (p,ev) in al_dims[0][0]]
+    num_primes = len(primes)
     for p, ev in al_dims[0][0]:
         header.append(r'<th>\(%s\)</th>'%p)
     header.append('<th>Dim.</th>')
@@ -55,10 +57,18 @@ def ALdim_table(al_dims):
     for i, (vec, dim) in enumerate(al_dims):
         row = []
         sign = 1
+        s = ''
         for p, ev in vec:
-            sign *= ev
-            row.append(r'<td>\(%s\)</td>'%('+' if ev == 1 else '-'))
-        row.append(r'<td>\(%s\)</td>'%(dim))
+            if ev == 1:
+                s += '%2B'
+                symb = '+'
+            else:
+                sign = -sign
+                s += '-'
+                symb = '-'
+            row.append(r'<td>\(%s\)</td>'%(symb))
+        link = newform_search_link(r'\(%s\)'%dim, level=level, weight=weight, char_order=1, atkin_lehner_string=s)
+        row.append(r'<td>%s</td>'%(link))
         fricke[sign] += dim
         if i == len(al_dims) - 1 and len(vec) > 1:
             tr = "<tr class='endsection'>"
@@ -67,9 +77,11 @@ def ALdim_table(al_dims):
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
         plus_knowl = display_knowl('mf.elliptic.plus_space',title='Plus space').replace('"',"'")
+        plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('mf.elliptic.minus_space',title='Minus space').replace('"',"'")
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, fricke[1]))
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, fricke[-1]))
+        minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
+        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
@@ -271,7 +283,7 @@ class WebNewformSpace(object):
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
-        return ALdim_table(self.AL_dims)
+        return ALdim_table(self.AL_dims, self.level, self.weight)
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):

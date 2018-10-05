@@ -4,7 +4,7 @@ from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_bool, parse_bool_unknown, parse_nf_string, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -28,13 +28,13 @@ def learnmore_list_remove(matchstring):
 def credit():
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
-def ALdims_knowl(al_dims):
+def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
     for vec, dim in al_dims:
         dim_dict[tuple(ev for (p, ev) in vec)] = dim
     short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
     # We erase plus_dim and minus_dim if they're obvious
-    AL_table = ALdim_table(al_dims)
+    AL_table = ALdim_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
 def set_info_funcs(info):
@@ -105,7 +105,7 @@ def set_info_funcs(info):
     def display_ALdims(space):
         al_dims = space.get('AL_dims')
         if al_dims:
-            return ALdims_knowl(al_dims)
+            return ALdims_knowl(al_dims, space['level'], space['weight'])
         else:
             return ''
     info['display_ALdims'] = display_ALdims
@@ -567,6 +567,8 @@ def newform_parse(info, query):
     parse_bool(info, query, 'is_twist_minimal')
     parse_bool_unknown(info, query, 'has_inner_twist')
     parse_ints(info, query, 'analytic_rank')
+    parse_noop(info, query, 'atkin_lehner_string')
+    parse_ints(info, query, 'fricke_eigenval')
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
