@@ -404,7 +404,6 @@ def render_single_Lfunction(Lclass, args, request):
         L = Lclass(**args)
         # if you move L=Lclass outside the try for debugging, remember to put it back in before committing
     except (ValueError, KeyError, TypeError) as err:  # do not trap all errors, if there is an assert error we want to see it in flasklog
-        
         if is_debug_mode():
             raise
         else:
@@ -453,11 +452,11 @@ def initLfunction(L, args, request):
     info['navi']= set_navi(L)
 
     #FIXME, can we disable this?
-    #if len(request.args) == 0:
-    #    lcalcUrl = request.path + '?download=lcalcfile'
-    #else:
-    #    lcalcUrl = request.path + '&download=lcalcfile'
-    #info['downloads'] = [('Lcalcfile', lcalcUrl)]
+    if len(request.args) == 0:
+        lcalcUrl = request.path + '?download=lcalcfile'
+    else:
+        lcalcUrl = request.path + '&download=lcalcfile'
+    info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
