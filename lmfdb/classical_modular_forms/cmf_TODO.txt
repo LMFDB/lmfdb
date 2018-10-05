@@ -1,7 +1,7 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (we first need to add trace_hash column, see under important)
-* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar)
+* data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (ongoing)
+* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
 * clicking Next on space search results takes you to newform search results (David)
 
 
@@ -14,7 +14,6 @@ On data updates:
 
 IMPORTANT:
 * hecke_ring_index as factorization (Drew)
-* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
@@ -24,6 +23,7 @@ IMPORTANT:
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * Atkin-Lehner dimension decomposition for the space (David)
 * Add fricke eigenvalue (or the sign of the functional equation) to mf_newforms and display it. (David)
+* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * Add density of zero traces (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)

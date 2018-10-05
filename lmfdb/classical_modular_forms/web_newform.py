@@ -77,6 +77,8 @@ class WebNewform(object):
         self.__dict__.update(data)
         self._data = data
 
+        self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
+
         if self.level == 1 or ZZ(self.level).is_prime():
             self.factored_level = ''
         else:
@@ -123,8 +125,8 @@ class WebNewform(object):
             self.has_exact_qexp = False
         self.character_values = defaultdict(list)
         cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
-                                             sort=['embedding_index']))
+                                             projection=['lfunction_label','embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
+                                             ))
         self.rel_dim = self.dim // self.char_degree
         if not cc_data:
             self.has_complex_qexp = False
@@ -133,14 +135,20 @@ class WebNewform(object):
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                embedded_mf['conrey_label'] = self.char_labels[m // self.rel_dim]
-                embedded_mf['embedding_num'] = (m % self.rel_dim) + 1
+                N, k, a, x, j = embedded_mf['lfunction_label'].split('.')
+                N, k, a, j = map(int, [N, k, a, j])
+                assert [N, k, x] == [self.level, self.weight, self.hecke_orbit_label]
+                assert a in self.char_labels
+                assert j <= self.rel_dim
+                embedded_mf['conrey_label'] = a
+                embedded_mf['embedding_num'] = j
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
                 embedded_mf['an'] = [ [float(x), float(y)] for x,y in embedded_mf['an']]
 
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
+            self.cc_data.sort(key = lambda x: (x['conrey_label'], x['embedding_num']))
             self.analytic_shift = [None]
             for n in range(1,self.cqexp_prec):
                 self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
@@ -226,15 +234,14 @@ class WebNewform(object):
         ns_label = '.'.join(base_label + [char_letter])
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
-        hecke_letter = cremona_letter_code(self.hecke_orbit - 1)
-        nf_url = ns_url + '/' + hecke_letter
+        nf_url = ns_url + '/' + self.hecke_orbit_label
         # without the leading /
         if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
             for character in self.char_labels:
                 for j in range(self.dim/self.char_degree):
-                    label = base_label + [str(character), hecke_letter, str(j + 1)]
+                    label = base_label + [str(character), self.hecke_orbit_label, str(j + 1)]
                     lfun_label = '.'.join(label)
                     lfun_url =  '/L' + cmf_base + '/'.join(label)
                     res.append(('L-function ' + lfun_label, lfun_url))

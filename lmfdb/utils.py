@@ -244,10 +244,6 @@ def to_dict(args):
 def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
-#EPLUS_RE_python = re.compile(r"e\+0*([1-9][0-9]*)")
-#EMINUS_RE_python = re.compile(r"e\-0*([1-9][0-9]*)")
-#EPLUS_RE_mpfr = re.compile(r"e\+*([1-9][0-9]*)")
-#EMINUS_RE_mpfr = re.compile(r"e\-*([1-9][0-9]*)")
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     if is_exact(x):
         return '%s' % x
@@ -255,17 +251,16 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         return "0"
     if method == "truncate":
         k = round_to_half_int(x)
-        if float(abs(x - k)) < 10.**( - digits - extra_truncation_digits):
+        if k == x:
             x = k
-        s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
-        #EPLUS_RE = EPLUS_RE_mpfr
-        #EMINUS_RE = EMINUS_RE_mpfr
+            if x in ZZ:
+                s = '%d' % x
+            else:
+                s = '%s' % float(x)
+        else:
+            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
     else:
         s = "%.{}g".format(prec) % float(x)
-        #EPLUS_RE = EPLUS_RE_python
-        #EMINUS_RE = EMINUS_RE_python
-    #s = EPLUS_RE.sub(r" \cdot 10^{\1}", s)
-    #s = EMINUS_RE.sub(r" \cdot 10^{-\1}", s)
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
@@ -325,6 +320,8 @@ def round_to_half_int(num, fraction=2):
     1
     >>> round_to_half_int(-0.9)
     -1
+    >>> round_to_half_int(0.5)
+    1/2
     """
     return round(num * 1.0 * fraction) / fraction
 
