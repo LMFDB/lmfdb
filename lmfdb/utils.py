@@ -19,15 +19,13 @@ from urllib import urlencode
 from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField
 from sage.structure.element import Element
 from copy import copy
-from random import randint
 from functools import wraps
 from itertools import islice
 from flask import request, make_response, flash, url_for, current_app
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
-
-from lmfdb.base import app, ctx_proc_userdata
+from lmfdb.base import app
 
 
 
@@ -260,7 +258,7 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         else:
             s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
     else:
-        s = "%.{}g".format(prec) % float(x)
+        s = "%.{}g".format(digits) % float(x)
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):

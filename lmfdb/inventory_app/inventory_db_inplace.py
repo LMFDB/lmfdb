@@ -1,6 +1,7 @@
 import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
+from lmfdb.db_backend import db
 
 class UpdateFailed(Exception):
     """Raise for failure to update"""
@@ -140,12 +141,12 @@ def set_rollback_dead(rollback_doc):
 
     """
     raise NotImplementedError
-    #Because we're using nexted documents, we capture the entire record, modify and return
-    rollback_table = inv_db[inv.ALL_STRUC.rollback_human[inv.STR_NAME]]
-    id = rollback_doc['_id']
-    diff = rollback_doc.copy()
-    diff['diff']['live'] = False
-    rollback_table.find_and_modify(query={'_id':id}, update={"$set":diff}, upsert=False, full_response=True)
+    ##Because we're using nexted documents, we capture the entire record, modify and return
+    #rollback_table = inv_db[inv.ALL_STRUC.rollback_human[inv.STR_NAME]]
+    #id = rollback_doc['_id']
+    #diff = rollback_doc.copy()
+    #diff['diff']['live'] = False
+    #rollback_table.find_and_modify(query={'_id':id}, update={"$set":diff}, upsert=False, full_response=True)
 
 
 def apply_rollback(rollback_doc):
@@ -156,9 +157,9 @@ def apply_rollback(rollback_doc):
     Throws -- UpdateFailed if diff application failed
     """
     raise NotImplementedError
-    try:
-        assert(rollback_doc['diff']['live'])
-        update_fields(rollback_doc['diff'], storeRollback=False)
-        set_rollback_dead(inv_db, rollback_doc)
-    except:
-        raise
+    #try:
+    #    assert(rollback_doc['diff']['live'])
+    #    update_fields(rollback_doc['diff'], storeRollback=False)
+    #    set_rollback_dead(inv_db, rollback_doc)
+    #except:
+    #    raise

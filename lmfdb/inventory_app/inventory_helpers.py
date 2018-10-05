@@ -1,11 +1,8 @@
 
-from os import path
-import hashlib
 from urlparse import urlparse
 from logging import getLogger
 from lmfdb_inventory import LOG_ID as LOG_ID
 from lmfdb_inventory import table_status
-import re
 
 #Log for db actions
 log_dest = getLogger(LOG_ID)

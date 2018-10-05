@@ -1,4 +1,3 @@
-#from scripts.reports.jsonify_db_structure import get_lmfdb_tables as glt
 import json
 from datetime import datetime
 import inventory_helpers as ih
@@ -12,6 +11,8 @@ from lmfdb.db_backend import db
 
 ops_sz = 2000000
 null_uid = '00000000-0000-0000-0000-000000000000'
+
+glt = lambda x : "get_list_table"
 
 #Deal with ops table
 
@@ -79,7 +80,7 @@ def get_progress(uid):
     if curr_item:
         try:
             prog_in_curr = get_progress_from_db(uid, curr_item['db'], curr_item['table'])
-        except Exception as e:
+        except Exception: # as e:
             #Web front or user can't do anything about errors here. If process
             # is failing, will become evident later
             prog_in_curr = 0
@@ -96,7 +97,7 @@ def get_progress_from_db(uid, db_id, table_id):
     process on db.table, so if there no longer is, it must have finished
     """
 
-    db_name = idc.get_db_name(db_id)
+    #db_name = idc.get_db_name(db_id)
     table_name = idc.get_table_name(table_id)
     try:
         live_progress = sf.get_scrape_progress(table_name)
@@ -131,7 +132,7 @@ def update_gone_list():
     for db_rec in dbs:
         db_name = db_rec[0]
         tables = iv.retrieve_db_listing(db_name)
-        db_id = idc.get_db_id(db_name)
+        #db_id = idc.get_db_id(db_name)
         for table in tables:
             table_name = table[0]
             gone = not (table_name in all_tables[db_name])

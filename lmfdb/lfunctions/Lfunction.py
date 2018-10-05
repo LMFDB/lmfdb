@@ -22,7 +22,7 @@ from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part, CBF, RIF
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -32,7 +32,6 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from sage.databases.cremona import class_to_int
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]

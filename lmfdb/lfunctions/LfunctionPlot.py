@@ -4,7 +4,7 @@ import math
 from flask import url_for
 from lmfdb.db_backend import db
 from lmfdb.classical_modular_forms.web_newform import WebNewform
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
+from lmfdb.classical_modular_forms.web_space import WebGamma1Space
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
@@ -372,7 +372,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
     ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+    #alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
@@ -384,8 +384,8 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             except ValueError:
                 continue
             newspaces = WS.decomp
-            numlabels = len(WS.decomp)  # one label per Galois orbit
-            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+            #numlabels = len(WS.decomp)  # one label per Galois orbit
+            #thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
             # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
             ybaseplus = y  # baseline y-coord for plus cases

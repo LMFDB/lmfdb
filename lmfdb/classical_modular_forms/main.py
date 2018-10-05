@@ -1,4 +1,4 @@
-from flask import render_template, url_for, redirect, abort, request, flash, make_response
+from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
 from collections import defaultdict
 from lmfdb.db_backend import db
@@ -347,7 +347,7 @@ class CMF_download(Downloader):
         data = self._get_hecke_nf(label)
         if not isinstance(data,list):
             return data
-        filename = label + self.file_suffix[lang]
+        #filename = label + self.file_suffix[lang]
         dim = None
         qexp = []
         for an, trace_an in data:
