@@ -54,7 +54,7 @@ def ALdim_table(al_dims, level, weight):
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
-    for i, (vec, dim) in enumerate(al_dims):
+    for i, (vec, dim, cnt) in enumerate(al_dims):
         row = []
         sign = 1
         s = ''
@@ -67,7 +67,10 @@ def ALdim_table(al_dims, level, weight):
                 s += '-'
                 symb = '-'
             row.append(r'<td>\(%s\)</td>'%(symb))
-        link = newform_search_link(r'\(%s\)'%dim, level=level, weight=weight, char_order=1, atkin_lehner_string=s)
+        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':s}
+        if cnt == 1:
+            query['jump'] = 'yes'
+        link = newform_search_link(r'\(%s\)'%dim, **query)
         row.append(r'<td>%s</td>'%(link))
         fricke[sign] += dim
         if i == len(al_dims) - 1 and len(vec) > 1:

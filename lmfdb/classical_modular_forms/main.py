@@ -30,7 +30,7 @@ def credit():
 
 def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
-    for vec, dim in al_dims:
+    for vec, dim, cnt in al_dims:
         dim_dict[tuple(ev for (p, ev) in vec)] = dim
     short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
     # We erase plus_dim and minus_dim if they're obvious
