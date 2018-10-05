@@ -28,6 +28,7 @@ IMPORTANT:
 
 
 GOOD:
+* Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
 * Add tests for display_float, etc

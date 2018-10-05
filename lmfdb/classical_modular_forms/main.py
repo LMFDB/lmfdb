@@ -114,7 +114,9 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        search_type = info.get('search_type',info.get('submit','List'))
+        search_type = info.get('search_type')
+        if search_type is None:
+            info['search_type'] = search_type = info.pop('submit','')
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:
