@@ -218,11 +218,7 @@ class WebNewformSpace(object):
         if self.char_labels[0] == 1:
             self.trivial_character = True
             character_str = "Trivial Character"
-            print self.label, self.AL_dims
-            self.plus_dim = sum(dim for eigs, dim in self.AL_dims if prod(ev for p,ev in eigs) == 1)
-            self.minus_dim = sum(dim for eigs, dim in self.AL_dims if prod(ev for (p,ev) in eigs) == -1)
-            print self.plus_dim, self.minus_dim
-            assert self.dim == self.plus_dim + self.minus_dim
+            self.minus_dim = self.dim - self.plus_dim
             self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
         else:
             self.trivial_character = False
