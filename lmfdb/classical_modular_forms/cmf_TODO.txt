@@ -12,7 +12,6 @@ On data updates:
 
 IMPORTANT:
 * hecke_ring_index as factorization (Drew)
-* Self dual: search and display (Drew, David)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * make tests pass (Edgar)

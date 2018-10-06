@@ -70,6 +70,13 @@
     <td>{{ newform.analytic_rank }}</td>
   </tr>
   {% endif %}
+  {% if newform.is_self_dual %}
+  <tr>
+    <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
+  </tr>
 </table>
 
 <script>
