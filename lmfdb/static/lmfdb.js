@@ -132,7 +132,7 @@ function knowl_click_handler($el) {
 
   // slightly different behaviour if we are inside a table, but
   // not in a knowl inside a table.
-  var table_mode = $el.parents().is("table") && !$el.parents().hasClass("knowl-content");
+  var table_mode = $el.parent().is("td") || $el.parent().is("th");
 
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
