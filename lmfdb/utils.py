@@ -258,7 +258,17 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
             else:
                 s = '%s' % float(x)
         else:
-            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
+            try:
+                s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
+            except TypeError:
+                # older versions of Sage don't support the digits keyword
+                s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str()
+                point = s.find('.')
+                if point != -1:
+                    if point < digits:
+                        s = s[:digits+1]
+                    else:
+                        s = s[:point]
     else:
         s = "%.{}g".format(prec) % float(x)
     return s
