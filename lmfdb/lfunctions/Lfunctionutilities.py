@@ -298,8 +298,12 @@ def lfuncEPtex(L, fmt):
         fmt could be any of the values: "abstract"
     """
     from Lfunction import Lfunction_from_db
-    if (L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db)) and fmt == "arithmetic":
-        return lfuncEPhtml(L, fmt)
+    if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
+        if L.Ltype() == "general":
+            return ("For information concerning the Euler product, see other "
+                    "instances of this L-function.")
+        else:
+            return lfuncEPhtml(L, fmt)
 
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
@@ -320,8 +324,6 @@ def lfuncEPtex(L, fmt):
             # but do we really want this?
             #else:
             #    ans += "\\prod_{p\\ \\mathrm{bad}} (1- a(p) p^{-s/2})^{-1} \\prod_{p\\ \\mathrm{good}} (1- a(p) p^{-s/2} + \chi(p)p^{-s})^{-1}"
-
-
         elif L.Ltype() == "hilbertmodularform":
             ans += "\\prod_{\mathfrak{p}\\ \\mathrm{bad}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s})^{-1} \\prod_{\mathfrak{p}\\ \\mathrm{good}} (1- a(\mathfrak{p}) (N\mathfrak{p})^{-s} + (N\mathfrak{p})^{-2s})^{-1}"
 
@@ -347,9 +349,7 @@ def lfuncEPtex(L, fmt):
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
 
-        elif L.Ltype() == "general":
-            return ("For information concerning the Euler product, see other "
-                    "instances of this L-function.")
+        
 
         else:
             return("\\text{No information is available about the Euler product.}")
@@ -613,19 +613,20 @@ def lfuncFEtex(L, fmt):
         ans += "(" + str(int(L.degree)) + ",\\ "
         ans += str(int(L.level)) + ",\\ "
         ans += "("
+        def real_digits(x):
+            return len(str(x).replace('.','').lstrip('-').lstrip('0'))
+        def mu_fe_prec(x):
+            x = CDF(x)
+            return max(map(real_digits, [x.real(), x.imag()]))
+
         if L.mu_fe != []:
-            for mu in range(len(L.mu_fe) - 1):
-                prec = len(str(L.mu_fe[mu]).split('.')[-1])
-                ans += seriescoeff(L.mu_fe[mu], 0, "literal", "", prec) + ", "
-            prec = len(str(L.mu_fe[-1]).split('.')[-1])
-            ans += seriescoeff(L.mu_fe[-1], 0, "literal", "", prec)
+            mus = [ display_complex(CDF(mu).real(), CDF(mu).imag(),  mu_fe_prec(mu), method="round" ) for mu in L.mu_fe ]
+            ans += ", ".join(mus)
         else:
             ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
-            for nu in range(len(L.nu_fe) - 1):
-                ans += str(L.nu_fe[nu]) + ", "
-            ans += str(L.nu_fe[-1])
+            ans += ", ".join(map(str, L.nu_fe))
         else:
             ans += "\\ "
         ans += "),\\ "
@@ -639,11 +640,61 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to dislpay for L(s)
         Will eventually be replaced by specialValueTriple.
     '''
+    if normalization=="arithmetic":
+        _, tex, Lval =  specialValueTriple(L, s, '', sLatex)
+    else:
+        tex, _, Lval =  specialValueTriple(L, s, sLatex, '')
+    if Lval == "\\infty":
+        operator = " = "
+    else:
+        operator = "\\approx"
+    return "\\[{0} {1} {2}\\]".format(tex, operator, Lval)
+#    number_of_decimals = 10
+#    val = None
+#    if hasattr(L,"lfunc_data"):
+#        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
+#        for x in p2sage(L.lfunc_data['values']):
+#            # the numbers here are always half integers
+#            # so this comparison is exact
+#            if x[0] == s_alg:
+#                val = x[1]
+#                break
+#    if val is None:
+#        if L.fromDB:
+#            val = "not computed"
+#        else:
+#            val = L.sageLfunction.value(s)
+#    print val
+#    if normalization == "arithmetic":
+#        lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
+#    else:
+#        lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
+#    # We must test for NaN first, since it would show as zero otherwise
+#    # Try "RR(NaN) < float(1e-10)" in sage -- GT
+#    if CC(val).real().is_NaN():
+#        return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
+#    elif val.abs() < 1e-10:
+#        return "\\[{0}=0\\]".format(lfunction_value_tex)
+#    elif normalization == "arithmetic":
+#        return(lfunction_value_tex,
+#               latex(round(val.real(), number_of_decimals)
+#                         + round(val.imag(), number_of_decimals) * I))
+#    else:
+#        return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
+#                                               latex(round(val.real(), number_of_decimals)
+#                                                     + round(val.imag(), number_of_decimals) * I))
+
+def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
+    ''' Returns [L_arithmetic, L_analytic, L_val]
+        Currently only used for genus 2 curves
+        and Dirichlet characters.
+        Eventually want to use for all L-functions.
+    '''
     number_of_decimals = 10
     val = None
-    if hasattr(L,"lfunc_data"):
-        s_alg = s+p2sage(L.lfunc_data['analytic_normalization'])
-        for x in p2sage(L.lfunc_data['values']):
+    if L.fromDB: #getattr(L, 'fromDB', False):
+        s_alg = s + L.analytic_normalization
+        for x in L.values:
             # the numbers here are always half integers
             # so this comparison is exact
             if x[0] == s_alg:
@@ -654,66 +705,26 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
             val = "not computed"
         else:
             val = L.sageLfunction.value(s)
-    if normalization == "arithmetic":
-        lfunction_value_tex = L.texname_arithmetic.replace('s)',  sLatex + ')')
-    else:
-        lfunction_value_tex = L.texname.replace('(s', '(' + sLatex)
-    # We must test for NaN first, since it would show as zero otherwise
-    # Try "RR(NaN) < float(1e-10)" in sage -- GT
-    if CC(val).real().is_NaN():
-        return "\\[{0}=\\infty\\]".format(lfunction_value_tex)
-    elif val.abs() < 1e-10:
-        return "\\[{0}=0\\]".format(lfunction_value_tex)
-    elif normalization == "arithmetic":
-        return(lfunction_value_tex,
-               latex(round(val.real(), number_of_decimals)
-                         + round(val.imag(), number_of_decimals) * I))
-    else:
-        return "\\[{0} \\approx {1}\\]".format(lfunction_value_tex,
-                                               latex(round(val.real(), number_of_decimals)
-                                                     + round(val.imag(), number_of_decimals) * I))
 
-def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
-    ''' Returns [L_arithmetic, L_analytic, L_val]
-        Currently only used for genus 2 curves
-        and Dirichlet characters.
-        Eventually want to use for all L-functions.
-    '''
-    #FIXME, if the value came from the plot_values we should perhaps display less digits
-    number_of_decimals = 10
-    val = None
-    if hasattr(L,"lfunc_data"):
-        s_alg = s + p2sage(L.lfunc_data['analytic_normalization'])
-        if 'values' in L.lfunc_data.keys():
-            for x in L.lfunc_data['values']:
-            # the numbers here are always half integers
-            # so this comparison is exact
-                if p2sage(x[0]) == s_alg:
-                    val = x[1]
-                    break
-    if val is None:
-        if L.fromDB:
-            val = "not computed"
-        else:
-            val = L.sageLfunction.value(s)
+    if sLatex_arithmetic:
+        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
+    else:
+        lfunction_value_tex_arithmetic = ''
+    if sLatex_analytic:
+        lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
+    else:
+        lfunction_value_tex_analytic = ''
 
-    lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)',  sLatex_arithmetic + ')')
-    lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
-    try:
-        ccval = CDF(string2number(val))
+    if isinstance(val, basestring):
+        Lval = val
+    else:
+        ccval = CDF(val)
         # We must test for NaN first, since it would show as zero otherwise
         # Try "RR(NaN) < float(1e-10)" in sage -- GT
         if ccval.real().is_NaN():
             Lval = "\\infty"
-        elif ccval.abs() < 10**(-number_of_decimals):
-            Lval = "0"
         else:
-            if type(val) is str and '.' in val and "I" not in val:
-                val_decimals = len(val.rstrip(' ').split('.')[-1])
-                number_of_decimals = min(number_of_decimals, val_decimals)
             Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
-    except (TypeError, NameError):
-        Lval = val    # if val is text
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
@@ -880,6 +891,21 @@ def name_and_object_from_url(url):
             label_isogeny_class =  "-".join(url_split[-3:]);
             obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class;
+
+    elif url_split[0] == "Character":
+        # Character/Dirichlet/19/8/
+        assert url_split[1] == "Dirichlet"
+        name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
+        label = ".".join(url_split[-2:])
+        obj_exists = db.char_dir_values.exists({"label" : label})
+
+    elif url_split[0] == "Genus2Curve":
+        # Genus2Curve/Q/310329/a/
+        assert url_split[1] == 'Q'
+        label_isogeny_class = ".".join(url_split[-2:]);
+        obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
+        name = 'Isogeny class ' + label_isogeny_class;
+
 
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
