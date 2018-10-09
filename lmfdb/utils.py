@@ -217,6 +217,39 @@ def pair2complex(pair):
         ip = 0
     return [float(rp), float(ip)]
 
+def str_to_CBF(s):
+    # in sage 8.2 or earlier this is equivalent to CBF(s)
+    s = str(s) # to convert from unicode
+    try:
+        return CBF(s)
+    except TypeError:
+        sign = 1
+        s = s.lstrip('+')
+        if '+' in s:
+            a, b = s.rsplit('+', 1)
+        elif '-' in s:
+            a, b = s.rsplit('-',1)
+            sign = -1
+        else:
+            a = ''
+            b = s
+        a = a.lstrip(' ')
+        b = b.lstrip(' ')
+        if 'I' in a:
+            b, a = a, b
+        assert 'I' in b or b == ''
+        if b == 'I':
+            b = '1'
+        else:
+            b = b.rstrip(' ').rstrip('I').rstrip('*')
+        
+        res = CBF(0)
+        if a:
+            res += CBF(a)
+        if b:
+            res  +=  sign * CBF(b)*I
+        return res
+
 
 
 def to_dict(args):
