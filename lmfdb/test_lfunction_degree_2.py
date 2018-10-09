@@ -40,10 +40,10 @@ class LfunctionTest(LmfdbTest):
                    "/ModularForm/GL2/Q/holomorphic/1/12/1/a/",
                    'Modular')
         self.check(homepage,
-                   "/L/ModularForm/GL2/Q/holomorphic/7/3/6/a/1/",
+                   "/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/",
                    'Modular')
         self.check(homepage,
-                   "/ModularForm/GL2/Q/holomorphic/7/3/6/a/",
+                   "/ModularForm/GL2/Q/holomorphic/7/3/b/a/",
                    'Modular')
         self.check(homepage,
                    "/L/ModularForm/GL2/Q/holomorphic/5/6/4/a/1/",

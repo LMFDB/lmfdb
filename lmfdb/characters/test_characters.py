@@ -157,7 +157,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert '/SatoTateGroup/0.1.100' in W.data
         assert 'L/Character/Dirichlet/6000/11' in W.data
         W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
-        assert '1.0766030216' in W.data
+        assert '1.076603021' in W.data
 
     def test_dirichletchar9999lfunc(self):
         """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""

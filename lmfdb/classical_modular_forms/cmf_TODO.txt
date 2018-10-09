@@ -28,6 +28,8 @@ IMPORTANT:
 
 
 GOOD:
+* ModularForm/GL2/Q/holomorphic/11/2/a/a/ no 0.99999 (Edgar)
+* filename when downloading angles and clpx (Edgar)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
