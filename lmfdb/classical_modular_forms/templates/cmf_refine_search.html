@@ -7,6 +7,7 @@
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="search_type" value="{{info.search_type}}"/>
 
 <table>
   <tr>
@@ -99,7 +100,7 @@
   <tr>
   </tr>
   <tr style="height:50px">
-    <td class="button"><button type='submit' name='submit_again' value='{{info.submit}}' style="width: 110px">Search again</button></td>
+    <td class="button"><button type='submit' name='submit_again' value='refine' style="width: 110px">Search again</button></td>
   </tr>
 </table>
 </form>
