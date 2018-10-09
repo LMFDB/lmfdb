@@ -3,6 +3,8 @@ import inventory_upload_data as iud
 from scrape_progress_update import update_scrape_progress
 import threading
 
+jdbs = None  #This is not a global, this fixes pyflakes problem
+
 def get_scrape_progress(table):
     """Routine to query database on state of MapReduce on a given table
        Will only return data for first operation if more than
@@ -13,12 +15,12 @@ def get_scrape_progress(table):
        returns tuple containing (number of records scanned, total number of records)
     """
     raise NotImplementedError
-    progress = connection['admin'].current_op()
-    for el in progress['inprog']:
-        if 'progress' in el.keys():
-            if el['ns'] == table:
-                return int(el['progress']['done']), int(el['progress']['total'])
-    return -1, -1
+    #progress = connection['admin'].current_op()
+    #for el in progress['inprog']:
+    #    if 'progress' in el.keys():
+    #        if el['ns'] == table:
+    #            return int(el['progress']['done']), int(el['progress']['total'])
+    #return -1, -1
 
 def scrape_worker(tables, uuid):
     """Worker function used to actually scan database and table list

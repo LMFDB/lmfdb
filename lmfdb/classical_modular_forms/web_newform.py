@@ -1,12 +1,17 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import  prime_range, latex, PolynomialRing, QQ, PowerSeriesRing, CDF,  ZZ, prod
+from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing,\
+                        CDF, ZZ, prod
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, factor_base_factorization_latex
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
+        factor_base_factorization_latex
+
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series,  web_latex, web_latex_split_on_pm, web_latex_poly, bigint_knowl, display_float, display_complex
+from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
+        web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
+        display_float, display_complex
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -135,16 +140,16 @@ class WebNewform(object):
             self.cqexp_prec = 10000
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                N, k, a, x, j = embedded_mf['lfunction_label'].split('.')
+                N, k, a, hecke_orbit_label, j = embedded_mf['lfunction_label'].split('.')
                 N, k, a, j = map(int, [N, k, a, j])
-                assert [N, k, x] == [self.level, self.weight, self.hecke_orbit_label]
+                assert [N, k, hecke_orbit_label] == [self.level, self.weight, self.hecke_orbit_label]
                 assert a in self.char_labels
                 assert j <= self.rel_dim
                 embedded_mf['conrey_label'] = a
                 embedded_mf['embedding_num'] = j
                 embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
-                embedded_mf['an'] = [ [float(x), float(y)] for x,y in embedded_mf['an']]
+                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf['an']]
 
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
@@ -300,6 +305,8 @@ class WebNewform(object):
             return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
         return None
 
+
+
     def _make_frac(self, num, den):
         if den == 1:
             return num
@@ -339,10 +346,10 @@ class WebNewform(object):
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        basis = []
+        #basis = []
         forward_size = 0
         inverse_size = 0
-        use_inverse =False
+        #use_inverse =False
         html = r"""
 <script>
 function switch_basis(btype) {

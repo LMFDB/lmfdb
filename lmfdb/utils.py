@@ -16,18 +16,16 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF
 from sage.structure.element import Element
 from copy import copy
-from random import randint
 from functools import wraps
 from itertools import islice
 from flask import request, make_response, flash, url_for, current_app
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
-
-from lmfdb.base import app, ctx_proc_userdata
+from lmfdb.base import app
 
 
 
@@ -219,6 +217,39 @@ def pair2complex(pair):
         ip = 0
     return [float(rp), float(ip)]
 
+def str_to_CBF(s):
+    # in sage 8.2 or earlier this is equivalent to CBF(s)
+    s = str(s) # to convert from unicode
+    try:
+        return CBF(s)
+    except TypeError:
+        sign = 1
+        s = s.lstrip('+')
+        if '+' in s:
+            a, b = s.rsplit('+', 1)
+        elif '-' in s:
+            a, b = s.rsplit('-',1)
+            sign = -1
+        else:
+            a = ''
+            b = s
+        a = a.lstrip(' ')
+        b = b.lstrip(' ')
+        if 'I' in a:
+            b, a = a, b
+        assert 'I' in b or b == ''
+        if b == 'I':
+            b = '1'
+        else:
+            b = b.rstrip(' ').rstrip('I').rstrip('*')
+        
+        res = CBF(0)
+        if a:
+            res += CBF(a)
+        if b:
+            res  +=  sign * CBF(b)* CBF.gens()[0]
+        return res
+
 
 
 def to_dict(args):
@@ -245,32 +276,34 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
+    if method == 'truncate':
+        rnd = 'RNDZ'
+    else:
+        rnd = 'RNDN'
     if is_exact(x):
         return '%s' % x
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
-    if method == "truncate":
-        k = round_to_half_int(x)
-        if k == x:
-            x = k
-            if x in ZZ:
-                s = '%d' % x
-            else:
-                s = '%s' % float(x)
+    k = round_to_half_int(x)
+    if k == x:
+        x = k
+        if x in ZZ:
+            s = '%d' % x
         else:
-            try:
-                s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
-            except TypeError:
-                # older versions of Sage don't support the digits keyword
-                s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str()
-                point = s.find('.')
-                if point != -1:
-                    if point < digits:
-                        s = s[:digits+1]
-                    else:
-                        s = s[:point]
+            s = '%s' % float(x)
     else:
-        s = "%.{}g".format(prec) % float(x)
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+        try:
+            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits, no_sci=no_sci)
+        except TypeError:
+            # older versions of Sage don't support the digits keyword
+            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(no_sci=no_sci)
+            point = s.find('.')
+            if point != -1:
+                if point < digits:
+                    s = s[:digits+1]
+                else:
+                    s = s[:point]
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):

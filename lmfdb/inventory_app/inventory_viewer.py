@@ -6,7 +6,6 @@ import inventory_db_core as idc
 #from inventory_db_inplace import update_fields
 from inventory_live_data import get_lockout_state
 from scrape_helpers import check_scrapes_by_table_id
-from copy import deepcopy
 from collections import defaultdict
 from lmfdb.utils import comma
 from lmfdb.db_backend import db
@@ -50,7 +49,7 @@ def retrieve_db_listing(db_name=None):
     """
     try:
         if db_name is None:
-            query = {}
+            #query = {}
             records = list(db.inv_dbs.search({}, ['name', 'nice_name']))
             counts = defaultdict(int)
             for tablename in db.tablenames:
@@ -267,9 +266,9 @@ def check_locks(resp):
     if get_lockout_state():
         raise EditLockError('Global Edit Lock')
     try:
-        db_name = resp['db']
+        #db_name = resp['db']
         table_name = resp['table']
-        db_id = idc.get_db_id(db_name)
+        #db_id = idc.get_db_id(db_name)
         table_id = idc.get_table_id(table_name)
         if check_locked(table_id):
             raise EditLockError('Table locked')

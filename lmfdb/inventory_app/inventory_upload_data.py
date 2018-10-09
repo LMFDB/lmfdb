@@ -2,11 +2,14 @@ import lmfdb_inventory as inv
 import inventory_db_core as invc
 import inventory_live_data as ild
 import datetime
+from lmfdb.db_backend import db
 
 #TODO this should log to its own logger
 #Routines to upload data from reports scan into inventory DB
 
 MAX_SZ = 10000
+
+upload_indices = None # not a global, just for pyflakes
 
 def upload_scraped_data(structure_data, uid):
     """Main entry point for scraper tool
@@ -95,6 +98,7 @@ def upload_table_structure(db_name, table_name, structure_dat, fresh=False):
         invc.cleanup_records(db, table_id, table_entry['records'])
 
         inv.log_dest.info("            Processing indices")
+        #FIXME
         upload_indices(db, table_id, table_entry['indices'])
 
     except Exception as e:
@@ -188,7 +192,7 @@ def delete_table_data(table_id, tbl, dry_run=False):
     try:
         table_dat = inv.ALL_STRUC.get_table(tbl)
         fields_tbl = table_dat[inv.STR_NAME]
-        fields_fields = table_dat[inv.STR_CONTENT]
+        #fields_fields = table_dat[inv.STR_CONTENT]
         rec_find = {'table_id':table_id}
 
         if not dry_run:

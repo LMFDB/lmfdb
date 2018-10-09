@@ -1,7 +1,4 @@
-import inventory_helpers as ih
 import lmfdb_inventory as inv
-import datetime as dt
-from lmfdb.utils import comma
 from lmfdb.db_backend import db
 
 #Table creation routines -------------------------------------------------------------
@@ -57,7 +54,7 @@ def trim_human_table(db_id, table_id):
     invalidated_keys = []
     a_db = db.inv_fields_auto
     h_db = db.inv_fields_human
-    fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
+    #fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
     rec_find = {'table_id':table_id}
     human_cursor = h_db.search(rec_find)
     for record in human_cursor:
@@ -78,7 +75,7 @@ def complete_human_table(db_id, table_id):
     """
     h_db = db.inv_fields_human
     a_db = db.inv_fields_auto
-    fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
+    #fields_fields = inv.ALL_STRUC.get_fields('human')[inv.STR_CONTENT]
     rec_find = {'table_id':table_id}
     auto_cursor = a_db.find(rec_find)
     for record in auto_cursor:

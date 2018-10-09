@@ -2,7 +2,7 @@
 # See templates/space.html for how functions are called
 
 from lmfdb.db_backend import db
-from sage.all import ZZ, prod
+from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from lmfdb.characters.utils import url_character
 from lmfdb.utils import display_knowl

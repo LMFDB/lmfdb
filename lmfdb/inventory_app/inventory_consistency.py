@@ -9,7 +9,7 @@ from lmfdb.db_backend import db
 
 
 def get_latest_report():
-    reports = db.inv_ops.search({'report':{'$exists':True}}, sort=[['time',-1]], limit=1)
+    sorted_reports = db.inv_ops.search({'report':{'$exists':True}}, sort=[['time',-1]], limit=1)
     return None if not sorted_reports else sorted_reports[0]
 
 def generate_report_threaded():
