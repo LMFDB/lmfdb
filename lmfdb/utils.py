@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, I
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -247,7 +247,7 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  +=  sign * CBF(b)*I
+            res  +=  sign * CBF(b)* CBF.gens()[0]
         return res
 
 
