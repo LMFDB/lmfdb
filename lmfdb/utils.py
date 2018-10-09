@@ -243,22 +243,24 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
+    if method == 'truncate':
+        rnd = 'RNDZ'
+    else:
+        rnd = 'RNDN'
     if is_exact(x):
         return '%s' % x
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
-    if method == "truncate":
-        k = round_to_half_int(x)
-        if k == x:
-            x = k
-            if x in ZZ:
-                s = '%d' % x
-            else:
-                s = '%s' % float(x)
+    k = round_to_half_int(x)
+    if k == x:
+        x = k
+        if x in ZZ:
+            s = '%d' % x
         else:
-            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
+            s = '%s' % float(x)
     else:
-        s = "%.{}g".format(digits) % float(x)
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci = no_sci)
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
