@@ -417,6 +417,7 @@ class CMF_download(Downloader):
 
     def download_cc_data(self, label, lang='text'):
         data = self._get_hecke_cc(label)
+        filename = label + '.cplx'
         if not isinstance(data,list):
             return data
         down = []
@@ -427,12 +428,13 @@ class CMF_download(Downloader):
                 D['root'] = root
             down.append(Json.dumps(D))
         return self._wrap('\n\n'.join(down),
-                          label + '.cplx',
+                          filename,
                           lang=lang,
                           title='Complex embeddings for newform %s,'%(label))
 
     def download_satake_angles(self, label, lang='text'):
         data = self._get_hecke_cc(label)
+        filename = label + '.angles'
         if not isinstance(data,list):
             return data
         down = []
@@ -443,7 +445,7 @@ class CMF_download(Downloader):
                 D['root'] = root
             down.append(Json.dumps(D))
         return self._wrap('\n\n'.join(down),
-                          label + '.angles',
+                          filename,
                           lang=lang,
                           title='Satake angles for newform %s,'%(label))
 

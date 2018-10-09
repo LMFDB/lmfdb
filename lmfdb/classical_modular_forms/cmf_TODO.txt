@@ -14,12 +14,9 @@ IMPORTANT:
 * hecke_ring_index as factorization (Drew)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
-* make tests pass (Edgar)
-* add tests (Edgar)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
-* Add density of zero traces (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
@@ -28,8 +25,7 @@ IMPORTANT:
 
 
 GOOD:
-* ModularForm/GL2/Q/holomorphic/11/2/a/a/ no 0.99999 (Edgar)
-* filename when downloading angles and clpx (Edgar)
+* Add density of zero traces (Edgar)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
@@ -40,18 +36,9 @@ GOOD:
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
 
-TEST FAILURES:
-
-* Satake parameters changed from old code for Delta: /ModularForm/GL2/Q/holomorphic/1/12/1/a/
-* Floating point precision: lmfdb.characters.test_characters, test_dirichletchar6000lfunc, '1.0766030216' in /L/Character/Dirichlet/6000/11
-* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_LDirichlet, '0.4813597784' in /L/Character/Dirichlet/19/9/
-* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_Lec, '0.2538418609' in /L/EllipticCurve/Q/11/a/
-* Floating point precision: lmfdb.lfunctions.test_lfunctions, test_Lgl2maass, '1 + 4.54845492142i' in /L/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/
-* /L/EllipticCurve/Q/56/a/?download=lcalcfile, AttributeError: Lfunction_EC instance has no attribute 'coefficient_period'
-* /L/lhash/dirichlet_L_6253.458/, TypeError: unable to convert 'a^123' to an integer
-* lmfdb.lfunctions.test_lfunctions, test_errorMessages, 'Unable to convert parameter' in /L/ModularForm/GL2/Q/holomorphic/5/k/4/a/1/
 
 FORMATTING:
+* Fix white space: http://localhost:37778/ModularForm/GL2/Q/holomorphic/16/2/e/a/
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3

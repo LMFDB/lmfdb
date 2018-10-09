@@ -19,7 +19,7 @@ from LfunctionComp import isogeny_class_cm
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, display_complex, str_to_CBF
+from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -280,16 +280,12 @@ def apply_coeff_info(L, coeff_info):
     """ Converts the dirichlet L-function coefficients and euler factors from
         the format in the database to algebraic and analytic form
     """
+
     def convert_coefficient(an, base_power_int):
         """
         this is only meant for dirichlet L-functions, and
         converts the format in the database to algebraic and analytic form
         """
-        def roundball_to_half_int(x):
-            if (2*x).contains_integer():
-                return float(x.parent()(RIF(2*x).unique_integer())/2)
-            else:
-                return float(x)
 
         if not str(an).startswith('a'):
             return an, an
@@ -314,8 +310,7 @@ def apply_coeff_info(L, coeff_info):
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
-                rp, ip = map(roundball_to_half_int, [analytic.real(), analytic.real()])
-                analytic = CDF(rp, ip)
+                analytic = round_CBF_to_half_int(analytic)
                 return arithmetic, analytic
 
     base_power_int = int(coeff_info[0][2:-3])

@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -216,6 +216,18 @@ def pair2complex(pair):
         rp = 0
         ip = 0
     return [float(rp), float(ip)]
+
+def round_RBF_to_half_int(x):
+    try:
+        return RIF(x).unique_integer()
+    except ValueError:
+        try:
+            return float(2*RIF(x).unique_integer())/2
+        except ValueError:
+            return float(x)
+
+def round_CBF_to_half_int(x):
+    return CDF(tuple(map(round_RBF_to_half_int, [x.real(), x.imag()])))
 
 def str_to_CBF(s):
     # in sage 8.2 or earlier this is equivalent to CBF(s)

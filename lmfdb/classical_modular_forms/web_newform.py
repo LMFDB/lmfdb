@@ -2,7 +2,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing,\
-                        CDF, ZZ, prod
+                        CDF, ZZ, prod, CBF, cached_method
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
         factor_base_factorization_latex
@@ -11,7 +11,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
         web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
-        display_float, display_complex
+        display_float, display_complex, round_CBF_to_half_int
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -466,7 +466,10 @@ function switch_basis(btype) {
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
             return ""
-        return r"\(%s i\)"%(display_float(y, prec).replace('e',r'\mathrm{e}'))
+        res = display_float(y, prec)
+        if res == '1':
+            res = ''
+        return r"\(%s i\)"%(res.replace('e',r'\mathrm{e}'))
 
     def _display_op(self, x, y, prec):
         xiszero = abs(x) < 10**(-prec)
@@ -530,23 +533,33 @@ function switch_basis(btype) {
         else:
             return self.satake_angle(m, p, i, prec)
 
+    @cached_method
     def satake_angle(self, m, p, i, prec=6):
         theta = self._get_theta(m, p, i)
         s = display_float(2*theta, prec)
-        if s != "0":
+        if s == "1":
+            s =  r'\pi'
+        elif s== "-1":
+            s =  r'-\pi'
+        elif s != "0":
             s += r'\pi'
         return r'\(%s\)'%s
 
+    @cached_method
     def _get_alpha(self, m, p, i):
-        theta = self.cc_data[m]['angles'][p]
-        chiang, chival = self.character_values[p][m // self.rel_dim]
-        ppow = CDF(p)**((ZZ(self.weight)-1)/2)
-        unit = CDF(0,2*CDF.pi()*theta).exp()
+        theta = CBF(self.cc_data[m]['angles'][p])
+        ppow = CBF(p)**((ZZ(self.weight)-1)/2)
+        unit = (2 * theta).exppii()
         if i == 0:
-            return ppow * unit
+            res =  ppow * unit
         else:
-            return ppow * chival / unit
+            # it is very likely that the real or imag part are a half integer
+            # as it returns a CDF, we need to convert it to CBF again
+            chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][m // self.rel_dim][1])))
+            res =  ppow * chival / unit
+        return round_CBF_to_half_int(res)
 
+    @cached_method
     def _get_theta(self, m, p, i):
         theta = self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][m // self.rel_dim]
