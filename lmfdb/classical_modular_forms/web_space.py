@@ -218,8 +218,11 @@ class WebNewformSpace(object):
         if self.char_labels[0] == 1:
             self.trivial_character = True
             character_str = "Trivial Character"
-            self.minus_dim = self.dim - self.plus_dim
-            self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
+            if self.dim == 0:
+                self.dim_str = r"\(%s\)"%(self.dim)
+            else:
+                self.minus_dim = self.dim - self.plus_dim
+                self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
         else:
             self.trivial_character = False
             character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
