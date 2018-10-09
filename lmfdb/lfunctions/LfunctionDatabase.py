@@ -1,13 +1,12 @@
 # Functions for fetching L-function data from databases
 
 from lmfdb.db_backend import db
-from lmfdb.utils import display_float
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
-    return fix_Ldata(Ldata);
+    return Ldata
 
 def get_instances_by_Lhash(Lhash):
     return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=["url"]))
@@ -26,23 +25,7 @@ def get_lfunction_by_url(url):
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
 
-def fix_Ldata(Ldata):
-    leading_term = Ldata.get('leading_term', None)
-    if Ldata['order_of_vanishing'] > 1:
-        value =  0
-    elif leading_term is not None:
-        value =  Ldata['leading_term']
-    else:
-        # we use the plot_values
-        # we make it a string, to avoid displaying 10 decimal digits
-        # see: specialValueTriple in Lfunctionutilities.py
-        value = display_float(Ldata['plot_values'][0],6)
-    central_value = [0.5 + 0.5*Ldata['motivic_weight'], value]
-    if 'values' not in Ldata:
-        Ldata['values'] = [ central_value ]
-    else:
-        Ldata['values'] += [ central_value ]
-    return Ldata
+
 
 def getEllipticCurveData(label):
     return db.ec_curves.lucky({'lmfdb_label': label})

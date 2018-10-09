@@ -17,12 +17,11 @@ from Lfunctionutilities import (string2number, get_bread,
 from LfunctionComp import isogeny_class_cm
 
 from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
-import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int
+from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, display_complex
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor, exp, log, real, pi, I, gcd, sqrt, prod, ceil, NaN, EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, real_part, CBF, RIF
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -32,7 +31,6 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from sage.databases.cremona import class_to_int
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -93,23 +91,23 @@ def makeLfromdata(L):
     L.level = int(data.get('conductor'))
     L.level_factored = factor(L.level)
 
-    central_character = data.get('central_character', None)
+    central_character = data.get('central_character')
     L.charactermodulus, L.characternumber = map(int, central_character.split("."))
     L.primitive = data.get('primitive', None)
     L.selfdual = data.get('self_dual', None)
     if data.get('root_number', None) is not None:
         # we first need to convert from unicode to a regular strin
-        L.sign = CBF(str(data.get('root_number', None)))
+        L.sign = CBF(str(data['root_number']))
     else:
-        # this is a numeric convered to LMFDB_RealLiteral
+        # this is a numeric converted to LMFDB_RealLiteral
         L.sign = 2*RBF(str(data.get('sign_arg'))).exppii()
-    assert RIF(L.sign.abs()).unique_integer() == 1
+    assert (L.sign.abs() - 1).abs().mid() < 1e-5
     if L.selfdual:
         L.sign = RIF(L.sign.real()).unique_integer()
     else:
         L.sign = L.sign.mid()
     L.st_group = data.get('st_group', '')
-    L.order_of_vanishing = data.get('order_of_vanishing', None)
+    L.order_of_vanishing = data.get('order_of_vanishing')
 
     L.motivic_weight = data.get('motivic_weight', None)
     if L.motivic_weight is not None:
@@ -132,6 +130,30 @@ def makeLfromdata(L):
                        string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
+    # central_value and values
+    L.leading_term = data.get('leading_term', None)
+
+    if L.order_of_vanishing >= 1:
+        central_value = 0
+    elif L.leading_term is not None:
+        #  convert to string in case it is in unicode string
+        central_value =  CDF(str(L.leading_term))
+    else:
+        # we use the plot_values
+        if L.selfdual:
+            central_value = CDF(data['plot_values'][0])
+        else:
+            central_value = data['plot_values'][0]/sqrt(L.sign)
+        # we should avoid displaying 10 digits as usual, as this is just a hack
+        central_value = display_complex(central_value.real(), central_value.imag(),6)
+    central_value = [0.5 + 0.5*L.motivic_weight, central_value]
+    if 'values' not in data:
+        L.values = [ central_value ]
+    else:
+        #  convert to string in case it is in unicode string
+        L.values = [ [float(x), CDF(str(xval))] for x, xval in data['values']] + [ central_value ]
+
+
     # Optional properties
     L.coefficient_field = data.get('coefficient_field', None)
 
@@ -152,16 +174,17 @@ def makeLfromdata(L):
     L.localfactors = data.get('euler_factors', None)
     L.bad_lfactors = data.get('bad_lfactors', None)
     if L.coefficient_field == "CDF":
-        # convert pairs of doubles to CBF
+        # convert pairs of doubles to CDF
         pairtoCDF = lambda x: CDF(tuple(x))
         pairtoCDF = lambda x: CDF(*tuple(x))
         L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
         L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
 
 
-    #FIXME the order
-    if data.get('dirichlet_coefficients', None):
-        L.dirichlet_coefficients_arithmetic = data.get('dirichlet_coefficients', None)
+    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
+    # would require more global changes.
+    if data.get('dirichlet_coefficients', None) is not None:
+        L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
         L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
@@ -176,7 +199,7 @@ def makeLfromdata(L):
                         L.dirichlet_coefficients_arithmetic[:i];
                     break;
     else:
-        L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)] 
+        L.dirichlet_coefficients_arithmetic = [0, 1] + [ string2number(data['a' + str(i)]) for i in range(2, 11)]
 
 
     if L.analytic_normalization == 0:
@@ -184,10 +207,9 @@ def makeLfromdata(L):
     else:
         L.dirichlet_coefficients = [ an/(n+1)**L.analytic_normalization for n, an in enumerate(L.dirichlet_coefficients_arithmetic)]
 
-    if 'coeff_info' in data:   # hack, works only for Dirichlet L-functions
-        convert_dirichlet_Lfunction_coefficients(L, data.get('coeff_info', None))
+    if 'coeff_info' in data and L.analytic_normalization == 0:   # hack, works only for Dirichlet L-functions
+        apply_coeff_info(L, data['coeff_info'])
 
-    
 
     # Configure the data for the zeros
 
@@ -212,6 +234,7 @@ def makeLfromdata(L):
     else:
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
+        L.dual_link = '/L/' + dual_L_data['origin']
         L.dual_accuracy = dual_L_data.get('accuracy', None);
         L.negative_zeros = map(str, dual_L_data['positive_zeros'][:zero_truncation])
         if L.dual_accuracy is not None:
@@ -252,17 +275,24 @@ def makeLfromdata(L):
 
 
 
-def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
-    """ Converts the dirichlet L-function coefficients from
-        the format in the database to algebaric and analytic form
+
+def apply_coeff_info(L, coeff_info):
+    """ Converts the dirichlet L-function coefficients and euler factors from
+        the format in the database to algebraic and analytic form
     """
-    base_power_int = int(coeff_info[0][2:-3])
-    L.dirichlet_coefficients_analytic = L.dirichlet_coefficients_arithmetic[:]
-    for n in range(0, len(L.dirichlet_coefficients_arithmetic)):
-        an = L.dirichlet_coefficients_arithmetic[n]
+    def convert_coefficient(an, base_power_int):
+        """
+        this is only meant for dirichlet L-functions, and
+        converts the format in the database to algebraic and analytic form
+        """
+        def roundball_to_half_int(x):
+            if (2*x).contains_integer():
+                return float(x.parent()(RIF(2*x).unique_integer())/2)
+            else:
+                return float(x)
+
         if not str(an).startswith('a'):
-            L.dirichlet_coefficients_arithmetic[n] = an
-            L.dirichlet_coefficients_analytic[n] = an
+            return an, an
         else:
             an_power = an[2:]
             an_power_int = int(an_power)
@@ -270,25 +300,38 @@ def convert_dirichlet_Lfunction_coefficients(L, coeff_info):
             an_power_int /= this_gcd
             this_base_power_int = base_power_int/this_gcd
             if an_power_int == 0:
-                L.dirichlet_coefficients_arithmetic[n] = 1
-                L.dirichlet_coefficients_analytic[n] = 1
+                return 1, 1
             elif this_base_power_int == 2:
-                L.dirichlet_coefficients_arithmetic[n] = -1
-                L.dirichlet_coefficients_analytic[n] = -1
+                return -1, -1
             elif this_base_power_int == 4:
                 if an_power_int == 1:
-                    L.dirichlet_coefficients_arithmetic[n] = I
-                    L.dirichlet_coefficients_analytic[n] = I
+                    return I, I
                 else:
-                    L.dirichlet_coefficients_arithmetic[n] = -I
-                    L.dirichlet_coefficients_analytic[n] = -I
+                    return -I, -I
             else:
-                L.dirichlet_coefficients_arithmetic[n] = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
-                L.dirichlet_coefficients_analytic[n] = exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
+                # an = e^(2 pi i an_power_int / this_base_power_int)
+                arithmetic = " $e\\left(\\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + "}\\right)$"
+                #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
+                analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
+                # round half integers
+                rp, ip = map(roundball_to_half_int, [analytic.real(), analytic.real()])
+                analytic = CDF(rp, ip)
+                return arithmetic, analytic
 
-    L.dirichlet_coefficients = L.dirichlet_coefficients_analytic[:]
-    # Note: a better name would be L.dirichlet_coefficients_analytic, but that
-    # would require more global changes.
+    base_power_int = int(coeff_info[0][2:-3])
+    for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
+        L.dirichlet_coefficients_arithmetic[n] , L.dirichlet_coefficients[n] =  convert_coefficient(an, base_power_int)
+
+
+
+    convert_euler_Lpoly = lambda poly_coeffs: map(lambda c: convert_coefficient(c, base_power_int)[1], poly_coeffs)
+    L.bad_lfactors = [ [p, convert_euler_Lpoly(poly)] for p, poly in L.bad_lfactors]
+    L.localfactors = map(convert_euler_Lpoly, L.localfactors)
+    L.coefficient_field = "CDF"
+
+
+
+
 
 
 
@@ -483,11 +526,14 @@ class Lfunction_from_db(Lfunction):
     """
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
-        validate_required_args('Unable to construct L-function from lhash.',
-                               kwargs, 'Lhash')
+        if 'Lhash' not in kwargs and 'url' not in kwargs:
+            raise KeyError('Unable to construct L-function from Lhash or url',
+                               'Missing required parameters: Lhash or url')
         self.numcoeff = 30
 
         self.__dict__.update(kwargs)
+        if 'url' in kwargs and 'Lhash' not in kwargs:
+            self.Lhash = self.get_Lhash_by_url(self.url)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
         self.info = self.general_webpagedata()
@@ -531,12 +577,16 @@ class Lfunction_from_db(Lfunction):
         lfactors.sort(key=lambda x: key_for_numerically_sort(x[0]))
         return lfactors
 
+    def get_Lhash_by_url(self, url):
+        instance = get_instance_by_url(url)
+        if instance is None:
+            raise KeyError('No L-function instance data for "%s" was found in the database.' % url)
+        return instance['Lhash']
 
     @property
     def origins(self):
         lorigins = []
-        for instance in sorted(get_instances_by_Lhash(self.Lhash),
-                               key=lambda elt: elt['url']):
+        for instance in get_instances_by_Lhash(self.Lhash):
             name, obj_exists = name_and_object_from_url(instance['url'])
             if not name:
                 name = ''
@@ -545,6 +595,8 @@ class Lfunction_from_db(Lfunction):
             else:
                 name = '(%s)' % (name)
                 lorigins.append((name, ""))
+            if not self.selfdual and hasattr(self, 'dual_link'):
+                lorigins.append(("Dual L-function", self.dual_link))
         return lorigins
 
     @property
@@ -609,10 +661,16 @@ class Lfunction_from_db(Lfunction):
 
     @property
     def texnamecompleted1ms(self):
-        return "\\Lambda(1-s)"
+        if self.selfdual:
+            return "\\Lambda(1-s)"
+        else:
+            return "\\overline{\\Lambda}(1-s)"
     @property
     def texnamecompleted1ms_arithmetic(self):
-        return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
+        if self.selfdual:
+            return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
+        else:
+            return "\\overline{\\Lambda}(%d-s)" % (self.motivic_weight + 1)
 
     @property
     def texnamecompleteds(self):
@@ -621,11 +679,11 @@ class Lfunction_from_db(Lfunction):
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds
 
-    def _retrieve_lfunc_data_from_db(self):
-        self.lfunc_data = get_lfunction_by_url(self.url)
-        if not self.lfunc_data:
-            raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
-        return
+    #def _retrieve_lfunc_data_from_db(self):
+    #    self.lfunc_data = get_lfunction_by_url(self.url)
+    #    if not self.lfunc_data:
+    #        raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
+    #    return
 
     @property
     def knowltype(self):
@@ -662,11 +720,7 @@ class Lfunction_CMF(Lfunction_from_db):
         self.__dict__.update(kwargs)
         self.label_args = (self.modform_level, self.weight, self.character, self.hecke_orbit, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
-        instance = get_instance_by_url(self.url)
-        if instance is None:
-            raise ValueError("L-function not in database") # caught by render_single_Lfunction
-        self.Lhash = instance['Lhash']
-        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+        Lfunction_from_db.__init__(self, url = self.url)
 
         self.numcoeff = 30
 
@@ -715,7 +769,7 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
         self.__dict__.update(kwargs)
         self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args
-        self.Lhash = get_instance_by_url(self.url)['Lhash']
+        self.Lhash = self.get_Lhash_by_url(self.url)
         Lfunction_from_db.__init__(self, Lhash = self.Lhash)
 
         self.numcoeff = 30
@@ -766,9 +820,7 @@ class Lfunction_EC(Lfunction_from_db):
         self.url = "EllipticCurve/%s/%s/%s" % (self.field,
                                                         self.conductor_label,
                                                         self.isogeny_class_label)
-
-        self.Lhash = get_instance_by_url(self.url)['Lhash']
-        Lfunction_from_db.__init__(self, Lhash = self.Lhash)
+        Lfunction_from_db.__init__(self, url = self.url)
 
         self.numcoeff = 30
 
@@ -1694,73 +1746,73 @@ class SymmetricPowerLfunction(Lfunction):
         return self.S
 
 
-class Lfunction_lcalc(Lfunction):
-    """Class representing an L-function coming from an lcalc source,
-    either a URL or a file
-    It can be called with a dictionary of these forms:
-
-    dict = { 'Ltype': 'lcalcurl', 'url': ... }  url is any url for an lcalcfile
-    dict = { 'Ltype': 'lcalcfile', 'filecontents': ... }  filecontents is the
-           contents of an lcalcfile
-    """
-    def __init__(self, **args):
-        constructor_logger(self, args)
-        # Initialize some default values
-        self.coefficient_type = 0
-        self.coefficient_period = 0
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.primitive = True
-        self.kappa_fe = []
-        self.lambda_fe = []
-        self.mu_fe = []
-        self.nu_fe = []
-        self.selfdual = False
-        self.texname = "L(s)"
-        self.texnamecompleteds = "\\Lambda(s)"
-        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
-        self.primitive = None
-        self.credit = ''
-        self.motivic_weight = NaN
-        self.algebraic = True
-
-        self._Ltype = args.pop("Ltype")
-        # Put the args into the object dictionary
-        self.__dict__.update(args)
-
-        # Get the lcalcfile from the web
-        if self._Ltype == 'lcalcurl':
-            if 'url' in args.keys():
-                try:
-                    import urllib
-                    logger.debug(self.url)
-                    self.filecontents = urllib.urlopen(self.url).read()
-                except:
-                    raise Exception("Wasn't able to read the file at the url")
-            else:
-                raise Exception("You forgot to supply an url.")
-
-        LfunctionLcalc.parseLcalcfile_ver1(self, self.filecontents)
-
-        # Check if self dual
-        self.checkselfdual()
-
-        if self.selfdual:
-            self.texnamecompleted1ms = "\\Lambda(1-s)"
-
-        try:
-            self.originalfile = re.match(".*/([^/]+)$", self.url)
-            self.originalfile = self.originalfile.group(1)
-            self.title = ("An L-function generated by an Lcalc file: " +
-                          self.originalfile)
-
-        except:
-            self.originalfile = ''
-            self.title = "An L-function generated by an Lcalc file."
-
-        logger.debug("Start generating Sage L")
-        generateSageLfunction(self)
+#class Lfunction_lcalc(Lfunction):
+#    """Class representing an L-function coming from an lcalc source,
+#    either a URL or a file
+#    It can be called with a dictionary of these forms:
+#
+#    dict = { 'Ltype': 'lcalcurl', 'url': ... }  url is any url for an lcalcfile
+#    dict = { 'Ltype': 'lcalcfile', 'filecontents': ... }  filecontents is the
+#           contents of an lcalcfile
+#    """
+#    def __init__(self, **args):
+#        constructor_logger(self, args)
+#        # Initialize some default values
+#        self.coefficient_type = 0
+#        self.coefficient_period = 0
+#        self.poles = []
+#        self.residues = []
+#        self.langlands = True
+#        self.primitive = True
+#        self.kappa_fe = []
+#        self.lambda_fe = []
+#        self.mu_fe = []
+#        self.nu_fe = []
+#        self.selfdual = False
+#        self.texname = "L(s)"
+#        self.texnamecompleteds = "\\Lambda(s)"
+#        self.texnamecompleted1ms = "\\overline{\\Lambda(1-\\overline{s})}"
+#        self.primitive = None
+#        self.credit = ''
+#        self.motivic_weight = NaN
+#        self.algebraic = True
+#
+#        self._Ltype = args.pop("Ltype")
+#        # Put the args into the object dictionary
+#        self.__dict__.update(args)
+#
+#        # Get the lcalcfile from the web
+#        if self._Ltype == 'lcalcurl':
+#            if 'url' in args.keys():
+#                try:
+#                    import urllib
+#                    logger.debug(self.url)
+#                    self.filecontents = urllib.urlopen(self.url).read()
+#                except:
+#                    raise Exception("Wasn't able to read the file at the url")
+#            else:
+#                raise Exception("You forgot to supply an url.")
+#
+#        LfunctionLcalc.parseLcalcfile_ver1(self, self.filecontents)
+#
+#        # Check if self dual
+#        self.checkselfdual()
+#
+#        if self.selfdual:
+#            self.texnamecompleted1ms = "\\Lambda(1-s)"
+#
+#        try:
+#            self.originalfile = re.match(".*/([^/]+)$", self.url)
+#            self.originalfile = self.originalfile.group(1)
+#            self.title = ("An L-function generated by an Lcalc file: " +
+#                          self.originalfile)
+#
+#        except:
+#            self.originalfile = ''
+#            self.title = "An L-function generated by an Lcalc file."
+#
+#        logger.debug("Start generating Sage L")
+#        generateSageLfunction(self)
 
 #############################################################################
 

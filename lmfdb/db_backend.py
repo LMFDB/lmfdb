@@ -237,7 +237,7 @@ class PostgresBase(object):
         return cur.fetchone()[0] is not None
 
     def _constraint_exists(self, tablename, constraintname):
-        print tablename, constraintname
+        #print tablename, constraintname
         cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
         return cur.fetchone() is not None
 

@@ -19,15 +19,13 @@ from urllib import urlencode
 from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField
 from sage.structure.element import Element
 from copy import copy
-from random import randint
 from functools import wraps
 from itertools import islice
 from flask import request, make_response, flash, url_for, current_app
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
-
-from lmfdb.base import app, ctx_proc_userdata
+from lmfdb.base import app
 
 
 
@@ -245,22 +243,24 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
+    if method == 'truncate':
+        rnd = 'RNDZ'
+    else:
+        rnd = 'RNDN'
     if is_exact(x):
         return '%s' % x
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
-    if method == "truncate":
-        k = round_to_half_int(x)
-        if k == x:
-            x = k
-            if x in ZZ:
-                s = '%d' % x
-            else:
-                s = '%s' % float(x)
+    k = round_to_half_int(x)
+    if k == x:
+        x = k
+        if x in ZZ:
+            s = '%d' % x
         else:
-            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits)
+            s = '%s' % float(x)
     else:
-        s = "%.{}g".format(prec) % float(x)
+        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci = no_sci)
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
