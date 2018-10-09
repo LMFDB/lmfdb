@@ -1,5 +1,3 @@
-from Lfunction import RiemannZeta
-from LfunctionLcalc import createLcalcfile_ver1
 from LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
 from lmfdb.base import LmfdbTest
 
@@ -401,10 +399,6 @@ class LfunctionTest(LmfdbTest):
     # Testing units not tested above
     #------------------------------------------------------
 
-#    def test_lcalcfile_ver1(self):
-#        L = RiemannZeta()
-#        assert "1" in createLcalcfile_ver1(L)
-
     def test_paintSVGall(self):
         svg = paintSvgFileAll([["GSp4", 1]])
         assert "12.4687" in svg
@@ -413,6 +407,7 @@ class LfunctionTest(LmfdbTest):
     #def test_paintSVGholo(self):
     #    svg = paintSvgHolo(4,6,4,6)
     #    assert "L/ModularForm/GL2/Q/holomorphic/4/6/1/a/1/" in svg
+    assert paintSvgHolo # pyflakes
 
     def test_paintSVGchar(self):
         svg = paintSvgChar(1,20,1,12)

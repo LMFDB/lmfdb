@@ -1,7 +1,6 @@
 # Functions for fetching L-function data from databases
 
 from lmfdb.db_backend import db
-from lmfdb.utils import display_float
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
