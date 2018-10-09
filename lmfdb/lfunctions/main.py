@@ -16,7 +16,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
@@ -378,11 +378,11 @@ def l_function_genus2_page(cond,x):
     args = {'label': cond+'.'+x}
     return render_single_Lfunction(Lfunction_genus2_Q, args, request)
 
-# L-function from lcalcfile with given url #####################################
-@l_function_page.route("/Lcalcurl/")
-def l_function_lcalc_page():
-    args = {'Ltype': 'lcalcurl', 'url': request.args['url']}
-    return render_single_Lfunction(Lfunction_lcalc, args, request)
+## L-function from lcalcfile with given url #####################################
+#@l_function_page.route("/Lcalcurl/")
+#def l_function_lcalc_page():
+#    args = {'Ltype': 'lcalcurl', 'url': request.args['url']}
+#    return render_single_Lfunction(Lfunction_lcalc, args, request)
 
 # L-function by hash ###########################################################
 @l_function_page.route("/lhash/<lhash>")
@@ -408,11 +408,11 @@ def render_single_Lfunction(Lclass, args, request):
             raise
         else:
             return render_lfunction_exception(err)
-    try:
-        if temp_args['download'] == 'lcalcfile':
-            return render_lcalcfile(L, request.path)
-    except KeyError as err:
-        pass # Do nothing
+    #try:
+    #    if temp_args['download'] == 'lcalcfile':
+    #        return render_lcalcfile(L, request.path)
+    #except KeyError as err:
+    #    pass # Do nothing
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
@@ -426,17 +426,17 @@ def render_lfunction_exception(err):
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
 
-def render_lcalcfile(L, url):
-    ''' Function for rendering the lcalc file of an L-function.
-    '''
-    try:  # First check if the Lcalc file is stored in the database
-        response = make_response(L.lcalcfile)
-    except:
-        import LfunctionLcalc
-        response = make_response(LfunctionLcalc.createLcalcfile_ver2(L, url))
-
-    response.headers['Content-type'] = 'text/plain'
-    return response
+#def render_lcalcfile(L, url):
+#    ''' Function for rendering the lcalc file of an L-function.
+#    '''
+#    try:  # First check if the Lcalc file is stored in the database
+#        response = make_response(L.lcalcfile)
+#    except:
+#        import LfunctionLcalc
+#        response = make_response(LfunctionLcalc.createLcalcfile_ver2(L, url))
+#
+#    response.headers['Content-type'] = 'text/plain'
+#    return response
 
 
 def initLfunction(L, args, request):
@@ -451,12 +451,11 @@ def initLfunction(L, args, request):
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
-    #FIXME, can we disable this?
-    if len(request.args) == 0:
-        lcalcUrl = request.path + '?download=lcalcfile'
-    else:
-        lcalcUrl = request.path + '&download=lcalcfile'
-    info['downloads'] = [('Lcalcfile', lcalcUrl)]
+    #if len(request.args) == 0:
+    #    lcalcUrl = request.path + '?download=lcalcfile'
+    #else:
+    #    lcalcUrl = request.path + '&download=lcalcfile'
+    #info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
@@ -676,11 +675,11 @@ def set_bread_and_friends(L, request):
                 friendlink3 = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
 
-    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
-        if L.degree <= 4:
-            bread = get_bread(L.degree, [])
-        else:
-            bread = [('L-functions', url_for('.l_function_top_page'))]
+#    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
+#        if L.degree <= 4:
+#            bread = get_bread(L.degree, [])
+#        else:
+#            bread = [('L-functions', url_for('.l_function_top_page'))]
 
 
     return (bread, origins, friends, factors, instances)
@@ -1010,10 +1009,10 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == "Genus2Curve" and arg2 == "Q":
         return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
 
-    elif arg1 == 'Lcalcurl':
-        return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
+    #elif arg1 == 'Lcalcurl':
+    #    return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
-    elif arg1 == 'lhash':
+    elif arg1 in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(arg2))
 
     else:
