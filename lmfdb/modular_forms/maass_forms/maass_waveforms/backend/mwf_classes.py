@@ -346,8 +346,10 @@ def pretty_coeff(c, prec=9):
     else:
         x = real_part(c)
         y = imag_part(c)
+    # the number of digits to display 'prec' digits after the .
+    digits = lambda z: len(str(abs(z)).split('.')[0].lstrip('0')) + prec
 
-    res =  display_complex(x, y, digits = prec)
+    res =  display_complex(x, y, digits = max(map(digits, [x, y])))
 
     if res == '0':
         return '&nbsp;0'
