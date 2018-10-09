@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, I
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
