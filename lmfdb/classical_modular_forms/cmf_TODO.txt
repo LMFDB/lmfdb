@@ -29,6 +29,7 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
 * redo test_emf.py (David)
+* Fix the disabled  tests in Lfunctions (Edgar)
 
 
 GOOD:
