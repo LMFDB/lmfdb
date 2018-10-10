@@ -12,6 +12,7 @@ On data updates:
 
 IMPORTANT:
 * hecke_ring_index as factorization (Drew)
+* make a decision regarding the definition of Satake parameters (Edgar)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -25,6 +26,7 @@ IMPORTANT:
 
 
 GOOD:
+* fix modulo of the character for rational functions (Edgar)
 * Add density of zero traces (Edgar)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
@@ -111,6 +113,7 @@ ISSUES already addressed:
 - Make user adjust Fourier coefficient embeddings #653
 - Make pretty coefficients #654
 - Create separate page for each embedding of a newform #659
+- Tests for lcalc files #1257
 - Search by analytic rank #1362
 - Plots of modular forms #1408
 - Random modular form #1434
