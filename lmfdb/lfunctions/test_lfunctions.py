@@ -39,8 +39,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
         assert '0.2538418608' in L.data
         assert 'Isogeny class 11.a' in L.data
-        #FIXME
-        #assert 'Modular form 11.2a' in L.data
+        assert 'Modular form 11.2.a.a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
@@ -48,8 +47,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/27/a/')
         assert '0.5888795834' in L.data
         assert 'Isogeny class 27.a'in L.data
-        #FIXME
-        #assert 'Modular form 27.2a' in L.data
+        assert 'Modular form 27.2.a.a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/27/a/')
@@ -154,11 +152,11 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/4/3/a/1/')
         assert '5.68016097037000022851316316519' in L.data
 
-        #FIXME
-        #L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        #assert '0.2538418608' in L.data
-        #assert 'Isogeny class 11.a' in L.data
-        #assert 'Modular form 11.2a' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        assert '0.2538418608' in L.data
+        assert 'Isogeny class 11.a' in L.data
+        assert 'Modular form 11.2.a.a' in L.data
+        #FIXME merge with EC to get sato-tate
         #assert '/SatoTateGroup/1.2.' in L.data
 
         #FIXME add GL2 G2c

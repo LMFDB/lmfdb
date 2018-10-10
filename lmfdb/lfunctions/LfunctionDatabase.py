@@ -9,7 +9,24 @@ def get_lfunction_by_Lhash(Lhash):
     return Ldata
 
 def get_instances_by_Lhash(Lhash):
-    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=["url"]))
+    return list(db.lfunc_instances.search({'Lhash': Lhash}))
+
+
+# a temporary fix while we don't replace the old Lhash (=trace_hash)
+def get_instances_by_trace_hash(trace_hash):
+    res = []
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash}, projection = 'Lhash'):
+        res += get_instances_by_Lhash(Lhash)
+    # remove duplicates
+    res.sort(key = lambda elt: elt['url'])
+    no_duplicates = []
+    previousurl = None
+    for elt in res:
+        if elt['url'] != previousurl:
+            no_duplicates.append(elt)
+            previousurl = elt['url']
+    return no_duplicates
+
 
 def get_instance_by_url(url):
     return db.lfunc_instances.lucky({'url': url})
