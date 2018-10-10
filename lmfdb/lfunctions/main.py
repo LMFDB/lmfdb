@@ -18,7 +18,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
                        Lfunction_from_db)
-from LfunctionComp import isogeny_class_table, isogeny_class_cm
+from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
