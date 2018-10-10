@@ -153,7 +153,7 @@ class LfunctionTest(LmfdbTest):
         assert '5.68016097037000022851316316519' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        assert '0.2538418608' in L.data
+        assert '0.253841' in L.data
         assert 'Isogeny class 11.a' in L.data
         assert 'Modular form 11.2.a.a' in L.data
         #FIXME merge with EC to get sato-tate
@@ -429,7 +429,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects = True)
         assert 'Isogeny class 37.a' in L.data
         assert 'Dual L-function' not in L.data
-        assert '5.0031700140066' in L.data
 
 
     #------------------------------------------------------
