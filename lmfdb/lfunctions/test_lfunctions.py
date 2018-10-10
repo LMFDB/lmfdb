@@ -93,6 +93,30 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
         assert "(Bianchi modular form 2.0.1879.1-1.0.1-a)" in L.data, L.data
 
+        L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
+        assert '/SatoTateGroup/1.2.' in L.data
+        assert '0.5352579714' in L.data
+        assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.data
+        assert 'Isogeny class 2.0.4.1-100.2-a' in L.data
+        assert 'Isogeny class 20.a' in L.data
+        assert 'Isogeny class 80.b' in L.data
+
+
+        L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/')
+        assert 'Bianchi modular form 2.0.3.1-75.1-a' in L.data
+        assert 'Isogeny class 2.0.3.1-75.1-a' in L.data
+        assert 'Isogeny class 15.a' in L.data
+        assert 'Isogeny class 45.a' in L.data
+
+        L = self.tc.get('L/EllipticCurve/2.0.8.1/2592.3/c/')
+        assert 'Bianchi modular form 2.0.8.1-2592.3-c' in L.data
+        assert 'Hilbert modular form 2.2.8.1-2592.1-f' in L.data
+        assert 'Isogeny class 2.0.8.1-2592.3-c' in L.data
+        assert 'Isogeny class 2.2.8.1-2592.1-f' in L.data
+        assert 'Isogeny class 288.a' in L.data
+        assert 'Isogeny class 576.i' in L.data
+
+
 
 
 
