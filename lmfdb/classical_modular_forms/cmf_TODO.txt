@@ -44,7 +44,6 @@ FORMATTING:
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
-* +,- dimension for the fricke eigenvalues show the dimension as a sum of two values
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results

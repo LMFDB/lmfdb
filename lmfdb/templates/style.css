@@ -2134,6 +2134,7 @@ table.ntdata td.embedding-wrap {
 #table-scroll-wrapper table.sticky-embeddings {
     margin: 0;
     padding: 0;
+    min-width: 55px;
 }
 table.sticky-embeddings td.vstrut {
     margin-left: 0;
