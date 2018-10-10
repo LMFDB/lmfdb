@@ -16,7 +16,7 @@ from Lfunctionutilities import (string2number, get_bread,
                                 name_and_object_from_url)
 from LfunctionComp import isogeny_class_cm
 
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_instances_by_trace_hash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
@@ -269,6 +269,9 @@ def makeLfromdata(L):
                 for j, elt in enumerate(dual_plot_values) ][1:]
     neg_plot.reverse()
     L.plotpoints = neg_plot + pos_plot
+
+    L.trace_hash = data.get('trace_hash', None)
+
 
     L.fromDB = True
 
@@ -560,8 +563,7 @@ class Lfunction_from_db(Lfunction):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash),
-                                       key=lambda elt: elt['url']):
+                for instance in get_instances_by_Lhash(factor_Lhash):
                     url = instance['url']
                     name, obj_exists = name_and_object_from_url(url)
                     if obj_exists:
@@ -581,7 +583,11 @@ class Lfunction_from_db(Lfunction):
     @property
     def origins(self):
         lorigins = []
-        for instance in get_instances_by_Lhash(self.Lhash):
+        instances = get_instances_by_Lhash(self.Lhash)
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        if self.trace_hash is not None:
+            instances = get_instances_by_trace_hash(str(self.trace_hash))
+        for instance in instances:
             name, obj_exists = name_and_object_from_url(instance['url'])
             if not name:
                 name = ''
@@ -599,8 +605,7 @@ class Lfunction_from_db(Lfunction):
         # we got here by tracehash or Lhash
         if self._Ltype == "general":
             linstances = []
-            for instance in sorted(get_instances_by_Lhash(self.Lhash),
-                                   key=lambda elt: elt['url']):
+            for instance in get_instances_by_Lhash(self.Lhash):
                 url = instance['url']
                 url = "/L/" + url
                 linstances.append((url[1:], url))

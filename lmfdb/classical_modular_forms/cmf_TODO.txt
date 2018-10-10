@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (ongoing)
 * why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
 
 On data updates:
@@ -17,7 +16,6 @@ IMPORTANT:
 * Update know for newspaces and mf.elliptic.space (Drew)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
@@ -25,6 +23,8 @@ IMPORTANT:
 
 
 GOOD:
+* zeros not matching: cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/37/2/a/a/ vs http://cmfs.lmfdb.xyz/L/EllipticCurve/Q/37/a/
+* merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * fix modulo of the character for rational functions (Edgar)
 * Add density of zero traces (Edgar)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
