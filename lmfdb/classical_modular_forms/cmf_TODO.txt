@@ -23,6 +23,7 @@ IMPORTANT:
 
 
 GOOD:
+* zeros not matching: cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/37/2/a/a/ vs http://cmfs.lmfdb.xyz/L/EllipticCurve/Q/37/a/
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * fix modulo of the character for rational functions (Edgar)
 * Add density of zero traces (Edgar)

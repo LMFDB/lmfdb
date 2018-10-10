@@ -37,7 +37,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
-        assert '0.2538418608' in L.data
+        assert '0.253841' in L.data
         assert 'Isogeny class 11.a' in L.data
         assert 'Modular form 11.2.a.a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
@@ -411,7 +411,7 @@ class LfunctionTest(LmfdbTest):
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.data
         assert '/L/Character/Dirichlet/6253/2635' in L.data
-        assert '/L/Character/Dirichlet/6253/458/' in L.data # self
+        assert '/L/Character/Dirichlet/6253/458' in L.data # self
 
         L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
         assert 'Dual L-function' in L.data
@@ -429,7 +429,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects = True)
         assert 'Isogeny class 37.a' in L.data
         assert 'Dual L-function' not in L.data
-        assert '5.003170014006659' in L.data
+        assert '5.0031700140066' in L.data
 
 
     #------------------------------------------------------
@@ -450,7 +450,6 @@ class LfunctionTest(LmfdbTest):
 
     def test_LcmfPlot(self):
         L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/1/')
-        print str(L)
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):
