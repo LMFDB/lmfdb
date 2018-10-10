@@ -312,7 +312,17 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
             s = '%s' % float(x)
     else:
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci = no_sci)
+        try:
+            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits, no_sci=no_sci)
+        except TypeError:
+            # older versions of Sage don't support the digits keyword
+            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(no_sci=no_sci)
+            point = s.find('.')
+            if point != -1:
+                if point < digits:
+                    s = s[:digits+1]
+                else:
+                    s = s[:point]
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
