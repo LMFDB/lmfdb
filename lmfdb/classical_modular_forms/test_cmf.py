@@ -152,13 +152,14 @@ class CmfTest(LmfdbTest):
         assert '\\(-1\\)</td><tdclass="op">\\(+\\)</td><tdclass="imag">\\(i\\)' in data
         assert '\\(-0.5\\)</td><tdclass="op">\\(+\\)</td><tdclass="imag">\\(1.65831i\\)' in data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
-        assert '9999' not in page.data
+        assert '.49999' not in page.data
+        assert '.9999' not in page.data
         assert '-3' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
         assert '\(\pi\)' in page.data
         assert '\(0.769946\pi\)' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert '9999' not in page.data
+        assert '.49999' not in page.data
         assert '0.866025 i' in page.data
         assert '\\(1\\)</td><tdclass="op">\\(-\\)</td><tdclass="imag">\\(i\\)' in page.data.replace(' ','').replace('\n','')
 

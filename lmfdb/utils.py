@@ -218,13 +218,20 @@ def pair2complex(pair):
     return [float(rp), float(ip)]
 
 def round_RBF_to_half_int(x):
+    x = RIF(x)
     try:
-        return RIF(x).unique_integer()
+        k = x.unique_round()
+        if (x - k).contains_zero():
+            return int(k)
     except ValueError:
-        try:
-            return float(2*RIF(x).unique_integer())/2
-        except ValueError:
-            return float(x)
+        pass
+    try:
+        k = (2*x).unique_round()
+        if (2*x - k).contains_zero():
+            return float(k)/2
+    except ValueError:
+        pass
+    return float(x)
 
 def round_CBF_to_half_int(x):
     return CDF(tuple(map(round_RBF_to_half_int, [x.real(), x.imag()])))
