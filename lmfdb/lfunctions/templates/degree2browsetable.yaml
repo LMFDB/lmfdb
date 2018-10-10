@@ -264,8 +264,8 @@ level: 234446
 character: 234446.1
 analytic_conductor: 0.010101010101
 epsilon: 1
-url: L/EllipticCurve/Q/234446.a
-object_url: [EllipticCurve/Q/234446.a,]
+url: L/EllipticCurve/Q/234446/a
+object_url: [EllipticCurve/Q/234446/a,]
 object_name: [rank&nbsp;4&nbsp;elliptic&nbsp;curve,holomorphic]
 self_dual: true
 arithmetic: true
