@@ -349,7 +349,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Ldegree2(self):
         L = self.tc.get('/L/degree2/')
-        assert '1.73353' in L.data and '/EllipticCurve/Q/234446.a' in L.data
+        assert '1.73353' in L.data and '/EllipticCurve/Q/234446/a' in L.data
         assert '17.02494' in L.data and '/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032' in L.data
 
     def test_Ldegree3(self):

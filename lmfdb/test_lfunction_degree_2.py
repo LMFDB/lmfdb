@@ -70,10 +70,10 @@ class LfunctionTest(LmfdbTest):
                    "/ModularForm/GL2/Q/holomorphic/6/4/a/a/",
                    'Modular')
         self.check(homepage,
-                   "/L/EllipticCurve/Q/11.a",
+                   "/L/EllipticCurve/Q/11/a",
                    'Elliptic')
         self.check(homepage,
-                   "/EllipticCurve/Q/11.a",
+                   "/EllipticCurve/Q/11/a",
                    'Elliptic')
         self.check(homepage,
                    "/ModularForm/GL2/Q/holomorphic/11/2/a/a/",
@@ -91,10 +91,10 @@ class LfunctionTest(LmfdbTest):
                    "/ModularForm/GL2/Q/holomorphic/5/6/b/a/",
                    'Modular')
         self.check(homepage,
-                   "/L/EllipticCurve/Q/36.a/",
+                   "/L/EllipticCurve/Q/36/a/",
                    'Elliptic')
         self.check(homepage,
-                   "/EllipticCurve/Q/36.a",
+                   "/EllipticCurve/Q/36/a",
                    'Elliptic')
         self.check(homepage,
                    "ModularForm/GL2/Q/holomorphic/36/2/a/a/",
@@ -130,10 +130,10 @@ class LfunctionTest(LmfdbTest):
                    "/ArtinRepresentation/2.2e3_17.4t3.4c1",
                    'Artin')
         self.check(homepage,
-                   "/L/EllipticCurve/Q/234446.a",
+                   "/L/EllipticCurve/Q/234446/a",
                    'Elliptic')
         self.check(homepage,
-                   "/EllipticCurve/Q/234446.a",
+                   "/EllipticCurve/Q/234446/a",
                    'Elliptic')
 
         
