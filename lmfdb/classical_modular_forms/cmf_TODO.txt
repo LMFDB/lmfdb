@@ -5,7 +5,11 @@ CRITICAL (BUGS):
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: populate analytic rank (Edgar)
-* data: per each newform, check that we have all the Lfunctions
+* check data quality:
+  * per each newform, check that we have all the Lfunctions, only  one for rational
+  * check that the roots are all different (Edgar)
+  * check that there are no duplicates in Lfun table
+  * check that there are no duplicates in hecke_cc table
 
 
 IMPORTANT:
