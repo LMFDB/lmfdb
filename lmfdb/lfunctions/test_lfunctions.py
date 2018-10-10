@@ -195,7 +195,7 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 129.2.a.d' in L.data
         for i in range(1,4):
             assert 'Modular form 129.2.1.d.%d' % i in L.data
-        
+
         assert '1.04395' in L.data
         assert '(1+T)^{3}' in L.data
         assert '1.55341889806000010842979008885' in L.data

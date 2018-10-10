@@ -14,6 +14,7 @@ from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Sp
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
 from sage.all import next_prime, cartesian_product_iterator
+import re
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -289,6 +290,13 @@ def jump_box(info):
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
+    #handle direct trace_hash search
+    if re.match(r'^\#\d+$',jump) and long(jump[1:]) < 2**61:
+        label = db.mf_newforms.lucky({'trace_hash': long(jump[1:].strip())}, projection="label")
+        if label:
+            return redirect(url_for_label(label), 301)
+        else:
+            errmsg = "hash %s not found"
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
@@ -417,6 +425,7 @@ class CMF_download(Downloader):
 
     def download_cc_data(self, label, lang='text'):
         data = self._get_hecke_cc(label)
+        filename = label + '.cplx'
         if not isinstance(data,list):
             return data
         down = []
@@ -427,12 +436,13 @@ class CMF_download(Downloader):
                 D['root'] = root
             down.append(Json.dumps(D))
         return self._wrap('\n\n'.join(down),
-                          label + '.cplx',
+                          filename,
                           lang=lang,
                           title='Complex embeddings for newform %s,'%(label))
 
     def download_satake_angles(self, label, lang='text'):
         data = self._get_hecke_cc(label)
+        filename = label + '.angles'
         if not isinstance(data,list):
             return data
         down = []
@@ -443,7 +453,7 @@ class CMF_download(Downloader):
                 D['root'] = root
             down.append(Json.dumps(D))
         return self._wrap('\n\n'.join(down),
-                          label + '.angles',
+                          filename,
                           lang=lang,
                           title='Satake angles for newform %s,'%(label))
 
