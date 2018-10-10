@@ -442,20 +442,21 @@ class PostgresTable(PostgresBase):
         inequalities, containment and disjunctions.
 
         INPUT:
-
         - ``key`` -- a code starting with $ from the following list:
-          - ``$lte`` -- less than or equal to
-          - ``$lt`` -- less than
-          - ``$gte`` -- greater than or equal to
-          - ``$gt`` -- greater than
-          - ``$ne`` -- not equal to
-          - ``$in`` -- the column must be one of the given set of values
-          - ``$nin`` -- the column must not be any of the given set of values
-          - ``$contains`` -- for json columns, the given value should be a subset of the column.
-          - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
-          - ``$containedin`` -- for json columns, the column should be a subset of the given list
-          - ``$exists`` -- if True, require not null; if False, require null.
-          - ``$startswith`` -- for text columns, matches strings that start with the given string.
+        - ``$lte`` -- less than or equal to
+        - ``$lt`` -- less than
+        - ``$gte`` -- greater than or equal to
+        - ``$gt`` -- greater than
+        - ``$ne`` -- not equal to
+        - ``$in`` -- the column must be one of the given set of values
+        - ``$nin`` -- the column must not be any of the given set of values
+        - ``$contains`` -- for json columns, the given value should be a subset of the column.
+        - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
+        - ``$containedin`` -- for json columns, the column should be a subset of the given list
+        - ``$exists`` -- if True, require not null; if False, require null.
+        - ``$startswith`` -- for text columns, matches strings that start with the given string.
+        - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
+        - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column.
 
@@ -533,6 +534,10 @@ class PostgresTable(PostgresBase):
             elif key == '$startswith':
                 cmd = SQL("{0} LIKE %s")
                 value = value.replace('_',r'\_').replace('%',r'\%') + '%'
+            elif key == '$like':
+                cmd = SQL("{0} LIKE '%s'")
+            elif key == '$regex':
+                cmd = SQL("{0} ~ '%s'")
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if force_json:

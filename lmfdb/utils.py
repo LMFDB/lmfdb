@@ -295,10 +295,6 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
-    if method == 'truncate':
-        rnd = 'RNDZ'
-    else:
-        rnd = 'RNDN'
     if is_exact(x):
         return '%s' % x
     if abs(x) < 10.**(- digits - extra_truncation_digits):
@@ -311,12 +307,16 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         else:
             s = '%s' % float(x)
     else:
+        if method == 'truncate':
+            rnd = 'RNDZ'
+        else:
+            rnd = 'RNDN'
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
         try:
-            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(digits=digits, no_sci=no_sci)
+            s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
         except TypeError:
             # older versions of Sage don't support the digits keyword
-            s = RealField(max(53,4*digits),  rnd='RNDZ')(x).str(no_sci=no_sci)
+            s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
             point = s.find('.')
             if point != -1:
                 if point < digits:

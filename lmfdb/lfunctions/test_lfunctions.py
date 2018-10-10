@@ -93,6 +93,30 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
         assert "(Bianchi modular form 2.0.1879.1-1.0.1-a)" in L.data, L.data
 
+        L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
+        assert '/SatoTateGroup/1.2.' in L.data
+        assert '0.5352579714' in L.data
+        assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.data
+        assert 'Isogeny class 2.0.4.1-100.2-a' in L.data
+        assert 'Isogeny class 20.a' in L.data
+        assert 'Isogeny class 80.b' in L.data
+
+
+        L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/')
+        assert 'Bianchi modular form 2.0.3.1-75.1-a' in L.data
+        assert 'Isogeny class 2.0.3.1-75.1-a' in L.data
+        assert 'Isogeny class 15.a' in L.data
+        assert 'Isogeny class 45.a' in L.data
+
+        L = self.tc.get('L/EllipticCurve/2.0.8.1/2592.3/c/')
+        assert 'Bianchi modular form 2.0.8.1-2592.3-c' in L.data
+        assert 'Hilbert modular form 2.2.8.1-2592.1-f' in L.data
+        assert 'Isogeny class 2.0.8.1-2592.3-c' in L.data
+        assert 'Isogeny class 2.2.8.1-2592.1-f' in L.data
+        assert 'Isogeny class 288.a' in L.data
+        assert 'Isogeny class 576.i' in L.data
+
+
 
 
 
@@ -381,12 +405,20 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/lhash/1938322253992393114/')
         assert '324016' in L.data, "Missing data in /L/lhash/1938322253992393114/"
         assert 'Dual L-function' not in L.data
+        assert '/L/EllipticCurve/Q/324016/h' in L.data
+
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.data, "Missing data in /L/lhash/dirichlet_L_6253.458/"
         assert """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" % (6253,458) in L.data,\
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.data
         assert '/L/Character/Dirichlet/6253/2635' in L.data
+        assert '/L/Character/Dirichlet/6253/458/' in L.data # self
+
+        L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
+        assert 'Dual L-function' in L.data
+        assert 'Modular form 13.4.3.a.1' in L.data
+        assert '/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1' in L.data
 
     def test_tracehash(self):
         L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')

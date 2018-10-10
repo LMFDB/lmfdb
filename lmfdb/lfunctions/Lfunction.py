@@ -595,9 +595,18 @@ class Lfunction_from_db(Lfunction):
         return lorigins
 
     @property
-    #FIXME, what is the difference between origins and instances?
     def instances(self):
-        return []
+        # we got here by tracehash or Lhash
+        if self._Ltype == "general":
+            linstances = []
+            for instance in sorted(get_instances_by_Lhash(self.Lhash),
+                                   key=lambda elt: elt['url']):
+                url = instance['url']
+                url = "/L/" + url
+                linstances.append((url[1:], url))
+            return linstances
+        else:
+            return []
 
     @property
     def friends(self):
