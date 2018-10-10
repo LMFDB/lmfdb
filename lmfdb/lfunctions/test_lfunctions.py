@@ -422,6 +422,20 @@ class LfunctionTest(LmfdbTest):
         assert 'Dual L-function' in L.data
         assert '/L/Character/Dirichlet/6253/2635' in L.data
 
+    def test_tracehash(self):
+        L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')
+        assert 'trace_hash = 7200459463482029776252499748763 not in [0, 2^61]' in L.data
+        L = self.tc.get('/L/tracehash/1938322253992393114/', follow_redirects = True)
+        assert '324016' in L.data, "Missing data in /L/tracehash/1938322253992393114/"
+        assert 'Dual L-function' not in L.data
+
+
+        L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects = True)
+        assert 'Isogeny class 37.a' in L.data
+        assert 'Dual L-function' not in L.data
+        assert '5.003170014006659' in L.data
+
+
     #------------------------------------------------------
     # Testing plots and zeros of L-functions
     #------------------------------------------------------

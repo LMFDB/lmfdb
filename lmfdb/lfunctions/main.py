@@ -28,6 +28,7 @@ from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
 from lmfdb.base import is_debug_mode
+from lmfdb.db_backend import db
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):
@@ -392,6 +393,20 @@ def l_function_genus2_page(cond,x):
 def l_function_by_hash_page(lhash):
     args = {'Lhash': lhash}
     return render_single_Lfunction(Lfunction_from_db, args, request)
+
+#by trace_hash
+@l_function_page.route("/tracehash/<int:trace_hash>")
+@l_function_page.route("/tracehash/<int:trace_hash>/")
+def l_function_by_trace_hash_page(trace_hash):
+    if trace_hash > 2**61 or trace_hash < 0:
+        errmsg = r'trace_hash = %s not in [0, 2^61]' % trace_hash
+        return render_lfunction_exception(errmsg)
+
+    lhash = db.lfunc_lfunctions.lucky({'trace_hash': trace_hash}, projection = "Lhash")
+    if lhash is None:
+        errmsg = 'Did not find an L-function with trace_hash = %s' % trace_hash
+        return render_lfunction_exception(errmsg)
+    return flask.redirect(url_for('.l_function_by_hash_page', lhash = lhash), 301)
 
 
 ################################################################################
