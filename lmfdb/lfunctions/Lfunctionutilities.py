@@ -613,12 +613,14 @@ def lfuncFEtex(L, fmt):
         ans += "(" + str(int(L.degree)) + ",\\ "
         ans += str(int(L.level)) + ",\\ "
         ans += "("
+        # this is mostly a hack for GL2 Maass forms
         def real_digits(x):
             return len(str(x).replace('.','').lstrip('-').lstrip('0'))
         def mu_fe_prec(x):
-            x = CDF(x)
-            return max(map(real_digits, [x.real(), x.imag()]))
-
+            if L._Ltype == 'maass':
+                return real_digits(imag_part(x))
+            else:
+                return 3
         if L.mu_fe != []:
             mus = [ display_complex(CDF(mu).real(), CDF(mu).imag(),  mu_fe_prec(mu), method="round" ) for mu in L.mu_fe ]
             ans += ", ".join(mus)
