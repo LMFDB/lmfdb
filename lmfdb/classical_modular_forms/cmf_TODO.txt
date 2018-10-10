@@ -12,6 +12,7 @@ On data updates:
 
 IMPORTANT:
 * hecke_ring_index as factorization (Drew)
+* make a decision regarding the definition of Satake parameters (Edgar)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * Update know for newspaces and mf.elliptic.space (Drew)
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -20,11 +21,11 @@ IMPORTANT:
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * link modular form history in Learn more about? (#1284) (Edgar)
-* redo test_emf.py (David)
 * Fix the disabled  tests in Lfunctions (Edgar)
 
 
 GOOD:
+* fix modulo of the character for rational functions (Edgar)
 * Add density of zero traces (Edgar)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
@@ -38,7 +39,7 @@ GOOD:
 
 
 FORMATTING:
-* Fix white space: http://localhost:37778/ModularForm/GL2/Q/holomorphic/16/2/e/a/
+* Fix white space: cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/16/2/e/a/
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
@@ -63,38 +64,15 @@ FUTURE WORK:
 * data: make friends with GL_2-type genus 2 curves and base changes to HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 
-STABILITY CHECKS (EDGAR):
-* verify that all links to modular forms elsewhere still work.  We've changed the label convention, so the following are probably broken.  See elliptic_curves/isog_class.py (search newform_label) for a fix.
-bianchi_modular_forms/web_BMF.py:            bc_urls = [url_for("cmf.render_elliptic_modular_forms", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
-elliptic_curves/web_ec.py:        self.newform_link = url_for("cmf.render_elliptic_modular_forms", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
 
 NOT CMF STUFF:
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+* fix hmf and bmf l-functions
+
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
-
-PROBABLY DONE:
-* throughout: work with labels e.g. '11.2.a.a'
-* L-function pages: make sure L-function links with orbits works
-* space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
-* gamma1 full space pages: breadcrumbs (Alex: done probably, someone else could check if they like)
-* form pages: breadcrumbs (Alex: done probably, someone else could check if they like)
-* form pages: should be three options for minimal: is minimal twist, is not minimal twist, is not known
-* form pages: display what the inner twists actually are (as orbits of characters). Never rigorous.  "This form admits X nontrivial inner twists".  Knowl for inner twists.  Asterisk depending on proven field
-* The following external links should work, but it may be worth checking:
-elliptic_curves/isog_class.py:        self.newform_link = url_for("cmf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
-hecke_algebras/main.py:        info['friends'] = [('Newforms space ' + info['label'], url_for("cmf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
-hecke_algebras/main.py:    info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
-hilbert_modular_forms/hilbert_modular_form.py:            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
-lfunctions/Lfunction.py:                       url_for("cmf.render_elliptic_modular_forms",
-templates/checklist.html:<a href="{{ url_for("cmf.render_elliptic_modular_forms", level=11, weight=2, char_orbit_label='a', label='a')}}">
-templates/checklist.html:<li><a href="{{ url_for('cmf.by_url_newform_label', level = 11, weight = 6, char_orbit_label = 'a',hecke_orbit = 'b')}}"> Cuspidal newform 11.6.a.b </a>
-templates/checklist.html:<a href="{{ url_for('l_functions.l_function_cmf_orbit', level=11, weight=6, char_orbit_label='a', hecke_orbit='b')}}"> its associated L-function </a> (along with the <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=1)}}">first</a>, <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=2)}}">second</a>, and <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=3)}}">third</a> conjugate constituents)<br/>
-tensor_products/templates/tensor_products_index.html:    <option value={{url_for('cmf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
-tensor_products/templates/tensor_products_index.html:    <option value={{url_for('cmf.render_elliptic_modular_forms')}}>Holomorphic cusp form</option>
-modular_forms/views/templates/mf_navigation.html:<a href="{{ url_for('cmf.index')
 
 
 LMFDB issues to be addressed:
@@ -111,6 +89,7 @@ ISSUES already addressed:
 - Make user adjust Fourier coefficient embeddings #653
 - Make pretty coefficients #654
 - Create separate page for each embedding of a newform #659
+- Tests for lcalc files #1257
 - Search by analytic rank #1362
 - Plots of modular forms #1408
 - Random modular form #1434

@@ -53,8 +53,8 @@ class Lfunction:
         # Not dependent on time actually
         # Manual tuning required
         if (self.degree > 2 or self.Ltype() == "maass" or
-            self.Ltype() == 'lcalcurl' or self.Ltype() == "hgmQ" or
-            self.Ltype() == "artin" ):  # Too slow to be rigorous here  ( or self.Ltype()=="ellipticmodularform")
+            self.Ltype() == "hgmQ" or
+            self.Ltype() == "artin" ):
             allZeros = self.compute_heuristic_zeros(**kwargs)
         else:
             allZeros = self.compute_checked_zeros(**kwargs)
@@ -73,7 +73,7 @@ class Lfunction:
 
     def compute_heuristic_zeros(self, step_size = 0.02, upper_bound = 20, lower_bound = None):
      #   if self.Ltype() == "hilbertmodularform":
-        if self.Ltype() not in ["riemann", "maass", "ellipticmodularform" , "ellipticcurve"]:
+        if self.Ltype() not in ["riemann", "maass"]:
             upper_bound = 10
         if self.selfdual:
             lower_bound = lower_bound or - step_size / 2

@@ -18,7 +18,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
                        Lfunction_from_db)
-from LfunctionComp import isogeny_class_table, isogeny_class_cm
+from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
@@ -379,12 +379,6 @@ def l_function_genus2_page(cond,x):
     args = {'label': cond+'.'+x}
     return render_single_Lfunction(Lfunction_genus2_Q, args, request)
 
-## L-function from lcalcfile with given url #####################################
-#@l_function_page.route("/Lcalcurl/")
-#def l_function_lcalc_page():
-#    args = {'Ltype': 'lcalcurl', 'url': request.args['url']}
-#    return render_single_Lfunction(Lfunction_lcalc, args, request)
-
 # L-function by hash ###########################################################
 @l_function_page.route("/lhash/<lhash>")
 @l_function_page.route("/lhash/<lhash>/")
@@ -423,11 +417,6 @@ def render_single_Lfunction(Lclass, args, request):
             raise
         else:
             return render_lfunction_exception(err)
-    #try:
-    #    if temp_args['download'] == 'lcalcfile':
-    #        return render_lcalcfile(L, request.path)
-    #except KeyError as err:
-    #    pass # Do nothing
 
     info = initLfunction(L, temp_args, request)
     return render_template('Lfunction.html', **info)
@@ -440,18 +429,6 @@ def render_lfunction_exception(err):
     bread =  [('L-functions', url_for('.l_function_top_page')), ('Error', '')]
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
-
-#def render_lcalcfile(L, url):
-#    ''' Function for rendering the lcalc file of an L-function.
-#    '''
-#    try:  # First check if the Lcalc file is stored in the database
-#        response = make_response(L.lcalcfile)
-#    except:
-#        import LfunctionLcalc
-#        response = make_response(LfunctionLcalc.createLcalcfile_ver2(L, url))
-#
-#    response.headers['Content-type'] = 'text/plain'
-#    return response
 
 
 def initLfunction(L, args, request):
@@ -466,11 +443,6 @@ def initLfunction(L, args, request):
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
 
-    #if len(request.args) == 0:
-    #    lcalcUrl = request.path + '?download=lcalcfile'
-    #else:
-    #    lcalcUrl = request.path + '&download=lcalcfile'
-    #info['downloads'] = [('Lcalcfile', lcalcUrl)]
     return info
 
 
@@ -548,37 +520,6 @@ def set_bread_and_friends(L, request):
         for elt in [origins, friends, factors, instances]:
             if elt is not None:
                 elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
-
-    elif L.Ltype() == 'ellipticmodularform':
-        friendlink = friendlink.rpartition('/')[0] # Strips off the embedding
-                                                   # number for the L-function
-        if L.character:  # TODO: Probably always true now
-            full_label = ( str(L.level) + '.' + str(L.weight) + '.' + str(L.character) +
-                                str(L.label) )
-        else:
-            full_label = str(L.level) + '.' + str(L.weight) + str(L.label)
-
-        origins = [('Modular form ' + full_label, friendlink)]
-
-        if L.ellipticcurve:
-            origins.append(
-                ('Isogeny class ' + L.ellipticcurve,
-                 url_for("ec.by_ec_label", label=L.ellipticcurve)))
-            # DEPRECATED
-            #for i in range(1, L.nr_of_curves_in_class + 1):
-            #    friends.append(('Elliptic curve ' + L.ellipticcurve + str(i),
-            #                            url_for("ec.by_ec_label", label=L.ellipticcurve + str(i))))
-            if not isogeny_class_cm(L.ellipticcurve):
-                friends.append(
-                    ('Symmetric square L-function',
-                     url_for(".l_function_ec_sym_page_label", power='2',
-                             label=L.ellipticcurve)))
-                friends.append(
-                    ('Symmetric cube L-function',
-                     url_for(".l_function_ec_sym_page_label", power='3',
-                             label=L.ellipticcurve)))
-        bread = get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page')),
-                                      (full_label, request.path)])
 
     elif L.Ltype() == 'maass':
         if L.group == 'GL2':
@@ -689,12 +630,6 @@ def set_bread_and_friends(L, request):
             if j != L.m:
                 friendlink3 = request.path.replace('/L/SymmetricPower/%d/' % L.m, '/L/SymmetricPower/%d/' % j)
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
-
-#    elif L.Ltype() in ['lcalcurl', 'lcalcfile']:
-#        if L.degree <= 4:
-#            bread = get_bread(L.degree, [])
-#        else:
-#            bread = [('L-functions', url_for('.l_function_top_page'))]
 
 
     return (bread, origins, friends, factors, instances)
@@ -893,7 +828,7 @@ def getLfunctionPlot(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
         if not hasattr(L, "hardy_z_function"):
             return None
         plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass", "ellipticmodularform", "ellipticcurve", "classical modular form", "classical modular form orbit"]:
+        if pythonL._Ltype not in ["riemann", "maass"]:
             plotrange = 12
         F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
 
@@ -1024,8 +959,6 @@ def generateLfunctionFromUrl(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg
     elif arg1 == "Genus2Curve" and arg2 == "Q":
         return Lfunction_genus2_Q(label=str(arg3)+'.'+str(arg4))
 
-    #elif arg1 == 'Lcalcurl':
-    #    return Lfunction_lcalc(Ltype='lcalcurl', url=temp_args['url'])
 
     elif arg1 in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(arg2))

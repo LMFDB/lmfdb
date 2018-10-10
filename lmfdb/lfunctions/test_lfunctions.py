@@ -35,12 +35,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('L/Character/Dirichlet/1000000000000000000000/3/')
         assert 'too large' in L.data
 
-#    def test_LcalcDirichlet(self):
-#        L = self.tc.get('L/Character/Dirichlet/19/9/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('L/Character/Dirichlet/6400/3/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
         assert '0.2538418608' in L.data
@@ -310,34 +304,6 @@ class LfunctionTest(LmfdbTest):
         assert '0.0755586459' in L.data
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/')
         assert '3.504643404484' in L.data
-
-#    def test_Llcalcfile(self):
-#        L = self.tc.get('/L/ArtinRepresentation/2.2e2_17.4t3.2c1/?download=lcalcfile')
-#        assert 'lcalc' in L.data
-#
-#    def test_LlcalcfileEc(self):
-#        L = self.tc.get('/L/EllipticCurve/Q/56/a/?download=lcalcfile')
-#        assert 'lcalc' in L.data
-
-#    def test_LcalcfileMaass(self):
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/4/1/9.632444_1.374060/0.15012282/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/4/1/8.954662_2.936591/0.36025530/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/-16.4031_-0.17112/-0.4216864/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/4/1/-9.63244_-1.37406/0.15012282/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/4/1/-8.95466_-2.93659/0.36025530/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL4/Q/Maass/1/1/-16.8997_-2.27258_6.035835/0.55659019/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
-#        L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.4216864/?download=lcalcfile')
-#        assert 'lcalc file' in L.data
 
     def test_Lmain(self):
         L = self.tc.get('/L/')
