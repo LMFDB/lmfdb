@@ -405,12 +405,20 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/lhash/1938322253992393114/')
         assert '324016' in L.data, "Missing data in /L/lhash/1938322253992393114/"
         assert 'Dual L-function' not in L.data
+        assert '/L/EllipticCurve/Q/324016/h' in L.data
+
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.data, "Missing data in /L/lhash/dirichlet_L_6253.458/"
         assert """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" % (6253,458) in L.data,\
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.data
         assert '/L/Character/Dirichlet/6253/2635' in L.data
+        assert '/L/Character/Dirichlet/6253/458/' in L.data # self
+
+        L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
+        assert 'Dual L-function' in L.data
+        assert 'Modular form 13.4.3.a.1' in L.data
+        assert '/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1' in L.data
 
     def test_tracehash(self):
         L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')
