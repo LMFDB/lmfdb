@@ -50,7 +50,8 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
-        assert '43.6348 i' in page.data
+        assert '0.299366' in page.data
+        assert '0.954138 i' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
         assert '0.792122' in page.data
 
@@ -61,7 +62,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert '1.65831' in page.data
+        assert r'\(-0.707106\)' in page.data
+        assert r'\(0.707106 i\)' in page.data
+        assert r'\(0.957427 i\)' in page.data
+        assert r'\(0.223606\)' in page.data
+        assert r'\(0.974679 i\)' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
         assert '0.253841' in page.data
@@ -146,7 +151,7 @@ class CmfTest(LmfdbTest):
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
         assert r'\(-0.707106\)' in page.data
-        assert r'\(-0.707106 i\)' in page.data
+        assert r'\(0.707106 i\)' in page.data
         assert r'\(0.957427 i\)' in page.data
         assert r'\(0.223606\)' in page.data
         assert r'\(0.974679 i\)' in page.data
