@@ -137,17 +137,15 @@ class LfunctionTest(LmfdbTest):
         assert '1856465' in L.data # a_13
 
 
-        for end in ['b/a/', '6/a/1/']:
-            L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/' + end)
-            assert '0.332981' in L.data
-            L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/' + end)
-            assert '7.21458918129000004171302862233' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        assert '0.332981' in L.data
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        assert '7.21458918129000004171302862233' in L.data
 
-        for end in ['1/a/1/', 'a/a/']:
-            L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/' + end)
-            assert '1341682069728' in L.data # a26
-            L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/' + end)
-            assert '18.17341115039999976943363435566' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        assert '1341682069728' in L.data # a26
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        assert '18.17341115039999976943363435566' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1/')
         assert '0.523757' in L.data and '0.530517' in L.data
@@ -503,7 +501,7 @@ class LfunctionTest(LmfdbTest):
         assert '2.791838' in L.data
 
     def test_LcmfPlot(self):
-        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/1/')
+        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/a/a/')
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):
