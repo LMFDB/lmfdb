@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
 
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
@@ -15,8 +14,7 @@ On data updates:
 IMPORTANT:
 * say induced (Edgar)
 * hecke_ring_index as factorization (Drew)
-* make a decision regarding the definition of Satake parameters, or update the knowl (Edgar)
---> normalized
+* make a decision regarding the definition of Satake parameters, or update the knowl (Edgar) --> normalized
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
