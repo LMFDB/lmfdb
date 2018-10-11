@@ -426,6 +426,8 @@ def comma(x):
 
 
 def format_percentage(num, denom):
+    if denom == 0:
+        return 'NaN'
     return "%10.2f"%((100.0*num)/denom)
 
 
