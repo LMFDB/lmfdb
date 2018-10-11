@@ -155,7 +155,7 @@ def render_newform_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['format'] = info.get('format','embed' if newform.dim>1 else 'satake')
+    info['format'] = info.get('format','embed' if newform.dim > 1 else 'satake')
     p, maxp = 2, 10
     if info['format'] in ['satake', 'satake_angle']:
         while p <= maxp:
@@ -166,7 +166,9 @@ def render_newform_webpage(label):
     errs = []
     try:
         info['CC_n'] = integer_options(info['n'], 1000)
-        if max(info['CC_n']) >= newform.cqexp_prec:
+        if newform.cqexp_prec == 0:
+            pass
+        elif max(info['CC_n']) >= newform.cqexp_prec:
             errs.append("Only a(n) up to %s are available"%(newform.cqexp_prec-1))
     except (ValueError, TypeError):
         info['n'] = '2-%s'%maxp

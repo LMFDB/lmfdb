@@ -21,7 +21,7 @@ from Lfunction_base import Lfunction
 
 from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
+from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -836,8 +836,8 @@ class Lfunction_EC(Lfunction_from_db):
             self.field_real_signature,
             self.field_absdisc,
             self.field_index)  = map(int, self.field_label.split("."))
-        field_signature = [self.field_real_signature,
-                (self.field_degree - self.field_real_signature) // 2]
+        #field_signature = [self.field_real_signature,
+        #        (self.field_degree - self.field_real_signature) // 2]
         # number of actual Gamma functions
         #self.quasidegree = sum( field_signature )
         #self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])

@@ -135,6 +135,7 @@ class WebNewform(object):
         self.rel_dim = self.dim // self.char_degree
         if not cc_data:
             self.has_complex_qexp = False
+            self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
