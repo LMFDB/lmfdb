@@ -181,7 +181,6 @@ class LfunctionTest(LmfdbTest):
 
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/')
-        assert 'Modular form 490.2.1.a.1' in L.data
         assert 'Modular form 490.2.a.a' in L.data
         assert '0.729971' in L.data
         assert '(2,\ 490,\ (\ :1/2),\ 1)' in L.data
