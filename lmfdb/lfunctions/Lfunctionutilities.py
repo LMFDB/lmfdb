@@ -880,7 +880,7 @@ def getConductorIsogenyFromLabel(label):
 # in the database, instead of trying to extract this from a URL
 def name_and_object_from_url(url):
     url_split = url.split("/");
-    name = None;
+    name = '??';
     obj_exists = False;
 
     if url_split[0] == "EllipticCurve":
@@ -905,6 +905,7 @@ def name_and_object_from_url(url):
         # Genus2Curve/Q/310329/a/
         assert url_split[1] == 'Q'
         label_isogeny_class = ".".join(url_split[-2:]);
+        print label_isogeny_class
         obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class;
 
@@ -922,10 +923,6 @@ def name_and_object_from_url(url):
                     newform_label = ".".join(url_split[-4:])
                     name =  'Modular form ' + newform_label;
                     obj_exists = db.mf_newforms.label_exists(newform_label)
-                else:
-                    obj_exists = False
-                    name = "??"
-
 
 
             elif  url_split[2] == 'TotallyReal':
@@ -940,6 +937,19 @@ def name_and_object_from_url(url):
                 name = 'Bianchi modular form ' + label;
                 obj_exists = db.bmf_forms.label_exists(label);
     return name, obj_exists
+
+def names_and_urls(instances):
+    res = []
+    for instance in instances:
+        name, obj_exists = name_and_object_from_url(instance['url'])
+        if not name:
+            name = ''
+        if obj_exists:
+            res.append((name, "/"+instance['url']))
+        else:
+            name = '(%s)' % (name)
+            res.append((name, ""))
+    return res
 
 def get_bread(degree, breads=[]):
     """

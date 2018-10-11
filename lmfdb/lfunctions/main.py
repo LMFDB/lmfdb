@@ -549,12 +549,6 @@ def set_bread_and_friends(L, request):
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
 
-    elif L.Ltype() == 'genus2curveQ':
-        (cond, dummy, alpha) = L.label.partition('.')
-        friends = [('Isogeny class ' + L.label,  url_for('g2c.by_url_isogeny_class_label',
-                                                         cond = cond, alpha = alpha))]
-        bread = get_bread(4, [(L.label, request.path)])
-
     elif L.Ltype() == 'dedekindzeta':
         friends = [('Number Field', friendlink)]
         if L.degree <= 4:

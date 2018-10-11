@@ -159,7 +159,24 @@ class LfunctionTest(LmfdbTest):
         #FIXME merge with EC to get sato-tate
         #assert '/SatoTateGroup/1.2.' in L.data
 
-        #FIXME add GL2 G2c
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/')
+        assert 'Isogeny class 169.a' in L.data
+        assert 'Modular form 13.2.e.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Modular form 13.2.4.a.1' in L.data
+        assert 'Modular form 13.2.10.a.1' in L.data
+        #FIXME merge with G2C to get sato-tate
+        #assert '/SatoTateGroup/1.4.E_6' in L.data
+
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/')
+        assert 'Isogeny class 324.a' in L.data
+        assert 'Modular form 18.2.c.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Modular form 18.2.7.a.1' in L.data
+        assert 'Modular form 18.2.13.a.1' in L.data
+        #FIXME merge with G2C to get sato-tate
+        #assert '/SatoTateGroup/1.4.E_3' in L.data
+
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/')
         assert 'Modular form 490.2.1.a.1' in L.data
@@ -394,6 +411,40 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 15360.f' in L.data
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/')
         assert '2.15654793578' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/2457/b/')
+        assert 'Isogeny class 2.0.3.1-273.1-a' in L.data
+        assert 'Isogeny class 2.0.3.1-273.4-a' in L.data
+        assert 'Isogeny class 2457.b' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/363/a/')
+        assert 'Isogeny class 363.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Isogeny class 11.a' in L.data
+        assert 'Isogeny class 33.a' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/360/a/')
+        assert 'Isogeny class 360.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Isogeny class 15.a' in L.data
+        assert 'Isogeny class 24.a' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/336/a/')
+        assert 'Isogeny class 336.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Isogeny class 14.a' in L.data
+        assert 'Isogeny class 24.a' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/324/a/')
+        assert 'Isogeny class 324.a' in L.data
+        assert 'Modular form 18.2.c.a' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/294/a/')
+        assert 'Isogeny class 294.a' in L.data
+        assert 'Factors' in L.data
+        assert 'Isogeny class 14.a' in L.data
+        assert 'Isogeny class 21.' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/256/a/')
+        assert 'Isogeny class 256.a' in L.data
+        assert 'Modular form 16.2.e.a' in L.data
+        L = self.tc.get('/L/Genus2Curve/Q/169/a/')
+        assert 'Isogeny class 169.a' in L.data
+        assert 'Modular form 13.2.e.a' in L.data
 
     def test_Llhash(self):
         r"""
