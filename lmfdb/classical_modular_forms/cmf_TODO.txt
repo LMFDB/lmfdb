@@ -43,6 +43,8 @@ GOOD:
 
 
 FORMATTING:
+* scrollbar on satake http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/14/2/a/a/
+* induced by: http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/
 * L-function of the Jacobian of a genus 2 curve with label %s vs L-function of degree 4, weight 1, conductor 3^112, and trivial character?
 
 IT WOULD BE NICE IF:

@@ -456,18 +456,21 @@ def set_gaga_properties(L):
     ans.append(('Conductor', conductor_str))
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
-    if L.selfdual:
-        ans.append(('Self-dual', "yes"))
-    else:
-        ans.append(('Self-dual', "no"))
-
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
-    # FIXME
-    # Disable until fixed
-    # prim = 'Primitive' if L.primitive else 'Not primitive'
-    # ans.append((None,        prim))
+
+    primitive =  getattr(L, 'primitive', None)
+    if primitive is not None:
+        txt = 'yes' if primitive else 'no'
+        ans.append(('Primitive', txt))
+
+    txt = 'yes' if L.selfdual else 'no'
+    ans.append(('Self-dual', txt))
+
+    rank = getattr(L, 'order_of_vanishing', None)
+    if rank is not None:
+        ans.append(('Analytic rank', str(rank)))
 
     return ans
 
