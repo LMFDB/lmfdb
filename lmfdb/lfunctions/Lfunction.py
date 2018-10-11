@@ -273,7 +273,7 @@ def makeLfromdata(L):
     L.plotpoints = neg_plot + pos_plot
 
     L.trace_hash = data.get('trace_hash', None)
-
+    L.types = data.get('types', None)
 
     L.fromDB = True
 

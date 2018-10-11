@@ -296,11 +296,14 @@ def lfuncEPtex(L, fmt):
     """
     from Lfunction import Lfunction_from_db
     if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
-        if L.Ltype() == "general":
-            return ("For information concerning the Euler product, see other "
-                    "instances of this L-function.")
-        else:
+        try:
             return lfuncEPhtml(L, fmt)
+        except Exception:
+            if L.Ltype() == "general" and False:
+                return ("For information concerning the Euler product, see other "
+                    "instances of this L-function.")
+            else:
+                raise
 
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
