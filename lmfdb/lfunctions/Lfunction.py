@@ -565,7 +565,13 @@ class Lfunction_from_db(Lfunction):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
-                lfactors.extend(names_and_urls(get_instances_by_Lhash(factor_Lhash)))
+                # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
+                if trace_hash is not None:
+                    instances = get_instances_by_trace_hash(str(trace_hash))
+                else:
+                    instances = get_instances_by_Lhash(factor_Lhash)
+                lfactors.extend(names_and_urls(instances))
         return lfactors
 
     def get_Lhash_by_url(self, url):
@@ -931,10 +937,13 @@ class Lfunction_genus2_Q(Lfunction_from_db):
     def factors(self):
         # this is just a hack, and the data should be replaced
         instances = []
+        # so far the only factors stored in the DB are products of EC
         for elt in db.lfunc_instances.search({'Lhash': self.Lhash, 'type':'ECQP'}, projection = 'url'):
             if '|' in elt:
                 for url in elt.split('|'):
-                    instances.append({'url':url.rstrip('/')})
+                    url = url.rstrip('/')
+                    # Lhash = trace_hash
+                    instances.extend(get_instances_by_trace_hash(db.lfunc_instances.lucky({'url': url}, 'Lhash')))
                 break
         return names_and_urls(instances)
 
