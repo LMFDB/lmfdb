@@ -188,7 +188,7 @@ class Lfunction:
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link
             info['rank'] = self.order_of_vanishing
-            info['motivic_weight'] = self.motivic_weight
+            info['motivic_weight'] = r'\(%d\)' % self.motivic_weight
 
         elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
             try:
