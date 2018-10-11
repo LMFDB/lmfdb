@@ -902,7 +902,6 @@ def name_and_object_from_url(url):
         # Genus2Curve/Q/310329/a/
         assert url_split[1] == 'Q'
         label_isogeny_class = ".".join(url_split[-2:]);
-        print label_isogeny_class
         obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class;
 

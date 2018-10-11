@@ -196,7 +196,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6 T + 29 T^{2}' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956000006232159194042'
         assert '1.76564402247000007406541044475'
 
@@ -208,7 +208,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6 T + 29 T^{2}' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956000006232159194042'
         assert '1.76564402247000007406541044475'
 
