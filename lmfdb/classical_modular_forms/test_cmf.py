@@ -167,10 +167,9 @@ class CmfTest(LmfdbTest):
         assert '\(0.769946\pi\)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert r'\(1.73205 i\)' in page.data
-        assert r'\(−2.5\)' in page.data
-        assert r'\(0.866025 i\)' in page.data
-
+        assert r'\(-0.965925\)' in page.data
+        assert r'\(0.258819 i\)' in page.data
+        assert r'\(0.990337 i\)' in page.data
 
 
     def test_download(self):
