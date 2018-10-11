@@ -107,11 +107,8 @@ def styleTheSign(sign):
         return str(sign)
 
 
-def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
+def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
-    #  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
-    #  precision is used to truncate decimal numbers
-    #truncation = float(10 ** truncationexp)
     try:
         if isinstance(coeff,str) or isinstance(coeff,unicode):
             if coeff == "I":
@@ -138,7 +135,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
         parenthesis = True
     else:
         parenthesis = False
-    coeff_display =  display_complex(rp, ip, precision, method="truncate", parenthesis=parenthesis)
+    coeff_display =  display_complex(rp, ip, digits, method="truncate", parenthesis=parenthesis)
 
     # deal with the zero case
     if coeff_display == "0":
@@ -180,7 +177,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
         if coeff_display[-1] not in [')', ' ']:
             ans += "&middot;"
     if seriescoefftype in ["series", "serieshtml", "signed"]:
-        ans += " " + seriesvar(index, seriestype)
+        ans += seriesvar(index, seriestype)
 
     return ans
 
