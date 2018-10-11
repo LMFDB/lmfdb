@@ -193,3 +193,18 @@ class CmfTest(LmfdbTest):
         assert '-12.531852282' in page.data
         assert '0.406839418685' in page.data
 
+
+    def test_random(self):
+        r"""
+        Test that we don't hit any error on a random newform
+        """
+        for i in range(100):
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random', follow_redirects = True)
+            assert 'Defining parameters' in page.data
+            assert 'Properties' in page.data
+            assert 'Newform' in page.data
+            assert 'expansion' in page.data
+            assert 'L-function' in page.data
+            assert 'Satake parameters' in page.data or 'Embeddings' in page.data
+
+
