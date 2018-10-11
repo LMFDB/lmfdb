@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
 
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
@@ -13,8 +12,9 @@ On data updates:
 
 
 IMPORTANT:
+* say induced (Edgar)
 * hecke_ring_index as factorization (Drew)
-* make a decision regarding the definition of Satake parameters, or update the knowl (Edgar)
+* make a decision regarding the definition of Satake parameters, or update the knowl (Edgar) --> normalized
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -43,7 +43,7 @@ GOOD:
 
 
 FORMATTING:
-* Fix white space: cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/16/2/e/a/
+* L-function of the Jacobian of a genus 2 curve with label %s vs L-function of degree 4, weight 1, conductor 3^112, and trivial character?
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
@@ -64,7 +64,8 @@ IT WOULD BE NICE IF:
 FUTURE WORK:
 * data: compute much more using pari
 * Review editorial review of CMFs to make sure issues have been addressed
-* data: make friends with GL_2-type genus 2 curves and base changes to HMFs and BMFs
+* data: add trace hash for ECNF L-fun
+* data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 
 
@@ -103,3 +104,8 @@ ISSUES already addressed:
 - Add Bober's modular form data #2196
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
+
+Some progress on:
+- L-functions and modularity #2032
+- Galois conjugate objects: Hilbert, Bianchi, EC #2262
+- Display the L-function factors #2269

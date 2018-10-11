@@ -160,14 +160,6 @@ def l_function_ec_sym3_browse_page():
     return render_template("ellipticcurve.html",
                            title='Symmetric Cube L-functions of Elliptic Curves', **info)
 
-# L-function of genus 2 curves browsing page ##############################################
-@l_function_page.route("/degree4/Genus2Curve/")
-def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
-    info["representation"] = ''
-    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
-    return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
-
 
 ###########################################################################
 #   Helper functions, navigation pages
@@ -556,12 +548,6 @@ def set_bread_and_friends(L, request):
             bread = get_bread(4, [(label, request.path)])
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
-
-    elif L.Ltype() == 'genus2curveQ':
-        (cond, dummy, alpha) = L.label.partition('.')
-        friends = [('Isogeny class ' + L.label,  url_for('g2c.by_url_isogeny_class_label',
-                                                         cond = cond, alpha = alpha))]
-        bread = get_bread(4, [(L.label, request.path)])
 
     elif L.Ltype() == 'dedekindzeta':
         friends = [('Number Field', friendlink)]
