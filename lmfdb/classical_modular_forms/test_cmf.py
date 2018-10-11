@@ -67,15 +67,12 @@ class CmfTest(LmfdbTest):
         assert '0.253841' in page.data
 
     def test_triv_character(self):
-        r"""
-        Check that some forms from issue 815 work.
-        """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
         assert r'1016q^{7}' in page.data
-        assert '259.036' in page.data
+        assert '0.375659' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
         assert '168q^{8}' in page.data
-        assert '55.8211' in page.data
+        assert '0.0536656' in page.data
 
     def test_non_triv_character(self):
         r"""
