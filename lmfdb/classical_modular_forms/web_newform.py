@@ -192,15 +192,18 @@ class WebNewform(object):
 
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
-                            ('Analytic conductor', str(self.Nk2)),
-                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
-                            ('Rep. character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', str(self.dim)),]
+                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
         try:
-            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+            # The try shouldn't be hit except when we're adding data
+            if self.is_self_dual != 0:
+                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+            self.properties.extend([('Analytic conductor', str(self.Nk2)),
+                                    ('Analytic rank', str(int(self.analytic_rank)))
+                                    ('Dimension', str(self.dim))])
         except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
             # no data for analytic rank
             pass
+
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:

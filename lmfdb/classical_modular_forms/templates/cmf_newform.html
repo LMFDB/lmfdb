@@ -7,7 +7,7 @@
 
 <!-- Hecke field and algebraic q-expansion data -->
 
-<h2> Defining parameters </h2>
+<h2> {{KNOWL('mf.elliptic.newspace',title='Newspace')}} parameters </h2>
 
 <table>
   <tr>
@@ -23,12 +23,6 @@
     <td>\( {{ newform.weight }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
-    <td> \(A\) </td>
-    <td>=</td>
-    <td>\({{ newform.Nk2 }}\)</td>
-  </tr>
-  <tr>
     <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
@@ -39,6 +33,33 @@
     <td> \( \chi \) </td>
     <td>=</td>
     <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a> (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit)</td>
+  </tr>
+</table>
+
+<h2> Invariants </h2>
+
+<table>
+  {% if newform.is_self_dual %}
+  <tr>
+    <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
+  </tr>
+  {% endif %}
+  {% if newform.has_analytic_rank %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>{{ newform.analytic_rank }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
+    <td> \(A\) </td>
+    <td>=</td>
+    <td>\({{ newform.Nk2 }}\)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
@@ -60,22 +81,6 @@
     <td> </td>
     <td> </td>
     <td>\({{ newform.fricke_eigenval }}\)</td>
-  </tr>
-  {% endif %}
-  {% if newform.has_analytic_rank %}
-  <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
-    <td> </td>
-    <td> </td>
-    <td>{{ newform.analytic_rank }}</td>
-  </tr>
-  {% endif %}
-  {% if newform.is_self_dual %}
-  <tr>
-    <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
-    <td> </td>
-    <td> </td>
-    <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
   </tr>
   {% endif %}
 </table>
@@ -145,7 +150,7 @@ function show_qexp(qstyle) {
 <p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion.</p>
 
 <form id="qexp">
-  <h4> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h4>
+  <h2> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h2>
   <div class="smalloutput">
     <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
   </div>
