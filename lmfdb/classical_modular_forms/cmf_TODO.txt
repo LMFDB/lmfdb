@@ -31,6 +31,7 @@ IMPORTANT:
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * Download Euler factors
+* visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search
 
 
 GOOD:
