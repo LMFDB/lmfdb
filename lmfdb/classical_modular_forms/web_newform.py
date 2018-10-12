@@ -471,7 +471,7 @@ function switch_basis(btype) {
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
-        return r"\(%s\)"%(display_float(x, prec).replace('e',r'\mathrm{e}'))
+        return r"%s"%(display_float(x, prec).replace('e',r'\mathrm{e}')).replace('-','&minus;')
 
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
@@ -479,7 +479,7 @@ function switch_basis(btype) {
         res = display_float(y, prec)
         if res == '1':
             res = ''
-        return r"\(%s i\)"%(res.replace('e',r'\mathrm{e}'))
+        return r"%s<em>i</em>"%(res.replace('e',r'\mathrm{e}'))
 
     def _display_op(self, x, y, prec):
         xiszero = abs(x) < 10**(-prec)
@@ -489,9 +489,9 @@ function switch_basis(btype) {
         elif yiszero or (xiszero and y > 0):
             return ""
         elif y > 0:
-            return r"\(+\)"
+            return r"+"
         elif y < 0:
-            return r"\(-\)"
+            return r"&minus;"
 
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:

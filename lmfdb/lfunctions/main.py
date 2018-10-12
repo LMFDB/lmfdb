@@ -26,6 +26,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db impo
 from lmfdb.WebCharacter import WebDirichlet
 from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
+from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
 from lmfdb.base import is_debug_mode
 from lmfdb.db_backend import db
@@ -252,7 +253,17 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 def l_function_cmf_page(level, weight, character, hecke_orbit, number):
     args = {'level': level, 'weight': weight, 'character': character,
             'hecke_orbit': hecke_orbit, 'number': number}
-    return render_single_Lfunction(Lfunction_CMF, args, request)
+    try:
+        return render_single_Lfunction(Lfunction_CMF, args, request)
+    except KeyError:
+        conrey_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
+        newform_label = convert_newformlabel_from_conrey(conrey_label)
+        level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
+        return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
+                                  char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
+
+
+
 
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
