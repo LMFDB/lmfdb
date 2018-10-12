@@ -39,7 +39,6 @@ GOOD:
 
 
 FORMATTING:
-* Fix white space: cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/16/2/e/a/
 
 IT WOULD BE NICE IF:
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
