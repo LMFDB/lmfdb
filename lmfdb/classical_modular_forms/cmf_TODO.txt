@@ -1,5 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
+* zeros not matching: cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/37/2/a/a/ vs http://cmfs.lmfdb.xyz/L/EllipticCurve/Q/37/a/ (Edgar)
 
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
@@ -23,7 +24,6 @@ IMPORTANT:
 
 
 GOOD:
-* zeros not matching: cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/37/2/a/a/ vs http://cmfs.lmfdb.xyz/L/EllipticCurve/Q/37/a/
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
