@@ -192,15 +192,19 @@ class WebNewform(object):
 
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
-                            ('Analytic conductor', str(self.Nk2)),
-                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
-                            ('Rep. character', '\(%s\)' % self.char_conrey_str),
-                            ('Dimension', str(self.dim)),]
+                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
         try:
-            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+            # The try shouldn't be hit except when we're adding data
+            if self.is_self_dual != 0:
+                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+            self.properties.extend([('Analytic conductor', str(self.Nk2)),
+                                    ('Analytic rank', str(int(self.analytic_rank))),
+                                    ('Dimension', str(self.dim))])
         except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
+            raise
             # no data for analytic rank
             pass
+
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
         elif self.is_cm == -1:
@@ -266,11 +270,15 @@ class WebNewform(object):
         # display the coefficient field
         label = self.__dict__.get("nf_label")
         if label is None:
-            return r"\(\Q(\nu)\)"
+            poly = self.__dict__.get('field_poly')
+            if poly:
+                return polyquo_knowl(poly)
+            else:
+                return 'Unknown'
         elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
-            return r"\(\Q(\nu)\) = " + self.field_knowl()
+            return self.field_knowl()
 
     def cm_field_knowl(self):
         # The knowl for the CM field, with appropriate title
