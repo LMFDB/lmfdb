@@ -13,13 +13,15 @@ from flask import url_for
 
 from Lfunctionutilities import (string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
-                                name_and_object_from_url)
+                                names_and_urls)
 from LfunctionComp import isogeny_class_cm
 
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_instances_by_trace_hash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
 from Lfunction_base import Lfunction
+
+from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, key_for_numerically_sort, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
+from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
 from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
 import sage.libs.lcalc.lcalc_Lfunction as lc
@@ -269,6 +271,9 @@ def makeLfromdata(L):
                 for j, elt in enumerate(dual_plot_values) ][1:]
     neg_plot.reverse()
     L.plotpoints = neg_plot + pos_plot
+
+    L.trace_hash = data.get('trace_hash', None)
+    L.types = data.get('types', None)
 
     L.fromDB = True
 
@@ -549,27 +554,25 @@ class Lfunction_from_db(Lfunction):
         return True
     @property
     def bread(self):
-        return [('L-functions', url_for('.l_function_top_page'))]
+        return get_bread(self.degree)
 
     @property
     def origin_label(self):
         return self.Lhash
 
     @property
-    def factors(self):
+    def factors_origins(self):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(get_instances_by_Lhash(factor_Lhash),
-                                       key=lambda elt: elt['url']):
-                    url = instance['url']
-                    name, obj_exists = name_and_object_from_url(url)
-                    if obj_exists:
-                        lfactors.append((name,  "/" + url))
-                    else:
-                        name = '(%s)' % (name)
-                        lfactors.append((name, ""))
-        lfactors.sort(key=lambda x: key_for_numerically_sort(x[0]))
+                # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = getattr(elt, 'trace_hash', None)
+                if trace_hash is not None:
+                    instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
+                else:
+                    instances = get_instances_by_Lhash(factor_Lhash)
+                lfactors.extend(names_and_urls(instances))
         return lfactors
 
     def get_Lhash_by_url(self, url):
@@ -578,26 +581,31 @@ class Lfunction_from_db(Lfunction):
             raise KeyError('No L-function instance data for "%s" was found in the database.' % url)
         return instance['Lhash']
 
+
     @property
     def origins(self):
         lorigins = []
-        for instance in get_instances_by_Lhash(self.Lhash):
-            name, obj_exists = name_and_object_from_url(instance['url'])
-            if not name:
-                name = ''
-            if obj_exists:
-                lorigins.append((name, "/"+instance['url']))
-            else:
-                name = '(%s)' % (name)
-                lorigins.append((name, ""))
-            if not self.selfdual and hasattr(self, 'dual_link'):
-                lorigins.append(("Dual L-function", self.dual_link))
+        instances = get_instances_by_Lhash(self.Lhash)
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        if self.trace_hash is not None:
+            instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
+        lorigins = names_and_urls(instances)
+        if not self.selfdual and hasattr(self, 'dual_link'):
+            lorigins.append(("Dual L-function", self.dual_link))
         return lorigins
 
     @property
-    #FIXME, what is the difference between origins and instances?
     def instances(self):
-        return []
+        # we got here by tracehash or Lhash
+        if self._Ltype == "general":
+            linstances = []
+            for instance in get_instances_by_Lhash(self.Lhash):
+                url = instance['url']
+                url = "/L/" + url
+                linstances.append((url[1:], url))
+            return linstances
+        else:
+            return []
 
     @property
     def friends(self):
@@ -835,12 +843,12 @@ class Lfunction_EC(Lfunction_from_db):
             self.field_real_signature,
             self.field_absdisc,
             self.field_index)  = map(int, self.field_label.split("."))
-        field_signature = [self.field_real_signature,
-                (self.field_degree - self.field_real_signature) // 2]
+        #field_signature = [self.field_real_signature,
+        #        (self.field_degree - self.field_real_signature) // 2]
         # number of actual Gamma functions
-        self.quasidegree = sum( field_signature )
-        self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
-        self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
+        #self.quasidegree = sum( field_signature )
+        #self.ec_conductor_norm  = int(self.conductor_label.split(".")[0])
+        #self.conductor = self.ec_conductor_norm * (self.field_absdisc ** self.field_degree)
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
         return
 
@@ -890,6 +898,70 @@ class Lfunction_EC(Lfunction_from_db):
             return "ec.q"
         else:
             return "ec.nf"
+
+#############################################################################
+
+class Lfunction_genus2_Q(Lfunction_from_db):
+    """Class representing the L-function of a genus 2 curve over Q
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        # Check for compulsory arguments
+        validate_required_args('Unabel to construct L-function of genus 2 curve.',
+                               args, 'label')
+
+        # Put the arguments into the object dictionary
+        self.__dict__.update(args)
+
+        # Load data from the database
+        self.url = "Genus2Curve/Q/" + self.label.replace(".","/")
+        self.isogeny_class_label = self.label
+        Lfunction_from_db.__init__(self, url = self.url)
+        self.numcoeff = 30
+
+    @property
+    def origin_label(self):
+        return  self.isogeny_class_label
+
+    @property
+    def _Ltype(self):
+        return "genus2curveQ"
+
+    @property
+    def knowltype(self):
+        return "g2c.q"
+
+    @property
+    def factors_origins(self):
+        # this is just a hack, and the data should be replaced
+        instances = []
+        # either the factors are stored in the DB as products of EC
+        for elt in db.lfunc_instances.search({'Lhash': self.Lhash, 'type':'ECQP'}, projection = 'url'):
+            if '|' in elt:
+                for url in elt.split('|'):
+                    url = url.rstrip('/')
+                    # Lhash = trace_hash
+                    instances.extend(get_instances_by_trace_hash(2, db.lfunc_instances.lucky({'url': url}, 'Lhash')))
+                break
+        # or we need to use the trace_hash to find other factorizations
+        if str(self.trace_hash) == self.Lhash:
+            for elt in db.lfunc_lfunctions.search({'trace_hash': self.trace_hash, 'degree' : 4}, projection = 'Lhash'):
+                if ',' in elt:
+                    for factor_Lhash in  elt.split(","):
+                        trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
+                        if trace_hash is not None:
+                            instancesf = get_instances_by_trace_hash(str(trace_hash))
+                        else:
+                            instancesf = get_instances_by_Lhash(factor_Lhash)
+                        instances.extend(instancesf)
+        return names_and_urls(instances)
+
+    #def _set_title(self):
+    #    title = "L-function of the Jacobian of a genus 2 curve with label %s" %  (self.origin_label)
+    #    self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
 
 
 
@@ -1291,67 +1363,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
 
 #############################################################################
 
-class Lfunction_genus2_Q(Lfunction):
-    """Class representing the L-function of a genus 2 curve over Q
 
-    Compulsory parameters: label
-
-    """
-
-    def __init__(self, **args):
-        # Check for compulsory arguments
-        validate_required_args('Unabel to construct L-function of genus 2 curve.',
-                               args, 'label')
-
-        self._Ltype = "genus2curveQ"
-
-        # Put the arguments into the object dictionary
-        self.__dict__.update(args)
-        self.numcoeff = 30
-
-        # Load data from the database
-        label_slash = self.label.replace(".","/")
-        db_label = "Genus2Curve/Q/" + label_slash
-        self.lfunc_data = get_lfunction_by_url(db_label)
-        if self.lfunc_data == None:
-            raise KeyError('No L-function instance data for "%s" was found '% db_label +
-                           'in the database.' )
-
-        # Extract the data
-        makeLfromdata(self)
-        self.fromDB = True
-
-        # Mandatory properties
-        self.coefficient_period = 0
-        self.coefficient_type = 2
-        self.poles = []
-        self.residues = []
-        self.langlands = True
-        self.quasidegree = 2
-
-        # Text for the web page
-        self.htmlname = "<em>L</em>(<em>s,A</em>)"
-        self.texname = "L(s,A)"
-        self.htmlname_arithmetic = "<em>L</em>(<em>A,s</em>)"
-        self.texname_arithmetic = "L(A,s)"
-        self.texnamecompleteds = "\\Lambda(s,A)"
-        self.texnamecompleted1ms = "\\Lambda(1-s,A)"
-        self.texnamecompleteds_arithmetic = "\\Lambda(A,s)"
-        self.texnamecompleted1ms_arithmetic = "\\Lambda(A, " + str(self.motivic_weight + 1) + "-s)"
-        title_end = ("where $A$ is the Jacobian of a genus 2 curve "
-                      + "with label " + self.label)
-        self.credit = ''
-
-        # Initiate the dictionary info that contains the data for the webpage
-        self.info = self.general_webpagedata()
-        self.info['knowltype'] = "g2c.q"
-        self.info['title'] = "$" + self.texname + "$" + ", " + title_end
-        self.info['title_arithmetic'] = ("$" + self.texname_arithmetic + "$" + ", " +
-                                 title_end)
-        self.info['title_analytic'] = "$" + self.texname + "$" + ", " + title_end
-
-
-#############################################################################
 
 class DedekindZeta(Lfunction):
     """Class representing the Dedekind zeta-function

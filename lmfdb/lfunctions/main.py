@@ -160,14 +160,6 @@ def l_function_ec_sym3_browse_page():
     return render_template("ellipticcurve.html",
                            title='Symmetric Cube L-functions of Elliptic Curves', **info)
 
-# L-function of genus 2 curves browsing page ##############################################
-@l_function_page.route("/degree4/Genus2Curve/")
-def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
-    info["representation"] = ''
-    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
-    return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
-
 
 ###########################################################################
 #   Helper functions, navigation pages
@@ -438,7 +430,7 @@ def initLfunction(L, args, request):
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
 
-    (info['bread'], info['origins'], info['friends'], info['factors'], info['Linstances'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'] ) = set_bread_and_friends(L, request)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -464,18 +456,21 @@ def set_gaga_properties(L):
     ans.append(('Conductor', conductor_str))
     ans.append(('Sign', "$"+styleTheSign(L.sign)+"$"))
 
-    if L.selfdual:
-        ans.append(('Self-dual', "yes"))
-    else:
-        ans.append(('Self-dual', "no"))
-
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
-    # FIXME
-    # Disable until fixed
-    # prim = 'Primitive' if L.primitive else 'Not primitive'
-    # ans.append((None,        prim))
+
+    primitive =  getattr(L, 'primitive', None)
+    if primitive is not None:
+        txt = 'yes' if primitive else 'no'
+        ans.append(('Primitive', txt))
+
+    txt = 'yes' if L.selfdual else 'no'
+    ans.append(('Self-dual', txt))
+
+    rank = getattr(L, 'order_of_vanishing', None)
+    if rank is not None:
+        ans.append(('Analytic rank', str(rank)))
 
     return ans
 
@@ -487,7 +482,7 @@ def set_bread_and_friends(L, request):
     bread = []
     friends = []
     origins = []
-    factors = []
+    factors_origins = []
     instances = []
 
     # Create default friendlink by removing 'L/' and ending '/'
@@ -514,10 +509,10 @@ def set_bread_and_friends(L, request):
         bread = L.bread + [(L.origin_label, request.path)]
         origins = L.origins
         friends = L.friends
-        factors = L.factors
+        factors_origins = L.factors_origins
         instances = L.instances
 
-        for elt in [origins, friends, factors, instances]:
+        for elt in [origins, friends, factors_origins, instances]:
             if elt is not None:
                 elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
 
@@ -556,12 +551,6 @@ def set_bread_and_friends(L, request):
             bread = get_bread(4, [(label, request.path)])
         else:
             bread = [('L-functions', url_for('.l_function_top_page'))]
-
-    elif L.Ltype() == 'genus2curveQ':
-        (cond, dummy, alpha) = L.label.partition('.')
-        friends = [('Isogeny class ' + L.label,  url_for('g2c.by_url_isogeny_class_label',
-                                                         cond = cond, alpha = alpha))]
-        bread = get_bread(4, [(L.label, request.path)])
 
     elif L.Ltype() == 'dedekindzeta':
         friends = [('Number Field', friendlink)]
@@ -632,7 +621,7 @@ def set_bread_and_friends(L, request):
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
 
 
-    return (bread, origins, friends, factors, instances)
+    return (bread, origins, friends, factors_origins, instances)
 
 
 def set_zeroslink_and_plotlink(L, args):

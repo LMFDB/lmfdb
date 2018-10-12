@@ -1,36 +1,33 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* data: Add isogeny_class_label to L-functions so that we can include friend links to elliptic curves (Edgar) (ongoing)
-* why are some Satake angles outside the range -pi to pi? (e.g. 55.2.j.a, 4.3 theta_3) (Edgar) (data being recomputed)
+* zeros not matching: cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/37/2/a/a/ vs http://cmfs.lmfdb.xyz/L/EllipticCurve/Q/37/a/ (Edgar)
 
 On data updates:
 * data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
 * data: populate analytic rank (Edgar)
-* data: per each newform, check that we have all the Lfunctions
-* check that the roots are all different (Edgar)
+* check data quality:
+  * per each newform, check that we have all the Lfunctions, only  one for rational
+  * check that the roots are all different (Edgar)
+  * check that there are no duplicates in Lfun table
+  * check that there are no duplicates in hecke_cc table
 
 
 IMPORTANT:
 * hecke_ring_index as factorization (Drew)
-* make a decision regarding the definition of Satake parameters (Edgar)
-* Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
-* Update know for newspaces and mf.elliptic.space (Drew)
+* Update knowl for newspaces and mf.elliptic.space (Drew)
+-------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
+* Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* Have L-function columns for both definitions of L-hash and remove duplication between L-functions of elliptic curves over Q and modular forms of weight 2 and trivial character (e.g. L/EllipticCurve/Q/11/a/ and L/ModularForm/GL2/Q/holomorphic/11/2/1/a/1/) (Edgar)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
-* link modular form history in Learn more about? (#1284) (Edgar)
-* Fix the disabled  tests in Lfunctions (Edgar)
 
 
 GOOD:
-* fix modulo of the character for rational functions (Edgar)
-* Add density of zero traces (Edgar)
+* merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
-* Add tests for display_float, etc
 * Make sure our description of labels is correct
 * data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
@@ -39,8 +36,13 @@ GOOD:
 
 
 FORMATTING:
+* link modular form history in Learn more about? (#1284) (Edgar)
+* induced by: http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/
+* L-function of the Jacobian of a genus 2 curve with label %s vs L-function of degree 4, weight 1, conductor 3^112, and trivial character?
 
 IT WOULD BE NICE IF:
+* Add tests for display_float, etc
+* Add density of zero traces (Edgar)
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
@@ -59,7 +61,8 @@ IT WOULD BE NICE IF:
 FUTURE WORK:
 * data: compute much more using pari
 * Review editorial review of CMFs to make sure issues have been addressed
-* data: make friends with GL_2-type genus 2 curves and base changes to HMFs and BMFs
+* data: add trace hash for ECNF L-fun
+* data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 
 
@@ -98,3 +101,8 @@ ISSUES already addressed:
 - Add Bober's modular form data #2196
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
+
+Some progress on:
+- L-functions and modularity #2032
+- Galois conjugate objects: Hilbert, Bianchi, EC #2262
+- Display the L-function factors #2269

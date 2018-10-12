@@ -37,10 +37,9 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lec(self):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
-        assert '0.2538418608' in L.data
+        assert '0.253841' in L.data
         assert 'Isogeny class 11.a' in L.data
-        #FIXME
-        #assert 'Modular form 11.2a' in L.data
+        assert 'Modular form 11.2.a.a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
@@ -48,8 +47,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/27/a/')
         assert '0.5888795834' in L.data
         assert 'Isogeny class 27.a'in L.data
-        #FIXME
-        #assert 'Modular form 27.2a' in L.data
+        assert 'Modular form 27.2.a.a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/27/a/')
@@ -93,6 +91,38 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
         assert "(Bianchi modular form 2.0.1879.1-1.0.1-a)" in L.data, L.data
 
+        L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
+        assert '/SatoTateGroup/1.2.' in L.data
+        assert '0.5352579714' in L.data
+        assert 'Bianchi modular form 2.0.4.1-100.2-a' in L.data
+        assert 'Isogeny class 2.0.4.1-100.2-a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 20.a' in L.data
+        assert 'Isogeny class 80.b' in L.data
+        assert 'Modular form 20.2.a.a' in L.data
+        assert 'Modular form 80.2.a.b' in L.data
+
+
+        L = self.tc.get('/L/EllipticCurve/2.0.3.1/75.1/a/')
+        assert 'Bianchi modular form 2.0.3.1-75.1-a' in L.data
+        assert 'Isogeny class 2.0.3.1-75.1-a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 15.a' in L.data
+        assert 'Isogeny class 45.a' in L.data
+        assert 'Modular form 15.2.a.a' in L.data
+        assert 'Modular form 45.2.a.a' in L.data
+
+        L = self.tc.get('/L/EllipticCurve/2.0.8.1/2592.3/c/')
+        assert 'Bianchi modular form 2.0.8.1-2592.3-c' in L.data
+        assert 'Hilbert modular form 2.2.8.1-2592.1-f' in L.data
+        assert 'Isogeny class 2.0.8.1-2592.3-c' in L.data
+        assert 'Isogeny class 2.2.8.1-2592.1-f' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 288.a' in L.data
+        assert 'Isogeny class 576.i' in L.data
+        assert 'Modular form 288.2.a.a' in L.data
+
+
 
 
 
@@ -103,25 +133,24 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/12/1/a/1/')
         assert '1.51472556376999989424803061411' in L.data # first zero
 
-        L = self.tc.get('L/ModularForm/GL2/Q/holomorphic/13/12/a/a/')
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/')
         assert '1.51472556376999989424803061411' in L.data # first zero
+        assert 'Origins of factors' in L.data
         for i in range(1,6):
             assert 'Modular form 13.12.1.a.%d' % i  in L.data
         assert '371293' in L.data # L_3 root
         assert '1856465' in L.data # a_13
 
 
-        for end in ['b/a/', '6/a/1/']:
-            L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/' + end)
-            assert '0.332981' in L.data
-            L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/' + end)
-            assert '7.21458918129000004171302862233' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        assert '0.332981' in L.data
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        assert '7.21458918129000004171302862233' in L.data
 
-        for end in ['1/a/1/', 'a/a/']:
-            L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/' + end)
-            assert '1341682069728' in L.data # a26
-            L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/' + end)
-            assert '18.17341115039999976943363435566' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        assert '1341682069728' in L.data # a26
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
+        assert '18.17341115039999976943363435566' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1/')
         assert '0.523757' in L.data and '0.530517' in L.data
@@ -130,17 +159,33 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/4/3/a/1/')
         assert '5.68016097037000022851316316519' in L.data
 
-        #FIXME
-        #L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        #assert '0.2538418608' in L.data
-        #assert 'Isogeny class 11.a' in L.data
-        #assert 'Modular form 11.2a' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        assert '0.253841' in L.data
+        assert 'Isogeny class 11.a' in L.data
+        assert 'Modular form 11.2.a.a' in L.data
+        #FIXME merge with EC to get sato-tate
         #assert '/SatoTateGroup/1.2.' in L.data
 
-        #FIXME add GL2 G2c
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/2/e/a/')
+        assert 'Isogeny class 169.a' in L.data
+        assert 'Modular form 13.2.e.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Modular form 13.2.4.a.1' in L.data
+        assert 'Modular form 13.2.10.a.1' in L.data
+        #FIXME merge with G2C to get sato-tate
+        #assert '/SatoTateGroup/1.4.E_6' in L.data
+
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/18/2/c/a/')
+        assert 'Isogeny class 324.a' in L.data
+        assert 'Modular form 18.2.c.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Modular form 18.2.7.a.1' in L.data
+        assert 'Modular form 18.2.13.a.1' in L.data
+        #FIXME merge with G2C to get sato-tate
+        #assert '/SatoTateGroup/1.4.E_3' in L.data
+
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/490/2/a/a/')
-        assert 'Modular form 490.2.1.a.1' in L.data
         assert 'Modular form 490.2.a.a' in L.data
         assert '0.729971' in L.data
         assert '(2,\ 490,\ (\ :1/2),\ 1)' in L.data
@@ -156,7 +201,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6 T + 29 T^{2}' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956000006232159194042'
         assert '1.76564402247000007406541044475'
 
@@ -168,7 +213,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6 T + 29 T^{2}' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956000006232159194042'
         assert '1.76564402247000007406541044475'
 
@@ -178,8 +223,6 @@ class LfunctionTest(LmfdbTest):
         assert 'Modular form 350.2.e.k' in L.data
         assert '(4,\ 122500,\ (\ :1/2, 1/2),\ 1)' in L.data
         assert '4.04397' in L.data
-        #FIXME
-        #assert '\chi_{122500} (51, \cdot )' in L.data
         assert '1.68486586956000006232159194042' in L.data
         assert '1.76564402247000007406541044475' in L.data
         assert '(1+T+19T^{2})(1+7T+19T^{2})' in L.data
@@ -366,12 +409,65 @@ class LfunctionTest(LmfdbTest):
     def test_Lgenus2(self):
         L = self.tc.get('/L/Genus2Curve/Q/169/a/')
         assert '0.0904903908' in L.data and 'E_6' in L.data
+
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/169/a/')
         assert '5.06823463541' in L.data
+
         L = self.tc.get('/L/Genus2Curve/Q/15360/f/')
         assert 'Isogeny class 15360.f' in L.data
+
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/')
         assert '2.15654793578' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/2457/b/')
+        assert 'Isogeny class 2.0.3.1-273.1-a' in L.data
+        assert 'Isogeny class 2.0.3.1-273.4-a' in L.data
+        assert 'Isogeny class 2457.b' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/363/a/')
+        assert 'Isogeny class 363.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 11.a' in L.data
+        assert 'Isogeny class 33.a' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/360/a/')
+        assert 'Isogeny class 360.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 15.a' in L.data
+        assert 'Isogeny class 24.a' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/336/a/')
+        assert 'Isogeny class 336.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 14.a' in L.data
+        assert 'Isogeny class 24.a' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/324/a/')
+        assert 'Isogeny class 324.a' in L.data
+        assert 'Modular form 18.2.c.a' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/294/a/')
+        assert 'Isogeny class 294.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 14.a' in L.data
+        assert 'Isogeny class 21.' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/256/a/')
+        assert 'Isogeny class 256.a' in L.data
+        assert 'Modular form 16.2.e.a' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/169/a/')
+        assert 'Isogeny class 169.a' in L.data
+        assert 'Modular form 13.2.e.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Modular form 13.2.4.a.1' in L.data
+        assert 'Modular form 13.2.10.a.1' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/196/a/')
+        assert 'Isogeny class 196.a' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 14.a' in L.data
+        assert 'Modular form 14.2.a.a' in L.data
 
     def test_Llhash(self):
         r"""
@@ -381,12 +477,20 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/lhash/1938322253992393114/')
         assert '324016' in L.data, "Missing data in /L/lhash/1938322253992393114/"
         assert 'Dual L-function' not in L.data
+        assert '/L/EllipticCurve/Q/324016/h' in L.data
+
         L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
         assert '1.0612' in L.data, "Missing data in /L/lhash/dirichlet_L_6253.458/"
         assert """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" % (6253,458) in L.data,\
                 "Missing origin in /L/lhash/dirichlet_L_6253.458/"
         assert 'Dual L-function' in L.data
         assert '/L/Character/Dirichlet/6253/2635' in L.data
+        assert '/L/Character/Dirichlet/6253/458' in L.data # self
+
+        L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
+        assert 'Dual L-function' in L.data
+        assert 'Modular form 13.4.3.a.1' in L.data
+        assert '/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1' in L.data
 
     def test_tracehash(self):
         L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')
@@ -399,7 +503,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/tracehash/1127515239490717889/', follow_redirects = True)
         assert 'Isogeny class 37.a' in L.data
         assert 'Dual L-function' not in L.data
-        assert '5.003170014006659' in L.data
 
 
     #------------------------------------------------------
@@ -419,8 +522,7 @@ class LfunctionTest(LmfdbTest):
         assert '2.791838' in L.data
 
     def test_LcmfPlot(self):
-        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/1/')
-        print str(L)
+        L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/a/a/')
         assert 'OK' in str(L)
 
     def test_LartinPlot(self):

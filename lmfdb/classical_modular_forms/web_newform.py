@@ -135,6 +135,7 @@ class WebNewform(object):
         self.rel_dim = self.dim // self.char_degree
         if not cc_data:
             self.has_complex_qexp = False
+            self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
             self.cqexp_prec = 10000
@@ -548,15 +549,15 @@ function switch_basis(btype) {
     @cached_method
     def _get_alpha(self, m, p, i):
         theta = CBF(self.cc_data[m]['angles'][p])
-        ppow = CBF(p)**((ZZ(self.weight)-1)/2)
+        #ppow = CBF(p)**((ZZ(self.weight)-1)/2)
         unit = (2 * theta).exppii()
         if i == 0:
-            res =  ppow * unit
+            res =  unit
         else:
             # it is very likely that the real or imag part are a half integer
             # as it returns a CDF, we need to convert it to CBF again
             chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][m // self.rel_dim][1])))
-            res =  ppow * chival / unit
+            res =  chival / unit
         return round_CBF_to_half_int(res)
 
     @cached_method

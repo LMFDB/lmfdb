@@ -107,11 +107,8 @@ def styleTheSign(sign):
         return str(sign)
 
 
-def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
+def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
     # seriescoefftype can be: series, serieshtml, signed, literal, factor
-    #  truncationexp is used to determine if a number is 'really' 0 or 1 or -1 or I or -I or 0.5 or -0.5
-    #  precision is used to truncate decimal numbers
-    #truncation = float(10 ** truncationexp)
     try:
         if isinstance(coeff,str) or isinstance(coeff,unicode):
             if coeff == "I":
@@ -138,7 +135,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
         parenthesis = True
     else:
         parenthesis = False
-    coeff_display =  display_complex(rp, ip, precision, method="truncate", parenthesis=parenthesis)
+    coeff_display =  display_complex(rp, ip, digits, method="truncate", parenthesis=parenthesis)
 
     # deal with the zero case
     if coeff_display == "0":
@@ -180,7 +177,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, precision):
         if coeff_display[-1] not in [')', ' ']:
             ans += "&middot;"
     if seriescoefftype in ["series", "serieshtml", "signed"]:
-        ans += " " + seriesvar(index, seriestype)
+        ans += seriesvar(index, seriestype)
 
     return ans
 
@@ -299,11 +296,14 @@ def lfuncEPtex(L, fmt):
     """
     from Lfunction import Lfunction_from_db
     if ((L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db))) and fmt == "arithmetic":
-        if L.Ltype() == "general":
-            return ("For information concerning the Euler product, see other "
-                    "instances of this L-function.")
-        else:
+        try:
             return lfuncEPhtml(L, fmt)
+        except Exception:
+            if L.Ltype() == "general" and False:
+                return ("For information concerning the Euler product, see other "
+                    "instances of this L-function.")
+            else:
+                raise
 
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
@@ -349,7 +349,6 @@ def lfuncEPtex(L, fmt):
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
 
-        
 
         else:
             return("\\text{No information is available about the Euler product.}")
@@ -880,7 +879,7 @@ def getConductorIsogenyFromLabel(label):
 # in the database, instead of trying to extract this from a URL
 def name_and_object_from_url(url):
     url_split = url.split("/");
-    name = None;
+    name = '??';
     obj_exists = False;
 
     if url_split[0] == "EllipticCurve":
@@ -922,10 +921,6 @@ def name_and_object_from_url(url):
                     newform_label = ".".join(url_split[-4:])
                     name =  'Modular form ' + newform_label;
                     obj_exists = db.mf_newforms.label_exists(newform_label)
-                else:
-                    obj_exists = False
-                    name = "??"
-
 
 
             elif  url_split[2] == 'TotallyReal':
@@ -940,6 +935,25 @@ def name_and_object_from_url(url):
                 name = 'Bianchi modular form ' + label;
                 obj_exists = db.bmf_forms.label_exists(label);
     return name, obj_exists
+
+def names_and_urls(instances):
+    res = []
+    names = []
+    for instance in instances:
+        name, obj_exists = name_and_object_from_url(instance['url'])
+        if not name:
+            name = ''
+        if obj_exists:
+            url = "/"+instance['url']
+        else:
+            name = '(%s)' % (name)
+            url = ""
+        # avoid duplicates
+        if name not in names:
+            res.append((name, url))
+            names.append(name)
+
+    return res
 
 def get_bread(degree, breads=[]):
     """

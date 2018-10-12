@@ -50,7 +50,8 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
-        assert '43.6348 i' in page.data
+        assert '0.299366' in page.data
+        assert '0.954138 i' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
         assert '0.792122' in page.data
 
@@ -61,21 +62,22 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert '1.65831' in page.data
+        assert r'\(-0.707106\)' in page.data
+        assert r'\(0.707106 i\)' in page.data
+        assert r'\(0.957427 i\)' in page.data
+        assert r'\(0.223606\)' in page.data
+        assert r'\(0.974679 i\)' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
         assert '0.253841' in page.data
 
     def test_triv_character(self):
-        r"""
-        Check that some forms from issue 815 work.
-        """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
         assert r'1016q^{7}' in page.data
-        assert '259.036' in page.data
+        assert '0.375659' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
         assert '168q^{8}' in page.data
-        assert '55.8211' in page.data
+        assert '0.0536656' in page.data
 
     def test_non_triv_character(self):
         r"""
@@ -148,21 +150,26 @@ class CmfTest(LmfdbTest):
 
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        data = page.data.replace(' ','').replace('\n','')
-        assert '\\(-1\\)</td><tdclass="op">\\(+\\)</td><tdclass="imag">\\(i\\)' in data
-        assert '\\(-0.5\\)</td><tdclass="op">\\(+\\)</td><tdclass="imag">\\(1.65831i\\)' in data
+        assert r'\(-0.707106\)' in page.data
+        assert r'\(0.707106 i\)' in page.data
+        assert r'\(0.957427 i\)' in page.data
+        assert r'\(0.223606\)' in page.data
+        assert r'\(0.974679 i\)' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
-        assert '.49999' not in page.data
-        assert '.9999' not in page.data
-        assert '-3' in page.data
+        assert r'\(-0.750000\)' in page.data
+        assert r'\(0.661437 i\)' in page.data
+        assert r'\(-0.272727\)' in page.data
+        assert r'\(1\)' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
         assert '\(\pi\)' in page.data
         assert '\(0.769946\pi\)' in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert '.49999' not in page.data
-        assert '0.866025 i' in page.data
-        assert '\\(1\\)</td><tdclass="op">\\(-\\)</td><tdclass="imag">\\(i\\)' in page.data.replace(' ','').replace('\n','')
 
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
+        assert r'\(-0.965925\)' in page.data
+        assert r'\(0.258819 i\)' in page.data
+        assert r'\(0.990337 i\)' in page.data
 
 
     def test_download(self):
@@ -185,4 +192,19 @@ class CmfTest(LmfdbTest):
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         assert '-12.531852282' in page.data
         assert '0.406839418685' in page.data
+
+
+    def test_random(self):
+        r"""
+        Test that we don't hit any error on a random newform
+        """
+        for i in range(100):
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random', follow_redirects = True)
+            assert 'Defining parameters' in page.data
+            assert 'Properties' in page.data
+            assert 'Newform' in page.data
+            assert 'expansion' in page.data
+            assert 'L-function' in page.data
+            assert 'Satake parameters' in page.data or 'Embeddings' in page.data
+
 

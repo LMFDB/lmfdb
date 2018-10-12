@@ -181,14 +181,17 @@ class Lfunction:
             info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
             chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
-            info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage', 
+            info['chi'] = ''
+            if self.charactermodulus != self.level:
+                info['chi'] += "induced by "
+            info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage', 
                                                     modulus=self.charactermodulus, number=self.characternumber)
             info['chi'] += '">' + chilatex + '</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link
             info['rank'] = self.order_of_vanishing
-            info['motivic_weight'] = self.motivic_weight
+            info['motivic_weight'] = r'\(%d\)' % self.motivic_weight
 
         elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
             try:
