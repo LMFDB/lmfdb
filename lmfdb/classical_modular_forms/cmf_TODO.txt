@@ -13,17 +13,20 @@ On data updates:
 
 
 IMPORTANT:
-* hecke_ring_index as factorization (Drew)
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
+* hecke_ring_index as factorization (Edgar)
 * Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
+* Download Euler factors
 
 
 GOOD:
+* Factor conductors > for long enough conductors 9 digits (Edgar)
+* lose the O(T^12) if degree = 12 (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Nk2 search and display to use the actual analytic conductor
@@ -36,8 +39,8 @@ GOOD:
 
 
 FORMATTING:
+* factor out powers of p
 * link modular form history in Learn more about? (#1284) (Edgar)
-* induced by: http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/
 * L-function of the Jacobian of a genus 2 curve with label %s vs L-function of degree 4, weight 1, conductor 3^112, and trivial character?
 
 IT WOULD BE NICE IF:
