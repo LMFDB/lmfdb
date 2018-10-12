@@ -566,9 +566,10 @@ class Lfunction_from_db(Lfunction):
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = getattr(elt, 'trace_hash', None)
                 if trace_hash is not None:
-                    instances = get_instances_by_trace_hash(str(trace_hash))
+                    instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
                 else:
                     instances = get_instances_by_Lhash(factor_Lhash)
                 lfactors.extend(names_and_urls(instances))
