@@ -49,8 +49,6 @@ GOOD:
 
 FORMATTING:
 * factor out powers of p
-* link modular form history in Learn more about? (#1284) (Edgar)
-* L-function of the Jacobian of a genus 2 curve with label %s vs L-function of degree 4, weight 1, conductor 3^112, and trivial character?
 
 IT WOULD BE NICE IF:
 * Add tests for display_float, etc
@@ -94,7 +92,6 @@ LMFDB issues to be addressed:
 - Determine planned extent of classical modular forms #873
 - Source and extent of data for classical modular forms #1224
 - Fix errors in classical modular form data and verify its correctness #1248
-- Modular form history #1282
 
 
 ISSUES already addressed:
@@ -103,6 +100,7 @@ ISSUES already addressed:
 - Make pretty coefficients #654
 - Create separate page for each embedding of a newform #659
 - Tests for lcalc files #1257
+- Modular form history #1282 (we decided not to link it)
 - Search by analytic rank #1362
 - Plots of modular forms #1408
 - Random modular form #1434
