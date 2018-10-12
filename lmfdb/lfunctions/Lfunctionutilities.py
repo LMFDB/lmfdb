@@ -349,7 +349,6 @@ def lfuncEPtex(L, fmt):
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
 
-        
 
         else:
             return("\\text{No information is available about the Euler product.}")
@@ -939,15 +938,21 @@ def name_and_object_from_url(url):
 
 def names_and_urls(instances):
     res = []
+    names = []
     for instance in instances:
         name, obj_exists = name_and_object_from_url(instance['url'])
         if not name:
             name = ''
         if obj_exists:
-            res.append((name, "/"+instance['url']))
+            url = "/"+instance['url']
         else:
             name = '(%s)' % (name)
-            res.append((name, ""))
+            url = ""
+        # avoid duplicates
+        if name not in names:
+            res.append((name, url))
+            names.append(name)
+
     return res
 
 def get_bread(degree, breads=[]):

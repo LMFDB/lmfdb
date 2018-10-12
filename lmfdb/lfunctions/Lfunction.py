@@ -561,14 +561,15 @@ class Lfunction_from_db(Lfunction):
         return self.Lhash
 
     @property
-    def factors(self):
+    def factors_origins(self):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = getattr(elt, 'trace_hash', None)
                 if trace_hash is not None:
-                    instances = get_instances_by_trace_hash(str(trace_hash))
+                    instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
                 else:
                     instances = get_instances_by_Lhash(factor_Lhash)
                 lfactors.extend(names_and_urls(instances))
@@ -587,7 +588,7 @@ class Lfunction_from_db(Lfunction):
         instances = get_instances_by_Lhash(self.Lhash)
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         if self.trace_hash is not None:
-            instances = get_instances_by_trace_hash(str(self.trace_hash))
+            instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
         lorigins = names_and_urls(instances)
         if not self.selfdual and hasattr(self, 'dual_link'):
             lorigins.append(("Dual L-function", self.dual_link))
@@ -934,17 +935,28 @@ class Lfunction_genus2_Q(Lfunction_from_db):
         return "g2c.q"
 
     @property
-    def factors(self):
+    def factors_origins(self):
         # this is just a hack, and the data should be replaced
         instances = []
-        # so far the only factors stored in the DB are products of EC
+        # either the factors are stored in the DB as products of EC
         for elt in db.lfunc_instances.search({'Lhash': self.Lhash, 'type':'ECQP'}, projection = 'url'):
             if '|' in elt:
                 for url in elt.split('|'):
                     url = url.rstrip('/')
                     # Lhash = trace_hash
-                    instances.extend(get_instances_by_trace_hash(db.lfunc_instances.lucky({'url': url}, 'Lhash')))
+                    instances.extend(get_instances_by_trace_hash(2, db.lfunc_instances.lucky({'url': url}, 'Lhash')))
                 break
+        # or we need to use the trace_hash to find other factorizations
+        if str(self.trace_hash) == self.Lhash:
+            for elt in db.lfunc_lfunctions.search({'trace_hash': self.trace_hash, 'degree' : 4}, projection = 'Lhash'):
+                if ',' in elt:
+                    for factor_Lhash in  elt.split(","):
+                        trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
+                        if trace_hash is not None:
+                            instancesf = get_instances_by_trace_hash(str(trace_hash))
+                        else:
+                            instancesf = get_instances_by_Lhash(factor_Lhash)
+                        instances.extend(instancesf)
         return names_and_urls(instances)
 
     #def _set_title(self):

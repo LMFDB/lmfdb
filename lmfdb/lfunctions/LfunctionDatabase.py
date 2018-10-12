@@ -15,7 +15,8 @@ def get_instances_by_Lhash(Lhash):
 
 
 # a temporary fix while we don't replace the old Lhash (=trace_hash)
-def get_instances_by_trace_hash(trace_hash):
+# there are trace hash collisions out there, we need the degree to distinguish them
+def get_instances_by_trace_hash(degree, trace_hash):
     def ECNF_convert_old_url(oldurl):
         # EllipticCurve/2.0.4.1/[4160,64,8]/a/
         if '[' not in oldurl:
@@ -29,7 +30,7 @@ def get_instances_by_trace_hash(trace_hash):
             return oldurl
 
     res = []
-    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash}, projection = 'Lhash'):
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection = 'Lhash'):
         for elt in get_instances_by_Lhash(Lhash):
             if elt['type'] == 'ECQP':
                 continue
@@ -38,15 +39,6 @@ def get_instances_by_trace_hash(trace_hash):
             if elt not in res:
                 res.append(elt)
     return res
-    # remove duplicates
-    res.sort(key = lambda elt: elt['url'])
-    no_duplicates = []
-    previousurl = None
-    for elt in res:
-        if elt['url'] != previousurl:
-            no_duplicates.append(elt)
-            previousurl = elt['url']
-    return no_duplicates
 
 
 def get_instance_by_url(url):
