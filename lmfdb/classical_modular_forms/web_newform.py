@@ -198,9 +198,10 @@ class WebNewform(object):
             if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
             self.properties.extend([('Analytic conductor', str(self.Nk2)),
-                                    ('Analytic rank', str(int(self.analytic_rank)))
+                                    ('Analytic rank', str(int(self.analytic_rank))),
                                     ('Dimension', str(self.dim))])
         except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
+            raise
             # no data for analytic rank
             pass
 
@@ -269,11 +270,15 @@ class WebNewform(object):
         # display the coefficient field
         label = self.__dict__.get("nf_label")
         if label is None:
-            return r"\(\Q(\nu)\)"
+            poly = self.__dict__.get('field_poly')
+            if poly:
+                return polyquo_knowl(poly)
+            else:
+                return 'Unknown'
         elif label == u'1.1.1.1':  # rationals, special case
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
-            return r"\(\Q(\nu)\) = " + self.field_knowl()
+            return self.field_knowl()
 
     def cm_field_knowl(self):
         # The knowl for the CM field, with appropriate title
