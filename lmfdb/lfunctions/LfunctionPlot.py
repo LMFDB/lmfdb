@@ -26,7 +26,7 @@ from lmfdb.utils import signtocolour
 ## of given degree (gives output for degree 3 and 4). Data is fetched from
 ## the database.
 ## ============================================
-def getAllMaassGraphHtml(degree):
+def getAllMaassGraphHtml(degree, signature=""):
     if degree == 3:
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
@@ -37,7 +37,10 @@ def getAllMaassGraphHtml(degree):
     ans = ""
     for i in range(0, len(groups)):
         g = groups[i][0]
-        ans += getGroupHtml(g)
+        if signature:
+            ans += getGroupHtml(signature)
+        else:
+            ans += getGroupHtml(g)
         for j in range(0, len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
@@ -51,7 +54,20 @@ def getAllMaassGraphHtml(degree):
 
 
 def getGroupHtml(group):
-    if group == 'GSp4':
+    if group == 'r0r0r0':   # note: signature, not group.  Delete the groups, then change the name
+        ans = "<h3 id='r0r0r0'>L-functions of signature (0,0,0;)</h3>\n"
+        ans += "<div>"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
+        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
+        ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
+        ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
+    elif group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GSp(4) of level 1. "
@@ -112,13 +128,13 @@ def getGroupHtml(group):
 ## ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + " and sign "
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + " and sign "
                + str(gls[2]) + "</h4>\n")
     else:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + "</h4>\n")
     ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
-    ans += "search. Click on any of the dots to get detailed information about "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). "
+    ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
     ans += ("<embed src='" + graphInfo['src'] + "' width='" +
