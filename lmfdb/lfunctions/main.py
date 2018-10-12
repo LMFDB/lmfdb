@@ -430,7 +430,7 @@ def initLfunction(L, args, request):
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
 
-    (info['bread'], info['origins'], info['friends'], info['factors'], info['Linstances'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'] ) = set_bread_and_friends(L, request)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -482,7 +482,7 @@ def set_bread_and_friends(L, request):
     bread = []
     friends = []
     origins = []
-    factors = []
+    factors_origins = []
     instances = []
 
     # Create default friendlink by removing 'L/' and ending '/'
@@ -509,10 +509,10 @@ def set_bread_and_friends(L, request):
         bread = L.bread + [(L.origin_label, request.path)]
         origins = L.origins
         friends = L.friends
-        factors = L.factors
+        factors_origins = L.factors_origins
         instances = L.instances
 
-        for elt in [origins, friends, factors, instances]:
+        for elt in [origins, friends, factors_origins, instances]:
             if elt is not None:
                 elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
 
@@ -621,7 +621,7 @@ def set_bread_and_friends(L, request):
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
 
 
-    return (bread, origins, friends, factors, instances)
+    return (bread, origins, friends, factors_origins, instances)
 
 
 def set_zeroslink_and_plotlink(L, args):
