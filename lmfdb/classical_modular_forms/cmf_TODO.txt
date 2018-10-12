@@ -21,17 +21,19 @@ IMPORTANT:
 * Indent q-expansion and trace expansion, less space before display precision (David)
 * Pull from upstream master (David)
 * Use HTML for complex embeddings (Edgar)
-* Multiply all analytic conductors by 2 (David)
+* Multiply all analytic conductors by 2 (Drew)
 * Fix color.col_link, figure out why Coefficient field header is big (David)
+* Change Gamma_0(N) to N, \chi_N(a, \cdot) with \chi (David)
+* Update display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
+* visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search (David)
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * hecke_ring_index as factorization (Edgar)
-* Add display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * Download Euler factors
-* visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search
+* Compute trace hashes for elliptic curves over quadratic fields (Drew)
 
 
 GOOD:
@@ -40,7 +42,6 @@ GOOD:
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
-* Make sure our description of labels is correct
 * data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
@@ -82,6 +83,7 @@ NOT CMF STUFF:
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 * fix hmf and bmf l-functions
+* Shrink the sidebar with a button analogous to the properties shrinker
 
 
 TO THINK ABOUT:
