@@ -7,7 +7,7 @@
     <tr class="middle dark">
       <th rowspan=2>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dim.') }}</th>
-      <th rowspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='$Nk^2$') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(A\)') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
@@ -36,7 +36,7 @@
     <tr>
       <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
       <td> {{ mf.dim }} </td>
-      <td> {{ mf.Nk2 }} </td>
+      <td> {{ "%.1f" | format(mf.analytic_conductor|float) }} </td>
       <td> {{ info.nf_link(mf) | safe }} </td>
       <td> {{ info.cm_link(mf) | safe }}</td>
       <td class="right">\({{ mf.trace_display[0] }}\)</td>

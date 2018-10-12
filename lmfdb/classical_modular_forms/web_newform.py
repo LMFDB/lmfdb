@@ -11,7 +11,7 @@ from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
         web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
-        display_float, display_complex, round_CBF_to_half_int
+        display_float, display_complex, round_CBF_to_half_int, polyquo_knowl
 from lmfdb.characters.utils import url_character
 import re
 from collections import defaultdict
@@ -88,6 +88,8 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        # We always print analytic conductor with 1 decimal digit
+        self.analytic_conductor = '%.1f'%(self.analytic_conductor)
 
         try:
             if not isinstance(self.hecke_ring_index, list): #FIXME temporary data fix
@@ -197,11 +199,10 @@ class WebNewform(object):
             # The try shouldn't be hit except when we're adding data
             if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-            self.properties.extend([('Analytic conductor', str(self.Nk2)),
+            self.properties.extend([('Analytic conductor', self.analytic_conductor),
                                     ('Analytic rank', str(int(self.analytic_rank))),
                                     ('Dimension', str(self.dim))])
         except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
-            raise
             # no data for analytic rank
             pass
 

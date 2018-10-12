@@ -59,7 +59,7 @@
     <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
     <td> \(A\) </td>
     <td>=</td>
-    <td>\({{ newform.Nk2 }}\)</td>
+    <td>\({{ newform.analytic_conductor }}\)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
@@ -67,7 +67,7 @@
     <td> </td>
     <td>\({{ newform.dim }}\)</td>
   </tr>
-  {% if newform.char_degree > 1 %}
+  {% if newform.char_degree > 1 and newform.rel_dim > 1 %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.relative_dimension', title='Relative dimension') }}: </td>
     <td> </td>
@@ -109,14 +109,15 @@ function show_qexp(qstyle) {
   <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section. {% if newform.dim > 1 %} Their {{ KNOWL('mf.elliptic.trace-expansion',title='traces') }} are integers. {% endif %}</p>
   {% endif %}
   <form id="qexp">
+    <table><tr><td>
     <div class="smalloutput">
       <span id="small_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=10) | safe }}</span>
     </div>
     <div class="mediumoutput nodisplay">
       <span id="medium_qexp_display">\(f(q) =\) {{ newform.q_expansion(prec_max=100) | safe }}</span>
     </div>
-    <br>
     {% if newform.dim > 1 %}
+    </td></tr><tr><td>
     <div class="smalloutput">
       <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
     </div>
@@ -124,6 +125,7 @@ function show_qexp(qstyle) {
       <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
     </div>
     {% endif %}
+    </td></tr></table>
 
     <p>
       <div class="toggle">Display precision:
@@ -148,16 +150,16 @@ function show_qexp(qstyle) {
 </div>
 {% else %}
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
-<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion.</p>
+<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('mf.elliptic.trace-expansion', title='trace expansion') }}.</p>
 
 <form id="qexp">
-  <h2> {{ KNOWL('mf.elliptic.trace-expansion',title='Trace-expansion') }} </h2>
+  <table><tr><td>
   <div class="smalloutput">
     <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=10) | safe }}</span>
   </div>
   <div class="mediumoutput nodisplay">
     <span>\(\operatorname{Tr}(f)(q) = \) {{ newform.trace_expansion(prec_max=100) | safe }}</span>
-  </div>
+  </div></td></tr></table>
 
   <p>
     <div class="toggle">Display precision:

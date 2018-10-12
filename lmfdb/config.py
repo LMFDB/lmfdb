@@ -38,6 +38,13 @@ class Configuration(object):
             action = "store_true",
             dest = 'core_debug',
             help = 'enable debug mode')
+        parser.add_argument(
+            '--color',
+            dest = 'core_color',
+            metavar = "COLOR",
+            help = 'color template (see templates/color.css)',
+            default = 17,
+            type = int)
 
         parser.add_argument('-p','--port',
                 dest = 'web_port',
@@ -140,7 +147,6 @@ class Configuration(object):
 
 
 
-
         from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
@@ -204,6 +210,8 @@ class Configuration(object):
             if opt in args_dict:
                 self.flask_options[opt] = args_dict[opt]
 
+        self.color = getint('core', 'color')
+
         self.postgresql_options = {
                 "port": getint("postgresql", "port"),
                 "host": get("postgresql", "host"),
@@ -225,6 +233,9 @@ class Configuration(object):
 
     def get_flask(self):
         return self.flask_options
+
+    def get_color(self):
+        return self.color
 
     def get_postgresql(self):
         return self.postgresql_options

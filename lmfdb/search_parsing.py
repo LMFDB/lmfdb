@@ -5,6 +5,8 @@
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
+FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
+LIST_FLOAT_RE = re.compile(r'^({0}|{0}-{0})(,({0}|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -16,7 +18,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
-FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
 from flask import flash
@@ -162,13 +164,15 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
 
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-def parse_range2(arg, key, parse_singleton=int):
+def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None):
+    if parse_endpoint is None:
+        parse_endpoint = parse_singleton
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if type(arg) == parse_singleton:
         return [key, arg]
     if ',' in arg:
-        tmp = [parse_range2(a, key, parse_singleton) for a in arg.split(',')]
+        tmp = [parse_range2(a, key, parse_singleton, parse_endpoint) for a in arg.split(',')]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ['$or', tmp]
     elif '-' in arg[1:]:
@@ -176,12 +180,11 @@ def parse_range2(arg, key, parse_singleton=int):
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
-            q['$gte'] = parse_singleton(start)
+            q['$gte'] = parse_endpoint(start)
         if end:
-            q['$lte'] = parse_singleton(end)
+            q['$lte'] = parse_endpoint(end)
         return [key, q]
     else:
-        print [key, parse_singleton(arg)]
         return [key, parse_singleton(arg)]
 
 # Like parse_range2, but to deal with strings which could be rational numbers
@@ -281,6 +284,21 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_floats(inp, query, qfield):
+    parse_endpoint = float
+    def parse_singleton(a):
+        if isinstance(a, basestring) and '.' in a:
+            prec = len(a) - a.find('.') - 1
+        else:
+            prec = 0
+        a = float(a)
+        return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
+    if LIST_FLOAT_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield, parse_singleton, parse_endpoint), query)
+    else:
+        raise ValueError("It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):

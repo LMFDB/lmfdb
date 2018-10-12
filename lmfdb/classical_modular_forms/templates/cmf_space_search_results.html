@@ -29,7 +29,7 @@
     <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
     <td><input type='text' style="width: 140px;" name='dim' placeholder='1-4' value='{{info.dim}}'></td>
     <td><input type='text' style="width: 140px;" name='num_forms' placeholder='3' value='{{info.num_forms}}'></td>
-    <td><input type='text' style="width: 140px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
+    <td><input type='text' style="width: 140px;" name='analytic_conductor' placeholder='1' value='{{info.analytic_conductor}}'></td>
   </tr>
 
   <tr>
@@ -71,7 +71,7 @@
   <thead class="dark">
     <tr class="middle">
       <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-      <th>{{ KNOWL('mf.elliptic.analytic_conductor', title='$Nk^2$') }}</th>
+      <th>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(A\)') }}</th>
       <th>{{ KNOWL('mf.elliptic.character', title='\(\chi\)') }}</th>
       <th class="center">{{ KNOWL('character.dirichlet.order', title='\(\operatorname{ord}(\chi)\)') }}</th>
       <th class="center">{{ KNOWL('mf.elliptic.display_dim', title='Dim.') }}</th>
@@ -83,7 +83,7 @@
     {% for space in info.results %}
     <tr>
       <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
-      <td> \({{ space.Nk2 }}\) </td>
+      <td> \({{ space.analytic_conductor }}\) </td>
       <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
       <td class="center"> \({{ space.char_order }}\) </td>
       <td class="center"> \({{ space.dim }}\) </td>

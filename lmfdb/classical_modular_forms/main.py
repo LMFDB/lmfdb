@@ -4,7 +4,7 @@ from collections import defaultdict
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -317,7 +317,7 @@ class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
     data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
-    columns = ['level','weight', 'dim', 'Nk2', 'field_poly', 'nf_label', 'cm_disc', 'trace_display']
+    columns = ['level','weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_disc', 'trace_display']
 
     def _get_hecke_nf(self, label):
         try:
@@ -563,7 +563,7 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['char_parity'] = -1
     parse_ints(info, query, 'level', name="Level")
-    parse_ints(info, query, 'Nk2', name="Analytic conductor")
+    parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
@@ -764,7 +764,7 @@ class CMF_stats(StatsDisplay):
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
         nspaces = comma(db.mf_newspaces.count())
-        Nk2bound = 2000 # should be added to dq_extent table?
+        Nk2bound = db.mf_newforms.max('Nk2')
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
