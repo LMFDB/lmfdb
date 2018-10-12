@@ -237,13 +237,13 @@ function get_all_embeddings(num_embeddings) {
           {% endif %}
           <tr>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap real">
-              {{ newform.embedding_re(mm,prec=info.prec) }}
+              {{ newform.embedding_re(mm,prec=info.prec) | safe }}
             </td>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} op">
-              {{ newform.embedding_op(mm,prec=info.prec) }}
+              {{ newform.embedding_op(mm,prec=info.prec) | safe }}
             </td>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap imag">
-              {{ newform.embedding_im(mm,prec=info.prec) }}
+              {{ newform.embedding_im(mm,prec=info.prec) | safe }}
             </td>
             {% if headcol_rowspan == 2 %}
             <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
@@ -260,13 +260,13 @@ function get_all_embeddings(num_embeddings) {
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
       <td class="nowrap real">
-        {{ newform.embedding_re(m,n,prec=info.prec,format=info.format) }}
+        {{ newform.embedding_re(m,n,prec=info.prec,format=info.format) | safe }}
       </td>
       <td class="op">
-        {{ newform.embedding_op(m,n,prec=info.prec) }}
+        {{ newform.embedding_op(m,n,prec=info.prec) | safe }}
       </td>
       <td class="nowrap imag">
-        {{ newform.embedding_im(m,n,prec=info.prec,format=info.format) }}
+        {{ newform.embedding_im(m,n,prec=info.prec,format=info.format) | safe }}
       </td>
       {% endfor %} {# n loop #}
       {% else %} {# info.format in ['satake', 'satake_angle'] #}
@@ -274,17 +274,17 @@ function get_all_embeddings(num_embeddings) {
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
       {% if info.format == 'satake' %}
       <td class="nowrap real">
-        {{ newform.satake_re(m,n,i,prec=info.prec) }}
+        {{ newform.satake_re(m,n,i,prec=info.prec) | safe }}
       </td>
       <td class="op">
-        {{ newform.satake_op(m,n,i) }}
+        {{ newform.satake_op(m,n,i) | safe }}
       </td>
       <td class="imag">
-        {{ newform.satake_im(m,n,i,prec=info.prec) }}
+        {{ newform.satake_im(m,n,i,prec=info.prec) | safe }}
       </td>
       {% else %} {# info.format == 'satake_angles' #}
       <td class="nowrap middle">
-        {{ newform.satake_angle(m,n,i,prec=info.prec) }}
+        {{ newform.satake_angle(m,n,i,prec=info.prec) | safe }}
       </td>
       {% endif %} {# info.format #}
       {% endfor %} {# n loop #}
