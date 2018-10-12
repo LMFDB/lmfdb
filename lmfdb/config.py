@@ -176,12 +176,24 @@ class Configuration(object):
         _cfgp  =  ConfigParser()
         _cfgp.read(args.config_file)
 
+
         # 3: override specific settings
+        def all(sep = '_'):
+            ret  =  {}
+            for s in _cfgp.sections():
+                for k, v in _cfgp.items(s):
+                    ret['%s%s%s' % (s, sep, k)]  =  v
+            return ret
+
+        all_set = all()
+
         for key, val in default_arguments_dict.iteritems():
             # if a nondefault value was passed through command line arguments set it
-            if args_dict[key] != val:
+            # or if a default value was not set in the config file
+            if args_dict[key] != val or key not in all_set:
                 sec, opt = key.split('_')
                 _cfgp.set(sec, opt, str(args_dict[key]))
+
 
         # some generic functions
         def get(section, key):
@@ -193,12 +205,6 @@ class Configuration(object):
         def getboolean(section, key):
             return _cfgp.getboolean(section, key)
 
-        def all(sep = '_'):
-            ret  =  {}
-            for s in _cfgp.sections():
-                for k, v in _cfgp.items(s):
-                    ret['%s%s%s' % (s, sep, k)]  =  v
-            return ret
 
 
         self.flask_options = {
