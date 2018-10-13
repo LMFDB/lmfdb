@@ -48,7 +48,6 @@ GOOD:
 
 
 FORMATTING:
-* factor out powers of p
 
 IT WOULD BE NICE IF:
 * Add tests for display_float, etc
