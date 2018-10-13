@@ -3016,9 +3016,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             # Determine the stats and counts currently recorded
             selecter = SQL("SELECT cols, constraint_cols, constraint_values, threshold FROM {0} WHERE stat = %s").format(Identifier(self.stats))
             stat_cmds = list(self._execute(selecter, ["total"]))
-            print stat_cmds
             col_value_dict = self.extra_counts(include_counts=False, suffix=suffix)
-            print col_value_dict
 
             # Delete all stats and counts
             deleter = SQL("DELETE FROM {0}")
@@ -3027,7 +3025,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
             # Regenerate stats and counts
             for cols, ccols, cvals, threshold in stat_cmds:
-                print cols, ccols, cvals, threshold
                 self.add_stats(cols, (ccols, cvals), threshold)
             self._add_extra_counts(col_value_dict, suffix=suffix)
 
