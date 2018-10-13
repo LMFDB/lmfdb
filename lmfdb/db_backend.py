@@ -2832,15 +2832,12 @@ class PostgresStatsTable(PostgresBase):
         cols = sorted(cols)
         where = [SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols]
         values, ccols, cvals = [], None, None
-        if constraint is None:
+        if constraint is None or constraint == (None, None):
             allcols = cols
         else:
             if isinstance(constraint, tuple):
                 # reconstruct constraint from ccols and cvals
                 ccols, cvals = constraint
-                if ccols is None and cvals is None:
-                    ccols = []
-                    cvals = []
                 constraint = self._join_dict(ccols, cvals)
             else:
                 ccols, cvals = self._split_dict(constraint)
@@ -3005,7 +3002,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     level += 1
 
     def refresh_stats(self, total=True, suffix=''):
-        #FIXME total is not used
         """
         Regenerate stats and counts, using rows with ``stat = "total"`` in the stats
         table to determine which stats to recompute, and the rows with ``extra = True``
@@ -3032,8 +3028,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 self.add_stats(cols, (ccols, cvals), threshold)
             self._add_extra_counts(col_value_dict, suffix=suffix)
 
-            # Refresh total in meta_tables
-            self._slow_count({}, suffix=suffix, extra=False)
+            if total:
+                # Refresh total in meta_tables
+                self._slow_count({}, suffix=suffix, extra=False)
 
     def _copy_extra_counts_to_tmp(self):
         """
