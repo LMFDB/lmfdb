@@ -78,7 +78,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None):
                     elif i > 1:
                         variableterm = vari + '^{' + str(i) + '}'
 
-                    if terms == prec:
+                    if terms == prec and i != len(vcf) - 1:
                         if vcf[i] < 0:
                             outstr += '+' # we haven't added the +
                         outstr += 'O(%s)' % variableterm

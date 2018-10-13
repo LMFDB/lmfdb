@@ -386,7 +386,7 @@ class RiemannZeta(Lfunction):
         self.primitive = True
         self.degree = 1
         self.quasidegree = 1
-        self.level = 1
+        self.level_factored = self.level = 1
         self.mu_fe = [0]
         self.nu_fe = []
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1027,6 +1027,7 @@ class Lfunction_Maass(Lfunction):
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.level = int(self.mf.level)
+            self.level_factored = factor(self.level)
             self.charactermodulus = self.level
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
@@ -1150,6 +1151,7 @@ class Lfunction_HMF(Lfunction):
         self.degree = 2 * self.field_degree
         self.quasidegree = self.degree
         self.level = f['level_norm'] * self.field_disc ** 2
+        self.level_factored = factor(self.level)
         self.mu_fe = []
         self.nu_fe = [Rational(self.weight - 1)/2 for i in range(self.field_degree)]
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1324,7 +1326,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.langlands = True
         self.degree = 4
         self.quasidegree = 1
-        self.level = 1
+        self.level_factored = self.level = 1
         self.mu_fe = []  # the shifts of the Gamma_R to print
         self.automorphyexp = float(self.weight) - float(1.5)
         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
@@ -1410,6 +1412,7 @@ class DedekindZeta(Lfunction):
         self.degree = self.NF.degree()
         self.quasidegree = sum(self.signature)
         self.level = self.NF.discriminant().abs()
+        self.level_factored = factor(self.level)
         self.mu_fe = self.signature[0] * [0]
         self.nu_fe = self.signature[1] * [0]
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1520,6 +1523,7 @@ class ArtinLfunction(Lfunction):
         self.primitive = self.artin.primitive()
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
+        self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1604,6 +1608,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.primitive = True
         self.degree = self.motive["degree"]
         self.level = self.motive["cond"]
+        self.level_factored = factor(self.level)
         self.mu_fe, self.nu_fe = lmfdb.hypergm.hodge.mu_nu(self.motive["hodge"], self.motive["sig"])
         self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
@@ -1704,6 +1709,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.primitive = True
         self.degree = self.m + 1
         self.level = self.S.conductor
+        self.level_factored = factor(self.level)
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe
