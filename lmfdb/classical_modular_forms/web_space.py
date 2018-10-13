@@ -297,10 +297,10 @@ class WebGamma1Space(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(level).factor()._latex_()
+        # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
             raise ValueError("Space not in database")
-        newspaces.sort(key = lambda x : x['label'])
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
