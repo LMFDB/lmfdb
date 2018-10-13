@@ -92,8 +92,6 @@ class WebNewform(object):
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
 
         try:
-            if not isinstance(self.hecke_ring_index, list): #FIXME temporary data fix
-                self.hecke_ring_index = list(ZZ(self.hecke_ring_index).factor())
             self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index)
             self.hecke_ring_index = prod([ p**e for p,e in self.hecke_ring_index])
         except AttributeError:
