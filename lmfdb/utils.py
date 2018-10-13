@@ -30,7 +30,7 @@ from lmfdb.base import app
 
 
 
-def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None):
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p = None):
     """ Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
@@ -86,7 +86,24 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None):
                     if vcf[i] == 1:
                         outstr += variableterm
                     elif abs(vcf[i]) != 1:
-                        outstr += str(vcf[i]) + variableterm
+                        if p is None or vcf[i] % p != 0:
+                            outstr += str(vcf[i]) + variableterm
+                        else:
+                            # we try to factor p
+                            res = vcf[i]
+                            e = 0
+                            while res % p == 0:
+                                res /= p
+                                e += 1
+                            assert e != 0
+                            pfactor = 'p^{%d}' % e if e > 1 else 'p'
+                            if res == 1:
+                                res = ''
+                            elif res == -1:
+                                res = '-'
+                            else:
+                                res = str(res)
+                            outstr += '%s %s %s' % (res, pfactor, variableterm)
                     elif vcf[i] == -1:
                         outstr += '-' + variableterm
                 terms += 1
