@@ -447,9 +447,9 @@ def lfuncEPhtml(L,fmt, prec = 12):
             if L.coefficient_field == "CDF" or None in poly:
                 factors = str(pretty_poly(poly, prec = prec))
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec)
+                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:
-                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois)
+                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
             out += ("<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td><td>" +
                         "$" + factors + "$" +
                         "</td>")
