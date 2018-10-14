@@ -627,17 +627,20 @@ class Lfunction_from_db(Lfunction):
         If `charactermodulus` and `characternumber` are defined, make a title
         which includes the character. Otherwise, make a title without character.
         '''
-        conductor_str = "$ %s $" % latex(self.level_factored)
+        if len(str(self.level)) < sum([len(str(elt)) + min(2, k) for elt, k in self.level_factored]):
+            conductor_str = "$%s$" % self.level
+        else:
+            conductor_str = "$%s$" % latex(self.level_factored)
 
         if self.chilatex is not None:
             title_end = (
-                    " of degree {degree}, weight {weight},"
+                    " of degree {degree}, motivic weight {weight},"
                     " conductor {conductor}, and {character}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
                             conductor=conductor_str, character=self.chilatex)
         else:
             title_end = (
-                    " of degree {degree}, weight {weight},"
+                    " of degree {degree}, motivic weight {weight},"
                     " and conductor {conductor}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
                             conductor=conductor_str)
@@ -739,12 +742,12 @@ class Lfunction_CMF(Lfunction_from_db):
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
-    def _set_title(self):
-        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
-            self.weight, self.level, self.chilatex)
-
-        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-
+#    def _set_title(self):
+#        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
+#            self.weight, self.level, self.chilatex)
+#
+#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+#
 
 #############################################################################
 
@@ -789,13 +792,13 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
     def bread(self):
         return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
-    def _set_title(self):
-        conductor_str = "$ %s $" % latex(self.modform_level)
-        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
-            self.weight, conductor_str)
-
-        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-
+#    def _set_title(self):
+#        conductor_str = "$ %s $" % latex(self.modform_level)
+#        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
+#            self.weight, conductor_str)
+#
+#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+#
 #################################################################################################
 
 
