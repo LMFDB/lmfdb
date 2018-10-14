@@ -469,7 +469,7 @@ function switch_basis(btype) {
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
-        return r"%s"%(display_float(x, prec).replace('-','&minus;')
+        return r"%s"%(display_float(x, prec).replace('-','&minus;'))
 
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
