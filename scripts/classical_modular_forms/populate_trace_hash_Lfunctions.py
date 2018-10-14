@@ -26,4 +26,4 @@ if len(sys.argv) == 3:
 else:
     print r"""Usage:
         You should run this on legendre, on lmfdb root dir as (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_trace_hash_Lfunctions.py 40 ::: {0..39}
+        # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_trace_hash_Lfunctions.py 40 ::: {0..39}"""
