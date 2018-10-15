@@ -99,15 +99,15 @@ h2.link > a {
 }
 
 #content > ul {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
     color: {{color.col_link}};
-  text-decoration: none;
-  font-family: sans-serif;
+    text-decoration: none;
+    font-family: sans-serif;
 }
 
 a[knowl] {
