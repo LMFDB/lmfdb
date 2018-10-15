@@ -1,5 +1,5 @@
 CRITICAL (BUGS):
-* knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
+* knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 
 IMPORTANT:
