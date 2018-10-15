@@ -27,5 +27,5 @@ if len(sys.argv) == 3:
         upsert_trace_hash(i)
 else:
     print r"""Usage:
-        You should run this on legendre, on lmfdb root dir as (this will use 40 cores):
+        You should run this on legendre as: (this will use 40 cores):
         # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
