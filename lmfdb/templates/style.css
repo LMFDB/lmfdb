@@ -2104,16 +2104,19 @@ table.coeff_ring_basis td.RHS {
 }
 
 table.complex-cols td.real {
+    font-family: MJX_Math;
     text-align: right;
     margin-right: 0;
     padding-right: 0;
 }
 table.complex-cols td.imag {
+    font-family: MJX_Math;
     text-align: left;
     margin-left: 0;
     padding-left: 0;
 }
 td.op {
+    font-family: MJX_Math;
     text-align: center;
     margin-right: 0;
     padding-right: 2px;
