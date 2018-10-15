@@ -89,19 +89,24 @@ def ALdim_table(al_dims, level, weight):
             (''.join(header), ''.join(rows)))
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
+    # symbolic_chi is currently ignored: we always use a symbolic chi
     if conrey is None:
         char = ""
-    elif symbolic_chi is True:
-        char = r", \chi"
-    elif symbolic_chi:
-        char = ", " + symbolic_chi
+    #elif symbolic_chi is True:
+    #    char = r", \chi"
+    #elif symbolic_chi:
+    #    char = ", " + symbolic_chi
     elif conrey == 1:
         char = ""
     else:
-        char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
+        #char = r", [\chi_{{{level}}}({conrey}, \cdot)]".format(level=level, conrey=conrey)
+        char = r", [\chi]"
     if typ:
         typ = r"^{\mathrm{%s}}"%(typ)
-    ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
+    if char:
+        ans = r"{S}_{{{k}}}{typ}({N}{char})"
+    else:
+        ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
 def minimal_conrey_in_character_orbit(level, weight, char_orbit):

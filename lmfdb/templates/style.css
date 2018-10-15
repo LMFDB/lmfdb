@@ -99,15 +99,15 @@ h2.link > a {
 }
 
 #content > ul {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
     color: {{color.col_link}};
-  text-decoration: none;
-  font-family: sans-serif;
+    text-decoration: none;
+    font-family: sans-serif;
 }
 
 a[knowl] {
@@ -2104,16 +2104,19 @@ table.coeff_ring_basis td.RHS {
 }
 
 table.complex-cols td.real {
+    font-family: MJX_Math;
     text-align: right;
     margin-right: 0;
     padding-right: 0;
 }
 table.complex-cols td.imag {
+    font-family: MJX_Math;
     text-align: left;
     margin-left: 0;
     padding-left: 0;
 }
-table.complex-cols td.op {
+td.op {
+    font-family: MJX_Math;
     text-align: center;
     margin-right: 0;
     padding-right: 2px;
@@ -2135,4 +2138,22 @@ table.sticky-embeddings td.vstrut {
     padding-left: 0;
     margin-right: 0;
     padding-right: 0;
+}
+
+table.qexp-table td.fdef {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+    vertical-align: top;
+}
+table.qexp-table td.op {
+    vertical-align: top;
+}
+
+td.topspace {
+    padding-top: 15px;
+}
+table.qexp-table td.output {
+    margin-left: 0;
+    padding-left: 0;
 }

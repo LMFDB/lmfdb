@@ -240,7 +240,12 @@ def render_full_gamma1_space_webpage(label):
 
 @cmf.route("/<int:level>/")
 def by_url_level(level):
-    return newform_search({'level' : level})
+    info = to_dict(request.args)
+    if 'level' in info:
+        redirect(url_for('.index'), code=301)
+    else:
+        info['level'] = level
+    return newform_search(info)
 
 @cmf.route("/<int:level>/<int:weight>/")
 def by_url_full_gammma1_space_label(level, weight):

@@ -248,7 +248,10 @@ def round_RBF_to_half_int(x):
             return float(k)/2
     except ValueError:
         pass
-    return float(x)
+    try:
+        return float(x)
+    except TypeError: # old version of Sage
+        return float(x.n(x.prec()))
 
 def round_CBF_to_half_int(x):
     return CDF(tuple(map(round_RBF_to_half_int, [x.real(), x.imag()])))
