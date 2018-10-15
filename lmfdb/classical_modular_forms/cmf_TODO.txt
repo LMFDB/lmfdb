@@ -6,7 +6,7 @@ IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Fix sort order on newforms and spaces (should be by analytic conductor, not Nk2) (David)
 * Update Nk2 search and display to use the actual analytic conductor (David)
-* Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (David)
+* Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (David) See: scripts/classical_modular_forms/verify_data.py
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
 * Undo color and logo changes (David)
 * Indent q-expansion and trace expansion, less space before display precision (David)
@@ -16,7 +16,6 @@ IMPORTANT:
 * Change Gamma_0(N) to N, \chi_N(a, \cdot) with \chi (David)
 * Update display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
 * visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search (seems like the same issue for nfs? http://cmfs.lmfdb.xyz/NumberField/2.2.3.1) (David)
-* weird rendering on safari of the complex embeddings 
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
@@ -27,6 +26,7 @@ IMPORTANT:
 
 
 GOOD:
+* compute all data for Nk^2 <= 4000
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
