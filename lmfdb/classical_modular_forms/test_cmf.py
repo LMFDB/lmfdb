@@ -51,7 +51,7 @@ class CmfTest(LmfdbTest):
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
         assert '0.299366' in page.data
-        assert '0.954138 i' in page.data
+        assert '0.954138' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
         assert '0.792122' in page.data
 
@@ -62,11 +62,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert r'\(-0.707106\)' in page.data
-        assert r'\(0.707106 i\)' in page.data
-        assert r'\(0.957427 i\)' in page.data
-        assert r'\(0.223606\)' in page.data
-        assert r'\(0.974679 i\)' in page.data
+        assert r'-0.707106' in page.data
+        assert r'0.707106' in page.data
+        assert r'0.957427' in page.data
+        assert r'0.223606' in page.data
+        assert r'0.974679' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
         assert '0.253841' in page.data
@@ -91,7 +91,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/b/a/")
         assert r'46q^{9}' in page.data
         assert r'\Q(\sqrt{-1})' in page.data
-        assert r'10 i' in page.data
+        assert r'10' in page.data
 
     def test_get_args(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/10/a/")
@@ -150,26 +150,26 @@ class CmfTest(LmfdbTest):
 
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        assert r'\(-0.707106\)' in page.data
-        assert r'\(0.707106 i\)' in page.data
-        assert r'\(0.957427 i\)' in page.data
-        assert r'\(0.223606\)' in page.data
-        assert r'\(0.974679 i\)' in page.data
+        assert r'-0.707106' in page.data
+        assert r'0.707106' in page.data
+        assert r'0.957427' in page.data
+        assert r'0.223606' in page.data
+        assert r'0.974679' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
-        assert r'\(-0.750000\)' in page.data
-        assert r'\(0.661437 i\)' in page.data
-        assert r'\(-0.272727\)' in page.data
-        assert r'\(1\)' in page.data
+        assert r'-0.750000' in page.data
+        assert r'0.661437' in page.data
+        assert r'-0.272727' in page.data
+        assert r'1' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
         assert '\(\pi\)' in page.data
         assert '\(0.769946\pi\)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert r'\(-0.965925\)' in page.data
-        assert r'\(0.258819 i\)' in page.data
-        assert r'\(0.990337 i\)' in page.data
+        assert r'-0.965925' in page.data
+        assert r'0.258819' in page.data
+        assert r'0.990337' in page.data
 
 
     def test_download(self):
