@@ -10,6 +10,7 @@ from dirichlet_conrey import DirichletGroup_conrey
 def verify_dimensions(n,k):
     totaldim = 0
     for ns in db.mf_newspaces.search({'level':n, 'weight':k}, projection = ['hecke_orbit_dims', 'char_orbit_index','char_labels','label']):
+        label = ns['label']
         index = ns['char_orbit_index']
         hecke_orbit_dims = ns['hecke_orbit_dims']
         hecke_orbit_dims.sort()
@@ -17,10 +18,10 @@ def verify_dimensions(n,k):
         totaldim += dim
         char_labels = ns['char_labels']
         sage_dim, sage_indexes = dim_and_char_labels(n,k,index)
-        assert dim == sage_dim
-        assert sorted(sage_indexes) == sorted(char_labels)
+        assert dim == sage_dim, label
+        assert sorted(sage_indexes) == sorted(char_labels), label
         hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label']}, projection = 'dim')))
-        assert hecke_orbit_dims == hecke_orbit_dims_nf
+        assert hecke_orbit_dims == hecke_orbit_dims_nf, label
 
     assert totaldim == dimension_new_cusp_forms(Gamma1(n), k), "%s != %s" % (totaldim, dimension_new_cusp_forms(Gamma1(n), k))
 
