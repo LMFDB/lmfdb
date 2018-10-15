@@ -29,7 +29,6 @@ def get_urls(newform):
 def verify_embeddings(nf):
     if nf['dim'] <= 20 and  nf['dim'] > 1:
         hoc = nf['hecke_orbit_code']
-nf = db.mf_newforms.search({'id':id_number}, projection = 'hecke_orbit_code')
         embeddings = list(db.mf_hecke_cc.search({'hecke_orbit_code':hoc}, projection = ['embedding_root_imag','embedding_root_real']))
         # we have the right number of embeddings
         assert len(embeddings) == dim
