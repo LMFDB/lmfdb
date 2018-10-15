@@ -242,7 +242,7 @@ def render_full_gamma1_space_webpage(label):
 def by_url_level(level):
     info = to_dict(request.args)
     if 'level' in info:
-        redirect(url_for('.index'), code=301)
+        return redirect(url_for('.index', **request.args), code=307)
     else:
         info['level'] = level
     return newform_search(info)

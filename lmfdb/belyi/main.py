@@ -85,7 +85,7 @@ def by_url_belyi_search_group_triple(group, abc):
     if len(request.args) > 0:
         # if group or abc changed, fall back to a general search
         if 'group' in request.args and (request.args['group'] != str(group) or request.args['abc_list'] != str(abc)):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['group'] = group
