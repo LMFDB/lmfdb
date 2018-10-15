@@ -270,7 +270,7 @@ class LfunctionTest(LmfdbTest):
                 assert 'Modular form 60.2.%d.a.%d' % (c,i) in L.data, 'Modular form 60.2.%d.a.%d' % (c,i)
         assert '0.676894' in L.data
         assert '2.15777231959226116393597609132' in L.data
-        assert '1-2T+2T^{2}-2pT^{3}+p^{2}T^{4}' in L.data
+        assert '$1-2T+2T^{2}-2 p T^{3}+ p^{2} T^{4}$' in L.data
         assert '(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/')
