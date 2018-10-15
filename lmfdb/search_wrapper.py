@@ -22,7 +22,7 @@ class SearchWrapper(object):
         self.kwds = kwds
 
     def __call__(self, info):
-        info = to_dict(info) # I'm not sure why this is required...
+        info = to_dict(info, exclude =['bread']) # I'm not sure why this is required...
         for key, func in self.shortcuts.items():
             if info.get(key,'').strip():
                 return func(info)
@@ -30,7 +30,6 @@ class SearchWrapper(object):
         template_kwds = {}
         for key in self.kwds:
             template_kwds[key] = info.get(key, self.kwds[key]())
-
         try:
             errpage = self.f(info, query)
         except ValueError as err:

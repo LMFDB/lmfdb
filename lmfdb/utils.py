@@ -291,7 +291,7 @@ def str_to_CBF(s):
 
 
 
-def to_dict(args):
+def to_dict(args, exclude = []):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
@@ -304,7 +304,7 @@ def to_dict(args):
     d = {}
     for key in args:
         values = args[key]
-        if isinstance(values, list):
+        if isinstance(values, list) and key not in exclude:
             if values:
                 d[key] = values[-1]
         elif values:
