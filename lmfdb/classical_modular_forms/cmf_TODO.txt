@@ -6,9 +6,8 @@ IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (Edgar) See: scripts/classical_modular_forms/verify_data.py
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
-* Multiply all analytic conductors by 2 (Drew)
-* Update display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)
-* Add search on prime divisors of level (David)
+* Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
+* Add search on prime divisors of level (Drew, David)
 * visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search (seems like the same issue for nfs? http://cmfs.lmfdb.xyz/NumberField/2.2.3.1) (David)
 * Enter label where Nk^2 bigger than range, get nice error message (outside range) (David)
 * For Dirichlet character, include orbit label in search results and on page (David)
@@ -29,7 +28,6 @@ GOOD:
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
-* data: add data for is_twist_minimal
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
@@ -37,6 +35,7 @@ GOOD:
 
 FORMATTING:
 * missing pixel in complex embeddings for firefox and safari
+* Consider switching level and weight on browse and refine search input boxes
 
 IT WOULD BE NICE IF:
 * notation like (1/2)^n for selberg data (Edgar, ask Farmer)
@@ -63,7 +62,7 @@ FUTURE WORK:
 * data: add trace hash for ECNF L-fun
 * data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
-
+* data: add data for is_twist_minimal
 
 NOT CMF STUFF:
 * pick columns and sort order on search results
