@@ -94,7 +94,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     ids = list(range(start, bound + 1, k))
-    for i in []: #ids:
+    for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         if nf is not None:
             print "%d ->\t %.2f %s" % (start, 100*float(i)/bound, nf['label'])
