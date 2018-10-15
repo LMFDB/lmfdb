@@ -4,8 +4,11 @@ from lmfdb.db_backend import db, SQL
 from sage.all import CDF
 
 
+# TODO
+# check that the first root matches the other root to the right precision
+# compute newform dimensions in Sage and compare with dims in mf_newspaces
+# compare with sum of dims in mf_newforms
 
-# check that we have all L-functions
 
 def get_urls(newform):
     char_labels = newform['char_labels']
