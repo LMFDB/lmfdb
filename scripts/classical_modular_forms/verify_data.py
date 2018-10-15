@@ -11,15 +11,15 @@ def verify_dimensions(n,k):
     totaldim = 0
     for ns in db.mf_newspaces.search({'level':n, 'weight':k}, projection = ['hecke_orbit_dims', 'char_orbit_index','char_labels','label']):
         label = ns['label']
-        index = ns['char_orbit_index']
+        number = ns['char_labels'][0]
         hecke_orbit_dims = ns['hecke_orbit_dims']
         hecke_orbit_dims.sort()
         dim = sum(hecke_orbit_dims)
         totaldim += dim
         char_labels = ns['char_labels']
-        sage_dim, sage_indexes = dim_and_char_labels(n,k,index)
+        sage_dim, sage_orbit = dim_and_orbit(n,k,number)
         assert dim == sage_dim, label
-        assert sorted(sage_indexes) == sorted(char_labels), label
+        assert sorted(sage_orbit) == sorted(char_labels), label
         hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label']}, projection = 'dim')))
         assert hecke_orbit_dims == hecke_orbit_dims_nf, label
 
@@ -28,9 +28,9 @@ def verify_dimensions(n,k):
 
 
 
-def dim_and_char_labels(n,k,index):
+def dim_and_orbit(n,k,number):
     G = DirichletGroup_conrey(n)
-    char = G[index]
+    char = G[number]
     indexes = [elt.number() for elt in char.galois_orbit()]
     dim = dimension_new_cusp_forms(char.sage_character(),k)
     return dim, indexes
