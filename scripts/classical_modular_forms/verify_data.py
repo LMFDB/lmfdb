@@ -62,7 +62,7 @@ if len(sys.argv) == 3:
     assert k > start
     ids = list(range(start, bound + 1, k))
     for i in ids:
-        nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim'])
+        nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         print nf['label']
         verify_Lfunctions(nf)
         verify_embeddings(nf)
