@@ -2,9 +2,9 @@ from bson.code import Code
 import dbtools
 import id_object
 import datetime
-import threading
-import bson
-import time
+#import threading
+#import bson
+#import time
 from collections import defaultdict
 from lmfdb.db_backend import db
 
@@ -162,54 +162,54 @@ def parse_lmfdb_to_json(tables = None, databases = None,
     """Legacy routine to scan any specified chunk of LMFDB to JSON"""
     raise NotImplementedError
     # connection has been deleted
-
-    if not tables:
-        tables = get_lmfdb_tables(databases = databases,
-                          is_good_database = is_good_database, is_good_table = is_good_table)
-    else:
-        if not hasattr(tables, '__iter__'): tables = [tables]
-        if not isinstance(tables, dict):
-            if not databases:
-                databases = get_lmfdb_databases(is_good_database = is_good_database)
-            if len(databases) == 1:
-                tbldict = {databases[0] : tables}
-            else:
-                tbldict = defaultdict(list)
-                for table in tables:
-                    db_name = table.split('_')[0]
-                    tbldict[db_name].append(table)
-            tables = tbldict
-        else:
-            for db_name, L in tables.items():
-                if not isinstance(L, list):
-                    if L:
-                        tables[db_name] = [L]
-                    else:
-                        tables.update(get_lmfdb_tables(databases=db_name))
-
-    db_struct = {}
-    for db_name in tables:
-        print('Running ' + db_name)
-        if is_good_database(db_name):
-            for table in tables[db_name]:
-                print('Parsing ' + table)
-                if is_good_table(table):
-                    mydict={}
-                    mythread = threading.Thread(target = parse_table_info_to_json, args = [table, mydict])
-                    mythread.start()
-                    while mythread.isAlive():
-                        u=bson.son.SON({"$ownOps":1,"currentOp":1})
-                        progress = connection['admin'].command(u)
-                        for el in progress['inprog']:
-                            if 'progress' in el.keys():
-                                if el['ns'] == table:
-                                    print("Scanning " + table + " " +
-                                        unicode(int(el['progress']['done'])) +
-                                        "\\" + unicode(int(el['progress']['total'])))
-                        time.sleep(5)
-
-                    merge_dicts(db_struct, mydict['data'])
-    return db_struct
+#
+#    if not tables:
+#        tables = get_lmfdb_tables(databases = databases,
+#                          is_good_database = is_good_database, is_good_table = is_good_table)
+#    else:
+#        if not hasattr(tables, '__iter__'): tables = [tables]
+#        if not isinstance(tables, dict):
+#            if not databases:
+#                databases = get_lmfdb_databases(is_good_database = is_good_database)
+#            if len(databases) == 1:
+#                tbldict = {databases[0] : tables}
+#            else:
+#                tbldict = defaultdict(list)
+#                for table in tables:
+#                    db_name = table.split('_')[0]
+#                    tbldict[db_name].append(table)
+#            tables = tbldict
+#        else:
+#            for db_name, L in tables.items():
+#                if not isinstance(L, list):
+#                    if L:
+#                        tables[db_name] = [L]
+#                    else:
+#                        tables.update(get_lmfdb_tables(databases=db_name))
+#
+#    db_struct = {}
+#    for db_name in tables:
+#        print('Running ' + db_name)
+#        if is_good_database(db_name):
+#            for table in tables[db_name]:
+#                print('Parsing ' + table)
+#                if is_good_table(table):
+#                    mydict={}
+#                    mythread = threading.Thread(target = parse_table_info_to_json, args = [table, mydict])
+#                    mythread.start()
+#                    while mythread.isAlive():
+#                        u=bson.son.SON({"$ownOps":1,"currentOp":1})
+#                        progress = connection['admin'].command(u)
+#                        for el in progress['inprog']:
+#                            if 'progress' in el.keys():
+#                                if el['ns'] == table:
+#                                    print("Scanning " + table + " " +
+#                                        unicode(int(el['progress']['done'])) +
+#                                        "\\" + unicode(int(el['progress']['total'])))
+#                        time.sleep(5)
+#
+#                    merge_dicts(db_struct, mydict['data'])
+#    return db_struct
 
 def get_lmfdb_databases(is_good_database=_is_good_database):
     """ Routine to get list of available databases """

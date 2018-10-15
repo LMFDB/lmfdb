@@ -127,11 +127,19 @@ class LfunctionTest(LmfdbTest):
 
 
     def test_Lcmf(self):
+        # check the zeros agree across 3 instances
+        L = self.tc.get('/L/Zeros/EllipticCurve/2.0.11.1/11.1/a/')
+        assert '6.36261389471308870138602900888' in L.data
+        L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        assert '6.36261389471308870138602900888' in L.data
+        L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
+        assert '6.36261389471308' in L.data
+
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/1/a/1/')
         assert '4.84e4' in L.data # a_7
         assert '71.7' in L.data # a_2
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/13/12/1/a/1/')
-        assert '1.51472556376999989424803061411' in L.data # first zero
+        assert '1.51472556377341264746894823521' in L.data # first zero
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/13/12/a/a/')
         assert '1.51472556376999989424803061411' in L.data # first zero
@@ -321,7 +329,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/SymmetricPower/6/EllipticCurve/Q/11/a/')
         assert '1771561' in L.data
         L = self.tc.get('/L/SymmetricPower/11/EllipticCurve/Q/11/a/')
-        assert '285311670611' in L.data
+        assert '11^{11}' in L.data
 
 
     def test_Ldedekind(self):

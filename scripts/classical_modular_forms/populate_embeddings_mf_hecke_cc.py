@@ -1,4 +1,4 @@
-from sage.all import  vector, PolynomialRing, ZZ, NumberField, RDF
+from sage.all import  vector, PolynomialRing, ZZ, NumberField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
@@ -42,7 +42,6 @@ def upsert_embedding(id_number, skip = False):
         denominators = newform['hecke_ring_denominators']
         betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
 
-        row_hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code})
         embeddings = HF.complex_embeddings(prec=2000)
         an_nf = list(db.mf_hecke_nf.search({'hecke_orbit_code':hecke_orbit_code}, ['n','an'], sort=['n']))
         betas_embedded = [map(elt, betas) for elt in embeddings]

@@ -200,7 +200,8 @@ class CmfTest(LmfdbTest):
         """
         for i in range(100):
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random', follow_redirects = True)
-            assert 'Defining parameters' in page.data
+            assert 'Newspace' in page.data
+            assert 'parameters' in page.data
             assert 'Properties' in page.data
             assert 'Newform' in page.data
             assert 'expansion' in page.data
