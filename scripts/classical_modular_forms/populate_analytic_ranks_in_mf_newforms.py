@@ -1,5 +1,5 @@
-import sys
-sys.path.append('/home/edgarcosta/lmfdb/')
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db
 
 def get_url(newform):
@@ -51,6 +51,5 @@ if len(sys.argv) == 3:
         upsert_rank(i)
 else:
     print r"""Usage:
-        You should run this on legendre, on lmfdb root dir as (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_analytic_ranks_in_mf_newforms.py 40 ::: {0..39}
-"""
+        You should run this on legendre as: (this will use 40 cores):
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]

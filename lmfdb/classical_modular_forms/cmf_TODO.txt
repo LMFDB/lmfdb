@@ -1,15 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
-On data updates:
-* data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
-* data: populate analytic rank (Edgar)
-* check data quality:
-  * per each newform, check that we have all the Lfunctions, only  one for rational
-  * check that the roots are all different (Edgar)
-  * check that there are no duplicates in Lfun table
-  * check that there are no duplicates in hecke_cc table
-
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
@@ -20,7 +11,6 @@ IMPORTANT:
 * Undo color and logo changes (David)
 * Indent q-expansion and trace expansion, less space before display precision (David)
 * Pull from upstream master (David)
-* Use HTML for complex embeddings (Edgar)
 * Multiply all analytic conductors by 2 (Drew)
 * Fix color.col_link, figure out why Coefficient field header is big (David)
 * Change Gamma_0(N) to N, \chi_N(a, \cdot) with \chi (David)
@@ -47,6 +37,7 @@ GOOD:
 
 
 FORMATTING:
+* missing pixel in complex embeddings for firefox and safari
 
 IT WOULD BE NICE IF:
 * Add tests for display_float, etc

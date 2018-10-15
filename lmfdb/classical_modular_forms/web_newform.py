@@ -483,7 +483,7 @@ function switch_basis(btype) {
         xiszero = abs(x) < 10**(-prec)
         yiszero = abs(y) < 10**(-prec)
         if xiszero and yiszero:
-            return r"\(0\)"
+            return r"0"
         elif yiszero or (xiszero and y > 0):
             return ""
         elif y > 0:
