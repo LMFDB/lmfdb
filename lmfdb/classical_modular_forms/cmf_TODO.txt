@@ -3,7 +3,6 @@ CRITICAL (BUGS):
 
 
 IMPORTANT:
-* make tests pass (Edgar)
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Fix sort order on newforms and spaces (should be by analytic conductor, not Nk2) (David)
 * Update Nk2 search and display to use the actual analytic conductor (David)
@@ -27,7 +26,7 @@ IMPORTANT:
 
 
 GOOD:
-* compute all data for Nk^2 <= 4000
+* compute all data for Nk^2 <= 4000 (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
