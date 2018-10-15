@@ -302,6 +302,7 @@ class WebGamma1Space(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(level).factor()._latex_()
+        # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
             raise ValueError("Space not in database")

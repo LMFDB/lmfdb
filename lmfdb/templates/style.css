@@ -2024,6 +2024,7 @@ p.short {
     border-collapse: collapse;
 }
 #table-scroll-wrapper th {
+    position: -webkit-sticky; top: 0;
     position: sticky; top: 0;
     z-index:1;
     background:{{color.table_ntdata_background_2}};
@@ -2052,11 +2053,13 @@ p.short {
     border-right: 2px solid {{ color.table_ntdata_border}};
 }
 #table-scroll-wrapper .sticky-col {
+    position: -webkit-sticky; left: 0;
     position: sticky; left: 0;
     z-index:2;
     background-clip: padding-box;
 }
 #table-scroll-wrapper th.sticky-head {
+    position: -webkit-sticky; left: 0; top: 0;
     position: sticky; left: 0; top: 0;
     z-index:3;
 }

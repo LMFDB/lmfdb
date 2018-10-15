@@ -386,7 +386,7 @@ class RiemannZeta(Lfunction):
         self.primitive = True
         self.degree = 1
         self.quasidegree = 1
-        self.level = 1
+        self.level_factored = self.level = 1
         self.mu_fe = [0]
         self.nu_fe = []
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -567,7 +567,7 @@ class Lfunction_from_db(Lfunction):
             for factor_Lhash in  self.Lhash.split(","):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
                 elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = getattr(elt, 'trace_hash', None)
+                trace_hash = elt.get('trace_hash',None)
                 if trace_hash is not None:
                     instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
                 else:
@@ -627,17 +627,20 @@ class Lfunction_from_db(Lfunction):
         If `charactermodulus` and `characternumber` are defined, make a title
         which includes the character. Otherwise, make a title without character.
         '''
-        conductor_str = "$ %s $" % latex(self.level_factored)
+        if len(str(self.level)) < sum([len(str(elt)) + min(2, k) for elt, k in self.level_factored]):
+            conductor_str = "$%s$" % self.level
+        else:
+            conductor_str = "$%s$" % latex(self.level_factored)
 
         if self.chilatex is not None:
             title_end = (
-                    " of degree {degree}, weight {weight},"
+                    " of degree {degree}, motivic weight {weight},"
                     " conductor {conductor}, and {character}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
                             conductor=conductor_str, character=self.chilatex)
         else:
             title_end = (
-                    " of degree {degree}, weight {weight},"
+                    " of degree {degree}, motivic weight {weight},"
                     " and conductor {conductor}"
                     ).format(degree=self.degree, weight=self.motivic_weight,
                             conductor=conductor_str)
@@ -739,12 +742,12 @@ class Lfunction_CMF(Lfunction_from_db):
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
-    def _set_title(self):
-        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
-            self.weight, self.level, self.chilatex)
-
-        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-
+#    def _set_title(self):
+#        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
+#            self.weight, self.level, self.chilatex)
+#
+#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+#
 
 #############################################################################
 
@@ -789,13 +792,13 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
     def bread(self):
         return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
 
-    def _set_title(self):
-        conductor_str = "$ %s $" % latex(self.modform_level)
-        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
-            self.weight, conductor_str)
-
-        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
-
+#    def _set_title(self):
+#        conductor_str = "$ %s $" % latex(self.modform_level)
+#        title = "L-function of a Hecke orbit of a homomorphic cusp form of weight %s and level %s" % (
+#            self.weight, conductor_str)
+#
+#        self.info['title'] = self.info['title_analytic'] = self.info['title_arithmetic'] = title
+#
 #################################################################################################
 
 
@@ -1027,6 +1030,7 @@ class Lfunction_Maass(Lfunction):
             # Extract the L-function information from the Maass form object
             self.symmetry = self.mf.symmetry
             self.level = int(self.mf.level)
+            self.level_factored = factor(self.level)
             self.charactermodulus = self.level
             self.weight = int(self.mf.weight)
             self.characternumber = int(self.mf.character)
@@ -1150,6 +1154,7 @@ class Lfunction_HMF(Lfunction):
         self.degree = 2 * self.field_degree
         self.quasidegree = self.degree
         self.level = f['level_norm'] * self.field_disc ** 2
+        self.level_factored = factor(self.level)
         self.mu_fe = []
         self.nu_fe = [Rational(self.weight - 1)/2 for i in range(self.field_degree)]
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1324,7 +1329,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.langlands = True
         self.degree = 4
         self.quasidegree = 1
-        self.level = 1
+        self.level_factored = self.level = 1
         self.mu_fe = []  # the shifts of the Gamma_R to print
         self.automorphyexp = float(self.weight) - float(1.5)
         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
@@ -1410,6 +1415,7 @@ class DedekindZeta(Lfunction):
         self.degree = self.NF.degree()
         self.quasidegree = sum(self.signature)
         self.level = self.NF.discriminant().abs()
+        self.level_factored = factor(self.level)
         self.mu_fe = self.signature[0] * [0]
         self.nu_fe = self.signature[1] * [0]
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1520,6 +1526,7 @@ class ArtinLfunction(Lfunction):
         self.primitive = self.artin.primitive()
         self.degree = self.artin.dimension()
         self.level = self.artin.conductor()
+        self.level_factored = factor(self.level)
         self.mu_fe = self.artin.mu_fe()
         self.nu_fe = self.artin.nu_fe()
         self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1604,6 +1611,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.primitive = True
         self.degree = self.motive["degree"]
         self.level = self.motive["cond"]
+        self.level_factored = factor(self.level)
         self.mu_fe, self.nu_fe = lmfdb.hypergm.hodge.mu_nu(self.motive["hodge"], self.motive["sig"])
         self.compute_kappa_lambda_Q_from_mu_nu()            # Somehow this doesn t work, and I don t know why!
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
@@ -1704,6 +1712,7 @@ class SymmetricPowerLfunction(Lfunction):
         self.primitive = True
         self.degree = self.m + 1
         self.level = self.S.conductor
+        self.level_factored = factor(self.level)
         self.kappa_fe = self.S._kappa_fe
         self.lambda_fe = self.S._lambda_fe
         self.Q_fe = self.S._Q_fe

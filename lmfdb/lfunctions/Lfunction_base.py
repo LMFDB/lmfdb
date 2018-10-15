@@ -1,5 +1,5 @@
 from flask import url_for
-from sage.all import ZZ, is_prime, latex, factor, imag_part
+from sage.all import ZZ, is_prime, latex, imag_part
 from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                 specialValueTriple)
@@ -126,7 +126,11 @@ class Lfunction:
         info['degree'] = int(self.degree)
         info['conductor'] = self.level
         if not is_prime(int(self.level)):
-            info['conductor_factored'] = latex(factor(int(self.level)))
+            if self.level >= 10**8:
+                info['conductor'] = latex(self.level_factored)
+            else:
+                info['conductor_factored'] = latex(self.level_factored)
+
 
         info['sign'] = "$" + styleTheSign(self.sign) + "$"
         info['algebraic'] = self.algebraic

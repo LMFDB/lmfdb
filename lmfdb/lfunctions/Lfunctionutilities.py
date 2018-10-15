@@ -4,7 +4,7 @@ import re
 from lmfdb.lfunctions import logger
 from flask import url_for
 import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n, is_prime
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
@@ -422,7 +422,7 @@ def lfuncEPhtml(L,fmt, prec = 12):
     def pretty_poly(poly, prec = None):
         out = "1"
         for i,elt in enumerate(poly):
-            if elt is None or i == prec:
+            if elt is None or (i == prec and prec != len(poly) - 1):
                 out += "O(%s)" % (seriesvar(i, "polynomial"),)
                 break;
             elif i > 0:
@@ -447,9 +447,9 @@ def lfuncEPhtml(L,fmt, prec = 12):
             if L.coefficient_field == "CDF" or None in poly:
                 factors = str(pretty_poly(poly, prec = prec))
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec)
+                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:
-                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois)
+                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
             out += ("<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td><td>" +
                         "$" + factors + "$" +
                         "</td>")
@@ -569,8 +569,10 @@ def lfuncFEtex(L, fmt):
     if fmt == "arithmetic" or fmt == "analytic":
         ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
-            # ans+=latex(L.level)+"^{\\frac{s}{2}}"
-            ans += latex(L.level) + "^{s/2}"
+            if L.level >= 10**8 and not is_prime(int(L.level)):
+                ans += r"\left(%s\right)^{s/2}" % latex(L.level_factored)
+            else:
+                ans += latex(L.level) + "^{s/2}"
             ans += " \\, "
         def munu_str(factors_list, field):
             assert field in ['\R','\C']
@@ -610,7 +612,11 @@ def lfuncFEtex(L, fmt):
         ans += "\n\\end{align}\n"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + ",\\ "
-        ans += str(int(L.level)) + ",\\ "
+        if L.level >= 10**8 and not is_prime(int(L.level)):
+            ans += latex(L.level_factored)
+        else:
+            ans += str(int(L.level))
+        ans += ",\\ "
         ans += "("
         # this is mostly a hack for GL2 Maass forms
         def real_digits(x):
