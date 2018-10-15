@@ -39,6 +39,7 @@ FORMATTING:
 * missing pixel in complex embeddings for firefox and safari
 
 IT WOULD BE NICE IF:
+* notation like (1/2)^n for selberg data (Edgar, ask Farmer)
 * Add tests for display_float, etc
 * Add density of zero traces (Edgar)
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
@@ -65,6 +66,8 @@ FUTURE WORK:
 
 
 NOT CMF STUFF:
+* pick columns and sort order on search results
+* pick a random object with contraints
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 * fix hmf and bmf l-functions
