@@ -62,7 +62,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert r'-0.707106' in page.data
+        assert r'0.707106' in page.data
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
@@ -150,16 +150,16 @@ class CmfTest(LmfdbTest):
 
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
-        assert r'-0.707106' in page.data
+        assert r'0.707106' in page.data
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
         assert r'0.974679' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
-        assert r'-0.750000' in page.data
+        assert r'0.750000' in page.data
         assert r'0.661437' in page.data
-        assert r'-0.272727' in page.data
+        assert r'0.272727' in page.data
         assert r'1' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
@@ -167,7 +167,7 @@ class CmfTest(LmfdbTest):
         assert '\(0.769946\pi\)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert r'-0.965925' in page.data
+        assert r'0.965925' in page.data
         assert r'0.258819' in page.data
         assert r'0.990337' in page.data
 

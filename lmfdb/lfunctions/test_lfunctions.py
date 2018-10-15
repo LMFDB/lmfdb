@@ -213,7 +213,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.729971' in L.data
         assert '(2,\ 490,\ (\ :1/2),\ 1)' in L.data
         assert '0.940863335931152039286421559408' in L.data
-        assert '1+7T+pT^{2}' in L.data
+        assert '1+7T+ p T^{2}' in L.data
         assert '\chi_{490} (1, \cdot )' in L.data
         L = self.tc.get('/L/EllipticCurve/Q/490/a/')
         assert '0.9408633359311520' in L.data
@@ -226,7 +226,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6T + pT^{2}' in L.data
+        assert '$1 + 6T + 29T^{2}$' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
 
@@ -238,7 +238,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '1 + 6T + pT^{2}' in L.data
+        assert '$1 + 6T + 29T^{2}$' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
 
@@ -250,8 +250,8 @@ class LfunctionTest(LmfdbTest):
         assert '4.04397' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
-        assert '(1+T+pT^{2})(1+7T+pT^{2})' in L.data
-        assert '(1-2T+pT^{2})^{2}' in L.data
+        assert '(1+T+ p T^{2})(1+7T+ p T^{2})' in L.data
+        assert '(1-2T+ p T^{2})^{2}' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/129/2/a/d/')
         assert 'Modular form 129.2.a.d' in L.data
