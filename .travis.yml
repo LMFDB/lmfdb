@@ -72,7 +72,7 @@ script:
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
     # This runs without fail
-    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb -n3" 
+    - ${SAGE} -sh -c "pytest --verbose -s --cov=lmfdb"
 
 after_failure:
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
