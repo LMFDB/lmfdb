@@ -62,9 +62,10 @@ if len(sys.argv) == 3:
     ids = list(range(start, bound + 1, k))
     for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
-        print "%.2f %s" % (100*float(i)/bound, nf['label'])
-        verify_Lfunctions(nf)
-        verify_embeddings(nf)
+        if nf is not None:
+            print "%.2f %s" % (100*float(i)/bound, nf['label'])
+            verify_Lfunctions(nf)
+            verify_embeddings(nf)
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
