@@ -32,6 +32,7 @@ def dim_and_orbit(n,k,number):
     G = DirichletGroup_conrey(n)
     char = G[number]
     indexes = [elt.number() for elt in char.galois_orbit()]
+    indexes.sort()
     dim = dimension_new_cusp_forms(char.sage_character(),k)
     return dim, indexes
 
