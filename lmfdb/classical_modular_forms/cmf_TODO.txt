@@ -1,15 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new scheme (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
-On data updates:
-* data: populate embeddings column by computing roots of defining polynomials and matching with complex data (Edgar)
-* data: populate analytic rank (Edgar)
-* check data quality:
-  * per each newform, check that we have all the Lfunctions, only  one for rational
-  * check that the roots are all different (Edgar)
-  * check that there are no duplicates in Lfun table
-  * check that there are no duplicates in hecke_cc table
-
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
