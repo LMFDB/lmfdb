@@ -6,7 +6,7 @@ IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Fix sort order on newforms and spaces (should be by analytic conductor, not Nk2) (David)
 * Update Nk2 search and display to use the actual analytic conductor (David)
-* Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (David) See: scripts/classical_modular_forms/verify_data.py
+* Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (Edgar) See: scripts/classical_modular_forms/verify_data.py
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
 * Undo color and logo changes (David)
 * Indent q-expansion and trace expansion, less space before display precision (David)
@@ -26,7 +26,7 @@ IMPORTANT:
 
 
 GOOD:
-* compute all data for Nk^2 <= 4000
+* compute all data for Nk^2 <= 4000 (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)

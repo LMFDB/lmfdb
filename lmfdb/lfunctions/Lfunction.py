@@ -567,7 +567,7 @@ class Lfunction_from_db(Lfunction):
             for factor_Lhash in  self.Lhash.split(","):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
                 elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = getattr(elt, 'trace_hash', None)
+                trace_hash = elt.get('trace_hash',None)
                 if trace_hash is not None:
                     instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
                 else:
