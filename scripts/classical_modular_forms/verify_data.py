@@ -95,12 +95,12 @@ if len(sys.argv) == 3:
     for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         if nf is not None:
-            print "%d -> %.2f %s" % (start, 100*float(i)/bound, nf['label'])
+            print "%d ->\t %.2f %s" % (start, 100*float(i)/bound, nf['label'])
             verify_Lfunctions(nf)
             verify_embeddings(nf)
     bound = db.mf_newforms.max('Nk2')
     for level in range(1, db.mf_newforms.max('level') + 1):
-        print "%d --> %d" % (start, level)
+        print "%d ->\t %d" % (start, level)
         for weight in range(2, db.mf_newforms.max('weight') + 1):
             if level*weight*weight <= bound and (level + weight)%k == start:
                 verify_dimensions(level, weight)
