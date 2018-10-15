@@ -1,8 +1,8 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db, SQL
-from sage.all import CDF, dimension_new_cusp_forms
-from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+from sage.all import CDF, dimension_new_cusp_forms, Gamma1
+from dirichlet_conrey import DirichletGroup_conrey
 
 
 # TODO
@@ -19,10 +19,10 @@ def verify_dimensions(n,k):
         sage_dim, sage_indexes = dim_and_char_labels(n,k,index)
         assert dim == sage_dim
         assert sorted(sage_indexes) == sorted(char_labels)
-        hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label'])}, projection = 'dim'))
+        hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label']}, projection = 'dim')))
         assert hecke_orbit_dims == hecke_orbit_dims_nf
 
-    assert totaldim = dimension_new_cusp_forms(Gamma1(n), k)
+    assert totaldim == dimension_new_cusp_forms(Gamma1(n), k), "%s != %s" % (totaldim, dimension_new_cusp_forms(Gamma1(n), k))
 
 
 
