@@ -70,7 +70,7 @@ before_script:
 
 script:
     # run pyflakes
-    - pyflakes lmfdb/ > pyflakeslog
+    - pyflakes . > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"
