@@ -4,7 +4,6 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
-* Run consistency checks: 1. compute newform dimensions in Sage 2. compare with dims in mf_newspaces 3. compare with sum of dims in mf_newforms 4. Check that L-functions are present 5. Check that L-function instances are present (Edgar) See: scripts/classical_modular_forms/verify_data.py
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
 * Multiply all analytic conductors by 2 (Drew)
 * Update display strings for non-rational forms; q + (beta_1 + 2beta_3 + ...)q^2 + ... (at most 5 terms in the q^2 coefficient) (Drew)

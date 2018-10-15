@@ -36,3 +36,4 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ```
 parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/verify_data.py 40 ::: {0..39}
 ```
+takes around 15 min
