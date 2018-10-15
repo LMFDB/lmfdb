@@ -7,12 +7,14 @@ IMPORTANT:
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
 * Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
 * Add search on prime divisors of level (Drew, David)
-* visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again does not change the search (seems like the same issue for nfs? http://cmfs.lmfdb.xyz/NumberField/2.2.3.1) (David)
+* visiting http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3/ changing 3 to 12 in the level box and searching again; fix URL (seems like the same issue for nfs? http://cmfs.lmfdb.xyz/NumberField/2.2.3.1) (Edgar)
 * Enter label where Nk^2 bigger than range, get nice error message (outside range) (David)
 * For Dirichlet character, include orbit label in search results and on page (David)
 * Remove twist-minimal from browse and refine search (David)
 * Random result with constraints (David)
 * Undo color change (David)
+* lower case labels for input boxes on browse and refine search (David)
+
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
@@ -70,7 +72,7 @@ NOT CMF STUFF:
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 * fix hmf and bmf l-functions
 * Shrink the sidebar with a button analogous to the properties shrinker
-
+* Related fields for dirichlet characters that are Kronecker symbols
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)

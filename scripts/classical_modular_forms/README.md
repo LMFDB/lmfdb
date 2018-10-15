@@ -8,6 +8,7 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ```
 ### Generate statistics
 ```
+from db_backend import db, SQL
 db._execute(SQL("DELETE FROM mf_newforms_stats"))
 db._execute(SQL("DELETE FROM mf_newforms_counts"))
 db.mf_newforms.stats.add_stats(['has_inner_twist'])
