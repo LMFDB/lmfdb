@@ -47,6 +47,7 @@ GOOD:
 
 
 FORMATTING:
+* missing pixel in complex embeddings for firefox and safari
 
 IT WOULD BE NICE IF:
 * Add tests for display_float, etc
