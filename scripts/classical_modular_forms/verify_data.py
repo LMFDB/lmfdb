@@ -29,7 +29,7 @@ def verify_dimensions(n,k):
 
 def dim_and_char_labels(n,k,index):
     G = DirichletGroup_conrey(n)
-    char = G[67]
+    char = G[index]
     indexes = [elt.number() for elt in char.galois_orbit()]
     dim = dimension_new_cusp_forms(char.sage_character(),k)
     return dim, indexes
@@ -92,7 +92,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     ids = list(range(start, bound + 1, k))
-    for i in ids:
+    for i in []: #ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         if nf is not None:
             print "%d ->\t %.2f %s" % (start, 100*float(i)/bound, nf['label'])
