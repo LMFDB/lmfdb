@@ -31,9 +31,9 @@ def verify_dimensions(n,k):
 def dim_and_orbit(n,k,number):
     G = DirichletGroup_conrey(n)
     char = G[number]
-    indexes = [elt.number() for elt in char.galois_orbit()]
-    indexes.sort()
-    dim = dimension_new_cusp_forms(char.sage_character(),k)
+    go = char.galois_orbit()
+    indexes = [elt.number() for elt in go]
+    dim = sum([dimension_new_cusp_forms(char.sage_character(),k) for elt in go])
     return dim, indexes
 
 
