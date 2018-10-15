@@ -12,7 +12,7 @@ def get_urls(newform):
     res = [ "ModularForm/GL2/Q/holomorphic/" + "/".join(newform['label'].split(".")) ]
     if newform['dim'] == 1:
         return res
-    elif dim > 80:
+    elif newform['dim'] > 80:
         res = []
     N, k, char_orbit, hecke_letter  = newform['label'].split(".")
     base_url = "ModularForm/GL2/Q/holomorphic/%s/%s/" % (N, k)
@@ -33,7 +33,7 @@ def verify_embeddings(nf):
         # we have the right number of embeddings
         assert len(embeddings) == dim
         # they are all distinct
-        assert len(Set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == dim
+        assert len(Set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim']
 
 # cerfies that we have all the L-functions
 # and that the ranks and trace_hash match
