@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
-from lmfdb.db_backend import db
-from lmfdb.db_backend import db
+from lmfdb.db_backend import db, SQL
+from sage.all import CDF
 
 
 
@@ -15,7 +15,6 @@ def get_urls(newform):
     elif newform['dim'] > 80:
         res = []
     N, k, char_orbit, hecke_letter  = newform['label'].split(".")
-    base_url = "ModularForm/GL2/Q/holomorphic/%s/%s/" % (N, k)
     base_label = [N, k]
     for character in char_labels:
         for j in range(newform['dim']/newform['char_degree']):
@@ -31,9 +30,9 @@ def verify_embeddings(nf):
         hoc = nf['hecke_orbit_code']
         embeddings = list(db.mf_hecke_cc.search({'hecke_orbit_code':hoc}, projection = ['embedding_root_imag','embedding_root_real']))
         # we have the right number of embeddings
-        assert len(embeddings) == dim
+        assert len(embeddings) == nf['dim']
         # they are all distinct
-        assert len(Set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim']
+        assert len(set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim']
 
 # cerfies that we have all the L-functions
 # and that the ranks and trace_hash match
