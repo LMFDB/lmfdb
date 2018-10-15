@@ -40,13 +40,13 @@ def verify_embeddings(nf):
 def verify_Lfunctions(nf):
     urls = get_urls(nf)
     for url in urls:
-        assert db.lfunc_instances.exists({'url':url})
-        assert db.lfunc_lfunctions.exists({'origin':url})
+        assert db.lfunc_instances.exists({'url':url}), url
+        assert db.lfunc_lfunctions.exists({'origin':url}), url
 
     if nf['dim'] <= 80:
-        assert db.lfunc_lfunctions.exists({'origin':url[0], 'trace_hash' : nf['trace_hash'] })
+        assert db.lfunc_lfunctions.exists({'origin':urls[0], 'trace_hash' : nf['trace_hash'] }), urls[0]
 
-    assert db.lfunc_lfunctions.exists({'origin':url[-1], 'order_of_vanishing' : nf['analytic_rank'] })
+    assert db.lfunc_lfunctions.exists({'origin':urls[-1], 'order_of_vanishing' : nf['analytic_rank'] }), urls[-1]
 
 
 
@@ -63,6 +63,7 @@ if len(sys.argv) == 3:
     ids = list(range(start, bound + 1, k))
     for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim'])
+        print nf['label']
         verify_Lfunctions(nf)
         verify_embeddings(nf)
 else:
