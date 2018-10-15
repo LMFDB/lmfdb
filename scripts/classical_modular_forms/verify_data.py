@@ -5,8 +5,6 @@ from sage.all import CDF, dimension_new_cusp_forms, Gamma1
 from dirichlet_conrey import DirichletGroup_conrey
 
 
-# TODO
-# check that the first root matches the other root to the right precision
 def verify_dimensions(n,k):
     totaldim = 0
     for ns in db.mf_newspaces.search({'level':n, 'weight':k}, projection = ['hecke_orbit_dims', 'char_orbit_index','char_labels','label']):
@@ -70,6 +68,8 @@ def verify_embeddings(nf):
 
 # cerfies that we have all the L-functions
 # and that the ranks and trace_hash match
+# TODO
+# check that the first root matches the other root to the right precision
 def verify_Lfunctions(nf):
     urls = get_urls(nf)
     for url in urls:
@@ -97,7 +97,7 @@ if len(sys.argv) == 3:
     for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         if nf is not None:
-            print "%d ->\t %.2f %s" % (start, 100*float(i)/bound, nf['label'])
+            print "%d ->\t %.2f\t %s" % (start, 100*float(i)/bound, nf['label'])
             verify_Lfunctions(nf)
             verify_embeddings(nf)
     bound = db.mf_newforms.max('Nk2')
