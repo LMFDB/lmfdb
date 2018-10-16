@@ -63,7 +63,7 @@
   <tr>
     <td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
     <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
-    <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
+    {# <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td> #}
     <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
   </tr>
 
@@ -78,6 +78,7 @@
         <option value="no" {{ "selected" if info.is_cm == 'no'}}>no</option>
       </select>
     </td>
+    {#
     <td>
       <select name='is_twist_minimal' style="width: 150px;">
 	<option></option>
@@ -85,6 +86,7 @@
 	<option value="False" {{ "selected" if info.is_twist_minimal == 'False'}}>False</option>
       </select>
     </td>
+    #}
     <td>
       <select name='has_inner_twist' style="width: 150px;">
         <option value="" {{ "selected" if info.has_inner_twist == ''}}>unrestricted</option>

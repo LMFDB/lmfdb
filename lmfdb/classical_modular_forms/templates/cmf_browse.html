@@ -159,6 +159,7 @@ Info was: {{info}}
     </tr>
 
     <tr>
+      {#
       <td colspan=2>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
       <td><select name='is_twist_minimal' style="width: 140px;">
           <option ></option>
@@ -167,8 +168,8 @@ Info was: {{info}}
         </select>
       </td>
       <td></td>
-
-      <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+      #}
+      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
       <td>
         <select name='has_inner_twist' style="width: 140px">
           <option value="yes">yes</option>

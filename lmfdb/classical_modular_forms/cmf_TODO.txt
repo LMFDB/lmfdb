@@ -12,7 +12,6 @@ IMPORTANT:
 * Remove twist-minimal from browse and refine search (David)
 * Random result with constraints (David)
 * Undo color change (David)
-* lower case labels for input boxes on browse and refine search (David)
 * code snippets for form and space pages (Drew)
 * Trace form search results (David)
 
