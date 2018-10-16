@@ -14,6 +14,8 @@ IMPORTANT:
 * Random result with constraints (David)
 * Undo color change (David)
 * lower case labels for input boxes on browse and refine search (David)
+* code snippets for form and space pages (Drew)
+* Trace form search results (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
@@ -47,8 +49,6 @@ IT WOULD BE NICE IF:
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
-* form pages: add code snippets
-* space pages: add code snippets
 * knowls: more
 * form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
 * identify (if possible?) a more precise description of the twisting characters
