@@ -32,7 +32,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for mf in info.results: %}
+    {% for mf in info.results %}
     <tr>
       <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
       <td> {{ mf.dim }} </td>

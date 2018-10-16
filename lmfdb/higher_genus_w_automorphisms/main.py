@@ -139,7 +139,7 @@ def index():
 
 @higher_genus_w_automorphisms_page.route("/random")
 def random_passport():
-    label = db.hgcwa_passports.random('passport_label')
+    label = db.hgcwa_passports.random(projection='passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
 @higher_genus_w_automorphisms_page.route("/stats")

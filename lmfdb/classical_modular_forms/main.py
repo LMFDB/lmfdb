@@ -125,6 +125,10 @@ def index():
             return dimension_space_search(info)
         elif search_type == 'Spaces':
             return space_search(info)
+        elif search_type == 'Traces':
+            return trace_search(info)
+        elif search_type == 'Random':
+            return newform_search(info, random=True)
         else:
             return newform_search(info)
     info = {"stats": CMF_stats()}
@@ -143,8 +147,12 @@ def index():
 
 @cmf.route("/random")
 def random_form():
-    label = db.mf_newforms.random()
-    return redirect(url_for_label(label), 307)
+    if len(request.args) > 0:
+        info = to_dict(request.args)
+        return newform_search(info, random=True)
+    else:
+        label = db.mf_newforms.random()
+        return redirect(url_for_label(label), 307)
 
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
@@ -595,10 +603,34 @@ def newform_parse(info, query):
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
+             url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def newform_search(info, query):
+    newform_parse(info, query)
+    set_info_funcs(info)
+
+def trace_postprocess(res, info, query):
+    ns = info['Tr_n'] = integer_options('1-40', 1000)
+    hecke_codes = [mf['hecke_orbit_code'] for mf in res]
+    trace_dict = defaultdict(dict)
+    for rec in db.mf_hecke_nf.search({'n':{'$lte': 40}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
+        trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
+    for mf in res:
+        mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
+    return res
+@search_wrap(template="cmf_trace_search_results.html",
+             table=db.mf_newforms,
+             title='Newform Search Results',
+             err_title='Newform Search Input Error',
+             shortcuts={'jump':jump_box},
+             projection=['label','hecke_orbit_code'],
+             postprocess=trace_postprocess,
+             bread=get_search_bread,
+             learnmore=learnmore_list,
+             credit=credit)
+def trace_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
 

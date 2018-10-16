@@ -9,8 +9,6 @@ IMPORTANT:
 * Add search on prime divisors of level (Drew, David)
 * Enter label where Nk^2 bigger than range, get nice error message (outside range) (David)
 * For Dirichlet character, include orbit label in search results and on page (David)
-* Remove twist-minimal from browse and refine search (David)
-* Random result with constraints (David)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
 * Trace form search results (David)

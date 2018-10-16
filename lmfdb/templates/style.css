@@ -2157,3 +2157,7 @@ table.qexp-table td.output {
     margin-left: 0;
     padding-left: 0;
 }
+
+.mjx_basic {
+    font-family: MJX_Math;
+}

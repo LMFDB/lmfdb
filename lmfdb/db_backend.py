@@ -975,19 +975,27 @@ class PostgresTable(PostgresBase):
         return self.exists({label_col:label})
 
 
-    def random(self, projection=0):
+    def random(self, query={}, projection=0):
         """
         Return a random label or record from this table.
 
         INPUT:
 
-        - ``projection`` -- which columns are requested (default 0, meaning just the label).
-                            See ``_parse_projection`` for more details.
+        - ``query`` -- a query dictionary from which a result
+          will be selected, uniformly at random
+        - ``projection`` -- which columns are requested
+          (default 0, meaning just the label).
+          See ``_parse_projection`` for more details.
 
         OUTPUT:
 
         If projection is 0, a random label from the table.
         Otherwise, a dictionary with keys specified by the projection.
+        A RuntimeError is raised if the selection fails when there are
+        rows in the table; this can occur if the ids are not consecutive
+        due to deletions.
+        If there are no results satisfying the query, None is returned
+        (analogously to the ``lucky`` method).
 
         EXAMPLES::
 
@@ -996,13 +1004,41 @@ class PostgresTable(PostgresBase):
             sage: nf.random()
             u'2.0.294787.1'
         """
-        maxtries = 100
-        maxid = self.max('id')
-        for _ in range(maxtries):
-            # The id may not exist if rows have been deleted
-            rid = random.randint(1, maxid)
-            res = self.lucky({'id':rid}, projection=projection)
-            if res: return res
+        if query:
+            # See if we know how many results there are
+            cnt = self.stats.quick_count(query)
+            if cnt is None:
+                # We need the list of results
+                # (in order to get a uniform sample),
+                # and get the count as a side effect
+                if projection == 0:
+                    # Labels won't be too large,
+                    # so we just get an unsorted list of labels
+                    L = list(self.search(query, 0, sort=[]))
+                else:
+                    # An arbitary projection might be large, so we get ids
+                    L = list(self.search(query, 'id', sort=[]))
+                self.stats._record_count(query, len(L))
+                if len(L) == 0:
+                    return None
+                res = random.choice(L)
+                if projection != 0:
+                    res = self.lucky({'id':res}, projection=projection)
+                return res
+            else:
+                offset = random.randrange(cnt)
+                return self.lucky(query, projection=projection, offset=offset, sort=[])
+        else:
+            maxtries = 100
+            maxid = self.max('id')
+            if maxid == 0:
+                return None
+            for _ in range(maxtries):
+                # The id may not exist if rows have been deleted
+                rid = random.randint(1, maxid)
+                res = self.lucky({'id':rid}, projection=projection)
+                if res: return res
+            raise RuntimeError("Random selection failed!")
         ### This code was used when not every table had an id.
         ## Get the number of pages occupied by the search_table
         #cur = self._execute(SQL("SELECT relpages FROM pg_class WHERE relname = %s"), [self.search_table])
@@ -1017,7 +1053,6 @@ class PostgresTable(PostgresBase):
         #    cur = self._execute(selecter, [percentage])
         #    if cur.rowcount > 0:
         #        return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
-        raise RuntimeError("Random selection failed!")
 
     ##################################################################
     # Convenience methods for accessing statistics                   #

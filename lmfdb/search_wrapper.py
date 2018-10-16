@@ -1,13 +1,13 @@
 
 from lmfdb.search_parsing import parse_start, parse_count
 from sage.misc.decorators import decorator_keywords
-from flask import render_template, jsonify
+from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from lmfdb.base import ctx_proc_userdata
 from lmfdb.utils import flash_error, to_dict
 
 class SearchWrapper(object):
-    def __init__(self, f, template, table, title, err_title, per_page=50, shortcuts={}, longcuts={}, projection = 1, cleaners = {}, postprocess=None, **kwds):
+    def __init__(self, f, template, table, title, err_title, per_page=50, shortcuts={}, longcuts={}, projection=1, url_for_label=None, cleaners = {}, postprocess=None, **kwds):
         self.f = f
         self.template = template
         self.table = table
@@ -17,11 +17,13 @@ class SearchWrapper(object):
         self.shortcuts = shortcuts
         self.longcuts = longcuts
         self.projection = projection
+        self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.postprocess = postprocess
         self.kwds = kwds
 
-    def __call__(self, info):
+    def __call__(self, info, random=False):
+        # If random is True, returns a random label
         info = to_dict(info, exclude =['bread']) # I'm not sure why this is required...
         for key, func in self.shortcuts.items():
             if info.get(key,'').strip():
@@ -46,15 +48,22 @@ class SearchWrapper(object):
             return jsonify({"nres":str(nres)})
         sort = query.pop('__sort__', None)
         table = query.pop('__table__', self.table)
-        proj = query.pop('__projection__', self.projection)
         # We want to pop __title__ even if overridden by info.
         title = query.pop('__title__', self.title)
         title = info.get('title', title)
         template = query.pop('__template__', self.template)
+        if random:
+            query.pop('__projection__', None)
+        proj = query.pop('__projection__', self.projection)
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
-            res = table.search(query, proj, limit=count, offset=start, sort=sort, info=info)
+            if random:
+                # Ignore __projection__: it's intended for searches
+                label = table.random(query, projection=0)
+                return redirect(self.url_for_label(label), 307)
+            else:
+                res = table.search(query, proj, limit=count, offset=start, sort=sort, info=info)
         except QueryCanceledError as err:
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
