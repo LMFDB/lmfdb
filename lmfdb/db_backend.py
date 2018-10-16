@@ -1025,6 +1025,8 @@ class PostgresTable(PostgresBase):
                 if projection != 0:
                     res = self.lucky({'id':res}, projection=projection)
                 return res
+            elif cnt == 0:
+                return None
             else:
                 offset = random.randrange(cnt)
                 return self.lucky(query, projection=projection, offset=offset, sort=[])
