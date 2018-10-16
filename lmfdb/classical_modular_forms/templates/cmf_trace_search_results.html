@@ -1,0 +1,39 @@
+{% extends 'cmf_refine_search.html' %}
+
+{% block show_results %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<p> The following table gives {{ KNOWL('mf.elliptic.trace-expansion', title='traces') }} of \(a_n\) for the search results.</p>
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <th> \(a_{ {{n}} }\) </th>
+      {% endif %}
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for mf in info.results %}
+    <tr>
+      <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <td class="mjx_basic"> {{ mf.tr_an[n] }} </td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'forward_back.html' %}
+{# FIXME: download_search_results #}
+{% endif %}
+
+{% endblock %}
