@@ -61,7 +61,16 @@ class SearchWrapper(object):
             if random:
                 # Ignore __projection__: it's intended for searches
                 label = table.random(query, projection=0)
-                return redirect(self.url_for_label(label), 307)
+                if label is None:
+                    res = []
+                    # ugh; we have to set these manually
+                    info['query'] = dict(query)
+                    info['number'] = 0
+                    info['count'] = count
+                    info['start'] = start
+                    info['exact_count'] = True
+                else:
+                    return redirect(self.url_for_label(label), 307)
             else:
                 res = table.search(query, proj, limit=count, offset=start, sort=sort, info=info)
         except QueryCanceledError as err:
