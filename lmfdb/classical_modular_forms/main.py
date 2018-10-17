@@ -4,7 +4,7 @@ from collections import defaultdict
 from lmfdb.db_backend import db, SQL
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_count, parse_start
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -611,8 +611,7 @@ def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
 
-def trace_prescreen(res, info, query):
-    # This approach is paired with specifying hecke_orbit_codes in the query using the constraints
+def trace_postprocess(res, info, query):
     if res:
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
@@ -621,73 +620,20 @@ def trace_prescreen(res, info, query):
         for mf in res:
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
-def trace_postscreen(res, info, query):
-    start = info.pop('orig_start')
-    count = info.pop('orig_count')
-    res = list(res)
-    print "reslen", len(res)
-    if res:
-        good = []
-        candidate_codes = [mf['hecke_orbit_code'] for mf in res]
-        A = info.get('an_constraints')
-        if A:
-            constraints = [piece.strip().split('=') for piece in A.split(',')]
-            constraints = {int(n[1:]): int(t) for n,t in constraints}
-        else:
-            constraints = {}
-        relevant_n = sorted(list(set(info['Tr_n'] + constraints.keys())))
-        trace_dict = defaultdict(dict)
-        for rec in db.mf_hecke_nf.search({'n':{'$in': relevant_n}, 'hecke_orbit_code':{'$in':candidate_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
-            trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
-        for mf in res:
-            T = trace_dict[mf['hecke_orbit_code']]
-            for n, t in constraints.items():
-                if T[n] != t:
-                    break
-            else:
-                mf['tr_an'] = T
-                good.append(mf)
-        if start >= len(good):
-            start -= (1 + (start - len(good)) / count) * count
-        if start < 0:
-            start = 0
-        info['number'] = len(good)
-        info['count'] = count
-        info['start'] = start
-        info['exact_count'] = True
-    return good[start:start+count]
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
              title='Newform Search Results',
              err_title='Newform Search Input Error',
-             #per_page=None, # Need all results in order to filter on constraints
              shortcuts={'jump':jump_box},
              projection=['label','dim','hecke_orbit_code'],
-             postprocess=trace_prescreen,
+             postprocess=trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def trace_search(info, query):
     newform_parse(info, query)
-    A = info.get('an_constraints')
-    if A and A.strip():
-        # TODO: Error checking
-        L = [piece.strip().split('=') for piece in A.split(',')]
-        constraints = sum([["T%s.n = %s"%(i, n.strip()[1:]), "T%s.trace_an = %s"%(i, t.strip())] for i, (n,t) in enumerate(L)], [])
-        constraints += ["T%s.hecke_orbit_code = T%s.hecke_orbit_code"%(i,i+1) for i in range(len(L)-1)]
-        tables = ["mf_hecke_nf T%s"%(i) for i in range(len(L))]
-        clause = " AND ".join(constraints)
-        selecter = "SELECT T0.hecke_orbit_code FROM {0} WHERE {1}".format(", ".join(tables), " AND ".join(constraints))
-        #print selecter
-        selecter = SQL(selecter)
-        cur = db._execute(selecter)
-        codes = [rec[0] for rec in cur]
-        #print "codes", codes
-        if codes:
-            query['hecke_orbit_code'] = {'$in':codes}
-        else:
-            query['hecke_orbit_code'] = -1
+    parse_equality_constraints(info, query, 'an_constraints', qfield='traces', shift=-1)
     set_info_funcs(info)
     ns = info['n'] = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
@@ -699,12 +645,6 @@ def trace_search(info, query):
     else:
         Trn = [n for n in Trn if n > 1]
     info['Tr_n'] = Trn
-    # Save the original count since it will be overwritten by None (per_page)
-    #info['orig_count'] = parse_count(info, 50)
-    #info.pop('count',None) # remove per_page so that we get all results
-    # Overwrite start since we need to do our own pagination
-    #info['orig_start'] = parse_start(info)
-    #info['start'] = 0
 
 def set_rows_cols(info, query):
     """

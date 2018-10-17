@@ -712,6 +712,17 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
 def parse_noop(inp, query, qfield):
     query[qfield] = inp
 
+@search_parser
+def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=int, shift=0): # Note that postgres -> index is one-based
+    for piece in inp.split(','):
+        n,t = piece.strip().split('=')
+        n = n.strip()
+        if not n.startswith(prefix):
+            raise ValueError("%s does not start with %s"%(n, prefix))
+        n = int(n[len(prefix):]) + shift
+        t = parse_singleton(t.strip())
+        query[qfield + '.%s'%n] = t
+
 def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, parse1=None, kwds1={},
                                      field2=None, name2=None, qfield2=None, parse2=None, kwds2={}):
     tmp_query1 = {}
