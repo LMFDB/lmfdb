@@ -1,5 +1,5 @@
 from lmfdb.base import LmfdbTest
-from lmfdb.db_backend import db
+from lmfdb.db_backend import PostgresDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 
@@ -9,6 +9,7 @@ class CMFTest(LmfdbTest):
 
     @parallel()
     def all_newforms(self, level, weight):
+        db = PostgresDatabase()
         errors = []
         n = 0
         for nf in db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim']):
@@ -40,6 +41,7 @@ class CMFTest(LmfdbTest):
 
     @parallel()
     def all_newspaces(self, level, weight):
+        db = PostgresDatabase()
         errors = []
         n = 0
         gamma1_dim = 0
