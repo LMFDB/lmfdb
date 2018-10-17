@@ -27,8 +27,8 @@ class CMFTest(LmfdbTest):
             return None
         except AssertionError:
             print "Error on page "+url
-            return url
             raise
+            return url
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
