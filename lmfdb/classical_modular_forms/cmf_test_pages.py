@@ -5,7 +5,7 @@ from sage.all import ZZ, sqrt
 import multiprocessing
 from traceback import print_exc
 
-ncpus = min(multiprocessing.cpu_count(), 1)
+ncpus = min(multiprocessing.cpu_count(), 40)
 
 class CMFTest(LmfdbTest):
     def runTest():
