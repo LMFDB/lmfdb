@@ -26,7 +26,7 @@ class CMFTest(LmfdbTest):
             return None
         except Exception as err:
             print "Error on page "+url
-            print str(e)
+            print str(err)
             return url
 
     @parallel(ncpus = ncpus)
