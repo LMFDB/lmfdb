@@ -98,7 +98,7 @@ class CMFTest(LmfdbTest):
 
     def test_all(self):
         todo = []
-        for Nk2 in range(db.mf_newforms.max('Nk2') + 1):
+        for Nk2 in range(1, db.mf_newforms.max('Nk2') + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
