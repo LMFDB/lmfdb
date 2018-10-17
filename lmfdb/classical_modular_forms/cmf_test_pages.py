@@ -3,6 +3,7 @@ from lmfdb.db_backend import PostgresDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 import multiprocessing
+from traceback import print_exc
 
 ncpus = min(multiprocessing.cpu_count(), 1)
 
@@ -27,6 +28,7 @@ class CMFTest(LmfdbTest):
         except Exception as err:
             print "Error on page "+url
             print str(err)
+            print_exc()
             return url
 
     @parallel(ncpus = ncpus)
@@ -86,6 +88,7 @@ class CMFTest(LmfdbTest):
         except Exception as err:
                 print "Error on page "+url
                 print str(err)
+                print print_exc()
                 errors.append(url)
         return errors
 
@@ -108,6 +111,7 @@ class CMFTest(LmfdbTest):
             except Exception as err:
                 print "Error on page "+url
                 print str(err)
+                print print_exc()
                 errors.append(url)
 
         #test wrong parity newspaces
@@ -124,6 +128,7 @@ class CMFTest(LmfdbTest):
             except Exception as err:
                 print "Error on page "+url
                 print str(err)
+                print print_exc()
                 errors.append(url)
 
 
@@ -141,7 +146,7 @@ class CMFTest(LmfdbTest):
     def test_all(self):
         todo = []
         from lmfdb.db_backend import db
-        for Nk2 in range(1, 65): #db.mf_newforms.max('Nk2') + 1):
+        for Nk2 in range(1, db.mf_newforms.max('Nk2') + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
@@ -149,12 +154,14 @@ class CMFTest(LmfdbTest):
         formerros = list(self.all_newforms(todo))
         spaceserrors = list(self.all_newspaces(todo))
         errors = []
-        for io in [formerros, spaceserrors]:
+        for k, io in enumerate([formerros, spaceserrors]):
             for i, o in formerros:
-                print i, o
                 if not isinstance(o, list):
-                    # something went wrong
-                    print i
+                    if k == 0:
+                        command = "all_newforms"
+                    else:
+                        command = "all_newspaces"
+                    errots.append( [command, i] )
                 else:
                     errors.extend(o)
 
