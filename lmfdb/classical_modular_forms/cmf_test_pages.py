@@ -24,7 +24,7 @@ class CMFTest(LmfdbTest):
             else:
                 assert 'Embeddings' in page.data
             return None
-        except Exception:
+        except Exception, e:
             print "Error on page "+url
             print str(e)
             return url
@@ -75,7 +75,7 @@ class CMFTest(LmfdbTest):
 
             for form in newforms:
                 assert form['label'] in page.data
-        except Exception:
+        except Exception, e:
                 print "Error on page "+url
                 print str(e)
                 errors.append(url)
