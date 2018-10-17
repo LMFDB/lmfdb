@@ -4,7 +4,7 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
-* Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (David)
+* Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (Edgar)
 * Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
 * Add search on prime divisors of level (Drew, David)
 * For Dirichlet character, include orbit label in search results and on page (David)
@@ -32,7 +32,6 @@ GOOD:
 
 
 FORMATTING:
-* missing pixel in complex embeddings for firefox and safari (Edgar)
 * Consider switching level and weight on browse and refine search input boxes
 
 IT WOULD BE NICE IF:
