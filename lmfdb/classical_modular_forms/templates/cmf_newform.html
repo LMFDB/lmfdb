@@ -204,7 +204,7 @@ function get_all_embeddings(num_embeddings) {
       {% if newform.dim > 1 %}
       <th class="sticky-head dark">{{ KNOWL('mf.elliptic.embedding_label', title='Label') }}</th>
       {% if newform.has_exact_qexp %}
-      <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\alpha)\)</th>
+      <th class="sticky-head dark center" style="left: 59px;">\(\iota_m(\alpha)\)</th>
       {% endif %}
       {% endif %}
       {% for n in newform.an_range(info.CC_n, format=info.format) %}
@@ -229,7 +229,7 @@ function get_all_embeddings(num_embeddings) {
       <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}">{{ newform.conrey_from_embedding(m) }}</td>
       {% if loop.index == 1 and newform.has_exact_qexp %}
       {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
-      <td rowspan = "{{headcol_rowspan*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
+      <td rowspan = "{{headcol_rowspan*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col border-right" style="left: 59px;">
         <table class="sticky-embeddings">
           {% for mm in newform.m_range(info.CC_m) %}
           {% if loop.index is divisibleby(2) %}
