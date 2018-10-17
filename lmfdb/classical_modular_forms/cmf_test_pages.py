@@ -4,7 +4,7 @@ from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 import multiprocessing
 
-ncpu = min(multiprocessing.cpu_count(), 40)
+ncpu = min(multiprocessing.cpu_count(), 4)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -17,16 +17,18 @@ class CMFTest(LmfdbTest):
             assert label in page.data
             if dim <= 80:
                 assert 'L-function %s' % label in page.data
-            assert 'L-function' in page.data
+            level, weight = label.split('.')[:2]
+            assert 'L-function %s.%s' % label.split('.')[:2]  in page.data
             assert 'Analytic rank' in page.data
             if dim == 1:
                 assert 'Satake parameters' in page.data
             else:
                 assert 'Embeddings' in page.data
             return None
-        except:
+        except AssertionError:
             print "Error on page "+url
             return url
+            raise
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
@@ -74,9 +76,10 @@ class CMFTest(LmfdbTest):
 
             for form in newforms:
                 assert form['label'] in page.data
-        except:
+        except AssertionError:
                 print "Error on page "+url
                 errors.append(url)
+                raise
 
 
         for ns in newspaces:
