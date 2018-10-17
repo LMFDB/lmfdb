@@ -689,7 +689,7 @@ def trace_search(info, query):
         else:
             query['hecke_orbit_code'] = -1
     set_info_funcs(info)
-    ns = info['n'] = info.get('n', '1-20')
+    ns = info['n'] = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
     if n_primality == 'primes':

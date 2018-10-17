@@ -92,8 +92,7 @@ class WebNewform(object):
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
 
         try:
-            self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index)
-            self.hecke_ring_index = prod([ p**e for p,e in self.hecke_ring_index])
+            self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
         except AttributeError:
             pass #  self.hecke_ring might be not set
 
@@ -262,6 +261,12 @@ class WebNewform(object):
             raise ValueError("Invalid newform label %s." % label)
         data = db.mf_newforms.lookup(label)
         if data is None:
+            # Display a different error if Nk^2 is too large
+            N, k, a, x = label.split('.')
+            Nk2 = int(N) * int(k) * int(k)
+            max_Nk2 = db.mf_newforms.max('Nk2')
+            if Nk2 > max_Nk2:
+                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\)."%(Nk2, max_Nk2))
             raise ValueError("Newform %s not found" % label)
         return WebNewform(data)
 
