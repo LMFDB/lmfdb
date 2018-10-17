@@ -11,7 +11,7 @@ class CMFTest(LmfdbTest):
         pass
 
     def newform(self, label, dim):
-        url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/')
+        url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
         try:
             page = self.tc.get(url)
             assert label in page.data
@@ -87,7 +87,7 @@ class CMFTest(LmfdbTest):
             label = ns['label']
             dim = ns['dim']
             gamma1_dim += dim
-            url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/')
+            url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
             try:
                 page = self.tc.get(url)
                 space_dim = 0
