@@ -105,6 +105,36 @@
     <td class="button"><button type='submit' name='submit_again' value='refine' style="width: 110px">Search again</button></td>
   </tr>
 </table>
+{% if info.search_type == 'Traces' %}
+<br>
+<table>
+  <tr>
+    <td colspan="2"> Columns to display </td>
+    <td> Show </td>
+    <td colspan="2"> Constraints </td>
+  <tr>
+    <td>
+      <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. 3,7,19, 40-90 </span>
+    </td>
+    <td>
+      <select name='n_primality' style="width: 150px;">
+        <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
+        <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
+        <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
+      </select>
+    </td>
+    <td>
+      <input type='text' style="width: 140px;" name='an_constraints' placeholder='1-20' value='{{info.an_constraints}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. a17 = 1, a8 = 0 </span>
+    </td>
+  </tr>
+</table>
+{% endif %}
 </form>
 
 {% block show_results %}{% endblock %}

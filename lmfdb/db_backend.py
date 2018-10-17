@@ -2169,7 +2169,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 tmp_table = table + suffix
                 self._clone(table, tmp_table)
-                addid, counts[table] = self._copy_from(filename, tmp_table, cols, 0, header, kwds, adjust_schema=adjust_schema)
+                addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds, adjust_schema=adjust_schema)
                 # Raise error if exactly one of search and extra contains ids
                 if header:
                     if addedid is None:
