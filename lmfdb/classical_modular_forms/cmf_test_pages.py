@@ -35,9 +35,11 @@ class CMFTest(LmfdbTest):
         if not errors:
             print "Tested %d pages with level = %d weight = %d with no errors" % (n, level, weight)
         else:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occuring on the following pages:" %(n, level, weight, len(errors))
+            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
             for url in errors:
                 print url
+
+        return errors
 
     @parallel()
     def all_newspaces(self, level, weight):
@@ -92,9 +94,11 @@ class CMFTest(LmfdbTest):
         if not errors:
             print "Tested %d pages with level = %d weight = %d with no errors" % (n, level, weight)
         else:
-            print "Tested %d pages  with level = %d weight = %d with %d errors occuring on the following pages:" %(n, level, weight, len(errors))
+            print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
             for url in errors:
                 print url
+
+        return errors
 
 
 
@@ -106,7 +110,19 @@ class CMFTest(LmfdbTest):
                 k = sqrt(Nk2/N)
                 if k in ZZ:
                     todo.append((N, int(k)))
-        list(self.all_newforms(todo))
-        list(self.all_newspaces(todo))
+        formerros = list(self.all_newforms(todo))
+        spaceserrors = list(self.all_newspaces(todo))
+        errors = []
+        for io in [formerros, spaceserrors]:
+            for _, o in formerros:
+                errors.extend(o)
+
+        if not erros:
+            print "No errors!"
+        else:
+            print "Errors occurring on the following pages:" %(n, level, weight, len(errors))
+            for url in errors:
+                print url
+
 
 
