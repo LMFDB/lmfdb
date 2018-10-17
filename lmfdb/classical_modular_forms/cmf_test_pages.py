@@ -58,7 +58,7 @@ class CMFTest(LmfdbTest):
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
         G1 = db.mf_gamma1_subspaces.lucky({'level':level,'weight':weight})
-        if dim is None:
+        if G1 is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
             assert newforms == []
