@@ -161,7 +161,7 @@ class CMFTest(LmfdbTest):
                         command = "all_newforms"
                     else:
                         command = "all_newspaces"
-                    errots.append( [command, i] )
+                    errors.append( [command, i] )
                 else:
                     errors.extend(o)
 

@@ -4,7 +4,7 @@ from collections import defaultdict
 from lmfdb.db_backend import db, SQL
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, integer_options, search_parser #, parse_count, parse_start
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -678,7 +678,7 @@ def trace_search(info, query):
         constraints += ["T%s.hecke_orbit_code = T%s.hecke_orbit_code"%(i,i+1) for i in range(len(L)-1)]
         tables = ["mf_hecke_nf T%s"%(i) for i in range(len(L))]
         clause = " AND ".join(constraints)
-        selecter = "SELECT T0.hecke_orbit_code FROM {0} WHERE {1}".format(", ".join(tables), " AND ".join(constraints))
+        selecter = "SELECT T0.hecke_orbit_code FROM {0} WHERE {1}".format(", ".join(tables), clause)
         #print selecter
         selecter = SQL(selecter)
         cur = db._execute(selecter)
