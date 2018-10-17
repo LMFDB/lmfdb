@@ -56,7 +56,7 @@ class CMFTest(LmfdbTest):
         n = 0
         gamma1_dim = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
-        newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight}, ['label', 'dim']))
+        newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(self.weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
         dim = db.mf_gamma1_subspaces.lucky({'level':level,'weight':weight}, projection = 'dim')
         if dim is None:
@@ -79,6 +79,7 @@ class CMFTest(LmfdbTest):
                 print "Error on page "+url
                 print str(err)
                 errors.append(url)
+        return errors
 
 
         for ns in newspaces:
