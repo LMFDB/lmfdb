@@ -4,7 +4,7 @@ from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 import multiprocessing
 
-ncpu = min(multiprocessing.cpu_count(), 4)
+ncpus = min(multiprocessing.cpu_count(), 4)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -127,10 +127,10 @@ class CMFTest(LmfdbTest):
             for _, o in formerros:
                 errors.extend(o)
 
-        if not erros:
+        if not errors:
             print "No errors!"
         else:
-            print "Errors occurring on the following pages:" %(n, level, weight, len(errors))
+            print "Errors occurring on the following pages:"
             for url in errors:
                 print url
 
