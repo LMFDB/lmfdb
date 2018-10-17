@@ -17,7 +17,6 @@ class CMFTest(LmfdbTest):
             assert label in page.data
             if dim <= 80:
                 assert 'L-function %s' % label in page.data
-            level, weight = label.split('.')[:2]
             assert 'L-function %s.%s' % label.split('.')[:2]  in page.data
             assert 'Analytic rank' in page.data
             if dim == 1:
@@ -25,9 +24,9 @@ class CMFTest(LmfdbTest):
             else:
                 assert 'Embeddings' in page.data
             return None
-        except AssertionError:
+        except Exception:
             print "Error on page "+url
-            raise
+            print str(e)
             return url
 
     @parallel(ncpus = ncpus)
@@ -76,10 +75,10 @@ class CMFTest(LmfdbTest):
 
             for form in newforms:
                 assert form['label'] in page.data
-        except AssertionError:
+        except Exception:
                 print "Error on page "+url
+                print str(e)
                 errors.append(url)
-                raise
 
 
         for ns in newspaces:
