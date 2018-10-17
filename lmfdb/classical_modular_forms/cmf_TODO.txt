@@ -7,7 +7,6 @@ IMPORTANT:
 * Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (Edgar)
 * Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
 * Add search on prime divisors of level (Drew, David)
-* Enter label where Nk^2 bigger than range, get nice error message (outside range) (David)
 * For Dirichlet character, include orbit label in search results and on page (David)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
