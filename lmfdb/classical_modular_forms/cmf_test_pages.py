@@ -2,6 +2,9 @@ from lmfdb.base import LmfdbTest
 from lmfdb.db_backend import PostgresDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
+import multiprocessing
+
+ncpu = min(multiprocessing.cpu_count(), 40)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -25,12 +28,12 @@ class CMFTest(LmfdbTest):
             print "Error on page "+url
             return url
 
-    @parallel(ncpus = 40)
+    @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
         db = PostgresDatabase()
         errors = []
         n = 0
-        for nf in db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim']):
+        for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
             n += 1
             url = self.newform(nf['label'],  nf['dim'])
             if url is not None:
@@ -45,7 +48,7 @@ class CMFTest(LmfdbTest):
 
         return errors
 
-    @parallel(ncpus = 40)
+    @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
         db = PostgresDatabase()
         errors = []
@@ -53,7 +56,7 @@ class CMFTest(LmfdbTest):
         gamma1_dim = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight}, ['label', 'dim']))
-        newforms = list(db.mf_newspaces.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
+        newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
         dim = db.mf_gamma1_subspaces({'level':level,'weight':weight}, projection = 'dim')
         if dim is None:
             assert newspaces == []
