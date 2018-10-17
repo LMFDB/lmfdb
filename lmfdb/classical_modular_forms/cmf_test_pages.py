@@ -102,7 +102,7 @@ class CMFTest(LmfdbTest):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
-                    todo.append((N, k))
+                    todo.append((N, int(k)))
         list(self.all_newforms(todo))
         list(self.all_newspaces(todo))
 
