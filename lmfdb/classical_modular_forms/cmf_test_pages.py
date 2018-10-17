@@ -63,7 +63,11 @@ class CMFTest(LmfdbTest):
                 assert ns['dim'] == 0
             assert newforms == []
             return []
-        dim = G1['dim'] - G1['sub_mul']*G1['sub_dim']
+
+        dim = G1['dim']
+        if G1['sub_level'] != level:
+            dim -= G1['sub_mul']*G1['sub_dim']
+
         try:
             n += 1
             gamma1_dim = 0
@@ -137,7 +141,7 @@ class CMFTest(LmfdbTest):
     def test_all(self):
         todo = []
         from lmfdb.db_backend import db
-        for Nk2 in range(1, 200): #db.mf_newforms.max('Nk2') + 1):
+        for Nk2 in range(1, 100): #db.mf_newforms.max('Nk2') + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
