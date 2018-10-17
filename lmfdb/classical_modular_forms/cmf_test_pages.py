@@ -7,29 +7,33 @@ class CMFTest(LmfdbTest):
     def runTest():
         pass
 
-    @parallel()
+    def newform(self, label, dim):
+        url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/')
+        try:
+            page = self.tc.get(url)
+            assert label in page.data
+            if dim <= 80:
+                assert 'L-function %s' % label in page.data
+            assert 'L-function' in page.data
+            assert 'Analytic rank' in page.data
+            if dim == 1:
+                assert 'Satake parameters' in page.data
+            else:
+                assert 'Embeddings' in page.data
+            return None
+        except:
+            print "Error on page "+url
+            return url
+
+    @parallel(ncpus = 40)
     def all_newforms(self, level, weight):
         db = PostgresDatabase()
         errors = []
         n = 0
         for nf in db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim']):
             n += 1
-            label = nf['label']
-            dim = nf['dim']
-            url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/')
-            try:
-                page = self.tc.get(url)
-                assert label in page.data
-                if dim <= 80:
-                    assert 'L-function %s' % label in page.data
-                assert '?' not in page.data
-                assert 'Analytic rank' in page.data
-                if dim == 1:
-                    assert 'Satake parameters' in page.data
-                else:
-                    assert 'Embeddings' in page.data
-            except:
-                print "Error on page "+url
+            url = self.newform(nf['label'],  nf['dim'])
+            if url is not None:
                 errors.append(url)
 
         if not errors:
@@ -41,7 +45,7 @@ class CMFTest(LmfdbTest):
 
         return errors
 
-    @parallel()
+    @parallel(ncpus = 40)
     def all_newspaces(self, level, weight):
         db = PostgresDatabase()
         errors = []
