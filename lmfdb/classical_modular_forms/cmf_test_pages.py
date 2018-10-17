@@ -17,7 +17,7 @@ class CMFTest(LmfdbTest):
             assert label in page.data
             if dim <= 80:
                 assert 'L-function %s' % label in page.data
-            assert 'L-function %s.%s' % label.split('.')[:2]  in page.data
+            assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
             assert 'Analytic rank' in page.data
             if dim == 1:
                 assert 'Satake parameters' in page.data
