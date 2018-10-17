@@ -4,7 +4,7 @@ from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 import multiprocessing
 
-ncpus = min(multiprocessing.cpu_count(), 4)
+ncpus = min(multiprocessing.cpu_count(), 40)
 
 class CMFTest(LmfdbTest):
     def runTest():
