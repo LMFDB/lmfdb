@@ -54,7 +54,6 @@ class CMFTest(LmfdbTest):
         db = PostgresDatabase()
         errors = []
         n = 0
-        gamma1_dim = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
@@ -65,16 +64,19 @@ class CMFTest(LmfdbTest):
             return
         try:
             n += 1
-            total_dim = 0
+            gamma1_dim = 0
             page = self.tc.get(url)
             assert 'The following table gives the dimensions of various subspaces of' in page.data
             for space in newspaces:
                 assert space['label'] in page.data
-                total_dim += space['dim']
-            assert gamma1_dim ==  db.mf_gamma1_subspaces({'level':level,'weight':weight}, projection = 'dim')
+                gamma1_dim += space['dim']
+            assert gamma1_dim == dim
 
+            gamma1_dim = 0
             for form in newforms:
                 assert form['label'] in page.data
+                gamma1_dim += form['dim']
+            assert gamma1_dim == dim
         except Exception as err:
                 print "Error on page "+url
                 print str(err)
@@ -102,6 +104,23 @@ class CMFTest(LmfdbTest):
                 print str(err)
                 errors.append(url)
 
+        #test wrong parity newspaces
+        for ns in list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':1 if bool(weight % 2) else -1}, ['label', 'dim'])):
+            label = ns['label']
+            dim = ns['dim']
+            url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
+            try:
+                assert dim == 0
+                page = self.tc.get(url)
+                assert "There are no modular forms of weight" in page.data
+                assert "odd" in page.data
+                assert "even" in page.data
+            except Exception as err:
+                print "Error on page "+url
+                print str(err)
+                errors.append(url)
+
+
         if not errors:
             print "Tested %d pages with level = %d weight = %d with no errors" % (n, level, weight)
         else:
@@ -125,8 +144,12 @@ class CMFTest(LmfdbTest):
         spaceserrors = list(self.all_newspaces(todo))
         errors = []
         for io in [formerros, spaceserrors]:
-            for _, o in formerros:
-                errors.extend(o)
+            for i, o in formerros:
+                if o is None:
+                    # something went wrong
+                    print i
+                else:
+                    errors.extend(o)
 
         if not errors:
             print "No errors!"
