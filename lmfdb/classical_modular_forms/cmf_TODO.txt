@@ -4,7 +4,7 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
-* Run through all pages: 1. check that they load 2. check that it contains relevant data (label, dim, etc) 3. statistics on time to load (Edgar)
+* Statistics on time to load all the pages (Edgar)
 * Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
 * For Dirichlet character, include orbit label in search results (David)
 * Undo color change (David)

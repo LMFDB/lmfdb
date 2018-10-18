@@ -27,6 +27,7 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 
 ## lfunc_lfunctions
 ### populate trace hashes in Lfunctions
+This runs in parallel and takes about 15min
 ```
 parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_trace_hash_Lfunctions.py 40 ::: {0..39}
 ```
@@ -34,7 +35,13 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 
 # Run consistency checks
 
+## check that the data is there and is consistent
 ```
 parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/verify_data.py 40 ::: {0..39}
 ```
 takes around 15 min
+## check that all the pages load, display the appropriate things, and that parts of the data are consistent
+This runs in parallel and takes about 12min
+```
+./test.sh lmfdb/classical_modular_forms/cmf_test_pages.py
+```
