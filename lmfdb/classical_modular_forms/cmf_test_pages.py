@@ -34,9 +34,9 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
-        logging.info.disabled = True
+        logging.getLogger().disabled = True
         db = PostgresDatabase()
-        logging.info.disabled = False
+        logging.getLogger().disabled = False
         errors = []
         n = 0
         for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
@@ -45,9 +45,7 @@ class CMFTest(LmfdbTest):
             if url is not None:
                 errors.append(url)
 
-        if not errors:
-            print "Tested %d pages with level = %d weight = %d with no errors" % (n, level, weight)
-        else:
+        if errors:
             print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
             for url in errors:
                 print url
@@ -56,7 +54,7 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
-        logging.info.disabled = True
+        logging.getLogger().disabled = True
         db = PostgresDatabase()
         logging.info.disabled = False
         errors = []
@@ -134,9 +132,7 @@ class CMFTest(LmfdbTest):
                 errors.append(url)
 
 
-        if not errors:
-            print "Tested %d pages with level = %d weight = %d with no errors" % (n, level, weight)
-        else:
+        if errors:
             print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
             for url in errors:
                 print url
