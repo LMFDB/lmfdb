@@ -153,7 +153,6 @@ class CMFTest(LmfdbTest):
         errors = []
         for k, io in enumerate([formerrors, spaceserrors]):
             for i, o in io:
-                print i, o
                 if not isinstance(o, list):
                     if k == 0:
                         command = "all_newforms"
