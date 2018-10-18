@@ -715,7 +715,10 @@ def parse_noop(inp, query, qfield):
 @search_parser
 def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=int, shift=0): # Note that postgres -> index is one-based
     for piece in inp.split(','):
-        n,t = piece.strip().split('=')
+        piece = piece.strip().split('=')
+        if len(piece) != 2:
+            raise ValueError("It must be a comma separated list of expressions of the form %sN=T"%(prefix))
+        n,t = piece
         n = n.strip()
         if not n.startswith(prefix):
             raise ValueError("%s does not start with %s"%(n, prefix))

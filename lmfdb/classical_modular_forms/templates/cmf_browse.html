@@ -179,6 +179,15 @@ Info was: {{info}}
           <option value="no">no</option>
         </select>
       </td>
+      <td colspan="2" class="right">
+        Bad primes
+        <select name='prime_quantifier'>
+          <option value='subsets'>subset of</option>
+          <option value='exact' selected='yes'>equal to</option>
+          <option value='append'>superset of</option>
+        </select>
+      <td><input type='text' name='level_primes' example='2,3' style="width: 140px"></td>
+      <td><span class="formexample"> e.g. 2,3</span></td>
     </tr>
 
     <tr>

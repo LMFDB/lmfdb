@@ -4,7 +4,7 @@ from collections import defaultdict
 from lmfdb.db_backend import db, SQL
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_count, parse_start
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -581,6 +581,8 @@ def common_parse(info, query):
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
     parse_bool(info, query, 'char_is_real', name="Character is real")
+    prime_mode = info.get('prime_quantifier','exact')
+    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode) # should add radical of level
 
 def newform_parse(info, query):
     common_parse(info, query)

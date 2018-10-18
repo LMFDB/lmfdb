@@ -65,6 +65,13 @@
     <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
     {# <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td> #}
     <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+    <td> Bad primes
+      <select name='prime_quantifier'>
+        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+      </select>
+    </td>
   </tr>
 
   <tr>
@@ -96,6 +103,7 @@
         <option value="no" {{ "selected" if info.has_inner_twist == 'no'}}>no</option>
       </select>
     </td>
+    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
   </tr>
   <tr>
   </tr>
