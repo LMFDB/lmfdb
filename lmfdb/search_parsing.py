@@ -680,7 +680,7 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool_unknown(inp, query, qfield):
-    # yes, no, not_no, not_yes
+    # yes, no, not_no, not_yes, unknown
     if inp == 'yes':
         query[qfield] = 1
     elif inp == 'not_no':
@@ -689,6 +689,8 @@ def parse_bool_unknown(inp, query, qfield):
         query[qfield] = {'$lt' : 1}
     elif inp == 'no':
         query[qfield] = -1
+    elif inp == 'unknown':
+        query[qfield] = 0
 
 @search_parser
 def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
