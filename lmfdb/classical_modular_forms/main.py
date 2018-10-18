@@ -1,6 +1,7 @@
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
 from collections import defaultdict
+from ast import literal_eval
 from lmfdb.db_backend import db, SQL
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
@@ -438,6 +439,28 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Trace form for %s,'%(label))
 
+    def download_multiple_traces(self, info):
+        lang = info.get(self.lang_key,'text').strip()
+        query = literal_eval(info.get('query','{}'))
+        forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
+        codes = [form['hecke_orbit_code'] for form in forms]
+        traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n','trace_an'], sort=[])
+        trace_dict = defaultdict(dict)
+        for rec in traces:
+            trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
+        s = ""
+        c = self.comment_prefix[lang]
+        s += c + ' Query "%s" returned %d forms.\n\n' % (str(info.get('query')), len(forms))
+        s += c + ' Below are two lists, one called labels, and one called traces (in matching order).\n'
+        s += c + ' Each list of traces starts with a_1 (giving the dimension).\n\n'
+        s += 'labels ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += ',\n'.join(form['label'] for form in forms)
+        s += self.start_and_end[lang][1] + '\n\n'
+        s += 'traces ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += ',\n'.join('[' + ','.join(str(trace_dict[form['hecke_orbit_code']][n]) for n in range(1,1001)) + ']' for form in forms)
+        s += self.start_and_end[lang][1]
+        return self._wrap(s, 'mf_newforms_traces', lang=lang)
+
     def download_cc_data(self, label, lang='text'):
         data = self._get_hecke_cc(label)
         filename = label + '.cplx'
@@ -580,7 +603,6 @@ def common_parse(info, query):
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
-    parse_bool(info, query, 'char_is_real', name="Character is real")
     prime_mode = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode) # should add radical of level
 
@@ -595,6 +617,7 @@ def newform_parse(info, query):
     parse_ints(info, query, 'analytic_rank')
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
+    parse_bool_unknown(info, query, 'is_self_dual')
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
@@ -627,7 +650,8 @@ def trace_postprocess(res, info, query):
              table=db.mf_newforms,
              title='Newform Search Results',
              err_title='Newform Search Input Error',
-             shortcuts={'jump':jump_box},
+             shortcuts={'jump':jump_box,
+                        'download':CMF_download().download_multiple_traces},
              projection=['label','dim','hecke_orbit_code'],
              postprocess=trace_postprocess,
              bread=get_search_bread,
