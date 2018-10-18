@@ -59,21 +59,13 @@ class CMFTest(LmfdbTest):
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
         newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
-        G1 = db.mf_gamma1_subspaces.lucky({'level':level,'weight':weight})
-        if G1 is None:
+        dim = db.mf_gamma1_subspaces.lucky({'level':level,'weight':weight, 'sub_level':level, 'sub_mult': 1}, projection = 'sub_dim')
+        if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
             assert newforms == []
             return []
 
-        dim = G1['dim']
-        if 'sub_mul' not in G1:
-            print ['#']*100
-            print  level, weight
-            print ['#']*100
-            raise ValueError
-        if G1['sub_level'] != level:
-            dim -= G1['sub_mul']*G1['sub_dim']
 
         try:
             n += 1
