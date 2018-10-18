@@ -21,7 +21,7 @@ def verify_dimensions(n,k):
         hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label']}, projection = 'dim')))
         assert hecke_orbit_dims == hecke_orbit_dims_nf, label
 
-    assert totaldim == dimension_new_cusp_forms(Gamma1(n), k), "%s != %s" % (totaldim, dimension_new_cusp_forms(Gamma1(n), k))
+    assert totaldim == dimension_new_cusp_forms(Gamma1(n), k), "n = %d k = %d --> %s != %s" % (n, k, totaldim, dimension_new_cusp_forms(Gamma1(n), k))
 
 
 
@@ -62,9 +62,9 @@ def verify_embeddings(nf):
         hoc = nf['hecke_orbit_code']
         embeddings = list(db.mf_hecke_cc.search({'hecke_orbit_code':hoc}, projection = ['embedding_root_imag','embedding_root_real']))
         # we have the right number of embeddings
-        assert len(embeddings) == nf['dim']
+        assert len(embeddings) == nf['dim'], str(hoc)
         # they are all distinct
-        assert len(set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim']
+        assert len(set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim'], str(hoc)
 
 # cerfies that we have all the L-functions
 # and that the ranks and trace_hash match
@@ -90,19 +90,19 @@ if len(sys.argv) == 3:
     k = int(sys.argv[1])
     if k == 0:
         # no duplicates in Lfun table
-        assert len(list(db._execute(SQL('SELECT "Lhash", COUNT(*) FROM lfunc_lfunctions WHERE load_key=\'CMFs-workshop\' GROUP BY "Lhash" HAVING  COUNT(*) > 1')))) == 0
+        assert len(list(db._execute(SQL('SELECT "Lhash", COUNT(*) FROM lfunc_lfunctions WHERE load_key=\'CMFs-workshop\' GROUP BY "Lhash" HAVING  COUNT(*) > 1')))) == 0, "duplicate L-functions!" 
     start = int(sys.argv[2])
-    assert k > start
+    assert k > start, "the modulos must be bigger than the representative"
     ids = list(range(start, bound + 1, k))
     for i in ids:
         nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
         if nf is not None:
-            print "%d ->\t %.2f\t %s" % (start, 100*float(i)/bound, nf['label'])
+            #print "%d ->\t %.2f\t %s" % (start, 100*float(i)/bound, nf['label'])
             verify_Lfunctions(nf)
             verify_embeddings(nf)
     bound = db.mf_newforms.max('Nk2')
     for level in range(1, db.mf_newforms.max('level') + 1):
-        print "%d ->\t %d" % (start, level)
+        #print "%d ->\t %d" % (start, level)
         for weight in range(2, db.mf_newforms.max('weight') + 1):
             if level*weight*weight <= bound and (level + weight)%k == start:
                 verify_dimensions(level, weight)
