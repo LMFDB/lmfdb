@@ -28,7 +28,7 @@ def convert_IQF_label(fld, lab):
         newlab = lab[1:-1].replace(",",".")
     if len(newlab.split("."))!=3:
         return newlab
-    newlab = db.ec_IQF_labels.lucky({'fld':fld, 'old':newlab}, 'new')
+    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
     if newlab:
         if newlab!=lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
