@@ -5,7 +5,6 @@ CRITICAL (BUGS):
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Statistics on time to load all the pages (Edgar)
-* Missing q-expansion strings (e.g. 145.2.a.d) (Drew)
 * For Dirichlet character, include orbit label in search results (David)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
@@ -13,6 +12,7 @@ IMPORTANT:
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
+* data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
 * add buttons to switch search types (Edgar)
