@@ -4,6 +4,7 @@ from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt
 import multiprocessing
 from traceback import print_exc
+import logging
 
 ncpus = min(multiprocessing.cpu_count(), 40)
 
@@ -33,7 +34,9 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
+        logging.info.disabled = True
         db = PostgresDatabase()
+        logging.info.disabled = False
         errors = []
         n = 0
         for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
@@ -53,7 +56,9 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
+        logging.info.disabled = True
         db = PostgresDatabase()
+        logging.info.disabled = False
         errors = []
         n = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
