@@ -67,6 +67,11 @@ class CMFTest(LmfdbTest):
             return []
 
         dim = G1['dim']
+        if 'sub_mul' not in G1:
+            print ['#']*100
+            print  level, weight
+            print ['#']*100
+            raise ValueError
         if G1['sub_level'] != level:
             dim -= G1['sub_mul']*G1['sub_dim']
 
@@ -156,6 +161,7 @@ class CMFTest(LmfdbTest):
         errors = []
         for k, io in enumerate([formerros, spaceserrors]):
             for i, o in formerros:
+                print i, o
                 if not isinstance(o, list):
                     if k == 0:
                         command = "all_newforms"
