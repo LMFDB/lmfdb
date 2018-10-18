@@ -40,22 +40,22 @@
         <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
       </select>
     </td>
+    <td> {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
+      <select name='prime_quantifier'>
+        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+      </select>
+    </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
-    <td>{{ KNOWL('character.dirichlet.real', title='Character is real?') }}</td>
   </tr>
 
   <tr>
     <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
+        <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
     <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
     <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
-    <td>
-      <select name='char_is_real' style="width: 140px;">
-	<option ></option>
-	<option value='True'{{ "selected" if info.char_is_real == 'True'}}>Yes</option>
-	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
-      </select>
-    </td>
   </tr>
 
   <tr style="height:50px">

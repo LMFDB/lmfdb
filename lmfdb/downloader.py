@@ -89,7 +89,6 @@ class Downloader(object):
         Generate download file for a list of search results determined by the
         ``query`` field in ``info``.
         """
-        print info
         lang = info.get(self.lang_key,'text').strip()
         filename = self.get('filename_base', self.table.search_table)
         label_col = self.table._label_col

@@ -932,6 +932,9 @@ div.center {
 table.ntdata .right {
     text-align: right;
 }
+td.right {
+    text-align: right;
+}
 table.ntdata .middle {
     vertical-align: middle;
 }

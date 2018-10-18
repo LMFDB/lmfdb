@@ -20,6 +20,9 @@
   <button type="submit" name="Submit" value="magma">Magma</button>&nbsp;
   <input type="hidden" name="download" value="1"/>
   <input type="hidden" name="query" value="{{info.query}}"/>
+  {% if info.search_type %}
+  <input type="hidden" name="search_type" value="{{info.search_type}}"/>
+  {% endif %}
 </form>
 {% endif %}
 </div>

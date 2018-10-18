@@ -14,8 +14,8 @@
     <td><div class="float-left">{{ KNOWL('mf.elliptic.weight', title='Weight') }}</div>
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
-        <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
-        <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
+        <option value="even"{% if info.weight_parity == 'even' %} selected='yes'{% endif %}>even</option>
+        <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
     </td>
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
@@ -36,27 +36,27 @@
     <td><div class="float-left">{{ KNOWL('mf.elliptic.character', title='Character') }}</div>
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
-        <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
-        <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
+        <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
+        <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
+    </td>
+    <td> {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
+      <select name='prime_quantifier'>
+        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+      </select>
     </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
-    <td>{{ KNOWL('character.dirichlet.real', title='Character is real?') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}</td>
   </tr>
 
   <tr>
     <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
     <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
     <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
-    <td>
-      <select name='char_is_real' style="width: 150px;">
-	<option ></option>
-	<option value='True'{{ "selected" if info.char_is_real == 'True'}}>Yes</option>
-	<option value='False'{{ "selected" if info.char_is_real == 'False'}}>No</option>
-      </select>
-    </td>
     <td><input type='text' style="width: 140px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
   </tr>
 
@@ -65,35 +65,45 @@
     <td>{{ KNOWL('mf.elliptic.cm_form', title='CM form') }}</td>
     {# <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td> #}
     <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+    <td>{{ KNOWL('lfunction.self-dual', title='Is self dual?') }}</td>
   </tr>
 
   <tr>
     <td><input type='text' style="width: 140px" name='cm_disc' placeholder='-3' value='{{info.cm_disc}}'></td>
     <td>
       <select name='is_cm' style="width: 150px;">
-        <option value="" {{ "selected" if info.is_cm == ''}}>unrestricted</option>
-        <option value="yes" {{ "selected" if info.is_cm == 'yes'}}>yes</option>
-        <option value="not_no" {{ "selected" if info.is_cm == 'not_no'}}>yes or unknown</option>
-        <option value="not_yes" {{ "selected" if info.is_cm == 'not_yes'}}>no or unknown</option>
-        <option value="no" {{ "selected" if info.is_cm == 'no'}}>no</option>
+        <option value="yes"{% if info.is_cm == 'yes' %} selected='yes'{% endif %}>yes</option>
+        <option value="not_no"{% if info.is_cm == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
+        <option value=""{% if not info.is_cm %} selected='yes'{% endif %}>unrestricted</option>
+        <option value="not_yes"{% if info.is_cm == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
+        <option value="no"{% if info.is_cm == 'no' %} selected='yes'{% endif %}>no</option>
       </select>
     </td>
     {#
     <td>
       <select name='is_twist_minimal' style="width: 150px;">
 	<option></option>
-	<option value="True" {{ "selected" if info.is_twist_minimal == 'True'}}>True</option>
-	<option value="False" {{ "selected" if info.is_twist_minimal == 'False'}}>False</option>
+	<option value="True"{% if info.is_twist_minimal == 'True' %} selected='yes' {% endif %}>True</option>
+	<option value="False"{% if info.is_twist_minimal == 'False' %} selected='yes' {% endif %}>False</option>
       </select>
     </td>
     #}
     <td>
       <select name='has_inner_twist' style="width: 150px;">
-        <option value="" {{ "selected" if info.has_inner_twist == ''}}>unrestricted</option>
-        <option value="yes" {{ "selected" if info.has_inner_twist == 'yes'}}>yes</option>
-        <option value="not_no" {{ "selected" if info.has_inner_twist == 'not_no'}}>yes or unknown</option>
-        <option value="not_yes" {{ "selected" if info.has_inner_twist == 'not_yes'}}>no or unknown</option>
-        <option value="no" {{ "selected" if info.has_inner_twist == 'no'}}>no</option>
+        <option value="yes"{% if info.has_inner_twist == 'yes' %} selected='yes'{% endif %}>yes</option>
+        <option value="not_no"{% if info.has_inner_twist == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
+        <option value=""{% if not info.has_inner_twist %} selected='yes'{% endif %}>unrestricted</option>
+        <option value="not_yes"{% if info.has_inner_twist == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
+        <option value="no"{% if info.has_inner_twist == 'no' %} selected='yes'{% endif %}>no</option>
+      </select>
+    </td>
+    <td>
+      <select name='is_self_dual' style="width: 150px;">
+        <option value="yes"{% if info.is_self_dual == 'yes' %} selected='yes'{% endif %}>yes</option>
+        <option value="not_no"{% if info.is_self_dual == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
+        <option value=""{% if not info.is_self_dual %} selected='yes'{% endif %}>unrestricted</option>
+        <option value="not_yes"{% if info.is_self_dual == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
+        <option value="no"{% if info.is_self_dual == 'no' %} selected='yes'{% endif %}>no</option>
       </select>
     </td>
   </tr>
