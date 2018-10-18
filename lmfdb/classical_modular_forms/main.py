@@ -604,7 +604,7 @@ def common_parse(info, query):
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info.get('prime_quantifier','exact')
-    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode) # should add radical of level
+    parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
 def newform_parse(info, query):
     common_parse(info, query)
