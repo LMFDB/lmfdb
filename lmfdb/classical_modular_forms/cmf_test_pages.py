@@ -148,11 +148,11 @@ class CMFTest(LmfdbTest):
                 k = sqrt(Nk2/N)
                 if k in ZZ:
                     todo.append((N, int(k)))
-        formerros = list(self.all_newforms(todo))
+        formerrors = list(self.all_newforms(todo))
         spaceserrors = list(self.all_newspaces(todo))
         errors = []
-        for k, io in enumerate([formerros, spaceserrors]):
-            for i, o in formerros:
+        for k, io in enumerate([formerrors, spaceserrors]):
+            for i, o in io:
                 print i, o
                 if not isinstance(o, list):
                     if k == 0:
