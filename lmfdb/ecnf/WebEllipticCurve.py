@@ -28,7 +28,7 @@ def convert_IQF_label(fld, lab):
         newlab = lab[1:-1].replace(",",".")
     if len(newlab.split("."))!=3:
         return newlab
-    newlab = db.ec_IQF_labels.lucky({'fld':fld, 'old':newlab}, 'new')
+    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
     if newlab:
         if newlab!=lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
@@ -470,6 +470,7 @@ class ECNF(object):
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
+            ld['kod'] = ld['kod'].replace('\\\\', '\\')
             ld['kod'] = web_latex(ld['kod']).replace('$', '')
 
         # URLs of self and related objects:
