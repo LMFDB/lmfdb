@@ -15,12 +15,13 @@ IMPORTANT:
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
-* Download Euler factors
-* Compute trace hashes for elliptic curves over quadratic fields (Drew)
+* add buttons to switch search types (Edgar)
+* Download Euler factors (Edgar)
 
 
 GOOD:
 * compute all data for Nk^2 <= 4000 (Edgar)
+* Add trace hashes for elliptic curves over quadratic fields (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
