@@ -8,7 +8,6 @@ IMPORTANT:
 * For Dirichlet character, include orbit label in search results (David LD)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
-* adjust order of betas in q-expansion (constant should come first) (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
