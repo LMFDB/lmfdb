@@ -172,7 +172,6 @@ def l_function_genus2_browse_page():
 def l_function_browse_page(degree, gammasignature):
     degree = get_degree(degree)
     nice_gammasignature = parse_codename(gammasignature)
-######    nice_gammasignature = "(0,0,0;)"  # make it a function of gammasignature
     if degree < 0:
         return flask.abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)

@@ -78,7 +78,7 @@ def getGroupHtml(group):
         ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
         ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
         ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
-    elif group == 'r0r0r0r0':   # note: signature, not group.  Delete the groups, then change the name
+    elif group == 'r0r0r0r0':
         ans = "<h3 id='r0r0r0r0'>L-functions of signature (0,0,0,0;)</h3>\n"
         ans += "<div>\n"
         ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
@@ -103,6 +103,7 @@ def getGroupHtml(group):
         ans += "\\end{equation}\n"
         ans += "with \\(\\mu_j\\) real.  By renaming and rearranging, we may assume \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
 
+    # groups, soon to be obsolete
     elif group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
