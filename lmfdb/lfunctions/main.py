@@ -18,7 +18,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EMF, Lfunction_EC, #Lfunct
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, Lfunction_lcalc,
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table, isogeny_class_cm
-from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
@@ -171,7 +171,8 @@ def l_function_genus2_browse_page():
 # def l_function_maass_gln_browse_page(degree):
 def l_function_browse_page(degree, gammasignature):
     degree = get_degree(degree)
-    nice_gammasignature = "(0,0,0;)"  # make it a function of gammasignature
+    nice_gammasignature = parse_codename(gammasignature)
+######    nice_gammasignature = "(0,0,0;)"  # make it a function of gammasignature
     if degree < 0:
         return flask.abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)

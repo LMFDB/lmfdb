@@ -33,14 +33,25 @@ def getAllMaassGraphHtml(degree, signature=""):
         groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
     else:
         return ""
+    if signature:
+        groups = []
 
     ans = ""
+    if signature == 'r0r0r0':
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL3", 1])
+        ans += getOneGraphHtml(["GL3", 4])
+    elif signature == 'r0r0r0r0':
+        ans += getGroupHtml(signature + 'selfdual')
+        ans += getOneGraphHtml(["GSp4", 1])
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL4", 1])
+
+#        else:
+#            ans += getGroupHtml(g)
     for i in range(0, len(groups)):
         g = groups[i][0]
-        if signature:
-            ans += getGroupHtml(signature)
-        else:
-            ans += getGroupHtml(g)
+        ans += getGroupHtml(g)
         for j in range(0, len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
@@ -67,6 +78,31 @@ def getGroupHtml(group):
         ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
         ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
         ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
+    elif group == 'r0r0r0r0':   # note: signature, not group.  Delete the groups, then change the name
+        ans = "<h3 id='r0r0r0r0'>L-functions of signature (0,0,0,0;)</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\Gamma_\\R(s + i \\mu_4)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
+        ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
+        ans += "</div>\n"
+    elif group == 'r0r0r0r0selfdual':
+        ans = "<h3 id='r0r0r0r0selfdual'>L-functions of signature (0,0,0,0;) with real coefficients</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s - i \\mu_1)"
+        ans += "\\Gamma_\\R(s - i \\mu_2)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\\mu_j\\) real.  By renaming and rearranging, we may assume \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
+
     elif group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
