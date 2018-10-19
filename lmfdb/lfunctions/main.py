@@ -199,13 +199,13 @@ def set_info_for_start_page():
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
-           {'title': 'GL3 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree3')},
+           {'title': 'Signature (0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree3', gammasignature='r0r0r0')},
            {'title': 'Symmetric Square L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
-          [{'title': 'GSp4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
-           {'title': 'GL4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree4')},
+          [{'title': 'Signature (0,0,0,0;) and real cofficients', 'link': url_for('.l_function_browse_page', degree='degree4', gammasignature='r0r0r0r0') + '#r0r0r0r0selfdual'},
+           {'title': 'Signature (0,0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree4', gammasignature='r0r0r0r0')},
            {'title': 'Symmetric Cube L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
 
     info = {
