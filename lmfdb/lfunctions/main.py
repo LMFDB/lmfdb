@@ -101,7 +101,7 @@ def l_function_degree_page(degree):
 @l_function_page.route("/degree2/CuspForm/")
 def l_function_cuspform_browse_page():
     info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
-    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(1, 7, 2, 12)]
+    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(201)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
 
 
@@ -984,6 +984,10 @@ def browseGraphHolo():
     return render_browseGraphHolo(request.args)
 
 
+@l_function_page.route("/browseGraphHoloNew/")
+def browseGraphHoloNew():
+    return render_browseGraphHoloNew(request.args)
+
 @l_function_page.route("/browseGraphChar/")
 def browseGraphChar():
     return render_browseGraphChar(request.args)
@@ -1002,9 +1006,13 @@ def render_browseGraph(args):
 
 def render_browseGraphHolo(args):
     data = LfunctionPlot.paintSvgHolo(args['Nmin'], args['Nmax'], args['kmin'], args['kmax'])
-    #print data
     response = make_response((data,200,{'Content-type':'image/svg+xml'}))
-    #response.headers['Content-type'] = 'image/svg+xml'
+    return response
+
+
+def render_browseGraphHoloNew(args):
+    data = LfunctionPlot.paintSvgHoloNew(args['condmax'])
+    response = make_response((data,200,{'Content-type':'image/svg+xml'}))
     return response
 
 
