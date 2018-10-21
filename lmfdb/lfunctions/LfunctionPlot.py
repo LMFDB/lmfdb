@@ -330,7 +330,7 @@ def getOneGraphHtmlHolo(condmax):
     #image_url = url_for('.browseGraphHoloNew', **{'Nmin':Nmin,'Nmax':Nmax,'kmin':kmin,'kmax':kmax})
     image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
     logger.debug(image_url)
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 610) +
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 620) +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
