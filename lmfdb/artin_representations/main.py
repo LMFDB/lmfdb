@@ -187,15 +187,6 @@ def random_representation():
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-
-@artin_representations_page.route("/Completeness2")
-def completeness_page():
-    t = 'Completeness of Artin Representation Data'
-    bread = get_bread([("Completeness", )])
-    return render_template("single.html", kid='dq.artin.extent',
-                           credit=tim_credit, title=t, bread=bread, 
-                           learnmore=learnmore_list())
-
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin Representations'
