@@ -264,11 +264,10 @@ def paintSvgFileAll(glslist):  # list of group and level
 ## ticlength = the length of the tickmarks
 ## ============================================
 def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xstart = 1):
+    # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     sign = 1 if xMax >= 1 else -1
     for i in range(1, xMax + 1, sign):
         xmlText = xmlText + ("<line x1='" + str(i * sign * xfactor) + "' y1='" +
@@ -288,6 +287,9 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xstart = 1):
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
 
+    # y-axis
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     sign = 1 if yMax >= 1 else -1
     for i in range(1, yMax + 1, sign):
         xmlText = xmlText + ("<line x1='0' y1='" +
@@ -418,7 +420,7 @@ def paintSvgHoloNew(condmax):
 
     ans = svgBegin()
     ans += "<g transform='translate(0 50)'>\n" # give ourselves a little space
-    ans += paintCS(x_max, 0, int(math.ceil(x_max)), int(math.ceil(y_max)), x_scale, -y_scale, 20, xstart = x_offset)
+    ans += paintCS(x_max, 0, int(math.ceil(x_max)), int(math.ceil(y_max)), x_scale, -y_scale, 7, xstart = x_offset)
     ans += "</g>"
 
     ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
