@@ -194,7 +194,7 @@ class CMFTest(LmfdbTest):
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
         if total > 0:
-            print "Average loading time: %.2f" % sum(just_times)/total
+            print "Average loading time: %.2f" % (sum(just_times)/total,)
             print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
             print "Quartiles: %.2f %.2f %.2f" % [just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]]
             print "Slowest pages:"
