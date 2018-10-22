@@ -220,4 +220,3 @@ def cande():
     return render_template("single.html", kid='rcs.cande.artin',
                            credit=tim_credit, title=t, bread=bread, 
                            learnmore=learnmore)
-
