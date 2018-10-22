@@ -136,7 +136,6 @@ def render_artin_representation_webpage(label):
     properties = [("Label", label),
                   ("Dimension", str(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  #("Conductor", str(the_rep.conductor())),
                   ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
                   #("Bad primes", str(the_rep.bad_primes())),
                   ("Root number", processed_root_number),
