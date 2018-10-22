@@ -7,7 +7,7 @@ from traceback import print_exc
 import logging
 import time
 
-ncpus = min(multiprocessing.cpu_count(), 40)
+ncpus = min(multiprocessing.cpu_count(), 10)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -48,7 +48,7 @@ class CMFTest(LmfdbTest):
             r = self.newform(nf['label'],  nf['dim'])
             res.append(r)
             if r[0] is None:
-                errors.append(url)
+                errors.append(r[1])
 
         if errors:
             print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
@@ -182,7 +182,7 @@ class CMFTest(LmfdbTest):
                     res.extend(o)
 
         if errors == []:
-            print "No errors!"
+            print "No errors while running the tests!"
         else:
             print "Unexpected errors occurring while running:"
             for e in errors:
@@ -193,26 +193,34 @@ class CMFTest(LmfdbTest):
         working_urls.sort(key= lambda elt: elt[0])
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
-        if total > 0:
-            print "Average loading time: %.2f" % (sum(just_times)/total,)
-            print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
-            print "Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]])
-            print "Slowest pages:"
-            for t, u in working_urls[-10:]:
-                print "%.2f - %s" % (t,u)
-        if total > 2:
-            print "Histogram"
-            nbins = min(10, total)
-            bins = [0]*nbins
-            h = (just_times[-1] - just_times[0])/nbins
-            i = 0
-            for elt in just_times:
-                while elt > (i + 1)*h + just_times[0]:
-                    i += 1
-                bins[i] += 1
-            for i, b in enumerate(bins):
-                d = int(100*float(b)/total)
-                print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '| - %d%%' % d
+        if broken_urls == []:
+            print "All the pages passed the tets"
+            if total > 0:
+                print "Average loading time: %.2f" % (sum(just_times)/total,)
+                print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
+                print "Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]])
+                print "Slowest pages:"
+                for t, u in working_urls[-10:]:
+                    print "%.2f - %s" % (t,u)
+            if total > 2:
+                print "Histogram"
+                nbins = min(10, total)
+                bins = [0]*nbins
+                h = (just_times[-1] - just_times[0])/nbins
+                i = 0
+                for elt in just_times:
+                    while elt > (i + 1)*h + just_times[0]:
+                        i += 1
+                    bins[i] += 1
+                for i, b in enumerate(bins):
+                    d = int(100*float(b)/total)
+                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '| - %d%%' % d
+        else:
+            print "These pages didn't pass the tests:"
+            for u in broken_urls:
+                print u
+
+
 
 
 
