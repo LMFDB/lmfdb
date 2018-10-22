@@ -160,7 +160,7 @@ class CMFTest(LmfdbTest):
     def test_all(self):
         todo = []
         from lmfdb.db_backend import db
-        maxNk2 = 500 # db.mf_newforms.max('Nk2')
+        maxNk2 = 200 # db.mf_newforms.max('Nk2')
         for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
