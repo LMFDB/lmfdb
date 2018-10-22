@@ -1,7 +1,7 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, PolynomialRing, QQ, PowerSeriesRing,\
+from sage.all import prime_range, latex, QQ, PowerSeriesRing,\
                         CDF, ZZ, CBF, cached_method
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
@@ -61,7 +61,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
     if prec == 0:
         return 'O(1)'
     d = len(eigseq[0])
-    R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
+    R = PowerSeriesRing(QQ, ['beta%s' % i for i in range(1,d)])
     Rgens = [1] + [g for g in R.gens()]
     Rq = PowerSeriesRing(R, 'q')
     q = Rq.gens()[0]
@@ -70,7 +70,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
         term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
         if term != 0:
              latexterm = latex(term*(q**j))
-             if s <> '' and latexterm[0] <> '-':
+             if s != '' and latexterm[0] != '-':
                   latexterm = '+' + latexterm
              s += '\(' + latexterm + '\)'
     return s + '\(+O(q^{%s})\)' % prec

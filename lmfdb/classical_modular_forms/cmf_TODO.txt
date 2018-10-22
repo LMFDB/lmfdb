@@ -5,7 +5,7 @@ CRITICAL (BUGS):
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * Statistics on time to load all the pages (Edgar)
-* For Dirichlet character, include orbit label in search results (David)
+* For Dirichlet character, include orbit label in search results (David LD)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
 
