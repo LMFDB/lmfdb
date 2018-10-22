@@ -41,6 +41,7 @@ class CMFTest(LmfdbTest):
         db = PostgresDatabase()
         logging.getLogger().disabled = False
         res = []
+        errors = []
         n = 0
         for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
             n += 1
@@ -62,6 +63,7 @@ class CMFTest(LmfdbTest):
         db = PostgresDatabase()
         logging.info.disabled = False
         errors = []
+        res = []
         n = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
