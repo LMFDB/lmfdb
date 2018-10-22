@@ -158,7 +158,8 @@ class CMFTest(LmfdbTest):
     def test_all(self):
         todo = []
         from lmfdb.db_backend import db
-        for Nk2 in range(1, db.mf_newforms.max('Nk2') + 1):
+        maxNk2 = 500 # db.mf_newforms.max('Nk2')
+        for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
@@ -187,14 +188,18 @@ class CMFTest(LmfdbTest):
 
         broken_urls = [ u for l, u in res  if u is None ]
         working_urls = [ (l, u) for l, u in res if u is not None]
-        working_urls.sort(key elt: elt[0])
+        working_urls.sort(key= lambda elt: elt[0])
         just_times = [ l for l, u in working_urls]
         total = len(working_urls)
         if total > 0:
             print "Average loading time: %.2f" % sum(just_times)/total
             print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
             print "Quartiles: %.2f %.2f %.2f" % [just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]]
+            print "Slowest pages:"
+            for t, u in working_urls[-10:]:
+                print "%.2f - %s" % (t,u)
         if total > 2:
+            print "Histogram"
             nbins = min(10, total)
             bins = [0]*nbins
             h = (just_times[-1] - just_times[0])/nbins
@@ -206,6 +211,7 @@ class CMFTest(LmfdbTest):
             for i, b in enumerate(bins):
                 d = int(100*float(b)/total)
                 print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '|'
+
 
 
 
