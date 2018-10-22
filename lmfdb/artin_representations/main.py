@@ -58,7 +58,6 @@ def index():
 
 def artin_representation_jump(info):
     label = info['natural']
-    # test if it is ok
     try:
         label = parse_artin_label(label)
     except ValueError as err:
