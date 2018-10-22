@@ -212,7 +212,7 @@ class CMFTest(LmfdbTest):
                 bins[i] += 1
             for i, b in enumerate(bins):
                 d = int(100*float(b)/total)
-                print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '|'
+                print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '| - %d%%' % d
 
 
 
