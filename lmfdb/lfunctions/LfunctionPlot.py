@@ -337,25 +337,26 @@ def getOneGraphHtmlHolo(condmax):
     return(ans)
 
 
+# TODO cleanup here
 ## ============================================
 ## Returns the url and width and height of the svg-file for
 ## the L-functions of holomorphic cusp form.
 ## ============================================
-def getGraphInfoHolo(condmax):
-    xfactor = 90
-    yfactor = 30
-    x_extraSpace = 50
-    y_extraSpace = 80
-
-    (width, height) = (x_extraSpace + xfactor * (Nmax), y_extraSpace + yfactor * (kmax))
-    url = url_for('.browseGraphHolo', Nmin=str(Nmin), Nmax=str(Nmax),
-                  kmin=str(kmin), kmax=str(kmax))
-
-    ans = {'src': url}
-    ans['width'] = width
-    ans['height'] = height
-
-    return(ans)
+#def getGraphInfoHolo(condmax):
+#    xfactor = 90
+#    yfactor = 30
+#    x_extraSpace = 50
+#    y_extraSpace = 80
+#
+#    (width, height) = (x_extraSpace + xfactor * (Nmax), y_extraSpace + yfactor * (kmax))
+#    url = url_for('.browseGraphHolo', Nmin=str(Nmin), Nmax=str(Nmax),
+#                  kmin=str(kmin), kmax=str(kmax))
+#
+#    ans = {'src': url}
+#    ans['width'] = width
+#    ans['height'] = height
+#
+#    return(ans)
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
@@ -375,7 +376,7 @@ def paintSvgHoloNew(condmax):
 
 
     radius = 3.3
-    top_space = 4*radius
+    #top_space = 4*radius
 
     values = {}
     max_k = 0 # the largest weight we see
