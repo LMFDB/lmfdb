@@ -1,16 +1,25 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-
+* Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
-* Statistics on time to load all the pages (Edgar)
 * For Dirichlet character, include orbit label in search results (David LD)
 * Undo color change (David)
 * code snippets for form and space pages (Drew)
+* 1000 more possibilities; cut off "See 2342 more embeddings" when large, include hint to use download all (David)
+* All stored data large download, flask stream (David)
+* Display 20 by default; limit to at most 100 embeddings; error message should not refer to m, split error message into too large and bad format (David)
+* Add first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns, compare speed) (David, Edgar)
+* Change embedding ordering, lexicographic on a_n (Edgar)
+* Change L-function labels (e.g. 46.2.c.b.3.1), lexicographic on a_n (Edgar)
+* Change isogeny_class_label column to friends, update supporting code: name_and_object_from_url (David)
+* Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
+* Error for old L-function labels (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
+* L-function bread (degree 24 -> degree 2 when you click on Cusp Forms) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Edgar)
@@ -60,7 +69,7 @@ FUTURE WORK:
 
 NOT CMF STUFF:
 * pick columns and sort order on search results
-* pick a random object with contraints
+* add UIs to pick random objects with contraints
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
 * http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
 * fix hmf and bmf l-functions

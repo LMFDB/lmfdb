@@ -176,16 +176,16 @@ function show_qexp(qstyle) {
 {% if newform.has_complex_qexp %}
 {% if info.format == 'embed' %}
 <h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
-<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the values \(\iota_m(a_n)\) are shown below.</p>
 {% elif info.format == 'analytic_embed' %}
 <h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
-<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the values \(a_n(f_m)/n^{(k-1)/2}\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the values \(\iota_m(a_n)/n^{(k-1)/2}\) are shown below.</p>
 {% elif info.format == 'satake' %}
 <h2>{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }}</h2>
-<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p(f_m)\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\iota_m(\alpha_p)\) are shown below.</p>
 {% else %}
 <h2>{{KNOWL('mf.elliptic.satake_parameters',title='Satake parameters')}}</h2>
-<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, write \(f_m\) for \(\iota_m(f)\); the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p(f_m) = \textrm{Arg}(\alpha_p(f_m))\) are shown below.</p>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the {{ KNOWL('mf.elliptic.satake_parameters',title='Satake angles') }} \(\theta_p = \textrm{Arg}(\iota_m(\alpha_p))\) are shown below.</p>
 {% endif %}
 
 <script>
