@@ -10,7 +10,7 @@ IMPORTANT:
 * code snippets for form and space pages (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* fix and verify (try furthest top right dot): http://www.lmfdb.org/L/degree2/CuspForm/ (Alex)
+* Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Edgar)
