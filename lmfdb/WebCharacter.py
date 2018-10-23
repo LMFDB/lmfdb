@@ -4,6 +4,7 @@ from sage.databases.cremona import cremona_letter_code
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
@@ -750,6 +751,155 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def order(self):
         return self.H.order()
 
+
+class WebDBDirichletCharacter(WebChar, WebDirichlet):
+    """
+    A class using data stored in the database. Currently, this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    _keys = [ 'title', 'credit', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label']
+
+    def __init__(self, modulus=2, number=1, **kwargs):
+        self.type = "Dirichlet"
+        self.modulus = int(modulus)
+        self.number = int(number)
+        logger.warning("{}.{}".format(self.modulus, self.number))
+        self.credit = ''
+        self.codelangs = ('pari', 'sage')
+        self._populate_from_db()
+
+################TODO DLD
+    @property
+    def previous(self):   return None
+    @property
+    def next(self):       return None
+
+
+    @property
+    def genvalues(self):  return None
+    def value(self, *args): return None
+
+    def charisprimitive(self, mod, num):
+        return None
+
+    @property
+    def charsums(self, *args):
+        return False
+
+
+    def gauss_sum(self, *args): return None
+    def jacobi_sum(self, *args): return None
+    def kloosterman_sum(self, *args): return None
+
+
+    ### AND ALL THE CODE PIECES
+
+########################
+
+    @property
+    def title(self):
+        return r"Dirichlet Character {}".format(self.texname)
+
+    @property
+    def texname(self):
+        return self.char2tex(self.modulus, self.number)
+
+    def symbol_numerator(self):
+        """
+        chi is equal to a kronecker symbol if and only if it is real
+        """
+        if self.order != 2:
+            return None
+        if self.parity == "Odd":
+            return symbol_numerator(self.conductor, True)
+        return symbol_numerator(self.conductor, False)
+
+    @property
+    def symbol(self):
+        return kronecker_symbol(self.symbol_numerator())
+
+    @property
+    def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character Group", cglink) )
+        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+            url = url_character(type=self.type, number_field=None, modulus=self.modulus, number=self.number)
+            if get_lfunction_by_url(url[1:]):
+                friendlist.append( ('L-function', '/L'+ url) )
+            friendlist.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order) )
+        if len(self.vflabel) > 0:
+            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        return friendlist
+
+    def _compute(self):
+        logger.warning("Compute called for WebDBDirichletCharacter.")
+
+    def _populate_from_db(self):
+        values_data = db.char_dir_values.lookup(
+            "{}.{}".format(self.modulus, self.number)
+        )
+
+        self.orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+        # The -1 in the line below is because labels index at 1, while
+        # the Cremona letter code indexes at 0
+        self.orbit_label = cremona_letter_code(self.orbit_index - 1)
+        self.order = int(values_data['order'])
+        self.indlabel = int(values_data['prim_label'].partition('.')[-1])
+
+        orbit_data = db.char_dir_orbits.lucky(
+            {'modulus': self.modulus, 'orbit_index': self.orbit_index}
+        )
+
+        self.conductor = int(orbit_data['conductor'])
+        self._set_isprimitive(orbit_data)
+        self._set_parity(orbit_data)
+        self._set_galoisorbit(orbit_data)
+
+    def _set_isprimitive(self, orbit_data):
+        if str(orbit_data['is_primitive']) == "True":
+            self.isprimitive = "Yes"
+        else:
+            self.isprimitive = "No"
+
+    def _set_parity(self, orbit_data):
+        _parity = int(orbit_data['parity'])
+        if _parity == -1:
+            self.parity = 'Odd'
+        else:
+            self.parity = 'Even'
+
+    def _set_galoisorbit(self, orbit_data):
+        upper_limit = min(200, self.order + 1)
+        orbit = (
+            power_mod(self.number, k, self.modulus)
+            for k in xsrange(1, upper_limit) if gcd(k, self.order) == 1
+        )
+        self.galoisorbit = list(
+            self._char_desc(num, prim=self.isprimitive) for num in orbit
+        )
+
+    @property
+    def values(self):
+        return [n for n, g in self.Gelts()]
+
+
 class WebSmallDirichletGroup(WebDirichletGroup):
 
     def _compute(self):
@@ -833,7 +983,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codecond(self):
         return { 'sage': 'chi.conductor()',
                  'pari': 'znconreyconductor(g,chi)' }
-
 
     @property
     def parity(self):
@@ -1281,4 +1430,3 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
                 'sage': 'G.gen_ideals()',
                 'pari': 'g.gen'
                 }
-
