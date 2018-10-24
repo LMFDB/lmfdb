@@ -2,7 +2,7 @@
 # ListCharacters.py
 
 import re
-from sage.all import lcm, factor, divisors
+from sage.all import lcm, factor, divisors, gcd
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.db_backend import db
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
@@ -135,11 +135,17 @@ def get_character_order(a, b, limit=7):
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
-def charinfo(chi):
+def charinfo(chi, value_data=None, orbit_data=None):
     """
     Return data associated to the WebDirichletCharacter chi. For moduli less
     than 10000, call charinfo_from_db to pull the data from the db instead.
+
+    The search function in ListCharacters polls the database already. In those
+    cases, value_data and orbit_data are already populated with the data from
+    the char_dir_values and char_dir_orbits collections already.
     """
+    if value_data and orbit_data:
+        return charinfo_from_db_entries(None, None, value_data, orbit_data)
     mod = chi.modulus()
     if mod < 10000:
         num = chi.number()
@@ -155,13 +161,18 @@ def charinfo(chi):
         WebDirichlet.char2tex(chi.modulus(), chi.number()),
     )
 
-def charinfo_from_db(mod, num):
+
+def charinfo_from_db(mod, num, values_data=None, orbit_data=None):
     """
     Return data associated to the WebDirichletCharacter chi from the db.
     """
-    values_data = db.char_dir_values.lookup(
-        "{}.{}".format(mod, num)
-    )
+    if not values_data:
+        values_data = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num)
+        )
+    else:
+        mod, _, num = values_data['label'].partition('.')
+        mod, num = int(mod), int(num)
 
     orbit_index = int(values_data['orbit_label'].partition('.')[-1])
 
@@ -170,12 +181,13 @@ def charinfo_from_db(mod, num):
     orbit_letter = cremona_letter_code(orbit_index - 1)
     orbit_label = "{}.{}".format(mod, orbit_letter)
     order = int(values_data['order'])
-    orbit_data = db.char_dir_orbits.lucky(
-        {'modulus': mod, 'orbit_index': orbit_index}
-    )
+    if not orbit_data:
+        orbit_data = db.char_dir_orbits.lucky(
+            {'modulus': mod, 'orbit_index': orbit_index}
+        )
     conductor = int(orbit_data['conductor'])
     is_prim = _is_primitive(orbit_data['is_primitive'])
-    is_odd = _is_odd(orbit_data['parity'])
+    is_odd = 'Odd' if _is_odd(orbit_data['parity']) else 'Even'
     return (
         mod,
         num,
@@ -197,8 +209,8 @@ def _is_primitive(db_primitive):
 def _is_odd(db_parity):
     _parity = int(db_parity)
     if _parity == -1:
-        return 'Odd'
-    return 'Even'
+        return True
+    return False
 
 
 class CharacterSearch:
@@ -289,22 +301,55 @@ class CharacterSearch:
                 continue
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
-            # DLD add logic if q < 10000 here
-            G = DirichletGroup_conrey(q)
-            for chi in G:
-                ticks += 1
-                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
-                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
-                    continue
-                if self.primitive and self.is_primitive != (True if q == c else False):
-                    continue
-                if self.parity and self.is_odd != p:
-                    continue
-                if count >= start:
-                    if len(res) == limit:
-                        return res, False
-                    res.append(charinfo(chi))
-                count += 1
+            if q < 10000:
+                # Use database instead
+                # Generate admissible numbers for Conrey labels
+                for num in (v for v in range(1, q) if gcd(v, q) == 1):
+                    ticks += 1
+                    values_data = db.char_dir_values.lookup(
+                        "{}.{}".format(q, num)
+                    )
+                    order = values_data['order']
+                    if order < self.omin or order > self.omax:
+                        continue
+
+                    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+                    orbit_data = db.char_dir_orbits.lucky(
+                        {'modulus': q, 'orbit_index': orbit_index}
+                    )
+                    conductor = int(orbit_data['conductor'])
+                    if conductor < self.cmin or conductor > self.cmax:
+                        continue
+
+                    is_prim = _is_primitive(orbit_data['is_primitive'])
+                    if self.primitive and self.is_primitive != is_prim:
+                        continue
+
+                    is_odd = _is_odd(orbit_data['parity'])
+                    if self.parity and self.is_odd != is_odd:
+                        continue
+
+                    if count >= start:
+                        if len(res) == limit:
+                            return res, False
+                        res.append(charinfo_from_db(None, None, values_data, orbit_data))
+                    count += 1
+            else:
+                G = DirichletGroup_conrey(q)
+                for chi in G:
+                    ticks += 1
+                    c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
+                    if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
+                        continue
+                    if self.primitive and self.is_primitive != (True if q == c else False):
+                        continue
+                    if self.parity and self.is_odd != p:
+                        continue
+                    if count >= start:
+                        if len(res) == limit:
+                            return res, False
+                        res.append(charinfo(chi))
+                    count += 1
             if ticks > 100000:
                 flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
                 return res, False
