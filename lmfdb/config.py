@@ -43,7 +43,7 @@ class Configuration(object):
             dest = 'core_color',
             metavar = "COLOR",
             help = 'color template (see templates/color.css)',
-            default = 17,
+            default = 0,
             type = int)
 
         parser.add_argument('-p','--port',
