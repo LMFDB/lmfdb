@@ -947,11 +947,13 @@ def names_and_urls(instances):
     res = []
     names = []
     for instance in instances:
-        name, obj_exists = name_and_object_from_url(instance['url'])
+        if not isinstance(instance, basestring):
+            instance = instance['url']
+        name, obj_exists = name_and_object_from_url(instance)
         if not name:
             name = ''
         if obj_exists:
-            url = "/"+instance['url']
+            url = "/"+instance
         else:
             name = '(%s)' % (name)
             url = ""

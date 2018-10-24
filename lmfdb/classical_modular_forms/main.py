@@ -171,14 +171,10 @@ def render_newform_webpage(label):
             if newform.level % p == 0:
                 maxp = next_prime(maxp)
             p = next_prime(p)
-    info['n'] = info.get('n', '2-%s'%maxp)
     errs = []
+    info['n'] = info.get('n', '2-%s'%maxp)
     try:
         info['CC_n'] = integer_options(info['n'], 1000)
-        if newform.cqexp_prec == 0:
-            pass
-        elif max(info['CC_n']) >= newform.cqexp_prec:
-            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
     except (ValueError, TypeError) as err:
         info['n'] = '2-%s'%maxp
         info['CC_n'] = range(2,maxp+1)
@@ -186,7 +182,7 @@ def render_newform_webpage(label):
             errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    maxm = min(newform.dim, 10)
+    maxm = min(newform.dim, 20)
     info['m'] = info.get('m', '1-%s'%maxm)
     try:
         info['CC_m'] = integer_options(info['m'], 1000)
@@ -204,6 +200,9 @@ def render_newform_webpage(label):
     except (ValueError, TypeError):
         info['prec'] = 6
         errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
+    newform.setup_cc_data(info)
+    if newform.cqexp_prec != 0 and max(info['CC_n']) >= newform.cqexp_prec:
+        errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_newform.html",
@@ -511,6 +510,8 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
+        form.setup_cc_data({'m':'1-%s'%form.dim,
+                            'n':'1-1000'})
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp

@@ -5,18 +5,15 @@ CRITICAL (BUGS):
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * For Dirichlet character, include orbit label in search results (David LD)
-* Undo color change (David)
+* Undo color change (Edgar)
 * code snippets for form and space pages (Drew)
-* 1000 more possibilities; cut off "See 2342 more embeddings" when large, include hint to use download all (David)
+* make sure issues resolved for orbit-traces-LFs.sage once mf_hecke_cc upload finishes (David)
 * All stored data large download, flask stream (David)
-* Display 20 by default; limit to at most 100 embeddings; error message should not refer to m, split error message into too large and bad format (David)
-* Add first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns, compare speed) (David, Edgar)
-* Test L-function labels (e.g. 46.2.c.b.3.1), lexicographic on a_n (David)
-* Change isogeny_class_label column to related_objects, update supporting code: name_and_object_from_url, email Drew (David)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Error for old L-function labels (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
 * Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
 * L-function bread (degree 24 -> degree 2 when you click on Cusp Forms) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
