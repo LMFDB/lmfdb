@@ -171,26 +171,28 @@ def render_newform_webpage(label):
             if newform.level % p == 0:
                 maxp = next_prime(maxp)
             p = next_prime(p)
-    info['n'] = info.get('n', '2-%s'%maxp)
     errs = []
+    info['n'] = info.get('n', '2-%s'%maxp)
     try:
         info['CC_n'] = integer_options(info['n'], 1000)
-        if newform.cqexp_prec == 0:
-            pass
-        elif max(info['CC_n']) >= newform.cqexp_prec:
-            errs.append("Only a(n) up to %s are available"%(newform.cqexp_prec-1))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as err:
         info['n'] = '2-%s'%maxp
         info['CC_n'] = range(2,maxp+1)
-        errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
-    maxm = min(newform.dim, 10)
+        if err.args and err.args[0] == 'Too many options':
+            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+        else:
+            errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
+    maxm = min(newform.dim, 20)
     info['m'] = info.get('m', '1-%s'%maxm)
     try:
         info['CC_m'] = integer_options(info['m'], 1000)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as err:
         info['m'] = '1-%s'%maxm
         info['CC_m'] = range(1,maxm+1)
-        errs.append("<span style='color:black'>m</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+        if err.args and err.args[0] == 'Too many options':
+            errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
+        else:
+            errs.append("<span style='color:black'>Embeddings</span> must be an integer, range of integers or comma separated list of integers")
     try:
         info['prec'] = int(info.get('prec',6))
         if info['prec'] < 1 or info['prec'] > 15:
@@ -198,6 +200,9 @@ def render_newform_webpage(label):
     except (ValueError, TypeError):
         info['prec'] = 6
         errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
+    newform.setup_cc_data(info)
+    if newform.cqexp_prec != 0 and max(info['CC_n']) >= newform.cqexp_prec:
+        errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_newform.html",
@@ -266,6 +271,7 @@ def by_url_space_label(level, weight, char_orbit_label):
     label = str(level)+"."+str(weight)+"."+char_orbit_label
     return render_space_webpage(label)
 
+# Backward compatibility from before 2018
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
 def by_url_space_conreylabel(level, weight, conrey_label):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label))
@@ -276,15 +282,19 @@ def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
     return render_newform_webpage(label)
 
+# Backward compatibility from before 2018
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>/")
-def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
+# From L-functions
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_label>/<int:embedding>/")
+def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_label, embedding):
+    assert conrey_label > 0
     assert embedding > 0
-    return by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit)
+    return by_url_newform_label(level, weight, char_orbit_label, hecke_orbit)
+
 
 
 
@@ -500,6 +510,8 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
+        form.setup_cc_data({'m':'1-%s'%form.dim,
+                            'n':'1-1000'})
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp

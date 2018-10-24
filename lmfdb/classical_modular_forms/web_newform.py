@@ -13,6 +13,8 @@ from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
         web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
         display_float, display_complex, round_CBF_to_half_int, polyquo_knowl
 from lmfdb.characters.utils import url_character
+from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
+from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -20,6 +22,7 @@ from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
+INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
@@ -76,7 +79,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
     return s + '\(+O(q^{%s})\)' % prec
 
 class WebNewform(object):
-    def __init__(self, data, space=None):
+    def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
         self.__dict__.update(data)
@@ -127,48 +130,12 @@ class WebNewform(object):
             self.texp_prec = len(self.texp)-1
         else:
             self.has_exact_qexp = False
-        self.character_values = defaultdict(list)
-        cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['lfunction_label','embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
-                                             ))
         self.rel_dim = self.dim // self.char_degree
-        if not cc_data:
-            self.has_complex_qexp = False
-            self.cqexp_prec = 0
-        else:
-            self.has_complex_qexp = True
-            self.cqexp_prec = 10000
-            self.cc_data = []
-            for m, embedded_mf in enumerate(cc_data):
-                N, k, a, hecke_orbit_label, j = embedded_mf['lfunction_label'].split('.')
-                N, k, a, j = map(int, [N, k, a, j])
-                assert [N, k, hecke_orbit_label] == [self.level, self.weight, self.hecke_orbit_label]
-                assert a in self.char_labels
-                assert j <= self.rel_dim
-                embedded_mf['conrey_label'] = a
-                embedded_mf['embedding_num'] = j
-                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
-                #as they are stored as a jsonb, large enough elements might be recognized as an integer
-                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf['an']]
 
-                self.cc_data.append(embedded_mf)
-                self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
-            self.cc_data.sort(key = lambda x: (x['conrey_label'], x['embedding_num']))
-            self.analytic_shift = [None]
-            for n in range(1,self.cqexp_prec):
-                self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
-
-
-            G = DirichletGroup_conrey(self.level)
-            chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
-            for p in prime_range(2, self.cqexp_prec):
-                if p.divides(self.level):
-                    continue
-                for chi in chars:
-                    c = chi.logvalue(p) * self.char_order
-                    angle = float(c / self.char_order)
-                    value = CDF(0,2*CDF.pi()*angle).exp()
-                    self.character_values[p].append((angle, value))
+        ## CC_DATA
+        self.cqexp_prec = 1000 # Initial estimate for error messages in render_newform_webpage.
+                               # Should get updated in setup_cc_data.
+        self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
@@ -211,30 +178,23 @@ class WebNewform(object):
         # Breadcrumbs
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
 
-        # Downloads
-        self.downloads = []
-        if self.has_exact_qexp:
-            self.downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
-        self.downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
-        if self.has_complex_qexp:
-            self.downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
-            self.downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
-        self.downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
-
         self.title = "Newform %s"%(self.label)
 
+    @cached_method
+    def lfunction_labels(self):
+        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
+        res = []
+        for character in self.char_labels:
+            for j in range(self.dim/self.char_degree):
+                label = base_label + [str(character), str(j + 1)]
+                lfun_label = '.'.join(label)
+                res.append(lfun_label)
+        return res
     @property
     def friends(self):
-        res = []
-        base_label = [str(self.level)]
-        if self.weight == 2 and self.dim == 1:
-            label = self.isogeny_class_label.split('.')
-            ec_label = '.'.join(label)
-            ec_url = '/EllipticCurve/Q/' + '/'.join(label)
-            res.append(('Elliptic curve isogeny class ' + ec_label, ec_url))
-        base_label.append(str(self.weight))
+        res = names_and_urls(self.related_objects)
+        base_label = map(str, [self.level, self.weight])
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
-        base_label =  map(str, [self.level, self.weight])
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
         res.append(('Newspace ' + ns1_label, ns1_url))
@@ -247,18 +207,96 @@ class WebNewform(object):
         if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
-            for character in self.char_labels:
-                for j in range(self.dim/self.char_degree):
-                    label = base_label + [str(character), self.hecke_orbit_label, str(j + 1)]
-                    lfun_label = '.'.join(label)
-                    lfun_url =  '/L' + cmf_base + '/'.join(label)
-                    res.append(('L-function ' + lfun_label, lfun_url))
+            for lfun_label in self.lfunction_labels():
+                lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                res.append(('L-function ' + lfun_label, lfun_url))
         return res
+
+    @property
+    def downloads(self):
+        downloads = []
+        if self.has_exact_qexp:
+            downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
+        downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
+        if self.has_complex_qexp:
+            downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+            downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
+        downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        return downloads
+
+    def setup_cc_data(self, info):
+        """
+        INPUT:
+
+        - ``info`` -- a dictionary with keys
+          - ``m`` -- a string describing the embedding indexes desired
+          - ``n`` -- a string describing the a_n desired
+          - ``CC_m`` -- a list of embedding indexes
+          - ``CC_n`` -- a list of desired a_n
+          - ``format`` -- one of 'embed', 'analytic_embed', 'satake', or 'satake_angle'
+        """
+        an_formats = ['embed','analytic_embed',None]
+        angles_formats = ['satake','satake_angle',None]
+        m = info.get('m','1-%s'%(min(self.dim,20)))
+        n = info.get('n','1-10')
+        CC_m = info.get('CC_m', integer_options(m, 1000))
+        CC_n = info.get('CC_n', integer_options(n, 1000))
+        format = info.get('format')
+        cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
+        if max(CC_n) >= 100:
+            an_key, angles_key = 'an', 'angles'
+        else:
+            an_key, angles_key = 'first_an', 'first_angles'
+        if format in an_formats:
+            cc_proj.append(an_key)
+        if format in angles_formats:
+            cc_proj.append(angles_key)
+        query = {'hecke_orbit_code':self.hecke_orbit_code}
+        range_match = INTEGER_RANGE_RE.match(m)
+        if range_match:
+            low, high = int(range_match.group(1)), int(range_match.group(2))
+            query['embedding_m'] = {'$gte':low, '$lte':high}
+        else:
+            query['embedding_m'] = {'$in': CC_m}
+
+        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+        if not cc_data:
+            self.has_complex_qexp = False
+            self.cqexp_prec = 0
+        else:
+            self.has_complex_qexp = True
+            self.cqexp_prec = 1000 if an_key == 'an' else 100
+            self.cc_data = {}
+            for embedded_mf in cc_data:
+                #as they are stored as a jsonb, large enough elements might be recognized as an integer
+                if format in an_formats:
+                    embedded_mf['an'] = [[float(x), float(y)] for x, y in embedded_mf.pop(an_key)] # 'an' or 'first_an'
+                if format in angles_formats:
+                    embedded_mf['angles'] = {p:theta for p,theta in embedded_mf.pop(angles_key)} # 'angles' or 'first_angles'
+                self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
+            if format in ['analytic_embed',None]:
+                self.analytic_shift = [None]
+                for n in range(1,self.cqexp_prec):
+                    self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
+            if format in angles_formats:
+                self.character_values = defaultdict(list)
+                G = DirichletGroup_conrey(self.level)
+                chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
+                for p in prime_range(2, self.cqexp_prec):
+                    if p.divides(self.level):
+                        continue
+                    for chi in chars:
+                        c = chi.logvalue(p) * self.char_order
+                        angle = float(c / self.char_order)
+                        value = CDF(0,2*CDF.pi()*angle).exp()
+                        self.character_values[p].append((angle, value))
+
 
     @staticmethod
     def by_label(label):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
+
         data = db.mf_newforms.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
@@ -439,7 +477,7 @@ function switch_basis(btype) {
 
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
-        return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=(m%self.rel_dim)+1)
+        return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=((m-1)%self.rel_dim)+1)
 
 
     def embedding(self, m, n=None, prec=6, format='embed'):
@@ -568,14 +606,14 @@ function switch_basis(btype) {
         else:
             # it is very likely that the real or imag part are a half integer
             # as it returns a CDF, we need to convert it to CBF again
-            chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][m // self.rel_dim][1])))
+            chival = CBF(round_CBF_to_half_int(CBF(self.character_values[p][(m-1) // self.rel_dim][1])))
             res =  chival / unit
         return round_CBF_to_half_int(res)
 
     @cached_method
     def _get_theta(self, m, p, i):
         theta = self.cc_data[m]['angles'][p]
-        chiang, chival = self.character_values[p][m // self.rel_dim]
+        chiang, chival = self.character_values[p][(m-1) // self.rel_dim]
         if i == 1:
             theta = chiang - theta
             if theta > 0.5:
@@ -601,5 +639,5 @@ function switch_basis(btype) {
             return [p for p in L if p >= 2 and p < self.cqexp_prec and ZZ(p).is_prime() and not ZZ(p).divides(self.level)]
 
     def m_range(self, L):
-        return [m-1 for m in L if m >= 1 and m <= self.dim]
+        return [m for m in L if m >= 1 and m <= self.dim]
 

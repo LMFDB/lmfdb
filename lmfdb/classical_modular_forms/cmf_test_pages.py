@@ -5,8 +5,9 @@ from sage.all import ZZ, sqrt
 import multiprocessing
 from traceback import print_exc
 import logging
+import time
 
-ncpus = min(multiprocessing.cpu_count(), 40)
+ncpus = min(multiprocessing.cpu_count(), 10)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -15,7 +16,9 @@ class CMFTest(LmfdbTest):
     def newform(self, label, dim):
         url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
         try:
+            now = time.time()
             page = self.tc.get(url)
+            load = time.time() - now
             assert label in page.data
             if dim <= 80:
                 assert 'L-function %s' % label in page.data
@@ -25,32 +28,34 @@ class CMFTest(LmfdbTest):
                 assert 'Satake parameters' in page.data
             else:
                 assert 'Embeddings' in page.data
-            return None
+            return (load, url)
         except Exception as err:
             print "Error on page "+url
             print str(err)
             print_exc()
-            return url
+            return (None, url)
 
     @parallel(ncpus = ncpus)
     def all_newforms(self, level, weight):
         logging.getLogger().disabled = True
         db = PostgresDatabase()
         logging.getLogger().disabled = False
+        res = []
         errors = []
         n = 0
         for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
             n += 1
-            url = self.newform(nf['label'],  nf['dim'])
-            if url is not None:
-                errors.append(url)
+            r = self.newform(nf['label'],  nf['dim'])
+            res.append(r)
+            if r[0] is None:
+                errors.append(r[1])
 
         if errors:
             print "Tested %d pages  with level = %d weight = %d with %d errors occurring on the following pages:" %(n, level, weight, len(errors))
             for url in errors:
                 print url
 
-        return errors
+        return res
 
     @parallel(ncpus = ncpus)
     def all_newspaces(self, level, weight):
@@ -58,6 +63,7 @@ class CMFTest(LmfdbTest):
         db = PostgresDatabase()
         logging.info.disabled = False
         errors = []
+        res = []
         n = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
         newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
@@ -69,11 +75,12 @@ class CMFTest(LmfdbTest):
             assert newforms == []
             return []
 
-
         try:
             n += 1
             gamma1_dim = 0
+            now = time.time()
             page = self.tc.get(url)
+            load = time.time() - now
             assert 'The following table gives the dimensions of various subspaces of' in page.data
             for space in newspaces:
                 assert space['label'] in page.data
@@ -85,12 +92,14 @@ class CMFTest(LmfdbTest):
                 assert form['label'] in page.data
                 gamma1_dim += form['dim']
             assert gamma1_dim == dim
+            res.append((load, url))
+
         except Exception as err:
                 print "Error on page "+url
                 print str(err)
                 print print_exc()
                 errors.append(url)
-        return errors
+                res.append((None, url))
 
 
         for ns in newspaces:
@@ -100,7 +109,9 @@ class CMFTest(LmfdbTest):
             gamma1_dim += dim
             url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
             try:
+                now = time.time()
                 page = self.tc.get(url)
+                load = time.time() - now
                 space_dim = 0
                 assert label in page.data
                 for nf in newforms:
@@ -108,11 +119,13 @@ class CMFTest(LmfdbTest):
                         assert nf['label'] in page.data
                         space_dim += nf['dim']
                 assert space_dim == dim
+                res.append((load, url))
             except Exception as err:
                 print "Error on page "+url
                 print str(err)
                 print print_exc()
                 errors.append(url)
+                res.append((None, url))
 
         #test wrong parity newspaces
         for ns in list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':1 if bool(weight % 2) else -1}, ['label', 'dim'])):
@@ -120,16 +133,19 @@ class CMFTest(LmfdbTest):
             dim = ns['dim']
             url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
             try:
-                assert dim == 0
+                now = time.time()
                 page = self.tc.get(url)
+                load = time.time() - now
                 assert "There are no modular forms of weight" in page.data
                 assert "odd" in page.data
                 assert "even" in page.data
+                res.append((load, url))
             except Exception as err:
                 print "Error on page "+url
                 print str(err)
                 print print_exc()
                 errors.append(url)
+                res.append((None, url))
 
 
         if errors:
@@ -137,14 +153,15 @@ class CMFTest(LmfdbTest):
             for url in errors:
                 print url
 
-        return errors
+        return res
 
 
 
     def test_all(self):
         todo = []
         from lmfdb.db_backend import db
-        for Nk2 in range(1, db.mf_newforms.max('Nk2') + 1):
+        maxNk2 = db.mf_newforms.max('Nk2')
+        for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
                 if k in ZZ:
@@ -152,6 +169,7 @@ class CMFTest(LmfdbTest):
         formerrors = list(self.all_newforms(todo))
         spaceserrors = list(self.all_newspaces(todo))
         errors = []
+        res = []
         for k, io in enumerate([formerrors, spaceserrors]):
             for i, o in io:
                 if not isinstance(o, list):
@@ -161,15 +179,56 @@ class CMFTest(LmfdbTest):
                         command = "all_newspaces"
                     errors.append( [command, i] )
                 else:
-                    errors.extend(o)
+                    res.extend(o)
 
         if errors == []:
-            print "No errors!"
+            print "No errors while running the tests!"
         else:
-            print "Errors occurring on the following pages:"
-            for url in errors:
-                print url
-            assert False
+            print "Unexpected errors occurring while running:"
+            for e in errors:
+                print e
+
+        broken_urls = [ u for l, u in res  if u is None ]
+        working_urls = [ (l, u) for l, u in res if u is not None]
+        working_urls.sort(key= lambda elt: elt[0])
+        just_times = [ l for l, u in working_urls]
+        total = len(working_urls)
+        if broken_urls == []:
+            print "All the pages passed the tets"
+            if total > 0:
+                print "Average loading time: %.2f" % (sum(just_times)/total,)
+                print "Min: %.2f Max %.2f" % (just_times[0], just_times[-1])
+                print "Quartiles: %.2f %.2f %.2f" % tuple([just_times[ max(0, int(total*f) - 1)] for f in [0.25, 0.5, 0.75]])
+                print "Slowest pages:"
+                for t, u in working_urls[-10:]:
+                    print "%.2f - %s" % (t,u)
+            if total > 2:
+                print "Histogram"
+                h = 0.5
+                nbins = (just_times[-1] - just_times[0])/h
+                while  nbins < 50:
+                    h *= 0.5
+                    nbins = (just_times[-1] - just_times[0])/h
+                nbins = int(nbins)
+                bins = [0]*nbins
+                i = 0
+                for elt in just_times:
+                    while elt > (i + 1)*h + just_times[0]:
+                        i += 1
+                    bins[i] += 1
+                for i, b in enumerate(bins):
+                    d = 100*float(b)/total
+                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %2.f%%' % d
+        else:
+            print "These pages didn't pass the tests:"
+            for u in broken_urls:
+                print u
+
+
+
+
+
+
 
 
 

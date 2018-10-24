@@ -8,7 +8,6 @@ from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, Poly
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
-from lmfdb.classical_modular_forms.web_newform import newform_conrey_exists
 
 
 ###############################################################
@@ -887,6 +886,7 @@ def name_and_object_from_url(url):
     url_split = url.split("/");
     name = '??';
     obj_exists = False;
+    #FIXME this is not robust against extra slashes
 
     if url_split[0] == "EllipticCurve":
         if url_split[1] == 'Q':
@@ -900,14 +900,14 @@ def name_and_object_from_url(url):
         name = 'Isogeny class ' + label_isogeny_class;
 
     elif url_split[0] == "Character":
-        # Character/Dirichlet/19/8/
+        # Character/Dirichlet/19/8
         assert url_split[1] == "Dirichlet"
         name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
         obj_exists = db.char_dir_values.exists({"label" : label})
 
     elif url_split[0] == "Genus2Curve":
-        # Genus2Curve/Q/310329/a/
+        # Genus2Curve/Q/310329/a
         assert url_split[1] == 'Q'
         label_isogeny_class = ".".join(url_split[-2:]);
         obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
@@ -917,13 +917,14 @@ def name_and_object_from_url(url):
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                if len(url_split) == 9:
-                    # ModularForm/GL2/Q/holomorphic/24/2/11/a/2/
-                    conrey_newform_label = ".".join(url_split[-5:-1])
-                    name =  'Modular form ' + conrey_newform_label + "." + url_split[-1];
-                    obj_exists = newform_conrey_exists(conrey_newform_label)
+                if len(url_split) == 10:
+                    # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
+                    newform_label = ".".join(url_split[-6:-2])
+                    conrey_newform_label = ".".join(url_split[-6:])
+                    name =  'Modular form ' + conrey_newform_label
+                    obj_exists = db.mf_newforms.label_exists(newform_label)
                 elif len(url_split) == 8:
-                    # ModularForm/GL2/Q/holomorphic/24/2/f/a/
+                    # ModularForm/GL2/Q/holomorphic/24/2/f/a
                     newform_label = ".".join(url_split[-4:])
                     name =  'Modular form ' + newform_label;
                     obj_exists = db.mf_newforms.label_exists(newform_label)
@@ -946,11 +947,13 @@ def names_and_urls(instances):
     res = []
     names = []
     for instance in instances:
-        name, obj_exists = name_and_object_from_url(instance['url'])
+        if not isinstance(instance, basestring):
+            instance = instance['url']
+        name, obj_exists = name_and_object_from_url(instance)
         if not name:
             name = ''
         if obj_exists:
-            url = "/"+instance['url']
+            url = "/"+instance
         else:
             name = '(%s)' % (name)
             url = ""
