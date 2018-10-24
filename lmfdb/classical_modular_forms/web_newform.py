@@ -249,7 +249,7 @@ class WebNewform(object):
         if self.dim > 1:
             for character in self.char_labels:
                 for j in range(self.dim/self.char_degree):
-                    label = base_label + [str(character), self.hecke_orbit_label, str(j + 1)]
+                    label = base_label + [char_letter, self.hecke_orbit_label, str(character), str(j + 1)]
                     lfun_label = '.'.join(label)
                     lfun_url =  '/L' + cmf_base + '/'.join(label)
                     res.append(('L-function ' + lfun_label, lfun_url))
