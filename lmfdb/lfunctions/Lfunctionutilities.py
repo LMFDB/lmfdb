@@ -887,6 +887,7 @@ def name_and_object_from_url(url):
     url_split = url.split("/");
     name = '??';
     obj_exists = False;
+    #FIXME this is not robust against extra slashes
 
     if url_split[0] == "EllipticCurve":
         if url_split[1] == 'Q':

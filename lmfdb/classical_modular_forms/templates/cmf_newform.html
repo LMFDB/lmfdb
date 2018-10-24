@@ -298,7 +298,7 @@ function get_all_embeddings(num_embeddings) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
-    {% if info.CC_m[0] == 1 and (newform.m_range(info.CC_m) | length) < min(100, newform.dim) %}
+    {% if info.CC_m[0] == 1 and (newform.m_range(info.CC_m) | length) < 100 and (newform.m_range(info.CC_m) | length) < newform.dim %}
     <tr>
       <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (newform.an_range(info.CC_n, format=info.format) | length)}}">
         {% if newform.dim > 100 %}

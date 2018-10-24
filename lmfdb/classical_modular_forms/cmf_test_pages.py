@@ -7,7 +7,7 @@ from traceback import print_exc
 import logging
 import time
 
-ncpus = min(multiprocessing.cpu_count(), 40)
+ncpus = min(multiprocessing.cpu_count(), 10)
 
 class CMFTest(LmfdbTest):
     def runTest():
@@ -204,17 +204,21 @@ class CMFTest(LmfdbTest):
                     print "%.2f - %s" % (t,u)
             if total > 2:
                 print "Histogram"
-                nbins = min(10, total)
+                h = 0.5
+                nbins = (just_times[-1] - just_times[0])/h
+                while  nbins < 50:
+                    h *= 0.5
+                    nbins = (just_times[-1] - just_times[0])/h
+                nbins = int(nbins)
                 bins = [0]*nbins
-                h = (just_times[-1] - just_times[0])/nbins
                 i = 0
                 for elt in just_times:
                     while elt > (i + 1)*h + just_times[0]:
                         i += 1
                     bins[i] += 1
                 for i, b in enumerate(bins):
-                    d = int(100*float(b)/total)
-                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(d-1) + '| - %d%%' % d
+                    d = 100*float(b)/total
+                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %2.f%%' % d
         else:
             print "These pages didn't pass the tests:"
             for u in broken_urls:
