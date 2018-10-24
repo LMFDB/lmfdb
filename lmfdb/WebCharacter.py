@@ -24,11 +24,17 @@ Any character object is obtained as a double inheritance of
 
 2. an object type (list of groups, character group, character)
 
+For Dirichlet characters of modulus up to 10000, the database holds data for
+the character and several of its values. For these objects, there are the
+"DB" classes that replace on-the-fly computation with database lookups.
+
 The code thus defines, from the generic top class WebCharObject
 
 1. the mathematical family classes
 
    - WebDirichlet
+
+   - WebDBDirichlet
 
    - WebHecke
 
@@ -46,7 +52,9 @@ and one obtains:
 
 - WebDirichletGroup
 
-- WebDirichletCharacter
+- WebDBDirichletGroup
+
+- WebDBDirichletCharacter
 
 - WebHeckeFamily
 
@@ -986,6 +994,44 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @property
     def next(self):
         return None
+
+    @property
+    def codeinit(self):
+        return {
+          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                 'chi = H[%i]'%(self.number) ],
+          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
+          }
+
+    @property
+    def codeisprimitive(self):
+        return { 'sage': 'chi.is_primitive()',
+                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+
+    @property
+    def codecond(self):
+        return { 'sage': 'chi.conductor()',
+                 'pari': 'znconreyconductor(g,chi)' }
+
+    @property
+    def codeparity(self):
+        return { 'sage': 'chi.is_odd()',
+                 'pari': 'zncharisodd(g,chi)' }
+
+    @property
+    def codesymbol(self):
+        m = self.symbol_numerator()
+        if m:
+            return { 'sage': 'kronecker_character(%i)'%m }
+        return None
+
+    @property
+    def codegaloisorbit(self):
+        return { 'sage': 'chi.sage_character().galois_orbit()',
+                 'pari': [ 'order = charorder(g,chi)',
+                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
+                 }
 
 #######################
 # The parts responsible for allowing computation of Gauss sums, etc. on page
