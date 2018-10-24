@@ -752,112 +752,32 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         return self.H.order()
 
 
-class WebDBDirichletCharacter(WebChar, WebDirichlet):
+class WebDBDirichlet(WebDirichlet):
     """
-    A class using data stored in the database. Currently, this is all Dirichlet
-    characters with modulus up to 10000.
+    A base class using data stored in the database. Currently this is all
+    Dirichlet characters with modulus up to 10000.
     """
-    _keys = [ 'title', 'credit', 'codelangs', 'type',
-              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol',
-              'previous', 'next', 'conductor',
-              'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
-              'inducing', 'codeinducing',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
-              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
-              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label']
-
-    def __init__(self, modulus=2, number=1, **kwargs):
+    def __init__(self, **kwargs):
         self.type = "Dirichlet"
-        self.modulus = int(modulus)
+        self.modulus = kwargs.get('modulus', None)
+        if self.modulus:
+            self.modulus = int(self.modulus)
         self.modlabel = self.modulus
-        self.number = int(number)
+        self.number = kwargs.get('number', None)
+        if self.number:
+            self.number = int(self.number)
         self.numlabel = self.number
         self.maxcols = 30
         self.credit = ''
         self.codelangs = ('pari', 'sage')
-        self._populate_from_db()
-
-    @property
-    def previous(self):
-        return None
-
-    @property
-    def next(self):
-        return None
-
-#######################
-# The parts responsible for allowing computation of Gauss sums, etc. on page
-    @property
-    def charsums(self, *args):
-        return False
-
-    def gauss_sum(self, *args):
-        return None
-
-    def jacobi_sum(self, *args):
-        return None
-
-    def kloosterman_sum(self, *args):
-        return None
-
-    def value(self, *args):
-        return None
-########################
-
-    @property
-    def title(self):
-        return r"Dirichlet Character {}".format(self.texname)
+        self._compute()
 
     @property
     def texname(self):
         return self.char2tex(self.modulus, self.number)
 
-    def symbol_numerator(self):
-        """
-        chi is equal to a kronecker symbol if and only if it is real
-        """
-        if self.order != 2:
-            return None
-        if self.parity == "Odd":
-            return symbol_numerator(self.conductor, True)
-        return symbol_numerator(self.conductor, False)
-
-    @property
-    def symbol(self):
-        return kronecker_symbol(self.symbol_numerator())
-
-    @property
-    def friends(self):
-        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
-
-        friendlist = []
-        cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character Group", cglink) )
-        if self.type == "Dirichlet" and self.isprimitive == "Yes":
-            url = url_character(
-                type=self.type,
-                number_field=None,
-                modulus=self.modulus,
-                number=self.number
-            )
-            if get_lfunction_by_url(url[1:]):
-                friendlist.append( ('L-function', '/L'+ url) )
-            friendlist.append(
-                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
-            )
-        if len(self.vflabel) > 0:
-            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
-        return friendlist
-
     def _compute(self):
-        logger.warning("Compute called for WebDBDirichletCharacter.")
+        self._populate_from_db()
 
     def _populate_from_db(self):
         values_data = db.char_dir_values.lookup(
@@ -890,8 +810,6 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         else:
             gens = [int(g) for g, v in valuepairs]
             vals = [int(v) for g, v in valuepairs]
-            logger.warning(gens)
-            logger.warning(vals)
             self.generators = self.textuple( map(str, gens) )
             self.genvalues = self.textuple( map(self._tex_value, vals) )
 
@@ -958,6 +876,182 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         )
 
 
+class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    headers = ['orbit label', 'order', 'primitive']
+
+    def __init__(self, **kwargs):
+        self._contents = None
+        self.maxrows = 30
+        self.maxcols = 30
+        self.rowtruncate = False
+        self.coltruncate = False
+        WebDBDirichlet.__init__(self, **kwargs)
+        self._set_groupelts()
+
+    def _compute(self):
+        WebDirichlet._compute(self)
+        logger.debug("WebDBDirichletGroup Computed")
+
+    def _set_groupelts(self):
+        if self.modulus == 1:
+            self.groupelts = [1]
+        else:
+            db_data = db.char_dir_values.lookup(
+                "{}.{}".format(self.modulus, 1)
+            )
+            valuepairs = db_data['values']
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+
+    def char_dbdata(self, mod, num):
+        """
+        Determine if the character is primitive by checking if its primitive
+        inducing character is itself, according to the database. Also return
+        the order of chi, the orbit_label of chi,  and the values within the
+        database.
+
+        Using only char_dir_values saves one database lookup, and combining
+        these steps saves more database lookups.
+        """
+        db_data = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num)
+        )
+        is_prim = (db_data['label'] == db_data['prim_label'])
+        order = db_data['order']
+        valuepairs = db_data['values']
+        orbit_label = db_data['orbit_label']
+        return is_prim, order, orbit_label, valuepairs
+
+    def _char_desc(self, num, mod=None, prim=None):
+        return (mod, num, self.char2tex(mod, num), prim)
+
+    def _determine_values(self, valuepairs, order):
+        """
+        Translate the db's values into the actual values.
+        """
+        raw_values = [int(v) for g, v in valuepairs]
+        values = [
+            self._tex_value(v, order, texify=True) for v in raw_values
+        ]
+        return values
+
+    def add_row(self, chi):
+        mod = chi.modulus()
+        num = chi.number()
+        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
+        formatted_orbit_label = "{}.{}".format(
+            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
+        )
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            (formatted_orbit_label, order, self.texbool(prim)),
+            self._determine_values(valuepairs, order)
+        ))
+
+
+class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently, this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    _keys = [ 'title', 'credit', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label']
+
+    def __init__(self, **kwargs):
+        self.maxcols = 30
+        self.coltruncate = False
+        WebDBDirichlet.__init__(self, **kwargs)
+
+    @property
+    def previous(self):
+        return None
+
+    @property
+    def next(self):
+        return None
+
+#######################
+# The parts responsible for allowing computation of Gauss sums, etc. on page
+    @property
+    def charsums(self, *args):
+        return False
+
+    def gauss_sum(self, *args):
+        return None
+
+    def jacobi_sum(self, *args):
+        return None
+
+    def kloosterman_sum(self, *args):
+        return None
+
+    def value(self, *args):
+        return None
+########################
+
+    @property
+    def texname(self):
+        return self.char2tex(self.modulus, self.number)
+
+    @property
+    def title(self):
+        return r"Dirichlet Character {}".format(self.texname)
+
+    def symbol_numerator(self):
+        """
+        chi is equal to a kronecker symbol if and only if it is real
+        """
+        if self.order != 2:
+            return None
+        if self.parity == "Odd":
+            return symbol_numerator(self.conductor, True)
+        return symbol_numerator(self.conductor, False)
+
+    @property
+    def symbol(self):
+        return kronecker_symbol(self.symbol_numerator())
+
+    @property
+    def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character Group", cglink) )
+        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+            url = url_character(
+                type=self.type,
+                number_field=None,
+                modulus=self.modulus,
+                number=self.number
+            )
+            if get_lfunction_by_url(url[1:]):
+                friendlist.append( ('L-function', '/L'+ url) )
+            friendlist.append(
+                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+            )
+        if len(self.vflabel) > 0:
+            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        return friendlist
+
+
 class WebSmallDirichletGroup(WebDirichletGroup):
 
     def _compute(self):
@@ -978,6 +1072,7 @@ class WebSmallDirichletGroup(WebDirichletGroup):
     @property
     def generators(self):
         return self.textuple(map(str, self.H.gens_values()))
+
 
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """

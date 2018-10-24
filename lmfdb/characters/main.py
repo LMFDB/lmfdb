@@ -6,8 +6,19 @@ import flask
 from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict, flash_error
+
+from lmfdb.utils import make_logger
+logger = make_logger("DLD")
+
 from lmfdb.characters.utils import url_character
-from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter, WebDBDirichletCharacter
+from lmfdb.WebCharacter import (
+        WebDirichletGroup,
+        WebSmallDirichletGroup,
+        WebDirichletCharacter,
+        WebSmallDirichletCharacter,
+        WebDBDirichletCharacter,
+        WebDBDirichletGroup
+)
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.characters import characters_page
@@ -183,7 +194,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 
     if number == None:
-        if modulus < 100000:
+        if modulus < 10000:
+            info = WebDBDirichletGroup(**args).to_dict()
+        elif modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()

@@ -133,9 +133,18 @@ def get_character_order(a, b, limit=7):
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
+# DLD add information here
 def charinfo(chi):
     """ return data associated to the WebDirichletCharacter chi """
-    return (chi.modulus(), chi.number(), chi.conductor(), chi.multiplicative_order(), chi.is_odd(), chi.is_primitive(), WebDirichlet.char2tex(chi.modulus(), chi.number()))
+    return (
+        chi.modulus(),
+        chi.number(),
+        chi.conductor(),
+        chi.multiplicative_order(),
+        chi.is_odd(),
+        chi.is_primitive(),
+        WebDirichlet.char2tex(chi.modulus(), chi.number()),
+    )
 
 class CharacterSearch:
 
@@ -159,7 +168,7 @@ class CharacterSearch:
         if self.order and self.mmin > 999:
             flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
             raise ValueError('modulus')
-        
+
         self.cmin, self.cmax = parse_interval(self.conductor, 'conductor') if self.conductor else (1, self.mmax)
         self.omin, self.omax = parse_interval(self.order, 'order') if self.order else (1, self.cmax)
         self.cmax = min(self.cmax,self.mmax)
@@ -184,7 +193,7 @@ class CharacterSearch:
 
         self.start = int(query.get('start', '0'))
 
-        
+
     def results(self):
         info = {}
         L, complete = self.results_by_modulus(self.mmin, self.mmax, self.start, self.limit)
@@ -202,7 +211,7 @@ class CharacterSearch:
         return info
 
     def list_valid(self):
-        return 
+        return
 
     def results_by_modulus(self, mmin, mmax, start, limit):
         res = []
@@ -225,6 +234,7 @@ class CharacterSearch:
                 continue
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
+            # DLD add logic if q < 10000 here
             G = DirichletGroup_conrey(q)
             for chi in G:
                 ticks += 1
@@ -244,6 +254,6 @@ class CharacterSearch:
                 flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
                 return res, False
         return res, True
-                
-                
+
+
 
