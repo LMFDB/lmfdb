@@ -784,32 +784,31 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         self.codelangs = ('pari', 'sage')
         self._populate_from_db()
 
-################TODO DLD
     @property
-    def previous(self):   return None
-    @property
-    def next(self):       return None
-
-
-    @property
-    def genvalues(self):  return None
-    def value(self, *args): return None
-
-    def charisprimitive(self, mod, num):
+    def previous(self):
         return None
 
+    @property
+    def next(self):
+        return None
+
+#######################
+# The parts responsible for allowing computation of Gauss sums, etc. on page
     @property
     def charsums(self, *args):
         return False
 
+    def gauss_sum(self, *args):
+        return None
 
-    def gauss_sum(self, *args): return None
-    def jacobi_sum(self, *args): return None
-    def kloosterman_sum(self, *args): return None
+    def jacobi_sum(self, *args):
+        return None
 
+    def kloosterman_sum(self, *args):
+        return None
 
-    ### AND ALL THE CODE PIECES
-
+    def value(self, *args):
+        return None
 ########################
 
     @property
