@@ -165,6 +165,10 @@ def charinfo(chi, value_data=None, orbit_data=None):
 def charinfo_from_db(mod, num, values_data=None, orbit_data=None):
     """
     Return data associated to the WebDirichletCharacter chi from the db.
+
+    If given values_data and orbit_data (as contained in the char_dir_values
+    and char_dir_orbits collections in the db), this doesn't make additional
+    calls and uses the given data.
     """
     if not values_data:
         values_data = db.char_dir_values.lookup(
@@ -201,12 +205,18 @@ def charinfo_from_db(mod, num, values_data=None, orbit_data=None):
 
 
 def _is_primitive(db_primitive):
+    """
+    Translate db's primitive entry to boolean.
+    """
     if str(db_primitive) == "True":
         return True
     return False
 
 
 def _is_odd(db_parity):
+    """
+    Translate db's parity entry to boolean.
+    """
     _parity = int(db_parity)
     if _parity == -1:
         return True
@@ -230,7 +240,7 @@ class CharacterSearch:
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 99999)
         if self.mmax > 99999:
-            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
+            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^6$"),"error")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
             flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
@@ -302,10 +312,18 @@ class CharacterSearch:
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
             if q < 10000:
-                # Use database instead
                 # Generate admissible numbers for Conrey labels
                 for num in (v for v in range(1, q) if gcd(v, q) == 1):
                     ticks += 1
+
+                    if ticks > 100000:
+                        flash(Markup(
+                            "Error: Unable to complete query within timeout "
+                            "(showing results up to modulus %d). "
+                            "Try narrowing your search." %q
+                        ),  "error")
+                        return res, False
+
                     values_data = db.char_dir_values.lookup(
                         "{}.{}".format(q, num)
                     )
@@ -338,6 +356,13 @@ class CharacterSearch:
                 G = DirichletGroup_conrey(q)
                 for chi in G:
                     ticks += 1
+                    if ticks > 100000:
+                        flash(Markup(
+                            "Error: Unable to complete query within timeout "
+                            "(showing results up to modulus %d). "
+                            "Try narrowing your search." %q
+                        ),  "error")
+                        return res, False
                     c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
                     if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
                         continue
@@ -350,10 +375,4 @@ class CharacterSearch:
                             return res, False
                         res.append(charinfo(chi))
                     count += 1
-            if ticks > 100000:
-                flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
-                return res, False
         return res, True
-
-
-
