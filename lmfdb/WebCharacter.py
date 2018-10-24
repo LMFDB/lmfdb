@@ -776,8 +776,10 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
     def __init__(self, modulus=2, number=1, **kwargs):
         self.type = "Dirichlet"
         self.modulus = int(modulus)
+        self.modlabel = self.modulus
         self.number = int(number)
-        logger.warning("{}.{}".format(self.modulus, self.number))
+        self.numlabel = self.number
+        self.maxcols = 30
         self.credit = ''
         self.codelangs = ('pari', 'sage')
         self._populate_from_db()
@@ -840,10 +842,17 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         cglink = url_character(type=self.type, modulus=self.modulus)
         friendlist.append( ("Character Group", cglink) )
         if self.type == "Dirichlet" and self.isprimitive == "Yes":
-            url = url_character(type=self.type, number_field=None, modulus=self.modulus, number=self.number)
+            url = url_character(
+                type=self.type,
+                number_field=None,
+                modulus=self.modulus,
+                number=self.number
+            )
             if get_lfunction_by_url(url[1:]):
                 friendlist.append( ('L-function', '/L'+ url) )
-            friendlist.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order) )
+            friendlist.append(
+                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+            )
         if len(self.vflabel) > 0:
             friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return friendlist
@@ -862,6 +871,8 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         self.orbit_label = cremona_letter_code(self.orbit_index - 1)
         self.order = int(values_data['order'])
         self.indlabel = int(values_data['prim_label'].partition('.')[-1])
+        self._set_values_and_groupelts(values_data)
+        self._set_generators_and_genvalues(values_data)
 
         orbit_data = db.char_dir_orbits.lucky(
             {'modulus': self.modulus, 'orbit_index': self.orbit_index}
@@ -871,6 +882,58 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         self._set_isprimitive(orbit_data)
         self._set_parity(orbit_data)
         self._set_galoisorbit(orbit_data)
+
+    def _set_generators_and_genvalues(self, values_data):
+        valuepairs = values_data['values_gens']
+        if self.modulus == 1:
+            self.generators = r"\(1\)"
+            self.genvalues = r"\(1\)"
+        else:
+            gens = [int(g) for g, v in valuepairs]
+            vals = [int(v) for g, v in valuepairs]
+            logger.warning(gens)
+            logger.warning(vals)
+            self.generators = self.textuple( map(str, gens) )
+            self.genvalues = self.textuple( map(self._tex_value, vals) )
+
+    def _set_values_and_groupelts(self, values_data):
+        valuepairs = values_data['values']
+        if self.modulus == 1:
+            self.groupelts = [1]
+            self.values = [r"\(1\)"]
+        else:
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+            raw_values = [int(v) for g, v in valuepairs]
+            self.values = [
+                self._tex_value(v, self.order, texify=True) for v in raw_values
+            ]
+
+    def _tex_value(self, numer, denom=None, texify=False):
+        if not denom:
+            denom = self.order
+
+        g = gcd(numer, denom)
+        if g > 1:
+            numer = numer // g
+            denom = denom // g
+
+        if denom == 1:
+            ret = '1'
+        elif (numer % denom) == 0:
+            ret = '1'
+        elif numer == 1 and denom == 2:
+            ret = '-1'
+        elif numer == 1 and denom == 4:
+            ret = 'i'
+        elif numer == 3 and denom == 4:
+            ret = '-i'
+        else:
+            ret = r"e\left(\frac{}{}\right)".format(numer, denom)
+        if texify:
+            return "\({}\)".format(ret)
+        else:
+            return ret
 
     def _set_isprimitive(self, orbit_data):
         if str(orbit_data['is_primitive']) == "True":
@@ -894,10 +957,6 @@ class WebDBDirichletCharacter(WebChar, WebDirichlet):
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in orbit
         )
-
-    @property
-    def values(self):
-        return [n for n, g in self.Gelts()]
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
