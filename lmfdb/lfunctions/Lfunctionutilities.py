@@ -8,7 +8,6 @@ from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, Poly
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
 from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
-from lmfdb.classical_modular_forms.web_newform import newform_conrey_exists
 
 
 ###############################################################
