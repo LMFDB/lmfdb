@@ -846,7 +846,7 @@ class WebDBDirichlet(WebDirichlet):
         elif numer == 3 and denom == 4:
             ret = '-i'
         else:
-            ret = r"e\left(\frac{}{}\right)".format(numer, denom)
+            ret = r"e\left(\frac{%s}{%s}\right)" % (numer, denom)
         if texify:
             return "\({}\)".format(ret)
         else:
@@ -1160,6 +1160,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def orbit_label(self):
+        logger.warning("Orbit label code was called. This shouldn't happen.")
         if self.modulus > 10000:
             return
         # Shortcut the trivial character, which behaves differently

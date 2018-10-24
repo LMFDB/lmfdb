@@ -80,10 +80,10 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
 
-{% for (mod,num,cond,order,par,prim,name) in info.chars: %}
+{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>
 <td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
-<td class="center">In Progress</a></td>
+<td class="center">{{orbit_label}}</a></td>
 <td class="center">{{mod}}</td>
 <td class="center">{{cond}}</td>
 <td class="center">{{order}}</td>

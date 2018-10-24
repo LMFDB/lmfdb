@@ -196,6 +196,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if number == None:
         if modulus < 10000:
             info = WebDBDirichletGroup(**args).to_dict()
+            info['show_orbit_label'] = True
         elif modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
         else:

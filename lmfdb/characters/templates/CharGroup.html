@@ -40,6 +40,15 @@
 {% if contents %}
 {# Characters #}
 <h2> {%if rowtruncate%}First {{contents|count}} of {{order}} {{KNOWL('character.dirichlet',title='characters')}}{% else %}{{KNOWL('character.dirichlet',title='Characters')}}{%endif%}</h2>
+<p>
+Each row describes a character. When available, the columns show the
+{% if show_orbit_label %}
+{{KNOWL('character.dirichlet.galois_orbit_label', title='orbit label')}},
+{% endif %}
+{{KNOWL('character.dirichlet.order', title='order')}} of the character,
+whether the character is {{KNOWL('character.dirichlet.primitive', title='primitive')}},
+and several values of the character.
+</p>
 <table class="ntdata" id="chitable">
   <thead class="space">
     <tr> 

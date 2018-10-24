@@ -3,6 +3,8 @@
 
 import re
 from sage.all import lcm, factor, divisors
+from sage.databases.cremona import cremona_letter_code
+from lmfdb.db_backend import db
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
 try:
     from dirichlet_conrey import DirichletGroup_conrey
@@ -133,18 +135,71 @@ def get_character_order(a, b, limit=7):
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
-# DLD add information here
 def charinfo(chi):
-    """ return data associated to the WebDirichletCharacter chi """
+    """
+    Return data associated to the WebDirichletCharacter chi. For moduli less
+    than 10000, call charinfo_from_db to pull the data from the db instead.
+    """
+    mod = chi.modulus()
+    if mod < 10000:
+        num = chi.number()
+        return charinfo_from_db(mod, num)
     return (
         chi.modulus(),
         chi.number(),
         chi.conductor(),
+        "Not computed",
         chi.multiplicative_order(),
         chi.is_odd(),
         chi.is_primitive(),
         WebDirichlet.char2tex(chi.modulus(), chi.number()),
     )
+
+def charinfo_from_db(mod, num):
+    """
+    Return data associated to the WebDirichletCharacter chi from the db.
+    """
+    values_data = db.char_dir_values.lookup(
+        "{}.{}".format(mod, num)
+    )
+
+    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+
+    # The -1 in the line below is because labels index at 1, while
+    # the Cremona letter code indexes at 0
+    orbit_letter = cremona_letter_code(orbit_index - 1)
+    orbit_label = "{}.{}".format(mod, orbit_letter)
+    order = int(values_data['order'])
+    orbit_data = db.char_dir_orbits.lucky(
+        {'modulus': mod, 'orbit_index': orbit_index}
+    )
+    conductor = int(orbit_data['conductor'])
+    is_prim = _is_primitive(orbit_data['is_primitive'])
+    is_odd = _is_odd(orbit_data['parity'])
+    return (
+        mod,
+        num,
+        conductor,
+        orbit_label,
+        order,
+        is_odd,
+        is_prim,
+        WebDirichlet.char2tex(mod, num),
+    )
+
+
+def _is_primitive(db_primitive):
+    if str(db_primitive) == "True":
+        return True
+    return False
+
+
+def _is_odd(db_parity):
+    _parity = int(db_parity)
+    if _parity == -1:
+        return 'Odd'
+    return 'Even'
+
 
 class CharacterSearch:
 
