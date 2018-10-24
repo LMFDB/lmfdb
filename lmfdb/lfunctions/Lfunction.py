@@ -724,8 +724,8 @@ class Lfunction_CMF(Lfunction_from_db):
         self.kwargs = kwargs
         # Put the arguments in the object dictionary
         self.__dict__.update(kwargs)
-        self.label_args = (self.modform_level, self.weight, self.character, self.hecke_orbit, self.number)
-        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%d/%s/%d" % self.label_args
+        self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit, self.character, self.number)
+        self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/%d/%d" % self.label_args
         Lfunction_from_db.__init__(self, url = self.url)
 
         self.numcoeff = 30

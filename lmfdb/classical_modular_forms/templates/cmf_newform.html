@@ -298,10 +298,14 @@ function get_all_embeddings(num_embeddings) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
-    {% if (newform.m_range(info.CC_m) | length) < newform.dim %}
+    {% if info.CC_m.startswith('1-') and (newform.m_range(info.CC_m) | length) < min(100, newform.dim)) %}
     <tr>
       <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (newform.an_range(info.CC_n, format=info.format) | length)}}">
-        <a onclick="get_all_embeddings({{newform.dim}}); return false" href="#">See {{newform.dim - (newform.m_range(info.CC_m) | length)}} more embeddings</a>
+        {% if newform.dim > 100 %}
+        <a onclick="get_all_embeddings({{100}}); return false" href="#">See next {{ 100 - (newform.m_range(info.CC_m) | length) }} embeddings (of {{newform.dim}} total)</a>
+        {% else %}
+        <a onclick="get_all_embeddings({{newform.dim}}); return false" href="#">See all {{newform.dim}} embeddings</a>
+        {% endif %}
       </td>
     </tr>
     {% endif %}
