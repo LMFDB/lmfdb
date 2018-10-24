@@ -178,19 +178,25 @@ def render_newform_webpage(label):
         if newform.cqexp_prec == 0:
             pass
         elif max(info['CC_n']) >= newform.cqexp_prec:
-            errs.append("Only a(n) up to %s are available"%(newform.cqexp_prec-1))
-    except (ValueError, TypeError):
+            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+    except (ValueError, TypeError) as err:
         info['n'] = '2-%s'%maxp
         info['CC_n'] = range(2,maxp+1)
-        errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+        if err.args and err.args[0] == 'Too many options':
+            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+        else:
+            errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
     maxm = min(newform.dim, 10)
     info['m'] = info.get('m', '1-%s'%maxm)
     try:
         info['CC_m'] = integer_options(info['m'], 1000)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError) as err:
         info['m'] = '1-%s'%maxm
         info['CC_m'] = range(1,maxm+1)
-        errs.append("<span style='color:black'>m</span> must be an integer, range of integers or comma separated list of integers (yielding at most 1000 possibilities)")
+        if err.args and err.args[0] == 'Too many options':
+            errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
+        else:
+            errs.append("<span style='color:black'>Embeddings</span> must be an integer, range of integers or comma separated list of integers")
     try:
         info['prec'] = int(info.get('prec',6))
         if info['prec'] < 1 or info['prec'] > 15:

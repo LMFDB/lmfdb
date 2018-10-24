@@ -13,6 +13,7 @@ from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
         web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
         display_float, display_complex, round_CBF_to_half_int, polyquo_knowl
 from lmfdb.characters.utils import url_character
+from lmfdb.Lfunctionutilities import names_and_urls
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
@@ -225,16 +226,9 @@ class WebNewform(object):
 
     @property
     def friends(self):
-        res = []
-        base_label = [str(self.level)]
-        if self.weight == 2 and self.dim == 1:
-            label = self.isogeny_class_label.split('.')
-            ec_label = '.'.join(label)
-            ec_url = '/EllipticCurve/Q/' + '/'.join(label)
-            res.append(('Elliptic curve isogeny class ' + ec_label, ec_url))
-        base_label.append(str(self.weight))
+        res = names_and_urls(self.related_objects)
+        base_label = map(str, [self.level, self.weight])
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
-        base_label =  map(str, [self.level, self.weight])
         ns1_label = '.'.join(base_label)
         ns1_url = cmf_base + '/'.join(base_label)
         res.append(('Newspace ' + ns1_label, ns1_url))
