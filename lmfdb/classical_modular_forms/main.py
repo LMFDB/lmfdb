@@ -266,6 +266,7 @@ def by_url_space_label(level, weight, char_orbit_label):
     label = str(level)+"."+str(weight)+"."+char_orbit_label
     return render_space_webpage(label)
 
+# Backward compatibility from before 2018
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
 def by_url_space_conreylabel(level, weight, conrey_label):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label))
@@ -276,15 +277,19 @@ def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
     return render_newform_webpage(label)
 
+# Backward compatibility from before 2018
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
 def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/<int:embedding>/")
-def by_url_newform_conreylabel_with_embedding(level, weight, conrey_label, hecke_orbit, embedding):
+# From L-functions
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_label>/<int:embedding>/")
+def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_label, embedding):
+    assert conrey_label > 0
     assert embedding > 0
-    return by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit)
+    return by_url_newform_label(level, weight, char_orbit_label, hecke_orbit)
+
 
 
 

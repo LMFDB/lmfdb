@@ -13,7 +13,7 @@ IMPORTANT:
 * Add first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns, compare speed) (David, Edgar)
 * Change embedding ordering, lexicographic on a_n (Edgar)
 * Change L-function labels (e.g. 46.2.c.b.3.1), lexicographic on a_n (Edgar)
-* Change isogeny_class_label column to friends, update supporting code: name_and_object_from_url (David)
+* Change isogeny_class_label column to friends, update supporting code: name_and_object_from_url, email Drew (David)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Error for old L-function labels (David)
 
