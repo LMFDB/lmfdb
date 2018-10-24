@@ -76,7 +76,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
     return s + '\(+O(q^{%s})\)' % prec
 
 class WebNewform(object):
-    def __init__(self, data, space=None):
+    def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
         self.__dict__.update(data)
@@ -128,10 +128,23 @@ class WebNewform(object):
         else:
             self.has_exact_qexp = False
         self.character_values = defaultdict(list)
-        cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['lfunction_label','embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
-                                             ))
         self.rel_dim = self.dim // self.char_degree
+
+        cc_proj = ['lfunction_label','embedding_index','embedding_root_real','embedding_root_imag']
+        if all_n:
+            cc_proj.extend(['an','angles'])
+        else:
+            cc_proj.extend(['first_an','first_angles'])
+        if self.dim <= 20:
+            all_m = True
+        query = {'hecke_orbit_code':self.hecke_orbit_code}
+        if all_m:
+            cc_data = list(db.mf_hecke_cc.search(query, projection = cc_proj))
+        else:
+            # fetch the first 20 embeddings
+            cc_data = []
+
+
         if not cc_data:
             self.has_complex_qexp = False
             self.cqexp_prec = 0
