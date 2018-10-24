@@ -138,11 +138,13 @@ class WebNewform(object):
         if self.dim <= 20:
             all_m = True
         query = {'hecke_orbit_code':self.hecke_orbit_code}
-        if all_m:
-            cc_data = list(db.mf_hecke_cc.search(query, projection = cc_proj))
-        else:
-            # fetch the first 20 embeddings
-            cc_data = []
+        if not all_m:
+            # fetch only first 20 embeddings
+            query['lfunction_label'] = {'$in': self.lfunction_labels()[:20]}
+
+        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+
+
 
 
         if not cc_data:
@@ -150,19 +152,19 @@ class WebNewform(object):
             self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = 10000
+            self.cqexp_prec = 10000 # = +Infinity
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                N, k, a, hecke_orbit_label, j = embedded_mf['lfunction_label'].split('.')
+                N, k, char_orbit_label, hecke_orbit_label, a, j = embedded_mf['lfunction_label'].split('.')
                 N, k, a, j = map(int, [N, k, a, j])
-                assert [N, k, hecke_orbit_label] == [self.level, self.weight, self.hecke_orbit_label]
+                assert [N, k, char_orbit_label, hecke_orbit_label] == [self.level, self.weight, self.char_orbit_label, self.hecke_orbit_label]
                 assert a in self.char_labels
                 assert j <= self.rel_dim
                 embedded_mf['conrey_label'] = a
                 embedded_mf['embedding_num'] = j
-                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
-                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf['an']]
+                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf[cc_proj[-2]]] # 'an' or 'first_an'
+                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf[cc_proj[-1]]} # 'angles' or 'first_angles'
 
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
@@ -236,6 +238,16 @@ class WebNewform(object):
 
         self.title = "Newform %s"%(self.label)
 
+    @cached_method
+    def lfunction_labels(self):
+        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
+        res = []
+        for character in self.char_labels:
+            for j in range(self.dim/self.char_degree):
+                label = base_label + [str(character), str(j + 1)]
+                lfun_label = '.'.join(label)
+                res.append(lfun_label)
+        return res
     @property
     def friends(self):
         res = []
@@ -260,18 +272,20 @@ class WebNewform(object):
         if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
-            for character in self.char_labels:
-                for j in range(self.dim/self.char_degree):
-                    label = base_label + [char_letter, self.hecke_orbit_label, str(character), str(j + 1)]
-                    lfun_label = '.'.join(label)
-                    lfun_url =  '/L' + cmf_base + '/'.join(label)
-                    res.append(('L-function ' + lfun_label, lfun_url))
+            for lfun_label in self.lfunction_labels():
+                lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                res.append(('L-function ' + lfun_label, lfun_url))
         return res
+
+
+    
+
 
     @staticmethod
     def by_label(label):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
+
         data = db.mf_newforms.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
