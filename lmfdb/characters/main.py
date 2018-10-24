@@ -6,10 +6,6 @@ import flask
 from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict, flash_error
-
-from lmfdb.utils import make_logger
-logger = make_logger("DLD")
-
 from lmfdb.characters.utils import url_character
 from lmfdb.WebCharacter import (
         WebDirichletGroup,

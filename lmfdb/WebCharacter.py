@@ -811,6 +811,11 @@ class WebDBDirichlet(WebDirichlet):
         self._set_galoisorbit(orbit_data)
 
     def _set_generators_and_genvalues(self, values_data):
+        """
+        The char_dir_values db collection contains `values_gens`, which
+        contains the generators for the unit group U(modulus) and the values
+        of the character on those generators.
+        """
         valuepairs = values_data['values_gens']
         if self.modulus == 1:
             self.generators = r"\(1\)"
@@ -822,6 +827,10 @@ class WebDBDirichlet(WebDirichlet):
             self.genvalues = self.textuple( map(self._tex_value, vals) )
 
     def _set_values_and_groupelts(self, values_data):
+        """
+        The char_dir_values db collection contains `values`, which contains
+        several group elements and the corresponding values.
+        """
         valuepairs = values_data['values']
         if self.modulus == 1:
             self.groupelts = [1]
@@ -835,6 +844,13 @@ class WebDBDirichlet(WebDirichlet):
             ]
 
     def _tex_value(self, numer, denom=None, texify=False):
+        """
+        Formats the number e**(2 pi i * numer / denom), detecting if this
+        simplifies to +- 1 or +- i.
+
+        Surround the output i MathJax `\(..\)` tags if `texify` is True.
+        `denom` defaults to self.order.
+        """
         if not denom:
             denom = self.order
 
@@ -900,20 +916,30 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         WebDBDirichlet.__init__(self, **kwargs)
         self._set_groupelts()
 
-    def _compute(self):
-        WebDirichlet._compute(self)
-        logger.debug("WebDBDirichletGroup Computed")
+    def add_row(self, chi):
+        """
+        Add a row to _contents for display on the webpage.
 
-    def _set_groupelts(self):
-        if self.modulus == 1:
-            self.groupelts = [1]
-        else:
-            db_data = db.char_dir_values.lookup(
-                "{}.{}".format(self.modulus, 1)
-            )
-            valuepairs = db_data['values']
-            self.groupelts = [int(g) for g, v in valuepairs]
-            self.groupelts[0] = -1
+        Each row of content takes the form
+
+            character_name, (header..data), (several..values)
+
+        where `header..data` is expected to be a tuple of length the same
+        size as `len(headers)`, and given in the same order as in `headers`,
+        and where `several..values` are the values of the character
+        on self.groupelts, in order.
+        """
+        mod = chi.modulus()
+        num = chi.number()
+        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
+        formatted_orbit_label = "{}.{}".format(
+            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
+        )
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            (formatted_orbit_label, order, self.texbool(prim)),
+            self._determine_values(valuepairs, order)
+        ))
 
     def char_dbdata(self, mod, num):
         """
@@ -934,6 +960,21 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         orbit_label = db_data['orbit_label']
         return is_prim, order, orbit_label, valuepairs
 
+    def _compute(self):
+        WebDirichlet._compute(self)
+        logger.debug("WebDBDirichletGroup Computed")
+
+    def _set_groupelts(self):
+        if self.modulus == 1:
+            self.groupelts = [1]
+        else:
+            db_data = db.char_dir_values.lookup(
+                "{}.{}".format(self.modulus, 1)
+            )
+            valuepairs = db_data['values']
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+
     def _char_desc(self, num, mod=None, prim=None):
         return (mod, num, self.char2tex(mod, num), prim)
 
@@ -946,19 +987,6 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
             self._tex_value(v, order, texify=True) for v in raw_values
         ]
         return values
-
-    def add_row(self, chi):
-        mod = chi.modulus()
-        num = chi.number()
-        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
-        formatted_orbit_label = "{}.{}".format(
-            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
-        )
-        self._contents.append((
-            self._char_desc(num, mod=mod, prim=prim),
-            (formatted_orbit_label, order, self.texbool(prim)),
-            self._determine_values(valuepairs, order)
-        ))
 
 
 class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
@@ -986,6 +1014,70 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         self.maxcols = 30
         self.coltruncate = False
         WebDBDirichlet.__init__(self, **kwargs)
+
+    @property
+    def texname(self):
+        return self.char2tex(self.modulus, self.number)
+
+    @property
+    def title(self):
+        return r"Dirichlet Character {}".format(self.texname)
+
+    @property
+    def symbol(self):
+        return kronecker_symbol(self.symbol_numerator())
+
+    @property
+    def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character Group", cglink) )
+        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+            url = url_character(
+                type=self.type,
+                number_field=None,
+                modulus=self.modulus,
+                number=self.number
+            )
+            if get_lfunction_by_url(url[1:]):
+                friendlist.append( ('L-function', '/L'+ url) )
+            friendlist.append(
+                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+            )
+        if len(self.vflabel) > 0:
+            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        return friendlist
+
+    def symbol_numerator(self):
+        """
+        chi is equal to a kronecker symbol if and only if it is real
+        """
+        if self.order != 2:
+            return None
+        if self.parity == "Odd":
+            return symbol_numerator(self.conductor, True)
+        return symbol_numerator(self.conductor, False)
+
+#######################
+# The parts responsible for allowing computation of Gauss sums, etc. on page
+    @property
+    def charsums(self, *args):
+        return False
+
+    def gauss_sum(self, *args):
+        return None
+
+    def jacobi_sum(self, *args):
+        return None
+
+    def kloosterman_sum(self, *args):
+        return None
+
+    def value(self, *args):
+        return None
+########################
 
     @property
     def previous(self):
@@ -1032,70 +1124,6 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                  'pari': [ 'order = charorder(g,chi)',
                            '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
                  }
-
-#######################
-# The parts responsible for allowing computation of Gauss sums, etc. on page
-    @property
-    def charsums(self, *args):
-        return False
-
-    def gauss_sum(self, *args):
-        return None
-
-    def jacobi_sum(self, *args):
-        return None
-
-    def kloosterman_sum(self, *args):
-        return None
-
-    def value(self, *args):
-        return None
-########################
-
-    @property
-    def texname(self):
-        return self.char2tex(self.modulus, self.number)
-
-    @property
-    def title(self):
-        return r"Dirichlet Character {}".format(self.texname)
-
-    def symbol_numerator(self):
-        """
-        chi is equal to a kronecker symbol if and only if it is real
-        """
-        if self.order != 2:
-            return None
-        if self.parity == "Odd":
-            return symbol_numerator(self.conductor, True)
-        return symbol_numerator(self.conductor, False)
-
-    @property
-    def symbol(self):
-        return kronecker_symbol(self.symbol_numerator())
-
-    @property
-    def friends(self):
-        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
-
-        friendlist = []
-        cglink = url_character(type=self.type, modulus=self.modulus)
-        friendlist.append( ("Character Group", cglink) )
-        if self.type == "Dirichlet" and self.isprimitive == "Yes":
-            url = url_character(
-                type=self.type,
-                number_field=None,
-                modulus=self.modulus,
-                number=self.number
-            )
-            if get_lfunction_by_url(url[1:]):
-                friendlist.append( ('L-function', '/L'+ url) )
-            friendlist.append(
-                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
-            )
-        if len(self.vflabel) > 0:
-            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
-        return friendlist
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
