@@ -77,7 +77,7 @@ def eigs_as_seqseq_to_qexp(eigseq):
     return s + '\(+O(q^{%s})\)' % prec
 
 class WebNewform(object):
-    def __init__(self, data, space=None):
+    def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
         self.__dict__.update(data)
@@ -129,28 +129,43 @@ class WebNewform(object):
         else:
             self.has_exact_qexp = False
         self.character_values = defaultdict(list)
-        cc_data = list(db.mf_hecke_cc.search({'hecke_orbit_code':self.hecke_orbit_code},
-                                             projection=['lfunction_label','embedding_index','an','angles','embedding_root_real','embedding_root_imag'],
-                                             ))
         self.rel_dim = self.dim // self.char_degree
+
+        cc_proj = ['lfunction_label','embedding_index','embedding_root_real','embedding_root_imag']
+        if all_n:
+            cc_proj.extend(['an','angles'])
+        else:
+            cc_proj.extend(['first_an','first_angles'])
+        if self.dim <= 20:
+            all_m = True
+        query = {'hecke_orbit_code':self.hecke_orbit_code}
+        if not all_m:
+            # fetch only first 20 embeddings
+            query['lfunction_label'] = {'$in': self.lfunction_labels()[:20]}
+
+        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+
+
+
+
         if not cc_data:
             self.has_complex_qexp = False
             self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = 10000
+            self.cqexp_prec = 10000 # = +Infinity
             self.cc_data = []
             for m, embedded_mf in enumerate(cc_data):
-                N, k, a, hecke_orbit_label, j = embedded_mf['lfunction_label'].split('.')
+                N, k, char_orbit_label, hecke_orbit_label, a, j = embedded_mf['lfunction_label'].split('.')
                 N, k, a, j = map(int, [N, k, a, j])
-                assert [N, k, hecke_orbit_label] == [self.level, self.weight, self.hecke_orbit_label]
+                assert [N, k, char_orbit_label, hecke_orbit_label] == [self.level, self.weight, self.char_orbit_label, self.hecke_orbit_label]
                 assert a in self.char_labels
                 assert j <= self.rel_dim
                 embedded_mf['conrey_label'] = a
                 embedded_mf['embedding_num'] = j
-                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf['angles']}
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
-                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf['an']]
+                embedded_mf['an'] = [ [float(x), float(y)] for x, y in embedded_mf[cc_proj[-2]]] # 'an' or 'first_an'
+                embedded_mf['angles'] = {p:theta for p,theta in embedded_mf[cc_proj[-1]]} # 'angles' or 'first_angles'
 
                 self.cc_data.append(embedded_mf)
                 self.cqexp_prec = min(self.cqexp_prec, len(embedded_mf['an']))
@@ -224,6 +239,16 @@ class WebNewform(object):
 
         self.title = "Newform %s"%(self.label)
 
+    @cached_method
+    def lfunction_labels(self):
+        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
+        res = []
+        for character in self.char_labels:
+            for j in range(self.dim/self.char_degree):
+                label = base_label + [str(character), str(j + 1)]
+                lfun_label = '.'.join(label)
+                res.append(lfun_label)
+        return res
     @property
     def friends(self):
         res = names_and_urls(self.related_objects)
@@ -241,18 +266,20 @@ class WebNewform(object):
         if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
         if self.dim > 1:
-            for character in self.char_labels:
-                for j in range(self.dim/self.char_degree):
-                    label = base_label + [char_letter, self.hecke_orbit_label, str(character), str(j + 1)]
-                    lfun_label = '.'.join(label)
-                    lfun_url =  '/L' + cmf_base + '/'.join(label)
-                    res.append(('L-function ' + lfun_label, lfun_url))
+            for lfun_label in self.lfunction_labels():
+                lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                res.append(('L-function ' + lfun_label, lfun_url))
         return res
+
+
+    
+
 
     @staticmethod
     def by_label(label):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
+
         data = db.mf_newforms.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
