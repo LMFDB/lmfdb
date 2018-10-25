@@ -313,7 +313,7 @@ class CharacterSearch:
                 continue
             if q < 10000:
                 # Generate admissible numbers for Conrey labels
-                for num in (v for v in range(1, q) if gcd(v, q) == 1):
+                for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
                     ticks += 1
 
                     if ticks > 100000:
