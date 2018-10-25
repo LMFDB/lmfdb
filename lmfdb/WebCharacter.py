@@ -166,7 +166,11 @@ class WebDirichlet(WebCharObject):
             num = c
             if prim == None:
                 prim = self.charisprimitive(mod,num)
-        return ( mod, num, self.char2tex(mod,num), prim)
+        else:
+            num = c
+            if prim == None:
+                prim = self.charisprimitive(mod, num)
+        return (mod, num, self.char2tex(mod,num), prim)
 
     def charisprimitive(self,mod,num):
         if isinstance(self.H, DirichletGroup_conrey) and self.H.modulus()==mod:
@@ -890,11 +894,11 @@ class WebDBDirichlet(WebDirichlet):
             self.parity = 'Even'
 
     def _set_galoisorbit(self, orbit_data):
+        if self.modulus == 1:
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
+            return
         upper_limit = min(200, self.order + 1)
-        orbit = (
-            power_mod(self.number, k, self.modulus)
-            for k in xsrange(1, upper_limit) if gcd(k, self.order) == 1
-        )
+        orbit = orbit_data['galois_orbit'][:upper_limit]
         self.galoisorbit = list(
             self._char_desc(num, prim=self.isprimitive) for num in orbit
         )
@@ -1014,6 +1018,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         self.maxcols = 30
         self.coltruncate = False
         WebDBDirichlet.__init__(self, **kwargs)
+        logger.warning("Now: {}  {}".format(self.modulus, self.number))
 
     @property
     def texname(self):
