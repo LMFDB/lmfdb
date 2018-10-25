@@ -239,8 +239,8 @@ class CharacterSearch:
             flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'"),"error")
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 99999)
-        if self.mmax > 99999:
-            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^6$"),"error")
+        if self.mmax > 9999:
+            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
             flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
@@ -311,68 +311,68 @@ class CharacterSearch:
                 continue
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
-            if q < 10000:
-                # Generate admissible numbers for Conrey labels
-                for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
-                    ticks += 1
+            #if q < 10000:
+            #    # Generate admissible numbers for Conrey labels
+            #    for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
+            #        ticks += 1
 
-                    if ticks > 100000:
-                        flash(Markup(
-                            "Error: Unable to complete query within timeout "
-                            "(showing results up to modulus %d). "
-                            "Try narrowing your search." %q
-                        ),  "error")
+            #        if ticks > 100000:
+            #            flash(Markup(
+            #                "Error: Unable to complete query within timeout "
+            #                "(showing results up to modulus %d). "
+            #                "Try narrowing your search." %q
+            #            ),  "error")
+            #            return res, False
+
+            #        values_data = db.char_dir_values.lookup(
+            #            "{}.{}".format(q, num)
+            #        )
+            #        order = values_data['order']
+            #        if order < self.omin or order > self.omax:
+            #            continue
+
+            #        orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+            #        orbit_data = db.char_dir_orbits.lucky(
+            #            {'modulus': q, 'orbit_index': orbit_index}
+            #        )
+            #        conductor = int(orbit_data['conductor'])
+            #        if conductor < self.cmin or conductor > self.cmax:
+            #            continue
+
+            #        is_prim = _is_primitive(orbit_data['is_primitive'])
+            #        if self.primitive and self.is_primitive != is_prim:
+            #            continue
+
+            #        is_odd = _is_odd(orbit_data['parity'])
+            #        if self.parity and self.is_odd != is_odd:
+            #            continue
+
+            #        if count >= start:
+            #            if len(res) == limit:
+            #                return res, False
+            #            res.append(charinfo_from_db(None, None, values_data, orbit_data))
+            #        count += 1
+            #else:
+            G = DirichletGroup_conrey(q)
+            for chi in G:
+                ticks += 1
+                if ticks > 100000:
+                    flash(Markup(
+                        "Error: Unable to complete query within timeout "
+                        "(showing results up to modulus %d). "
+                        "Try narrowing your search." %q
+                    ),  "error")
+                    return res, False
+                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
+                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
+                    continue
+                if self.primitive and self.is_primitive != (True if q == c else False):
+                    continue
+                if self.parity and self.is_odd != p:
+                    continue
+                if count >= start:
+                    if len(res) == limit:
                         return res, False
-
-                    values_data = db.char_dir_values.lookup(
-                        "{}.{}".format(q, num)
-                    )
-                    order = values_data['order']
-                    if order < self.omin or order > self.omax:
-                        continue
-
-                    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
-                    orbit_data = db.char_dir_orbits.lucky(
-                        {'modulus': q, 'orbit_index': orbit_index}
-                    )
-                    conductor = int(orbit_data['conductor'])
-                    if conductor < self.cmin or conductor > self.cmax:
-                        continue
-
-                    is_prim = _is_primitive(orbit_data['is_primitive'])
-                    if self.primitive and self.is_primitive != is_prim:
-                        continue
-
-                    is_odd = _is_odd(orbit_data['parity'])
-                    if self.parity and self.is_odd != is_odd:
-                        continue
-
-                    if count >= start:
-                        if len(res) == limit:
-                            return res, False
-                        res.append(charinfo_from_db(None, None, values_data, orbit_data))
-                    count += 1
-            else:
-                G = DirichletGroup_conrey(q)
-                for chi in G:
-                    ticks += 1
-                    if ticks > 100000:
-                        flash(Markup(
-                            "Error: Unable to complete query within timeout "
-                            "(showing results up to modulus %d). "
-                            "Try narrowing your search." %q
-                        ),  "error")
-                        return res, False
-                    c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
-                    if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
-                        continue
-                    if self.primitive and self.is_primitive != (True if q == c else False):
-                        continue
-                    if self.parity and self.is_odd != p:
-                        continue
-                    if count >= start:
-                        if len(res) == limit:
-                            return res, False
-                        res.append(charinfo(chi))
-                    count += 1
+                    res.append(charinfo(chi))
+                count += 1
         return res, True
