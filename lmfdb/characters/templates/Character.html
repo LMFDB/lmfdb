@@ -6,6 +6,7 @@
 {{ place_code('init') }}
 
 {# Kronecker symbol #}
+
 {% if symbol %}
   {% if isprimitive == "Yes" and indlabel %}
     <h2>
@@ -37,7 +38,7 @@
   <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
   {% endif %}
-  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label}} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
 </table>
 
 {% if galoisorbit %}

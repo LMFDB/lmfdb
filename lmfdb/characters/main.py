@@ -7,7 +7,14 @@ from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.characters.utils import url_character
-from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
+from lmfdb.WebCharacter import (
+        WebDirichletGroup,
+        WebSmallDirichletGroup,
+        WebDirichletCharacter,
+        WebSmallDirichletCharacter,
+        WebDBDirichletCharacter,
+        WebDBDirichletGroup
+)
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.characters import characters_page
@@ -183,7 +190,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 
     if number == None:
-        if modulus < 100000:
+        if modulus < 10000:
+            info = WebDBDirichletGroup(**args).to_dict()
+            info['show_orbit_label'] = True
+        elif modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
@@ -205,7 +215,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
         flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
-    if modulus < 100000:
+    if modulus < 10000:
+        webchar = WebDBDirichletCharacter(**args)
+        info = webchar.to_dict()
+    elif modulus < 100000:
         webchar = WebDirichletCharacter(**args)
         info = webchar.to_dict()
     else:

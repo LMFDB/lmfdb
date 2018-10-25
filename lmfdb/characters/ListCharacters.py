@@ -2,7 +2,9 @@
 # ListCharacters.py
 
 import re
-from sage.all import lcm, factor, divisors
+from sage.all import lcm, factor, divisors, gcd
+from sage.databases.cremona import cremona_letter_code
+from lmfdb.db_backend import db
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
 try:
     from dirichlet_conrey import DirichletGroup_conrey
@@ -133,9 +135,93 @@ def get_character_order(a, b, limit=7):
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
-def charinfo(chi):
-    """ return data associated to the WebDirichletCharacter chi """
-    return (chi.modulus(), chi.number(), chi.conductor(), chi.multiplicative_order(), chi.is_odd(), chi.is_primitive(), WebDirichlet.char2tex(chi.modulus(), chi.number()))
+def charinfo(chi, value_data=None, orbit_data=None):
+    """
+    Return data associated to the WebDirichletCharacter chi. For moduli less
+    than 10000, call charinfo_from_db to pull the data from the db instead.
+
+    The search function in ListCharacters polls the database already. In those
+    cases, value_data and orbit_data are already populated with the data from
+    the char_dir_values and char_dir_orbits collections already.
+    """
+    if value_data and orbit_data:
+        return charinfo_from_db_entries(None, None, value_data, orbit_data)
+    mod = chi.modulus()
+    if mod < 10000:
+        num = chi.number()
+        return charinfo_from_db(mod, num)
+    return (
+        chi.modulus(),
+        chi.number(),
+        chi.conductor(),
+        "Not computed",
+        chi.multiplicative_order(),
+        chi.is_odd(),
+        chi.is_primitive(),
+        WebDirichlet.char2tex(chi.modulus(), chi.number()),
+    )
+
+
+def charinfo_from_db(mod, num, values_data=None, orbit_data=None):
+    """
+    Return data associated to the WebDirichletCharacter chi from the db.
+
+    If given values_data and orbit_data (as contained in the char_dir_values
+    and char_dir_orbits collections in the db), this doesn't make additional
+    calls and uses the given data.
+    """
+    if not values_data:
+        values_data = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num)
+        )
+    else:
+        mod, _, num = values_data['label'].partition('.')
+        mod, num = int(mod), int(num)
+
+    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+
+    # The -1 in the line below is because labels index at 1, while
+    # the Cremona letter code indexes at 0
+    orbit_letter = cremona_letter_code(orbit_index - 1)
+    orbit_label = "{}.{}".format(mod, orbit_letter)
+    order = int(values_data['order'])
+    if not orbit_data:
+        orbit_data = db.char_dir_orbits.lucky(
+            {'modulus': mod, 'orbit_index': orbit_index}
+        )
+    conductor = int(orbit_data['conductor'])
+    is_prim = _is_primitive(orbit_data['is_primitive'])
+    is_odd = 'Odd' if _is_odd(orbit_data['parity']) else 'Even'
+    return (
+        mod,
+        num,
+        conductor,
+        orbit_label,
+        order,
+        is_odd,
+        is_prim,
+        WebDirichlet.char2tex(mod, num),
+    )
+
+
+def _is_primitive(db_primitive):
+    """
+    Translate db's primitive entry to boolean.
+    """
+    if str(db_primitive) == "True":
+        return True
+    return False
+
+
+def _is_odd(db_parity):
+    """
+    Translate db's parity entry to boolean.
+    """
+    _parity = int(db_parity)
+    if _parity == -1:
+        return True
+    return False
+
 
 class CharacterSearch:
 
@@ -154,12 +240,12 @@ class CharacterSearch:
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 99999)
         if self.mmax > 99999:
-            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
+            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^6$"),"error")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
             flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
             raise ValueError('modulus')
-        
+
         self.cmin, self.cmax = parse_interval(self.conductor, 'conductor') if self.conductor else (1, self.mmax)
         self.omin, self.omax = parse_interval(self.order, 'order') if self.order else (1, self.cmax)
         self.cmax = min(self.cmax,self.mmax)
@@ -184,7 +270,7 @@ class CharacterSearch:
 
         self.start = int(query.get('start', '0'))
 
-        
+
     def results(self):
         info = {}
         L, complete = self.results_by_modulus(self.mmin, self.mmax, self.start, self.limit)
@@ -202,7 +288,7 @@ class CharacterSearch:
         return info
 
     def list_valid(self):
-        return 
+        return
 
     def results_by_modulus(self, mmin, mmax, start, limit):
         res = []
@@ -225,25 +311,68 @@ class CharacterSearch:
                 continue
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
-            G = DirichletGroup_conrey(q)
-            for chi in G:
-                ticks += 1
-                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
-                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
-                    continue
-                if self.primitive and self.is_primitive != (True if q == c else False):
-                    continue
-                if self.parity and self.is_odd != p:
-                    continue
-                if count >= start:
-                    if len(res) == limit:
-                        return res, False
-                    res.append(charinfo(chi))
-                count += 1
-            if ticks > 100000:
-                flash(Markup("Error: Unable to complete query within timeout (showing results up to modulus %d).  Try narrowing your search."%q),"error")
-                return res, False
-        return res, True
-                
-                
+            if q < 10000:
+                # Generate admissible numbers for Conrey labels
+                for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
+                    ticks += 1
 
+                    if ticks > 100000:
+                        flash(Markup(
+                            "Error: Unable to complete query within timeout "
+                            "(showing results up to modulus %d). "
+                            "Try narrowing your search." %q
+                        ),  "error")
+                        return res, False
+
+                    values_data = db.char_dir_values.lookup(
+                        "{}.{}".format(q, num)
+                    )
+                    order = values_data['order']
+                    if order < self.omin or order > self.omax:
+                        continue
+
+                    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+                    orbit_data = db.char_dir_orbits.lucky(
+                        {'modulus': q, 'orbit_index': orbit_index}
+                    )
+                    conductor = int(orbit_data['conductor'])
+                    if conductor < self.cmin or conductor > self.cmax:
+                        continue
+
+                    is_prim = _is_primitive(orbit_data['is_primitive'])
+                    if self.primitive and self.is_primitive != is_prim:
+                        continue
+
+                    is_odd = _is_odd(orbit_data['parity'])
+                    if self.parity and self.is_odd != is_odd:
+                        continue
+
+                    if count >= start:
+                        if len(res) == limit:
+                            return res, False
+                        res.append(charinfo_from_db(None, None, values_data, orbit_data))
+                    count += 1
+            else:
+                G = DirichletGroup_conrey(q)
+                for chi in G:
+                    ticks += 1
+                    if ticks > 100000:
+                        flash(Markup(
+                            "Error: Unable to complete query within timeout "
+                            "(showing results up to modulus %d). "
+                            "Try narrowing your search." %q
+                        ),  "error")
+                        return res, False
+                    c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
+                    if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
+                        continue
+                    if self.primitive and self.is_primitive != (True if q == c else False):
+                        continue
+                    if self.parity and self.is_odd != p:
+                        continue
+                    if count >= start:
+                        if len(res) == limit:
+                            return res, False
+                        res.append(charinfo(chi))
+                    count += 1
+        return res, True
