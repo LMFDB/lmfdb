@@ -1,5 +1,6 @@
 import time
-from flask import abort, send_file
+from flask import abort, send_file, stream_with_context, Response
+from werkzeug.datastructures import Headers
 from ast import literal_eval
 import StringIO
 
@@ -73,7 +74,6 @@ class Downloader(object):
         if title is None:
             title = self.get('title', self.table.search_table)
         filename = filebase + self.file_suffix[lang]
-        print lang, filename
         c = self.comment_prefix[lang]
         mydate = time.strftime("%d %B %Y")
         s =  '\n'
@@ -83,6 +83,31 @@ class Downloader(object):
         strIO.write(str(s))
         strIO.seek(0)
         return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+    def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
+        """
+        As for _wrap, but uses a stream.  For use with large files.
+
+        INPUT:
+
+        - generator -- yields the contents of the file, usually one line at a time.
+        """
+        if title is None:
+            title = self.get('title', self.table.search_table)
+        filename = filebase
+        if add_ext:
+            filename += self.file_suffix[lang]
+        c = self.comment_prefix[lang]
+        mydate = time.strftime("%d %B %Y")
+        @stream_with_context
+        def _generator():
+            yield '\n' + c + ' %s downloaded from the LMFDB on %s.\n' % (title, mydate)
+            for line in generator:
+                yield line
+        headers = Headers()
+        headers.add('Content-Disposition', 'attachment', filename=filename)
+        resp = Response(_generator(), mimetype='text/plain', headers=headers)
+        return resp
 
     def __call__(self, info):
         """
