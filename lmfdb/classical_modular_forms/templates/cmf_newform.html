@@ -395,7 +395,7 @@ a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.cm_proved
 {% endif %}
 
 {% if newform.hecke_cutters %}
-<p>This newform can be constructed as the {% if (newform.hecke_cutters | length) > 1 %}intersection of the kernels of the linear operators{% else %}kernel of the linear operator{% endif %} {{newform.display_hecke_cutters()}} acting on \(S_{{ '{' + newform.weight|string + '}' }}^{\mathrm{new} }({% if newform.trivial_character %}\Gamma_0({{newform.level}}){% else %}{{newform.level}}, \chi{% endif %})\).
+{{ newform.display_hecke_cutters() | safe }}
 {% endif %}
 {% endif %}
 

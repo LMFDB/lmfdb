@@ -11,7 +11,8 @@ from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
         web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
-        display_float, display_complex, round_CBF_to_half_int, polyquo_knowl
+        display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
+        display_knowl
 from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from lmfdb.search_parsing import integer_options
@@ -348,8 +349,45 @@ class WebNewform(object):
         else:
             return name
 
+    def display_newspace(self):
+        s = r'\(S_{%s}^{\mathrm{new}}('
+        if self.char_order == 1:
+            s += r'\Gamma_0(%s))\)'
+        else:
+            s += r'%s, \chi)\)'
+        return s%(self.weight, self.level)
+
     def display_hecke_cutters(self):
-        return " and ".join(web_latex_split_on_pm(coeff_to_poly(F, 'x')).replace('x','T_{%s}'%p) for (p,F) in self.hecke_cutters)
+        polynomials = []
+        truncated = False
+        for p,F in self.hecke_cutters:
+            if len(F) > 21:
+                # truncate to the first 10 coefficients
+                F = [0]*(len(F)-10) + F[-10:]
+                F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
+                truncated = True
+            else:
+                F = latex(coeff_to_poly(F, 'T%s'%p))
+            polynomials.append(web_latex_split_on_pm(F))
+        title = 'linear operator'
+        if len(polynomials) > 1:
+            title += 's'
+        knowl = display_knowl('mf.elliptic.hecke_cutter', title=title)
+        desc = "<p>This newform can be constructed as the "
+        if truncated or len(polynomials) > 1:
+            if len(polynomials) > 1:
+                desc += "intersection of the kernels "
+            else:
+                desc += "kernel "
+            desc += "of the following %s acting on %s:</p>\n<table>"
+            desc = desc % (knowl, self.display_newspace())
+            desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
+        elif len(polynomials) == 1:
+            desc += "kernel of the %s %s acting on %s."
+            desc = desc % (knowl, polynomials[0], self.display_newspace())
+        else:
+            return ""
+        return desc
 
     def defining_polynomial(self):
         if self.__dict__.get('field_poly'):
