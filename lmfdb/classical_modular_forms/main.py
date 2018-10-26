@@ -461,7 +461,7 @@ class CMF_download(Downloader):
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
 
-    def _download_cc(self, label, col, suffix, title):
+    def _download_cc(self, label, lang, col, suffix, title):
         try:
             code = encode_hecke_orbit(label)
         except ValueError:
@@ -491,10 +491,10 @@ class CMF_download(Downloader):
                                     title=title)
 
     def download_cc_data(self, label, lang='text'):
-        return self._download_cc(label, 'an', '.cplx', 'Complex embeddings')
+        return self._download_cc(label, lang, 'an', '.cplx', 'Complex embeddings')
 
     def download_satake_angles(self, label, lang='text'):
-        return self._download_cc(label, 'angles', '.angles', 'Satake angles')
+        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
