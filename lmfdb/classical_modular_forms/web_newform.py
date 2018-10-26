@@ -240,8 +240,8 @@ class WebNewform(object):
         angles_formats = ['satake','satake_angle',None]
         m = info.get('m','1-%s'%(min(self.dim,20)))
         n = info.get('n','1-10')
-        CC_m = info.get('CC_m', integer_options(m, 1000))
-        CC_n = info.get('CC_n', integer_options(n, 1000))
+        CC_m = info.get('CC_m', integer_options(m))
+        CC_n = info.get('CC_n', integer_options(n))
         format = info.get('format')
         cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
         if max(CC_n) >= 100:
