@@ -361,13 +361,19 @@ class WebNewform(object):
         polynomials = []
         truncated = False
         for p,F in self.hecke_cutters:
-            if len(F) > 21:
-                # truncate to the first 10 coefficients
-                F = [0]*(len(F)-10) + F[-10:]
+            cut = len(F) - 1
+            count = 0
+            while cut >= 0 and count < 8:
+                if F[cut]:
+                    count += 1
+                cut -= 1
+            if count < 8 or cut == 0 and abs(F[0]) < 100:
+                F = latex(coeff_to_poly(F, 'T%s'%p))
+            else:
+                # truncate to the first 8 nonzero coefficients
+                F = [0]*(cut+1) + F[cut+1:]
                 F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
                 truncated = True
-            else:
-                F = latex(coeff_to_poly(F, 'T%s'%p))
             polynomials.append(web_latex_split_on_pm(F))
         title = 'linear operator'
         if len(polynomials) > 1:
