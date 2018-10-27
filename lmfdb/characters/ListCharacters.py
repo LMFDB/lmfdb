@@ -145,7 +145,7 @@ def charinfo(chi, value_data=None, orbit_data=None):
     the char_dir_values and char_dir_orbits collections already.
     """
     if value_data and orbit_data:
-        return charinfo_from_db_entries(None, None, value_data, orbit_data)
+        return charinfo_from_db(None, None, value_data, orbit_data)
     mod = chi.modulus()
     if mod < 10000:
         num = chi.number()
@@ -311,68 +311,71 @@ class CharacterSearch:
                 continue
             if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
                 continue
-            #if q < 10000:
-            #    # Generate admissible numbers for Conrey labels
-            #    for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
-            #        ticks += 1
+            if q >= 10000:
+                #TODO raise an error and catch it elsewhere. This shouldn't be called.
+                continue
+            if q < 10000:
+                # Generate admissible numbers for Conrey labels
+                for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
+                    ticks += 1
 
-            #        if ticks > 100000:
-            #            flash(Markup(
-            #                "Error: Unable to complete query within timeout "
-            #                "(showing results up to modulus %d). "
-            #                "Try narrowing your search." %q
-            #            ),  "error")
-            #            return res, False
-
-            #        values_data = db.char_dir_values.lookup(
-            #            "{}.{}".format(q, num)
-            #        )
-            #        order = values_data['order']
-            #        if order < self.omin or order > self.omax:
-            #            continue
-
-            #        orbit_index = int(values_data['orbit_label'].partition('.')[-1])
-            #        orbit_data = db.char_dir_orbits.lucky(
-            #            {'modulus': q, 'orbit_index': orbit_index}
-            #        )
-            #        conductor = int(orbit_data['conductor'])
-            #        if conductor < self.cmin or conductor > self.cmax:
-            #            continue
-
-            #        is_prim = _is_primitive(orbit_data['is_primitive'])
-            #        if self.primitive and self.is_primitive != is_prim:
-            #            continue
-
-            #        is_odd = _is_odd(orbit_data['parity'])
-            #        if self.parity and self.is_odd != is_odd:
-            #            continue
-
-            #        if count >= start:
-            #            if len(res) == limit:
-            #                return res, False
-            #            res.append(charinfo_from_db(None, None, values_data, orbit_data))
-            #        count += 1
-            #else:
-            G = DirichletGroup_conrey(q)
-            for chi in G:
-                ticks += 1
-                if ticks > 100000:
-                    flash(Markup(
-                        "Error: Unable to complete query within timeout "
-                        "(showing results up to modulus %d). "
-                        "Try narrowing your search." %q
-                    ),  "error")
-                    return res, False
-                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
-                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
-                    continue
-                if self.primitive and self.is_primitive != (True if q == c else False):
-                    continue
-                if self.parity and self.is_odd != p:
-                    continue
-                if count >= start:
-                    if len(res) == limit:
+                    if ticks > 100000:
+                        flash(Markup(
+                            "Error: Unable to complete query within timeout "
+                            "(showing results up to modulus %d). "
+                            "Try narrowing your search." %q
+                        ),  "error")
                         return res, False
-                    res.append(charinfo(chi))
-                count += 1
+
+                    values_data = db.char_dir_values.lookup(
+                        "{}.{}".format(q, num)
+                    )
+                    order = values_data['order']
+                    if order < self.omin or order > self.omax:
+                        continue
+
+                    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+                    orbit_data = db.char_dir_orbits.lucky(
+                        {'modulus': q, 'orbit_index': orbit_index}
+                    )
+                    conductor = int(orbit_data['conductor'])
+                    if conductor < self.cmin or conductor > self.cmax:
+                        continue
+
+                    is_prim = _is_primitive(orbit_data['is_primitive'])
+                    if self.primitive and self.is_primitive != is_prim:
+                        continue
+
+                    is_odd = _is_odd(orbit_data['parity'])
+                    if self.parity and self.is_odd != is_odd:
+                        continue
+
+                    if count >= start:
+                        if len(res) == limit:
+                            return res, False
+                        res.append(charinfo_from_db(None, None, values_data, orbit_data))
+                    count += 1
+#            else:
+#            G = DirichletGroup_conrey(q)
+#            for chi in G:
+#                ticks += 1
+#                if ticks > 100000:
+#                    flash(Markup(
+#                        "Error: Unable to complete query within timeout "
+#                        "(showing results up to modulus %d). "
+#                        "Try narrowing your search." %q
+#                    ),  "error")
+#                    return res, False
+#                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
+#                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
+#                    continue
+#                if self.primitive and self.is_primitive != (True if q == c else False):
+#                    continue
+#                if self.parity and self.is_odd != p:
+#                    continue
+#                if count >= start:
+#                    if len(res) == limit:
+#                        return res, False
+#                    res.append(charinfo(chi))
+#                count += 1
         return res, True
