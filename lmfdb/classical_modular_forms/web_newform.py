@@ -642,8 +642,8 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_alpha(self, m, p, i):
-        theta = CBF(self.cc_data[m]['angles'][p])
-        #ppow = CBF(p)**((ZZ(self.weight)-1)/2)
+        # Currently, the database is storing the root rather than the reciprocal root
+        theta = -CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:
             res =  unit
@@ -656,7 +656,8 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_theta(self, m, p, i):
-        theta = self.cc_data[m]['angles'][p]
+        # Currently, the database is storing the root rather than the reciprocal root
+        theta = -self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][(m-1) // self.rel_dim]
         if i == 1:
             theta = chiang - theta
