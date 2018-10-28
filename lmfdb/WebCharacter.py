@@ -863,6 +863,9 @@ class WebDBDirichlet(WebDirichlet):
             numer = numer // g
             denom = denom // g
 
+        # Reduce mod the denominator
+        numer = (numer % denom)
+
         if denom == 1:
             ret = '1'
         elif (numer % denom) == 0:
