@@ -33,6 +33,8 @@ def upsert_embedding(id_number, skip = False):
     if newform['dim'] == 1:
         row_embeddings['embedding_root_imag'] = 0
         row_embeddings['embedding_root_real'] = 0
+    elif newform['weight'] == 1:
+        return
     elif newform.get('field_poly', None) is None:
 	    return
     else:
