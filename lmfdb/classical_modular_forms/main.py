@@ -850,7 +850,7 @@ class CMF_stats(StatsDisplay):
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
         stats_url = url_for(".statistics")
-        self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2bound, stats_url)
+        self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), stats_url)
         self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound())
 
     table = db.mf_newforms
