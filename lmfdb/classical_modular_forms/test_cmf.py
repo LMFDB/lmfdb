@@ -149,6 +149,8 @@ class CmfTest(LmfdbTest):
         assert '12.0.1952986685049.1' in page.data
 
     def test_satake(self):
+        #FIXME double check these by hand
+        assert False
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
         assert r'0.707106' in page.data
         assert r'0.707106' in page.data
