@@ -89,7 +89,7 @@ class SearchWrapper(object):
                     res = self.postprocess(res, info, query)
             except ValueError as err:
                 # Errors raised in postprocessing
-                info['err'] = str(err)
+                flash_error(str(err))
                 return render_template(self.template, info=info, title=err_title, **template_kwds)
             for key, func in self.longcuts.items():
                 if info.get(key,'').strip():

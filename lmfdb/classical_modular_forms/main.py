@@ -687,7 +687,7 @@ def set_rows_cols(info, query):
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
     info['level_list'] = integer_options(info['level'], max_opts=2000)
     if len(info['weight_list']) * len(info['level_list']) > 10000:
-        raise ValueError("Table too large")
+        raise ValueError("Table too large: must have at most 10000 entries")
 
 def has_data(N, k):
     return N*k*k <= 2000
