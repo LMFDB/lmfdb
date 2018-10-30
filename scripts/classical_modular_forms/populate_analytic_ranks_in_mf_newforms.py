@@ -17,8 +17,10 @@ def get_url(newform):
 
 
 def upsert_rank(id_number, skip = False):
-    newform = db.mf_newforms.lucky({'id':id_number}, projection=['label','char_labels','dim','char_degree','analytic_rank'])
+    newform = db.mf_newforms.lucky({'id':id_number}, projection=['weight','label','char_labels','dim','char_degree','analytic_rank'])
     if newform is None:
+        return
+    if newform['weight'] == 1: # no Lfun for weight 1
         return
     if skip:
         if newform.get('analytic_rank', None) is not None:
