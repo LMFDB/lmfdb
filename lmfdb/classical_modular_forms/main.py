@@ -14,7 +14,7 @@ from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newfor
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
-from sage.all import ZZ, next_prime, cartesian_product_iterator
+from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
 import re
 
 def learnmore_list():
@@ -29,6 +29,10 @@ def learnmore_list_remove(matchstring):
 
 def credit():
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+
+@cached_function
+def Nk2_bound():
+    return db.mf_newforms.max('Nk2')
 
 def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
@@ -138,7 +142,7 @@ def index():
     space_labels = ('20.5','60.2','55.3.d')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('1', '2', '3-4', '5-9', '10-50')
-    info["level_list"] = ('1', '2-9', '10-99', '100-2000')
+    info["level_list"] = ('1', '2-9', '10-99', '100-%s'%(Nk2_bound()))
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -690,7 +694,7 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: must have at most 10000 entries")
 
 def has_data(N, k):
-    return N*k*k <= 2000
+    return N*k*k <= Nk2_bound()
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -842,13 +846,12 @@ class CMF_stats(StatsDisplay):
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
         nspaces = comma(db.mf_newspaces.count())
-        Nk2bound = db.mf_newforms.max('Nk2')
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
         stats_url = url_for(".statistics")
         self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2bound, stats_url)
-        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2bound)
+        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound())
 
     table = db.mf_newforms
     baseurl_func = ".index"
