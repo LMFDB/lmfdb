@@ -169,7 +169,8 @@ class WebNewform(object):
                                     ('Dimension', str(self.dim))])
         except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
             # no data for analytic rank
-            pass
+            self.properties.extend([('Analytic conductor', self.analytic_conductor),
+                                    ('Dimension', str(self.dim))])
 
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
@@ -204,13 +205,14 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
-        # without the leading /
-        if db.lfunc_instances.exists({'url': nf_url[1:]}):
-            res.append(('L-function ' + self.label, '/L' + nf_url))
-        if self.dim > 1:
-            for lfun_label in self.lfunction_labels():
-                lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
-                res.append(('L-function ' + lfun_label, lfun_url))
+
+        if self.weight > 1:
+            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+                res.append(('L-function ' + self.label, '/L' + nf_url))
+            if self.dim > 1:
+                for lfun_label in self.lfunction_labels():
+                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                    res.append(('L-function ' + lfun_label, lfun_url))
         return res
 
     @property

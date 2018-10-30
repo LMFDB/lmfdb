@@ -1,6 +1,7 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
+* Fix embedding data (Edgar)
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
@@ -8,6 +9,8 @@ IMPORTANT:
 * All stored data large download, flask stream (David)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Error for old L-function labels (David)
+* Upload data for Nk^2 <= 3000 (Drew)
+* expanding search on Dimension talbe doesn't work eg: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?weight=1&level=1500-2000&prime_quantifier=exact&count=50&submit=Dimensions and then expand to weight 1-50
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)

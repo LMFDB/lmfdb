@@ -6,20 +6,21 @@ def get_url(newform):
     char_labels = newform['char_labels']
     if newform['dim'] == 1:
         return [ "ModularForm/GL2/Q/holomorphic/" + "/".join(newform['label'].split(".")) ]
-    N, k, char_orbit, hecke_letter  = newform['label'].split(".")
-    base_label = [N, k]
+    base_label  = newform['label'].split(".")
     res = []
     for character in char_labels:
         for j in range(newform['dim']/newform['char_degree']):
-            label = base_label + [str(character), hecke_letter, str(j + 1)]
+            label = base_label + [str(character), str(j + 1)]
             origin_url = 'ModularForm/GL2/Q/holomorphic/'  + '/'.join(label)
             res.append(origin_url)
     return res
 
 
 def upsert_rank(id_number, skip = False):
-    newform = db.mf_newforms.lucky({'id':id_number}, projection=['label','char_labels','dim','char_degree','analytic_rank'])
+    newform = db.mf_newforms.lucky({'id':id_number}, projection=['weight','label','char_labels','dim','char_degree','analytic_rank'])
     if newform is None:
+        return
+    if newform['weight'] == 1: # no Lfun for weight 1
         return
     if skip:
         if newform.get('analytic_rank', None) is not None:
