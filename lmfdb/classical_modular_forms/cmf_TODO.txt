@@ -1,18 +1,18 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 * Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
+* Fix embedding data (Edgar)
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
-* For Dirichlet character, include orbit label in search results (David LD)
-* Undo color change (Edgar)
 * code snippets for form and space pages (Drew)
-* make sure issues resolved for orbit-traces-LFs.sage once mf_hecke_cc upload finishes (David)
 * All stored data large download, flask stream (David)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Error for old L-function labels (David)
+* Upload data for Nk^2 <= 3000 (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
 * Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
 * L-function bread (degree 24 -> degree 2 when you click on Cusp Forms) (Edgar)

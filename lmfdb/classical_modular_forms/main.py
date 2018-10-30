@@ -358,16 +358,6 @@ class CMF_download(Downloader):
             data.append((ev.get('an'),ev.get('trace_an')))
         return data
 
-    def _get_hecke_cc(self, label):
-        try:
-            code = encode_hecke_orbit(label)
-        except ValueError:
-            return abort(404, "Invalid label: %s"%label)
-        eigenvals = db.mf_hecke_cc.search({'hecke_orbit_code':code}, ['lfunction_label','embedding_root_real', 'embedding_root_imag', 'an', 'angles'])#, sort=['conrey_label','embedding_index'])
-        if not eigenvals:
-            return abort(404, "No form found for %s"%(label))
-        return [(ev.get('lfunction_label'), [ev.get('embedding_root_real'), ev.get('embedding_root_imag')], ev.get('an'), ev.get('angles')) for ev in eigenvals]
-
     qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
                                    'f = R(poly_data)',
                                    'K.<a> = NumberField(f)',
@@ -471,39 +461,40 @@ class CMF_download(Downloader):
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
 
+    def _download_cc(self, label, lang, col, suffix, title):
+        try:
+            code = encode_hecke_orbit(label)
+        except ValueError:
+            return abort(404, "Invalid label: %s"%label)
+        if not db.mf_hecke_cc.exists({'hecke_orbit_code':code}):
+            return abort(404, "No form found for %s"%(label))
+        def cc_generator():
+            for ev in db.mf_hecke_cc.search(
+                    {'hecke_orbit_code':code},
+                    ['lfunction_label',
+                     'embedding_root_real',
+                     'embedding_root_imag',
+                     col],
+                    sort=['conrey_label','embedding_index']):
+                D = {'label':ev.get('lfunction_label'),
+                     col:ev.get(col)}
+                root = (ev.get('embedding_root_real'),
+                        ev.get('embedding_root_imag'))
+                if root != (None, None):
+                    D['root'] = root
+                yield Json.dumps(D) + '\n\n'
+        filename = label + suffix
+        title += ' for newform %s,'%(label)
+        return self._wrap_generator(cc_generator(),
+                                    filename,
+                                    lang=lang,
+                                    title=title)
+
     def download_cc_data(self, label, lang='text'):
-        data = self._get_hecke_cc(label)
-        filename = label + '.cplx'
-        if not isinstance(data,list):
-            return data
-        down = []
-        for label, root, an, angles in data:
-            D = {'label':label,
-                 'an':an}
-            if root != [None,None]:
-                D['root'] = root
-            down.append(Json.dumps(D))
-        return self._wrap('\n\n'.join(down),
-                          filename,
-                          lang=lang,
-                          title='Complex embeddings for newform %s,'%(label))
+        return self._download_cc(label, lang, 'an', '.cplx', 'Complex embeddings')
 
     def download_satake_angles(self, label, lang='text'):
-        data = self._get_hecke_cc(label)
-        filename = label + '.angles'
-        if not isinstance(data,list):
-            return data
-        down = []
-        for label, root, an, angles in data:
-            D = {'label':label,
-                 'angles':angles}
-            if root != [None,None]:
-                D['root'] = root
-            down.append(Json.dumps(D))
-        return self._wrap('\n\n'.join(down),
-                          filename,
-                          lang=lang,
-                          title='Satake angles for newform %s,'%(label))
+        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
@@ -699,7 +690,7 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large")
 
 def has_data(N, k):
-    return k > 1 and N*k*k <= 2000
+    return N*k*k <= 2000
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
