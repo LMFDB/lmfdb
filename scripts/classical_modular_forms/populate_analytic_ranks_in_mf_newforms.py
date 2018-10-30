@@ -6,12 +6,11 @@ def get_url(newform):
     char_labels = newform['char_labels']
     if newform['dim'] == 1:
         return [ "ModularForm/GL2/Q/holomorphic/" + "/".join(newform['label'].split(".")) ]
-    N, k, char_orbit, hecke_letter  = newform['label'].split(".")
-    base_label = [N, k]
+    base_label  = newform['label'].split(".")
     res = []
     for character in char_labels:
         for j in range(newform['dim']/newform['char_degree']):
-            label = base_label + [str(character), hecke_letter, str(j + 1)]
+            label = base_label + [str(character), str(j + 1)]
             origin_url = 'ModularForm/GL2/Q/holomorphic/'  + '/'.join(label)
             res.append(origin_url)
     return res
