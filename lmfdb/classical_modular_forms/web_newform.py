@@ -505,13 +505,15 @@ function switch_basis(btype) {
             k, l = map(ZZ, self.hecke_ring_numerators[1])
             k = k / self.hecke_ring_denominators[1]
             l = l / self.hecke_ring_denominators[1]
-            beta = vector((k - (b*l)/(2*a), (s*l)/(2*a)))
+            beta = vector((k - (b*l)/(2*a), ((s*l)/(2*a)).abs()))
             den = lcm(beta[0].denom(), beta[1].denom())
             beta *= den
-            if beta[1] == 1:
-                Sqrt = r'\sqrt{%s}' % d
+            if d == -1:
+                Sqrt = 'i'
             else:
-                Sqrt = r'%s\sqrt{%s}' % (beta[1],d)
+                Sqrt = r'\sqrt{%s}' % d
+            if beta[1] != 1:
+                Sqrt = r'%s%s' % (beta[1], Sqrt)
             if beta[0] == 0:
                 Num = Sqrt
             else:
@@ -521,8 +523,10 @@ function switch_basis(btype) {
             else:
                 Frac = r'\frac{1}{%s}(%s)' % (den, Num)
             return r'\(\beta = %s\)' % Frac
+        elif self.field_poly_root_of_unity != 0:
+            return r'the root of unity \(%s\)' % (self._nu_latex)
         else:
-            return 'a root \(\beta\) of %s' % (self.defining_polynomial())
+            return r'a root \(\beta\) of %s' % (self.defining_polynomial())
 
     def eigs_as_seqseq_to_qexp(self, prec):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
