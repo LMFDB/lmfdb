@@ -2,7 +2,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, QQ, PowerSeriesRing, PolynomialRing,\
-    CDF, ZZ, CBF, cached_method
+    CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
     factor_base_factorization_latex
@@ -74,6 +74,7 @@ class WebNewform(object):
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
         # We always print analytic conductor with 1 decimal digit
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
+        self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
 
         try:
             self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
@@ -325,7 +326,11 @@ class WebNewform(object):
         if self.char_degree == 1:
             name = r'\(\Q\)'
         else:
-            name = r'\(\Q(\zeta_{%s})\)' % self.char_order
+            m = self.char_order
+            if self.field_poly_root_of_unity:
+                # In this case the defining polynomial is cyclotomic
+                m = self.field_poly_root_of_unity
+            name = r'\(\Q(\zeta_{%s})\)' % m
         if self.char_degree < 24:
             return nf_display_knowl(cyclolookup[self.char_order], name=name)
         else:
@@ -383,12 +388,16 @@ class WebNewform(object):
         return None
 
     def Qnu(self):
-        if self.field_poly_is_cyclotomic:
+        if self.field_poly_root_of_unity != 0 or self.single_generator:
             return ""
-        elif self.hecke_ring_power_basis:
-            return r"\(\Q(\beta)\)"
         else:
             return r"\(\Q(\nu)\)"
+
+    def Qeq(self):
+        if self.field_poly_root_of_unity != 0 or self.single_generator:
+            return ""
+        else:
+            return r"\(=\)"
 
     def _make_frac(self, num, den):
         if den == 1:
@@ -400,15 +409,15 @@ class WebNewform(object):
 
     @property
     def _nu_latex(self):
-        if self.field_poly_is_cyclotomic:
-            return r"\zeta_{%s}" % self.cyclotomic_m
+        if self.field_poly_root_of_unity != 0:
+            return r"\zeta_{%s}" % self.field_poly_root_of_unity
         else:
             return r"\nu"
 
     @property
     def _nu_var(self):
-        if self.field_poly_is_cyclotomic:
-            return r"zeta%s" % self.cyclotomic_m
+        if self.field_poly_root_of_unity != 0:
+            return r"zeta%s" % self.field_poly_root_of_unity
         else:
             return r"nu"
 
@@ -487,10 +496,33 @@ function switch_basis(btype) {
         s += '</table>'
         return s
 
-    @property
-    def cyclotomic_m(self):
-        f = PolynomialRing(QQ, 'x')(self.field_poly)
-        return f.is_cyclotomic(True)
+    def order_gen(self):
+        if self.dim == 2:
+            c, b, a = map(ZZ, self.field_poly)
+            D = b**2 - 4*a*c
+            d = D.squarefree_part()
+            s = (D//d).isqrt()
+            k, l = map(ZZ, self.hecke_ring_numerators[1])
+            k = k / self.hecke_ring_denominators[1]
+            l = l / self.hecke_ring_denominators[1]
+            beta = vector((k - (b*l)/(2*a), (s*l)/(2*a)))
+            den = lcm(beta[0].denom(), beta[1].denom())
+            beta *= den
+            if beta[1] == 1:
+                Sqrt = r'\sqrt{%s}' % d
+            else:
+                Sqrt = r'%s\sqrt{%s}' % (beta[1],d)
+            if beta[0] == 0:
+                Num = Sqrt
+            else:
+                Num = r'%s + %s' % (beta[0], Sqrt)
+            if den == 1:
+                Frac = Num
+            else:
+                Frac = r'\frac{1}{%s}(%s)' % (den, Num)
+            return r'\(\beta = %s\)' % Frac
+        else:
+            return 'a root \(\beta\) of %s' % (self.defining_polynomial())
 
     def eigs_as_seqseq_to_qexp(self, prec):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
@@ -499,9 +531,9 @@ function switch_basis(btype) {
             return 'O(1)'
         eigseq = self.qexp[:prec]
         d = len(eigseq[0])
-        if self.hecke_ring_power_basis:
-            if self.field_poly_is_cyclotomic:
-                R = PowerSeriesRing(QQ, 'zeta%s'%(self.cyclotomic_m))
+        if self.single_generator:
+            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+                R = PowerSeriesRing(QQ, 'zeta%s'%(self.field_poly_root_of_unity))
                 zeta = R.gen()
                 Rgens = [zeta**i for i in range(d)]
             else:
