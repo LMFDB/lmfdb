@@ -7,7 +7,6 @@ flask-login
 flask-markdown
 markupsafe
 psycopg2-binary
-pymongo
 pyflakes
 pytest
 pytest-cov
