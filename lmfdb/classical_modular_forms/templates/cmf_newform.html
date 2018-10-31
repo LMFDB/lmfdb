@@ -79,8 +79,8 @@
     <!-- Coefficient code depends on existence of form -->
   <tr>
     <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
-    <td> \(\Q(\nu)\) </td>
-    <td>=</td>
+    <td> {{ newform.Qnu() }} </td>
+    <td> {% if not newform.field_poly_is_cyclotomic %}={% endif %} </td>
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
   {% endif %}
@@ -108,8 +108,8 @@ function show_qexp(qstyle) {
 
 <h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp">
-  {% if newform.dim > 1 %}
-  <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section. {% if newform.dim > 1 %} Their {{ KNOWL('mf.elliptic.trace-expansion',title='traces') }} are integers. {% endif %}</p>
+  {% if newform.dim > 1 and not newform.field_poly_is_cyclotomic %}
+    <p>The coefficients are expressed in terms of a basis of the coefficient ring described in the next section. Their {{ KNOWL('mf.elliptic.trace-expansion',title='traces') }} are integers.</p>
   {% endif %}
   <form id="qexp">
     <table class="qexp-table">
@@ -138,7 +138,10 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.dim > 1 %}
-  <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }} in terms of a root \(\nu\) of {{ newform.defining_polynomial() }}:</p> {{ newform.order_basis() | safe}}
+  {% if not newform.hecke_ring_power_basis %}
+    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{% if not newform.field_poly_is_cyclotomic %}in terms of a root \(\nu\) of {{ newform.defining_polynomial() }}{% endif %}:</p>
+    {{ newform.order_basis() | safe}}
+  {% endif %}
   {% if newform.hecke_ring_index_proven %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>

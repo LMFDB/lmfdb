@@ -1,24 +1,25 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PowerSeriesRing,\
-                        CDF, ZZ, CBF, cached_method
+from sage.all import prime_range, latex, QQ, PowerSeriesRing, PolynomialRing,\
+    CDF, ZZ, CBF, cached_method
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
-        factor_base_factorization_latex
+    factor_base_factorization_latex
 
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
-        web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
-        display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
-        display_knowl
+    web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
+    display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
+    display_knowl
 from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
+from sage.misc.functional import cyclotomic_polynomial
 from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 
@@ -57,27 +58,6 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
-
-def eigs_as_seqseq_to_qexp(eigseq):
-    # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
-    # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
-    prec = len(eigseq)
-    if prec == 0:
-        return 'O(1)'
-    d = len(eigseq[0])
-    R = PowerSeriesRing(QQ, ['beta%s' % i for i in range(1,d)])
-    Rgens = [1] + [g for g in R.gens()]
-    Rq = PowerSeriesRing(R, 'q')
-    q = Rq.gens()[0]
-    s = ''
-    for j in range(prec):
-        term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
-        if term != 0:
-             latexterm = latex(term*(q**j))
-             if s != '' and latexterm[0] != '-':
-                  latexterm = '+' + latexterm
-             s += '\(' + latexterm + '\)'
-    return s + '\(+O(q^{%s})\)' % prec
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
@@ -402,7 +382,13 @@ class WebNewform(object):
             return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
         return None
 
-
+    def Qnu(self):
+        if self.field_poly_is_cyclotomic:
+            return ""
+        elif self.hecke_ring_power_basis:
+            return r"\(\Q(\beta)\)"
+        else:
+            return r"\(\Q(\nu)\)"
 
     def _make_frac(self, num, den):
         if den == 1:
@@ -411,6 +397,20 @@ class WebNewform(object):
             return r"\((\)%s\()/%s\)"%(num, den)
         else:
             return r"\((\)%s\()/\)%s"%(num, bigint_knowl(den))
+
+    @property
+    def _nu_latex(self):
+        if self.field_poly_is_cyclotomic:
+            return r"\zeta_{%s}" % self.cyclotomic_m
+        else:
+            return r"\nu"
+
+    @property
+    def _nu_var(self):
+        if self.field_poly_is_cyclotomic:
+            return r"zeta%s" % self.cyclotomic_m
+        else:
+            return r"nu"
 
     def _make_table(self, basis):
         s = '<table class="coeff_ring_basis">\n'
@@ -423,9 +423,9 @@ class WebNewform(object):
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
             numsize = sum(len(str(c)) for c in num if c)
             if numsize > 80:
-                num = web_latex_poly(num, r'\nu', superscript=True, cutoff=8)
+                num = web_latex_poly(num, self._nu_latex, superscript=True, cutoff=8)
             else:
-                num = web_latex(coeff_to_poly(num, 'nu'))
+                num = web_latex(coeff_to_poly(num, self._nu_var))
             betai = r'\(\beta_{%s}\)'%i
             basis.append((betai, self._make_frac(num, den)))
         return self._make_table(basis)
@@ -435,18 +435,14 @@ class WebNewform(object):
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
             num = web_latex_poly(num, r'\beta', superscript=False, cutoff=40)
             if i == 0:
-                nupow = r'\(\nu\)'
+                nupow = r'\(%s\)' % self._nu_latex
             else:
-                nupow = r'\(\nu^{%s}\)'%(i+1)
+                nupow = r'\(%s^{%s}\)' % (self._nu_latex, i+1)
             basis.append((nupow, self._make_frac(num, den)))
         return self._make_table(basis)
 
     def order_basis(self):
         # display the Hecke order, defining the variables used in the exact q-expansion display
-        #basis = []
-        forward_size = 0
-        inverse_size = 0
-        #use_inverse =False
         html = r"""
 <script>
 function switch_basis(btype) {
@@ -458,23 +454,24 @@ function switch_basis(btype) {
 <div class="forward-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(\nu^j\) in terms of \(\beta_i\)</a>
+  <a onclick="switch_basis('inverse-basis'); return false" href='#'>Display \(%s^j\) in terms of \(\beta_i\)</a>
 </div>
 </div>
 <div class="inverse-basis%s">
 %s
 <div class="toggle">
-  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(\nu^j\)</a>
+  <a onclick="switch_basis('forward-basis'); return false" href='#'>Display \(\beta_i\) in terms of \(%s^j\)</a>
 </div>
 </div>"""
+        forward_size = inverse_size = 0
         for num, den in zip(self.hecke_ring_numerators, self.hecke_ring_denominators):
             forward_size += sum(len(str(c)) for c in num if c) + len(str(den))
         for num, den in zip(self.hecke_ring_inverse_numerators, self.hecke_ring_inverse_denominators):
             inverse_size += sum(len(str(c)) for c in num if c) + len(str(den))
         if len(self.hecke_ring_numerators) > 3 and forward_size > 240 and 2*inverse_size < forward_size:
-            return html % (" nodisplay", self._order_basis_forward(), "", self._order_basis_inverse())
+            return html % (" nodisplay", self._order_basis_forward(), self._nu_latex, "", self._order_basis_inverse(), self._nu_latex)
         else:
-            return html % ("", self._order_basis_forward(), " nodisplay", self._order_basis_inverse())
+            return html % ("", self._order_basis_forward(), self._nu_latex, " nodisplay", self._order_basis_inverse(), self._nu_latex)
 
     def order_basis_table(self):
         s = '<table class="ntdata">\n  <tr>\n'
@@ -490,6 +487,45 @@ function switch_basis(btype) {
         s += '</table>'
         return s
 
+    @property
+    def cyclotomic_m(self):
+        f = PolynomialRing(QQ, 'x')(self.field_poly)
+        return f.is_cyclotomic(True)
+
+    def eigs_as_seqseq_to_qexp(self, prec):
+        # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
+        # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
+        if prec == 0:
+            return 'O(1)'
+        eigseq = self.qexp[:prec]
+        d = len(eigseq[0])
+        if self.hecke_ring_power_basis:
+            if self.field_poly_is_cyclotomic:
+                R = PowerSeriesRing(QQ, 'zeta%s'%(self.cyclotomic_m))
+                zeta = R.gen()
+                Rgens = [zeta**i for i in range(d)]
+            else:
+                R = PowerSeriesRing(QQ, 'beta')
+                beta = R.gen()
+                Rgens = [beta**i for i in range(d)]
+        else:
+            R = PowerSeriesRing(QQ, ['beta%s' % i for i in range(1,d)])
+            Rgens = [1] + [g for g in R.gens()]
+        Rq = PowerSeriesRing(R, 'q')
+        q = Rq.gens()[0]
+        s = ''
+        for j in range(prec):
+            term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
+            if term != 0:
+                latexterm = latex(term*(q**j))
+                print latexterm
+                if s != '' and latexterm[0] != '-':
+                    latexterm = '+' + latexterm
+                s += '\(' + latexterm + '\)'
+        # Work around bug in Sage's latex
+        s = s.replace('betaq', 'beta q')
+        return s + '\(+O(q^{%s})\)' % prec
+
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
@@ -497,7 +533,7 @@ function switch_basis(btype) {
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
             else:
-                s = eigs_as_seqseq_to_qexp(self.qexp[:prec])
+                s = self.eigs_as_seqseq_to_qexp(prec)
             return s
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
