@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."
 from  lmfdb.db_backend import db
 ZZx = PolynomialRing(ZZ, "x")
 def convert_eigenvals_to_qexp(basis, eigenvals):
-    qexp = [0]
+    qexp = []
     for i, ev in enumerate(eigenvals):
         if ev['n'] != i+1:
             raise ValueError("Missing eigenvalue")
@@ -53,7 +53,7 @@ def upsert_embedding(id_number, skip = False):
         an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an'][:min_len]))
         #qexp_diff = [ (vector(CCC, elt[:min_len]) - an_cc).norm() for elt in qexp ]
         # normalized, to avoid the unstability comming from large weight
-        qexp_diff = [ vector([(elt- an_cc[i])/elt.abs() for i, elt in enumerate(q) if elt != 0]).norm()   for j,q in enumerate(qexp)]
+        qexp_diff = [ vector([(elt- an_cc[i])/elt.abs() for i, elt in enumerate(q) if elt != 0]).norm() for j,q in enumerate(qexp)]
 
         qexp_diff_sorted = sorted(qexp_diff)
         min_diff = qexp_diff_sorted[0]
