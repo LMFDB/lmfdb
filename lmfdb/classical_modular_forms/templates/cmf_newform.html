@@ -109,8 +109,8 @@ function show_qexp(qstyle) {
 <h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp">
   {% if newform.dim > 1 %}
-    <p> Coefficients of the q-expansion are expressed in terms of {{ newform.order_gen() }}.
-      We also show the integral q-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.</p>
+    <p> Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.</p>
   {% endif %}
   <form id="qexp">
     <table class="qexp-table">
@@ -138,9 +138,11 @@ function show_qexp(qstyle) {
     </p>
   </form>
 
-  {% if newform.dim > 1 %}
+  {% if newform.dim > 2 and not newform.hecke_ring_power_basis %}
     <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{% if not newform.field_poly_is_cyclotomic %} in terms of a root \(\nu\) of {{ newform.defining_polynomial() }}{% endif %}:</p>
     {{ newform.order_basis() | safe}}
+  {% endif %}
+  {% if newform.dim > 1 %}
   {% if newform.hecke_ring_index_proven %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
