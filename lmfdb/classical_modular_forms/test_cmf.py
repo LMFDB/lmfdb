@@ -85,7 +85,6 @@ class CmfTest(LmfdbTest):
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/e/a/")
         assert r'\Q(\zeta_{6})' in page.data
-        assert r'x^{2}' in page.data
         assert '0.866025' in page.data
         assert r'6q^{6}' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/b/a/")
