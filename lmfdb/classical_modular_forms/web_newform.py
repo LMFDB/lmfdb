@@ -509,7 +509,7 @@ function switch_basis(btype) {
         if self.field_poly_root_of_unity == 4:
             return r'\(i = \sqrt{-1}\)'
         elif self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
-            return r'a primitive root of unity \(\zeta_%s\)' % self.field_poly_root_of_unity
+            return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
             D = b**2 - 4*a*c
