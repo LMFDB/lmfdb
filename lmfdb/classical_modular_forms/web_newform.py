@@ -699,7 +699,7 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            x, y = self.cc_data[m]['an'][n-1]
         return self._display_op(x, y, prec)
 
     def satake(self, m, p, i, prec=6, format='satake'):
