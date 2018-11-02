@@ -8,7 +8,7 @@ IMPORTANT:
 * code snippets for form and space pages (Drew)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Error for old L-function labels (David)
-* Upload data for Nk^2 <= 3000 (Drew)
+* Upload data for Nk^2 <= 3000 (Drew, Edgar)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
