@@ -63,6 +63,10 @@ class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
+        #FIXME
+        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity']:
+            if elt not in data:
+                data[elt] = None
         self.__dict__.update(data)
         self._data = data
 
@@ -259,9 +263,7 @@ class WebNewform(object):
                     embedded_mf['angles'] = {p:theta for p,theta in embedded_mf.pop(angles_key)} # 'angles' or 'first_angles'
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in ['analytic_embed',None]:
-                self.analytic_shift = [None]
-                for n in range(1,self.cqexp_prec):
-                    self.analytic_shift.append(float(n)**((1-ZZ(self.weight))/2))
+                self.analytic_shift = [float(n)**((1-ZZ(self.weight))/2) for n in range(1, self.cqexp_prec)]
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
@@ -633,10 +635,11 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            # 'an' start at a_1
+            x, y = self.cc_data[m]['an'][n-1]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n]
-                y *= self.analytic_shift[n]
+                x *= self.analytic_shift[n-1]
+                y *= self.analytic_shift[n-1]
         if self.cc_data[m]['real']:
             return display_float(x, prec)
         else:
@@ -673,9 +676,9 @@ function switch_basis(btype) {
             if x is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            x, y = self.cc_data[m]['an'][n-1]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n]
+                x *= self.analytic_shift[n-1]
         return self._display_re(x, prec)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
@@ -684,9 +687,9 @@ function switch_basis(btype) {
             if y is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            x, y = self.cc_data[m]['an'][n-1]
             if format == 'analytic_embed':
-                y *= self.analytic_shift[n]
+                y *= self.analytic_shift[n-1]
         return self._display_im(abs(y), prec) # sign is handled in embedding_op
 
     def embedding_op(self, m, n=None, prec=6):
@@ -732,7 +735,7 @@ function switch_basis(btype) {
     @cached_method
     def _get_alpha(self, m, p, i):
         # Currently, the database is storing the root rather than the reciprocal root
-        theta = -CBF(self.cc_data[m]['angles'][p])
+        theta = CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:
             res =  unit
@@ -746,7 +749,7 @@ function switch_basis(btype) {
     @cached_method
     def _get_theta(self, m, p, i):
         # Currently, the database is storing the root rather than the reciprocal root
-        theta = -self.cc_data[m]['angles'][p]
+        theta = self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][(m-1) // self.rel_dim]
         if i == 1:
             theta = chiang - theta
