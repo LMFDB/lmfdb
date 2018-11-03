@@ -32,6 +32,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import 
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
+from bson.binary import Binary
 from lmfdb.utils import rgbtohex, signtocolour
 
 # this is a blueprint specific default for the tempate system.

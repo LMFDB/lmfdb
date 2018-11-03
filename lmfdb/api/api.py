@@ -14,6 +14,7 @@ from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
+from bson import json_util
 
 def pluck(n, list):
     return [_[n] for _ in list]
