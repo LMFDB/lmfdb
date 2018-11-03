@@ -7,8 +7,8 @@ IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * code snippets for form and space pages (Drew)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
-* Error for old L-function labels (David)
 * Upload data for Nk^2 <= 3000 (Drew)
+* Create appropriate indexes
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
@@ -32,7 +32,6 @@ GOOD:
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
-
 
 FORMATTING:
 * Consider switching level and weight on browse and refine search input boxes
