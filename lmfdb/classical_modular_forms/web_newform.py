@@ -1,7 +1,7 @@
 # See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PowerSeriesRing, PolynomialRing,\
+from sage.all import prime_range, latex, QQ, PowerSeriesRing,\
     CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
@@ -19,7 +19,6 @@ from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
-from sage.misc.functional import cyclotomic_polynomial
 from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 
@@ -263,7 +262,7 @@ class WebNewform(object):
                     embedded_mf['angles'] = {p:theta for p,theta in embedded_mf.pop(angles_key)} # 'angles' or 'first_angles'
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in ['analytic_embed',None]:
-                self.analytic_shift = [float(n)**((1-ZZ(self.weight))/2) for n in range(1, self.cqexp_prec)]
+                self.analytic_shift = [float(i)**((1-ZZ(self.weight))/2) for i in range(1, self.cqexp_prec)]
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
