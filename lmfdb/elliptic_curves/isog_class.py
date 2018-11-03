@@ -76,7 +76,7 @@ class ECisog_class(object):
 
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
-        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'isogeny_class_label':'%s.%s'%(N,iso)},'label')
+        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'related_objects':{'$contains':'EllipticCurve/Q/%s/%s' % (N, iso)}},'label')
         self.newform_exists_in_db = self.newform_label is not None
         if self.newform_label is not None:
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
