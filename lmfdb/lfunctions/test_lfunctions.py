@@ -230,7 +230,7 @@ class LfunctionTest(LmfdbTest):
         assert '3.10207045712088492456262227600' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/151/1/')
-        assert 'Modular form 350.2.151.k.1' in L.data
+        assert 'Modular form 350.2.e.151.k.1' in L.data
         assert 'Dual L-function' in L.data
         assert '/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/51/1/'
         assert '\chi_{350} (151, \cdot )' in L.data
