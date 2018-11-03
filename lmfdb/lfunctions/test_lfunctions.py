@@ -242,8 +242,8 @@ class LfunctionTest(LmfdbTest):
         assert '3.10207045712088492456262227600' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/350/2/e/k/')
-        assert 'Modular form 350.2.151.k.1' in L.data
-        assert 'Modular form 350.2.51.k.1' in L.data
+        assert 'Modular form 350.2.e.151.k.1' in L.data
+        assert 'Modular form 350.2.e.51.k.1' in L.data
         assert 'Modular form 350.2.e.k' in L.data
         assert '(4,\ 122500,\ (\ :1/2, 1/2),\ 1)' in L.data
         assert '4.04397' in L.data
@@ -484,8 +484,8 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 169.a' in L.data
         assert 'Modular form 13.2.e.a' in L.data
         assert 'Origins of factors' in L.data
-        assert 'Modular form 13.2.4.a.1' in L.data
-        assert 'Modular form 13.2.10.a.1' in L.data
+        assert 'Modular form 13.2.e.a.4.1' in L.data
+        assert 'Modular form 13.2.e.a.10.1' in L.data
 
         L = self.tc.get('/L/Genus2Curve/Q/196/a/')
         assert 'Isogeny class 196.a' in L.data
@@ -513,8 +513,8 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/Lhash/7200459463482029776252499748763/')
         assert 'Dual L-function' in L.data
-        assert 'Modular form 13.4.3.a.1' in L.data
-        assert '/L/ModularForm/GL2/Q/holomorphic/13/4/3/a/1' in L.data
+        assert 'Modular form 13.4.c.a.3.1' in L.data
+        assert '/L/ModularForm/GL2/Q/holomorphic/13/4/c/a/3/1' in L.data
 
     def test_tracehash(self):
         L = self.tc.get('/L/tracehash/7200459463482029776252499748763/')
@@ -573,8 +573,8 @@ class LfunctionTest(LmfdbTest):
         assert 'should not exceed the modulus ' in L.data
         L = self.tc.get('/L/EllipticCurve/Q/11/b/')
         assert 'No L-function instance data for' in L.data
-        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/6/4/c/1/')
-        assert 'No L-function instance data for "ModularForm/GL2/Q/holomorphic/5/6/4/c/1" was found in the database.' in L.data
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/5/6/d/c/')
+        assert 'No L-function instance data for "ModularForm/GL2/Q/holomorphic/5/6/d/c" was found in the database.' in L.data
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/16.40312_0.171121/-0.421999/')
         assert 'No L-function instance data for' in L.data
         L = self.tc.get('/L/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a/2/0/')
