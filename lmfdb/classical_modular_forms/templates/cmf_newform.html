@@ -26,7 +26,7 @@
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td>{{ newform.level }}.{{ newform.char_orbit_label }} ({% if newform.char_order == 1 %}trivial{% else %}of order {{ newform.char_order }} and degree {{ newform.char_degree }}{% endif %})</td>
+    <td>{{ newform.level }}.{{ newform.char_orbit_label }} ({% if newform.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} {{ newform.char_order }} and {{ KNOWL('character.dirichlet.degree', title='degree') }} {{ newform.char_degree }}{% endif %})</td>
   </tr>
   <tr>
     <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
