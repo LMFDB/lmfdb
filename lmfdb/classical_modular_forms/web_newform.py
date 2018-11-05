@@ -329,8 +329,11 @@ class WebNewform(object):
             name = r'\(\Q\)'
         else:
             m = self.char_order
-            if self.field_poly_root_of_unity:
-                # In this case the defining polynomial is cyclotomic
+            if m % 2:
+                m *= 2
+            if self.dim == self.char_degree and self.field_poly_root_of_unity:
+                # the relative dimension is 1 and the coefficient field is cyclotomic
+                # We want to display it using the appropriate root of unity
                 m = self.field_poly_root_of_unity
             if m == 4:
                 name = r'\(\Q(i)\)'
