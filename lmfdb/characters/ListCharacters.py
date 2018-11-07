@@ -2,7 +2,7 @@
 # ListCharacters.py
 
 import re
-from sage.all import lcm, factor, divisors, gcd
+from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.db_backend import db
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
