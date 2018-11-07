@@ -1021,7 +1021,6 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         self.maxcols = 30
         self.coltruncate = False
         WebDBDirichlet.__init__(self, **kwargs)
-        logger.warning("Now: {}  {}".format(self.modulus, self.number))
 
     @property
     def texname(self):
@@ -1242,9 +1241,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
 
     @property
     def orbit_label(self):
-        logger.warning("Orbit label code was called. This shouldn't happen.")
         if self.modulus > 10000:
             return
+        logger.warning("Orbit label code was called. This shouldn't happen.")
         # Shortcut the trivial character, which behaves differently
         if self.conductor == 1:
             return 'a'
