@@ -14,4 +14,4 @@ pytest-xdist
 pyyaml
 seaborn
 unittest2
-bson
+pymongo
