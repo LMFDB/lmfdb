@@ -136,6 +136,30 @@ def get_character_order(a, b, limit=7):
     return [(_, line(_)) for _ in range(a, b)]
 
 
+def info_from_db_orbit(orbit):
+    mod = orbit['modulus']
+    conductor = orbit['conductor']
+    orbit_index = orbit['orbit_index']
+    orbit_letter = cremona_letter_code(orbit_index - 1)
+    orbit_label = "{}.{}".format(mod, orbit_letter)
+    order = orbit['order']
+    is_odd = 'Odd' if _is_odd(orbit['parity']) else 'Even'
+    is_prim = _is_primitive(orbit['is_primitive'])
+    results = []
+    for num in orbit['galois_orbit']:
+        results.append((
+            mod,
+            num,
+            conductor,
+            orbit_label,
+            order,
+            is_odd,
+            is_prim,
+            WebDirichlet.char2tex(mod, num)
+        ))
+    return results
+
+
 def _is_primitive(db_primitive):
     """
     Translate db's primitive entry to boolean.
@@ -205,7 +229,7 @@ class CharacterSearch:
 
     def results(self):
         info = {}
-        L, complete = self.results_by_modulus(self.mmin, self.mmax, self.start, self.limit)
+        L, complete = self.lookup_results(self.mmin, self.mmax, self.start, self.limit)
         info['more'] = not complete
         if len(L):
             if self.start == 0:
@@ -248,52 +272,30 @@ class CharacterSearch:
                 query['is_primitive'] = False
         return query
 
-    def results_by_modulus(self, mmin, mmax, start, limit):
+    def lookup_results(self, mmin, mmax, start, limit):
         res = []
-        ticks = 0
         if mmin > mmax or self.cmin > self.cmax or self.omin > self.omax:
             return res, True
         if self.omax == 1 and self.cmin > 1:
             return res, True
-        step = 1
-        if self.conductor and self.cmin == self.cmax:
-            step = self.cmin
-            if mmin % step:
-                mmin = mmin + step - (mmin%step)
-        count = 0
         query = self._construct_search_query()
 
-        orbit_cursor = db.char_dir_orbits.search(query, limit=limit)
+        orbit_cursor = db.char_dir_orbits.search(query)
         for orbit in orbit_cursor:
             res += info_from_db_orbit(orbit)
+            # This is a not great way to implement offsets.
+            # This should be improved.
+            if start > 0:
+                num_omit = min(len(res), start)
+                res = res[num_omit:]
+                start = start - num_omit
+            if len(res) >= limit:
+                break
 
-        if len(res) >= limit-1:
+        if len(res) >= limit:
+            res = res[:limit]
             complete = False
         else:
             complete = True
 
         return res, complete
-
-
-def info_from_db_orbit(orbit):
-    mod = orbit['modulus']
-    conductor = orbit['conductor']
-    orbit_index = orbit['orbit_index']
-    orbit_letter = cremona_letter_code(orbit_index - 1)
-    orbit_label = "{}.{}".format(mod, orbit_letter)
-    order = orbit['order']
-    is_odd = 'Odd' if _is_odd(orbit['parity']) else 'Even'
-    is_prim = _is_primitive(orbit['is_primitive'])
-    results = []
-    for num in orbit['galois_orbit']:
-        results.append((
-            mod,
-            num,
-            conductor,
-            orbit_label,
-            order,
-            is_odd,
-            is_prim,
-            WebDirichlet.char2tex(mod, num)
-        ))
-    return results
