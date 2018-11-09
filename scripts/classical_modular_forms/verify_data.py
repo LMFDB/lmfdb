@@ -65,11 +65,13 @@ def verify_embeddings(nf):
         # they are all distinct
         assert len(set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim'], str(hoc)
 
-# cerfies that we have all the L-functions
+# certifies that we have all the L-functions
 # and that the ranks and trace_hash match
 # TODO
 # check that the first root matches the other root to the right precision
 def verify_Lfunctions(nf):
+    if nf['weight'] == 1:
+        return
     urls = get_urls(nf)
     for url in urls:
         assert db.lfunc_instances.exists({'url':url}), url
@@ -94,7 +96,7 @@ if len(sys.argv) == 3:
     assert k > start, "the modulos must be bigger than the representative"
     ids = list(range(start, bound + 1, k))
     for i in ids:
-        nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code'])
+        nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code', 'weight'])
         if nf is not None:
             #print "%d ->\t %.2f\t %s" % (start, 100*float(i)/bound, nf['label'])
             verify_Lfunctions(nf)
