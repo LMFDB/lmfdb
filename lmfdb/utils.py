@@ -327,7 +327,7 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         except TypeError:
             pass;
         # the second statment checks for overflow
-        if k2 == 2*x and k2 - (2*x + 1) == 1:
+        if k2 == 2*x and (2*x + 1) - k2 == 1:
             if k2 % 2 == 0:
                 s = '%s' % (k2/2)
             else:
