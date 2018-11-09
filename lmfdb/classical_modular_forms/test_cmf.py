@@ -190,6 +190,28 @@ class CmfTest(LmfdbTest):
         assert '0.317472\pi' in page.data
 
 
+        #test large floats
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed')
+        assert '−213.765' in page.data
+        assert '−5.39613e49' in page.data
+        assert '−7.61561e49' in page.data
+        assert '−3412.76' in page.data
+        assert '−1.55372e49' in page.data
+        assert '−1.00032e49' in page.data
+        assert '3626.53' in page.data
+        assert '1.17539e49' in page.data
+        assert '1.20000e50' in page.data
+
+        # same numbers but normalized
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed')
+        assert '−0.993913' in page.data
+        assert ' −1.36786' in page.data
+        assert '−0.286180' in page.data
+        assert '−0.179671' in page.data
+        assert '0.216496' in page.data
+        assert '2.15536' in page.data
+
+
     def test_download(self):
         r"""
         Test download function
