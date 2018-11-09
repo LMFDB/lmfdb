@@ -41,7 +41,7 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ```
 takes around 15 min
 ## check that all the pages load, display the appropriate things, and that parts of the data are consistent
-This runs in parallel and takes about 12min
+This runs in parallel and takes about 1h
 ```
 ./test.sh lmfdb/classical_modular_forms/cmf_test_pages.py
 ```

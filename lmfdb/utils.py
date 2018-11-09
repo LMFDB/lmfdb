@@ -316,22 +316,23 @@ def is_exact(x):
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     if is_exact(x):
-        print 'exact'
         return '%s' % x
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     k = round_to_half_int(x)
     if k == x:
+        k2 = None
         try:
             k2 = ZZ(2*x)
-            if k2 == 2*x:
-                if k2 % 2 == 0:
-                    s = '%d' % k2/2
-                else:
-                    s = '%s' % float(k2)/2
-                return s
         except TypeError:
             pass;
+        # the second statment checks for overflow
+        if k2 == 2*x and (2*x + 1) - k2 == 1:
+            if k2 % 2 == 0:
+                s = '%s' % (k2/2)
+            else:
+                s = '%s' % (float(k2)/2)
+            return s
     if method == 'truncate':
         rnd = 'RNDZ'
     else:

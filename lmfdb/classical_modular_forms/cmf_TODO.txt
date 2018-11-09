@@ -25,7 +25,7 @@ IMPORTANT:
 
 
 GOOD:
-* compute all data for Nk^2 <= 4000 (Edgar)
+* Drop the dependence of bson. Convert binary with bson to 64bit png and reupload those
 * Add trace hashes for elliptic curves over quadratic fields (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
