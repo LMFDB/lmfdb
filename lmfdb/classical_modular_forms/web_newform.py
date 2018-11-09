@@ -571,7 +571,7 @@ function switch_basis(btype) {
             term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
             if term != 0:
                 latexterm = latex(term*(q**j))
-                print latexterm
+                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
                 s += '\(' + latexterm + '\)'
