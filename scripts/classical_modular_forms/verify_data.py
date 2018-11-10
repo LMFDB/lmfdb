@@ -16,7 +16,7 @@ def verify_dimensions(n,k):
         totaldim += dim
         char_labels = ns['char_labels']
         # FIX label for trivial character
-        if n, number == 1, 0:
+        if (n, number) == (1, 0):
             number = 1
             assert char_labels == [0]
             # and fix them
