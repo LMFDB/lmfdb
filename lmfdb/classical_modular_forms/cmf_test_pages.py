@@ -19,7 +19,7 @@ class CMFTest(LmfdbTest):
             now = time.time()
             page = self.tc.get(url)
             load = time.time() - now
-            k = int(label.split(".")[0])
+            k = int(label.split(".")[1])
             if k > 1:
                 assert label in page.data
                 if dim <= 80:
