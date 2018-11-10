@@ -19,11 +19,13 @@ class CMFTest(LmfdbTest):
             now = time.time()
             page = self.tc.get(url)
             load = time.time() - now
-            assert label in page.data
-            if dim <= 80:
-                assert 'L-function %s' % label in page.data
-            assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
-            assert 'Analytic rank' in page.data
+            k = int(label.split(".")[0])
+            if k > 1:
+                assert label in page.data
+                if dim <= 80:
+                    assert 'L-function %s' % label in page.data
+                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
+                assert 'Analytic rank' in page.data
             if dim == 1:
                 assert 'Satake parameters' in page.data
             else:

@@ -1,7 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
-* Fix embedding data (Edgar)
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
