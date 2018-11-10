@@ -15,6 +15,13 @@ def verify_dimensions(n,k):
         dim = sum(hecke_orbit_dims)
         totaldim += dim
         char_labels = ns['char_labels']
+        # FIX label for trivial character
+        if n, number == 1, 0:
+            number = 1
+            assert char_labels == [0]
+            # and fix them
+            char_labels = [1]
+        # end FIX
         sage_dim, sage_orbit = dim_and_orbit(n,k,number)
         assert dim == sage_dim, label
         assert sorted(sage_orbit) == sorted(char_labels), label
