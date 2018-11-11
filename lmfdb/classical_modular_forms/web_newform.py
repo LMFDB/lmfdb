@@ -1,4 +1,3 @@
-# See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, QQ, PowerSeriesRing,\

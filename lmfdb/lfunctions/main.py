@@ -98,9 +98,12 @@ def l_function_degree_page(degree):
 
 
 # L-function of holomorphic cusp form with trivial character browsing page ##############################################
-@l_function_page.route("/degree2/CuspForm/")
-def l_function_cuspform_browse_page():
-    info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
+@l_function_page.route("/<degree>/CuspForm/")
+def l_function_cuspform_browse_page(degree):
+    deg = get_degree(degree)
+    if deg < 0:
+        return flask.abort(404)
+    info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(201)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
 
@@ -715,32 +718,23 @@ def l_function_ec_plot(label):
         return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
 
-@l_function_page.route("/Plot/<arg1>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/<arg10>/")
-def plotLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None, arg10=None):
-    return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+@l_function_page.route("/Plot/<path:args>/")
+def plotLfunction(args):
+    args = tuple(args.split('/'))
+    return render_plotLfunction(request, *args)
 
 
-@l_function_page.route("/Zeros/<arg1>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/<arg10>/")
-def zerosLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None, arg10=None):
-    return render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+@l_function_page.route("/Zeros/<path:args>/")
+def zerosLfunction(args):
+    args = tuple(args.split('/'))
+    return render_zerosLfunction(request, *args)
+
+@l_function_page.route("/download_euler/<path:args>/")
+def download_euler(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_euler_factors()
+
+
 
 
 ################################################################################
@@ -926,7 +920,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         return Lfunction_EC(field_label=args[1], conductor_label=args[2], isogeny_class_label=args[3])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'holomorphic':  # this has args: one for weight and one for level
-        if args[8] is not None:
+        if len(args) == 10:
             return Lfunction_CMF(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7], character=args[8], number=args[9])
         else:
             return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
@@ -968,6 +962,8 @@ def generateLfunctionFromUrl(*args, **kwds):
     elif args[0] in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(args[1]))
 
+    elif is_debug_mode():
+        raise Exception
     else:
         return None
 

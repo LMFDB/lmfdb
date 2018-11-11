@@ -490,13 +490,19 @@ def lfuncEPhtml(L,fmt, prec = 12):
         eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
         trclass = " class='more nodisplay'"
 
-    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td><td></td>"""
+    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td>"""
+
+    last_entry = ""
     if display_galois:
-        eptable +="<td></td>"
+        last_entry +="<td></td>"
+    try:
+        last_entry = """<td %s> <a href="%s">Download Euler factors</a></td>""" % ('colspan = 2' if display_galois else '', L.download_euler_factor_url)
+    except AttributeError:
+        last_entry += "<td></td>"
+    eptable += last_entry
     eptable += "</tr>"
-    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td><td></td>"""
-    if display_galois:
-        eptable +="<td></td>"
+    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td>"""
+    eptable += last_entry
     eptable += "</tr>\n</table>"
     ans += "\n" + eptable
     return(ans)
