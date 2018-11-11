@@ -91,11 +91,11 @@ with open(filename, 'r') as F:
             for c in ['an', 'first_an']:
                 hc[c] = [[float(x), float(y)] for x, y in hc[c]]
 
-            if hc.keys() != cols:
+            if sorted(hc.keys()) != sorted(cols):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
-                for c in cols:
-                    if c not in hc.keys():
-                        print c
+                print sorted(hc.keys())
+                print sorted(cols)
+                assert False
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
