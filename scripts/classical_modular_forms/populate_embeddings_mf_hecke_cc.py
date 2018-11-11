@@ -57,7 +57,7 @@ def upsert_embedding(id_number, skip = False):
 
         qexp_diff_sorted = sorted(qexp_diff)
         min_diff = qexp_diff_sorted[0]
-        print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
+        #print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
 
         #assuring that is something close to zero, and that no other value is close to it
         assert min_diff < 1e-6
@@ -79,7 +79,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id'))
+    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
     for i in ids[start::k]:
         upsert_embedding(i)
 else:
