@@ -71,7 +71,7 @@ with open(filename, 'r') as F:
         elif i % M == C:
             linesplit = line[:-1].split(':')
             N, k = map(int, linesplit[1].split('.')[:2])
-            if N*k**2 > Nk2:
+            if N*k**2 > maxNk2:
                 continue
             for i, c in enumerate(cols):
                 if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
