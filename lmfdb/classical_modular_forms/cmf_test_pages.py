@@ -163,6 +163,7 @@ class CMFTest(LmfdbTest):
         todo = []
         from lmfdb.db_backend import db
         maxNk2 = db.mf_newforms.max('Nk2')
+        maxNK2 = 200
         for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
@@ -211,7 +212,7 @@ class CMFTest(LmfdbTest):
                 while  nbins < 50:
                     h *= 0.5
                     nbins = (just_times[-1] - just_times[0])/h
-                nbins = int(nbins)
+                nbins = ceil(nbins)
                 bins = [0]*nbins
                 i = 0
                 for elt in just_times:
