@@ -5,7 +5,6 @@ from sage.all import RR
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
-drew_dim12 = {}
 cols = cols_header.split(':')
 
 if len(sys.argv) == 3:
@@ -91,6 +90,12 @@ with open(filename, 'r') as F:
                 assert False
             for c in ['an', 'first_an']:
                 hc[c] = [[float(x), float(y)] for x, y in hc[c]]
+
+            if hc.keys() != cols:
+                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                for c in cols:
+                    if c not in hc.keys():
+                        print c
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
