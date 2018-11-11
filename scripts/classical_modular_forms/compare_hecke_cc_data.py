@@ -11,7 +11,7 @@ cols = cols_header.split(':')
 if len(sys.argv) == 3:
     M = int(sys.argv[1])
     C = int(sys.argv[2])
-    assert k > mod
+    assert M > C
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
