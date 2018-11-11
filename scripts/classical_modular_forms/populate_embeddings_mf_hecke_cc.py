@@ -83,7 +83,7 @@ if len(sys.argv) == 3:
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)
-        if j % int(len(ids)*0.1) == 0: :
+        if j % int(len(ids)*0.01) == 0:
             print '%.2f %% done' % (100.*j/len(ids))
 else:
     print r"""Usage:
