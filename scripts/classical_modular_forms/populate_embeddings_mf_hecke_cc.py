@@ -80,10 +80,11 @@ if len(sys.argv) == 3:
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
     ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
-    for j, i in enumerate(ids[start::k]):
+    ids = ids[start::k]
+    for j, i in enumerate(ids):
         upsert_embedding(i)
-        if j > len(ids)*0.1/k:
-            print '%.2f %% done' % (100.*j*k/len(ids))
+        if j % int(len(ids)*0.1) == 0: :
+            print '%.2f %% done' % (100.*j/len(ids))
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
