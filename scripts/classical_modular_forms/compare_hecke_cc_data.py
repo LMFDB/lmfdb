@@ -6,6 +6,7 @@ from sage.all import RR
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
+maxNk2 = db.mf_newforms.max('Nk2')
 
 if len(sys.argv) == 3:
     M = int(sys.argv[1])
@@ -15,6 +16,8 @@ else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
         # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+
+
 
 def compare_floats(a, b, prec = 52):
     if b == 0:
@@ -67,6 +70,9 @@ with open(filename, 'r') as F:
             pass
         elif i % M == C:
             linesplit = line[:-1].split(':')
+            N, k = linesplit[1].split('.')
+            if N*k**2 > Nk2:
+                continue
             for i, c in enumerate(cols):
                 if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
                     linesplit[i] = int(linesplit[i])
