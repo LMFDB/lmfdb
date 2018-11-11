@@ -38,7 +38,7 @@ def upsert_embedding(id_number, skip = False):
     elif newform.get('field_poly', None) is None:
 	    return
     else:
-        print rowcc['lfunction_label']
+        # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
         numerators =  newform['hecke_ring_numerators']
         denominators = newform['hecke_ring_denominators']
@@ -80,8 +80,10 @@ if len(sys.argv) == 3:
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
     ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
-    for i in ids[start::k]:
+    for j, i in enumerate(ids[start::k]):
         upsert_embedding(i)
+        if j > len(ids)*0.1/k:
+            print '%.2f %% done' % (100.*j*k/len(ids))
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
