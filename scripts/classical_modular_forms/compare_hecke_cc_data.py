@@ -59,7 +59,9 @@ def compare_row(a, b, verbose = True):
     return True
 
 with open(filename, 'r') as F:
-    for i, line in enumerate(F.readlines()):
+    i = -1
+    for line in F:
+        i += 1
         if i < 3:
             if i == 0:
                 assert line[:-1] == cols_header
