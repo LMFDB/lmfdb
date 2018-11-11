@@ -7,6 +7,16 @@ filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 drew_dim12 = {}
 cols = cols_header.split(':')
+
+if len(sys.argv) == 3:
+    M = int(sys.argv[1])
+    C = int(sys.argv[2])
+    assert k > mod
+else:
+    print r"""Usage:
+        You should run this on legendre as: (this will use 40 cores):
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+
 def compare_floats(a, b, prec = 52):
     if b == 0:
         b, a = a, b
@@ -54,7 +64,7 @@ with open(filename, 'r') as F:
             if i == 0:
                 assert line[:-1] == cols_header
             pass
-        else:
+        elif i % M == C:
             linesplit = line[:-1].split(':')
             for i, c in enumerate(cols):
                 if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
@@ -86,3 +96,6 @@ with open(filename, 'r') as F:
 
             if i % 10528 == 0:
                 print '%.2f %%' % 100*i/105288.
+
+
+
