@@ -1,7 +1,7 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.db_backend import PostgresDatabase
 from sage.parallel.decorate import parallel
-from sage.all import ZZ, sqrt
+from sage.all import ZZ, sqrt, ceil
 import multiprocessing
 from traceback import print_exc
 import logging
@@ -163,7 +163,7 @@ class CMFTest(LmfdbTest):
         todo = []
         from lmfdb.db_backend import db
         maxNk2 = db.mf_newforms.max('Nk2')
-        maxNK2 = 200
+        maxNK2 = 100
         for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
