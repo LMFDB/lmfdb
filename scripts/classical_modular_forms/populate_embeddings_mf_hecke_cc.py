@@ -84,7 +84,7 @@ if len(sys.argv) == 3:
     for j, i in enumerate(ids):
         upsert_embedding(i)
         if j % int(len(ids)*0.01) == 0:
-            print '%.2f %% done' % (100.*(j+1)/len(ids))
+            print '%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids)))
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
