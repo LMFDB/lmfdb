@@ -78,8 +78,9 @@ if len(sys.argv) == 3:
     k = int(sys.argv[1])
     start = int(sys.argv[2])
     assert k > start
-    ids = list(range(start, bound + 1, k))
-    for i in ids:
+    hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
+    ids = list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id'))
+    for i in ids[start::k]:
         upsert_embedding(i)
 else:
     print r"""Usage:
