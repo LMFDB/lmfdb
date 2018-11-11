@@ -617,7 +617,7 @@ class Lfunction_from_db(Lfunction):
 
     @property
     def download_euler_factor_url(self):
-        return request.path.replace('/L/', '/L/dowload_euler/')
+        return request.path.replace('/L/', '/L/download_euler/')
 
     def download_euler_factors(self):
         filename = self.url.replace('/','_')
