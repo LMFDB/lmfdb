@@ -1,4 +1,5 @@
-
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db
 from sage.all import RR
 
