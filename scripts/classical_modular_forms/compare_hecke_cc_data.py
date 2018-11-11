@@ -51,6 +51,8 @@ def compare_row(a, b, verbose = True):
 with open(filename, 'r') as F:
     for i, line in enumerate(F.readlines()):
         if i < 3:
+            if i == 0:
+                assert line[:-1] == cols_header
             pass
         else:
             linesplit = line[:-1].split(':')
