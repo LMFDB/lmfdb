@@ -61,14 +61,14 @@ def compare_row(a, b, verbose = True):
     return True
 
 with open(filename, 'r') as F:
-    i = -1
+    linenumber = -1
     for line in F:
-        i += 1
-        if i < 3:
-            if i == 0:
+        linenumber += 1
+        if linenumber < 3:
+            if linenumber == 0:
                 assert line[:-1] == cols_header
             pass
-        elif i % M == C:
+        elif linenumber % M == C:
             linesplit = line[:-1].split(':')
             N, k = map(int, linesplit[1].split('.')[:2])
             #if N*k**2 > maxNk2:
@@ -110,8 +110,8 @@ with open(filename, 'r') as F:
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
                 assert False
 
-            if i % 10528 == 0:
-                print '%.2f %%' % 100*i/105288.
+            if linenumber % 10528 == 0:
+                print '%.2f %%' % 100*linenumber/105288.
 
 
 
