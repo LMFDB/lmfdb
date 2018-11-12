@@ -163,7 +163,6 @@ class CMFTest(LmfdbTest):
         todo = []
         from lmfdb.db_backend import db
         maxNk2 = db.mf_newforms.max('Nk2')
-        maxNk2 = 100
         for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)
@@ -221,7 +220,7 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %2.f%%' % d
+                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d
         else:
             print "These pages didn't pass the tests:"
             for u in broken_urls:
