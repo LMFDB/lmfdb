@@ -4,6 +4,7 @@ from lmfdb.db_backend import db
 from sage.all import RR
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
+num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
 maxNk2 = db.mf_newforms.max('Nk2')
@@ -20,6 +21,8 @@ else:
 
 
 def compare_floats(a, b, prec = 52):
+    if a == b:
+        return True
     if b == 0:
         b, a = a, b
     if a == 0:
@@ -61,14 +64,14 @@ def compare_row(a, b, verbose = True):
     return True
 
 with open(filename, 'r') as F:
-    i = -1
+    linenumber = -1
     for line in F:
-        i += 1
-        if i < 3:
-            if i == 0:
+        linenumber += 1
+        if linenumber < 3:
+            if linenumber == 0:
                 assert line[:-1] == cols_header
             pass
-        elif i % M == C:
+        elif linenumber % M == C:
             linesplit = line[:-1].split(':')
             N, k = map(int, linesplit[1].split('.')[:2])
             #if N*k**2 > maxNk2:
@@ -110,8 +113,8 @@ with open(filename, 'r') as F:
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
                 assert False
 
-            if i % 10528 == 0:
-                print '%.2f %%' % 100*i/105288.
+            if (linenumber - C)/M % int(float(num_lines)/(10*M)) == 0:
+                print '%.2f %%' % (100*linenumber/float(num_lines))
 
 
 
