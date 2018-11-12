@@ -20,7 +20,7 @@ else:
 
 
 
-def compare_floats(a, b, prec = 53):
+def compare_floats(a, b, prec = 52):
     if a == b:
         return True
     if b == 0:
