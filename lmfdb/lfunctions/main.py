@@ -734,6 +734,11 @@ def download_euler(args):
     args = tuple(args.split('/'))
     return generateLfunctionFromUrl(*args).download_euler_factors()
 
+@l_function_page.route("/download/<path:args>/")
+def download(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download()
+
 
 
 

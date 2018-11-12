@@ -619,6 +619,10 @@ class Lfunction_from_db(Lfunction):
     def download_euler_factor_url(self):
         return request.path.replace('/L/', '/L/download_euler/')
 
+    @property
+    def download_url(self):
+        return request.path.replace('/L/', '/L/download/')
+
     def download_euler_factors(self):
         filename = self.url.replace('/','_')
         data  = {}
@@ -630,6 +634,21 @@ class Lfunction_from_db(Lfunction):
                 filename + '.euler_factors',
                 lang = 'text',
                 title = 'Euler Factors of %s' % self.url)
+
+    def download(self):
+        filename = self.url.replace('/','_')
+        data  = dict(self.__dict__)
+        for k in ['level_factored', 'dirichlet_coefficients']:
+            if isinstance(data[k], list):
+                data[k] = map(str, data[k])
+            else:
+                data[k] = str(data[k])
+        data.pop('level_factored')
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.lfunction',
+                lang = 'text',
+                title = 'The L-function object of %s' % self.url)
 
 
 
