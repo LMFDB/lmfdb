@@ -391,9 +391,7 @@ def paintSvgHoloNew(condmax):
                 for j in range(nf['dim']/nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
-                    print lfun_url
                     z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
-                    print z1
                     if z1 is not None:
                         values[nf['analytic_conductor']].append([label, z1, lfun_url])
 
