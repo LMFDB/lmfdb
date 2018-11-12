@@ -175,7 +175,7 @@ def set_info_for_start_page():
     tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page')},
+          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
            {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
 

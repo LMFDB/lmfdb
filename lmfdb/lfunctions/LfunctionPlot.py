@@ -418,7 +418,7 @@ def paintSvgHoloNew(condmax):
     ans = svgBegin()
     ans += "<g transform='translate(10 40)'>\n" # give ourselves a little space
 
-    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale + 1), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
+    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale + 1), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
     ans += "</g>"
 
     ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
