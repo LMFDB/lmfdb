@@ -34,9 +34,8 @@ def compare_row(a, b, verbose = True):
                 return False
         elif c in ['embedding_root_real', 'embedding_root_imag']:
             if not compare_floats(a[i], b[i]):
-                if a[i] != 0: # FIXME
-                    print c, a[i], b[i], a[i] - b[i]
-                    #return False #FIXME
+                print c, a[i], b[i], a[i] - b[i]
+                return False 
         elif c in ['an', 'first_an']:
             for j, ((ax, ay), (bx, by)) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(ax, bx):
