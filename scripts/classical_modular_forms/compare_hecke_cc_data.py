@@ -111,7 +111,7 @@ with open(filename, 'r') as F:
                 assert False
 
             if (linenumber - C)/M % int(105288./(10*M)) == 0:
-                print '%.2f %%' % 100*linenumber/105288.
+                print '%.2f %%' % (100*linenumber/105288.)
 
 
 
