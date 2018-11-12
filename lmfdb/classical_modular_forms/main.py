@@ -37,6 +37,10 @@ def Nk2_bound():
 def weight_bound():
     return db.mf_newforms.max('weight')
 
+@cached_function
+def level_bound():
+    return db.mf_newforms.max('level')
+
 
 def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
@@ -146,7 +150,7 @@ def index():
     space_labels = ('20.5','60.2','55.3.d')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('1', '2', '3-4', '5-9', '10-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-9', '10-99', '100-%d' % Nk2_bound() )
+    info["level_list"] = ('1', '2-9', '10-99', '100-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
