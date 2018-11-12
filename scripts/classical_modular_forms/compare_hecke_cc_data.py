@@ -5,8 +5,20 @@ from sage.all import RR
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
-drew_dim12 = {}
 cols = cols_header.split(':')
+maxNk2 = db.mf_newforms.max('Nk2')
+
+if len(sys.argv) == 3:
+    M = int(sys.argv[1])
+    C = int(sys.argv[2])
+    assert M > C
+else:
+    print r"""Usage:
+        You should run this on legendre as: (this will use 40 cores):
+        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+
+
+
 def compare_floats(a, b, prec = 52):
     if b == 0:
         b, a = a, b
@@ -23,7 +35,7 @@ def compare_row(a, b, verbose = True):
         elif c in ['embedding_root_real', 'embedding_root_imag']:
             if not compare_floats(a[i], b[i]):
                 print c, a[i], b[i], a[i] - b[i]
-                return False
+                return False 
         elif c in ['an', 'first_an']:
             for j, ((ax, ay), (bx, by)) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(ax, bx):
@@ -49,13 +61,18 @@ def compare_row(a, b, verbose = True):
     return True
 
 with open(filename, 'r') as F:
-    for i, line in enumerate(F.readlines()):
+    i = -1
+    for line in F:
+        i += 1
         if i < 3:
             if i == 0:
                 assert line[:-1] == cols_header
             pass
-        else:
+        elif i % M == C:
             linesplit = line[:-1].split(':')
+            N, k = map(int, linesplit[1].split('.')[:2])
+            #if N*k**2 > maxNk2:
+            #    continue
             for i, c in enumerate(cols):
                 if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
                     linesplit[i] = int(linesplit[i])
@@ -79,6 +96,15 @@ with open(filename, 'r') as F:
                 assert False
             for c in ['an', 'first_an']:
                 hc[c] = [[float(x), float(y)] for x, y in hc[c]]
+
+            if 'embedding_root_real' not in hc.keys(): #FIXME
+                hc['embedding_root_imag'] = 0
+                hc['embedding_root_real'] = 0
+            if sorted(hc.keys()) != sorted(cols):
+                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                print sorted(hc.keys())
+                print sorted(cols)
+                assert False
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
@@ -86,3 +112,6 @@ with open(filename, 'r') as F:
 
             if i % 10528 == 0:
                 print '%.2f %%' % 100*i/105288.
+
+
+
