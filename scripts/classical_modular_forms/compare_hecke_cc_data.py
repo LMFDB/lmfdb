@@ -110,7 +110,7 @@ with open(filename, 'r') as F:
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
                 assert False
 
-            if linenumber % 10528 == 0:
+            if (linenumber - C)/M % int(105288./(10*M)) == 0:
                 print '%.2f %%' % 100*linenumber/105288.
 
 
