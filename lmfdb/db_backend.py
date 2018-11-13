@@ -2001,7 +2001,7 @@ class PostgresTable(PostgresBase):
                 if addid:
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
                     self._execute(alter_table)
-                    drop_seq = SQL("DROP SEQUENCE {0}").format(seq_name)
+                    drop_seq = SQL("DROP SEQUENCE {0}").format(Identifier(seq_name))
                     self._execute(drop_seq)
 
                 return addid, cur.rowcount
