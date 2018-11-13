@@ -734,6 +734,7 @@ def dimension_space_postprocess(res, info, query):
     return dim_dict
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
+    urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     set_rows_cols(info, query)
     dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -870,13 +871,17 @@ class CMF_stats(StatsDisplay):
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
         {'cols': [],
-         'buckets':{'level':[1,1,9,99,2000]},
+         'buckets':{'level':[1,1,9,99,199,399,599,799,999,3000]},
          'row_title':'level',
          'knowl':'mf.elliptic.level'},
         {'cols': [],
          'buckets':{'weight':[1,1,2,3,4,9,50]},
          'row_title':'weight',
          'knowl':'mf.elliptic.weight'},
+        {'cols':[],
+         'buckets':{'char_order':[1,1,2,3,4,5,10,20,100,1000]},
+         'row_title':'character order',
+         'knowl':'character.dirichlet.order'},
         {'cols':'has_inner_twist',
          'top_title':'inner twisting',
          'row_title':'has inner twist',

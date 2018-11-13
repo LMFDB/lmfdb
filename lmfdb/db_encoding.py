@@ -172,7 +172,7 @@ class Json(pgJson):
                     'data': [int(obj.numerator()), int(obj.denominator())]}
         elif isinstance(obj, RealNumber):
             return {'__RealLiteral__': 0, # encoding version
-                    'data': obj.literal if isinstance(obj, RealLiteral) else str(obj),
+                    'data': obj.literal if isinstance(obj, RealLiteral) else str(obj), # need truncate=False
                     'prec': int(obj.parent().precision())}
         elif isinstance(obj, complex):
             # As noted above, support for Sage complex numbers

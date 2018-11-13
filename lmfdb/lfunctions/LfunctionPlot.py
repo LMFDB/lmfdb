@@ -389,7 +389,7 @@ def paintSvgHoloNew(condmax):
         else:
             for character in nf['char_labels']:
                 for j in range(nf['dim']/nf['char_degree']):
-                    label = base_label + [str(character), hecke_letter, str(j + 1)]
+                    label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
                     z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
                     if z1 is not None:
@@ -416,10 +416,11 @@ def paintSvgHoloNew(condmax):
     # Begin drawing
 
     ans = svgBegin()
-    ans += "<g transform='translate(10 40)'>\n" # give ourselves a little space
+    ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
 
-    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale + 1), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
-    ans += "</g>"
+    ans += "<g transform='translate(0 40)'>\n" # give ourselves a little space
+    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
+    ans += "</g>\n"
 
     ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
     cfw = colorsForWeights(max_k) # pick our colour pallette we need colors for weights 1 (at some point) to max_k inclusive
@@ -449,6 +450,8 @@ def paintSvgHoloNew(condmax):
     #            + str(numberwithlabel) + "</text>\n")
 
     ans += "</g>\n"
+    ans += "</g>"
+
     ans += svgEnd()
 
     return ans
