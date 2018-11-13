@@ -1992,16 +1992,16 @@ class PostgresTable(PostgresBase):
                     create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
                     self._execute(create_seq, [cur_count+1]*2);
                     # edit default value
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id SET DEFAULT nextval({1})", Identifier(table), Identifier(seq_name))
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id SET DEFAULT nextval({1})").format(Identifier(table), Identifier(seq_name))
                     self._execute(alter_table)
 
                 cur = self.conn.cursor()
                 cur.copy_from(F, table, columns=columns, **kwds)
 
                 if addid:
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id DROP", Identifier(table))
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id DROP".format(Identifier(table))
                     self._execute(alter_table)
-                    drop_seq = SQL("DROP SEQUENCE {0}", seq_name)
+                    drop_seq = SQL("DROP SEQUENCE {0}").format(seq_name)
                     self._execute(drop_seq)
 
                 return addid, cur.rowcount
