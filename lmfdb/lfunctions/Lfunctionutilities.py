@@ -430,7 +430,8 @@ def lfuncEPhtml(L,fmt, prec = 12):
 
 
 
-    eptable = "<table id='eptable' class='ntdata euler'>\n"
+    eptable = r"""<div style="max-width: 100%; overflow-x: auto; position: relative;">"""
+    eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
     if L.degree > 2  and L.degree < 12:
@@ -490,14 +491,20 @@ def lfuncEPhtml(L,fmt, prec = 12):
         eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
         trclass = " class='more nodisplay'"
 
-    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td><td></td>"""
+    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td>"""
+
+    last_entry = ""
     if display_galois:
-        eptable +="<td></td>"
+        last_entry +="<td></td>"
+    try:
+        last_entry = r"""<td %s style="position: absolute; right:0px;"> <a href="%s">Download Euler factors</a></td>""" % ('colspan = 2' if display_galois else '', L.download_euler_factor_url)
+    except AttributeError:
+        last_entry += "<td></td>"
+    eptable += last_entry
     eptable += "</tr>"
-    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td><td></td>"""
-    if display_galois:
-        eptable +="<td></td>"
-    eptable += "</tr>\n</table>"
+    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td>"""
+    eptable += last_entry
+    eptable += "</tr>\n</table></div>"
     ans += "\n" + eptable
     return(ans)
 

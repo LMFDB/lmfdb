@@ -1,7 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
-* Fix embedding data (Edgar)
 
 IMPORTANT:
 * Update knowl for newspaces and mf.elliptic.space (Drew)
@@ -9,7 +7,7 @@ IMPORTANT:
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Upload data for Nk^2 <= 3000 (Drew)
 * Upload data for Nk^2 <= 4000 (Edgar)
-* check data for dim <= 12 (Edgar)
+* check data for dim <= 20 (Edgar)
 * Create appropriate indexes
 * Add character order and character degree (David)
 * Update level buckets in stats and on front page (David)
@@ -18,18 +16,14 @@ IMPORTANT:
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
-* Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
-* L-function bread (degree 24 -> degree 2 when you click on Cusp Forms) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 data (Drew)
-* data: add weight 1 cc data (Edgar)
-* form pages: weight 1 link to Artin rep (Edgar)
+* data: add weight 1 cc data (Drew)
+* form pages: weight 1 link to Artin rep (Drew)
 * add buttons to switch search types (David)
-* Download Euler factors (Edgar)
-
 
 GOOD:
-* compute all data for Nk^2 <= 4000 (Edgar)
+* Drop the dependence of bson. Convert binary with bson to 64bit png and reupload those
 * Add trace hashes for elliptic curves over quadratic fields (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
@@ -44,7 +38,6 @@ FORMATTING:
 IT WOULD BE NICE IF:
 * notation like (1/2)^n for selberg data (Edgar, ask Farmer)
 * Add tests for display_float, etc
-* Add density of zero traces (Edgar)
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)

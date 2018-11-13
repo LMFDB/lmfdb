@@ -14,7 +14,6 @@ from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
 from lmfdb.api import api_page, api_logger
-from bson import json_util
 
 def pluck(n, list):
     return [_[n] for _ in list]
@@ -277,7 +276,7 @@ def api_query(table, id = None):
 
     if format.lower() == "json":
         #return flask.jsonify(**data) # can't handle binary data
-        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2, default=json_util.default), mimetype='application/json')
+        return current_app.response_class(json.dumps(data, encoding='ISO-8859-1', indent=2), mimetype='application/json')
     elif format.lower() == "yaml":
         y = yaml.dump(data,
                       default_flow_style=False,

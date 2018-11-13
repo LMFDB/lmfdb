@@ -16,29 +16,3 @@ assert main # silence pyflakes
 
 app.register_blueprint(l_function_page, url_prefix="/L")
 
-
-## How to solve this redirection easily?
-##
-##@app.route("/Lfunction/")
-##@app.route("/Lfunction/<arg1>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-##@app.route("/Lfunction/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-##@app.route("/L-function/")
-##@app.route("/L-function/<arg1>/")
-##@app.route("/L-function/<arg1>/<arg2>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-##@app.route("/L-function/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-# def render_Lfunction_redirect(**args):
-##    args.update(request.args)
-##    return flask.redirect(url_for("render_Lfunction", **args), code=301)

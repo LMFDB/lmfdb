@@ -1,7 +1,6 @@
-# See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PowerSeriesRing,\
+from sage.all import prime_range, latex, QQ, PolynomialRing,\
     CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
@@ -96,7 +95,7 @@ class WebNewform(object):
                 self.star_twist = 'inner twists*'
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an','trace_an'], sort=['n'])
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
         if eigenvals:  # this should always be true
             self.has_exact_qexp = True
             zero = [0] * self.dim
@@ -556,25 +555,35 @@ function switch_basis(btype) {
         d = len(eigseq[0])
         if self.single_generator:
             if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
-                R = PowerSeriesRing(QQ, self._nu_var)
+                R = PolynomialRing(QQ, self._nu_var)
             else:
-                R = PowerSeriesRing(QQ, 'beta')
+                R = PolynomialRing(QQ, 'beta')
             beta = R.gen()
             Rgens = [beta**i for i in range(d)]
         else:
-            R = PowerSeriesRing(QQ, ['beta%s' % i for i in range(1,d)])
+            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
             Rgens = [1] + [g for g in R.gens()]
-        Rq = PowerSeriesRing(R, 'q')
-        q = Rq.gens()[0]
         s = ''
         for j in range(prec):
             term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
             if term != 0:
-                latexterm = latex(term*(q**j))
-                print latexterm
+                latexterm = latex(term)
+                if term.number_of_terms() > 1:
+                    latexterm = r"\left(" +  latexterm + r"\right)"
+
+                if j > 0:
+                    if term == 1:
+                        latexterm = ''
+                    elif term == -1:
+                        latexterm = '-'
+                    if j == 1:
+                        latexterm += ' q'
+                    else:
+                        latexterm += ' q^{%d}' % j
+                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
-                s += '\(' + latexterm + '\)'
+                s += '\(' + latexterm + '\) '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
         return s + '\(+O(q^{%s})\)' % prec

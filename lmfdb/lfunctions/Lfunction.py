@@ -9,7 +9,8 @@
 import math
 import re
 
-from flask import url_for
+from flask import url_for, request
+from lmfdb.db_encoding import Json
 
 from Lfunctionutilities import (string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
@@ -23,7 +24,7 @@ from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF, primes_first_n
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -33,6 +34,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
+from lmfdb.downloader import Downloader
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -535,6 +537,8 @@ class Lfunction_from_db(Lfunction):
         if 'url' in kwargs and 'Lhash' not in kwargs:
             self.Lhash = self.get_Lhash_by_url(self.url)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
+        if 'url' not in kwargs:
+            self.url = self.lfunc_data['origin']
         makeLfromdata(self)
         self.info = self.general_webpagedata()
         self._set_knowltype()
@@ -610,6 +614,44 @@ class Lfunction_from_db(Lfunction):
     @property
     def friends(self):
         return []
+
+    @property
+    def download_euler_factor_url(self):
+        return request.path.replace('/L/', '/L/download_euler/')
+
+    @property
+    def download_url(self):
+        return request.path.replace('/L/', '/L/download/')
+
+    def download_euler_factors(self):
+        filename = self.url.replace('/','_')
+        data  = {}
+        data['bad_lfactors'] = self.bad_lfactors
+        ps = primes_first_n(len(self.localfactors))
+        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.euler_factors',
+                lang = 'text',
+                title = 'Euler Factors of %s' % self.url)
+
+    def download(self):
+        filename = self.url.replace('/','_')
+        data  = dict(self.__dict__)
+        for k in ['level_factored', 'dirichlet_coefficients']:
+            if isinstance(data[k], list):
+                data[k] = map(str, data[k])
+            else:
+                data[k] = str(data[k])
+        data.pop('level_factored')
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.lfunction',
+                lang = 'text',
+                title = 'The L-function object of %s' % self.url)
+
+
+
 
     @property
     def chilatex(self):
@@ -699,6 +741,10 @@ class Lfunction_from_db(Lfunction):
         if self.knowltype is not None:
             self.info['knowltype'] = self.knowltype
 
+
+
+
+
 ####################################################################################################
 
 class Lfunction_CMF(Lfunction_from_db):
@@ -740,7 +786,7 @@ class Lfunction_CMF(Lfunction_from_db):
 
     @property
     def bread(self):
-        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
 #    def _set_title(self):
 #        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
@@ -790,7 +836,7 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
 
     @property
     def bread(self):
-        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
 
 #    def _set_title(self):
 #        conductor_str = "$ %s $" % latex(self.modform_level)

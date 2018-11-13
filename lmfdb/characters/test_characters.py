@@ -56,7 +56,7 @@ class DirichletSearchTest(LmfdbTest):
         assert '\chi_{50}(11,' in W.data and '\chi_{75}(46,' in W.data
 
     def test_condsearch(self):
-        W = self.tc.get('/Character/Dirichlet/?conductor=111')
+        W = self.tc.get('/Character/Dirichlet/?conductor=111&limit=100')
         assert '111/17' in W.data
 
     def test_nextprev(self):
