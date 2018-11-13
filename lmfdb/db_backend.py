@@ -1989,8 +1989,8 @@ class PostgresTable(PostgresBase):
                     # create sequence
                     cur_count = self.max_id()
                     seq_name = table + '_seq'
-                    create_seq = SQL("CREATE SEQUENCE {0} START WITH {1} CACHE 10000").format(Identifier(seq_name), cur_count)
-                    self._execute(create_seq);
+                    create_seq = SQL("CREATE SEQUENCE {0} START WITH %s CACHE 10000").format(Identifier(seq_name))
+                    self._execute(create_seq, [cur_count]);
                     # edit default value
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id SET DEFAULT nextval({1})", Identifier(table), Identifier(seq_name))
                     self._execute(alter_table)
