@@ -12,7 +12,6 @@ IMPORTANT:
 * Update level buckets in stats and on front page (David)
 * Deal with bson and plots (David)
 * Display "unique form in space" when hecke cutter is empty list (David)
-* download euler (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)

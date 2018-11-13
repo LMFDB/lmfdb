@@ -448,7 +448,7 @@ def initLfunction(L, args, request):
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
 
-    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'], info['downloads'] ) = set_bread_and_friends(L, request)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -502,6 +502,7 @@ def set_bread_and_friends(L, request):
     origins = []
     factors_origins = []
     instances = []
+    downloads = []
 
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.path.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
@@ -529,6 +530,7 @@ def set_bread_and_friends(L, request):
         friends = L.friends
         factors_origins = L.factors_origins
         instances = L.instances
+        downloads = L.downloads
 
         for elt in [origins, friends, factors_origins, instances]:
             if elt is not None:
@@ -639,7 +641,7 @@ def set_bread_and_friends(L, request):
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
 
 
-    return (bread, origins, friends, factors_origins, instances)
+    return (bread, origins, friends, factors_origins, instances, downloads)
 
 
 def set_zeroslink_and_plotlink(L, args):
@@ -733,6 +735,16 @@ def zerosLfunction(args):
 def download_euler(args):
     args = tuple(args.split('/'))
     return generateLfunctionFromUrl(*args).download_euler_factors()
+
+@l_function_page.route("/download_zeros/<path:args>/")
+def download_zeros(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_zeros()
+
+@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
+def download_dirichlet_coeff(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_dirichlet_coeff()
 
 @l_function_page.route("/download/<path:args>/")
 def download(args):
