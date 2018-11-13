@@ -1999,7 +1999,7 @@ class PostgresTable(PostgresBase):
                 cur.copy_from(F, table, columns=columns, **kwds)
 
                 if addid:
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id DROP".format(Identifier(table))
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id DROP").format(Identifier(table))
                     self._execute(alter_table)
                     drop_seq = SQL("DROP SEQUENCE {0}").format(seq_name)
                     self._execute(drop_seq)
