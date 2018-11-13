@@ -6,16 +6,15 @@ IMPORTANT:
 * code snippets for form and space pages (Drew)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Upload data for Nk^2 <= 3000 (Drew)
-* Upload data for Nk^2 <= 4000 (Edgar)
-* check data for dim <= 20 (Edgar)
+* Upload data for 3000 < Nk^2 <= 4000 (Edgar)
 * Create appropriate indexes
 * Add character order and character degree (David)
 * Update level buckets in stats and on front page (David)
 * Deal with bson and plots (David)
 * Display "unique form in space" when hecke cutter is empty list (David)
+* download euler (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
-* Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
 * data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Drew)
