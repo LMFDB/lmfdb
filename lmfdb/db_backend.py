@@ -1992,7 +1992,7 @@ class PostgresTable(PostgresBase):
                     create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
                     self._execute(create_seq, [cur_count+1]*2);
                     # edit default value
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval('%s')").format(Identifier(table), Identifier('id'))
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
                     self._execute(alter_table, [seq_name])
 
                 cur = self.conn.cursor()
