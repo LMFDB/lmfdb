@@ -3252,7 +3252,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 elif len(L) == 1:
                     cnt = L[0][1]
                 else:
-                    raise RuntimeError
+                    raise RuntimeError("Multiple results for %s"%(bucketed_constraint))
                 data.append((bucketed_constraint[col], cnt))
                 total += cnt
         else:
