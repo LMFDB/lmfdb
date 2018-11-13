@@ -11,6 +11,10 @@ IMPORTANT:
 * Upload data for Nk^2 <= 4000 (Edgar)
 * check data for dim <= 12 (Edgar)
 * Create appropriate indexes
+* Add character order and character degree (David)
+* Update level buckets in stats and on front page (David)
+* Deal with bson and plots (David)
+* Display "unique form in space" when hecke cutter is empty list (David)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
@@ -20,7 +24,7 @@ IMPORTANT:
 * data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Edgar)
 * form pages: weight 1 link to Artin rep (Edgar)
-* add buttons to switch search types (Edgar)
+* add buttons to switch search types (David)
 * Download Euler factors (Edgar)
 
 
