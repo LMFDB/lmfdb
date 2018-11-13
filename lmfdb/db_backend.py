@@ -1971,17 +1971,13 @@ class PostgresTable(PostgresBase):
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
         """
-        cur_count = self.max_id()
         sep = kwds.get("sep", u"\t")
-        cur = self.conn.cursor()
         try:
             with open(filename) as F:
                 if header:
                     # This consumes the first three lines
                     columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
                     addid = ('id' not in columns)
-                    if addid:
-                        columns = ["id"] + columns
                 else:
                     addid = False
 
@@ -1990,23 +1986,24 @@ class PostgresTable(PostgresBase):
                 # None of our column names have double quotes in them. :-D
                 columns = ['"' + col + '"' for col in columns]
                 if addid:
-                    # We write the rows with ids added to a temporary file
-                    # The speed here could be improved by implementing our own
-                    # file-like object that just inserted an appropriate
-                    # id at the beginning of each line, but implementing
-                    # the read method with a specified number of bytes is kind
-                    # of annoying.
-                    idfile = tempfile.NamedTemporaryFile('w', delete=False)
-                    try:
-                        with idfile:
-                            for i, line in enumerate(F):
-                                idfile.write((unicode(i + cur_count + 1) + sep + line).encode("utf-8"))
-                        with open(idfile.name) as Fid:
-                            cur.copy_from(Fid, table, columns=columns, **kwds)
-                    finally:
-                        idfile.unlink(idfile.name)
-                else:
-                    cur.copy_from(F, table, columns=columns, **kwds)
+                    # create sequence
+                    cur_count = self.max_id()
+                    seq_name = table + '_seq'
+                    create_seq = SQL("CREATE SEQUENCE {0} START WITH {1} CACHE 10000").format(Identifier(seq_name), cur_count)
+                    self._execute(create_seq);
+                    # edit default value
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id SET DEFAULT nextval({1})", Identifier(table), Identifier(seq_name))
+                    self._execute(alter_table)
+
+                cur = self.conn.cursor()
+                cur.copy_from(F, table, columns=columns, **kwds)
+
+                if addid:
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN id DROP", Identifier(table))
+                    self._execute(alter_table)
+                    drop_seq = SQL("DROP SEQUENCE {0}", seq_name)
+                    self._execute(drop_seq)
+
                 return addid, cur.rowcount
         except Exception:
             self.conn.rollback()
