@@ -28,11 +28,9 @@ Group by:&nbsp;
 <td>
 Sort by:&nbsp;
 <select name='sortby'>
-{% if info.sortyby == 'objects' %}
-<option value="size">size</option><option value="objects" selected>objects</option>
-{% else %}
-<option value="size" selected>size</option><option value="objects">objects</option>
-{% endif %}
+  <option value="size"{% if info.sortby == 'size' %} selected{% endif %}>size</option>
+  <option value="name"{% if info.sortby == 'name' %} selected{% endif %}>name</option>
+  <option value="objects"{% if info.sortby == 'objects' %} selected{% endif %}>objects</option>
 </select>
 </td>
 <td>

@@ -74,12 +74,8 @@ def stats():
         info['minsizes'] = '1'
     info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
     info['sortby'] = request.args.get('sortby','size').strip().lower()
-    if not info['sortby'] in ['size', 'objects']:
+    if not info['sortby'] in ['size', 'objects', 'name']:
         info['sortby'] = 'size'
-    #dbs = get_database_info(True)
-    #C = base.getDBConnection()
-    #dbstats = {elt:C[elt].command("dbstats") for elt in dbs}
-    #info['dbs'] = len(dbstats.keys())
     nobjects = size = dataSize = indexSize = 0
     dbSize = defaultdict(int)
     dbObjects = defaultdict(int)
@@ -115,32 +111,17 @@ def stats():
                 'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
                 'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
     dataSize = size - indexSize
-    #for elt in dbstats:
-    #    dbsize = dbstats[elt]['dataSize']+dbstats[elt]['indexSize']
-    #    size += dbsize
-    #    dataSize += dbstats[elt]['dataSize']
-    #    indexSize += dbstats[elt]['indexSize']
-    #    dbsize = mb(dbsize)
-    #    dbobjects = dbstats[elt]['objects']
-    #    for c in pluck(0,dbs[elt]):
-    #        if C[elt][c].count():
-    #            collections += 1
-    #            coll = '<a href = "' + url_for (".api_query", db=elt, collection = c) + '">'+c+'</a>'
-    #            cstats = C[elt].command("collstats",c)
-    #            objects += cstats['count']
-    #            csize = mb(cstats['size']+cstats['totalIndexSize'])
-    #            if csize >= int(info['minsize']):
-    #                stats[cstats['ns']] = {'db':elt, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
-    #                                      'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
     info['ntables'] = len(table_sizes)
     info['nobjects'] = nobjects
     info['size'] = mb(size)
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
-    if info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['table']))
+    if info['sortby'] == 'name':
+        sortedkeys = sorted(list(stats))
+    elif info['sortby'] == 'objects' and info['groupby'] == 'db':
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['nrows'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['table']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['nrows'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
         sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
