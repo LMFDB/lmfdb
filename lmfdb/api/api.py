@@ -76,43 +76,75 @@ def stats():
     info['sortby'] = request.args.get('sortby','size').strip().lower()
     if not info['sortby'] in ['size', 'objects']:
         info['sortby'] = 'size'
-    dbs = get_database_info(True)
-    C = base.getDBConnection()
-    dbstats = {elt:C[elt].command("dbstats") for elt in dbs}
-    info['dbs'] = len(dbstats.keys())
-    collections = objects = 0
-    size = dataSize = indexSize = 0
+    #dbs = get_database_info(True)
+    #C = base.getDBConnection()
+    #dbstats = {elt:C[elt].command("dbstats") for elt in dbs}
+    #info['dbs'] = len(dbstats.keys())
+    nobjects = size = dataSize = indexSize = 0
+    dbSize = defaultdict(int)
+    dbObjects = defaultdict(int)
     stats = {}
-    for elt in dbstats:
-        dbsize = dbstats[elt]['dataSize']+dbstats[elt]['indexSize']
-        size += dbsize
-        dataSize += dbstats[elt]['dataSize']
-        indexSize += dbstats[elt]['indexSize']
-        dbsize = mb(dbsize)
-        dbobjects = dbstats[elt]['objects']
-        for c in pluck(0,dbs[elt]):
-            if C[elt][c].count():
-                collections += 1
-                coll = '<a href = "' + url_for (".api_query", db=elt, collection = c) + '">'+c+'</a>'
-                cstats = C[elt].command("collstats",c)
-                objects += cstats['count']
-                csize = mb(cstats['size']+cstats['totalIndexSize'])
-                if csize >= int(info['minsize']):
-                    stats[cstats['ns']] = {'db':elt, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
-                                          'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
-    info['collections'] = collections
-    info['objects'] = objects
+    table_sizes = db.table_sizes()
+    def split_db(tablename):
+        i = tablename.find('_')
+        if i == -1:
+            return '', tablename
+        else:
+            return tablename[:i], tablename[i+1:]
+    for tablename, sizes in table_sizes.items():
+        dname, name = split_db(tablename)
+        dbSize[dname] += sizes['total_bytes']
+        dbObjects[dname] += sizes['nrows']
+    for tablename, sizes in table_sizes.items():
+        tsize = sizes['total_bytes']
+        size += tsize
+        csize = mb(tsize)
+        nobjects += sizes['nrows']
+        indexSize += sizes['index_bytes']
+        if csize >= int(info['minsize']):
+            dname, name = split_db(tablename)
+            link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if sizes['nrows']:
+                avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
+            else:
+                avg_size = 0
+            stats[tablename] = {
+                'db':dname, 'table':link, 'dbSize':dbSize[dname], 'dbObjects':dbObjects[dname],
+                'size': csize, 'avgObjSize':avg_size,
+                'indexSize':mb(sizes['index_bytes']), 'dataSize':mb(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']),
+                'countsSize':mb(sizes['counts_bytes']), 'statsSize':mb(sizes['stats_bytes']),
+                'nrows': sizes['nrows'], 'nstats': sizes['nstats'], 'ncounts': sizes['ncounts']}
+    dataSize = size - indexSize
+    #for elt in dbstats:
+    #    dbsize = dbstats[elt]['dataSize']+dbstats[elt]['indexSize']
+    #    size += dbsize
+    #    dataSize += dbstats[elt]['dataSize']
+    #    indexSize += dbstats[elt]['indexSize']
+    #    dbsize = mb(dbsize)
+    #    dbobjects = dbstats[elt]['objects']
+    #    for c in pluck(0,dbs[elt]):
+    #        if C[elt][c].count():
+    #            collections += 1
+    #            coll = '<a href = "' + url_for (".api_query", db=elt, collection = c) + '">'+c+'</a>'
+    #            cstats = C[elt].command("collstats",c)
+    #            objects += cstats['count']
+    #            csize = mb(cstats['size']+cstats['totalIndexSize'])
+    #            if csize >= int(info['minsize']):
+    #                stats[cstats['ns']] = {'db':elt, 'coll':coll, 'dbSize': dbsize, 'size':csize, 'dbObjects':dbobjects,
+    #                                      'dataSize':mb(cstats['size']), 'indexSize':mb(cstats['totalIndexSize']), 'avgObjSize':int(round(cstats['avgObjSize'])), 'objects':cstats['count'], 'indexes':cstats['nindexes']}
+    info['ntables'] = len(table_sizes)
+    info['nobjects'] = nobjects
     info['size'] = mb(size)
     info['dataSize'] = mb(dataSize)
     info['indexSize'] = mb(indexSize)
     if info['sortby'] == 'objects' and info['groupby'] == 'db':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbObjects'],stats[x]['db'],-stats[x]['objects'],stats[x]['table']))
     elif info['sortby'] == 'objects':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['objects'],stats[x]['db'],stats[x]['table']))
     elif info['sortby'] == 'size' and info['groupby'] == 'db':
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['dbSize'],stats[x]['db'],-stats[x]['size'],stats[x]['table']))
     else:
-        sortedkeys = sorted([db for db in stats],key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['coll']))
+        sortedkeys = sorted(list(stats),key=lambda x: (-stats[x]['size'],stats[x]['db'],stats[x]['table']))
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
