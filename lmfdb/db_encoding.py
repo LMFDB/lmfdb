@@ -26,6 +26,7 @@ def setup_connection(conn):
     # We want to use unicode everywhere
     register_type(UNICODE, conn)
     register_type(UNICODEARRAY, conn)
+    conn.set_client_encoding('UTF8')
     cur = conn.cursor()
     cur.execute("SELECT NULL::numeric")
     oid = cur.description[0][1]

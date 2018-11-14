@@ -956,3 +956,17 @@ def get_bread(degree, breads=[]):
     for b in breads:
         breadcrumb.append(b)
     return breadcrumb
+
+# Convert  r0r0c1 to (0,0;1), for example
+def parse_codename(text):
+
+    ans = text
+    if 'c' in text:
+        ans = re.sub('c', ';', ans, 1)
+    else:
+        ans += ';'
+    ans = re.sub('r', '', ans, 1)
+    ans = re.sub('(r|c)', ',', ans)
+
+    return '(' + ans + ')'
+
