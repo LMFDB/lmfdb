@@ -383,7 +383,7 @@ class WebNewform(object):
             desc += "kernel of the %s %s acting on %s."
             desc = desc % (knowl, polynomials[0], self.display_newspace())
         else:
-            return ""
+            desc = r"<p>There are no other newforms in %s.</p>"%(self.display_newspace())
         return desc
 
     def defining_polynomial(self):

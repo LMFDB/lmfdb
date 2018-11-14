@@ -3530,6 +3530,61 @@ class PostgresDatabase(PostgresBase):
         else:
             raise ValueError("%s is not a search table"%name)
 
+    def table_sizes(self):
+        """
+        Returns a dictionary containing information on the sizes of the search tables.
+
+        OUTPUT:
+
+        A dictionary with a row for each search table
+        (as well as a few others such as kwl_knowls), with entries
+
+        - ``nrows`` -- an estimate for the number of rows in the table
+        - ``nstats`` -- an estimate for the number of rows in the stats table
+        - ``ncounts`` -- an estimate for the number of rows in the counts table
+        - ``total_bytes`` -- the total number of bytes used by the main table, as well as stats, counts, extras, indexes, ancillary storage....
+        - ``index_bytes`` -- the number of bytes used for indexes on the main table
+        - ``toast_bytes`` -- the number of bytes used for storage of variable length data types, such as strings and jsonb
+        - ``table_bytes`` -- the number of bytes used for fixed length storage on the main table
+        - ``extra_bytes`` -- the number of bytes used by the extras table (including the index on id, toast, etc)
+        - ``counts_bytes`` -- the number of bytes used by the counts table
+        - ``stats_bytes`` -- the number of bytes used by the stats table
+        """
+        query = """
+SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
+       total_bytes-index_bytes-COALESCE(toast_bytes,0) AS table_bytes FROM (
+  SELECT relname as table_name,
+         c.reltuples AS row_estimate,
+         pg_total_relation_size(c.oid) AS total_bytes,
+         pg_indexes_size(c.oid) AS index_bytes,
+         pg_total_relation_size(reltoastrelid) AS toast_bytes
+  FROM pg_class c
+  LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public' AND relkind = 'r'
+) a"""
+        sizes = defaultdict(lambda: defaultdict(int))
+        cur = db._execute(SQL(query))
+        for table_name, row_estimate, total_bytes, index_bytes, toast_bytes, table_bytes in cur:
+            if table_name.endswith('_stats'):
+                name = table_name[:-6]
+                sizes[name]['nstats'] = int(row_estimate)
+                sizes[name]['stats_bytes'] = total_bytes
+            elif table_name.endswith('_counts'):
+                name = table_name[:-7]
+                sizes[name]['ncounts'] = int(row_estimate)
+                sizes[name]['counts_bytes'] = total_bytes
+            elif table_name.endswith('_extras'):
+                name = table_name[:-7]
+                sizes[name]['extras_bytes'] = total_bytes
+            else:
+                name = table_name
+                sizes[name]['nrows'] = int(row_estimate)
+                sizes[name]['index_bytes'] = index_bytes
+                sizes[name]['toast_bytes'] = toast_bytes
+                sizes[name]['table_bytes'] = table_bytes
+            sizes[name]['total_bytes'] += total_bytes
+        return sizes
+
     def _create_meta_indexes_hist(self):
         with DelayCommit(self, silence=True):
             self._execute(SQL("CREATE TABLE meta_indexes_hist (index_name text, table_name text, type text, columns jsonb, modifiers jsonb, storage_params jsonb, version integer)"))
