@@ -316,12 +316,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 {%- endmacro %}
 
 {# This block is rendered in the properties box #}
-{% block origins_block %}
+{% block more_props %}
 {{ rightnavig("Origins of factors", factors_origins) }}
 {% endblock %}
 
-{% block dowloads_block %}
-
-{{ rightnavig("Downloads", downloads) }}
-
-{% endblock %}
