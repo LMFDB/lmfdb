@@ -356,7 +356,7 @@ def lfuncEPtex(L, fmt):
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt, prec = 12):
+def lfuncEPhtml(L,fmt, prec = None):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -429,8 +429,7 @@ def lfuncEPhtml(L,fmt, prec = 12):
         return out
 
 
-
-    eptable = r"""<div style="max-width: 100%; overflow-x: auto; position: relative;">"""
+    eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
     eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
@@ -496,15 +495,12 @@ def lfuncEPhtml(L,fmt, prec = 12):
     last_entry = ""
     if display_galois:
         last_entry +="<td></td>"
-    try:
-        last_entry = r"""<td %s style="position: absolute; right:0px;"> <a href="%s">Download Euler factors</a></td>""" % ('colspan = 2' if display_galois else '', L.download_euler_factor_url)
-    except AttributeError:
-        last_entry += "<td></td>"
+    last_entry += "<td></td>"
     eptable += last_entry
     eptable += "</tr>"
     eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td>"""
     eptable += last_entry
-    eptable += "</tr>\n</table></div>"
+    eptable += "</tr>\n</table>\n</div>\n"
     ans += "\n" + eptable
     return(ans)
 
