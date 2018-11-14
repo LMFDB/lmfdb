@@ -376,7 +376,6 @@ def paintSvgHoloNew(condmax):
 
     for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','char_labels','dim','char_degree']):
         level, k, _, hecke_letter = nf['label'].split('.')
-        base_label = [level, k]
         if int(k) > max_k:
             max_k = int(k)
         if nf['analytic_conductor'] not in values:

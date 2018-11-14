@@ -7,7 +7,10 @@ from lmfdb.db_backend import db
 
 def upsert_trace_hash(id_number):
     newform = db.mf_newforms.lucky({'id':id_number}, projection=['label','trace_hash','dim','weight'])
-    if newform is None or newform['dim'] > 81 or newform['weight'] == 1:
+    if newform is None or newform['dim'] > 20 or newform['weight'] == 1:
+        return
+    if 'trace_hash' not in newform:
+        print newform['label']
         return
     base_url = "ModularForm/GL2/Q/holomorphic/" + newform['label'].replace(".","/")
     trace_hash = newform['trace_hash']

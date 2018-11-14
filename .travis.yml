@@ -24,8 +24,6 @@ addons:
             - libssl-dev
             # needed for pyflakes
             - python-pip
-            # to have mongo shell
-            - mongodb-org-shell
             # to run nosetests in parallel
             - parallel
 
