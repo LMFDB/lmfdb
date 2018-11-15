@@ -423,20 +423,20 @@ download_make_data_comment = {
 @g2c_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Completeness',''))
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
     return render_template("single.html", kid='dq.g2c.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
 def how_computed_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Source',''))
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
     return render_template("single.html", kid='dq.g2c.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Labels")
 def labels_page():
     t = 'Labels for Genus 2 Curves over $\Q$'
-    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '),('Labels',''))
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Labels',''))
     return render_template("single.html", kid='g2c.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
