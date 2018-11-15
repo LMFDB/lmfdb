@@ -1794,12 +1794,12 @@ div.maassformplot img {
       margin: 5px 0px 0px;}
 
 p.rotation  {
-             -moz-transform: rotate(270deg);
-             -webkit-transform: rotate(270deg);
-             -o-transform: rotate(270deg);
-             -ms-transform: rotate(270deg);
              transform: rotate(270deg); }
 
+/* temporary over-side for GL(2) on beta */
+body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
+    transform: rotate(0deg)
+}
 
 #sidebar table th, #sidebar table td {
 	text-align: left;
