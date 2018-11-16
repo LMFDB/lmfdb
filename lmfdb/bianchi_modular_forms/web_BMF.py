@@ -121,6 +121,9 @@ class WebBMF(object):
                 self.CM = 'not determined'
             elif self.CM == 0:
                 self.CM = 'no'
+            else:
+                if self.CM%4 in [2,3]:
+                    self.CM = 4*self.CM
         except AttributeError:
             self.CM = 'not determined'
         self.properties2.append(('CM', str(self.CM)))
