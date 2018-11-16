@@ -191,6 +191,10 @@ def housekeeping(fn):
     return decorated_view
 
 
+@login_page.route("/register")
+def register_new():
+    return ""
+
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
 @admin_required
@@ -204,9 +208,10 @@ def register(N=10):
     resp.headers['Content-type'] = 'text/plain'
     return resp
 
+
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
-    if not userdb.rw_userdb:
+    if not userdb._rw_userdb:
         flask.abort(401, "no attempt to create user, not enough privileges");
     userdb.delete_old_tokens()
     if not userdb.token_exists(token):
@@ -233,21 +238,21 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
-        next = request.form["next"]
+        #next = request.form["next"]
 
         if userdb.user_exists(name):
             flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
             return flask.redirect(url_for(".register_new"))
 
-        newuser = userdb.new_user(name, pw1)
-        newuser.full_name = full_name
-        newuser.save()
+        newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
+        userdb.delete_token(token)
+        #newuser.full_name = full_name
+        #newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
-        userdb.delete_token(token)
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
-        return flask.redirect(next or url_for(".info"))
+        return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/change_password", methods=['POST'])

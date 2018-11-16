@@ -154,7 +154,7 @@ def ref_to_link(txt):
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
             the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '")| safe }}'
+            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
             ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"
@@ -519,15 +519,22 @@ def cleanup():
 def index():
     cur_cat = request.args.get("category", "")
 
-    filtermode = "filtered" in request.args
+
+    filtermode = request.args.get("filtered")
     from knowl import knowl_qualities
     if request.method == 'POST':
-        filters = [request.args.get(quality, "") == "on" or not filtermode for quality in knowl_qualities]
+        qualities = [quality for quality in knowl_qualities if request.form.get(quality, "") == "on"]
     elif request.method == 'GET':
-        filters = request.args.getlist('filters')
+        qualities = request.args.getlist('qualities')
+
+    if filtermode:
+        filters = [ q for q in qualities if q in knowl_qualities ]
+    else:
+        filters = []
 
     search = request.args.get("search", "")
     knowls = knowldb.search(cur_cat, filters, search.lower())
+
 
     def first_char(k):
         t = k['title']
@@ -554,7 +561,8 @@ def index():
                            searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
                            searchmode=bool(search),
-                           filters=tuple(filters),
                            categories = knowldb.get_categories(),
                            cur_cat = cur_cat,
-                           categorymode = bool(cur_cat))
+                           categorymode = bool(cur_cat),
+                           filtermode = filtermode,
+                           qualities = qualities)

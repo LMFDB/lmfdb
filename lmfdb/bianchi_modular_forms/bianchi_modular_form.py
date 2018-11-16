@@ -2,7 +2,7 @@
 
 import re
 
-from flask import render_template, url_for, request, redirect, flash, jsonify
+from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
 
 from sage.all import latex
@@ -10,6 +10,7 @@ from sage.all import latex
 from lmfdb.db_backend import db
 from lmfdb.utils import to_dict, web_latex_ideal_fact
 from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string, parse_start, parse_count
+from lmfdb.search_wrapper import search_wrap
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
@@ -78,28 +79,49 @@ def index():
         info['learnmore'] = []
         return render_template("bmf-browse.html", info=info, credit=credit, title=t, bread=bread, bc_examples=bc_examples, learnmore=learnmore_list())
     else:
-        return bianchi_modular_form_search(**args)
+        return bianchi_modular_form_search(args)
 
 @bmf_page.route("/random")
 def random_bmf():    # Random Bianchi modular form
     label = db.bmf_forms.random()
     return bianchi_modular_form_by_label(label)
 
-def bianchi_modular_form_search(**args):
+def bianchi_modular_form_jump(info):
+    label = info['label']
+    dat = label.split("-")
+    if len(dat)==2: # assume field & level, display space
+        return render_bmf_space_webpage(dat[0], dat[1])
+    else: # assume single newform label; will display an error if invalid
+        return bianchi_modular_form_by_label(label)
+
+def bianchi_modular_form_postprocess(res, info, query):
+    if info['number'] > 0:
+        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
+    else:
+        info['field_pretty_name'] = ''
+    res.sort(key=lambda x: [x['level_norm'], int(x['level_number']), x['label_suffix']])
+    return res
+
+@search_wrap(template="bmf-search_results.html",
+             table=db.bmf_forms,
+             title='Bianchi Modular Form Search Results',
+             err_title='Bianchi Modular Forms Search Input Error',
+             shortcuts={'label': bianchi_modular_form_jump},
+             projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
+             cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
+                       "level_ideal": lambda v: teXify_pol(v['level_ideal']),
+                       "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
+                       "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
+                       "bc": lambda v: bc_info(v['bc']),
+                       "cm": lambda v: cm_info(v.pop('CM', '?'))},
+             bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
+                           ('Search Results', '.')],
+             learnmore=learnmore_list,
+             properties=lambda: [])
+def bianchi_modular_form_search(info, query):
     """Function to handle requests from the top page, either jump to one
     newform or do a search.
     """
-    info = to_dict(args)  # what has been entered in the search boxes
-    if 'label' in info:
-        # The Label button has been pressed.
-        label = info['label']
-        dat = label.split("-")
-        if len(dat)==2: # assume field & level, display space
-            return render_bmf_space_webpage(dat[0], dat[1])
-        else: # assume single newform label; will display an error if invalid
-            return bianchi_modular_form_by_label(label)
-
-    query = {}
     for field in ['field_label', 'weight', 'level_norm', 'dimension']:
         if info.get(field):
             if field == 'weight':
@@ -114,7 +136,6 @@ def bianchi_modular_form_search(**args):
                 query[field] = parse_range(info[field])
             else:
                 query[field] = info[field]
-
     if not 'sfe' in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
@@ -128,37 +149,6 @@ def bianchi_modular_form_search(**args):
         query['bc'] = 0
     else:
         info['include_base_change'] = "on"
-
-    if 'result_count' in info:
-        nres = db.bmf_forms.count(query)
-        return jsonify({"nres":str(nres)})
-
-    start = parse_start(info)
-    count = parse_count(info, 50)
-    proj = ['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM']
-    res = db.bmf_forms.search(query, proj, limit=count, offset=start, info=info)
-    if info['number'] > 0:
-        info['field_pretty_name'] = field_pretty(res[0]['field_label'])
-    else:
-        info['field_pretty_name'] = ''
-
-    for v in res:
-        v['level_number'] = v['level_label'].split(".")[1]
-        v['level_ideal'] = teXify_pol(v['level_ideal'])
-        v['sfe'] = "+1" if v['sfe']==1 else "-1"
-        v['url'] = url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix'])
-        v['bc'] = bc_info(v['bc'])
-        v['cm'] = cm_info(v.pop('CM'))
-
-    res.sort(key=lambda x: [x['level_norm'], int(x['level_number']), x['label_suffix']])
-    info['forms'] = res
-
-    t = 'Bianchi Modular Form Search Results'
-
-    bread = [('Bianchi Modular Forms', url_for(".index")), (
-        'Search Results', ' ')]
-    properties = []
-    return render_template("bmf-search_results.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
 
 @bmf_page.route('/<field_label>')
 def bmf_search_field(field_label):
@@ -311,9 +301,9 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
-                    'sfe': "+1" if f['sfe']==1 else "-1",
+                    'sfe': "+1" if f.get('sfe',None)==1 else "-1" if f.get('sfe',None)==-1 else "?",
                     'bc': bc_info(f['bc']),
-                    'cm': cm_info(f['CM']),
+                    'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]

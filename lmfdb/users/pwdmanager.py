@@ -104,10 +104,10 @@ class PostgresUserTable(PostgresBase):
         return new_user
 
     def change_password(self, uid, newpwd):
-        if self.rw_userd():
+        if self._rw_userdb:
             bcpass = self.bchash(newpwd)
             #TODO: use identifiers
-            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
             self._execute(updater, [bcpass, uid])
             logger.info("password for %s changed!" % uid)
         else:
@@ -150,7 +150,7 @@ class PostgresUserTable(PostgresBase):
                         logger.info("user " + uid  +  " logged in with old style password, trying to update")
                         try:
                             #TODO: use identifiers
-                            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+                            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
                             self._execute(updater, [bcpass, uid])
                             logger.info("password update for " + uid + " succeeded")
                         except Exception:
@@ -177,7 +177,7 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), Placeholder() * len(values))
+        updater = SQL("UPDATE userdb.users SET ({0}) = ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
         self._execute(updater, list(values) + [uid])
 
     def lookup(self, uid):
@@ -196,7 +196,7 @@ class PostgresUserTable(PostgresBase):
         return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
 
     def create_tokens(self, tokens):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             return;
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
@@ -214,7 +214,7 @@ class PostgresUserTable(PostgresBase):
         return cur.rowcount == 1
 
     def delete_old_tokens(self):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             logger.info("no attempt to delete old tokens, not enough privileges")
             return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
@@ -224,7 +224,7 @@ class PostgresUserTable(PostgresBase):
         self._execute(deletor, [cutoff])
 
     def delete_token(self, token):
-        if not self.rw_userd:
+        if not self._rw_userdb:
             return;
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])

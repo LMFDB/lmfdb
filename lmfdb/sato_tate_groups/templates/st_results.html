@@ -64,7 +64,7 @@
     <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[t\!=\!0]$') }}</th>
     <th colspan="11">{{ KNOWL('st_group.trace_moments', title='trace moments') }}</th>
 </tr>
-{% for group in info.stgroups: %}
+{% for group in info.results: %}
 <tr>
     <td> <a href = "{{info.stgroup_url(group)}}"> {{group.label}} </a> </td>
     <td align=right> {{group.weight}} </td>

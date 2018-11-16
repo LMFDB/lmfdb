@@ -163,7 +163,7 @@ def nf_knowl_guts(label):
     out += '<br>Signature: '
     out += str(wnf.signature())
     out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t())
-    out += '<br>Class number: %s ' % str(wnf.class_number())
+    out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
     out += '</div>'
@@ -507,15 +507,19 @@ class WebNumberField:
         return na_text()
 
     def units(self):  # fundamental units
+        res = None
         if self.haskey('units'):
-            return ',&nbsp; '.join(self._data['units'])
-        if self.unit_rank() == 0:
-            return ''
-        if self.haskey('class_number'):
+            res = ',&nbsp; '.join(self._data['units'])
+        elif self.unit_rank() == 0:
+            res = ''
+        elif self.haskey('class_number'):
             K = self.K()
             units = [web_latex(u) for u in K.unit_group().fundamental_units()]
             units = ',&nbsp; '.join(units)
-            return units
+            res = units
+        if res:
+            res = res.replace('\\\\', '\\')
+            return res
         return na_text()
 
     def disc_factored_latex(self):
@@ -534,7 +538,8 @@ class WebNumberField:
         cg_list = self._data['class_group']
         if cg_list == []:
             return 'Trivial'
-        return cg_list
+        #return cg_list
+        return '$%s$'%str(cg_list)
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
@@ -544,12 +549,17 @@ class WebNumberField:
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
-            return str(AbelianGroup(cg_list)) + ', order ' + str(self._data['class_number'])
+            return str(AbelianGroup(cg_list)) + ', order ' + self.class_number_latex()
         return na_text()
 
     def class_number(self):
         if self.haskey('class_number'):
             return self._data['class_number']
+        return na_text()
+
+    def class_number_latex(self):
+        if self.haskey('class_number'):
+            return '$%s$'%str(self._data['class_number'])
         return na_text()
 
     def can_class_number(self):

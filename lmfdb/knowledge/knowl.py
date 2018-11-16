@@ -68,10 +68,9 @@ class KnowlBackend(PostgresBase):
         if category:
             restrictions.append(SQL("cat = %s"))
             values.append(category)
-        if any(filters):
-            qualities = [quality for quality, filt in zip(knowl_qualities, filters) if filt]
+        if len(filters) > 0:
             restrictions.append(SQL("quality = ANY(%s)"))
-            values.append(Array(qualities))
+            values.append(Array([q for q in filters if q in knowl_qualities]))
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
@@ -136,7 +135,7 @@ class KnowlBackend(PostgresBase):
         """
         saves history tokens in a collection "history".
         each entry has the _id of the updated knowl and at least a timestamp
-        and a reference to who has edtited it. also, the title is nice to
+        and a reference to who has edited it. Also, the title is nice to
         avoid an additional lookup when listing the history!
         'state' can either be 'saved' (for the recent changes list) or 'locked'.
         TODO also calculate a diff with python's difflib and store it here.

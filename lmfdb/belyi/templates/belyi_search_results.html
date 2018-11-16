@@ -66,7 +66,7 @@ Download all search results for&nbsp;
     <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
     <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
 </tr>
-{% for galmap in info.belyi_galmaps: %}
+{% for galmap in info.results: %}
 <tr>
     <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
     <td align=center> {{galmap.deg}} </td>

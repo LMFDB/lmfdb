@@ -57,7 +57,7 @@
     <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
     <th>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}</th>
   </tr>
-  {% for l in info.modlmfs %}
+  {% for l in info.results %}
   <tr>
     <td align='left'><a href="{{url_for('modlmf.render_modlmf_webpage', label=l.label)}}">{{l.label}} </a></td>
     <td>{{l.characteristic}}</td>

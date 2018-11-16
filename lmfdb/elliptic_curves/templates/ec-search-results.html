@@ -124,7 +124,7 @@ table td.params {
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
 </tr>
-{% for curve in info.curves: %}
+{% for curve in info.results: %}
 <tr>
 <td class="center"><a href="{{info.curve_url(curve)}}">{{curve.lmfdb_label}}</a></td>
 <td class="center">{{curve.label}}</td>

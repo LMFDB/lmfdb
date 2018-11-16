@@ -2,16 +2,16 @@
 import re
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file, jsonify
+from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 
 from lmfdb.db_backend import db
-from lmfdb.utils import to_dict
 
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
-from lmfdb.search_parsing import parse_ints, parse_count, parse_start, clean_input
+from lmfdb.search_parsing import parse_ints, clean_input
+from lmfdb.search_wrapper import search_wrap
 
 from markupsafe import Markup
 
@@ -58,7 +58,7 @@ def hecke_algebras_render_webpage():
         info['summary'] = hecke_algebras_summary()
         return render_template("hecke_algebras-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
-        return hecke_algebras_search(**args)
+        return hecke_algebras_search(args)
 
 # Random hecke_algebras
 @hecke_algebras_page.route("/random")
@@ -97,23 +97,74 @@ def hecke_algebras_by_orbit_label(lab):
         flash(Markup("No Hecke Algebras orbit in the database has label <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
+def download_search(info):
+    lang = info["submit"]
+    filename = 'Hecke_algebras' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
 
-def hecke_algebras_search(**args):
-    info = to_dict(args)  # what has been entered in the search boxes
+    if 'ell' in info["query"]:
+        res = list(db.hecke_ladic.search(ast.literal_eval(info["query"])))
+    else:
+        res = list(db.hecke_orbits.search(ast.literal_eval(info["query"])))
+    last = len(res)
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    if 'ell' in info["query"]:
+        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight and the Hecke orbits for which l-adic data is available.\n\n'%(mydate, len(res))
+    else:
+        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight, list of the first 10 Hecke operators (to download more operators for a given algebra, please visit its webpage).\n\n'%(mydate, len(res))
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the Hecke operators stored
+    for c, rr in enumerate(res):
+        s += list_start
+        s += ",".join([str(rr['level']), str(rr['weight']),""])
+        if 'ell' in info["query"]:
+            s += '"%s"' % (str(rr['orbit_label']))
+        else:
+            s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
+        if c != last:
+            s += list_end + ',\\\n'
+        else:
+            s += list_end
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    if 'download' in info:
-        return download_search(info)
-    if 'label' in info and info.get('label'):
-        return hecke_algebras_by_label(info.get('label'))
+def hecke_algebras_postprocess(res, info, query):
+    if info.get('ell'):
+        for v in res:
+            v['label'] = ".".join(v['orbit_label'].split(".")[i] for i in [0,1,2])
+    return res
 
-    query = {}
-   
-    try:
-        for field, name in (('level','Level'),('weight','Weight'),('num_orbits', 'Number of Hecke orbits'),('ell','characteristic')):
-            parse_ints(info, query, field, name)
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info)
+@search_wrap(template="hecke_algebras-search.html",
+             table=db.hecke_algebras, # note that if 'ell' is included, a different table is used
+             title='Hecke Algebras Search Results',
+             err_title='Hecke Algebras Search Error',
+             shortcuts={'download':download_search,
+                        'label':(lambda info: hecke_algebras_by_label(info.get('label')))},
+             projection=['label','num_orbits','level','weight'],
+             postprocess=hecke_algebras_postprocess,
+             bread=lambda:[('HeckeAlgebras', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')],
+             learnmore=learnmore_list,
+             properties=lambda:[])
+def hecke_algebras_search(info, query):
+    for field, name in (('level','Level'),
+                        ('weight','Weight'),
+                        ('num_orbits', 'Number of Hecke orbits'),
+                        ('ell','characteristic')):
+        parse_ints(info, query, field, name)
     if info.get('ell'):
         if int(info.get('ell'))>13:
             flash(Markup("No data for primes or integers greater than $13$ is available"), "error")
@@ -128,7 +179,7 @@ def hecke_algebras_search(**args):
                 for field in ['level','weight']:
                     if info.get(field):
                         int(info.get(field))
-            except ValueError as err:
+            except ValueError:
                 flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(info.get('orbit_label'))),"error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:
@@ -143,29 +194,10 @@ def hecke_algebras_search(**args):
         else:
             return hecke_algebras_by_orbit_label(info.get('orbit_label'))
 
-    count = parse_count(info,50)
-    start = parse_start(info)
-
+    # If 'ell' is included, we use a different table
     if info.get('ell'):
-        coll = db.hecke_ladic
-        proj = ['orbit_label','index','level','weight']
-    else:
-        coll = db.hecke_algebras
-        proj = ['label','num_orbits','level','weight']
-    if 'result_count' in info:
-        nres = coll.count(query)
-        return jsonify({"nres":str(nres)})
-    res = coll.search(query, proj, limit=count, offset=start, info=info)
-    if info.get('ell'):
-        for v in res:
-            v['label'] = ".".join(v['orbit_label'].split(".")[i] for i in [0,1,2])
-
-    info['hecke_algebras'] = res
-
-    t = 'Hecke Algebras Search Results'
-    bread = [('HeckeAlgebras', url_for(".hecke_algebras_render_webpage")),('Search Results', ' ')]
-    properties = []
-    return render_template("hecke_algebras-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
+        query['__table__'] = db.hecke_ladic
+        query['__projection__'] = ['orbit_label','index','level','weight']
 
 def search_input_error(info, bread=None):
     t = 'Hecke Algebras Search Error'
@@ -500,49 +532,3 @@ def download_hecke_algebras_full_lists_id(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-
-
-def download_search(info):
-    lang = info["submit"]
-    filename = 'Hecke_algebras' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-
-    if 'ell' in info["query"]:
-        res = list(db.hecke_ladic.search(ast.literal_eval(info["query"])))
-    else:
-        res = list(db.hecke_orbits.search(ast.literal_eval(info["query"])))
-    last = len(res)
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    if 'ell' in info["query"]:
-        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight and the Hecke orbits for which l-adic data is available.\n\n'%(mydate, len(res))
-    else:
-        s += c + ' Hecke algebras downloaded from the LMFDB on %s. Found %s algebras. The data is given in the following format: it is a list of lists, each containing level, weight, list of the first 10 Hecke operators (to download more operators for a given algebra, please visit its webpage).\n\n'%(mydate, len(res))
-    # The list entries are matrices of different sizes.  Sage and gp
-    # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
-    s += download_assignment_start[lang] + list_start + '\\\n'
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-    # loop through all search results and grab the Hecke operators stored
-    for c, rr in enumerate(res):
-        s += list_start
-        s += ",".join([str(rr['level']), str(rr['weight']),""])
-        if 'ell' in info["query"]:
-            s += '"%s"' % (str(rr['orbit_label']))
-        else:
-            s += ",".join([entry(r) for r in [sage_eval(rr['hecke_op'])[i] for i in range(0, min(10, rr['num_hecke_op']))]])
-        if c != last:
-            s += list_end + ',\\\n'
-        else:
-            s += list_end
-    s += list_end
-    s += download_assignment_end[lang]
-    s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)

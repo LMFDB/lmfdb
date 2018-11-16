@@ -232,7 +232,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lmain(self):
         L = self.tc.get('/L/')
-        assert 'Riemann' in L.data
+        assert 'Riemann' in L.data and 'Signature' in L.data
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
@@ -269,16 +269,16 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic' in L.data
 
     def test_Ldegree3MaassForm(self):
-        L = self.tc.get('/L/degree3/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree3/r0r0r0/')
+        assert 'equation' in L.data
 
     def test_Ldegree3EllipticCurve(self):
         L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
         assert 'Elliptic' in L.data
 
     def test_Ldegree4MaassForm(self):
-        L = self.tc.get('/L/degree4/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree4/r0r0r0r0/')
+        assert 'functional' in L.data
 
     def test_Ldegree4EllipticCurve(self):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
@@ -331,10 +331,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Plot/ModularForm/GL2/Q/holomorphic/14/6/1/a/0/')
         print str(L)
         assert 'OK' in str(L)
-
-    def test_LdedekindZeros(self):
-        L = self.tc.get('/L/Zeros/NumberField/3.1.23.1/')
-        assert '5.1156833288' in L.data
 
     def test_LartinPlot(self):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2.2e2_17.4t3.2c1/')

@@ -2,13 +2,6 @@
 
 {% block content %}
 
-<style>
-table,td {
-  border-right:solid 30px transparent;
-} 
-</style>
-  
-
 <p><h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
 
 <p>
@@ -67,8 +60,8 @@ table,td {
       <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>${{info.u}}$</td></tr>
       <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>${{info.t}}$</td></tr>
       <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>{{info.slopes}}</td></tr>
-      <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois Mean Slope')}}:</td><td>${{info.gms}}$</td></tr>
-      <tr><td>{{KNOWL('lf.global_splitting_model', title='Global Splitting Model')}}:</td><td>{{info.gsm}}</td></tr>
+      <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>{{KNOWL('lf.global_splitting_model', title='Global splitting model')}}:</td><td>{{info.gsm}}</td></tr>
     </table>
   </p>
 
