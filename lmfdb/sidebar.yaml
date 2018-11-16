@@ -92,18 +92,20 @@
            colspan: onecolumn
      - title: GL(3)
        style: rotate
+       status: beta
        part2:
          - title: Maass
-           url_for: "l_functions.l_function_maass_gln_browse_page"
-           url_args:
-             degree: 'degree3'
+           status: future
+           colspan: onecolumn
          - title: Cohomological
            status: future
            colspan: onecolumn
      - title: Other
        style: rotate
+       status: beta
        part2:
          - title: Siegel
+           status: beta
            url_for: "smf.index"
          - title: U(2,1)
            status: future
