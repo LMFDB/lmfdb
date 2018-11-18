@@ -58,6 +58,7 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
+
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
@@ -84,13 +85,14 @@ class WebNewform(object):
         except AttributeError:
             pass #  self.hecke_ring might be not set
 
+	self._inner_twist = data.get('inner_twist',[])
         if self.has_inner_twist != 0:
             if self.inner_twist_proved:
-                if len(self.inner_twist == 1):
+                if len(self._inner_twist) == 1:
                     self.star_twist = 'inner twist'
                 else:
                     self.star_twist = 'inner twists'
-            elif len(self.inner_twist) == 1:
+            elif len(self._inner_twist) == 1:
                 self.star_twist = 'inner twist*'
             else:
                 self.star_twist = 'inner twists*'
@@ -124,9 +126,6 @@ class WebNewform(object):
 
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
-        if self.has_inner_twist:
-            self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         # Make up for db_backend currently deleting Nones
@@ -161,10 +160,22 @@ class WebNewform(object):
         elif self.is_cm == -1:
             self.properties += [('CM', 'No')]
 
-        # Breadcrumbs
-        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
-
         self.title = "Newform %s"%(self.label)
+
+
+    @property
+    def inner_twist(self):
+        return [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self._inner_twist]
+
+    # Breadcrumbs
+    @property
+    def bread(self):
+        return get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+
+
+    @property
+    def char_conrey_link(self):
+        return url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
 
     @cached_method
     def lfunction_labels(self):
