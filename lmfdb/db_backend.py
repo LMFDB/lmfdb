@@ -91,6 +91,70 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
 
+def IdentifierWrapper(name, convert = True):
+    """
+    Returns a composable representing an SQL identifer.
+    This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
+    and coverts them (if desired) from the Python format to SQL,
+    as SQL starts at 1, and it is inclusive at the end
+
+    Example:
+
+        >>> IdentifierWrapper('name')
+        Identifier('name')
+        >>> print IdentifierWrapper('name[:10]').as_string(db.conn)
+        "name"[:10]
+        >>> print IdentifierWrapper('name[1:10]').as_string(db.conn)
+        "name"[2:10]
+        >>> print IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn)
+        "name"[1:10]
+        >>> print IdentifierWrapper('name[1:10:3]').as_string(db.conn)
+        "name"[2:10:3]
+        >>> print IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn)
+        "name"[2:10:3][1:2]
+        >>> print IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn)
+        "name"[2:10:3][1::1]
+        >>> print IdentifierWrapper('name[1:10:3][0]').as_string(db.conn)
+        "name"[2:10:3][1]
+    """
+    if '[' not in name:
+        return Identifier(name)
+    else:
+        i = name.index('[')
+        knife = name[i:]
+        name = name[:i]
+        # convert python slicer to postgres slicer
+        # SQL starts at 1, and it is inclusive at the end
+        # so we just need to convert a:b:c -> a+1:b:c
+
+        # first we remove spaces
+        knife = knife.replace(' ','')
+
+
+        # assert that the knife is of the shape [*]
+        if knife[0] != '[' or knife[-1] != ']':
+            raise ValueError("%s is not in the proper format" % knife)
+
+        if convert:
+            chunks = knife[1:-1].split('][')
+            for i, s in enumerate(chunks):
+                # each cut is of the format a:b:c
+                # where a, b, c are either integers or empty strings
+                split = s.split(':',1)
+                # nothing to adjust
+                if split[0] == '':
+                    continue
+                else:
+                    # we should increment it by 1
+                    split[0] = str(int(split[0]) + 1)
+                chunks[i] = ':'.join(split)
+            sql_slicer = '[' + ']['.join(chunks) + ']'
+        else:
+            sql_slicer = knife
+
+        return SQL('{0}{1}').format(Identifier(name), SQL(sql_slicer))
+
+
 class QueryLogFilter(object):
     """
     A filter used when logging slow queries.
@@ -394,32 +458,6 @@ class PostgresTable(PostgresBase):
             sage: ec._parse_projection({"prec":False})
             ((u'lmfdb_iso', u'p', u'val', u'unit'), (), 0)
         """
-        def convert_slicer(col_slicer):
-            if '[' not in col_slicer:
-                return col, col
-            else:
-                i = col_slicer.index('[')
-                slicer = col_slicer[i:]
-                colname = col_slicer[:i]
-                if not self.col_type[colname].endswith('[]'):
-                    raise ValueError("%s is not an array column table"%colname)
-                # convert python slicer to postgres slicer
-                # SQL starts at 1, and it is inclusive at the end
-                # so we just need to convert a:b:c -> a+1:b:c
-                # remove spaces
-                slicer = slicer.replace(' ','')
-                if slicer[0] != '[' or slicer[-1] != ']':
-                    raise ValueError("%s is not in the proper format"%col_slicer)
-                slices = slicer[1:-1].split('][')
-                for i, s in enumerate(slices):
-                    split = s.spit(':')
-                    if split[0] == '':
-                        continue
-                    else:
-                        split[0] = str(int(split[0]  + 1))
-                    slices[i] = ':'.join(split)
-                sql_slicer = colname + '[' + ']['.join(slices) + ']'
-                return colname, sql_slicer
         search_cols = []
         extra_cols = []
         if projection == 0:
@@ -459,11 +497,11 @@ class PostgresTable(PostgresBase):
                 projection = [projection]
             include_id = False
             for col in projection:
-                col, sql_slicer = convert_slicer(col)
-                if col in self._search_cols:
-                    search_cols.append(sql_slicer)
-                elif col in self._extra_cols:
-                    extra_cols.append(sql_slicer)
+                colname = col.split('[',1)[0]
+                if colname in self._search_cols:
+                    search_cols.append(col)
+                elif colname in self._extra_cols:
+                    extra_cols.append(col)
                 elif col == 'id':
                     include_id = True
                 else:
@@ -479,20 +517,20 @@ class PostgresTable(PostgresBase):
 
         INPUT:
         - ``key`` -- a code starting with $ from the following list:
-        - ``$lte`` -- less than or equal to
-        - ``$lt`` -- less than
-        - ``$gte`` -- greater than or equal to
-        - ``$gt`` -- greater than
-        - ``$ne`` -- not equal to
-        - ``$in`` -- the column must be one of the given set of values
-        - ``$nin`` -- the column must not be any of the given set of values
-        - ``$contains`` -- for json columns, the given value should be a subset of the column.
-        - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
-        - ``$containedin`` -- for json columns, the column should be a subset of the given list
-        - ``$exists`` -- if True, require not null; if False, require null.
-        - ``$startswith`` -- for text columns, matches strings that start with the given string.
-        - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
-        - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
+            - ``$lte`` -- less than or equal to
+            - ``$lt`` -- less than
+            - ``$gte`` -- greater than or equal to
+            - ``$gt`` -- greater than
+            - ``$ne`` -- not equal to
+            - ``$in`` -- the column must be one of the given set of values
+            - ``$nin`` -- the column must not be any of the given set of values
+            - ``$contains`` -- for json columns, the given value should be a subset of the column.
+            - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
+            - ``$containedin`` -- for json columns, the column should be a subset of the given list
+            - ``$exists`` -- if True, require not null; if False, require null.
+            - ``$startswith`` -- for text columns, matches strings that start with the given string.
+            - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
+            - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column.
 
@@ -751,7 +789,7 @@ class PostgresTable(PostgresBase):
             else:
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
                 if extra_cols:
-                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(Identifier, extra_cols)), Identifier(self.extra_table))
+                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(IdentifierWrapper, extra_cols)), Identifier(self.extra_table))
                     extra_cur = self._execute(selecter, [rec[0]])
                     extra_rec = extra_cur.fetchone()
                     for k,v in zip(extra_cols, extra_rec):
@@ -822,7 +860,7 @@ class PostgresTable(PostgresBase):
             {'reg':455.191694993}
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         qstr, values = self._build_query(query, 1, offset, sort=sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
         cur = self._execute(selecter, values)
@@ -833,7 +871,7 @@ class PostgresTable(PostgresBase):
             elif extra_cols:
                 id = rec[0]
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
-                vars = SQL(", ").join(map(Identifier, extra_cols))
+                vars = SQL(", ").join(map(IdentifierWrapper, extra_cols))
                 selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(vars, Identifier(self.extra_table))
                 cur = self._execute(selecter, [id])
                 rec = cur.fetchone()
@@ -916,7 +954,7 @@ class PostgresTable(PostgresBase):
             (1000, False)
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
@@ -1167,7 +1205,7 @@ class PostgresTable(PostgresBase):
         Execution time: 1947.655 ms
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
