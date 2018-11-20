@@ -743,7 +743,6 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_alpha(self, m, p, i):
-        # Currently, the database is storing the root rather than the reciprocal root
         theta = CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:

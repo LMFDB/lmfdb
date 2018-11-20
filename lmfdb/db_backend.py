@@ -41,7 +41,7 @@ SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
-types_whitelist = set([
+types_whitelist = [
     "int2", "smallint", "smallserial", "serial2",
     "int4", "int", "integer", "serial", "serial4",
     "int8", "bigint", "bigserial", "serial8",
@@ -59,7 +59,12 @@ types_whitelist = set([
     "txid_snapshot", "uuid",
     "cidr", "inet", "macaddr",
     "money", "pg_lsn",
-])
+]
+# add arrays
+types_whitelist += [ elt + '[]' for elt in types_whitelist]
+# make it a set
+types_whitelist = set(types_whitelist)
+
 param_types_whitelist = [
     r"^(bit( varying)?|varbit)\s*\([1-9][0-9]*\)$",
     r'(text|(char(acter)?|character varying|varchar(\s*\(1-9][0-9]*\))?))(\s+collate "(c|posix|[a-z][a-z]_[a-z][a-z](\.[a-z0-9-]+)?)")?',
@@ -290,7 +295,8 @@ class PostgresTable(PostgresBase):
         self.col_type = {}
         self.has_id = False
         def set_column_info(col_list, table_name):
-            cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+            # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+            cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
             for rec in cur:
                 col = rec[0]
                 self.col_type[col] = rec[1]

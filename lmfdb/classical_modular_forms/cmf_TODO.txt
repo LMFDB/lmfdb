@@ -2,10 +2,13 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
+* try array instead of jsonb for ans and primes (Edgar)
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * code snippets for form and space pages (Drew)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Upload data for Nk^2 <= 3000 (Drew)
+* Move galois group to the middle in the euler factors table (Edgar)
+* Remove download button in the table (Edgar)
 * Upload data for 3000 < Nk^2 <= 4000 (Edgar)
 * Create appropriate indexes
 * Add character order and character degree (David)
@@ -58,6 +61,7 @@ FUTURE WORK:
 * data: add data for is_twist_minimal
 
 NOT CMF STUFF:
+* add utf8 check to pyflakes
 * pick columns and sort order on search results
 * add UIs to pick random objects with contraints
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
