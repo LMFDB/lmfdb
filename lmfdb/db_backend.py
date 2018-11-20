@@ -284,7 +284,7 @@ class PostgresTable(PostgresBase):
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types = None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
@@ -295,8 +295,11 @@ class PostgresTable(PostgresBase):
         self.col_type = {}
         self.has_id = False
         def set_column_info(col_list, table_name):
-            # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
-            cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+            if data_types is None or table_name not in data_types:
+                # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+                cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+            else:
+                cur = data_types[table_name]
             for rec in cur:
                 col = rec[0]
                 self.col_type[col] = rec[1]
@@ -391,6 +394,32 @@ class PostgresTable(PostgresBase):
             sage: ec._parse_projection({"prec":False})
             ((u'lmfdb_iso', u'p', u'val', u'unit'), (), 0)
         """
+        def convert_slicer(col_slicer):
+            if '[' not in col_slicer:
+                return col, col
+            else:
+                i = col_slicer.index('[')
+                slicer = col_slicer[i:]
+                colname = col_slicer[:i]
+                if not self.col_type[colname].endswith('[]'):
+                    raise ValueError("%s is not an array column table"%colname)
+                # convert python slicer to postgres slicer
+                # SQL starts at 1, and it is inclusive at the end
+                # so we just need to convert a:b:c -> a+1:b:c
+                # remove spaces
+                slicer = slicer.replace(' ','')
+                if slicer[0] != '[' or slicer[-1] != ']':
+                    raise ValueError("%s is not in the proper format"%col_slicer)
+                slices = slicer[1:-1].split('][')
+                for i, s in enumerate(slices):
+                    split = s.spit(':')
+                    if split[0] == '':
+                        continue
+                    else:
+                        split[0] = str(int(split[0]  + 1))
+                    slices[i] = ':'.join(split)
+                sql_slicer = colname + '[' + ']['.join(slices) + ']'
+                return colname, sql_slicer
         search_cols = []
         extra_cols = []
         if projection == 0:
@@ -430,10 +459,11 @@ class PostgresTable(PostgresBase):
                 projection = [projection]
             include_id = False
             for col in projection:
+                col, sql_slicer = convert_slicer(col)
                 if col in self._search_cols:
-                    search_cols.append(col)
+                    search_cols.append(sql_slicer)
                 elif col in self._extra_cols:
-                    extra_cols.append(col)
+                    extra_cols.append(sql_slicer)
                 elif col == 'id':
                     include_id = True
                 else:
@@ -3399,8 +3429,11 @@ class PostgresDatabase(PostgresBase):
         else:
             privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
             knowls_tables = ['kwl_deleted', 'kwl_history', 'kwl_knowls']
-            self._read_and_write_knowls = all( all( self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [self._user, table, priv]).rowcount == 1 for priv in privileges) for table in knowls_tables)
-            self._read_and_write_userdb =  all(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_schema = %s AND table_name=%s AND privilege_type=%s"), [self._user, 'userdb', 'users', priv]).rowcount == 1 for priv in privileges)
+            cur = sorted(list(self._execute(SQL("SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN (" + ",".join(['%s']*len(knowls_tables)) + ") AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user] +  knowls_tables + privileges)))
+            self._read_and_write_knowls = cur == sorted([(table, priv) for table in knowls_tables for priv in privileges])
+
+            cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
+            self._read_and_write_userdb = cur == sorted([(priv,) for priv in privileges])
 
         logging.info("User: %s" % self._user)
         logging.info("Read only: %s" % self._read_only)
@@ -3411,12 +3444,20 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.config import Configuration
         self.__editor = Configuration().get_logging().get('editor')
 
+
+
+        cur = self._execute(SQL('SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns'))
+        data_types = {}
+        for table_name, column_name, regtype in cur:
+            if table_name not in data_types:
+                 data_types[table_name] = []
+            data_types[table_name].append((column_name, regtype))
+
         cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
-
-
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
+            tabledata += (data_types,)
             # it would be nice to include this in meta_tables
             if tablename == 'artin_reps':
                 table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
@@ -3535,6 +3576,9 @@ class PostgresDatabase(PostgresBase):
             return getattr(self, name)
         else:
             raise ValueError("%s is not a search table"%name)
+
+
+
 
     def table_sizes(self):
         """
