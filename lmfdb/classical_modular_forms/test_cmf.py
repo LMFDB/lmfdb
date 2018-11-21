@@ -211,6 +211,27 @@ class CmfTest(LmfdbTest):
         assert '0.216496' in page.data
         assert '2.15536' in page.data
 
+        # test some exact values
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/e/a/?n=97&m=8&prec=6&format=satake_angle')
+        assert '0.0890699' in page.data
+        assert '0.689069' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/d/a/?m=4&n=97&prec=6&format=satake_angle')
+        assert '0.237314' in page.data
+        assert '0.637314' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/')
+        # alpha_11
+        assert '0.603022' in page.data
+        assert '0.797724' in page.data
+        # alpha_13
+        assert '0.277350' in page.data
+        assert '0.960768' in page.data
+        # alpha_17
+        assert '0.727606' in page.data
+        assert '0.685994' in page.data
+
+
 
     def test_download(self):
         r"""

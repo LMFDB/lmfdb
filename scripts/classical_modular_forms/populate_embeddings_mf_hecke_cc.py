@@ -17,7 +17,7 @@ def convert_eigenvals_to_qexp(basis, eigenvals):
 
 
 def upsert_embedding(id_number, skip = False):
-    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
+    rowcc = db.mf_hecke_cc_array.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
     if skip:
@@ -69,17 +69,17 @@ def upsert_embedding(id_number, skip = False):
                 row_embeddings['embedding_root_imag'] = float(embeddings[i](HF.gen()).imag())
                 break
     assert len(row_embeddings) == 2
-    db.mf_hecke_cc.upsert({'id': rowcc['id']}, row_embeddings)
+    db.mf_hecke_cc_array.upsert({'id': rowcc['id']}, row_embeddings)
 
 
 import sys
 if len(sys.argv) == 3:
-    bound = db.mf_hecke_cc.max_id()
+    bound = db.mf_hecke_cc_array.max_id()
     k = int(sys.argv[1])
     start = int(sys.argv[2])
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
+    ids = sorted(list(db.mf_hecke_cc_array.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)

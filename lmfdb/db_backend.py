@@ -41,7 +41,7 @@ SLOW_QUERY_LOGFILE = "slow_queries.log"
 SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
-types_whitelist = set([
+types_whitelist = [
     "int2", "smallint", "smallserial", "serial2",
     "int4", "int", "integer", "serial", "serial4",
     "int8", "bigint", "bigserial", "serial8",
@@ -59,7 +59,12 @@ types_whitelist = set([
     "txid_snapshot", "uuid",
     "cidr", "inet", "macaddr",
     "money", "pg_lsn",
-])
+]
+# add arrays
+types_whitelist += [ elt + '[]' for elt in types_whitelist]
+# make it a set
+types_whitelist = set(types_whitelist)
+
 param_types_whitelist = [
     r"^(bit( varying)?|varbit)\s*\([1-9][0-9]*\)$",
     r'(text|(char(acter)?|character varying|varchar(\s*\(1-9][0-9]*\))?))(\s+collate "(c|posix|[a-z][a-z]_[a-z][a-z](\.[a-z0-9-]+)?)")?',
@@ -85,6 +90,70 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'gist':   ['fillfactor', 'buffering'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
+
+def IdentifierWrapper(name, convert = True):
+    """
+    Returns a composable representing an SQL identifer.
+    This is  wrapper for psycopg2.sql.Identifier that supports ARRAY slicers
+    and coverts them (if desired) from the Python format to SQL,
+    as SQL starts at 1, and it is inclusive at the end
+
+    Example:
+
+        >>> IdentifierWrapper('name')
+        Identifier('name')
+        >>> print IdentifierWrapper('name[:10]').as_string(db.conn)
+        "name"[:10]
+        >>> print IdentifierWrapper('name[1:10]').as_string(db.conn)
+        "name"[2:10]
+        >>> print IdentifierWrapper('name[1:10]', convert = False).as_string(db.conn)
+        "name"[1:10]
+        >>> print IdentifierWrapper('name[1:10:3]').as_string(db.conn)
+        "name"[2:10:3]
+        >>> print IdentifierWrapper('name[1:10:3][0:2]').as_string(db.conn)
+        "name"[2:10:3][1:2]
+        >>> print IdentifierWrapper('name[1:10:3][0::1]').as_string(db.conn)
+        "name"[2:10:3][1::1]
+        >>> print IdentifierWrapper('name[1:10:3][0]').as_string(db.conn)
+        "name"[2:10:3][1]
+    """
+    if '[' not in name:
+        return Identifier(name)
+    else:
+        i = name.index('[')
+        knife = name[i:]
+        name = name[:i]
+        # convert python slicer to postgres slicer
+        # SQL starts at 1, and it is inclusive at the end
+        # so we just need to convert a:b:c -> a+1:b:c
+
+        # first we remove spaces
+        knife = knife.replace(' ','')
+
+
+        # assert that the knife is of the shape [*]
+        if knife[0] != '[' or knife[-1] != ']':
+            raise ValueError("%s is not in the proper format" % knife)
+
+        if convert:
+            chunks = knife[1:-1].split('][')
+            for i, s in enumerate(chunks):
+                # each cut is of the format a:b:c
+                # where a, b, c are either integers or empty strings
+                split = s.split(':',1)
+                # nothing to adjust
+                if split[0] == '':
+                    continue
+                else:
+                    # we should increment it by 1
+                    split[0] = str(int(split[0]) + 1)
+                chunks[i] = ':'.join(split)
+            sql_slicer = '[' + ']['.join(chunks) + ']'
+        else:
+            sql_slicer = knife
+
+        return SQL('{0}{1}').format(Identifier(name), SQL(sql_slicer))
+
 
 class QueryLogFilter(object):
     """
@@ -279,7 +348,7 @@ class PostgresTable(PostgresBase):
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types = None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
@@ -290,7 +359,11 @@ class PostgresTable(PostgresBase):
         self.col_type = {}
         self.has_id = False
         def set_column_info(col_list, table_name):
-            cur = self._execute(SQL("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+            if data_types is None or table_name not in data_types:
+                # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+                cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+            else:
+                cur = data_types[table_name]
             for rec in cur:
                 col = rec[0]
                 self.col_type[col] = rec[1]
@@ -424,9 +497,10 @@ class PostgresTable(PostgresBase):
                 projection = [projection]
             include_id = False
             for col in projection:
-                if col in self._search_cols:
+                colname = col.split('[',1)[0]
+                if colname in self._search_cols:
                     search_cols.append(col)
-                elif col in self._extra_cols:
+                elif colname in self._extra_cols:
                     extra_cols.append(col)
                 elif col == 'id':
                     include_id = True
@@ -443,20 +517,20 @@ class PostgresTable(PostgresBase):
 
         INPUT:
         - ``key`` -- a code starting with $ from the following list:
-        - ``$lte`` -- less than or equal to
-        - ``$lt`` -- less than
-        - ``$gte`` -- greater than or equal to
-        - ``$gt`` -- greater than
-        - ``$ne`` -- not equal to
-        - ``$in`` -- the column must be one of the given set of values
-        - ``$nin`` -- the column must not be any of the given set of values
-        - ``$contains`` -- for json columns, the given value should be a subset of the column.
-        - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
-        - ``$containedin`` -- for json columns, the column should be a subset of the given list
-        - ``$exists`` -- if True, require not null; if False, require null.
-        - ``$startswith`` -- for text columns, matches strings that start with the given string.
-        - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
-        - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
+            - ``$lte`` -- less than or equal to
+            - ``$lt`` -- less than
+            - ``$gte`` -- greater than or equal to
+            - ``$gt`` -- greater than
+            - ``$ne`` -- not equal to
+            - ``$in`` -- the column must be one of the given set of values
+            - ``$nin`` -- the column must not be any of the given set of values
+            - ``$contains`` -- for json columns, the given value should be a subset of the column.
+            - ``$notcontains`` -- for json columns, the column must not contain any entry of the given value (which should be iterable)
+            - ``$containedin`` -- for json columns, the column should be a subset of the given list
+            - ``$exists`` -- if True, require not null; if False, require null.
+            - ``$startswith`` -- for text columns, matches strings that start with the given string.
+            - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
+            - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column.
 
@@ -715,7 +789,7 @@ class PostgresTable(PostgresBase):
             else:
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
                 if extra_cols:
-                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(Identifier, extra_cols)), Identifier(self.extra_table))
+                    selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(IdentifierWrapper, extra_cols)), Identifier(self.extra_table))
                     extra_cur = self._execute(selecter, [rec[0]])
                     extra_rec = extra_cur.fetchone()
                     for k,v in zip(extra_cols, extra_rec):
@@ -786,7 +860,7 @@ class PostgresTable(PostgresBase):
             {'reg':455.191694993}
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         qstr, values = self._build_query(query, 1, offset, sort=sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
         cur = self._execute(selecter, values)
@@ -797,7 +871,7 @@ class PostgresTable(PostgresBase):
             elif extra_cols:
                 id = rec[0]
                 D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
-                vars = SQL(", ").join(map(Identifier, extra_cols))
+                vars = SQL(", ").join(map(IdentifierWrapper, extra_cols))
                 selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(vars, Identifier(self.extra_table))
                 cur = self._execute(selecter, [id])
                 rec = cur.fetchone()
@@ -880,7 +954,7 @@ class PostgresTable(PostgresBase):
             (1000, False)
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
@@ -1131,7 +1205,7 @@ class PostgresTable(PostgresBase):
         Execution time: 1947.655 ms
         """
         search_cols, extra_cols, id_offset = self._parse_projection(projection)
-        vars = SQL(", ").join(map(Identifier, search_cols))
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols))
         if limit is None:
             qstr, values = self._build_query(query, sort=sort)
         else:
@@ -3064,7 +3138,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
             if total:
                 # Refresh total in meta_tables
-                self._slow_count({}, suffix=suffix, extra=False)
+                self.total = self._slow_count({}, suffix=suffix, extra=False)
 
     def _copy_extra_counts_to_tmp(self):
         """
@@ -3393,8 +3467,11 @@ class PostgresDatabase(PostgresBase):
         else:
             privileges = ['INSERT', 'SELECT', 'UPDATE', 'DELETE']
             knowls_tables = ['kwl_deleted', 'kwl_history', 'kwl_knowls']
-            self._read_and_write_knowls = all( all( self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_name=%s AND privilege_type=%s"), [self._user, table, priv]).rowcount == 1 for priv in privileges) for table in knowls_tables)
-            self._read_and_write_userdb =  all(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee=%s AND table_schema = %s AND table_name=%s AND privilege_type=%s"), [self._user, 'userdb', 'users', priv]).rowcount == 1 for priv in privileges)
+            cur = sorted(list(self._execute(SQL("SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_name IN (" + ",".join(['%s']*len(knowls_tables)) + ") AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user] +  knowls_tables + privileges)))
+            self._read_and_write_knowls = cur == sorted([(table, priv) for table in knowls_tables for priv in privileges])
+
+            cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
+            self._read_and_write_userdb = cur == sorted([(priv,) for priv in privileges])
 
         logging.info("User: %s" % self._user)
         logging.info("Read only: %s" % self._read_only)
@@ -3405,12 +3482,20 @@ class PostgresDatabase(PostgresBase):
         from lmfdb.config import Configuration
         self.__editor = Configuration().get_logging().get('editor')
 
+
+
+        cur = self._execute(SQL('SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns'))
+        data_types = {}
+        for table_name, column_name, regtype in cur:
+            if table_name not in data_types:
+                 data_types[table_name] = []
+            data_types[table_name].append((column_name, regtype))
+
         cur = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables"))
-
-
         self.tablenames = []
         for tabledata in cur:
             tablename = tabledata[0]
+            tabledata += (data_types,)
             # it would be nice to include this in meta_tables
             if tablename == 'artin_reps':
                 table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
@@ -3530,6 +3615,9 @@ class PostgresDatabase(PostgresBase):
         else:
             raise ValueError("%s is not a search table"%name)
 
+
+
+
     def table_sizes(self):
         """
         Returns a dictionary containing information on the sizes of the search tables.
@@ -3579,6 +3667,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             else:
                 name = table_name
                 sizes[name]['nrows'] = int(row_estimate)
+                # use the cached account for an accurate count
+                if name in self.tablenames:
+                    row_cached = db[name].stats.quick_count({})
+                    if row_cached is not None:
+                        sizes[name]['nrows'] = row_cached
                 sizes[name]['index_bytes'] = index_bytes
                 sizes[name]['toast_bytes'] = toast_bytes
                 sizes[name]['table_bytes'] = table_bytes
@@ -3766,6 +3859,76 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)))
                 print "Dropped {0}".format(tbl)
             self.tablenames.remove(name)
+
+    def rename_table(self, old_name, new_name, commit=True):
+        assert old_name != new_name
+        assert new_name not in self.tablenames
+        with DelayCommit(self, commit, silence=True):
+            table = self[old_name]
+            # first rename indexes
+            cols = map(Identifier, ['index_name', 'table_name'])
+            rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
+            for meta in ['meta_indexes','meta_indexes_hist']:
+                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta), ), [old_name]))
+                if indexes:
+                    rename_index_in_meta = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3} = {4}")
+                    rename_index_in_meta = rename_index_in_meta.format( Identifier(meta),
+                                                                        SQL(", ").join(cols),
+                                                                        SQL(", ").join(Placeholder() * len(cols)),
+                                                                        cols[0],
+                                                                        Placeholder())
+                    for old_index_name in indexes:
+                        old_index_name = old_index_name[0]
+                        new_index_name = old_index_name.replace(old_name, new_name)
+                        self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name])
+                        if meta == 'meta_indexes':
+                            self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
+            else:
+                print "Renamed all indexes and the corresponding entries in meta_indexes(_hist)"
+
+            # rename meta_tables and meta_tables_hist
+            rename_table_in_meta = SQL("UPDATE {0} SET name = %s WHERE name = %s")
+            for meta in ['meta_tables','meta_tables_hist']:
+                self._execute(rename_table_in_meta.format(Identifier(meta)), [new_name, old_name])
+            else:
+                print "Renamed all entries meta_tables(_hist)"
+
+            rename = SQL('ALTER TABLE {0} RENAME TO {1}');
+            # rename extra table
+            if table.extra_table is not None:
+                old_extra = table.extra_table
+                assert old_extra == old_name + '_extras'
+                new_extra = new_name + '_extras'
+                self._execute(rename.format(Identifier(old_extra), Identifier(new_extra)))
+                print "Renamed {0} to {1}".format(old_extra, new_extra)
+            for suffix in ['', "_counts", "_stats"]:
+                self._execute(rename.format(Identifier(old_name + suffix), Identifier(new_name + suffix)))
+                print "Renamed {0} to {1}".format(old_name + suffix, new_name + suffix)
+
+            # rename oldN tables
+            for backup_number in range(table._next_backup_number()):
+                for ext in ["", "_extras", "_counts", "_stats"]:
+                    old_name_old = "{0}{1}_old{2}".format(old_name, ext, backup_number)
+                    new_name_old = "{0}{1}_old{2}".format(new_name, ext, backup_number)
+                    if self._table_exists(old_name_old):
+                        self._execute(rename.format(Identifier(old_name_old), Identifier(new_name_old)))
+                        print "Renamed {0} to {1}".format(old_name_old, new_name_old)
+            for ext in ["", "_extras", "_counts", "_stats"]:
+                old_name_tmp = "{0}{1}_tmp".format(old_name, ext)
+                new_name_tmp = "{0}{1}_tmp".format(new_name, ext)
+                if self._table_exists(old_name_tmp):
+                    self._execute(rename.format(Identifier(old_name_tmp), Identifier(new_name_tmp)))
+                    print "Renamed {0} to {1}".format(old_name_tmp, new_name_old)
+
+            # initialized table
+            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
+            table = PostgresTable(self, *tabledata)
+            self.__dict__[new_name] = table
+            self.tablenames.append(new_name)
+            self.tablenames.remove(old_name)
+            self.tablenames.sort()
+
+
 
     def copy_to(self, search_tables, data_folder, **kwds):
         failures = []
