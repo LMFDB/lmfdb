@@ -3860,6 +3860,69 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 print "Dropped {0}".format(tbl)
             self.tablenames.remove(name)
 
+    def rename_table(self, old_name, new_name, commit=True):
+        assert old_name != new_name
+        assert new_name not in self.tablenames
+        with DelayCommit(self, commit, silence=True):
+            table = self[old_name]
+            # first rename indexes
+            rename_index_in_meta = SQL("UPDATE %s SET index_name = %s, table_name = %s WHERE index_name = %s")
+            rename_index = SQL("ALTER INDEX IF EXISTS %s RENAME TO %s")
+            for meta in ['meta_indexes','meta_indexes_hist']:
+                indexes = list(self._execute(SQL("SELECT index_name FROM %s WHERE table_name = %s"), [Identifier(meta), old_name]))
+                if indexes:
+                    for old_index_name in indexes:
+                        new_index_name = old_index_name.replace(old_name, new_name)
+                        self._execute(rename_index_in_meta, [Identifier(meta), new_index_name, new_name, old_index_name])
+                        if meta == 'meta_indexes':
+                            self._execute(rename_index, [Identifier(old_index_name), Identifier(new_index_name)])
+            else:
+                print "Renamed all indexes and the corresponding entries in meta_indexes(_hist)"
+
+            # rename meta_tables and meta_tables_hist
+            rename_table_in_meta = SQL("UPDATE %s SET name = %s WHERE name = %s")
+            for meta in ['meta_tables','meta_tables_hist']:
+                self._execute(rename_table_in_meta, [Identifier(meta), new_name, old_name])
+            else:
+                print "Renamed all entries meta_tables(_hist)"
+
+            rename = SQL('ALTER TABLE %s RENAME TO %s');
+            # rename extra table
+            if table.extra_table is not None:
+                old_extra = table.extra_table
+                assert old_extra == old_name + '_extras'
+                new_extra = new_name + '_extras'
+                self._execute(rename.format(Identifier(old_extra), Identifier(new_extra)))
+                print "Renamed {0} to {1}".format(old_extra, new_extra)
+            for suffix in ['', "_counts", "_stats"]:
+                self._execute(rename.format(Identifier(old_name + suffix), Identifier(new_name + suffix)))
+                print "Renamed {0} to {1}".format(old_name + suffix, new_name + suffix)
+
+            # rename oldN tables
+            for backup_number in range(table._next_backup_number):
+                for ext in ["", "_extras", "_counts", "_stats"]:
+                    old_name_old = "{0}{1}_old{2}".format(old_name, ext, backup_number)
+                    new_name_old = "{0}{1}_old{2}".format(new_name, ext, backup_number)
+                    if self._table_exists(old_name_old):
+                        self._execute(rename.format(Identifier(old_name_old), Identifier(new_name_old)))
+                        print "Renamed {0} to {1}".format(old_name_old, new_name_old)
+            for ext in ["", "_extras", "_counts", "_stats"]:
+                old_name_tmp = "{0}{1}_tmp".format(old_name, ext)
+                new_name_tmp = "{0}{1}_tmp".format(new_name, ext)
+                if self._table_exists(old_name_tmp):
+                    self._execute(rename.format(Identifier(old_name_tmp), Identifier(new_name_tmp)))
+                    print "Renamed {0} to {1}".format(old_name_tmp, new_name_old)
+
+            # initialized table
+            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s").format(new_name)).fetchone()
+            table = PostgresTable(self, *tabledata)
+            self.__dict__[new_name] = table
+            self.tablenames.append(new_name)
+            self.tablenames.remove(old_name)
+            self.tablenames.sort()
+
+
+
     def copy_to(self, search_tables, data_folder, **kwds):
         failures = []
         for tablename in search_tables:
