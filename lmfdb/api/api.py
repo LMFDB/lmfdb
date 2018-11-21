@@ -5,7 +5,6 @@ import re
 import yaml
 import json
 import flask
-import lmfdb.base as base
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb.db_backend import db
