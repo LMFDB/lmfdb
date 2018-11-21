@@ -3138,7 +3138,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
             if total:
                 # Refresh total in meta_tables
-                self._slow_count({}, suffix=suffix, extra=False)
+                self.total = self._slow_count({}, suffix=suffix, extra=False)
 
     def _copy_extra_counts_to_tmp(self):
         """
