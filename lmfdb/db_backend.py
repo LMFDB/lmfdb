@@ -3872,6 +3872,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta)), [old_name]))
                 if indexes:
                     for old_index_name in indexes:
+                        old_index_name = old_index_name[0]
                         new_index_name = old_index_name.replace(old_name, new_name)
                         self._execute(rename_index_in_meta.format(Identifier(meta), [new_index_name, new_name, old_index_name]))
                         if meta == 'meta_indexes':
