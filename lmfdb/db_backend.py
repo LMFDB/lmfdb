@@ -3667,6 +3667,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             else:
                 name = table_name
                 sizes[name]['nrows'] = int(row_estimate)
+                # use the cached account for an accurate count
+                if name in self.tablenames:
+                    row_cached = db[name].stats.quick_count({})
+                    if row_cached is not None:
+                        sizes[name]['nrows'] = row_cached
                 sizes[name]['index_bytes'] = index_bytes
                 sizes[name]['toast_bytes'] = toast_bytes
                 sizes[name]['table_bytes'] = table_bytes
