@@ -3880,7 +3880,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     for old_index_name in indexes:
                         old_index_name = old_index_name[0]
                         new_index_name = old_index_name.replace(old_name, new_name)
-                        self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name]))
+                        self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name])
                         if meta == 'meta_indexes':
                             self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
             else:
