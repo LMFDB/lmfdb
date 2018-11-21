@@ -3906,7 +3906,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 print "Renamed {0} to {1}".format(old_name + suffix, new_name + suffix)
 
             # rename oldN tables
-            for backup_number in range(table._next_backup_number):
+            for backup_number in range(table._next_backup_number()):
                 for ext in ["", "_extras", "_counts", "_stats"]:
                     old_name_old = "{0}{1}_old{2}".format(old_name, ext, backup_number)
                     new_name_old = "{0}{1}_old{2}".format(new_name, ext, backup_number)
