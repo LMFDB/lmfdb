@@ -3921,7 +3921,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     print "Renamed {0} to {1}".format(old_name_tmp, new_name_old)
 
             # initialized table
-            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s").format(new_name)).fetchone()
+            tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [new_name]).fetchone()
             table = PostgresTable(self, *tabledata)
             self.__dict__[new_name] = table
             self.tablenames.append(new_name)
