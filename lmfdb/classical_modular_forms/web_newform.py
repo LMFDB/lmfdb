@@ -256,7 +256,7 @@ class WebNewform(object):
         else:
             query['embedding_m'] = {'$in': CC_m}
 
-        cc_data= list(db.mf_hecke_cc_array.search(query, projection = cc_proj))
+        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
             self.cqexp_prec = 0
