@@ -2,7 +2,6 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
-* try array instead of jsonb for ans and primes (Edgar)
 * Update knowl for newspaces and mf.elliptic.space (Drew)
 * code snippets for form and space pages (Drew)
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)

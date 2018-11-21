@@ -20,9 +20,17 @@ from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+import bisect
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
+
+
+# we store a_n with n \in [1, an_storage_bound]
+an_storage_bound = 1000
+# we store alpha_p with p <= an_storage_bound
+primes_for_angles = prime_range(an_storage_bound)
+
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
@@ -101,8 +109,8 @@ class WebNewform(object):
             zero = [0] * self.dim
             self.qexp = [zero]
             self.texp = [0]
-            for i, ev in enumerate(eigenvals):
-                if ev['n'] != i+1:
+            for i, ev in enumerate(eigenvals, 1):
+                if ev['n'] != i:
                     raise ValueError("Missing eigenvalue")
                 self.texp.append(ev['trace_an'])
                 if ev.get('an'):
@@ -110,14 +118,14 @@ class WebNewform(object):
                 else:
                     # only had traces
                     self.has_exact_qexp = False
-            self.qexp_prec = len(self.qexp)-1
-            self.texp_prec = len(self.texp)-1
+            self.qexp_prec = len(self.qexp)
+            self.texp_prec = len(self.texp)
         else:
             self.has_exact_qexp = False
         self.rel_dim = self.dim // self.char_degree
 
         ## CC_DATA
-        self.cqexp_prec = 1000 # Initial estimate for error messages in render_newform_webpage.
+        self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
                                # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
@@ -227,16 +235,19 @@ class WebNewform(object):
         n = info.get('n','1-10')
         CC_m = info.get('CC_m', integer_options(m))
         CC_n = info.get('CC_n', integer_options(n))
+        # convert CC_n to an interval in [1,an_storage_bound]
+        CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
+        an_keys = (CC_n[0]-1, CC_n[1])
+        # extra 5 primes in case we hit too many bad primes
+        angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
         format = info.get('format')
         cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        if max(CC_n) >= 100:
-            an_key, angles_key = 'an', 'angles'
-        else:
-            an_key, angles_key = 'first_an', 'first_angles'
+        an_projection = 'an[%d:%d]' % an_keys
+        angles_projection = 'angles[%d:%d]' % angles_keys
         if format in an_formats:
-            cc_proj.append(an_key)
+            cc_proj.append(an_projection)
         if format in angles_formats:
-            cc_proj.append(angles_key)
+            cc_proj.append(angles_projection)
         query = {'hecke_orbit_code':self.hecke_orbit_code}
         range_match = INTEGER_RANGE_RE.match(m)
         if range_match:
@@ -245,28 +256,29 @@ class WebNewform(object):
         else:
             query['embedding_m'] = {'$in': CC_m}
 
-        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+        cc_data= list(db.mf_hecke_cc_array.search(query, projection = cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
             self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = 1000 if an_key == 'an' else 100
+            self.cqexp_prec = an_keys[1] + 1
             self.cc_data = {}
             for embedded_mf in cc_data:
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
                 if format in an_formats:
-                    embedded_mf['an'] = [[float(x), float(y)] for x, y in embedded_mf.pop(an_key)] # 'an' or 'first_an'
+                    # we don't store a_0, thus the +1
+                    embedded_mf['an'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
                 if format in angles_formats:
-                    embedded_mf['angles'] = {p:theta for p,theta in embedded_mf.pop(angles_key)} # 'angles' or 'first_angles'
+                    embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in ['analytic_embed',None]:
-                self.analytic_shift = [float(i)**((1-ZZ(self.weight))/2) for i in range(1, self.cqexp_prec)]
+                self.analytic_shift = {i : float(i)**((1-ZZ(self.weight))/2) for i in self.cc_data.values()[0]['an'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
                 chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
-                for p in prime_range(2, self.cqexp_prec):
+                for p in self.cc_data.values()[0]['angles'].keys():
                     if p.divides(self.level):
                         continue
                     for chi in chars:
@@ -546,9 +558,10 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
-    def eigs_as_seqseq_to_qexp(self, prec):
+    def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
         # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
+        prec = min(self.qexp_prec, prec_max)
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
@@ -564,7 +577,7 @@ function switch_basis(btype) {
             R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
             Rgens = [1] + [g for g in R.gens()]
         s = ''
-        for j in range(prec):
+        for j in range(len(eigseq)):
             term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
             if term != 0:
                 latexterm = latex(term)
@@ -586,14 +599,14 @@ function switch_basis(btype) {
                 s += '\(' + latexterm + '\) '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '\(+O(q^{%s})\)' % prec
+        return s + '\(+O(q^{%d})\)' % prec
 
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
             if self.dim == 1:
-                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
+                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=False))
             else:
                 s = self.eigs_as_seqseq_to_qexp(prec)
             return s
@@ -603,6 +616,7 @@ function switch_basis(btype) {
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
         return web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
+
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':
@@ -644,11 +658,10 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            # 'an' start at a_1
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n-1]
-                y *= self.analytic_shift[n-1]
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
         if self.cc_data[m]['real']:
             return display_float(x, prec)
         else:
@@ -685,9 +698,9 @@ function switch_basis(btype) {
             if x is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n-1]
+                x *= self.analytic_shift[n]
         return self._display_re(x, prec)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
@@ -696,9 +709,9 @@ function switch_basis(btype) {
             if y is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                y *= self.analytic_shift[n-1]
+                y *= self.analytic_shift[n]
         return self._display_im(abs(y), prec) # sign is handled in embedding_op
 
     def embedding_op(self, m, n=None, prec=6):
@@ -708,7 +721,7 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
         return self._display_op(x, y, prec)
 
     def satake(self, m, p, i, prec=6, format='satake'):
@@ -756,7 +769,6 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_theta(self, m, p, i):
-        # Currently, the database is storing the root rather than the reciprocal root
         theta = self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][(m-1) // self.rel_dim]
         if i == 1:
