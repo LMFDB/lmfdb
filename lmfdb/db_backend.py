@@ -3866,23 +3866,23 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
             # first rename indexes
-            rename_index_in_meta = SQL("UPDATE %s SET index_name = {0}, table_name = {1} WHERE index_name = {2}")
+            rename_index_in_meta = SQL("UPDATE {0} SET index_name = %s, table_name = %s WHERE index_name = %s")
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
             for meta in ['meta_indexes','meta_indexes_hist']:
-                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = {1}").format(Identifier(meta), old_name)))
+                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta)), [old_name]))
                 if indexes:
                     for old_index_name in indexes:
                         new_index_name = old_index_name.replace(old_name, new_name)
-                        self._execute(rename_index_in_meta.format(Identifier(meta), new_index_name, new_name, old_index_name))
+                        self._execute(rename_index_in_meta.format(Identifier(meta), [new_index_name, new_name, old_index_name]))
                         if meta == 'meta_indexes':
                             self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
             else:
                 print "Renamed all indexes and the corresponding entries in meta_indexes(_hist)"
 
             # rename meta_tables and meta_tables_hist
-            rename_table_in_meta = SQL("UPDATE {0} SET name = %s WHERE name = {1}")
+            rename_table_in_meta = SQL("UPDATE {0} SET name = %s WHERE name = %s")
             for meta in ['meta_tables','meta_tables_hist']:
-                self._execute(rename_table_in_meta.format(Identifier(meta), new_name, old_name))
+                self._execute(rename_table_in_meta.format(Identifier(meta)), [new_name, old_name])
             else:
                 print "Renamed all entries meta_tables(_hist)"
 
