@@ -3866,15 +3866,21 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
             # first rename indexes
-            rename_index_in_meta = SQL("UPDATE {0} SET index_name = %s, table_name = %s WHERE index_name = %s")
+            cols = map(Identifier, ['index_name', 'table_name'])
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
             for meta in ['meta_indexes','meta_indexes_hist']:
-                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta)), [old_name]))
+                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta), ), [old_name]))
                 if indexes:
+                    rename_index_in_meta = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3} = {4}")
+                    rename_index_in_meta = rename_index_in_meta.format( Identifier(meta),
+                                                                        SQL(", ").join(cols),
+                                                                        SQL(", ").join(Placeholder() * len(cols)),
+                                                                        cols[0],
+                                                                        Placeholder())
                     for old_index_name in indexes:
                         old_index_name = old_index_name[0]
                         new_index_name = old_index_name.replace(old_name, new_name)
-                        self._execute(rename_index_in_meta.format(Identifier(meta), [new_index_name, new_name, old_index_name]))
+                        self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name]))
                         if meta == 'meta_indexes':
                             self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
             else:
