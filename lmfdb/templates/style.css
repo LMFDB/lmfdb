@@ -956,7 +956,7 @@ table.euler {
 }
 
 table.euler tr .galois {
-    padding-left: 25px;
+    text-align: center;
 }
 
 .knowl-content {
