@@ -51,14 +51,15 @@ class KnowlBackend(PostgresBase):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
         #FIXME this should be moved to the config file
-        self.caching_time = 60
+        self.caching_time = 10
         self.cached_titles_timestamp = 0;
         self.cached_titles = {}
 
     @property
     def titles(self):
-        if time.time() - self.cached_titles_timestamp > self.caching_time:
-            self.cached_titles_timestamp = time.time()
+        now = time.time()
+        if now - self.cached_titles_timestamp > self.caching_time:
+            self.cached_titles_timestamp = now
             self.cached_titles = dict([(elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'])])
         return self.cached_titles
 
