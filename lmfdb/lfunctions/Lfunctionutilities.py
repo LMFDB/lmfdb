@@ -432,12 +432,13 @@ def lfuncEPhtml(L,fmt, prec = None):
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
     eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if L.degree > 2  and L.degree < 12:
         display_galois = True
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
     else:
         display_galois = False
+    eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
     def row(trclass, goodorbad, p, poly):
@@ -449,9 +450,7 @@ def lfuncEPhtml(L,fmt, prec = None):
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-            out += ("<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td><td>" +
-                        "$" + factors + "$" +
-                        "</td>")
+            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>";
             if display_galois:
                 out += "<td class='galois'>"
                 if gal_groups[0]==[0,0]:
@@ -464,6 +463,7 @@ def lfuncEPhtml(L,fmt, prec = None):
                     out += "$\\times$"
                     out += group_display_knowl(n, k)
                 out += "</td>"
+            out += "<td>" +"$" + factors + "$" + "</td>"
             out += "</tr>\n"
 
         except IndexError:
@@ -630,12 +630,18 @@ def lfuncFEtex(L, fmt):
                 return 3
         if L.mu_fe != []:
             mus = [ display_complex(CDF(mu).real(), CDF(mu).imag(),  mu_fe_prec(mu), method="round" ) for mu in L.mu_fe ]
-            ans += ", ".join(mus)
+            if mus == [mus[0]]*len(mus) and len(mus) >= 6:
+                ans += '[%s]^{%d}' % (mus[0], len(mus))
+            else:
+                ans += ", ".join(mus)
         else:
             ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
-            ans += ", ".join(map(str, L.nu_fe))
+            if L.nu_fe == [L.nu_fe[0]]*len(L.nu_fe):
+                ans += '[%s]^{%d}' % (L.nu_fe[1], len(L.nu_fe))
+            else:
+                ans += ", ".join(map(str, L.nu_fe))
         else:
             ans += "\\ "
         ans += "),\\ "
@@ -731,7 +737,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
         # We must test for NaN first, since it would show as zero otherwise
         # Try "RR(NaN) < float(1e-10)" in sage -- GT
         if ccval.real().is_NaN():
-            Lval = "\\infty"
+            Lval = "$\\infty$"
         else:
             Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
 
