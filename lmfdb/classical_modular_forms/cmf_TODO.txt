@@ -9,7 +9,6 @@ IMPORTANT:
 * Create appropriate indexes
 * Add character order and character degree (David)
 * Update level buckets in stats and on front page (David)
-* Deal with bson and plots (David)
 * Display "unique form in space" when hecke cutter is empty list (David)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
@@ -22,7 +21,6 @@ IMPORTANT:
 
 GOOD:
 * move the constant coefficient in q-exp coefficients to the left
-* Drop the dependence of bson. Convert binary with bson to 64bit png and reupload those
 * Add trace hashes for elliptic curves over quadratic fields (Edgar)
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
