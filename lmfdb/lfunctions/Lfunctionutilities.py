@@ -630,7 +630,7 @@ def lfuncFEtex(L, fmt):
                 return 3
         if L.mu_fe != []:
             mus = [ display_complex(CDF(mu).real(), CDF(mu).imag(),  mu_fe_prec(mu), method="round" ) for mu in L.mu_fe ]
-            if mus == [mus[0]]*len(mus) and len(mus) >= 6:
+            if len(mus) >= 6 and mus == [mus[0]]*len(mus):
                 ans += '[%s]^{%d}' % (mus[0], len(mus))
             else:
                 ans += ", ".join(mus)
@@ -638,8 +638,8 @@ def lfuncFEtex(L, fmt):
             ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
-            if L.nu_fe == [L.nu_fe[0]]*len(L.nu_fe):
-                ans += '[%s]^{%d}' % (L.nu_fe[1], len(L.nu_fe))
+            if len(L.nu_fe) >= 6 and L.nu_fe == [L.nu_fe[0]]*len(L.nu_fe):
+                ans += '[%s]^{%d}' % (L.nu_fe[0], len(L.nu_fe))
             else:
                 ans += ", ".join(map(str, L.nu_fe))
         else:
