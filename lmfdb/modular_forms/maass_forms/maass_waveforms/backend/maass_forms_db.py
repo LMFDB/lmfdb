@@ -40,7 +40,7 @@ class MaassDB(object):
         return forms[0] if forms else None
 
     def get_maassform_plot_by_id(self, maass_id):
-        return db.mwf_plots.lucky({'maass_id':maass_id}, projection='png64')
+        return db.mwf_plots.lucky({'maass_id':maass_id}, projection='plot')
 
     def maassform_has_plot(self, maass_id):
         return db.mwf_plots.exists({'maass_id':maass_id})
