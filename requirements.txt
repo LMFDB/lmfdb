@@ -1,5 +1,4 @@
 bcrypt
-bson
 cython
 git+https://github.com/jwbober/conrey-dirichlet-characters.git@master#egg=dirichlet_conrey
 flask
