@@ -1,7 +1,7 @@
 from lmfdb.base import LmfdbTest
 from lmfdb.db_backend import PostgresDatabase
 from sage.parallel.decorate import parallel
-from sage.all import ZZ, sqrt
+from sage.all import ZZ, sqrt, ceil
 import multiprocessing
 from traceback import print_exc
 import logging
@@ -19,11 +19,13 @@ class CMFTest(LmfdbTest):
             now = time.time()
             page = self.tc.get(url)
             load = time.time() - now
-            assert label in page.data
-            if dim <= 80:
-                assert 'L-function %s' % label in page.data
-            assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
-            assert 'Analytic rank' in page.data
+            k = int(label.split(".")[1])
+            if k > 1:
+                assert label in page.data
+                if dim <= 80:
+                    assert 'L-function %s' % label in page.data
+                assert 'L-function %s.%s' % tuple(label.split('.')[:2])  in page.data
+                assert 'Analytic rank' in page.data
             if dim == 1:
                 assert 'Satake parameters' in page.data
             else:
@@ -209,7 +211,7 @@ class CMFTest(LmfdbTest):
                 while  nbins < 50:
                     h *= 0.5
                     nbins = (just_times[-1] - just_times[0])/h
-                nbins = int(nbins)
+                nbins = ceil(nbins)
                 bins = [0]*nbins
                 i = 0
                 for elt in just_times:
@@ -218,7 +220,7 @@ class CMFTest(LmfdbTest):
                     bins[i] += 1
                 for i, b in enumerate(bins):
                     d = 100*float(b)/total
-                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %2.f%%' % d
+                    print '%.2f\t|' %((i + 0.5)*h +  just_times[0]) + '-'*(int(d)-1) + '| - %.2f%%' % d
         else:
             print "These pages didn't pass the tests:"
             for u in broken_urls:

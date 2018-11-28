@@ -321,28 +321,34 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         return "0"
     k = round_to_half_int(x)
     if k == x:
-        x = k
-        if x in ZZ:
-            s = '%d' % x
-        else:
-            s = '%s' % float(x)
-    else:
-        if method == 'truncate':
-            rnd = 'RNDZ'
-        else:
-            rnd = 'RNDN'
-        no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+        k2 = None
         try:
-            s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+            k2 = ZZ(2*x)
         except TypeError:
-            # older versions of Sage don't support the digits keyword
-            s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
-            point = s.find('.')
-            if point != -1:
-                if point < digits:
-                    s = s[:digits+1]
-                else:
-                    s = s[:point]
+            pass;
+        # the second statment checks for overflow
+        if k2 == 2*x and (2*x + 1) - k2 == 1:
+            if k2 % 2 == 0:
+                s = '%s' % (k2/2)
+            else:
+                s = '%s' % (float(k2)/2)
+            return s
+    if method == 'truncate':
+        rnd = 'RNDZ'
+    else:
+        rnd = 'RNDN'
+    no_sci = 'e' not in "%.{}g".format(digits) % float(x)
+    try:
+        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+    except TypeError:
+        # older versions of Sage don't support the digits keyword
+        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
+        point = s.find('.')
+        if point != -1:
+            if point < digits:
+                s = s[:digits+1]
+            else:
+                s = s[:point]
     return s
 
 def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):

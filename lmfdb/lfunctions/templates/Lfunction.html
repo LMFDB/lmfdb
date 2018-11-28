@@ -207,7 +207,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
         <td> not available </td>
         {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        <td> {{ sv_edge_arithmetic[1] }}</td>
         {% endif %}
         </tr>
         <tr class="analytic nodisplay">
@@ -217,7 +217,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
         <td> not available </td>
         {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_analytic[1] }}$ </td>
+        <td> {{ sv_edge_analytic[1] }} </td>
         {% endif %}
         </tr>
   {% endif %}
@@ -317,7 +317,6 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 {# This block is rendered in the properties box #}
 {% block more_props %}
-
 {{ rightnavig("Origins of factors", factors_origins) }}
-
 {% endblock %}
+

@@ -9,13 +9,8 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ### Generate statistics
 ```
 from db_backend import db, SQL
-db._execute(SQL("DELETE FROM mf_newforms_stats"))
-db._execute(SQL("DELETE FROM mf_newforms_counts"))
-db.mf_newforms.stats.add_stats(['has_inner_twist'])
-db.mf_newforms.stats.add_stats(['analytic_rank'])
-db.mf_newspaces.stats.add_stats(['num_forms'])
-db.mf_newforms.stats.add_stats(['cm_disc'])
-db.mf_newforms.stats.add_bucketed_counts([],{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]})
+db.mf_newforms.stats.refresh_stats()
+db.mf_newspaces.stats.refresh_stats()
 ```
 
 ## mf_hecke_cc
@@ -41,7 +36,7 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ```
 takes around 15 min
 ## check that all the pages load, display the appropriate things, and that parts of the data are consistent
-This runs in parallel and takes about 12min
+This runs in parallel and takes about 1h
 ```
 ./test.sh lmfdb/classical_modular_forms/cmf_test_pages.py
 ```

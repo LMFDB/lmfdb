@@ -26,6 +26,7 @@ def setup_connection(conn):
     # We want to use unicode everywhere
     register_type(UNICODE, conn)
     register_type(UNICODEARRAY, conn)
+    conn.set_client_encoding('UTF8')
     cur = conn.cursor()
     cur.execute("SELECT NULL::numeric")
     oid = cur.description[0][1]
@@ -172,7 +173,7 @@ class Json(pgJson):
                     'data': [int(obj.numerator()), int(obj.denominator())]}
         elif isinstance(obj, RealNumber):
             return {'__RealLiteral__': 0, # encoding version
-                    'data': obj.literal if isinstance(obj, RealLiteral) else str(obj),
+                    'data': obj.literal if isinstance(obj, RealLiteral) else str(obj), # need truncate=False
                     'prec': int(obj.parent().precision())}
         elif isinstance(obj, complex):
             # As noted above, support for Sage complex numbers
