@@ -108,7 +108,7 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
 
-    def test_dirichletchar11(self):
+    def test_valuefield(self):
         W = self.tc.get('/Character/Dirichlet/13/2')
         assert  'Value Field' in W.data
 
