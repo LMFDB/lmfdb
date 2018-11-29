@@ -231,7 +231,7 @@ class WebNumberField:
         if euler_phi(n) > 23:
             return cls('none')  # Forced to fail
         pol = pari.polcyclo(n)
-        R = PolynomialRing(QQ, 'x')
+        R = PolynomialRing(ZZ, 'x')
         coeffs = R(pol.polredabs()).coefficients(sparse=False)
         return cls.from_coeffs(coeffs)
 
