@@ -83,9 +83,9 @@
     {#
     <td>
       <select name='is_twist_minimal' style="width: 150px;">
-	<option></option>
-	<option value="True"{% if info.is_twist_minimal == 'True' %} selected='yes' {% endif %}>True</option>
-	<option value="False"{% if info.is_twist_minimal == 'False' %} selected='yes' {% endif %}>False</option>
+        <option></option>
+        <option value="True"{% if info.is_twist_minimal == 'True' %} selected='yes' {% endif %}>True</option>
+        <option value="False"{% if info.is_twist_minimal == 'False' %} selected='yes' {% endif %}>False</option>
       </select>
     </td>
     #}
@@ -116,6 +116,12 @@
   </tr>
   <tr style="height:50px">
     <td class="button"><button type='submit' name='submit_again' value='refine' style="width: 110px">Search again</button></td>
+    {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
+    {% for type, desc in search_types %}
+    {%if info.search_type != type %}
+    <td class="button"><button type='submit' name='submit' value='{{ type }}'>{{ desc }}</button> &nbsp; &nbsp; </td>
+    {% endif %}
+    {% endfor %}
   </tr>
 </table>
 {% if info.search_type == 'Traces' %}
@@ -125,27 +131,27 @@
     <td colspan="2"> Columns to display </td>
     <td> Show </td>
     <td colspan="2"> Constraints </td>
-  <tr>
-    <td>
-      <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
-    </td>
-    <td style="width: 150px;">
-      <span class="formexample"> e.g. 3,7,19, 40-90 </span>
-    </td>
-    <td>
-      <select name='n_primality' style="width: 150px;">
-        <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
-        <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
-        <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
-      </select>
-    </td>
-    <td>
-      <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
-    </td>
-    <td style="width: 150px;">
-      <span class="formexample"> e.g. a17=1, a8=0 </span>
-    </td>
-  </tr>
+    <tr>
+      <td>
+        <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
+      </td>
+      <td style="width: 150px;">
+        <span class="formexample"> e.g. 3,7,19, 40-90 </span>
+      </td>
+      <td>
+        <select name='n_primality' style="width: 150px;">
+          <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
+          <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
+          <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
+        </select>
+      </td>
+      <td>
+        <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
+      </td>
+      <td style="width: 150px;">
+        <span class="formexample"> e.g. a17=1, a8=0 </span>
+      </td>
+    </tr>
 </table>
 {% endif %}
 </form>
