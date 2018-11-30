@@ -7,9 +7,10 @@ IMPORTANT:
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Upload data for Nk^2 <= 3000 (Drew)
 * Create appropriate indexes
-* Add character order and character degree (David)
 * Update level buckets in stats and on front page (David)
-* Display "unique form in space" when hecke cutter is empty list (David)
+* Add character values section (hecke_ring_character_values) (David)
+* Add section on Artin representation for weight 1 forms (David)
+* Add new search functionality to refine search in weight 1, add projective image column (David)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
@@ -18,6 +19,7 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Drew)
 * add buttons to switch search types (David)
 * avoid access exclusive lock with the alter table when using copy from
+* Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
 
 GOOD:
 * move the constant coefficient in q-exp coefficients to the left
