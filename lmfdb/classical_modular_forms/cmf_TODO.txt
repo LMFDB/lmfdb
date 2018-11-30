@@ -9,7 +9,7 @@ IMPORTANT:
 * Create appropriate indexes
 * Update level buckets in stats and on front page (David)
 * Add character values section (hecke_ring_character_values) (David)
-* Add section on Artin representation for weight 1 forms (David)
+* Add section on Artin representation for weight 1 forms (projective_image_type, projective_image, artin_degree) (Edgar)
 * Add new search functionality to refine search in weight 1, add projective image column (David)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
