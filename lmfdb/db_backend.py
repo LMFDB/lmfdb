@@ -38,8 +38,7 @@ from lmfdb.utils import make_logger, format_percentage
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
-SLOW_CUTOFF = 1
-
+SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
 types_whitelist = [
