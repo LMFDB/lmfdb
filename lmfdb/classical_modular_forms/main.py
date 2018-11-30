@@ -129,10 +129,6 @@ def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
         search_type = info.get('search_type', 'List')
-        submit = info.pop('submit', None)
-        if submit is not None:
-            info['search_type'] = search_type = submit
-
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:

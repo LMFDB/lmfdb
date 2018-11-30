@@ -115,11 +115,11 @@
   <tr>
   </tr>
   <tr style="height:50px">
-    <td class="button"><button type='submit' name='submit_again' value='refine' style="width: 110px">Search again</button></td>
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px">Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
     {% for type, desc in search_types %}
     {%if info.search_type != type %}
-    <td class="button"><button type='submit' name='submit' value='{{ type }}'>{{ desc }}</button> &nbsp; &nbsp; </td>
+    <td class="button"><button type='submit' name='search_type' value='{{ type }}'>{{ desc }}</button> &nbsp; &nbsp; </td>
     {% endif %}
     {% endfor %}
   </tr>
