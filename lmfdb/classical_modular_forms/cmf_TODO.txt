@@ -16,7 +16,6 @@ IMPORTANT:
 * data: add weight 1 data (Drew)
 * data: add weight 1 cc data (Drew)
 * form pages: weight 1 link to Artin rep (Drew)
-* add buttons to switch search types (David)
 * avoid access exclusive lock with the alter table when using copy from
 
 GOOD:
@@ -33,7 +32,6 @@ FORMATTING:
 * Consider switching level and weight on browse and refine search input boxes
 
 IT WOULD BE NICE IF:
-* Add tests for display_float, etc
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)

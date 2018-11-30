@@ -128,9 +128,11 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        search_type = info.get('search_type')
-        if search_type is None:
-            info['search_type'] = search_type = info.pop('submit','')
+        search_type = info.get('search_type', 'List')
+        submit = info.pop('submit', None)
+        if submit is not None:
+            info['search_type'] = search_type = submit
+
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:
@@ -142,8 +144,9 @@ def index():
             return trace_search(info)
         elif search_type == 'Random':
             return newform_search(info, random=True)
-        else:
+        elif search_type == 'List':
             return newform_search(info)
+        assert False
     info = {"stats": CMF_stats()}
     newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
