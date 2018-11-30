@@ -19,7 +19,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table
-from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
@@ -164,6 +164,31 @@ def l_function_ec_sym3_browse_page():
     return render_template("ellipticcurve.html",
                            title='Symmetric Cube L-functions of Elliptic Curves', **info)
 
+# L-function of genus 2 curves browsing page ##############################################
+@l_function_page.route("/degree4/Genus2Curve/")
+def l_function_genus2_browse_page():
+    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
+    info["representation"] = ''
+    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
+
+# generic/pure L-function browsing page ##############################################
+@l_function_page.route("/<degree>/<gammasignature>/")
+# def l_function_maass_gln_browse_page(degree):
+def l_function_browse_page(degree, gammasignature):
+    degree = get_degree(degree)
+    nice_gammasignature = parse_codename(gammasignature)
+    if degree < 0:
+        return flask.abort(404)
+    contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)
+    if not contents:
+        return flask.abort(404)
+    info = {"bread": get_bread(degree, [(gammasignature, url_for('.l_function_browse_page',
+                                            degree='degree' + str(degree), gammasignature=gammasignature))])}
+    info["contents"] = contents
+    return render_template("MaassformGLn.html",
+                           title='L-functions of degree %s and signature %s' % (degree, nice_gammasignature), **info)
+
 
 ###########################################################################
 #   Helper functions, navigation pages
@@ -180,13 +205,13 @@ def set_info_for_start_page():
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
-           {'title': 'GL3 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree3')},
+           {'title': 'Signature (0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree3', gammasignature='r0r0r0')},
            {'title': 'Symmetric Square L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
-          [{'title': 'GSp4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
-           {'title': 'GL4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree4')},
+          [{'title': 'Signature (0,0,0,0;) and real cofficients', 'link': url_for('.l_function_browse_page', degree='degree4', gammasignature='r0r0r0r0') + '#r0r0r0r0selfdual'},
+           {'title': 'Signature (0,0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree4', gammasignature='r0r0r0r0')},
            {'title': 'Symmetric Cube L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
 
     info = {

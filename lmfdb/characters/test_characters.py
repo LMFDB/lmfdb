@@ -108,6 +108,10 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
 
+    def test_valuefield(self):
+        W = self.tc.get('/Character/Dirichlet/13/2')
+        assert  'Value Field' in W.data
+
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme

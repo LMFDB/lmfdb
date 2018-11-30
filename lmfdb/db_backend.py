@@ -2407,7 +2407,6 @@ class PostgresTable(PostgresBase):
             res = -1
         return res
 
-
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
         Efficiently copy data from files into this table.
