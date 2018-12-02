@@ -68,7 +68,9 @@ def set_info_funcs(info):
             if poly:
                 return polyquo_knowl(poly)
             return ""
+
     info["nf_link"] = nf_link
+
     def cm_link(mf):
         if mf['is_cm'] == -1:
             return "No"
@@ -79,6 +81,7 @@ def set_info_funcs(info):
             cm_name = field_pretty(cm_label)
             return nf_display_knowl(cm_label, cm_name)
     info["cm_link"] = cm_link
+
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
                           'E':'Eisenstein series'}
@@ -92,10 +95,19 @@ def set_info_funcs(info):
             return False
         return all(mf['char_order'] == 1 for mf in results)
     info["display_AL"] = display_AL
+
     def display_Fricke(results):
         # only called if display_AL has returned False
         return any(mf['char_order'] == 1 for mf in results)
     info["display_Fricke"] = display_Fricke
+
+    def display_Projective(results):
+        return all(mf['weight'] == 1 for mf in results)
+    info["display_Projective"] = display_Projective
+
+    # assumes the format Dn A4 S4 S5
+    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
+
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -116,6 +128,7 @@ def set_info_funcs(info):
             terms.append(link)
         return r'+'.join(terms)
     info['display_decomp'] = display_decomp
+
     def display_ALdims(space):
         al_dims = space.get('AL_dims')
         if al_dims:
@@ -702,6 +715,7 @@ def set_rows_cols(info, query):
 
 def has_data(N, k):
     return N*k*k <= Nk2_bound()
+
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -731,6 +745,7 @@ def dimension_space_postprocess(res, info, query):
     info['url_generator'] = url_generator
     info['has_data'] = has_data
     return dim_dict
+
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['search_type'] = ''
