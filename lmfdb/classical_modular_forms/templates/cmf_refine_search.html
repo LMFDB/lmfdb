@@ -111,6 +111,28 @@
   </tr>
   <tr>
   </tr>
+  {% if info.weight == '1' %}
+  <tr>
+    <td rowspan="2">
+      Only for weight 1:
+    </td>
+    <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
+    <td>{{ KNOWL('mf.elliptic.projective_image_type', title='Projective image type') }}</td>
+    <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
+  </tr>
+  <tr>
+    <td><input type='text' style="width: 140px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
+    <td>
+      <select name='projective_image_type' style="width: 150px;">
+        {% set projective_image_type_values = [('', 'unrestricted'), ('Dn', 'Dn'), ('A4', 'A4'), ('S4', 'S4'), ('A5','A5')] %}
+        {% for val, text in projective_image_type_values %}
+        <option value="{{ val }}"{% if info.projective_image_type == val %} selected='yes'{% endif %}>{{ text }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td><input type='text' style="width: 140px" name='artin_degree' placeholder='4' value='{{info.artin_degree}}'></td>
+  </tr>
+  {% endif %}
   <tr>
   </tr>
   <tr style="height:50px">

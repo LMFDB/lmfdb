@@ -110,10 +110,10 @@ def bianchi_modular_form_postprocess(res, info, query):
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
                        "level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "sfe": lambda v: "+1" if v.get('sfe')==1 else "-1",
+                       "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
                        "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
                        "bc": lambda v: bc_info(v['bc']),
-                       "cm": lambda v: cm_info(v.get('CM'))},
+                       "cm": lambda v: cm_info(v.pop('CM', '?'))},
              bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
                            ('Search Results', '.')],
              learnmore=learnmore_list,
@@ -301,9 +301,9 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
-                    'sfe': "+1" if f['sfe']==1 else "-1",
+                    'sfe': "+1" if f.get('sfe',None)==1 else "-1" if f.get('sfe',None)==-1 else "?",
                     'bc': bc_info(f['bc']),
-                    'cm': cm_info(f['CM']),
+                    'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
