@@ -16,10 +16,10 @@ class CmfTest(LmfdbTest):
         """
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").data
         assert '?search_type=Dimensions' in data
-        assert '?submit=Dimensions&char_order=1' in data
+        assert '?search_type=Dimensions&char_order=1' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions",follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/19/5/">69</a>' in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?submit=Dimensions&char_order=1", follow_redirects=True).data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&char_order=1", follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">13</a>' in data
 
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
@@ -127,7 +127,7 @@ class CmfTest(LmfdbTest):
         assert r'Decomposition</a> of \(S_{12}^{\mathrm{new}}(\Gamma_1(6))\)' in page.data
 
     def test_dim_table(self):
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&submit=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension Search Results' in page.data
 
     def test_character_parity(self):
