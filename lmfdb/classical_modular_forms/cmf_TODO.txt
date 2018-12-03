@@ -11,10 +11,9 @@ IMPORTANT:
 * Add character values section (hecke_ring_character_values) (David)
 * Add section on Artin representation for weight 1 forms (projective_image_type, projective_image, artin_degree) (Edgar)
 * compare db data agains Drew's data 3001-4000 (Edgar)
+* fix reload (Edgar)
 * upload data (Edgar)
 * recompute roots (Edgar)
-* undo hardcoded 20 by field being defined
-* fix analytic ranks (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
