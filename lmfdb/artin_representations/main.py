@@ -24,9 +24,9 @@ def get_bread(breads=[]):
     return bc
 
 def learnmore_list():
-    return [('Source of the data', url_for(".source")),
-            ('Rigor of the data', url_for(".rigor")),
-            ('Completeness and extent of the data', url_for(".cande")),
+    return [('Completeness of the data', url_for(".cande")),
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
             ('Artin representations labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -201,18 +201,18 @@ def source():
                            credit=tim_credit, title=t, bread=bread, 
                            learnmore=learnmore)
 
-@artin_representations_page.route("/Rigor")
-def rigor():
-    t = 'Rigor of Artin Representation Data'
-    bread = get_bread([("Rigor", '')])
-    learnmore = learnmore_list_remove('Rigor')
+@artin_representations_page.route("/Reliability")
+def reliability():
+    t = 'Reliability of Artin Representation Data'
+    bread = get_bread([("Reliability", '')])
+    learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
                            credit=tim_credit, title=t, bread=bread, 
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
 def cande():
-    t = 'Completeness and Extent of Artin Representation Data'
+    t = 'Completeness of Artin representation Data'
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
