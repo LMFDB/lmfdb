@@ -2275,8 +2275,8 @@ class PostgresTable(PostgresBase):
             if restat:
                 # create tables before restating
                 for table in [self.stats.counts, self.stats.stats]:
-                    if not self._table_exists(table.search_table + suffix):
-                        self._clone(table.search_table, table.search_table + suffix)
+                    if not self._table_exists(table + suffix):
+                        self._clone(table, table + suffix)
                 self.stats.refresh_stats(suffix=suffix)
                 for table in [self.stats.counts, self.stats.stats]:
                     if table not in tables:
