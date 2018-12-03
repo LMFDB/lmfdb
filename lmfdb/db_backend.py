@@ -2273,6 +2273,10 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.restore_indexes(suffix=suffix)
             if restat:
+                # create tables before restating
+                for table in [self.stats.counts, self.stats.stats]:
+                    if not self._table_exists(table.search_table + suffix):
+                        self._clone(table.search_table, table.search_table + suffix)
                 self.stats.refresh_stats(suffix=suffix)
                 for table in [self.stats.counts, self.stats.stats]:
                     if table not in tables:
