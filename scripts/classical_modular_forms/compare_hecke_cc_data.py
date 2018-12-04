@@ -28,6 +28,8 @@ else:
 
 
 def compare_floats(a, b, prec = 52):
+    if a== None and b == None:
+        return True
     if a == b:
         return True
     if b == 0:
