@@ -28,10 +28,10 @@ else:
 
 
 def compare_floats(a, b, prec = 52):
-    if a== None and b == None:
-        return True
     if a == b:
         return True
+    if None in [a,b]:
+        return False
     if b == 0:
         b, a = a, b
     if a == 0:
@@ -47,7 +47,7 @@ def compare_row(a, b, verbose = True):
         elif c in ['embedding_root_real', 'embedding_root_imag']:
             if not compare_floats(a[i], b[i]):
                 print c, a[i], b[i], a[i] - b[i]
-                return False 
+                return False
         elif c == 'an':
             for j, ((ax, ay), (bx, by)) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(ax, bx):
