@@ -106,7 +106,7 @@ def set_info_funcs(info):
     info["display_Projective"] = display_Projective
 
     # assumes the format Dn A4 S4 S5
-    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
+    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else '?'
 
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
@@ -885,11 +885,11 @@ class CMF_stats(StatsDisplay):
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
         {'cols': [],
-         'buckets':{'level':[1,1,9,99,199,399,599,799,999,3000]},
+         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000]},
          'row_title':'level',
          'knowl':'mf.elliptic.level'},
         {'cols': [],
-         'buckets':{'weight':[1,1,2,3,4,9,50]},
+         'buckets':{'weight':[1,1,2,3,4,5,10,20,40,62]},
          'row_title':'weight',
          'knowl':'mf.elliptic.weight'},
         {'cols':[],

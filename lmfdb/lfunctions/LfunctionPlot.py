@@ -416,6 +416,7 @@ def paintSvgHoloNew(condmax):
         """
         Given a total number of weights returns a list of RGB tuples
         """
+        # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
         return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=1.5, light=.75, rot=3.8))
