@@ -558,6 +558,32 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
+    def _get_Rgens(self):
+        d = self.dim
+        if self.single_generator:
+            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+                R = PolynomialRing(QQ, self._nu_var)
+            else:
+                R = PolynomialRing(QQ, 'beta')
+            beta = R.gen()
+            return [beta**i for i in range(d)]
+        else:
+            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
+            return [1] + [g for g in R.gens()]
+
+    def display_character_values(self):
+        Rgens = self._get_Rgens()
+        d = self.dim
+        gens = [r'      <td class="dark border-right border-bottom">\(g\)</td>']
+        vals = [r'      <td class="dark border-right">\(\chi(g)\)</td>']
+        for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
+            term = sum(Rgens[i]*chi_g[i] for i in range(d))
+            latexterm = latex(term)
+            color = "dark" if j%2 else "light"
+            gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
+            vals.append(r'      <td class="%s">\(%s\)</td>'%(color, latexterm))
+        return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
+
     def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
         # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
@@ -565,17 +591,8 @@ function switch_basis(btype) {
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
-        d = len(eigseq[0])
-        if self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
-                R = PolynomialRing(QQ, self._nu_var)
-            else:
-                R = PolynomialRing(QQ, 'beta')
-            beta = R.gen()
-            Rgens = [beta**i for i in range(d)]
-        else:
-            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
-            Rgens = [1] + [g for g in R.gens()]
+        d = self.dim
+        Rgens = self._get_Rgens()
         s = ''
         for j in range(len(eigseq)):
             term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
