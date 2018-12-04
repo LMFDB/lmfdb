@@ -582,8 +582,8 @@ function switch_basis(btype) {
     def display_character_values(self):
         Rgens = self._get_Rgens()
         d = self.dim
-        gens = [r'      <td class="dark border-right border-bottom">\(g\)</td>']
-        vals = [r'      <td class="dark border-right">\(\chi(g)\)</td>']
+        gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
+        vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
         for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
             term = sum(Rgens[i]*chi_g[i] for i in range(d))
             latexterm = latex(term)
