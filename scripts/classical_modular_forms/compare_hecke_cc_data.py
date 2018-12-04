@@ -4,6 +4,7 @@ from lmfdb.db_backend import db
 from sage.all import RR
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
+filaneme = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
 num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
@@ -39,7 +40,7 @@ def compare_row(a, b, verbose = True):
             if not compare_floats(a[i], b[i]):
                 print c, a[i], b[i], a[i] - b[i]
                 return False 
-        elif c in ['an', 'first_an']:
+        elif c == 'an':
             for j, ((ax, ay), (bx, by)) in enumerate(zip(a[i],b[i])):
                 if not compare_floats(ax, bx):
                     print c, j, ax, bx, ax-bx
@@ -51,7 +52,7 @@ def compare_row(a, b, verbose = True):
                     if ay != 0:
                         print RR(abs((ay - by)/ay)).log(2)
                     return False
-        elif c in ['angles', 'first_angles']:
+        elif c == 'angles':
             for j, ((ap, at), (bp, bt)) in enumerate(zip(a[i],b[i])):
                 if ap != bp:
                     print c, j, ap, bp
