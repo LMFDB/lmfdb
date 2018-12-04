@@ -69,8 +69,9 @@ class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
-        #FIXME
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity']:
+
+        # Make up for db_backend currently deleting Nones
+        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank']:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -144,9 +145,6 @@ class WebNewform(object):
             self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
-        # Make up for db_backend currently deleting Nones
-        if not hasattr(self, 'hecke_cutters'):
-            self.hecke_cutters = None
         self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
@@ -159,17 +157,19 @@ class WebNewform(object):
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
                             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
-        try:
-            # The try shouldn't be hit except when we're adding data
-            if self.is_self_dual != 0:
+
+        if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Analytic rank', str(int(self.analytic_rank))),
-                                    ('Dimension', str(self.dim))])
-        except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
-            # no data for analytic rank
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Dimension', str(self.dim))])
+        self.properties += [('Analytic conductor', self.analytic_conductor)]
+
+        if self.analytic_rank is not None:
+            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+
+        self.properties += [('Dimension', str(self.dim))]
+
+        if self.weight == 1:
+            self.properties.extend([('Projective image', '\(%s\)' % self.projective_image_latex),
+                ('Artin degree', str(self.artin_degree))])
 
         if self.is_cm == 1:
             self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
