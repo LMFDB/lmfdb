@@ -89,7 +89,7 @@ with open(filename, 'r') as F:
                     if c == 'first_an':
                         linesplit[i] = linesplit[i][:-1]
                 elif c in ['angles', 'first_angles']:
-                    linesplit[i] = [[int(x), float(y)] for x, y in eval(linesplit[i])]
+                    linesplit[i] = [float(y) for _, y in eval(linesplit[i])]
             # fix trivial character
             if linesplit[2] == 0:
                 linesplit[2] = 1
