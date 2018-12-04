@@ -8,6 +8,8 @@ filaneme = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
 num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
+cols.remove('first_an')
+cols.remove('first_angles')
 maxNk2 = db.mf_newforms.max('Nk2')
 
 if len(sys.argv) == 3:
@@ -104,6 +106,11 @@ with open(filename, 'r') as F:
             if 'embedding_root_real' not in hc.keys(): #FIXME
                 hc['embedding_root_imag'] = 0
                 hc['embedding_root_real'] = 0
+            if sorted(hc.keys()) != sorted(cols):
+                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                print sorted(hc.keys())
+                print sorted(cols)
+                assert False
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
