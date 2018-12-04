@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db
-from sage.all import RR
+from sage.all import RR, prime_range
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
 filename = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
@@ -11,6 +11,10 @@ cols = cols_header.split(':')
 cols.remove('first_an')
 cols.remove('first_angles')
 maxNk2 = db.mf_newforms.max('Nk2')
+# we store a_n with n \in [1, an_storage_bound]
+an_storage_bound = 1000
+# we store alpha_p with p <= an_storage_bound
+primes_for_angles = prime_range(an_storage_bound)
 
 if len(sys.argv) == 3:
     M = int(sys.argv[1])
@@ -86,7 +90,8 @@ with open(filename, 'r') as F:
                     if c == 'first_an':
                         linesplit[i] = linesplit[i][:-1]
                 elif c in ['angles', 'first_angles']:
-                    linesplit[i] = [float(y) for _, y in eval(linesplit[i])]
+                    angles_dict = dict([(int(x), float(y)) for x, y in eval(linesplit[i])])
+                    linesplit[i] = [ angles_dict.get(p, None) for p in primes_for_angles ]
             # fix trivial character
             if linesplit[2] == 0:
                 linesplit[2] = 1
