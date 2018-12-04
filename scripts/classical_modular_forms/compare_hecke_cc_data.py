@@ -4,7 +4,7 @@ from lmfdb.db_backend import db
 from sage.all import RR
 
 filename = '/scratch/importing/mf_dim20_hecke_cc_3000.txt'
-filaneme = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
+filename = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
 num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
