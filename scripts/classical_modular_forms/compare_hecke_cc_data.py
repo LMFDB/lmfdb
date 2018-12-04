@@ -55,12 +55,9 @@ def compare_row(a, b, verbose = True):
                         print RR(abs((ay - by)/ay)).log(2)
                     return False
         elif c == 'angles':
-            for j, ((ap, at), (bp, bt)) in enumerate(zip(a[i],b[i])):
-                if ap != bp:
-                    print c, j, ap, bp
-                    return False
+            for j, at, bt in enumerate(zip(a[i],b[i])):
                 if not compare_floats(at, bt):
-                    print c, j, ap, at, bt, at-bt
+                    print c, j, at, bt, at-bt
                     if at !=0:
                         print RR(abs((at - bt)/at)).log(2)
                     return False
