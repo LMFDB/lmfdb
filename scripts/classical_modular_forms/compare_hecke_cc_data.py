@@ -98,7 +98,7 @@ with open(filename, 'r') as F:
             if hc is None:
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
                 assert False
-            for c in ['an', 'first_an']:
+            for c in ['an']:
                 hc[c] = [[float(x), float(y)] for x, y in hc[c]]
 
             if 'embedding_root_real' not in hc.keys(): #FIXME

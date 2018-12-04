@@ -7,7 +7,7 @@ IMPORTANT:
 * Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
 * Upload data for Nk^2 <= 3000 (Drew)
 * Create appropriate indexes
-* Update level buckets in stats and on front page (David)
+* Update level buckets in stats and on front page (Edgar)
 * Add character values section (hecke_ring_character_values) (David)
 * compare db data agains Drew's data 3001-4000 (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
