@@ -104,11 +104,6 @@ with open(filename, 'r') as F:
             if 'embedding_root_real' not in hc.keys(): #FIXME
                 hc['embedding_root_imag'] = 0
                 hc['embedding_root_real'] = 0
-            if sorted(hc.keys()) != sorted(cols):
-                print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
-                print sorted(hc.keys())
-                print sorted(cols)
-                assert False
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
