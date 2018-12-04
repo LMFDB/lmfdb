@@ -124,6 +124,14 @@ class WebNewform(object):
             self.has_exact_qexp = False
         self.rel_dim = self.dim // self.char_degree
 
+
+        if self.weight == 1:
+            #FIXME no need for the if
+            self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:] if 'projective_image' in self._data else '?'
+            #FIXME
+            if 'artin_degree' not in self._data:
+                self.artin_degree = '?'
+
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
                                # Should get updated in setup_cc_data.
