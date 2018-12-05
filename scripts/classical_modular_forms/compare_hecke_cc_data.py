@@ -8,8 +8,8 @@ filename = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
 num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
-cols.remove('first_an')
-cols.remove('first_angles')
+del cols[10]
+del cols[8]
 maxNk2 = db.mf_newforms.max('Nk2')
 # we store a_n with n \in [1, an_storage_bound]
 an_storage_bound = 1000
@@ -81,6 +81,8 @@ with open(filename, 'r') as F:
             pass
         elif linenumber % M == C:
             linesplit = line[:-1].split(':')
+            del linesplit[10]
+            del linesplit[8]
             N, k = map(int, linesplit[1].split('.')[:2])
             #if N*k**2 > maxNk2:
             #    continue
@@ -89,13 +91,11 @@ with open(filename, 'r') as F:
                     linesplit[i] = int(linesplit[i])
                 elif c in ['embedding_root_real', 'embedding_root_imag']:
                     linesplit[i] =float(linesplit[i])
-                elif c in ['an', 'first_an']:
+                elif c == 'an':
                     linesplit[i] = [[float(x), float(y)] for x, y in eval(linesplit[i])]
-                    if c == 'first_an':
-                        linesplit[i] = linesplit[i][:-1]
-                elif c in ['angles', 'first_angles']:
+                elif c == 'angles':
                     angles_dict = dict([(int(x), float(y)) for x, y in eval(linesplit[i])])
-                    linesplit[i] = [ angles_dict.get(p, None) for p in primes_for_angles ]
+                    linesplit[i] = [ angles_dict.get(p) for p in primes_for_angles ]
             # fix trivial character
             if linesplit[2] == 0:
                 linesplit[2] = 1
@@ -120,6 +120,8 @@ with open(filename, 'r') as F:
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                print hc_list[-1][:10]
+                print linesplit[-1][:10]
                 assert False
 
             if (linenumber - C)/M % int(float(num_lines)/(10*M)) == 0:

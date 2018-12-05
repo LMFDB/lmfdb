@@ -157,12 +157,12 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
+    newform_labels = ('1.12.a.a','11.2.a.a', '23.2.a.a', '49.2.e.b', '95.6.a.a', '983.2.c.a')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
-    space_labels = ('20.5','60.2','55.3.d')
+    space_labels = ('20.5','60.2','55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
-    info["weight_list"] = ('1', '2', '3-4', '5-9', '10-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-9', '10-99', '100-%d' % level_bound() )
+    info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
+    info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -881,7 +881,7 @@ class CMF_stats(StatsDisplay):
 
     stat_list = [
         {'cols': [],
-         'buckets':{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]},
+         'buckets':{'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
         {'cols': [],
@@ -910,7 +910,7 @@ class CMF_stats(StatsDisplay):
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
          'row_title': 'newforms',
          'knowl': 'mf.elliptic.galois-orbits',
-         'url_extras': 'submit=Spaces&'},
+         'url_extras': 'search_type=Spaces&'},
         {'cols': 'cm_disc',
          'top_title':'complex multiplication',
          'row_title':'CM by',
