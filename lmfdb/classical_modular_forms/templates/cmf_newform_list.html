@@ -62,13 +62,11 @@
       <td class="center">{% if 'fricke_eigenval' in mf and mf['fricke_eigenval'] %}\({{"+" if mf['fricke_eigenval'] == 1 else "-"}}\){% endif %}</td>
       {% endif %}
       <td>
+        {% if mf.qexp_display %}
         <a href="{{info.mf_url(mf)}}">
-          {% if mf.qexp_display %}
           \({{ mf.qexp_display }}\)
-          {% else %}
-          \(q + \cdots\)
-          {% endif %}
         </a>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
