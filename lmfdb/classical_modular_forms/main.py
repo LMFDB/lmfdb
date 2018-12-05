@@ -936,12 +936,19 @@ class CMF_stats(StatsDisplay):
          'row_title': 'newforms',
          'knowl': 'mf.elliptic.galois-orbits',
          'url_extras': 'search_type=Spaces&'},
-        {'cols': 'cm_disc',
-         'top_title':'complex multiplication',
-         'row_title':'CM by',
+        #{'cols': 'cm_disc',
+        # 'top_title':'complex multiplication',
+        # 'row_title':'CM by',
+        # 'knowl':'mf.elliptic.cm_form',
+        # 'reverse':True,
+        # 'formatter':cm_format},
+        {'cols': 'self_twist_discs',
+         'top_title':'self twists',
+         'row_title':'twist by',
          'knowl':'mf.elliptic.cm_form',
          'reverse':True,
-         'formatter':cm_format},
+         'split_list':True,
+         'formatter':cm_format}
     ]
 
 @cmf.route("/stats")
