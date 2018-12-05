@@ -148,22 +148,16 @@ Info was: {{info}}
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twist discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='self_twist_disc' placeholder='-3'></td>
+      <td><input type='text' style="width: 130px;" name='self_twist_discs' placeholder='-3'></td>
       <td><span class="formexample"> e.g. -3 </span></td>
 
       <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
       <td>
         <select name='self_twist' style="width: 140px;">
-          <option value="" selected>unrestricted</option>
-          <option value="yes_selftwist">has self-twist</option>
-          <option value="yes_cm">has CM</option>
-          <option value="yes_rm">has RM</option>
-          <option value="not_no_selftwist">has self-twist or unknown</option>
-          <option value="not_no_cm">has CM or unknown</option>
-          <option value="not_no_cm">has CM or unknown</option>
-          <option value="unknown_selftwist">unknown</option>
-          <option value="not_yes_self_wist">no self-twists or unknown</option>
-          <option value="no_selftwist">no self-twists</option>
+          {% set self_twist_values = [('', 'unrestricted'), ('yes_selftwist', 'has self-twist'), ('yes_cm', 'has CM'), ('yes_rm', 'has RM'), ('not_no_selftwist','has self-twist or unknown'), ('not_no_cm', 'has CM or unknown'),  ('not_no_rm', 'has RM or unknown'), ('unknown_selftwist', 'unknown'), ('not_yes_self_wist', 'no self-twists or unknown'), ('no_selftwist', 'no self-twists') ] %}
+          {% for val, text in self_twist_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
         </select>
       </td>
     </tr>

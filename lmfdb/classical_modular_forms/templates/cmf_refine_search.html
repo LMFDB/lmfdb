@@ -61,23 +61,21 @@
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-    <td>{{ KNOWL('mf.elliptic.cm_form', title='Has CM') }}</td>
+    <td>{{ KNOWL('mf.elliptic.self_twist', title='Self-twist discriminant')}}</td>
+    <td>{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
     {# <td>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td> #}
     <td>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
     <td>{{ KNOWL('lfunction.self-dual', title='Is self dual?') }}</td>
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px" name='cm_disc' placeholder='-3' value='{{info.cm_disc}}'></td>
+    <td><input type='text' style="width: 140px;" name='self_twist_discs' placeholder='-3' value='{{info.self_twist_discs}}'></td>
     <td>
-      <select name='is_cm' style="width: 150px;">
-        <option value=""{% if not info.is_cm %} selected='yes'{% endif %}>unrestricted</option>
-        <option value="yes"{% if info.is_cm == 'yes' %} selected='yes'{% endif %}>yes</option>
-        <option value="not_no"{% if info.is_cm == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
-        <option value="unknown"{% if info.is_cm == 'unknown' %} selected='yes'{% endif %}>unknown</option>
-        <option value="not_yes"{% if info.is_cm == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
-        <option value="no"{% if info.is_cm == 'no' %} selected='yes'{% endif %}>no</option>
+      <select name='self_twist' style="width: 150px;">
+        {% set self_twist_values = [('', 'unrestricted'), ('yes_selftwist', 'has self-twist'), ('yes_cm', 'has CM'), ('yes_rm', 'has RM'), ('not_no_selftwist','has self-twist or unknown'), ('not_no_cm', 'has CM or unknown'),  ('not_no_rm', 'has RM or unknown'), ('unknown_selftwist', 'unknown'), ('not_yes_self_wist', 'no self-twists or unknown'), ('no_selftwist', 'no self-twists') ] %}
+        {% for val, text in self_twist_values %}
+        <option value="{{ val }}"{% if info.self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
+        {% endfor %}
       </select>
     </td>
     {#
@@ -112,7 +110,7 @@
   </tr>
   <tr>
   </tr>
-  {% if info.weight == '1' %}
+  {% if info.weight == '1' or info.self_twist == 'yes_rm' %}
   <tr>
     <td rowspan="2">
       Only for weight 1:

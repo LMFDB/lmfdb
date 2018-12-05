@@ -5,7 +5,7 @@ from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -659,6 +659,7 @@ def newform_parse(info, query):
     parse_bool_unknown(info, query, 'is_self_twist',name='Has self-twist')
     parse_bool_unknown(info, query, 'is_cm',name='Has self-twist')
     parse_bool_unknown(info, query, 'is_rm',name='Has self-twist')
+    parse_subset(info, query, 'self_twist_discs', name='Self-twist discriminant', parse_singleton=int)
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal')
     parse_bool_unknown(info, query, 'has_inner_twist')
@@ -666,6 +667,9 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool_unknown(info, query, 'is_self_dual')
+    parse_noop(info, query, 'projective_image')
+    parse_noop(info, query, 'projective_image_type')
+    parse_ints(info, query, 'artin_degree', name="Artin degree")
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
