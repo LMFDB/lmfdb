@@ -2687,7 +2687,7 @@ class PostgresStatsTable(PostgresBase):
                 total = self._slow_count({}, extra=False)
         self.total = total
 
-    def _has_stats(self, jcols, ccols, cvals, threshold, threshold_inequality=False):
+    def _has_stats(self, jcols, ccols, cvals, threshold, split_list=False, threshold_inequality=False):
         """
         Checks whether statistics have been recorded for a given set of columns.
         It just checks whether the "total" stat has been computed.
@@ -2700,8 +2700,12 @@ class PostgresStatsTable(PostgresBase):
         - ``threshold`` -- an integer: if the number of rows with a given tuple of
            values for the accumulated columns is less than this threshold, those
            rows are thrown away.
+        - ``split_list`` -- whether entries of lists should be counted once for each entry.
         """
-        values = [jcols, "total"]
+        if split_list:
+            values = [jcols, "split_total"]
+        else:
+            values = [jcols, "total"]
         if ccols is None:
             ccols = "constraint_cols IS NULL"
             cvals = "constraint_values IS NULL"
@@ -2722,7 +2726,7 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         return cur.rowcount > 0
 
-    def quick_count(self, query, suffix=''):
+    def quick_count(self, query, split_list=False, suffix=''):
         """
         Tries to quickly determine the number of results for a given query
         using the count table.
@@ -2736,12 +2740,12 @@ class PostgresStatsTable(PostgresBase):
         Either an integer giving the number of results, or None if not cached.
         """
         cols, vals = self._split_dict(query)
-        selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s").format(Identifier(self.counts + suffix))
-        cur = self._execute(selecter, [cols, vals])
+        selecter = SQL("SELECT count FROM {0} WHERE cols = %s AND values = %s AND split = %s").format(Identifier(self.counts + suffix))
+        cur = self._execute(selecter, [cols, vals, split_list])
         if cur.rowcount:
             return int(cur.fetchone()[0])
 
-    def _slow_count(self, query, record=True, suffix='', extra=True):
+    def _slow_count(self, query, split_list=False, record=True, suffix='', extra=True):
         """
         No shortcuts: actually count the rows in the search table.
 
@@ -2754,6 +2758,8 @@ class PostgresStatsTable(PostgresBase):
 
         The number of rows in the search table satisfying the query.
         """
+        if split_list:
+            raise NotImplementedError
         selecter = SQL("SELECT COUNT(*) FROM {0}").format(Identifier(self.search_table + suffix))
         qstr, values = self.table._parse_dict(query)
         if qstr is not None:
@@ -2926,7 +2932,7 @@ class PostgresStatsTable(PostgresBase):
         assert len(ccols) == len(cvals)
         return dict(zip(ccols, cvals))
 
-    def add_stats(self, cols, constraint=None, threshold=None, suffix='', commit=True):
+    def add_stats(self, cols, constraint=None, threshold=None, split_list=False, suffix='', commit=True):
         """
         Add statistics on counts, average, min and max values for a given set of columns.
 
@@ -2937,6 +2943,10 @@ class PostgresStatsTable(PostgresBase):
             It should take the form of a dictionary of the form used in search queries.
             Alternatively, you can provide a pair ccols, cvals giving the items in the dictionary.
         - ``threshold`` -- an integer or None.
+        - ``split_list`` -- if True, then counts each element of lists separately.  For example,
+            if the list [2,4,8] occurred as the value for a certain column,
+            the counts for 2, 4 and 8 would each be incremented.  Constraint columns are not split.
+            This option is not supported for nontrivial thresholds.
 
         OUTPUT:
 
@@ -2947,6 +2957,8 @@ class PostgresStatsTable(PostgresBase):
 
         Returns a boolean: whether any counts were stored.
         """
+        if split_list and threshold is not None:
+            raise ValueError("split_list and threshold not simultaneously supported")
         cols = sorted(cols)
         where = [SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols]
         values, ccols, cvals = [], None, None
@@ -2970,7 +2982,8 @@ class PostgresStatsTable(PostgresBase):
             where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
         else:
             where = SQL("")
-        if self._has_stats(cols, ccols, cvals, threshold):
+        if self._has_stats(cols, ccols, cvals, threshold, split_list):
+            self.logger.info("Statistics already exist")
             return
         self.logger.info("Adding stats to {0} for {1} ({2})".format(self.search_table, ", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
         having = SQL("")
@@ -2987,7 +3000,10 @@ class PostgresStatsTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
             cur = self._execute(selecter, values)
-            to_add = []
+            if split_list:
+                to_add = defaultdict(int)
+            else:
+                to_add = []
             total = 0
             onenumeric = False # whether we're grouping by a single numeric column
             if len(cols) == 1:
@@ -2997,6 +3013,8 @@ class PostgresStatsTable(PostgresBase):
                     avg = 0
                     mn = None
                     mx = None
+            if split_list:
+                allcols = tuple(allcols)
             for countvec in cur:
                 colvals, count = countvec[:-1], countvec[-1]
                 if constraint is None:
@@ -3010,8 +3028,14 @@ class PostgresStatsTable(PostgresBase):
                             i += 1
                         else:
                             allcolvals.append(constraint[col])
-                to_add.append((allcols, allcolvals, count))
-                total += count
+                if split_list:
+                    listed = [(x if isinstance(x, list) else list(x)) for x in allcolvals]
+                    for vals in cartesian_product_iterator(listed):
+                        total += count
+                        to_add[(allcols, vals)] += count
+                else:
+                    to_add.append((allcols, allcolvals, count))
+                    total += count
                 if onenumeric:
                     val = colvals[0]
                     avg += val * count
@@ -3022,7 +3046,10 @@ class PostgresStatsTable(PostgresBase):
             if total == 0:
                 self.logger.info("No rows exceeded the threshold; returning after %.3f secs".format(time.time() - now))
                 return False
-            stats = [(cols, "total", total, ccols, cvals, threshold)]
+            if split_list:
+                stats = [(cols, "split_total", total, ccols, cvals, threshold)]
+            else:
+                stats = [(cols, "total", total, ccols, cvals, threshold)]
             if onenumeric:
                 avg = float(avg) / total
                 stats.append((cols, "avg", avg, ccols, cvals, threshold))
@@ -3031,7 +3058,11 @@ class PostgresStatsTable(PostgresBase):
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
-            inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
+            if split_list:
+                to_add = [(cols, values, count, True) for ((cols, values), count) in to_add.items()]
+                inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
+            else:
+                inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
         self.logger.info("Added stats for %s in %.3f secs"%(", ".join(cols), time.time() - now))
         return True
@@ -3134,6 +3165,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             # Determine the stats and counts currently recorded
             selecter = SQL("SELECT cols, constraint_cols, constraint_values, threshold FROM {0} WHERE stat = %s").format(Identifier(self.stats))
             stat_cmds = list(self._execute(selecter, ["total"]))
+            split_cmds = list(self._execute(selecter, ["split_total"]))
             col_value_dict = self.extra_counts(include_counts=False, suffix=suffix)
 
             # Delete all stats and counts
@@ -3144,6 +3176,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             # Regenerate stats and counts
             for cols, ccols, cvals, threshold in stat_cmds:
                 self.add_stats(cols, (ccols, cvals), threshold)
+            for cols, ccols, cvals, threshold in split_cmds:
+                self.add_stats(cols, (ccols, cvals), threshold, split_list=True)
             self._add_extra_counts(col_value_dict, suffix=suffix)
 
             if total:
@@ -3201,7 +3235,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         return ans
 
-    def _get_values_counts(self, cols, constraint):
+    def _get_values_counts(self, cols, constraint, split_list=False):
         """
         Utility function used in ``display_data``.
 
@@ -3213,17 +3247,17 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``cols`` -- a list of column names that are stored in the counts table.
         - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
         """
-        selecter_constraints = [SQL("cols = %s")]
+        selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
             positions = [allcols.index(x) for x in cols]
-            selecter_values = [allcols]
+            selecter_values = [split_list, allcols]
             for i, x in enumerate(allcols):
                 if x in constraint:
                     selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                     selecter_values.append(Json(constraint[x]))
         else:
-            selecter_values = [cols]
+            selecter_values = [split_list, cols]
             positions = range(len(cols))
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
@@ -3266,7 +3300,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, include_upper=True, query_formatter=None, reverse=False, url_extras=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, reverse=False, url_extras=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3283,6 +3317,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             The buckets are the values between these break points.  Repeating break points
             makes one bucket consist of just that point.  Values of these columns
             are grouped based on which bucket they fall into.
+        - ``split_list`` -- whether count entries from lists individually.  For example,
+            a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
         - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
         - ``query_formatter`` -- a function for encoding the values into the url.
         - ``reverse`` -- whether to sort in reverse order.
@@ -3304,10 +3340,10 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 query_formatter = lambda x: str(x)
             col = cols[0]
             total, avg = self._get_total_avg(cols, constraint, avg)
-            data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint)]
+            data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint, split_list)]
             data.sort(reverse=reverse)
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
-            if avg:
+            if split_list or avg:
                 raise ValueError
             def range_formatter(x):
                 if isinstance(x, dict):
@@ -3345,6 +3381,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             base_url += url_extras
         data = [{'value':formatter(value),
                  count_key:count,
+                 # TODO: update url for split_list
                  'query':"{0}{1}={2}".format(base_url, col, query_formatter(value)),
                  'proportion':format_percentage(count, total)}
                 for value, count in data]
@@ -3838,7 +3875,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                                          SQL(", ").join(extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
-            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean)')
+            creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")

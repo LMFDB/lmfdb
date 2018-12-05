@@ -63,6 +63,8 @@ def set_info_funcs(info):
                 parts[2] = r'\(\cdots\)'
                 name = '.'.join(parts)
             return nf_display_knowl(nf_label, name)
+        elif mf['dim'] == mf['char_degree'] and mf.get('field_poly_root_of_unity'):
+            return r'\(\Q(\zeta_{%s})\)' % mf['field_poly_root_of_unity']
         else:
             poly = mf.get('field_poly')
             if poly:
@@ -141,7 +143,8 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        info['search_type'] = search_type = info.get('search_type', 'List')
+        # hidden_search_type for prev/next buttons
+        info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:

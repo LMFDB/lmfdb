@@ -7,6 +7,7 @@
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="hidden_search_type" value="{{info.search_type}}"/>
 
 <table>
   <tr>
@@ -139,7 +140,7 @@
     <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px">Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
     {% for type, desc in search_types %}
-    {%if info.search_type != type %}
+    {% if info.search_type != type %}
     <td class="button"><button type='submit' name='search_type' value='{{ type }}'>{{ desc }}</button> &nbsp; &nbsp; </td>
     {% endif %}
     {% endfor %}
