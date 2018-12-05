@@ -118,6 +118,8 @@ with open(filename, 'r') as F:
             hc_list = [ hc[c] for c in cols]
             if not compare_row(hc_list, linesplit):
                 print {'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]}
+                print hc_list[-1][:10]
+                print linesplit[-1][:10]
                 assert False
 
             if (linenumber - C)/M % int(float(num_lines)/(10*M)) == 0:
