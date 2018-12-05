@@ -171,10 +171,19 @@ class WebNewform(object):
             self.properties.extend([('Projective image', '\(%s\)' % self.projective_image_latex),
                 ('Artin degree', str(self.artin_degree))])
 
-        if self.is_cm == 1:
-            self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
-        elif self.is_cm == -1:
-            self.properties += [('CM', 'No')]
+        if self.is_self_twist ==1:
+            if self.is_cm == 1:
+                disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
+                self.properties += [('CM discriminant', disc)]
+            elif self.is_cm == -1:
+                self.properties += [('CM', 'No')]
+
+            if self.weight == 1:
+                if self.is_rm == 1:
+                    disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
+                    self.properties += [('RM discriminant', disc)]
+                elif self.is_rm == -1:
+                    self.properties += [('RM', 'No')]
 
         # Breadcrumbs
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
@@ -212,6 +221,11 @@ class WebNewform(object):
                 for lfun_label in self.lfunction_labels():
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
                     res.append(('L-function ' + lfun_label, lfun_url))
+        # fake it until you make it
+        # display L-functions from Artin
+        elif self.weight == 1:
+            res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
+
         return res
 
     @property
@@ -328,12 +342,15 @@ class WebNewform(object):
         else:
             return self.field_knowl()
 
-    def cm_field_knowl(self):
-        # The knowl for the CM field, with appropriate title
-        if self.__dict__.get('cm_disc', 0) == 0:
-            raise ValueError("Not CM")
-        cm_label = "2.0.%s.1"%(-self.cm_disc)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
+    def self_twist_field_knowl(self, disc):
+        r = 2 if disc > 0 else 0
+        field_label = "2.%d.%d.1" % (r, abs(disc))
+        field_name = field_pretty(field_label)
+        return nf_display_knowl(field_label, field_name)
+
+    def rm_and_cm_field_knowl(self, sign  = 1):
+        disc = [ d for d in self.__dict__.get('self_twist_discs', []) if sign*d > 0 ]
+        return ' and '.join( map(self.self_twist_field_knowl, disc) )
 
     def field_knowl(self):
         if self.rel_dim == 1:

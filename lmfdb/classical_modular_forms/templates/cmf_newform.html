@@ -388,7 +388,12 @@ function get_all_embeddings(num_embeddings) {
 {% if newform.is_cm != 0 %}
 <p>This newform is
 {{ "not" if newform.is_cm == -1 }}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.cm_proved else '')) }}{% if newform.is_cm == 1 %}, with CM by {{ newform.cm_field_knowl() |safe }}{% endif %}.</p>
+a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_cm == 1 %}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}{% endif %}.</p>
+{% endif %}
+{% if newform.weight == 1 and newform.is_rm != 0 %}
+<p>This newform is
+{{ "not" if newform.is_rm == -1 }}
+a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_rm == 1 %}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}{% endif %}.</p>
 {% endif %}
 
 {% if newform.is_twist_minimal is defined %}
