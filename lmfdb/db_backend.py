@@ -277,7 +277,9 @@ class PostgresBase(object):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
-                    if values:
+                    if values_list:
+                        query = query.replace('%s','VALUES_LIST')
+                    elif values:
                         query = query % (tuple(values))
                     self.logger.info(query + " ran in %ss" % (t,))
                     if slow_note is not None:
