@@ -1648,6 +1648,13 @@ class PostgresTable(PostgresBase):
         try:
             with searchfile:
                 with extrafile:
+                    # write headers
+                    searchfile.write(u'\t'.join(search_cols) + u'\n')
+                    searchfile.write(u'\t'.join(self.col_type.get(col) for col in search_cols) + u'\n\n')
+                    if self.extra_table is not None:
+                        extrafile.write(u'\t'.join(extra_cols) + u'\n')
+                        extrafile.write(u'\t'.join(self.col_type.get(col) for col in extra_cols) + u'\n\n')
+
                     for rec in self.search(query, projection=projection, sort=[]):
                         processed = func(rec)
                         searchfile.write(u'\t'.join(tostr_func(processed.get(col), self.col_type[col]) for col in search_cols) + u'\n')
