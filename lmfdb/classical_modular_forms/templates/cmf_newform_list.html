@@ -13,7 +13,7 @@
       {% if Projective_image %}
       <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.projective_image', title='Image') }}</th>
       {% endif %}
-      <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
+      <th rowspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twist') }}</th>
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
@@ -48,7 +48,7 @@
         \({{ info.display_projective_image(mf) }}\)
       </td>
       {% endif %}
-      <td> {{ info.cm_link(mf) | safe }}</td>
+      <td> {{ info.self_twist_link(mf) | safe }}</td>
       <td class="right">\({{ mf.trace_display[0] }}\)</td>
       <td class="right">\({{ mf.trace_display[1] }}\)</td>
       <td class="right">\({{ mf.trace_display[2] }}\)</td>

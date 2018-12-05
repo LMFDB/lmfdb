@@ -73,16 +73,17 @@ def set_info_funcs(info):
 
     info["nf_link"] = nf_link
 
-    def cm_link(mf):
-        if mf['is_cm'] == -1:
+    def self_twist_link(mf):
+        if mf['is_self_twist'] == -1:
             return "No"
-        elif mf['is_cm'] == 0:
+        elif mf['is_self_twist'] == 0:
             return ""
         else:
-            cm_label = "2.0.%s.1"%(-mf['cm_disc'])
-            cm_name = field_pretty(cm_label)
-            return nf_display_knowl(cm_label, cm_name)
-    info["cm_link"] = cm_link
+            r = 2 if mf['self_twist_disc'] > 0 else 0
+            field_label = "2.%d.%d.1" % (r, abs(mf['self_twist_disc']))
+            field_name = field_pretty(field_label)
+            return nf_display_knowl(field_label, field_name)
+    info["self_twist_link"] = self_twist_link
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
@@ -108,7 +109,7 @@ def set_info_funcs(info):
     info["display_Projective"] = display_Projective
 
     # assumes the format Dn A4 S4 S5
-    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else '?'
+    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
 
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
