@@ -142,6 +142,10 @@
    {% if entries %}
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
+    {% if entries is string %}
+      {# For very large lists of friends, we use javascript #}
+      {{ entries | safe }}
+    {% else %}
     <ul>
         {% for text,url in entries %}
         {% if url %}
@@ -151,6 +155,7 @@
         {% endif %}
         {% endfor %}
     </ul>
+    {% endif %}
   </div>
    {% endif %}
  {%- endmacro %}
