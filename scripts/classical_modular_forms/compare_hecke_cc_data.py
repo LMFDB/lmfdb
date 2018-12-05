@@ -8,8 +8,8 @@ filename = '/scratch/importing/mf_dim20_hecke_cc_3001_4000.txt'
 num_lines = sum(1 for line in open(filename))
 cols_header = 'hecke_orbit_code:lfunction_label:conrey_label:embedding_index:embedding_m:embedding_root_real:embedding_root_imag:an:first_an:angles:first_angles'
 cols = cols_header.split(':')
-cols.remove('first_an')
-cols.remove('first_angles')
+del cols[8]
+del cols[10]
 maxNk2 = db.mf_newforms.max('Nk2')
 # we store a_n with n \in [1, an_storage_bound]
 an_storage_bound = 1000
@@ -81,6 +81,8 @@ with open(filename, 'r') as F:
             pass
         elif linenumber % M == C:
             linesplit = line[:-1].split(':')
+            del linesplit[8]
+            del linesplit[10]
             N, k = map(int, linesplit[1].split('.')[:2])
             #if N*k**2 > maxNk2:
             #    continue
