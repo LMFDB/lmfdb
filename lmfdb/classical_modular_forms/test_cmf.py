@@ -259,8 +259,7 @@ class CmfTest(LmfdbTest):
         r"""
         Test that we don't hit any error on a random newform
         """
-        for i in range(100):
-            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random', follow_redirects = True)
+        def check(page):
             assert 'Newspace' in page.data
             assert 'parameters' in page.data
             assert 'Properties' in page.data
@@ -268,5 +267,16 @@ class CmfTest(LmfdbTest):
             assert 'expansion' in page.data
             assert 'L-function' in page.data
             assert 'Satake parameters' in page.data or 'Embeddings' in page.data
+        for i in range(100):
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/random', follow_redirects = True)
+            check(page)
+
+        for w in ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-'):
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=%d&search_type=Random' % w, follow_redirects = True)
+            check(page)
+
+        for l in ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-'):
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=%s&search_type=Random' % l, follow_redirects = True)
+            check(page)
 
 

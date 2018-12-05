@@ -5,7 +5,7 @@ from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
@@ -73,16 +73,17 @@ def set_info_funcs(info):
 
     info["nf_link"] = nf_link
 
-    def cm_link(mf):
-        if mf['is_cm'] == -1:
+    def self_twist_link(mf):
+        if mf['is_self_twist'] == -1:
             return "No"
-        elif mf['is_cm'] == 0:
+        elif mf['is_self_twist'] == 0:
             return ""
         else:
-            cm_label = "2.0.%s.1"%(-mf['cm_disc'])
-            cm_name = field_pretty(cm_label)
-            return nf_display_knowl(cm_label, cm_name)
-    info["cm_link"] = cm_link
+            r = 2 if mf['self_twist_disc'] > 0 else 0
+            field_label = "2.%d.%d.1" % (r, abs(mf['self_twist_disc']))
+            field_name = field_pretty(field_label)
+            return nf_display_knowl(field_label, field_name)
+    info["self_twist_link"] = self_twist_link
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
@@ -108,7 +109,7 @@ def set_info_funcs(info):
     info["display_Projective"] = display_Projective
 
     # assumes the format Dn A4 S4 S5
-    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else '?'
+    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
 
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
@@ -636,11 +637,29 @@ def common_parse(info, query):
     prime_mode = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
+def preparse_self_twist(info):
+    # yes, no, not_no, not_yes, unknown
+    # + '_' +
+    # selftwist, cm, rm
+    translate = {'selftwist':'is_self_twist', 'cm':'is_cm', 'rm':'is_rm'}
+    inp = info.get('self_twist')
+    if inp:
+        inpsplit = inp.split('_')
+        key = translate.get(inpsplit[-1])
+        if key:
+            info[key] = '_'.join(inpsplit[:-1])
+
+
 def newform_parse(info, query):
     common_parse(info, query)
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
-    parse_bool_unknown(info, query, 'is_cm',name='CM form')
+    # populates is_self_twist, is_cm or is_rm
+    preparse_self_twist(info)
+    parse_bool_unknown(info, query, 'is_self_twist',name='Has self-twist')
+    parse_bool_unknown(info, query, 'is_cm',name='Has self-twist')
+    parse_bool_unknown(info, query, 'is_rm',name='Has self-twist')
+    parse_subset(info, query, 'self_twist_discs', name='Self-twist discriminant', parse_singleton=int)
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal')
     parse_bool_unknown(info, query, 'has_inner_twist')
@@ -648,6 +667,9 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool_unknown(info, query, 'is_self_dual')
+    parse_noop(info, query, 'projective_image')
+    parse_noop(info, query, 'projective_image_type')
+    parse_ints(info, query, 'artin_degree', name="Artin degree")
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,

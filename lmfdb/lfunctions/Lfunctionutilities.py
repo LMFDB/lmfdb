@@ -891,11 +891,11 @@ def getConductorIsogenyFromLabel(label):
 # TODO This needs to be able to handle any sort of L-function.
 # There should probably be a more relevant field
 # in the database, instead of trying to extract this from a URL
+# FIXME move this to somewhere else
 def name_and_object_from_url(url):
-    url_split = url.split("/");
+    url_split = url.rstrip('/').lstrip('/').split("/");
     name = '??';
     obj_exists = False;
-    #FIXME this is not robust against extra slashes
 
     if url_split[0] == "EllipticCurve":
         if url_split[1] == 'Q':
@@ -950,6 +950,11 @@ def name_and_object_from_url(url):
                 label = '-'.join(url_split[-3:])
                 name = 'Bianchi modular form ' + label;
                 obj_exists = db.bmf_forms.label_exists(label);
+    elif url_split[0] == "ArtinRepresentation":
+        label = url_split[1]
+        name =  'Artin representation ' + label;
+        obj_exists = db.artin_reps.label_exists(label.split('c')[0]);
+
     return name, obj_exists
 
 def names_and_urls(instances):
@@ -970,7 +975,6 @@ def names_and_urls(instances):
         if name not in names:
             res.append((name, url))
             names.append(name)
-
     return res
 
 def get_bread(degree, breads=[]):
