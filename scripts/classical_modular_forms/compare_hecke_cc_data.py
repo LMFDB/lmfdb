@@ -89,13 +89,11 @@ with open(filename, 'r') as F:
                     linesplit[i] = int(linesplit[i])
                 elif c in ['embedding_root_real', 'embedding_root_imag']:
                     linesplit[i] =float(linesplit[i])
-                elif c in ['an', 'first_an']:
+                elif c == 'an':
                     linesplit[i] = [[float(x), float(y)] for x, y in eval(linesplit[i])]
-                    if c == 'first_an':
-                        linesplit[i] = linesplit[i][:-1]
-                elif c in ['angles', 'first_angles']:
+                elif c == 'angles':
                     angles_dict = dict([(int(x), float(y)) for x, y in eval(linesplit[i])])
-                    linesplit[i] = [ angles_dict.get(p, None) for p in primes_for_angles ]
+                    linesplit[i] = [ angles_dict.get(p) for p in primes_for_angles ]
             # fix trivial character
             if linesplit[2] == 0:
                 linesplit[2] = 1
