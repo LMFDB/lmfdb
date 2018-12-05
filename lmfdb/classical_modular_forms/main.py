@@ -881,7 +881,7 @@ class CMF_stats(StatsDisplay):
 
     stat_list = [
         {'cols': [],
-         'buckets':{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]},
+         'buckets':{'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
         {'cols': [],
