@@ -147,19 +147,23 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='cm_disc' placeholder='-3'></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twist discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='self_twist_disc' placeholder='-3'></td>
       <td><span class="formexample"> e.g. -3 </span></td>
 
-      <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='Has CM') }}</td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
       <td>
-        <select name='is_cm' style="width: 140px;">
+        <select name='self_twist' style="width: 140px;">
           <option value="" selected>unrestricted</option>
-          <option value="yes">yes</option>
-          <option value="not_no">yes or unknown</option>
-          <option value="unknown">unknown</option>
-          <option value="not_yes">no or unknown</option>
-          <option value="no">no</option>
+          <option value="yes_selftwist">has self-twist</option>
+          <option value="yes_cm">has CM</option>
+          <option value="yes_rm">has RM</option>
+          <option value="not_no_selftwist">has self-twist or unknown</option>
+          <option value="not_no_cm">has CM or unknown</option>
+          <option value="not_no_cm">has CM or unknown</option>
+          <option value="unknown_selftwist">unknown</option>
+          <option value="not_yes_self_wist">no self-twists or unknown</option>
+          <option value="no_selftwist">no self-twists</option>
         </select>
       </td>
     </tr>

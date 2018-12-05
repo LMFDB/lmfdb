@@ -637,11 +637,28 @@ def common_parse(info, query):
     prime_mode = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
+def preparse_self_twist(info):
+    # yes, no, not_no, not_yes, unknown
+    # + '_' +
+    # selftwist, cm, rm
+    translate = {'selftwist':'is_self_twist', 'cm':'is_cm', 'rm':'is_rm'}
+    inp = info.get('self_twist')
+    if inp:
+        inpsplit = inp.split('_')
+        key = translate.get(inpsplit[-1])
+        if key:
+            info[key] = '_'.join(inpsplit[:-1])
+
+
 def newform_parse(info, query):
     common_parse(info, query)
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
-    parse_bool_unknown(info, query, 'is_cm',name='CM form')
+    # populates is_self_twist, is_cm or is_rm
+    preparse_self_twist(info)
+    parse_bool_unknown(info, query, 'is_self_twist',name='Has self-twist')
+    parse_bool_unknown(info, query, 'is_cm',name='Has self-twist')
+    parse_bool_unknown(info, query, 'is_rm',name='Has self-twist')
     parse_ints(info, query, 'cm_disc', name="CM discriminant")
     parse_bool(info, query, 'is_twist_minimal')
     parse_bool_unknown(info, query, 'has_inner_twist')
