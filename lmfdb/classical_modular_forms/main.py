@@ -63,6 +63,8 @@ def set_info_funcs(info):
                 parts[2] = r'\(\cdots\)'
                 name = '.'.join(parts)
             return nf_display_knowl(nf_label, name)
+        elif mf['dim'] == mf['char_degree'] and mf.get('field_poly_root_of_unity'):
+            return r'\(\Q(\zeta_{%s})\)' % mf['field_poly_root_of_unity']
         else:
             poly = mf.get('field_poly')
             if poly:
@@ -141,7 +143,8 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        info['search_type'] = search_type = info.get('search_type', 'List')
+        # hidden_search_type for prev/next buttons
+        info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:
@@ -157,7 +160,7 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
+    newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b', '983.2.c.a')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
     space_labels = ('20.5','60.2','55.3.d')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]

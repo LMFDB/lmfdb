@@ -314,6 +314,8 @@ class WebNewform(object):
 
     def field_display(self):
         # display the coefficient field
+        if self.rel_dim == 1:
+            return self.cyc_display()
         label = self.__dict__.get("nf_label")
         if label is None:
             poly = self.__dict__.get('field_poly')
