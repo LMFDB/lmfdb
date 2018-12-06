@@ -77,7 +77,7 @@ class WebNewform(object):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank']:
+        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank', 'artin_degree','projective_image']:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -133,11 +133,8 @@ class WebNewform(object):
 
 
         if self.weight == 1:
-            #FIXME no need for the if
-            self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:] if 'projective_image' in self._data else '?'
-            #FIXME
-            if 'artin_degree' not in self._data:
-                self.artin_degree = '?'
+            if self.projective_image:
+                self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:]
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
@@ -173,9 +170,10 @@ class WebNewform(object):
 
         self.properties += [('Dimension', str(self.dim))]
 
-        if self.weight == 1:
-            self.properties.extend([('Projective image', '\(%s\)' % self.projective_image_latex),
-                ('Artin degree', str(self.artin_degree))])
+        if self.projective_image:
+            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+        if self.artin_degree: # artin_degree > 0
+            self.artin_degree += [('Artin degree', str(self.artin_degree))]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
@@ -347,6 +345,14 @@ class WebNewform(object):
             return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
         else:
             return self.field_knowl()
+
+    #def artin_field_display(self):
+    #    label = db.nf_fields.lucky({'coeffs':self.artin_field}, projection='label')
+    #    if label is None:
+    #        return nf_display_knowl(label, field_pretty(label))
+    #    else:
+    #        #we should never hit this case
+    #        return polyquo_knowl(self.artin_field)
 
 
 
