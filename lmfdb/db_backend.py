@@ -277,7 +277,9 @@ class PostgresBase(object):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
                     query = query.as_string(self.conn)
-                    if values:
+                    if values_list:
+                        query = query.replace('%s','VALUES_LIST')
+                    elif values:
                         query = query % (tuple(values))
                     self.logger.info(query + " ran in %ss" % (t,))
                     if slow_note is not None:
@@ -3262,7 +3264,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
 
-    def _get_total_avg(self, cols, constraint, avg):
+    def _get_total_avg(self, cols, constraint, avg, split_list):
         """
         Utility function used in ``display_data``.
 
@@ -3279,14 +3281,15 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - the total number of rows satisying the constraint
         - the average value of the given column (only possible if cols has length 1), or None if the average not requested.
         """
+        total_str = "split_total" if split_list else "total"
         totaler = SQL("SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL").format(Identifier(self.stats))
         if constraint:
             ccols, cvals = self._split_dict(constraint)
             totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
-            totaler_values = [cols, "total", ccols, cvals]
+            totaler_values = [cols, total_str, ccols, cvals]
         else:
             totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
-            totaler_values = [cols, "total"]
+            totaler_values = [cols, total_str]
         cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
@@ -3300,7 +3303,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, reverse=False, url_extras=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, sort_key=None, reverse=False, url_extras=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3339,9 +3342,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             if query_formatter is None:
                 query_formatter = lambda x: str(x)
             col = cols[0]
-            total, avg = self._get_total_avg(cols, constraint, avg)
+            total, avg = self._get_total_avg(cols, constraint, avg, split_list)
             data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint, split_list)]
-            data.sort(reverse=reverse)
+            data.sort(key=sort_key, reverse=reverse)
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
             if split_list or avg:
                 raise ValueError

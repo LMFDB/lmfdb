@@ -7,8 +7,6 @@ IMPORTANT:
 * fix tests (Edgar)
 * projective image and artin degree not for every form (Edgar)
 * projective field and artin field displayed (Edgar)
-* add stats for projective image type, change to self-twist (CM by -> Twist field) (David)
-* change stats for CM to account for list (David)
 * javascript friends list (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * add ECQD and genus 2 curves to friends (Edgar)
