@@ -65,6 +65,12 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
+def quad_field_knowl(disc):
+    r = 2 if disc > 0 else 0
+    field_label = "2.%d.%d.1" % (r, abs(disc))
+    field_name = field_pretty(field_label)
+    return nf_display_knowl(field_label, field_name)
+
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
@@ -342,15 +348,11 @@ class WebNewform(object):
         else:
             return self.field_knowl()
 
-    def self_twist_field_knowl(self, disc):
-        r = 2 if disc > 0 else 0
-        field_label = "2.%d.%d.1" % (r, abs(disc))
-        field_name = field_pretty(field_label)
-        return nf_display_knowl(field_label, field_name)
+
 
     def rm_and_cm_field_knowl(self, sign  = 1):
         disc = [ d for d in self.__dict__.get('self_twist_discs', []) if sign*d > 0 ]
-        return ' and '.join( map(self.self_twist_field_knowl, disc) )
+        return ' and '.join( map(quad_field_knowl, disc) )
 
     def field_knowl(self):
         if self.rel_dim == 1:
