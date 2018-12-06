@@ -92,13 +92,15 @@
     <td>\({{ newform.fricke_eigenval }}\)</td>
   </tr>
   {% endif %}
-  {% if newform.weight == 1 %}
+  {% if newform.projective_image %}
   <tr>
     <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
     <td> </td>
     <td> </td>
     <td>\({{ newform.projective_image_latex }}\)</td>
   </tr>
+  {% endif %}
+  {% if newform.artin_degree %}
   <tr>
     <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
     <td> </td>
