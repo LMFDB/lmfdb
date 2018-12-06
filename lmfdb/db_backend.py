@@ -3303,7 +3303,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, reverse=False, url_extras=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, sort_key=None, reverse=False, url_extras=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3344,7 +3344,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             col = cols[0]
             total, avg = self._get_total_avg(cols, constraint, avg, split_list)
             data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint, split_list)]
-            data.sort(reverse=reverse)
+            data.sort(key=sort_key, reverse=reverse)
         elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
             if split_list or avg:
                 raise ValueError

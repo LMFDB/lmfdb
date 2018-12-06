@@ -930,6 +930,10 @@ class CMF_stats(StatsDisplay):
          'row_title':'analytic rank',
          'knowl':'lfunction.analytic_rank',
          'avg':True},
+        {'cols':'projective_image',
+         'top_title':'projective images for weight 1 forms',
+         'row_title':'projective image',
+         'formatter': (lambda t: r'\(%s_%s\)' % (t[0], t[1:]))},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
@@ -943,12 +947,11 @@ class CMF_stats(StatsDisplay):
         # 'reverse':True,
         # 'formatter':cm_format},
         {'cols': 'self_twist_discs',
-         'top_title':'self twists',
-         'row_title':'twist by',
+         'top_title':'self twist discriminants',
+         'row_title':'twist disc',
          'knowl':'mf.elliptic.cm_form',
-         'reverse':True,
-         'split_list':True,
-         'formatter':cm_format}
+         'sort_key': (lambda x: (abs(x[0]),x[0])),
+         'split_list':True}
     ]
 
 @cmf.route("/stats")
