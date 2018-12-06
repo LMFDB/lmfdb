@@ -280,8 +280,10 @@ def render_full_gamma1_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
-@cmf.route("/<int:level>/")
+@cmf.route("/<level>/")
 def by_url_level(level):
+    if "." in level:
+        return redirect(url_for_label(level), code=301)
     info = to_dict(request.args)
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)

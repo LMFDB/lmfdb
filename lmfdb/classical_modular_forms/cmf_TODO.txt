@@ -3,12 +3,11 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * code snippets for form and space pages (Drew)
-* Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
-* Create appropriate indexes
+* Create appropriate indexes -> run tests and see slow queries (Edgar)
+* fix tests (Edgar)
 * projective image and artin degree not for every form (Edgar)
 * projective field and artin field displayed (Edgar)
 * javascript friends list (Edgar)
-* Fix 2773.1.j.b and 2921.1.bg.a: defining polynomial changed but not all data seems to have
 -------------------------- Pull Request Line -------------------------------------------------
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
