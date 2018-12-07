@@ -365,7 +365,8 @@ class WebNewform(object):
     @property
     def artin_image_display(self):
         if self.artin_image:
-            return self.artin_image
+            pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
+            return pretty if pretty else self.artin_image
         return None
 
 
