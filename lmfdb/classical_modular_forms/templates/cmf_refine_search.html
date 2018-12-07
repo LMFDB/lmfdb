@@ -18,6 +18,7 @@
 
 <table>
   <tr>
+    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
@@ -25,34 +26,33 @@
         <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
     <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
-    <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
-    <td><input type='text' style="width: 140px;" name='dim' placeholder='1' value='{{info.dim}}'></td>
-    <td><input type='text' style="width: 140px;" name='nf_label' placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='analytic_conductor' placeholder='47' value='{{info.analytic_conductor}}'></td>
+    <td><input type='text' style="width: 140px;" name='level'               placeholder='4' value='{{info.level}}'></td>
+    <td><input type='text' style="width: 140px;" name='weight'              placeholder='2' value='{{info.weight}}'></td>
+    <td><input type='text' style="width: 140px;" name='dim'                 placeholder='1' value='{{info.dim}}'></td>
+    <td><input type='text' style="width: 140px;" name='nf_label'            placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='analytic_conductor'  placeholder='47' value='{{info.analytic_conductor}}'></td>
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
-      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
-        <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
-        <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
-      </select></div>
-    </td>
     <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       <div class="float-right"><select name='prime_quantifier'>
-        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
-        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
-      </select></div>
+          <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+          <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+          <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+        </select></div>
+    </td>
+    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
+      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option></option>
+          <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
+          <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
+        </select></div>
     </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
@@ -60,10 +60,10 @@
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
-    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
-    <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
+    <td><input type='text' style="width: 140px;" name='level_primes'  placeholder='2,3'  value="{{info.level_primes}}"></td>
+    <td><input type='text' style="width: 140px;" name='char_label'    placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='prim_label'    placeholder='1.a' value='{{info.prim_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='char_order'    placeholder='1' value='{{info.char_order}}'></td>
     <td><input type='text' style="width: 140px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
   </tr>
 
