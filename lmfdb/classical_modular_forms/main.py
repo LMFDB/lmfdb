@@ -913,6 +913,17 @@ def cm_format(D):
         cm_label = "2.0.%s.1"%(-D)
         return nf_display_knowl(cm_label, field_pretty(cm_label))
 
+def projective_image_sort_key(tup):
+    im_type = tup[0]
+    if im_type == 'A4':
+        return -3
+    elif im_type == 'S4':
+        return -2
+    elif im_type == 'A5':
+        return -1
+    else:
+        return int(im_type[1:])
+
 class CMF_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for classical modular forms
@@ -920,12 +931,13 @@ class CMF_stats(StatsDisplay):
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
         nspaces = comma(db.mf_newspaces.count())
+        ndim = comma(db.mf_hecke_cc.count())
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        stats_url = url_for(".statistics")
-        self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), stats_url)
-        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound())
+        #stats_url = url_for(".statistics")
+        self.short_summary = r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), ndim)
+        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound(), ndim)
 
     table = db.mf_newforms
     baseurl_func = ".index"
@@ -953,13 +965,16 @@ class CMF_stats(StatsDisplay):
          'knowl':'mf.elliptic.inner_twist',
          'formatter':boolean_unknown_format},
         {'cols':'analytic_rank',
+         'top_title':'analytic ranks for forms of weight greater than 1',
          'row_title':'analytic rank',
          'knowl':'lfunction.analytic_rank',
          'avg':True},
         {'cols':'projective_image',
          'top_title':'projective images for weight 1 forms',
          'row_title':'projective image',
-         'formatter': (lambda t: r'\(%s_%s\)' % (t[0], t[1:]))},
+         'sort_key': projective_image_sort_key,
+         'knowl':'mf.elliptic.projective_image',
+         'formatter': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:]))},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
@@ -970,12 +985,14 @@ class CMF_stats(StatsDisplay):
          'top_title':'complex multiplication',
          'row_title':'CM disc',
          'knowl':'mf.elliptic.cm_form',
+         'denominator':{},
          'reverse':True,
          'split_list':True},
         {'cols': 'rm_discs',
          'top_title':'real multiplication',
          'row_title':'RM disc',
          'knowl':'mf.elliptic.rm_form',
+         'denominator':{},
          'split_list':True},
         #{'cols': 'self_twist_discs',
         # 'top_title':'self twist discriminants',

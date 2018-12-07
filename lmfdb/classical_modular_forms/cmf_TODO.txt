@@ -6,8 +6,6 @@ IMPORTANT:
 * Create appropriate indexes -> run tests and see slow queries (Edgar)
 * javascript friends list (Edgar)
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
-* Add option to give denominator for proportions; default to total, provide dict to override (David)
-* Cutoff for number of rows in stats, more button, default 60 for CM (David)
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
 * Add is_CM, is_RM (in weight 1 and overall) (David)
 * Field display on list is broken (Drew)

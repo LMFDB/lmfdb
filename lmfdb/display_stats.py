@@ -39,7 +39,7 @@ class StatsDisplay(UniqueRepresentation):
         dists = []
         for attr in self.stat_list:
             kwds = {}
-            for key in ['constraint', 'avg', 'formatter', 'buckets', 'split_list', 'include_upper', 'query_formatter', 'sort_key', 'reverse', 'url_extras']:
+            for key in ['constraint', 'avg', 'formatter', 'buckets', 'split_list', 'include_upper', 'query_formatter', 'sort_key', 'reverse', 'url_extras', 'denominator']:
                 if key in attr:
                     kwds[key] = attr[key]
             # default value for top_title from row_title
@@ -47,10 +47,18 @@ class StatsDisplay(UniqueRepresentation):
                 attr['top_title'] = attr['row_title']
                 if not attr['top_title'].endswith('s'):
                     attr['top_title'] += 's'
+            attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
             table = attr.get('table',self.table)
             counts = table.stats.display_data(attr["cols"], url_for(self.baseurl_func), **kwds)
+            max_rows = attr.get('max_rows',6)
             rows = [counts[i:i+10] for i in range(0,len(counts),10)]
-            dists.append({'attribute':attr,'rows':rows})
+            short_rows = rows[:max_rows]
+            if len(rows) > max_rows:
+                divs = [("short_table_" + hsh, short_rows, "short"),
+                        ("long_table_" + hsh + " nodisplay", rows, "long")]
+            else:
+                divs = [("short_table", rows, "none")]
+            dists.append({'attribute':attr,'divs':divs})
         return dists
 
     def setup(self):
