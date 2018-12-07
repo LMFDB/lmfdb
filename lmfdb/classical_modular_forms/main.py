@@ -908,6 +908,17 @@ def cm_format(D):
         cm_label = "2.0.%s.1"%(-D)
         return nf_display_knowl(cm_label, field_pretty(cm_label))
 
+def projective_image_sort_key(tup):
+    im_type = tup[0]
+    if im_type == 'A4':
+        return -3
+    elif im_type == 'S4':
+        return -2
+    elif im_type == 'A5':
+        return -1
+    else:
+        return int(im_type[1:])
+
 class CMF_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for classical modular forms
@@ -955,7 +966,8 @@ class CMF_stats(StatsDisplay):
         {'cols':'projective_image',
          'top_title':'projective images for weight 1 forms',
          'row_title':'projective image',
-         'formatter': (lambda t: r'\(%s_%s\)' % (t[0], t[1:]))},
+         'sort_key': projective_image_sort_key,
+         'formatter': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:]))},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',

@@ -8,7 +8,6 @@ IMPORTANT:
 * projective field and artin field displayed (Edgar)
 * javascript friends list (Edgar)
 * address not proven self-twist (Edgar)
-* Add option to give denominator for proportions; default to total, provide dict to override (David)
 * Cutoff for number of rows in stats, more button, default 60 for CM (David)
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
 * Add is_CM, is_RM (in weight 1 and overall) (David)

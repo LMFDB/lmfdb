@@ -5,11 +5,23 @@
 {{ info.summary | safe }}
 </div>
 
+<script>
+function show_rows(hsh, to_show) {
+  $('.short_table_' + hsh).hide();
+  $('.long_table_' + hsh).hide();
+  $('.' + to_show + '_table_' + hsh).show();
+  var elementBottom = $('#' + hsh + '-anchor').offset().top() + $('#' + hsh + '-anchor').outerHeight();
+  var viewportTop = $(window).scrollTop();
+  return elementBottom < viewportTop;
+}
+</script>
+
 {% for d in info.distributions %}
-<h2> Distribution of {{KNOWL(d.attribute.knowl, title = d.attribute.top_title)}} </h2>
-<div>
+<h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{KNOWL(d.attribute.knowl, title = d.attribute.top_title)}} </h2>
+{% for div_classes, rows, span_class in d.divs %}
+<div class="{{div_classes}}">
 <table border=1>
-{% for r in d.rows %}
+{% for r in rows %}
 <tr>
 <th>{{d.attribute.row_title}}</th>
 {% for c in r %}
@@ -32,7 +44,17 @@
 {% endfor %}
 
 </table>
+{% if span_class == 'short' %}
+<div class="toggle">Display
+  <span class="short_table_{{d.attribute.hash}}"><a onclick="return show_rows('{{d.attribute.hash}}','long');" href="#{{d.attribute.hash}}-anchor">more</a></span>
 </div>
+{% elif span_class == 'long' %}
+<div class="toggle">Display
+  <span class="long_table_{{d.attribute.hash}} nodisplay"><a onclick="return show_rows('{{d.attribute.hash}}','short');" href="#{{d.attribute.hash}}-anchor">less</a></span>
+</div>
+{% endif %}
+</div>
+{% endfor %}
 {% endfor %}
 
 <p>
