@@ -362,6 +362,12 @@ class WebNewform(object):
         label, poly = self.projective_field_label, self.projective_field
         return self.field_display_gen(label, poly)
 
+    @property
+    def artin_image_display(self):
+        if self.artin_image:
+            return self.artin_image
+        return None
+
 
 
     def rm_and_cm_field_knowl(self, sign  = 1):
