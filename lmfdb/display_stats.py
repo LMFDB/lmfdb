@@ -39,7 +39,7 @@ class StatsDisplay(UniqueRepresentation):
         dists = []
         for attr in self.stat_list:
             kwds = {}
-            for key in ['constraint', 'avg', 'formatter', 'buckets', 'split_list', 'include_upper', 'query_formatter', 'sort_key', 'reverse', 'url_extras']:
+            for key in ['constraint', 'avg', 'formatter', 'buckets', 'split_list', 'include_upper', 'query_formatter', 'sort_key', 'reverse', 'url_extras', 'denominator']:
                 if key in attr:
                     kwds[key] = attr[key]
             # default value for top_title from row_title

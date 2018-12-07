@@ -3303,7 +3303,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, include_upper=True, query_formatter=None, sort_key=None, reverse=False, url_extras=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, denominator=None, include_upper=True, query_formatter=None, sort_key=None, reverse=False, url_extras=None, count_key='count'):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3322,6 +3322,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             are grouped based on which bucket they fall into.
         - ``split_list`` -- whether count entries from lists individually.  For example,
             a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
+        - ``denominator`` -- a query giving the denominator for the proportions.
+            Defaults to the number of rows in the table where the columns are non-null.
         - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
         - ``query_formatter`` -- a function for encoding the values into the url.
         - ``reverse`` -- whether to sort in reverse order.
@@ -3379,6 +3381,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             raise NotImplementedError
         if formatter is None:
             formatter = lambda x: x
+        if denominator is not None:
+            # override the total computed above
+            total = self.count(denominator)
         base_url = base_url + '?'
         if url_extras:
             base_url += url_extras
