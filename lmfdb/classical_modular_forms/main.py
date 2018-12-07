@@ -120,7 +120,7 @@ def set_info_funcs(info):
 
 
     # assumes the format Dn A4 S4 S5
-    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
+    info["display_projective_image"] = lambda mf: ('%s_{%s}' % (mf['projective_image'][:1], mf['projective_image'][1:])) if 'projective_image' in mf else ''
 
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
