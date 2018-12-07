@@ -165,7 +165,7 @@ class WebNewform(object):
         if self.projective_image:
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
-            self.properties += [('Artin degree', str(self.artin_degree))]
+            self.properties += [('Image size', str(self.artin_degree))]
         if self.artin_image:
             self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
@@ -190,7 +190,7 @@ class WebNewform(object):
 
     @cached_method
     def lfunction_labels(self):
-        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
+        base_label = self.label.split('.')
         res = []
         for character in self.char_labels:
             for j in range(self.dim/self.char_degree):
@@ -225,6 +225,7 @@ class WebNewform(object):
             res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
 
         return res
+
 
     @property
     def downloads(self):
