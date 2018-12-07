@@ -166,6 +166,8 @@ class WebNewform(object):
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
             self.properties += [('Artin degree', str(self.artin_degree))]
+        if self.artin_image:
+            self.properties += [('Artin image', self.artin_image_display)]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
@@ -365,7 +367,8 @@ class WebNewform(object):
     @property
     def artin_image_display(self):
         if self.artin_image:
-            return self.artin_image
+            pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
+            return pretty if pretty else self.artin_image
         return None
 
 
