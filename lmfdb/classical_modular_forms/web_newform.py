@@ -165,7 +165,7 @@ class WebNewform(object):
         if self.projective_image:
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
-            self.properties += [('Image size', str(self.artin_degree))]
+            self.properties += [('Artin image size', str(self.artin_degree))]
         if self.artin_image:
             self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
