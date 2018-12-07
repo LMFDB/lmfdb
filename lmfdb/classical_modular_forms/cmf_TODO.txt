@@ -7,9 +7,15 @@ IMPORTANT:
 * fix tests (Edgar)
 * projective field and artin field displayed (Edgar)
 * javascript friends list (Edgar)
-* swap level and weight (Edgar)
 * if D2 display both rows (Edgar)
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
+* address not proven self-twist (Edgar)
+* Add option to give denominator for proportions; default to total, provide dict to override (David)
+* Cutoff for number of rows in stats, more button, default 60 for CM (David)
+* 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
+* Add is_CM, is_RM (in weight 1 and overall) (David)
+* Add a D2, S4, A5 form to interesting forms (Edgar)
+* Field display on list is broken (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
