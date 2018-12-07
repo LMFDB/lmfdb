@@ -3061,7 +3061,7 @@ class PostgresStatsTable(PostgresBase):
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             if split_list:
-                to_add = [(cols, values, count, True) for ((cols, values), count) in to_add.items()]
+                to_add = [(c, v, ct, True) for ((c, v), ct) in to_add.items()]
                 inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
             else:
                 inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
