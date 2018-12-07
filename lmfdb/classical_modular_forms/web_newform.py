@@ -167,7 +167,7 @@ class WebNewform(object):
         if self.artin_degree: # artin_degree > 0
             self.properties += [('Artin degree', str(self.artin_degree))]
         if self.artin_image:
-            self.properties += [('Artin image', self.artin_image_display)]
+            self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
