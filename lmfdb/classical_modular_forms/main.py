@@ -931,12 +931,13 @@ class CMF_stats(StatsDisplay):
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
         nspaces = comma(db.mf_newspaces.count())
+        ndim = comma(db.mf_hecke_cc.count())
         weight_knowl = display_knowl('mf.elliptic.weight', title = 'weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        stats_url = url_for(".statistics")
-        self.short_summary = r'The database currently contains %s %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\). Here are some <a href="%s">further statistics</a>.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), stats_url)
-        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\)." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound())
+        #stats_url = url_for(".statistics")
+        self.short_summary = r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), ndim)
+        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound(), ndim)
 
     table = db.mf_newforms
     baseurl_func = ".index"
@@ -972,6 +973,7 @@ class CMF_stats(StatsDisplay):
          'top_title':'projective images for weight 1 forms',
          'row_title':'projective image',
          'sort_key': projective_image_sort_key,
+         'knowl':'mf.elliptic.projective_image',
          'formatter': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:]))},
         {'cols':'num_forms',
          'table':db.mf_newspaces,

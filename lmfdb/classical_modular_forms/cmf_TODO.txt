@@ -7,7 +7,6 @@ IMPORTANT:
 * fix tests (Edgar)
 * javascript friends list (Edgar)
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
-* Cutoff for number of rows in stats, more button, default 60 for CM (David)
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
 * Add is_CM, is_RM (in weight 1 and overall) (David)
 * Add a D2, S4, A5 form to interesting forms (Edgar)
