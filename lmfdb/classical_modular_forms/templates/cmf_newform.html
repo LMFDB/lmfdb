@@ -116,6 +116,14 @@
     <td>\({{ newform.artin_degree }}\)</td>
   </tr>
   {% endif %}
+  {% if newform.artin_image %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image') }}</td>
+    <td> </td>
+    <td> </td>
+    <td>\({{ newform.artin_image_display }}\)</td>
+  </tr>
+  {% endif %}
   {% if newform.artin_field %}
   <tr>
     <td>{{ KNOWL('mf.elliptic.artin_field', title='Artin field')}}</td>
