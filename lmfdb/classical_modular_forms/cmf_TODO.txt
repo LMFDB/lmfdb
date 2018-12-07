@@ -9,7 +9,6 @@ IMPORTANT:
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
 * Add is_CM, is_RM (in weight 1 and overall) (David)
-* Add a D2, S4, A5 form to interesting forms (Edgar)
 * Field display on list is broken (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * add ECQD and genus 2 curves to friends (Edgar)
