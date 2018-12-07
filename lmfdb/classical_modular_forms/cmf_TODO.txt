@@ -3,13 +3,14 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * code snippets for form and space pages (Drew)
-* Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
-* Create appropriate indexes
-* projective image and artin degree not for every form (Edgar)
+* Create appropriate indexes -> run tests and see slow queries (Edgar)
+* fix tests (Edgar)
 * projective field and artin field displayed (Edgar)
 * javascript friends list (Edgar)
-* Fix 2773.1.j.b and 2921.1.bg.a: defining polynomial changed but not all data seems to have
+* address not proven self-twist (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
+* add artin_field_label (Edgar)
+* if D2 display both rows
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
@@ -52,6 +53,9 @@ FUTURE WORK:
 * data: add data for is_twist_minimal
 
 NOT CMF STUFF:
+* reset start with javascript
+* generalize search_types
+* hidden != search clean hidden
 * add utf8 check to pyflakes
 * pick columns and sort order on search results
 * add UIs to pick random objects with contraints

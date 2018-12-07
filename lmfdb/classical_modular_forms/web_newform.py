@@ -65,13 +65,19 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
+def quad_field_knowl(disc):
+    r = 2 if disc > 0 else 0
+    field_label = "2.%d.%d.1" % (r, abs(disc))
+    field_name = field_pretty(field_label)
+    return nf_display_knowl(field_label, field_name)
+
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank']:
+        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank', 'artin_degree','projective_image']:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -127,11 +133,8 @@ class WebNewform(object):
 
 
         if self.weight == 1:
-            #FIXME no need for the if
-            self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:] if 'projective_image' in self._data else '?'
-            #FIXME
-            if 'artin_degree' not in self._data:
-                self.artin_degree = '?'
+            if self.projective_image:
+                self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:]
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
@@ -167,9 +170,10 @@ class WebNewform(object):
 
         self.properties += [('Dimension', str(self.dim))]
 
-        if self.weight == 1:
-            self.properties.extend([('Projective image', '\(%s\)' % self.projective_image_latex),
-                ('Artin degree', str(self.artin_degree))])
+        if self.projective_image:
+            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+        if self.artin_degree: # artin_degree > 0
+            self.artin_degree += [('Artin degree', str(self.artin_degree))]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
@@ -342,15 +346,19 @@ class WebNewform(object):
         else:
             return self.field_knowl()
 
-    def self_twist_field_knowl(self, disc):
-        r = 2 if disc > 0 else 0
-        field_label = "2.%d.%d.1" % (r, abs(disc))
-        field_name = field_pretty(field_label)
-        return nf_display_knowl(field_label, field_name)
+    #def artin_field_display(self):
+    #    label = db.nf_fields.lucky({'coeffs':self.artin_field}, projection='label')
+    #    if label is None:
+    #        return nf_display_knowl(label, field_pretty(label))
+    #    else:
+    #        #we should never hit this case
+    #        return polyquo_knowl(self.artin_field)
+
+
 
     def rm_and_cm_field_knowl(self, sign  = 1):
         disc = [ d for d in self.__dict__.get('self_twist_discs', []) if sign*d > 0 ]
-        return ' and '.join( map(self.self_twist_field_knowl, disc) )
+        return ' and '.join( map(quad_field_knowl, disc) )
 
     def field_knowl(self):
         if self.rel_dim == 1:

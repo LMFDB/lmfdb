@@ -1,7 +1,8 @@
 {%- from "knowl-defs.html" import KNOWL with context -%}
 {% set AL_signs = info.display_AL(info.results) %}
 {% set Fricke_sign = info.display_Fricke(info.results) %}
-{% set Projective_image = info.display_Projective(info.results) %}
+{% set Projective_image = info.all_weight1(info.results) %}
+{% set self_twists_cols = [(info.self_twist_col, 'Self-twist', info.self_twist_link), (info.cm_col, 'CM', info.cm_link), (info.rm_col, 'RM', info.rm_link)] %}
 
 <table class="ntdata">
   <thead>
@@ -13,7 +14,11 @@
       {% if Projective_image %}
       <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.projective_image', title='Image') }}</th>
       {% endif %}
-      <th rowspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twist') }}</th>
+      {% for b, text, _ in self_twists_cols %}
+        {% if b %}
+        <th rowspan=2>{{ KNOWL('mf.elliptic.self_twist', title=text) }}</th>
+        {% endif %}
+      {% endfor %}
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
@@ -48,7 +53,11 @@
         \({{ info.display_projective_image(mf) }}\)
       </td>
       {% endif %}
-      <td> {{ info.self_twist_link(mf) | safe }}</td>
+      {% for b, _, func in self_twists_cols %}
+        {% if b %}
+          <td> {{ func(mf) | safe }}</td>
+        {% endif %}
+      {% endfor %}
       <td class="right">\({{ mf.trace_display[0] }}\)</td>
       <td class="right">\({{ mf.trace_display[1] }}\)</td>
       <td class="right">\({{ mf.trace_display[2] }}\)</td>
