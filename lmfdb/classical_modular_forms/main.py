@@ -114,6 +114,11 @@ def set_info_funcs(info):
         return all(mf['weight'] == 1 for mf in results)
     info["all_weight1"] = all_weight1
 
+    def all_D2(results):
+        return all(mf.get('projective_image') == 'D2' for mf in results)
+    info["all_D2"] = all_D2
+
+
     # assumes the format Dn A4 S4 S5
     info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
 
@@ -294,7 +299,7 @@ def render_full_gamma1_space_webpage(label):
 @cmf.route("/<level>/")
 def by_url_level(level):
     if "." in level:
-        return redirect(url_for_label(level), code=301)
+        return redirect(url_for_label(label = level), code=301)
     info = to_dict(request.args)
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)

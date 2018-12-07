@@ -76,7 +76,7 @@
   </tr>
   {% endif %}
   {% if newform.has_exact_qexp and newform.dim > 1 %}
-    <!-- Coefficient code depends on existence of form -->
+  <!-- Coefficient code depends on existence of form -->
   <tr>
     <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.Qnu() }} </td>
@@ -100,12 +100,36 @@
     <td>\({{ newform.projective_image_latex }}\)</td>
   </tr>
   {% endif %}
+  {% if newform.projective_field %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.projective_field', title='Projective field')}}</td>
+    <td> </td>
+    <td> </td>
+    <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
+  </tr>
+  {% endif %}
   {% if newform.artin_degree %}
   <tr>
     <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
     <td> </td>
     <td> </td>
     <td>\({{ newform.artin_degree }}\)</td>
+  </tr>
+  {% endif %}
+  {% if newform.artin_image %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image') }}</td>
+    <td> </td>
+    <td> </td>
+    <td>\({{ newform.artin_image_display }}\)</td>
+  </tr>
+  {% endif %}
+  {% if newform.artin_field %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.artin_field', title='Artin field')}}</td>
+    <td> </td>
+    <td> </td>
+    <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
 </table>

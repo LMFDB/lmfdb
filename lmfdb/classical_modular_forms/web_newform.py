@@ -77,7 +77,7 @@ class WebNewform(object):
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank', 'artin_degree','projective_image']:
+        for elt in db.mf_newforms.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -93,10 +93,6 @@ class WebNewform(object):
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
 
-        try:
-            self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
-        except AttributeError:
-            pass #  self.hecke_ring might be not set
 
         if self.has_inner_twist != 0:
             if self.inner_twist_proved:
@@ -131,10 +127,6 @@ class WebNewform(object):
             self.has_exact_qexp = False
         self.rel_dim = self.dim // self.char_degree
 
-
-        if self.weight == 1:
-            if self.projective_image:
-                self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:]
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
@@ -174,6 +166,8 @@ class WebNewform(object):
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
             self.properties += [('Artin degree', str(self.artin_degree))]
+        if self.artin_image:
+            self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
@@ -330,44 +324,61 @@ class WebNewform(object):
             raise ValueError("Newform %s not found" % label)
         return WebNewform(data)
 
+    @property
+    def hecke_ring_index_factored(self):
+        if self.hecke_ring_index_factorization is not None:
+            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+        return None
+
+    @property
+    def projective_image_latex(self):
+        if self.projective_image:
+            return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
+        return None
+
     def field_display(self):
         # display the coefficient field
         if self.rel_dim == 1:
             return self.cyc_display()
-        label = self.__dict__.get("nf_label")
+        else:
+            return self.field_display_gen(self.nf_label, self.field_poly)
+
+    def field_display_gen(self, label, poly):
         if label is None:
-            poly = self.__dict__.get('field_poly')
             if poly:
                 return polyquo_knowl(poly)
             else:
                 return 'Unknown'
         elif label == u'1.1.1.1':  # rationals, special case
-            return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
+            return nf_display_knowl(label, name=r"\(\Q\)")
         else:
-            return self.field_knowl()
+            return nf_display_knowl(label, field_pretty(label))
 
-    #def artin_field_display(self):
-    #    label = db.nf_fields.lucky({'coeffs':self.artin_field}, projection='label')
-    #    if label is None:
-    #        return nf_display_knowl(label, field_pretty(label))
-    #    else:
-    #        #we should never hit this case
-    #        return polyquo_knowl(self.artin_field)
+    @property
+    def artin_field_display(self):
+        label, poly = self.artin_field_label, self.artin_field
+        return self.field_display_gen(label, poly)
+
+    @property
+    def projective_field_display(self):
+        label, poly = self.projective_field_label, self.projective_field
+        return self.field_display_gen(label, poly)
+
+    @property
+    def artin_image_display(self):
+        if self.artin_image:
+            pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
+            return pretty if pretty else self.artin_image
+        return None
 
 
 
     def rm_and_cm_field_knowl(self, sign  = 1):
-        disc = [ d for d in self.__dict__.get('self_twist_discs', []) if sign*d > 0 ]
-        return ' and '.join( map(quad_field_knowl, disc) )
-
-    def field_knowl(self):
-        if self.rel_dim == 1:
-            return self.cyc_display()
-        label = self.__dict__.get("nf_label")
-        if label:
-            return nf_display_knowl(label, field_pretty(label))
+        if self.self_twist_discs:
+            disc = [ d for d in self.self_twist_discs if sign*d > 0 ]
+            return ' and '.join( map(quad_field_knowl, disc) )
         else:
-            return "Not in LMFDB"
+            return ''
 
     def cyc_display(self):
         if self.char_degree == 1:
@@ -434,7 +445,7 @@ class WebNewform(object):
         return desc
 
     def defining_polynomial(self):
-        if self.__dict__.get('field_poly'):
+        if self.field_poly:
             return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
         return None
 
