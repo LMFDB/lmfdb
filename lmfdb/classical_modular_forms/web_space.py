@@ -316,7 +316,7 @@ class WebGamma1Space(object):
         self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
-        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit']))
+        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
                        for space in newspaces]
 
