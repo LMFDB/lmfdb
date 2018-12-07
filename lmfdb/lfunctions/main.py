@@ -19,7 +19,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table
-from Lfunctionutilities import (p2sage, styleTheSign, get_bread,
+from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 
@@ -98,9 +98,12 @@ def l_function_degree_page(degree):
 
 
 # L-function of holomorphic cusp form with trivial character browsing page ##############################################
-@l_function_page.route("/degree2/CuspForm/")
-def l_function_cuspform_browse_page():
-    info = {"bread": get_bread(2, [("Cusp Form", url_for('.l_function_cuspform_browse_page'))])}
+@l_function_page.route("/<degree>/CuspForm/")
+def l_function_cuspform_browse_page(degree):
+    deg = get_degree(degree)
+    if deg < 0:
+        return flask.abort(404)
+    info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
     info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(201)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
 
@@ -161,6 +164,31 @@ def l_function_ec_sym3_browse_page():
     return render_template("ellipticcurve.html",
                            title='Symmetric Cube L-functions of Elliptic Curves', **info)
 
+# L-function of genus 2 curves browsing page ##############################################
+@l_function_page.route("/degree4/Genus2Curve/")
+def l_function_genus2_browse_page():
+    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
+    info["representation"] = ''
+    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
+
+# generic/pure L-function browsing page ##############################################
+@l_function_page.route("/<degree>/<gammasignature>/")
+# def l_function_maass_gln_browse_page(degree):
+def l_function_browse_page(degree, gammasignature):
+    degree = get_degree(degree)
+    nice_gammasignature = parse_codename(gammasignature)
+    if degree < 0:
+        return flask.abort(404)
+    contents = LfunctionPlot.getAllMaassGraphHtml(degree, gammasignature)
+    if not contents:
+        return flask.abort(404)
+    info = {"bread": get_bread(degree, [(gammasignature, url_for('.l_function_browse_page',
+                                            degree='degree' + str(degree), gammasignature=gammasignature))])}
+    info["contents"] = contents
+    return render_template("MaassformGLn.html",
+                           title='L-functions of degree %s and signature %s' % (degree, nice_gammasignature), **info)
+
 
 ###########################################################################
 #   Helper functions, navigation pages
@@ -172,18 +200,18 @@ def set_info_for_start_page():
     tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page')},
+          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
            {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
 
           [{'title': '', 'link': ''},
-           {'title': 'GL3 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree3')},
+           {'title': 'Signature (0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree3', gammasignature='r0r0r0')},
            {'title': 'Symmetric Square L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
 
-          [{'title': 'GSp4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page', degree='degree4') + '#GSp4_Q_Maass'},
-           {'title': 'GL4 Maass Form', 'link': url_for('.l_function_maass_gln_browse_page',
-                                                       degree='degree4')},
+          [{'title': 'Signature (0,0,0,0;) and real cofficients', 'link': url_for('.l_function_browse_page', degree='degree4', gammasignature='r0r0r0r0') + '#r0r0r0r0selfdual'},
+           {'title': 'Signature (0,0,0,0;)', 'link': url_for('.l_function_browse_page',
+                                                       degree='degree4', gammasignature='r0r0r0r0')},
            {'title': 'Symmetric Cube L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
 
     info = {
@@ -445,7 +473,7 @@ def initLfunction(L, args, request):
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
 
-    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'] ) = set_bread_and_friends(L, request)
+    (info['bread'], info['origins'], info['friends'], info['factors_origins'], info['Linstances'], info['downloads'] ) = set_bread_and_friends(L, request)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -499,6 +527,7 @@ def set_bread_and_friends(L, request):
     origins = []
     factors_origins = []
     instances = []
+    downloads = []
 
     # Create default friendlink by removing 'L/' and ending '/'
     friendlink = request.path.replace('/L/', '/').replace('/L-function/', '/').replace('/Lfunction/', '/')
@@ -526,6 +555,7 @@ def set_bread_and_friends(L, request):
         friends = L.friends
         factors_origins = L.factors_origins
         instances = L.instances
+        downloads = L.downloads
 
         for elt in [origins, friends, factors_origins, instances]:
             if elt is not None:
@@ -636,7 +666,7 @@ def set_bread_and_friends(L, request):
                 friends.append(('Symmetric %s' % ordinal(j), friendlink3))
 
 
-    return (bread, origins, friends, factors_origins, instances)
+    return (bread, origins, friends, factors_origins, instances, downloads)
 
 
 def set_zeroslink_and_plotlink(L, args):
@@ -715,32 +745,38 @@ def l_function_ec_plot(label):
         return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
 
-@l_function_page.route("/Plot/<arg1>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-@l_function_page.route("/Plot/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/<arg10>/")
-def plotLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None, arg10=None):
-    return render_plotLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+@l_function_page.route("/Plot/<path:args>/")
+def plotLfunction(args):
+    args = tuple(args.split('/'))
+    return render_plotLfunction(request, *args)
 
 
-@l_function_page.route("/Zeros/<arg1>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/")
-@l_function_page.route("/Zeros/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>/<arg6>/<arg7>/<arg8>/<arg9>/<arg10>/")
-def zerosLfunction(arg1=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None, arg8=None, arg9=None, arg10=None):
-    return render_zerosLfunction(request, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+@l_function_page.route("/Zeros/<path:args>/")
+def zerosLfunction(args):
+    args = tuple(args.split('/'))
+    return render_zerosLfunction(request, *args)
+
+@l_function_page.route("/download_euler/<path:args>/")
+def download_euler(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_euler_factors()
+
+@l_function_page.route("/download_zeros/<path:args>/")
+def download_zeros(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_zeros()
+
+@l_function_page.route("/download_dirichlet_coeff/<path:args>/")
+def download_dirichlet_coeff(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download_dirichlet_coeff()
+
+@l_function_page.route("/download/<path:args>/")
+def download(args):
+    args = tuple(args.split('/'))
+    return generateLfunctionFromUrl(*args).download()
+
+
 
 
 ################################################################################
@@ -926,7 +962,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         return Lfunction_EC(field_label=args[1], conductor_label=args[2], isogeny_class_label=args[3])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'holomorphic':  # this has args: one for weight and one for level
-        if args[8] is not None:
+        if len(args) == 10:
             return Lfunction_CMF(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7], character=args[8], number=args[9])
         else:
             return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
@@ -968,6 +1004,8 @@ def generateLfunctionFromUrl(*args, **kwds):
     elif args[0] in ['lhash', 'Lhash']:
         return Lfunction_from_db(Lhash=str(args[1]))
 
+    elif is_debug_mode():
+        raise Exception
     else:
         return None
 

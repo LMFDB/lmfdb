@@ -5,12 +5,12 @@ from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit
+from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
 from sage.databases.cremona import class_to_int
@@ -33,6 +33,14 @@ def credit():
 @cached_function
 def Nk2_bound():
     return db.mf_newforms.max('Nk2')
+@cached_function
+def weight_bound():
+    return db.mf_newforms.max('weight')
+
+@cached_function
+def level_bound():
+    return db.mf_newforms.max('level')
+
 
 def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
@@ -55,22 +63,34 @@ def set_info_funcs(info):
                 parts[2] = r'\(\cdots\)'
                 name = '.'.join(parts)
             return nf_display_knowl(nf_label, name)
+        elif mf['dim'] == mf['char_degree'] and mf.get('field_poly_root_of_unity'):
+            return r'\(\Q(\zeta_{%s})\)' % mf['field_poly_root_of_unity']
         else:
             poly = mf.get('field_poly')
             if poly:
                 return polyquo_knowl(poly)
             return ""
+
     info["nf_link"] = nf_link
-    def cm_link(mf):
-        if mf['is_cm'] == -1:
+
+    def quad_links(mf, is_field, disc_field, bound = None):
+        if mf[is_field] == -1:
             return "No"
-        elif mf['is_cm'] == 0:
+        elif mf[is_field] == 0:
             return ""
         else:
-            cm_label = "2.0.%s.1"%(-mf['cm_disc'])
-            cm_name = field_pretty(cm_label)
-            return nf_display_knowl(cm_label, cm_name)
-    info["cm_link"] = cm_link
+            discs = mf[disc_field]
+            if bound:
+                discs = discs[:bound]
+            return ', '.join( map(quad_field_knowl, discs) )
+    info["self_twist_link"] = lambda mf: quad_links(mf, 'is_self_twist', 'self_twist_discs', bound = 1)
+    info["cm_link"] = lambda mf: quad_links(mf, 'is_cm', 'cm_discs')
+    info["rm_link"] = lambda mf: quad_links(mf, 'is_rm', 'rm_discs')
+    info["cm_col"] = info.get('cm_discs') is not None or 'cm' in  info.get('self_twist', '')
+    info["rm_col"] = info.get('rm_discs') is not None or 'rm' in  info.get('self_twist', '')
+    info["self_twist_col"] = not (info["cm_col"] or info["rm_col"])
+
+
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
                           'E':'Eisenstein series'}
@@ -84,10 +104,19 @@ def set_info_funcs(info):
             return False
         return all(mf['char_order'] == 1 for mf in results)
     info["display_AL"] = display_AL
+
     def display_Fricke(results):
         # only called if display_AL has returned False
         return any(mf['char_order'] == 1 for mf in results)
     info["display_Fricke"] = display_Fricke
+
+    def all_weight1(results):
+        return all(mf['weight'] == 1 for mf in results)
+    info["all_weight1"] = all_weight1
+
+    # assumes the format Dn A4 S4 S5
+    info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
+
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -108,6 +137,7 @@ def set_info_funcs(info):
             terms.append(link)
         return r'+'.join(terms)
     info['display_decomp'] = display_decomp
+
     def display_ALdims(space):
         al_dims = space.get('AL_dims')
         if al_dims:
@@ -120,9 +150,13 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        search_type = info.get('search_type')
-        if search_type is None:
-            info['search_type'] = search_type = info.pop('submit','')
+        # if we hit search again set start = 0
+        # it would be nice to reflect this on the url
+        if info.get('hidden_search_type', True) == info.get('search_type', False):
+            info['start'] = 0
+        # hidden_search_type for prev/next buttons
+        info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
+
         if search_type == 'Dimensions':
             for key in newform_only_fields:
                 if key in info:
@@ -134,15 +168,16 @@ def index():
             return trace_search(info)
         elif search_type == 'Random':
             return newform_search(info, random=True)
-        else:
+        elif search_type == 'List':
             return newform_search(info)
+        assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a','11.2.a.a', '49.2.e.b')
+    newform_labels = ('1.12.a.a','11.2.a.a', '23.2.a.a', '49.2.e.b', '95.6.a.a', '983.2.c.a')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
-    space_labels = ('20.5','60.2','55.3.d')
+    space_labels = ('20.5','60.2','55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
-    info["weight_list"] = ('1', '2', '3-4', '5-9', '10-50')
-    info["level_list"] = ('1', '2-9', '10-99', '100-%s'%(Nk2_bound()))
+    info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
+    info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -256,8 +291,10 @@ def render_full_gamma1_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
-@cmf.route("/<int:level>/")
+@cmf.route("/<level>/")
 def by_url_level(level):
+    if "." in level:
+        return redirect(url_for_label(level), code=301)
     info = to_dict(request.args)
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
@@ -345,7 +382,7 @@ class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
     data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
-    columns = ['level','weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_disc', 'trace_display']
+    columns = ['level','weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
 
     def _get_hecke_nf(self, label):
         try:
@@ -590,7 +627,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
             raise ValueError("You must use the orbit label when searching by primitive character")
         query[conrey_field] = {'$contains': int(orbit)}
 
-newform_only_fields = ['dim','nf_label','is_cm','cm_disc','is_twist_minimal','has_inner_twist','analytic_rank']
+newform_only_fields = ['dim','nf_label','is_self_twist','cm_discs','rm_discs','is_twist_minimal','has_inner_twist','analytic_rank']
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
@@ -613,18 +650,47 @@ def common_parse(info, query):
     prime_mode = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
+def preparse_self_twist(info):
+    # yes, no 
+    # + '_' +
+    # selftwist, cm, rm
+    translate = {'selftwist':'is_self_twist', 'cm':'is_cm', 'rm':'is_rm'}
+    inp = info.get('self_twist')
+    if inp:
+        inpsplit = inp.split('_')
+        key = translate.get(inpsplit[-1])
+        if key:
+            info[key] = '_'.join(inpsplit[:-1])
+
+def parse_discriminant(d, sign = 0):
+    d = int(d)
+    if d*sign < 0:
+        raise ValueError('%d %s 0' % (d, '<' if sign > 0 else '>'))
+    if (d % 4) not in [0, 1]:
+        raise ValueError('%d != 0 or 1 mod 4' % d)
+    return d
+
+
 def newform_parse(info, query):
     common_parse(info, query)
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
-    parse_bool_unknown(info, query, 'is_cm',name='CM form')
-    parse_ints(info, query, 'cm_disc', name="CM discriminant")
+    # populates is_self_twist, is_cm or is_rm
+    preparse_self_twist(info)
+    parse_bool_unknown(info, query, 'is_self_twist',name='Has self-twist')
+    parse_bool(info, query, 'is_cm',name='Has self-twist')
+    parse_bool(info, query, 'is_rm',name='Has self-twist')
+    parse_subset(info, query, 'cm_discs', name="CM discriminant", parse_singleton=lambda d: parse_discriminant(d, -1))
+    parse_subset(info, query, 'rm_discs', name="RM discriminant", parse_singleton=lambda d: parse_discriminant(d, 1))
     parse_bool(info, query, 'is_twist_minimal')
     parse_bool_unknown(info, query, 'has_inner_twist')
     parse_ints(info, query, 'analytic_rank')
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool_unknown(info, query, 'is_self_dual')
+    parse_noop(info, query, 'projective_image')
+    parse_noop(info, query, 'projective_image_type')
+    parse_ints(info, query, 'artin_degree', name="Artin degree")
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
@@ -695,6 +761,7 @@ def set_rows_cols(info, query):
 
 def has_data(N, k):
     return N*k*k <= Nk2_bound()
+
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -724,8 +791,10 @@ def dimension_space_postprocess(res, info, query):
     info['url_generator'] = url_generator
     info['has_data'] = has_data
     return dim_dict
+
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
+    urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     set_rows_cols(info, query)
     dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
@@ -858,17 +927,21 @@ class CMF_stats(StatsDisplay):
 
     stat_list = [
         {'cols': [],
-         'buckets':{'dim':[1,1,2,3,4,5,10,20,100,1000,10000]},
+         'buckets':{'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
          'row_title':'dimension',
          'knowl':'mf.elliptic.dimension'},
         {'cols': [],
-         'buckets':{'level':[1,1,9,99,2000]},
+         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000]},
          'row_title':'level',
          'knowl':'mf.elliptic.level'},
         {'cols': [],
-         'buckets':{'weight':[1,1,2,3,4,9,50]},
+         'buckets':{'weight':[1,1,2,3,4,5,10,20,40,62]},
          'row_title':'weight',
          'knowl':'mf.elliptic.weight'},
+        {'cols':[],
+         'buckets':{'char_order':[1,1,2,3,4,5,10,20,100,1000]},
+         'row_title':'character order',
+         'knowl':'character.dirichlet.order'},
         {'cols':'has_inner_twist',
          'top_title':'inner twisting',
          'row_title':'has inner twist',
@@ -878,18 +951,28 @@ class CMF_stats(StatsDisplay):
          'row_title':'analytic rank',
          'knowl':'lfunction.analytic_rank',
          'avg':True},
+        {'cols':'projective_image',
+         'top_title':'projective images for weight 1 forms',
+         'row_title':'projective image',
+         'formatter': (lambda t: r'\(%s_%s\)' % (t[0], t[1:]))},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': r'number of newforms in \(S_k(\Gamma_0(N), \chi)\)',
          'row_title': 'newforms',
          'knowl': 'mf.elliptic.galois-orbits',
-         'url_extras': 'submit=Spaces&'},
-        {'cols': 'cm_disc',
-         'top_title':'complex multiplication',
-         'row_title':'CM by',
+         'url_extras': 'search_type=Spaces&'},
+        #{'cols': 'cm_disc',
+        # 'top_title':'complex multiplication',
+        # 'row_title':'CM by',
+        # 'knowl':'mf.elliptic.cm_form',
+        # 'reverse':True,
+        # 'formatter':cm_format},
+        {'cols': 'self_twist_discs',
+         'top_title':'self twist discriminants',
+         'row_title':'twist disc',
          'knowl':'mf.elliptic.cm_form',
-         'reverse':True,
-         'formatter':cm_format},
+         'sort_key': (lambda x: (abs(x[0]),x[0])),
+         'split_list':True}
     ]
 
 @cmf.route("/stats")

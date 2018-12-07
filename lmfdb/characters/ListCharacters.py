@@ -2,7 +2,7 @@
 # ListCharacters.py
 
 import re
-from sage.all import lcm, factor, divisors, gcd
+from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.db_backend import db
 from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
@@ -135,73 +135,29 @@ def get_character_order(a, b, limit=7):
         return l
     return [(_, line(_)) for _ in range(a, b)]
 
-def charinfo(chi, value_data=None, orbit_data=None):
-    """
-    Return data associated to the WebDirichletCharacter chi. For moduli less
-    than 10000, call charinfo_from_db to pull the data from the db instead.
 
-    The search function in ListCharacters polls the database already. In those
-    cases, value_data and orbit_data are already populated with the data from
-    the char_dir_values and char_dir_orbits collections already.
-    """
-    if value_data and orbit_data:
-        return charinfo_from_db(None, None, value_data, orbit_data)
-    mod = chi.modulus()
-    if mod < 10000:
-        num = chi.number()
-        return charinfo_from_db(mod, num)
-    return (
-        chi.modulus(),
-        chi.number(),
-        chi.conductor(),
-        "Not computed",
-        chi.multiplicative_order(),
-        chi.is_odd(),
-        chi.is_primitive(),
-        WebDirichlet.char2tex(chi.modulus(), chi.number()),
-    )
-
-
-def charinfo_from_db(mod, num, values_data=None, orbit_data=None):
-    """
-    Return data associated to the WebDirichletCharacter chi from the db.
-
-    If given values_data and orbit_data (as contained in the char_dir_values
-    and char_dir_orbits collections in the db), this doesn't make additional
-    calls and uses the given data.
-    """
-    if not values_data:
-        values_data = db.char_dir_values.lookup(
-            "{}.{}".format(mod, num)
-        )
-    else:
-        mod, _, num = values_data['label'].partition('.')
-        mod, num = int(mod), int(num)
-
-    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
-
-    # The -1 in the line below is because labels index at 1, while
-    # the Cremona letter code indexes at 0
+def info_from_db_orbit(orbit):
+    mod = orbit['modulus']
+    conductor = orbit['conductor']
+    orbit_index = orbit['orbit_index']
     orbit_letter = cremona_letter_code(orbit_index - 1)
     orbit_label = "{}.{}".format(mod, orbit_letter)
-    order = int(values_data['order'])
-    if not orbit_data:
-        orbit_data = db.char_dir_orbits.lucky(
-            {'modulus': mod, 'orbit_index': orbit_index}
-        )
-    conductor = int(orbit_data['conductor'])
-    is_prim = _is_primitive(orbit_data['is_primitive'])
-    is_odd = 'Odd' if _is_odd(orbit_data['parity']) else 'Even'
-    return (
-        mod,
-        num,
-        conductor,
-        orbit_label,
-        order,
-        is_odd,
-        is_prim,
-        WebDirichlet.char2tex(mod, num),
-    )
+    order = orbit['order']
+    is_odd = 'Odd' if _is_odd(orbit['parity']) else 'Even'
+    is_prim = _is_primitive(orbit['is_primitive'])
+    results = []
+    for num in orbit['galois_orbit']:
+        results.append((
+            mod,
+            num,
+            conductor,
+            orbit_label,
+            order,
+            is_odd,
+            is_prim,
+            WebDirichlet.char2tex(mod, num)
+        ))
+    return results
 
 
 def _is_primitive(db_primitive):
@@ -238,7 +194,7 @@ class CharacterSearch:
         if self.primitive and not self.primitive in ['Yes','No']:
             flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'"),"error")
             raise ValueError('primitive')
-        self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 99999)
+        self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
             flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
             raise ValueError('modulus')
@@ -273,7 +229,7 @@ class CharacterSearch:
 
     def results(self):
         info = {}
-        L, complete = self.results_by_modulus(self.mmin, self.mmax, self.start, self.limit)
+        L, complete = self.lookup_results(self.mmin, self.mmax, self.start, self.limit)
         info['more'] = not complete
         if len(L):
             if self.start == 0:
@@ -290,92 +246,56 @@ class CharacterSearch:
     def list_valid(self):
         return
 
-    def results_by_modulus(self, mmin, mmax, start, limit):
+    def _construct_search_query(self):
+        query = {}
+        query['modulus'] = {
+            '$gte': self.mmin,
+            '$lte': self.mmax
+        }
+        query['conductor'] = {
+            '$gte': self.cmin,
+            '$lte': self.cmax
+        }
+        query['order'] = {
+            '$gte': self.omin,
+            '$lte': self.omax
+        }
+        if self.parity:
+            if self.is_odd:
+                query['parity'] = -1
+            else:
+                query['parity'] = 1
+        if self.primitive:
+            if self.is_primitive:
+                query['is_primitive'] = True
+            else:
+                query['is_primitive'] = False
+        return query
+
+    def lookup_results(self, mmin, mmax, start, limit):
         res = []
-        ticks = 0
         if mmin > mmax or self.cmin > self.cmax or self.omin > self.omax:
             return res, True
         if self.omax == 1 and self.cmin > 1:
             return res, True
-        step = 1
-        if self.conductor and self.cmin == self.cmax:
-            step = self.cmin
-            if mmin % step:
-                mmin = mmin + step - (mmin%step)
-        count = 0
-        for q in xrange(mmin, mmax + 1, step):
-            # if we have not found any results of modululs q <= cmax we are never going to find any (unless only imprimitive results are sought)
-            if q > self.cmax and not res and self.start == 0 and (not self.primitive or self.is_primitive):
-                return res, True
-            if self.conductor and not divisors_in_interval(q, self.cmin, self.cmax):
-                continue
-            if self.order and not divisors_in_interval(modn_exponent(q), self.omin, self.omax):
-                continue
-            if q >= 10000:
-                #TODO raise an error and catch it elsewhere. This shouldn't be called.
-                continue
-            if q < 10000:
-                # Generate admissible numbers for Conrey labels
-                for num in (v for v in range(1, q+1) if gcd(v, q) == 1):
-                    ticks += 1
+        query = self._construct_search_query()
 
-                    if ticks > 100000:
-                        flash(Markup(
-                            "Error: Unable to complete query within timeout "
-                            "(showing results up to modulus %d). "
-                            "Try narrowing your search." %q
-                        ),  "error")
-                        return res, False
+        orbit_cursor = db.char_dir_orbits.search(query)
+        for orbit in orbit_cursor:
+            res += info_from_db_orbit(orbit)
+            # This is a not great way to implement offsets.
+            # This should be improved.
+            if start > 0:
+                num_omit = min(len(res), start)
+                res = res[num_omit:]
+                start = start - num_omit
+            if len(res) >= limit:
+                break
 
-                    values_data = db.char_dir_values.lookup(
-                        "{}.{}".format(q, num)
-                    )
-                    order = values_data['order']
-                    if order < self.omin or order > self.omax:
-                        continue
+        if len(res) >= limit:
+            res = res[:limit]
+            complete = False
+        else:
+            complete = True
 
-                    orbit_index = int(values_data['orbit_label'].partition('.')[-1])
-                    orbit_data = db.char_dir_orbits.lucky(
-                        {'modulus': q, 'orbit_index': orbit_index}
-                    )
-                    conductor = int(orbit_data['conductor'])
-                    if conductor < self.cmin or conductor > self.cmax:
-                        continue
-
-                    is_prim = _is_primitive(orbit_data['is_primitive'])
-                    if self.primitive and self.is_primitive != is_prim:
-                        continue
-
-                    is_odd = _is_odd(orbit_data['parity'])
-                    if self.parity and self.is_odd != is_odd:
-                        continue
-
-                    if count >= start:
-                        if len(res) == limit:
-                            return res, False
-                        res.append(charinfo_from_db(None, None, values_data, orbit_data))
-                    count += 1
-#            else:
-#            G = DirichletGroup_conrey(q)
-#            for chi in G:
-#                ticks += 1
-#                if ticks > 100000:
-#                    flash(Markup(
-#                        "Error: Unable to complete query within timeout "
-#                        "(showing results up to modulus %d). "
-#                        "Try narrowing your search." %q
-#                    ),  "error")
-#                    return res, False
-#                c,o,p = chi.conductor(), chi.multiplicative_order(), chi.is_odd()
-#                if c < self.cmin or c > self.cmax or o < self.omin or o > self.omax:
-#                    continue
-#                if self.primitive and self.is_primitive != (True if q == c else False):
-#                    continue
-#                if self.parity and self.is_odd != p:
-#                    continue
-#                if count >= start:
-#                    if len(res) == limit:
-#                        return res, False
-#                    res.append(charinfo(chi))
-#                count += 1
-        return res, True
+        return res, complete

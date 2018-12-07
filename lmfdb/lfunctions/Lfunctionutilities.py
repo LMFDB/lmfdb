@@ -356,7 +356,7 @@ def lfuncEPtex(L, fmt):
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt, prec = 12):
+def lfuncEPhtml(L,fmt, prec = None):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -429,15 +429,16 @@ def lfuncEPhtml(L,fmt, prec = 12):
         return out
 
 
-
-    eptable = "<table id='eptable' class='ntdata euler'>\n"
+    eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
+    eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
-    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th><th class='weight'>$F_p$</th>"
+    eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
     if L.degree > 2  and L.degree < 12:
         display_galois = True
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
     else:
         display_galois = False
+    eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
     def row(trclass, goodorbad, p, poly):
@@ -449,9 +450,7 @@ def lfuncEPhtml(L,fmt, prec = 12):
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-            out += ("<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td><td>" +
-                        "$" + factors + "$" +
-                        "</td>")
+            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>";
             if display_galois:
                 out += "<td class='galois'>"
                 if gal_groups[0]==[0,0]:
@@ -464,6 +463,7 @@ def lfuncEPhtml(L,fmt, prec = 12):
                     out += "$\\times$"
                     out += group_display_knowl(n, k)
                 out += "</td>"
+            out += "<td>" +"$" + factors + "$" + "</td>"
             out += "</tr>\n"
 
         except IndexError:
@@ -490,14 +490,17 @@ def lfuncEPhtml(L,fmt, prec = 12):
         eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
         trclass = " class='more nodisplay'"
 
-    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td><td></td>"""
+    eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td>"""
+
+    last_entry = ""
     if display_galois:
-        eptable +="<td></td>"
+        last_entry +="<td></td>"
+    last_entry += "<td></td>"
+    eptable += last_entry
     eptable += "</tr>"
-    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td><td></td>"""
-    if display_galois:
-        eptable +="<td></td>"
-    eptable += "</tr>\n</table>"
+    eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td>"""
+    eptable += last_entry
+    eptable += "</tr>\n</table>\n</div>\n"
     ans += "\n" + eptable
     return(ans)
 
@@ -627,12 +630,18 @@ def lfuncFEtex(L, fmt):
                 return 3
         if L.mu_fe != []:
             mus = [ display_complex(CDF(mu).real(), CDF(mu).imag(),  mu_fe_prec(mu), method="round" ) for mu in L.mu_fe ]
-            ans += ", ".join(mus)
+            if len(mus) >= 6 and mus == [mus[0]]*len(mus):
+                ans += '[%s]^{%d}' % (mus[0], len(mus))
+            else:
+                ans += ", ".join(mus)
         else:
             ans += "\\ "
         ans += ":"
         if L.nu_fe != []:
-            ans += ", ".join(map(str, L.nu_fe))
+            if len(L.nu_fe) >= 6 and L.nu_fe == [L.nu_fe[0]]*len(L.nu_fe):
+                ans += '[%s]^{%d}' % (L.nu_fe[0], len(L.nu_fe))
+            else:
+                ans += ", ".join(map(str, L.nu_fe))
         else:
             ans += "\\ "
         ans += "),\\ "
@@ -728,7 +737,7 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
         # We must test for NaN first, since it would show as zero otherwise
         # Try "RR(NaN) < float(1e-10)" in sage -- GT
         if ccval.real().is_NaN():
-            Lval = "\\infty"
+            Lval = "$\\infty$"
         else:
             Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
 
@@ -882,11 +891,11 @@ def getConductorIsogenyFromLabel(label):
 # TODO This needs to be able to handle any sort of L-function.
 # There should probably be a more relevant field
 # in the database, instead of trying to extract this from a URL
+# FIXME move this to somewhere else
 def name_and_object_from_url(url):
-    url_split = url.split("/");
+    url_split = url.rstrip('/').lstrip('/').split("/");
     name = '??';
     obj_exists = False;
-    #FIXME this is not robust against extra slashes
 
     if url_split[0] == "EllipticCurve":
         if url_split[1] == 'Q':
@@ -941,6 +950,11 @@ def name_and_object_from_url(url):
                 label = '-'.join(url_split[-3:])
                 name = 'Bianchi modular form ' + label;
                 obj_exists = db.bmf_forms.label_exists(label);
+    elif url_split[0] == "ArtinRepresentation":
+        label = url_split[1]
+        name =  'Artin representation ' + label;
+        obj_exists = db.artin_reps.label_exists(label.split('c')[0]);
+
     return name, obj_exists
 
 def names_and_urls(instances):
@@ -961,7 +975,6 @@ def names_and_urls(instances):
         if name not in names:
             res.append((name, url))
             names.append(name)
-
     return res
 
 def get_bread(degree, breads=[]):
@@ -974,3 +987,17 @@ def get_bread(degree, breads=[]):
     for b in breads:
         breadcrumb.append(b)
     return breadcrumb
+
+# Convert  r0r0c1 to (0,0;1), for example
+def parse_codename(text):
+
+    ans = text
+    if 'c' in text:
+        ans = re.sub('c', ';', ans, 1)
+    else:
+        ans += ';'
+    ans = re.sub('r', '', ans, 1)
+    ans = re.sub('(r|c)', ',', ans)
+
+    return '(' + ans + ')'
+

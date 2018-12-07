@@ -34,15 +34,29 @@ def svgEnd():
 ## of given degree (gives output for degree 3 and 4). Data is fetched from
 ## the database.
 ## ============================================
-def getAllMaassGraphHtml(degree):
+def getAllMaassGraphHtml(degree, signature=""):
     if degree == 3:
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
         groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
     else:
         return ""
+    if signature:
+        groups = []
 
     ans = ""
+    if signature == 'r0r0r0':
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL3", 1])
+        ans += getOneGraphHtml(["GL3", 4])
+    elif signature == 'r0r0r0r0':
+        ans += getGroupHtml(signature + 'selfdual')
+        ans += getOneGraphHtml(["GSp4", 1])
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL4", 1])
+
+#        else:
+#            ans += getGroupHtml(g)
     for i in range(0, len(groups)):
         g = groups[i][0]
         ans += getGroupHtml(g)
@@ -59,7 +73,46 @@ def getAllMaassGraphHtml(degree):
 
 
 def getGroupHtml(group):
-    if group == 'GSp4':
+    if group == 'r0r0r0':   # note: signature, not group.  Delete the groups, then change the name
+        ans = "<h3 id='r0r0r0'>L-functions of signature (0,0,0;)</h3>\n"
+        ans += "<div>"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
+        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
+        ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
+        ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
+    elif group == 'r0r0r0r0':
+        ans = "<h3 id='r0r0r0r0'>L-functions of signature (0,0,0,0;)</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\Gamma_\\R(s + i \\mu_4)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
+        ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
+        ans += "</div>\n"
+    elif group == 'r0r0r0r0selfdual':
+        ans = "<h3 id='r0r0r0r0selfdual'>L-functions of signature (0,0,0,0;) with real coefficients</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\begin{equation}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s - i \\mu_1)"
+        ans += "\\Gamma_\\R(s - i \\mu_2)"
+        ans += "\\end{equation}\n"
+        ans += "with \\(\\mu_j\\) real.  By renaming and rearranging, we may assume \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
+
+    # groups, soon to be obsolete
+    elif group == 'GSp4':
         ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GSp(4) of level 1. "
@@ -120,13 +173,13 @@ def getGroupHtml(group):
 ## ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + " and sign "
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + " and sign "
                + str(gls[2]) + "</h4>\n")
     else:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + "</h4>\n")
     ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
-    ans += "search. Click on any of the dots to get detailed information about "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). "
+    ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
     ans += ("<embed src='" + graphInfo['src'] + "' width='" +
@@ -263,51 +316,49 @@ def paintSvgFileAll(glslist):  # list of group and level
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xstart = 1):
+def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
-    sign = 1 if xMax >= 1 else -1
-    for i in range(1, xMax + 1, sign):
-        xmlText = xmlText + ("<line x1='" + str(i * sign * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range(5, xMax + 1, sign * 5):
-        xmlText = xmlText + ("<text x='" + str(i * sign * xfactor - 6) + "' y='" +
-                             str(height - 2 * ticlength) +
+    xsign = 1 if xMax >= 1 else -1
+    ysign = 1 if yMax >= 1 else -1
+    for i in range(xMin, xMax + 1, xsign * dashedx):
+        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='" +
+                             str(xsign * height - 2 * ticlength) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i + xstart) + "</text>\n")
+                             + str(i + xoffset) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * sign * xfactor) +
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor) +
+                             "' y2='" + str(ysign * height) + "' x2='" +
+                             str(i * xsign * xfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range(1, xMax + 1, xsign):
+        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='" +
+                             str(ysign*height - ticlength) + "' x2='" +
+                             str(i * xfactor) + "' y2='" + str(ysign * height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
 
 
     # y-axis
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    sign = 1 if yMax >= 1 else -1
-    for i in range(1, yMax + 1, sign):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * sign * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * sign * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range(5, yMax + 1, sign*5):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * sign * yfactor + 3) +
+    xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
+    for i in range(1, yMax + 1, ysign*dashedy):
+        xmlText = xmlText + ("<text x='-10' y='" +
+                             str(ysign*height - i * ysign * yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * sign * yfactor) + "' x2='" + str(width) +
-                             "' y2='" + str(height - i * sign * yfactor) +
+                             str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width) +
+                             "' y2='" + str(height - i * ysign * yfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+    for i in range(yMin, yMax + 1, ysign*dashedy):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * ysign * yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i * ysign * yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
 
     return(xmlText)
 
@@ -322,15 +373,10 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xstart = 1):
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 def getOneGraphHtmlHolo(condmax):
-    #graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-# To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "'
-# width='" + str(graphInfo['width']) +
-    # TODO cleanup here
-    #image_url = url_for('static', filename='images/browseGraphHolo_22_14_5a.svg')
-    #image_url = url_for('.browseGraphHoloNew', **{'Nmin':Nmin,'Nmax':Nmax,'kmin':kmin,'kmax':kmax})
-    image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
+    #image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
+    image_url = url_for('static', filename='images/browseGraphHoloNew_201.svg')
     logger.debug(image_url)
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 620) +
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 680) +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
@@ -370,9 +416,10 @@ def paintSvgHoloNew(condmax):
         """
         Given a total number of weights returns a list of RGB tuples
         """
+        # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
-        return map(lambda (r,g,b): "("+str(100*r)+r"%" + str(100*g)+r"%" + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=1.5, light=.75, rot=3.8))
+        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=1.5, light=.75, rot=3.8))
 
 
     radius = 3.3
@@ -383,7 +430,6 @@ def paintSvgHoloNew(condmax):
 
     for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','char_labels','dim','char_degree']):
         level, k, _, hecke_letter = nf['label'].split('.')
-        base_label = [level, k]
         if int(k) > max_k:
             max_k = int(k)
         if nf['analytic_conductor'] not in values:
@@ -391,21 +437,24 @@ def paintSvgHoloNew(condmax):
         if nf['dim'] == 1:
             lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(nf['label'].split('.'))
             z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
-            values[nf['analytic_conductor']].append([nf['label'].split('.'), z1, lfun_url])
+            if z1 is not None:
+                values[nf['analytic_conductor']].append([nf['label'].split('.'), z1, lfun_url])
         else:
             for character in nf['char_labels']:
                 for j in range(nf['dim']/nf['char_degree']):
-                    label = base_label + [str(character), hecke_letter, str(j + 1)]
+                    label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
                     z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
-                    values[nf['analytic_conductor']].append([label, z1, lfun_url])
+                    if z1 is not None:
+                        values[nf['analytic_conductor']].append([label, z1, lfun_url])
+
 
     points = []
     y_max = 0.0
     x_max = 0.0
     y_scale = 60
     x_scale = 6
-    x_offset = 35 # the first analytic conductor is 47 or something so this is pleasing
+    x_offset = 40 # the first analytic conductor is 47 or something so this is pleasing
     for Nk2 in sorted(values.keys()):
         for label, z1, lfun_url in values[Nk2]:
             N, k = label[:2]
@@ -420,9 +469,11 @@ def paintSvgHoloNew(condmax):
     # Begin drawing
 
     ans = svgBegin()
-    ans += "<g transform='translate(0 50)'>\n" # give ourselves a little space
-    ans += paintCS(x_max, 0, int(math.ceil(x_max)), int(math.ceil(y_max)), x_scale, -y_scale, 7, xstart = x_offset)
-    ans += "</g>"
+    ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
+
+    ans += "<g transform='translate(0 40)'>\n" # give ourselves a little space
+    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
+    ans += "</g>\n"
 
     ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
     cfw = colorsForWeights(max_k) # pick our colour pallette we need colors for weights 1 (at some point) to max_k inclusive
@@ -452,6 +503,8 @@ def paintSvgHoloNew(condmax):
     #            + str(numberwithlabel) + "</text>\n")
 
     ans += "</g>\n"
+    ans += "</g>"
+
     ans += svgEnd()
 
     return ans

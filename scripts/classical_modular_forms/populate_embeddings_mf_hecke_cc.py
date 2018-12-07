@@ -38,7 +38,7 @@ def upsert_embedding(id_number, skip = False):
     elif newform.get('field_poly', None) is None:
 	    return
     else:
-        print rowcc['lfunction_label']
+        # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
         numerators =  newform['hecke_ring_numerators']
         denominators = newform['hecke_ring_denominators']
@@ -57,7 +57,7 @@ def upsert_embedding(id_number, skip = False):
 
         qexp_diff_sorted = sorted(qexp_diff)
         min_diff = qexp_diff_sorted[0]
-        print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
+        #print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
 
         #assuring that is something close to zero, and that no other value is close to it
         assert min_diff < 1e-6
@@ -78,9 +78,13 @@ if len(sys.argv) == 3:
     k = int(sys.argv[1])
     start = int(sys.argv[2])
     assert k > start
-    ids = list(range(start, bound + 1, k))
-    for i in ids:
+    hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
+    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
+    ids = ids[start::k]
+    for j, i in enumerate(ids):
         upsert_embedding(i)
+        if j % int(len(ids)*0.01) == 0:
+            print '%d\t--> %.2f %% done' % (start, (100.*(j+1)/len(ids)))
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):

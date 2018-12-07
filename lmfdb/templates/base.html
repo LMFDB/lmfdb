@@ -116,7 +116,12 @@ _gaq.push(['_trackPageLoadTime']);
 {%- endif %}
 </head>
 
+{%- if BETA -%}
+<body class="beta {{ body_class }}">
+{%- else -%}
 <body class="{{ body_class }}">
+{%- endif -%}
+
 {% block body -%}{%- endblock body %}
 </body>
 </html>

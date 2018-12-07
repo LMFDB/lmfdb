@@ -9,7 +9,8 @@
 import math
 import re
 
-from flask import url_for
+from flask import url_for, request
+from lmfdb.db_encoding import Json
 
 from Lfunctionutilities import (string2number, get_bread,
                                 compute_local_roots_SMF2_scalar_valued,
@@ -23,7 +24,7 @@ from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF, primes_first_n, next_prime
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -33,6 +34,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
+from lmfdb.downloader import Downloader
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -171,7 +173,6 @@ def makeLfromdata(L):
         L.credit = data.get('credit', None)
 
 
-    #HERE
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
     L.bad_lfactors = data.get('bad_lfactors', None)
@@ -217,7 +218,7 @@ def makeLfromdata(L):
 
     zero_truncation = 25   # show at most 25 positive and negative zeros
                            # later: implement "show more"
-    L.positive_zeros = map(str, data['positive_zeros'][:zero_truncation])
+    L.positive_zeros_raw = map(str, data['positive_zeros'])
     L.accuracy = data.get('accuracy', None);
 
     def convert_zeros(accuracy, list_zeros):
@@ -229,19 +230,23 @@ def makeLfromdata(L):
         return [ (RealNumber(elt.str() + ".")/two_power).str(truncate = True) for elt in int_zeros]
 
     if L.accuracy is not None:
-        L.positive_zeros = convert_zeros(L.accuracy, L.positive_zeros)
+        L.positive_zeros_raw = convert_zeros(L.accuracy, L.positive_zeros_raw)
+    L.positive_zeros = L.positive_zeros_raw[:zero_truncation]
 
     if L.selfdual:
-        L.negative_zeros = L.positive_zeros[:]
+        L.negative_zeros_raw = L.positive_zeros_raw[:]
+        L.dual_accuracy = L.accuracy
     else:
         dual_L_label = data['conjugate']
         dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.dual_link = '/L/' + dual_L_data['origin']
         L.dual_accuracy = dual_L_data.get('accuracy', None);
-        L.negative_zeros = map(str, dual_L_data['positive_zeros'][:zero_truncation])
+        L.negative_zeros_raw = map(str, dual_L_data['positive_zeros'])
         if L.dual_accuracy is not None:
-            L.negative_zeros = convert_zeros(L.dual_accuracy, L.negative_zeros)
-    L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.negative_zeros]
+            L.negative_zeros_raw = convert_zeros(L.dual_accuracy, L.negative_zeros_raw)
+    L.negative_zeros = L.negative_zeros_raw[:zero_truncation]
+    L.negative_zeros = ["&minus;" + zero for zero in L.negative_zeros]
+    L.negative_zeros_raw = [ '-' + zero for zero in reversed(L.negative_zeros_raw)]
     L.negative_zeros.reverse()
     L.negative_zeros += ['0' for _ in range(data['order_of_vanishing'])]
     L.negative_zeros = ", ".join(L.negative_zeros)
@@ -535,6 +540,8 @@ class Lfunction_from_db(Lfunction):
         if 'url' in kwargs and 'Lhash' not in kwargs:
             self.Lhash = self.get_Lhash_by_url(self.url)
         self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
+        if 'url' not in kwargs:
+            self.url = self.lfunc_data['origin']
         makeLfromdata(self)
         self.info = self.general_webpagedata()
         self._set_knowltype()
@@ -610,6 +617,82 @@ class Lfunction_from_db(Lfunction):
     @property
     def friends(self):
         return []
+
+    @property
+    def downloads(self):
+        return [['Download Euler factors', self.download_euler_factor_url],
+                ['Download zeros', self.download_zeros_url],
+                ['Download Dirichlet coefficients', self.download_dirichlet_coeff_url]]
+
+    @property
+    def download_euler_factor_url(self):
+        return request.path.replace('/L/', '/L/download_euler/')
+
+    @property
+    def download_zeros_url(self):
+        return request.path.replace('/L/', '/L/download_zeros/')
+    @property
+    def download_dirichlet_coeff_url(self):
+        return request.path.replace('/L/', '/L/download_dirichlet_coeff/')
+
+    @property
+    def download_url(self):
+        return request.path.replace('/L/', '/L/download/')
+
+    def download_euler_factors(self):
+        filename = self.url.replace('/','_')
+        data  = {}
+        data['bad_lfactors'] = self.bad_lfactors
+        ps = primes_first_n(len(self.localfactors))
+        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.euler_factors',
+                lang = 'text',
+                title = 'Euler Factors of %s' % self.url)
+
+    def download_zeros(self):
+        filename = self.url.replace('/','_')
+        data  = {}
+        data['order_of_vanishing'] = self.order_of_vanishing
+        data['positive_zeros'] = self.positive_zeros_raw
+        data['negative_zeros'] = self.negative_zeros_raw
+        data['positive_zeros_accuracy'] = self.accuracy
+        data['negative_zeros_accuracy'] = self.dual_accuracy
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.zeros',
+                lang = 'text',
+                title = 'Zeros of %s' % self.url)
+
+    def download_dirichlet_coeff(self):
+        filename = self.url.replace('/','_')
+        data  = {}
+        data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.dir_coeffs',
+                lang = 'text',
+                title = 'Dirichlet coefficients of %s' % self.url)
+
+
+    def download(self):
+        filename = self.url.replace('/','_')
+        data  = dict(self.__dict__)
+        for k in ['level_factored', 'dirichlet_coefficients']:
+            if isinstance(data[k], list):
+                data[k] = map(str, data[k])
+            else:
+                data[k] = str(data[k])
+        data.pop('level_factored')
+        return Downloader()._wrap(
+                Json.dumps(data),
+                filename + '.lfunction',
+                lang = 'text',
+                title = 'The L-function object of %s' % self.url)
+
+
+
 
     @property
     def chilatex(self):
@@ -699,6 +782,10 @@ class Lfunction_from_db(Lfunction):
         if self.knowltype is not None:
             self.info['knowltype'] = self.knowltype
 
+
+
+
+
 ####################################################################################################
 
 class Lfunction_CMF(Lfunction_from_db):
@@ -740,7 +827,7 @@ class Lfunction_CMF(Lfunction_from_db):
 
     @property
     def bread(self):
-        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
 #    def _set_title(self):
 #        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
@@ -790,7 +877,7 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
 
     @property
     def bread(self):
-        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page'))])
+        return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
 
 #    def _set_title(self):
 #        conductor_str = "$ %s $" % latex(self.modform_level)

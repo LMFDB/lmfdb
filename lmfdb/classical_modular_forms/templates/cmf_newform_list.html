@@ -1,6 +1,8 @@
 {%- from "knowl-defs.html" import KNOWL with context -%}
 {% set AL_signs = info.display_AL(info.results) %}
 {% set Fricke_sign = info.display_Fricke(info.results) %}
+{% set Projective_image = info.all_weight1(info.results) %}
+{% set self_twists_cols = [(info.self_twist_col, 'Self-twist', info.self_twist_link), (info.cm_col, 'CM', info.cm_link), (info.rm_col, 'RM', info.rm_link)] %}
 
 <table class="ntdata">
   <thead>
@@ -9,7 +11,14 @@
       <th rowspan=2>{{ KNOWL('mf.elliptic.dimension_galois_orbit', title='Dim.') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(A\)') }}</th>
       <th rowspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Field') }}</th>
-      <th rowspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM?') }}</th>
+      {% if Projective_image %}
+      <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.projective_image', title='Image') }}</th>
+      {% endif %}
+      {% for b, text, _ in self_twists_cols %}
+        {% if b %}
+        <th rowspan=2>{{ KNOWL('mf.elliptic.self_twist', title=text) }}</th>
+        {% endif %}
+      {% endfor %}
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
@@ -17,6 +26,7 @@
       {% elif Fricke_sign %}
       <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.fricke', title='Fricke sign') }}</th>
       {% endif %}
+
       <th rowspan=2>{{ KNOWL('mf.elliptic.q-expansion', title='$q$-expansion') }}</th>
     </tr>
     <tr class="dark">
@@ -34,11 +44,20 @@
   <tbody>
     {% for mf in info.results %}
     <tr>
-      <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
+      <td> <a href="{{ info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
       <td> {{ mf.dim }} </td>
       <td> {{ "%.1f" | format(mf.analytic_conductor|float) }} </td>
       <td> {{ info.nf_link(mf) | safe }} </td>
-      <td> {{ info.cm_link(mf) | safe }}</td>
+      {% if Projective_image %}
+      <td class="center">
+        \({{ info.display_projective_image(mf) }}\)
+      </td>
+      {% endif %}
+      {% for b, _, func in self_twists_cols %}
+        {% if b %}
+          <td> {{ func(mf) | safe }}</td>
+        {% endif %}
+      {% endfor %}
       <td class="right">\({{ mf.trace_display[0] }}\)</td>
       <td class="right">\({{ mf.trace_display[1] }}\)</td>
       <td class="right">\({{ mf.trace_display[2] }}\)</td>
@@ -52,13 +71,9 @@
       <td class="center">{% if 'fricke_eigenval' in mf and mf['fricke_eigenval'] %}\({{"+" if mf['fricke_eigenval'] == 1 else "-"}}\){% endif %}</td>
       {% endif %}
       <td>
-        {% if mf.dim <= 20 %}
-        <a href="{{info.mf_url(mf)}}">
         {% if mf.qexp_display %}
-        \({{ mf.qexp_display }}\)
-        {% else %}
-        \(q + \cdots\)
-        {% endif %}
+        <a href="{{info.mf_url(mf)}}">
+          \({{ mf.qexp_display }}\)
         </a>
         {% endif %}
       </td>

@@ -56,7 +56,7 @@ class DirichletSearchTest(LmfdbTest):
         assert '\chi_{50}(11,' in W.data and '\chi_{75}(46,' in W.data
 
     def test_condsearch(self):
-        W = self.tc.get('/Character/Dirichlet/?conductor=111')
+        W = self.tc.get('/Character/Dirichlet/?conductor=111&limit=100')
         assert '111/17' in W.data
 
     def test_nextprev(self):
@@ -107,6 +107,10 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
+
+    def test_valuefield(self):
+        W = self.tc.get('/Character/Dirichlet/13/2')
+        assert  'Value Field' in W.data
 
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):

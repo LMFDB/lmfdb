@@ -1,8 +1,7 @@
-# See genus2_curves/web_g2c.py
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PowerSeriesRing,\
-    CDF, ZZ, CBF, cached_method, vector, lcm
+from sage.all import prime_range, latex, QQ, PolynomialRing,\
+    PowerSeriesRing, CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
     factor_base_factorization_latex
@@ -21,9 +20,17 @@ from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from web_space import convert_spacelabel_from_conrey, get_bread
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+import bisect
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
+
+
+# we store a_n with n \in [1, an_storage_bound]
+an_storage_bound = 1000
+# we store alpha_p with p <= an_storage_bound
+primes_for_angles = prime_range(an_storage_bound)
+
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
@@ -58,13 +65,19 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
+def quad_field_knowl(disc):
+    r = 2 if disc > 0 else 0
+    field_label = "2.%d.%d.1" % (r, abs(disc))
+    field_name = field_pretty(field_label)
+    return nf_display_knowl(field_label, field_name)
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
-        #FIXME
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity']:
+
+        # Make up for db_backend currently deleting Nones
+        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity', 'hecke_cutters', 'analytic_rank', 'artin_degree','projective_image']:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -98,14 +111,14 @@ class WebNewform(object):
                 self.star_twist = 'inner twists*'
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code}, ['n','an','trace_an'], sort=['n'])
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
         if eigenvals:  # this should always be true
             self.has_exact_qexp = True
             zero = [0] * self.dim
             self.qexp = [zero]
             self.texp = [0]
-            for i, ev in enumerate(eigenvals):
-                if ev['n'] != i+1:
+            for i, ev in enumerate(eigenvals, 1):
+                if ev['n'] != i:
                     raise ValueError("Missing eigenvalue")
                 self.texp.append(ev['trace_an'])
                 if ev.get('an'):
@@ -113,14 +126,19 @@ class WebNewform(object):
                 else:
                     # only had traces
                     self.has_exact_qexp = False
-            self.qexp_prec = len(self.qexp)-1
-            self.texp_prec = len(self.texp)-1
+            self.qexp_prec = len(self.qexp)
+            self.texp_prec = len(self.texp)
         else:
             self.has_exact_qexp = False
         self.rel_dim = self.dim // self.char_degree
 
+
+        if self.weight == 1:
+            if self.projective_image:
+                self.projective_image_latex = self.projective_image[:1] + '_' + self.projective_image[1:]
+
         ## CC_DATA
-        self.cqexp_prec = 1000 # Initial estimate for error messages in render_newform_webpage.
+        self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
                                # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
@@ -128,9 +146,6 @@ class WebNewform(object):
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
-        # Make up for db_backend currently deleting Nones
-        if not hasattr(self, 'hecke_cutters'):
-            self.hecke_cutters = None
         self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
@@ -143,22 +158,34 @@ class WebNewform(object):
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
                             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
-        try:
-            # The try shouldn't be hit except when we're adding data
-            if self.is_self_dual != 0:
-                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Analytic rank', str(int(self.analytic_rank))),
-                                    ('Dimension', str(self.dim))])
-        except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
-            # no data for analytic rank
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Dimension', str(self.dim))])
 
-        if self.is_cm == 1:
-            self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
-        elif self.is_cm == -1:
-            self.properties += [('CM', 'No')]
+        if self.is_self_dual != 0:
+                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+        self.properties += [('Analytic conductor', self.analytic_conductor)]
+
+        if self.analytic_rank is not None:
+            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+
+        self.properties += [('Dimension', str(self.dim))]
+
+        if self.projective_image:
+            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+        if self.artin_degree: # artin_degree > 0
+            self.artin_degree += [('Artin degree', str(self.artin_degree))]
+
+        if self.is_self_twist ==1:
+            if self.is_cm == 1:
+                disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
+                self.properties += [('CM discriminant', disc)]
+            elif self.is_cm == -1:
+                self.properties += [('CM', 'No')]
+
+            if self.weight == 1:
+                if self.is_rm == 1:
+                    disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
+                    self.properties += [('RM discriminant', disc)]
+                elif self.is_rm == -1:
+                    self.properties += [('RM', 'No')]
 
         self.title = "Newform %s"%(self.label)
 
@@ -208,6 +235,11 @@ class WebNewform(object):
                 for lfun_label in self.lfunction_labels():
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
                     res.append(('L-function ' + lfun_label, lfun_url))
+        # fake it until you make it
+        # display L-functions from Artin
+        elif self.weight == 1:
+            res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
+
         return res
 
     @property
@@ -239,16 +271,19 @@ class WebNewform(object):
         n = info.get('n','1-10')
         CC_m = info.get('CC_m', integer_options(m))
         CC_n = info.get('CC_n', integer_options(n))
+        # convert CC_n to an interval in [1,an_storage_bound]
+        CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
+        an_keys = (CC_n[0]-1, CC_n[1])
+        # extra 5 primes in case we hit too many bad primes
+        angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
         format = info.get('format')
         cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        if max(CC_n) >= 100:
-            an_key, angles_key = 'an', 'angles'
-        else:
-            an_key, angles_key = 'first_an', 'first_angles'
+        an_projection = 'an[%d:%d]' % an_keys
+        angles_projection = 'angles[%d:%d]' % angles_keys
         if format in an_formats:
-            cc_proj.append(an_key)
+            cc_proj.append(an_projection)
         if format in angles_formats:
-            cc_proj.append(angles_key)
+            cc_proj.append(angles_projection)
         query = {'hecke_orbit_code':self.hecke_orbit_code}
         range_match = INTEGER_RANGE_RE.match(m)
         if range_match:
@@ -263,22 +298,23 @@ class WebNewform(object):
             self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = 1000 if an_key == 'an' else 100
+            self.cqexp_prec = an_keys[1] + 1
             self.cc_data = {}
             for embedded_mf in cc_data:
                 #as they are stored as a jsonb, large enough elements might be recognized as an integer
                 if format in an_formats:
-                    embedded_mf['an'] = [[float(x), float(y)] for x, y in embedded_mf.pop(an_key)] # 'an' or 'first_an'
+                    # we don't store a_0, thus the +1
+                    embedded_mf['an'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
                 if format in angles_formats:
-                    embedded_mf['angles'] = {p:theta for p,theta in embedded_mf.pop(angles_key)} # 'angles' or 'first_angles'
+                    embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
             if format in ['analytic_embed',None]:
-                self.analytic_shift = [float(i)**((1-ZZ(self.weight))/2) for i in range(1, self.cqexp_prec)]
+                self.analytic_shift = {i : float(i)**((1-ZZ(self.weight))/2) for i in self.cc_data.values()[0]['an'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
                 chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
-                for p in prime_range(2, self.cqexp_prec):
+                for p in self.cc_data.values()[0]['angles'].keys():
                     if p.divides(self.level):
                         continue
                     for chi in chars:
@@ -306,6 +342,8 @@ class WebNewform(object):
 
     def field_display(self):
         # display the coefficient field
+        if self.rel_dim == 1:
+            return self.cyc_display()
         label = self.__dict__.get("nf_label")
         if label is None:
             poly = self.__dict__.get('field_poly')
@@ -318,12 +356,19 @@ class WebNewform(object):
         else:
             return self.field_knowl()
 
-    def cm_field_knowl(self):
-        # The knowl for the CM field, with appropriate title
-        if self.__dict__.get('cm_disc', 0) == 0:
-            raise ValueError("Not CM")
-        cm_label = "2.0.%s.1"%(-self.cm_disc)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
+    #def artin_field_display(self):
+    #    label = db.nf_fields.lucky({'coeffs':self.artin_field}, projection='label')
+    #    if label is None:
+    #        return nf_display_knowl(label, field_pretty(label))
+    #    else:
+    #        #we should never hit this case
+    #        return polyquo_knowl(self.artin_field)
+
+
+
+    def rm_and_cm_field_knowl(self, sign  = 1):
+        disc = [ d for d in self.__dict__.get('self_twist_discs', []) if sign*d > 0 ]
+        return ' and '.join( map(quad_field_knowl, disc) )
 
     def field_knowl(self):
         if self.rel_dim == 1:
@@ -395,7 +440,7 @@ class WebNewform(object):
             desc += "kernel of the %s %s acting on %s."
             desc = desc % (knowl, polynomials[0], self.display_newspace())
         else:
-            return ""
+            desc = r"<p>There are no other newforms in %s.</p>"%(self.display_newspace())
         return desc
 
     def defining_polynomial(self):
@@ -558,44 +603,72 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
-    def eigs_as_seqseq_to_qexp(self, prec):
+    def _get_Rgens(self):
+        d = self.dim
+        if self.single_generator:
+            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+                R = PolynomialRing(QQ, self._nu_var)
+            else:
+                R = PolynomialRing(QQ, 'beta')
+            beta = R.gen()
+            return [beta**i for i in range(d)]
+        else:
+            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
+            return [1] + [g for g in R.gens()]
+
+    def display_character_values(self):
+        Rgens = self._get_Rgens()
+        d = self.dim
+        gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
+        vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
+        for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
+            term = sum(Rgens[i]*chi_g[i] for i in range(d))
+            latexterm = latex(term)
+            color = "dark" if j%2 else "light"
+            gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
+            vals.append(r'      <td class="%s">\(%s\)</td>'%(color, latexterm))
+        return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
+
+    def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
         # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
+        prec = min(self.qexp_prec, prec_max)
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
-        d = len(eigseq[0])
-        if self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
-                R = PowerSeriesRing(QQ, self._nu_var)
-            else:
-                R = PowerSeriesRing(QQ, 'beta')
-            beta = R.gen()
-            Rgens = [beta**i for i in range(d)]
-        else:
-            R = PowerSeriesRing(QQ, ['beta%s' % i for i in range(1,d)])
-            Rgens = [1] + [g for g in R.gens()]
-        Rq = PowerSeriesRing(R, 'q')
-        q = Rq.gens()[0]
+        d = self.dim
+        Rgens = self._get_Rgens()
         s = ''
-        for j in range(prec):
+        for j in range(len(eigseq)):
             term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
             if term != 0:
-                latexterm = latex(term*(q**j))
-                print latexterm
+                latexterm = latex(term)
+                if term.number_of_terms() > 1:
+                    latexterm = r"\left(" +  latexterm + r"\right)"
+
+                if j > 0:
+                    if term == 1:
+                        latexterm = ''
+                    elif term == -1:
+                        latexterm = '-'
+                    if j == 1:
+                        latexterm += ' q'
+                    else:
+                        latexterm += ' q^{%d}' % j
+                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
-                s += '\(' + latexterm + '\)'
+                s += '\(' + latexterm + '\) '
         # Work around bug in Sage's latex
         s = s.replace('betaq', 'beta q')
-        return s + '\(+O(q^{%s})\)' % prec
+        return s + '\(+O(q^{%d})\)' % prec
 
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
         if self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
             if self.dim == 1:
-                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec+1)],prec=prec),enclose=False))
+                s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=False))
             else:
                 s = self.eigs_as_seqseq_to_qexp(prec)
             return s
@@ -605,6 +678,7 @@ function switch_basis(btype) {
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
         return web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
+
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':
@@ -646,11 +720,10 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            # 'an' start at a_1
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n-1]
-                y *= self.analytic_shift[n-1]
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
         if self.cc_data[m]['real']:
             return display_float(x, prec)
         else:
@@ -687,9 +760,9 @@ function switch_basis(btype) {
             if x is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                x *= self.analytic_shift[n-1]
+                x *= self.analytic_shift[n]
         return self._display_re(x, prec)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
@@ -698,9 +771,9 @@ function switch_basis(btype) {
             if y is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
             if format == 'analytic_embed':
-                y *= self.analytic_shift[n-1]
+                y *= self.analytic_shift[n]
         return self._display_im(abs(y), prec) # sign is handled in embedding_op
 
     def embedding_op(self, m, n=None, prec=6):
@@ -710,7 +783,7 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n-1]
+            x, y = self.cc_data[m]['an'][n]
         return self._display_op(x, y, prec)
 
     def satake(self, m, p, i, prec=6, format='satake'):
@@ -745,7 +818,6 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_alpha(self, m, p, i):
-        # Currently, the database is storing the root rather than the reciprocal root
         theta = CBF(self.cc_data[m]['angles'][p])
         unit = (2 * theta).exppii()
         if i == 0:
@@ -759,7 +831,6 @@ function switch_basis(btype) {
 
     @cached_method
     def _get_theta(self, m, p, i):
-        # Currently, the database is storing the root rather than the reciprocal root
         theta = self.cc_data[m]['angles'][p]
         chiang, chival = self.character_values[p][(m-1) // self.rel_dim]
         if i == 1:

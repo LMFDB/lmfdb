@@ -18,24 +18,18 @@
     <td>\( {{ space.weight }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.galois_orbit_label', title='orbit label') }}: </td>
+    <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td>{{ space.char_orbit_label }}</td>
+    <td>{{ space.level }}.{{ space.char_orbit_label }} ({% if space.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ space.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ space.char_degree }}\){% endif %})</td>
   </tr>
   <tr>
     <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
     <td> \( \chi \) </td>
     <td>=</td>
-    <td><a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> ({% if space.char_orbit_index == 1 %}trivial character{% else %}minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit{% endif %})</td>
+    <td><a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a>{% if space.char_degree > 1 %} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit){% endif %}</td>
   </tr>
-{% if space.char_orbit_index != 1 %}
-  <tr>
-    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.order', title='order') }}: </td>
-    <td> \(\operatorname{ord}(\chi)\) </td>
-    <td>=</td>
-    <td>\( {{ space.char_order }} \)</td>
-  </tr>
+  {% if space.char_orbit_index != 1 %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
     <td> \(\operatorname{cond}(\chi)\) </td>

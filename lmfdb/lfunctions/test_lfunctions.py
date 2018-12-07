@@ -374,7 +374,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lmain(self):
         L = self.tc.get('/L/')
-        assert 'Riemann' in L.data
+        assert 'Riemann' in L.data and 'Signature' in L.data
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
@@ -411,16 +411,16 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic' in L.data
 
     def test_Ldegree3MaassForm(self):
-        L = self.tc.get('/L/degree3/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree3/r0r0r0/')
+        assert 'equation' in L.data
 
     def test_Ldegree3EllipticCurve(self):
         L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
         assert 'Elliptic' in L.data
 
     def test_Ldegree4MaassForm(self):
-        L = self.tc.get('/L/degree4/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree4/r0r0r0r0/')
+        assert 'functional' in L.data
 
     def test_Ldegree4EllipticCurve(self):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')

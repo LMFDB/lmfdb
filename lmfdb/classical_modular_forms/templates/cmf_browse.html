@@ -32,7 +32,7 @@ Info was: {{info}}
   {% endfor %}
 </p>
 <p>
-  Using a <a href="?search_type=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?submit=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
+  Using a <a href="?search_type=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
 </p>
 <p>
   As a <a href="?search_type=Spaces&dim=1-">list</a> of {{ KNOWL('mf.elliptic.newspaces', title='spaces of newforms') }}</a>
@@ -147,21 +147,25 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='CM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='cm_disc' placeholder='-3'></td>
-      <td><span class="formexample"> e.g. -3 </span></td>
-
-      <td colspan=2>{{ KNOWL('mf.elliptic.cm_form', title='Has CM') }}</td>
-      <td>
-        <select name='is_cm' style="width: 140px;">
-          <option value="" selected>unrestricted</option>
-          <option value="yes">yes</option>
-          <option value="not_no">yes or unknown</option>
-          <option value="unknown">unknown</option>
-          <option value="not_yes">no or unknown</option>
-          <option value="no">no</option>
+      <td colspan=2 rowspan=2 >{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
+      <td rowspan=2 >
+        <select name='self_twist' style="width: 140px;">
+          {% set self_twist_values = [('', 'unrestricted'), ('yes_selftwist', 'has self-twist'), ('yes_cm', 'has CM'), ('yes_rm', 'has RM'), ('no_selftwist', 'no self-twists') ] %}
+          {% for val, text in self_twist_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
         </select>
       </td>
+      <td rowspan=2>
+      </td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='cm_discs' placeholder='-3'></td>
+      <td><span class="formexample"> e.g. -3 </span></td>
+    </tr>
+    <tr>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='RM discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='rm_discs' placeholder='5'></td>
+      <td><span class="formexample"> e.g. 5 </span></td>
     </tr>
 
     <tr>
@@ -206,10 +210,10 @@ Info was: {{info}}
     </tr>
   </table>
   <p>
-    <button type='submit' name='submit'>List</button> &nbsp; &nbsp;
-    <button type='submit' name='submit' value='Dimensions'>Dimension Table</button> &nbsp; &nbsp;
-    <button type='submit' name='submit' value='Traces'>Traces Table</button> &nbsp; &nbsp;
-    <button type='submit' name='submit' value='Random'>Random</button>
+    <button type='submit' name='search_type' value='List'>List</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Dimensions'>Dimension Table</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Traces'>Traces Table</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Random'>Random</button>
   </p>
 </form>
 

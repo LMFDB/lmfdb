@@ -1,32 +1,25 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
-* Extract data from Bober to give to Drew (N:k:i:D:T) (Edgar)
-* Fix embedding data (Edgar)
 
 IMPORTANT:
-* Update knowl for newspaces and mf.elliptic.space (Drew)
 * code snippets for form and space pages (Drew)
-* Add projective_image_type column, text "Dn", "A4", "S4", "A5"; projective_image text "D15", "A4",... (Drew)
-* Upload data for Nk^2 <= 3000 (Drew)
-* Upload data for Nk^2 <= 4000 (Edgar)
-* check data for dim <= 12 (Edgar)
-* Create appropriate indexes
+* Create appropriate indexes -> run tests and see slow queries (Edgar)
+* fix tests (Edgar)
+* projective field and artin field displayed (Edgar)
+* javascript friends list (Edgar)
+* address not proven self-twist (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
+* add artin_field_label (Edgar)
+* if D2 display both rows
+* add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
-* Compare speed for first 100 an as separate columns in mf_hecke_cc (try two jsonb columns and 200 float columns) (Edgar)
-* Change template, add axis, make it static for /L/degree2/CuspForm/  (Edgar)
-* L-function bread (degree 24 -> degree 2 when you click on Cusp Forms) (Edgar)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* data: add weight 1 data (Drew)
-* data: add weight 1 cc data (Edgar)
-* form pages: weight 1 link to Artin rep (Edgar)
-* add buttons to switch search types (Edgar)
-* Download Euler factors (Edgar)
-
+* form pages: weight 1 link to Artin rep (Drew)
+* avoid access exclusive lock with the alter table when using copy from
+* Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
 
 GOOD:
-* compute all data for Nk^2 <= 4000 (Edgar)
-* Add trace hashes for elliptic curves over quadratic fields (Edgar)
+* move the constant coefficient in q-exp coefficients to the left
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
@@ -38,9 +31,6 @@ FORMATTING:
 * Consider switching level and weight on browse and refine search input boxes
 
 IT WOULD BE NICE IF:
-* notation like (1/2)^n for selberg data (Edgar, ask Farmer)
-* Add tests for display_float, etc
-* Add density of zero traces (Edgar)
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
@@ -63,6 +53,10 @@ FUTURE WORK:
 * data: add data for is_twist_minimal
 
 NOT CMF STUFF:
+* reset start with javascript
+* generalize search_types
+* hidden != search clean hidden
+* add utf8 check to pyflakes
 * pick columns and sort order on search results
 * add UIs to pick random objects with contraints
 * bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer

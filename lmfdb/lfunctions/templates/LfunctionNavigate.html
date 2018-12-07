@@ -1,7 +1,11 @@
 {% extends 'homepage.html' %}
 
 {% block content %}
-<h2> Browse {{KNOWL('lfunction', title='L-functions' )}} by {{KNOWL("lfunction.underlying_object",title="underlying object")}}</h2>
+<h2> Browse {{KNOWL('lfunction', title='L-functions' )}}
+by
+{{ KNOWL('lfunction.signature', title='signature') }}
+or
+{{KNOWL("lfunction.underlying_object",title="underlying object")}}</h2>
 <table>
 {% for i in type_row_list: %}
 <tr>
