@@ -173,7 +173,7 @@ class WebNewform(object):
         if self.projective_image:
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
-            self.artin_degree += [('Artin degree', str(self.artin_degree))]
+            self.properties += [('Artin degree', str(self.artin_degree))]
 
         if self.is_self_twist ==1:
             if self.is_cm == 1:
