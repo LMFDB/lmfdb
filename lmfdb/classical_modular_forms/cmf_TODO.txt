@@ -4,7 +4,6 @@ CRITICAL (BUGS):
 IMPORTANT:
 * code snippets for form and space pages (Drew)
 * Create appropriate indexes -> run tests and see slow queries (Edgar)
-* fix tests (Edgar)
 * javascript friends list (Edgar)
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
