@@ -5,7 +5,6 @@ IMPORTANT:
 * code snippets for form and space pages (Drew)
 * Create appropriate indexes -> run tests and see slow queries (Edgar)
 * fix tests (Edgar)
-* projective field and artin field displayed (Edgar)
 * javascript friends list (Edgar)
 * if D2 display both rows (Edgar)
 * Today: RM and CM cols, statistics, show examples in weight 1 where we have everything

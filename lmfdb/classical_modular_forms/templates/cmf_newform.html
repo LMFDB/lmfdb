@@ -105,7 +105,7 @@
     <td>{{ KNOWL('mf.elliptic.projective_field', title='Projective field')}}</td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.projective_field_display | safe }}</td>
+    <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.artin_degree %}
@@ -121,7 +121,7 @@
     <td>{{ KNOWL('mf.elliptic.artin_field', title='Artin field')}}</td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.artin_field_display | safe }}</td>
+    <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
 </table>

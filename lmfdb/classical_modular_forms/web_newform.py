@@ -331,7 +331,7 @@ class WebNewform(object):
     @property
     def projective_image_latex(self):
         if self.projective_image:
-            return self.projective_image[:1] + '_' + self.projective_image[1:]
+            return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
         return None
 
     def field_display(self):

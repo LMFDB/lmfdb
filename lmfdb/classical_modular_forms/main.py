@@ -114,6 +114,11 @@ def set_info_funcs(info):
         return all(mf['weight'] == 1 for mf in results)
     info["all_weight1"] = all_weight1
 
+    def all_D2(results):
+        return all(mf.get('projevtive_image') == 'D2' for mf in results)
+    info["all_D2"] = all_D2
+
+
     # assumes the format Dn A4 S4 S5
     info["display_projective_image"] = lambda mf: mf['projective_image'][:1] + '_' + mf['projective_image'][1:] if 'projective_image' in mf else ''
 
