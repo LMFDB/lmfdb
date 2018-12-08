@@ -111,7 +111,7 @@ def set_info_funcs(info):
     info["display_Fricke"] = display_Fricke
 
     def all_weight1(results):
-        return all(mf['weight'] == 1 for mf in results)
+        return all(mf.get('weight') == 1 for mf in results)
     info["all_weight1"] = all_weight1
 
     def all_D2(results):
