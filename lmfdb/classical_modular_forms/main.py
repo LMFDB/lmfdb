@@ -155,10 +155,6 @@ def set_info_funcs(info):
 def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
-        # if we hit search again set start = 0
-        # it would be nice to reflect this on the url
-        if info.get('hidden_search_type', True) == info.get('search_type', False):
-            info['start'] = 0
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
 
