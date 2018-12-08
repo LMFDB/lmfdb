@@ -113,6 +113,36 @@ $(function() {
  $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
+
+/* javascript code to generate the properties box */
+function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
+  //body reference
+  var body = document.getElementById("properties_script").parentElement
+  var ul = document.createElement('ul');
+  function add_friend(ulelement, text, href) {
+    var friend = document.createElement('li');
+    var url = document.createElement('a');
+    url.appendChild(document.createTextNode(text));
+    url.href = href;
+    friend.appendChild(url);
+    ulelement.appendChild(friend);
+  }
+  // initialFriends
+  for (var k = 0; k < initialFriends.length; k++) {
+    add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
+  }
+
+  for (var i = 0; i < char_labels.length; i++) {
+    for (var j = 1; j <= rel_dim; j++) {
+      var lfun_text = 'L-function ' + label + '.' + char_labels[i].toString() + '.' + j.toString();
+      var lfun_url = nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
+      add_friend(ul, lfun_text, lfun_url);
+    }
+  }
+  body.appendChild(ul);
+}
+
+
 /* javascript code for the knowledge db features */
 /* global counter, used to uniquely identify each knowl-output element
  * that's necessary because the same knowl could be referenced several times
