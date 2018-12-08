@@ -450,7 +450,7 @@ All \(p\)-adic regulators are identically \(1\) since the rank is \(0\).
 Note: \(p\)-adic regulator data only exists for primes \(p\ge5\) of good ordinary
 reduction.
 </p>
-        <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'padic']);}); ">
+        <select onchange="$('#padic').load('{{url_for('.padic_data', label=data.lmfdb_label, p='xxx', rank=data.mw.rank).replace('xxx', "'+this.value+'")}}', function() { renderMathInElement($('#padic').get(0),katexOpts);}); ">
         <option value=''>Choose a prime...</option>
         {% for p in data.data.p_adic_primes %}
         <option value="{{ p }}">{{ p }}</option>
@@ -621,8 +621,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#modform_output").load("{{data.modform_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+            {# render the output #}
+            renderMathInElement($("#modform_output").get(0), katexOpts);
         });
 }
 $(function() {

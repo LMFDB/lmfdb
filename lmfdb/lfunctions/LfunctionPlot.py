@@ -60,7 +60,7 @@ def getAllMaassGraphHtml(degree, signature=""):
 
 ## ============================================
 ## Returns the header and information about the Gamma-factors for the
-## group with name group (in html and MathJax)
+## group with name group (in html and with math)
 ## ============================================
 
 
@@ -161,7 +161,7 @@ def getGroupHtml(group):
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
 ## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation) (in html and MathJax)
+## sign (of the functional equation) (in html with math)
 ## ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:

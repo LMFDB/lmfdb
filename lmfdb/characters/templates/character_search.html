@@ -57,7 +57,7 @@ table td.params {
          ],
          "aLengthMenu": [[20, 50, -1], [20, 50, 100]],
          "fnRowCallback": function( row, data, index ){ 
-             MathJax.Hub.Queue(['Typeset', MathJax.Hub, row]);
+             renderMathInElement(row, katexOpts); // TODO FIXME if this code is used
              return row;
          }
 

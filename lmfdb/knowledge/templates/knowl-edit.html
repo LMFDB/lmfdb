@@ -107,20 +107,10 @@ function update() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
-      MathJax.Hub.Queue(function () {  
-        update_id = null;
-        // MathJax tells us it is done.
-        // has there been a call in the meantime and we have to do this again?
-        if (reparse_latex) {
-          /* console.log("reparse_latex == true"); */
-          reparse_latex = false;
-          update();
-        } 
-      });
+      renderMathInElement($title.get(), katexOpts);
+      renderMathInElement($content.get(), katexOpts);
       /* finally, set the title and hide the refresh link */
-      MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
+      $title.html($ktitle.val());
       $update.fadeOut();
     }).error(function() { $title.html("ERROR"); })
 }

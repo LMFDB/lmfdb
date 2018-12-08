@@ -245,11 +245,7 @@ def ajax_once(callback, *arglist, **kwds):
     res = callback()
     url = ajax_url(ajax_once, arglist, kwds, inline=True)
     s0 = """<span id='%(nonce)s'>%(res)s """  % locals()
-    # s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s',
-    # {'level':22,'weight':4},function() {
-    # MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return
-    # false;" href="#">%(text)s</a>""" % locals()
-    s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {a:1},function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a>""" % locals()
+    s1 = """[<a onclick="$('#%(nonce)s').load('%(url)s', {a:1},function() { renderMathInElement($('#%(nonce)s').get(0), katexOpts);}); return false;" href="#">%(text)s</a>""" % locals()
     return s0 + s1
 
 

@@ -26,17 +26,8 @@ td.title {
 h2.link > a {
     color: {{color.box_tab_text}};
 }
-#mathjax-info {
-  display: none;
-  position: absolute;
-  z-index: 99;
-  width: 600px;
-  height: 600px;
-  padding-top: 150px;
-  line-height: 20px;
-  text-align: center;
-  font-size: small;
-  color: {{color.grey}};
+.katex {
+    font-size: 1em !important;
 }
 /* TODO: where is content?*/
 #content > h1
@@ -50,7 +41,7 @@ h2.link > a {
 }
 #content > h1:first-child,
 #content > h2:first-child {
-  margin-top: 0px;
+    margin-top: 0px;
 }
 
 #content > h2

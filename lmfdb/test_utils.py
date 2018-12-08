@@ -154,7 +154,7 @@ class UtilsTest(unittest2.TestCase):
                          '<i>x</i><sup>3</sup> + 1')
 
     ################################################################################
-    #  latex/mathjax utilities
+    #  latex/math rendering utilities
     ################################################################################
 
     def test_web_latex(self):

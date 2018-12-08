@@ -169,8 +169,8 @@ function knowl_click_handler($el) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
-      MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
-      MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
+      renderMathInElement($output.get(0));
+      $output.slideDown("slow");
 
     } else {
       $output.addClass("loading");
@@ -194,9 +194,9 @@ function knowl_click_handler($el) {
            $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
          }
         }
-        // in any case, reveal the new output after mathjax has finished
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
-        MathJax.Hub.Queue([ function() { $output.slideDown("slow"); }]);
+        // in any case, reveal the new output after math rendering has finished
+        renderMathInElement($output.get(0),katexOpts);
+        $output.slideDown("slow");
       });
     } // ~~ end not cached
   }

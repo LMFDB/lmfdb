@@ -265,14 +265,14 @@ def pol_to_html(p):
 
 
 ################################################################################
-#  latex/mathjax utilities
+#  latex/math rendering utilities
 ################################################################################
 
 def web_latex(x, enclose=True):
     """
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to make it a mathjax equation.
+    `\(` and `\)` to tag it as an equation in html.
 
     Note:
     if input is a factored ideal, use web_latex_ideal_fact instead.
@@ -293,7 +293,7 @@ def web_latex_ideal_fact(x, enclose=True):
     """
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
-    `\)` to make it a mathjax equation.
+    `\)` to tag it as an equation in html.
 
     sage puts many parentheses around latex representations of factored ideals.
     This function removes excessive parentheses.
@@ -854,7 +854,7 @@ def ajax_more(callback, *arg_list, **kwds):
         res = ''
     if arg_list:
         url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
+        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
 
