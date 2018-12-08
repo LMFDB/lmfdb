@@ -43,7 +43,7 @@
     <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       <div class="float-right"><select name='prime_quantifier'>
           <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-          <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+          <option value=''{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
           <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
         </select></div>
     </td>
@@ -144,7 +144,7 @@
   <tr>
   </tr>
   <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px">Search again</button></td>
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px" onclick='resetStart()'>Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
     {% for type, desc in search_types %}
     {% if info.search_type != type %}
