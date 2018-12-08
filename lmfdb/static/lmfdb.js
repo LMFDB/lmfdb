@@ -356,14 +356,43 @@ function simult_change(event) {
 };
 
 
+
+function resetStart()
+{
+  // resets start if not changing search_type
+  $('input[name=start]').val('')
+  // this will be cleaned by the cleanSubmit
+}
+
 function cleanSubmit(id)
 {
-    var myForm = document.getElementById(id);
-    var allInputs = myForm.getElementsByTagName('input');
-    var allSelects = myForm.getElementsByTagName('select');
-    var item, i, n = 0;
-
-    for(i = 0; item = allInputs[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-    for(i = 0; item = allSelects[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-    if (!n) { var all = document.createElement('input'); all.type='hidden'; all.name='all'; all.value='1'; myForm.appendChild(all); }
+  var myForm = document.getElementById(id);
+  var allInputs = myForm.getElementsByTagName('input');
+  var allSelects = myForm.getElementsByTagName('select');
+  var item, i, n = 0;
+  for(i = 0; item = allInputs[i]; i++) {
+    if (item.getAttribute('name') ) {
+      if (!item.value) {
+        item.setAttribute('name', '');
+      } else {
+        n++
+      };
+    }
+  }
+  for(i = 0; item = allSelects[i]; i++) {
+    if (item.getAttribute('name') ) {
+      if (!item.value) {
+        item.setAttribute('name', '');
+      } else {
+        n++
+      };
+    }
+  }
+  if (!n) {
+    var all = document.createElement('input');
+    all.type='hidden';
+    all.name='all';
+    all.value='1';
+    myForm.appendChild(all);
+  }
 }

@@ -652,7 +652,7 @@ def common_parse(info, query):
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
-    prime_mode = info.get('prime_quantifier','exact')
+    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
 def preparse_self_twist(info):
