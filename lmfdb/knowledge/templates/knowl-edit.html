@@ -107,8 +107,8 @@ function update() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      renderMathInElement($title.get(), katexOpts);
-      renderMathInElement($content.get(), katexOpts);
+      renderMathInElement($title.get(0), katexOpts);
+      renderMathInElement($content.get(0), katexOpts);
       /* finally, set the title and hide the refresh link */
       $title.html($ktitle.val());
       $update.fadeOut();
