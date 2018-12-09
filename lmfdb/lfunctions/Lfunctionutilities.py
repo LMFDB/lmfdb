@@ -374,9 +374,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = "\\begin{aligned} \n " + L.texname_arithmetic + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname_arithmetic + " = "
         else:
-            ans = "\\begin{aligned} \n " + L.texname + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += "\\prod_p (1 - p^{-s})^{-1}"
         elif L.Ltype() == "dirichlet":
@@ -413,7 +413,7 @@ def lfuncEPtex(L, fmt):
 
         else:
             return("No information is available about the Euler product.")
-        ans += " \n \\end{aligned}"
+        ans += " \n \\end{aligned}\]"
         return(ans)
     else:
         return("No information is available about the Euler product.")
