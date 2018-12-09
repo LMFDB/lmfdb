@@ -169,7 +169,7 @@ function knowl_click_handler($el) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
-      renderMathInElement($output.get(0));
+      renderMathInElement($output.get(0), katexOpts);
       $output.slideDown("slow");
 
     } else {
