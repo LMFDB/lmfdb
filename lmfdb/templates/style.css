@@ -2177,6 +2177,7 @@ td.topspace {
 table.qexp-table td.output {
     margin-left: 0;
     padding-left: 0;
+    vertical-align: top;
 }
 
 .mjx_basic {

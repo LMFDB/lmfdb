@@ -3,10 +3,7 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * code snippets for form and space pages (Drew)
-* Create appropriate indexes -> run tests and see slow queries (Edgar)
-* fix tests (Edgar)
-* javascript friends list (Edgar)
-* Today: RM and CM cols, statistics, show examples in weight 1 where we have everything
+* Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
 * Add is_CM, is_RM (in weight 1 and overall) (David)
 * Field display on list is broken (Drew)

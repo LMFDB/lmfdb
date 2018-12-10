@@ -165,7 +165,7 @@ class WebNewform(object):
         if self.projective_image:
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
         if self.artin_degree: # artin_degree > 0
-            self.properties += [('Artin degree', str(self.artin_degree))]
+            self.properties += [('Artin image size', str(self.artin_degree))]
         if self.artin_image:
             self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
@@ -188,9 +188,9 @@ class WebNewform(object):
 
         self.title = "Newform %s"%(self.label)
 
-    @cached_method
+    @property
     def lfunction_labels(self):
-        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
+        base_label = self.label.split('.')
         res = []
         for character in self.char_labels:
             for j in range(self.dim/self.char_degree):
@@ -212,19 +212,24 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
-        if self.weight > 1:
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
-                res.append(('L-function ' + self.label, '/L' + nf_url))
-            if self.dim > 1:
-                for lfun_label in self.lfunction_labels():
-                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
-                    res.append(('L-function ' + lfun_label, lfun_url))
         # fake it until you make it
         # display L-functions from Artin
-        elif self.weight == 1:
+        if self.weight == 1:
             res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
+        else:
+            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+                res.append(('L-function ' + self.label, '/L' + nf_url))
+            if len(self.char_labels)*self.rel_dim > 50:
+                res = map(lambda elt : list(map(str, elt)), res)
+                # properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
+            if self.dim > 1:
+                for lfun_label in self.lfunction_labels:
+                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                    res.append(('L-function ' + lfun_label, lfun_url))
 
         return res
+
 
     @property
     def downloads(self):

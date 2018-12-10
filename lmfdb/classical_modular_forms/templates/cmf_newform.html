@@ -2,6 +2,8 @@
 
 {% block content %}
 
+
+
 {% set KNOWL_ID = "mf.%s"|format(newform.label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
@@ -110,7 +112,7 @@
   {% endif %}
   {% if newform.artin_degree %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size') }}</td>
     <td> </td>
     <td> </td>
     <td>\({{ newform.artin_degree }}\)</td>
