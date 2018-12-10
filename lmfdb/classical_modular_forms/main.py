@@ -74,20 +74,18 @@ def set_info_funcs(info):
     info["nf_link"] = nf_link
 
     def quad_links(mf, is_field, disc_field, bound = None):
-        if mf[is_field] == -1:
-            return "No"
-        elif mf[is_field] == 0:
-            return ""
-        else:
+        if mf[is_field]:
             discs = mf[disc_field]
             if bound:
                 discs = discs[:bound]
             return ', '.join( map(quad_field_knowl, discs) )
+        else:
+            return "No"
     info["self_twist_link"] = lambda mf: quad_links(mf, 'is_self_twist', 'self_twist_discs', bound = 1)
     info["cm_link"] = lambda mf: quad_links(mf, 'is_cm', 'cm_discs')
     info["rm_link"] = lambda mf: quad_links(mf, 'is_rm', 'rm_discs')
-    info["cm_col"] = info.get('cm_discs') is not None or 'cm' in  info.get('self_twist', '')
-    info["rm_col"] = info.get('rm_discs') is not None or 'rm' in  info.get('self_twist', '')
+    info["cm_col"] = info.get('cm_discs') is not None or 'cm' in  info.get('has_self_twist', '')
+    info["rm_col"] = info.get('rm_discs') is not None or 'rm' in  info.get('has_self_twist', '')
     info["self_twist_col"] = not (info["cm_col"] or info["rm_col"])
 
 
@@ -651,17 +649,20 @@ def common_parse(info, query):
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier','exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
-def preparse_self_twist(info):
-    # yes, no 
-    # + '_' +
-    # selftwist, cm, rm
-    translate = {'selftwist':'is_self_twist', 'cm':'is_cm', 'rm':'is_rm'}
-    inp = info.get('self_twist')
+def parse_self_twist(info, query):
+    # self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ]
+    translate = {'cm': '1', 'rm': '2', 'cm_and_rm':'3'}
+    inp = info.get('has_self_twist')
     if inp:
-        inpsplit = inp.split('_')
-        key = translate.get(inpsplit[-1])
-        if key:
-            info[key] = '_'.join(inpsplit[:-1])
+        if inp in ['no','yes']:
+            info['is_self_twist'] = inp
+            parse_bool(info, query, 'is_self_twist', name='Has self-twist')
+        else:
+            try:
+                info['self_twist_type'] = translate[inp]
+                parse_ints(info, query, 'self_twist_type',name='Has self-twist')
+            except KeyError:
+                raise ValueError('%s not in %s' % (inp, translate.keys()))
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -676,11 +677,7 @@ def newform_parse(info, query):
     common_parse(info, query)
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
-    # populates is_self_twist, is_cm or is_rm
-    preparse_self_twist(info)
-    parse_bool_unknown(info, query, 'is_self_twist',name='Has self-twist')
-    parse_bool(info, query, 'is_cm',name='Has self-twist')
-    parse_bool(info, query, 'is_rm',name='Has self-twist')
+    parse_self_twist(info, query)
     parse_subset(info, query, 'cm_discs', name="CM discriminant", parse_singleton=lambda d: parse_discriminant(d, -1))
     parse_subset(info, query, 'rm_discs', name="RM discriminant", parse_singleton=lambda d: parse_discriminant(d, 1))
     parse_bool(info, query, 'is_twist_minimal')
