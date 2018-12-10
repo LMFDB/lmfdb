@@ -135,7 +135,7 @@ function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
   for (var i = 0; i < char_labels.length; i++) {
     for (var j = 1; j <= rel_dim; j++) {
       var lfun_text = 'L-function ' + label + '.' + char_labels[i].toString() + '.' + j.toString();
-      var lfun_url = '/L'+'nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
+      var lfun_url = '/L'+nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
       add_friend(ul, lfun_text, lfun_url);
     }
   }
