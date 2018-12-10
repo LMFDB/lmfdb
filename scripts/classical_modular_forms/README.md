@@ -40,3 +40,34 @@ This runs in parallel and takes about 1h
 ```
 ./test.sh lmfdb/classical_modular_forms/cmf_test_pages.py
 ```
+
+
+# Indexes
+
+## To make tests run smoothly:
+```
+for cols in [['is_self_twist'], ['level'], ['weight'], ['self_twist_type'],['analytic_conductor'],['label'],['space_label']]:
+    try:
+        db.mf_newforms.create_index(cols)
+    except ValueError, err:
+        print cols, err
+        pass
+for cols in [['embedding_m', 'hecke_orbit_code']]:
+    try:
+        db.mf_hecke_cc.create_index(cols)
+    except ValueError, err:
+        print cols, err
+        pass
+for cols in [['n', 'hecke_orbit_code'],['hecke_orbit_code']]:
+    try:
+        db.mf_hecke_nf.create_index(cols)
+    except ValueError, err:
+        print cols, err
+        pass
+for cols in [['label'], ['weight'], ['level'],['char_order', 'weight','level']]:
+    try:
+        db.mf_newspaces.create_index(cols)
+    except ValueError, err:
+        print cols, err
+        pass
+```
