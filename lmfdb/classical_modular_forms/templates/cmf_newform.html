@@ -2,6 +2,8 @@
 
 {% block content %}
 
+
+
 {% set KNOWL_ID = "mf.%s"|format(newform.label) %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
 
@@ -76,7 +78,7 @@
   </tr>
   {% endif %}
   {% if newform.has_exact_qexp and newform.dim > 1 %}
-    <!-- Coefficient code depends on existence of form -->
+  <!-- Coefficient code depends on existence of form -->
   <tr>
     <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.Qnu() }} </td>
@@ -100,12 +102,36 @@
     <td>\({{ newform.projective_image_latex }}\)</td>
   </tr>
   {% endif %}
+  {% if newform.projective_field %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.projective_field', title='Projective field')}}</td>
+    <td> </td>
+    <td> </td>
+    <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
+  </tr>
+  {% endif %}
   {% if newform.artin_degree %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size') }}</td>
     <td> </td>
     <td> </td>
     <td>\({{ newform.artin_degree }}\)</td>
+  </tr>
+  {% endif %}
+  {% if newform.artin_image %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image') }}</td>
+    <td> </td>
+    <td> </td>
+    <td>\({{ newform.artin_image_display }}\)</td>
+  </tr>
+  {% endif %}
+  {% if newform.artin_field %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.artin_field', title='Artin field')}}</td>
+    <td> </td>
+    <td> </td>
+    <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
 </table>
@@ -398,7 +424,7 @@ a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twis
 a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_rm == 1 %}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}{% endif %}.</p>
 {% endif %}
 
-{% if newform.is_twist_minimal is defined %}
+{% if newform.is_twist_minimal %}
 <p>This newform is {{ "not" if not newform.is_twist_minimal }} {{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
 {% endif %}
 

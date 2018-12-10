@@ -107,7 +107,7 @@ class PostgresUserTable(PostgresBase):
         if self._rw_userdb:
             bcpass = self.bchash(newpwd)
             #TODO: use identifiers
-            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
+            updater = SQL("UPDATE userdb.users SET bcpassword = %s WHERE username = %s")
             self._execute(updater, [bcpass, uid])
             logger.info("password for %s changed!" % uid)
         else:

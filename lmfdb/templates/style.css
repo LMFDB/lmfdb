@@ -962,6 +962,21 @@ table.euler tr .galois {
     text-align: center;
 }
 
+table.statgrid th.rhead {
+    border-right: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid th.chead {
+    border-bottom: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid td.prop {
+    border-bottom: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}
+
+table.statgrid td.cnt {
+    border-right: 1px solid #ccc;
+}
+
 .knowl-content {
   padding: 0 10px;
 }
@@ -2162,6 +2177,7 @@ td.topspace {
 table.qexp-table td.output {
     margin-left: 0;
     padding-left: 0;
+    vertical-align: top;
 }
 
 .mjx_basic {

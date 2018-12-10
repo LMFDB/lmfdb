@@ -18,6 +18,7 @@
 
 <table>
   <tr>
+    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option></option>
@@ -25,34 +26,33 @@
         <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
     <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
-    <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
-    <td><input type='text' style="width: 140px;" name='dim' placeholder='1' value='{{info.dim}}'></td>
-    <td><input type='text' style="width: 140px;" name='nf_label' placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='analytic_conductor' placeholder='47' value='{{info.analytic_conductor}}'></td>
+    <td><input type='text' style="width: 140px;" name='level'               placeholder='4' value='{{info.level}}'></td>
+    <td><input type='text' style="width: 140px;" name='weight'              placeholder='2' value='{{info.weight}}'></td>
+    <td><input type='text' style="width: 140px;" name='dim'                 placeholder='1' value='{{info.dim}}'></td>
+    <td><input type='text' style="width: 140px;" name='nf_label'            placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='analytic_conductor'  placeholder='47' value='{{info.analytic_conductor}}'></td>
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
-      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
-        <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
-        <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
-      </select></div>
-    </td>
     <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       <div class="float-right"><select name='prime_quantifier'>
-        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
-        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
-      </select></div>
+          <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+          <option value=''{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+          <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+        </select></div>
+    </td>
+    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
+      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option></option>
+          <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
+          <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
+        </select></div>
     </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
@@ -60,10 +60,10 @@
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
-    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
-    <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
+    <td><input type='text' style="width: 140px;" name='level_primes'  placeholder='2,3'  value="{{info.level_primes}}"></td>
+    <td><input type='text' style="width: 140px;" name='char_label'    placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='prim_label'    placeholder='1.a' value='{{info.prim_label}}'></td>
+    <td><input type='text' style="width: 140px;" name='char_order'    placeholder='1' value='{{info.char_order}}'></td>
     <td><input type='text' style="width: 140px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
   </tr>
 
@@ -78,10 +78,10 @@
 
   <tr>
     <td>
-      <select name='self_twist' style="width: 150px;">
-          {% set self_twist_values = [('', 'unrestricted'), ('yes_selftwist', 'has self-twist'), ('yes_cm', 'has CM'), ('yes_rm', 'has RM'), ('no_selftwist', 'no self-twists') ] %}
+      <select name='has_self_twist' style="width: 150px;">
+          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
         {% for val, text in self_twist_values %}
-        <option value="{{ val }}"{% if info.self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
+        <option value="{{ val }}"{% if info.has_self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
         {% endfor %}
       </select>
     </td>
@@ -125,8 +125,8 @@
       Only for weight 1:
     </td>
     <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
-    <td>{{ KNOWL('mf.elliptic.projective_image_type', title='Projective image type') }}</td>
-    <td>{{ KNOWL('mf.elliptic.artin_degree', title='Artin degree') }}</td>
+    <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image type') }}</td>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size') }}</td>
   </tr>
   <tr>
     <td><input type='text' style="width: 140px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
@@ -144,7 +144,7 @@
   <tr>
   </tr>
   <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px">Search again</button></td>
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px" onclick='resetStart()'>Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
     {% for type, desc in search_types %}
     {% if info.search_type != type %}
