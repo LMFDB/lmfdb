@@ -95,15 +95,10 @@ class WebNewform(object):
 
 
         if self.has_inner_twist != 0:
-            if self.inner_twist_proved:
-                if len(self.inner_twist == 1):
-                    self.star_twist = 'inner twist'
-                else:
-                    self.star_twist = 'inner twists'
-            elif len(self.inner_twist) == 1:
-                self.star_twist = 'inner twist*'
+            if len(self.inner_twist == 1):
+                self.star_twist = 'inner twist'
             else:
-                self.star_twist = 'inner twists*'
+                self.star_twist = 'inner twists'
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
