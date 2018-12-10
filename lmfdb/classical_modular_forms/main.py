@@ -12,7 +12,7 @@ from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_know
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
-from lmfdb.display_stats import StatsDisplay, boolean_unknown_format
+from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, per_row_total, sum_totaler
 from sage.databases.cremona import class_to_int
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
 import re
@@ -730,7 +730,7 @@ def trace_postprocess(res, info, query):
              err_title='Newform Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_traces},
-             projection=['label','dim','hecke_orbit_code'],
+             projection=['label','dim','hecke_orbit_code','weight'],
              postprocess=trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list,
@@ -913,8 +913,7 @@ def cm_format(D):
         cm_label = "2.0.%s.1"%(-D)
         return nf_display_knowl(cm_label, field_pretty(cm_label))
 
-def projective_image_sort_key(tup):
-    im_type = tup[0]
+def projective_image_sort_key(im_type):
     if im_type == 'A4':
         return -3
     elif im_type == 'S4':
@@ -943,20 +942,28 @@ class CMF_stats(StatsDisplay):
     baseurl_func = ".index"
 
     stat_list = [
-        {'cols': [],
-         'buckets':{'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
-         'row_title':'dimension',
-         'knowl':'mf.elliptic.dimension'},
-        {'cols': [],
-         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000]},
-         'row_title':'level',
-         'knowl':'mf.elliptic.level'},
-        {'cols': [],
-         'buckets':{'weight':[1,1,2,3,4,5,10,20,40,62]},
+        #{'cols': 'dim',
+        # 'buckets':[1,1,2,3,4,10,20,100,1000,10000,100000],
+        # 'row_title':'dimension',
+        # 'knowl':'mf.elliptic.dimension'},
+        #{'cols': 'level',
+        # 'buckets':[1,1,10,100,200,400,600,800,1000,2000,4000],
+        # 'row_title':'level',
+        # 'knowl':'mf.elliptic.level'},
+        {'cols': ['level','dim'],
+         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000],
+                    'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
+         'top_title':'level and dimension',
+         'proportioner': per_row_total,
+         'totaler': sum_totaler(),
+         'corner_label':r'\(N \backslash d\)',
+        },
+        {'cols': 'weight',
+         'buckets':[1,1,2,3,4,5,10,20,40,62],
          'row_title':'weight',
          'knowl':'mf.elliptic.weight'},
-        {'cols':[],
-         'buckets':{'char_order':[1,1,2,3,4,5,10,20,100,1000]},
+        {'cols':'char_order',
+         'buckets':[1,1,2,3,4,5,10,20,100,1000],
          'row_title':'character order',
          'knowl':'character.dirichlet.order'},
         {'cols':'has_inner_twist',
@@ -985,14 +992,14 @@ class CMF_stats(StatsDisplay):
          'top_title':'complex multiplication',
          'row_title':'CM disc',
          'knowl':'mf.elliptic.cm_form',
-         'denominator':{},
+         'totaler':{},
          'reverse':True,
          'split_list':True},
         {'cols': 'rm_discs',
          'top_title':'real multiplication',
          'row_title':'RM disc',
          'knowl':'mf.elliptic.rm_form',
-         'denominator':{},
+         'totaler':{},
          'split_list':True},
         #{'cols': 'self_twist_discs',
         # 'top_title':'self twist discriminants',

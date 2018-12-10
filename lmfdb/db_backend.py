@@ -2669,6 +2669,16 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
+class KeyedDefaultDict(defaultdict):
+    """
+    A defaultdict where the default value takes the key as input.
+    """
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError((key,))
+        self[key] = value = self.default_factory(key)
+        return value
+
 class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
@@ -3046,7 +3056,7 @@ class PostgresStatsTable(PostgresBase):
                     if mx is None or val > mx:
                         mx = val
             if total == 0:
-                self.logger.info("No rows exceeded the threshold; returning after %.3f secs".format(time.time() - now))
+                self.logger.info("No rows exceeded the threshold; returning after %.3f secs" % (time.time() - now))
                 return False
             if split_list:
                 stats = [(cols, "split_total", total, ccols, cvals, threshold)]
@@ -3237,7 +3247,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         return ans
 
-    def _get_values_counts(self, cols, constraint, split_list=False):
+    def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url):
         """
         Utility function used in ``display_data``.
 
@@ -3252,17 +3262,43 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
-            positions = [allcols.index(x) for x in cols]
             selecter_values = [split_list, allcols]
             for i, x in enumerate(allcols):
                 if x in constraint:
                     selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                     selecter_values.append(Json(constraint[x]))
         else:
-            selecter_values = [split_list, cols]
-            positions = range(len(cols))
+            allcols = sorted(cols)
+            selecter_values = [split_list, allcols]
+        positions = [allcols.index(x) for x in cols]
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
-        return [([values[i] for i in positions], int(count)) for values, count in self._execute(selecter, values=selecter_values)]
+        n = len(cols)
+        headers = [[] for _ in cols]
+        default_proportion = '      0.00' if len(cols) == 1 else ''
+        def make_count_dict(values, cnt):
+            if isinstance(values, (list, tuple)):
+                query = base_url + '&'.join(query_formatter(val, col) for val, col in zip(values, cols))
+            else:
+                query = base_url + query_formatter(values, cols[0])
+            return {'count': cnt,
+                    'query': query,
+                    'proportion': default_proportion, # will be overridden for nonzero cnts.
+            }
+        data = KeyedDefaultDict(lambda key: make_count_dict(key, 0))
+        for values, count in self._execute(selecter, values=selecter_values):
+            values = [values[i] for i in positions]
+            for val, header in zip(values, headers):
+                header.append(val)
+            D = make_count_dict(values, count)
+            if len(cols) == 1:
+                values = formatter(values[0])
+            else:
+                values = tuple(formatter(val, col) for val, col in zip(values, cols))
+            data[values] = D
+        if len(cols) == 1:
+            return headers[0], data
+        else:
+            return headers, data
 
     def _get_total_avg(self, cols, constraint, avg, split_list):
         """
@@ -3303,7 +3339,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             avg = None
         return total, avg
 
-    def display_data(self, cols, base_url, constraint=None, avg=False, formatter=None, buckets = None, split_list=False, denominator=None, include_upper=True, query_formatter=None, sort_key=None, reverse=False, url_extras=None, count_key='count'):
+    def display_data(self, cols, base_url, constraint=None, avg=None, formatter=None, buckets = {}, split_list=False, totaler=None, include_upper=True, query_formatter=None, sort_key=None, reverse=False, proportioner=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -3315,89 +3351,135 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             Only rows satsifying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
-        - ``formatter`` -- a function applied to the tuple of values for display.
+        - ``formatter`` -- a function applied to the tuple of values for display.  It should be injective.
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
             The buckets are the values between these break points.  Repeating break points
             makes one bucket consist of just that point.  Values of these columns
             are grouped based on which bucket they fall into.
         - ``split_list`` -- whether count entries from lists individually.  For example,
             a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
-        - ``denominator`` -- a query giving the denominator for the proportions.
+        - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
             Defaults to the number of rows in the table where the columns are non-null.
+                      -- (2d-case) a function taking inputs the grid, row headers, col headers
+                         and this object, which adds some totals to the grid
         - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
         - ``query_formatter`` -- a function for encoding the values into the url.
+            Needs to accept both inputs and outputs from the formatter function.
+            When cols has length 2, takes the col as a second argument.
+        - ``sort_key`` -- a sort key for row/column headers (or a list of two such in the 2d case)
         - ``reverse`` -- whether to sort in reverse order.
+        - ``proprotioner`` -- a function for adding proportions to a 2d grid.
+            See display_stats.py for examples.
         - ``url_extras`` -- an optional string to add to the base_url after the ?
-        - ``count_key`` -- the key to use for counts in the returned dictionaries.
+        - ``kwds`` -- used to discard unused extraneous arguments.
 
         OUTPUT:
 
-        A list of dictionaries, each with four keys.
+        A dictionary.
+
+        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
         - ``value`` -- a tuple of values taken on by the given columns.
-        - ``count_key`` -- (this key specified by the input parameter).  The number of rows with that tuple of values.
+        - ``count`` -- The number of rows with that tuple of values.
         - ``query`` -- a url resulting in a list of entries with the given tuple of values.
         - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
+
+        In the 2d case, it has two keys, ``grid`` and ``col_headers``.  ``grid`` is a list of pairs, the first being a row header and the second being a list of dictionaries as above.  ``col_headers`` is a list of column headers.
         """
         if isinstance(cols, basestring):
             cols = [cols]
-        if len(cols) == 1 and buckets is None:
-            if query_formatter is None:
-                query_formatter = lambda x: str(x)
-            col = cols[0]
-            total, avg = self._get_total_avg(cols, constraint, avg, split_list)
-            data = [(values[0], count) for values, count in self._get_values_counts(cols, constraint, split_list)]
-            data.sort(key=sort_key, reverse=reverse)
-        elif len(cols) == 0 and buckets is not None and len(buckets) == 1:
-            if split_list or avg:
-                raise ValueError
-            def range_formatter(x):
-                if isinstance(x, dict):
-                    a = x['$gte'] if ('$gte' in x) else x['$gt']+1
-                    b = x['$lte'] if ('$lte' in x) else x['$lt']+1
-                    if a == b:
-                        return str(a)
-                    else:
-                        return "{0}-{1}".format(a,b)
-                return str(x)
-            if query_formatter is None:
-                query_formatter = range_formatter
-            if formatter is None:
-                formatter = range_formatter
-            col = buckets.keys()[0]
-            total = 0
-            data = []
-            for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
-                L = self._get_values_counts(cols, bucketed_constraint)
-                if len(L) == 0:
-                    # No results in this bucket
-                    cnt = 0
-                elif len(L) == 1:
-                    cnt = L[0][1]
+        if isinstance(buckets, list):
+            if len(cols) == 1:
+                buckets = {cols[0]: buckets}
+            else:
+                raise ValueError("Must specify keys for buckets")
+        def range_formatter(x, col=None): # accept an unused col argument for the 2d case.
+            if isinstance(x, dict):
+                if '$gte' in x:
+                    a = x['$gte']
+                elif '$gt' in x:
+                    a = x['$gt'] + 1
                 else:
-                    raise RuntimeError("Multiple results for %s"%(bucketed_constraint))
-                data.append((bucketed_constraint[col], cnt))
-                total += cnt
-        else:
-            raise NotImplementedError
+                    a = None
+                if '$lte' in x:
+                    b = x['$lte']
+                elif '$lt' in x:
+                    b = x['$lt'] - 1
+                else:
+                    b = None
+                if a == b:
+                    return str(a)
+                elif b is None:
+                    return "{0}-".format(a)
+                elif a is None:
+                    raise ValueError
+                else:
+                    return "{0}-{1}".format(a,b)
+            return str(x)
         if formatter is None:
-            formatter = lambda x: x
-        if denominator is not None:
-            # override the total computed above
-            total = self.count(denominator)
+            if buckets:
+                formatter = range_formatter
+            else:
+                formatter = lambda x: x
+        if query_formatter is None:
+            def query_formatter(x, col):
+                F = formatter(x) if len(cols) == 1 else formatter(x, col)
+                return '{0}={1}'.format(col, F)
         base_url = base_url + '?'
         if url_extras:
             base_url += url_extras
-        data = [{'value':formatter(value),
-                 count_key:count,
-                 # TODO: update url for split_list
-                 'query':"{0}{1}={2}".format(base_url, col, query_formatter(value)),
-                 'proportion':format_percentage(count, total)}
-                for value, count in data]
-        if avg:
-            data.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
-                         count_key:total,
-                         'query':"{0}?{1}".format(base_url, cols[0]),
-                         'proportion':format_percentage(1,1)})
+        if len(cols) == 1:
+            display_mode = 'rows'
+            col = cols[0]
+            headers, counts = self._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            if not buckets:
+                if avg or totaler is None:
+                    total, avg = self._get_total_avg(cols, constraint, avg, split_list)
+                headers = [formatter(val) for val in sorted(headers, key=sort_key, reverse=reverse)]
+            elif cols == buckets.keys():
+                if split_list or avg or sort_key:
+                    raise ValueError
+                headers = [formatter(bucket[col]) for bucket in self._split_buckets(buckets, None, include_upper)]
+                if totaler is None:
+                    total = sum(counts[bucket]['count'] for bucket in headers)
+            else:
+                raise ValueError("Bucket keys must be subset of columns")
+            if totaler is None:
+                overall = total
+            else:
+                overall = self.count(totaler)
+            counts = [counts[val] for val in headers]
+            for D, val in zip(counts, headers):
+                D['value'] = val
+                D['proportion'] = format_percentage(D['count'], overall)
+            if avg:
+                counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
+                               'count':total,
+                               'query':"{0}?{1}".format(base_url, cols[0]),
+                               'proportion':format_percentage(total,overall)})
+            return {'counts': counts}
+        elif len(cols) == 2:
+            if split_list or avg:
+                raise ValueError
+            non_buckets = [col for col in cols if col not in buckets]
+            if len(buckets) + len(non_buckets) != 2:
+                raise ValueError("Bucket keys must be a subset of columns")
+            headers, grid = self._get_values_counts(cols, constraint, False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            for i, col in enumerate(cols):
+                if col in buckets:
+                    headers[i] = [formatter(bucket[col], col) for bucket in self._split_buckets({col:buckets[col]}, None, include_upper)]
+                else:
+                    sk = sort_key[i] if isinstance(sort_key, list) else sort_key
+                    rev = reverse[i] if isinstance(reverse, list) else reverse
+                    headers[i] = [formatter(val, col) for val in sorted(headers[i], key=sk, reverse=rev)]
+            row_headers, col_headers = headers
+            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
+            if proportioner is not None:
+                proportioner(grid, row_headers, col_headers, self)
+            if totaler is not None:
+                totaler(grid, row_headers, col_headers, self)
+            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
+        else:
+            raise NotImplementedError
         return data
 
     def create_oldstats(self, filename):
