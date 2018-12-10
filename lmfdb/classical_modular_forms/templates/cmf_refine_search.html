@@ -81,7 +81,7 @@
       <select name='has_self_twist' style="width: 150px;">
           {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
         {% for val, text in self_twist_values %}
-        <option value="{{ val }}"{% if info.self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
+        <option value="{{ val }}"{% if info.has_self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
         {% endfor %}
       </select>
     </td>
