@@ -12,9 +12,10 @@ url: https://www.math.u-bordeaux.fr/~ballombe/
 ---
 name: Samuele Anni
 email: samuele.anni@gmail.com
-affil: University of Heidelberg
+affil: University of Luxembourg
+url: https://wwwfr.uni.lu/recherche/fstc/mathematics_research_unit/people/samuele_anni
 ---
-name: Angelica Babei 
+name: Angelica Babei
 url: https://www.math.dartmouth.edu/~ababei/
 affil: Dartmouth College
 ---
@@ -25,8 +26,8 @@ url: http://math.bu.edu/people/jbala/
 affil: Boston University
 ---
 name: Alex Bartel
-url: http://homepages.warwick.ac.uk/~maslan/
-affil: University of Warwick
+url: https://www.gla.ac.uk/schools/mathematicsstatistics/staff/alexbartel/
+affil: University of Glasgow
 ---
 name: Jennifer Beineke
 url: http://mars.wne.edu/~jbeineke/
@@ -50,7 +51,7 @@ affil: Google Inc.
 name: Chris Brady
 affil: University of Warwick
 ---
-name: Benjamin Breen 
+name: Benjamin Breen
 url: https://www.math.dartmouth.edu/~breen/
 affil: Dartmouth College
 ---
@@ -103,8 +104,8 @@ email: maarten@mderickx.nl
 affil: Universiteit Leiden
 ---
 name: Martin Dickson
-url: http://www.maths.bris.ac.uk/~mamjd/
-affil: University of Bristol
+affil: Kings College London
+url:  https://nms.kcl.ac.uk/martin.dickson/
 ---
 name: Tim Dokchitser
 url: http://www.maths.bris.ac.uk/~matyd/
@@ -131,7 +132,6 @@ affil: Grinnell College
 ---
 name: Markus Fraczek
 email: markus.fraczek@gmail.com
-affil: University of Warwick
 ---
 name: Sharon Frechette
 affil: College of Holy Cross
@@ -205,7 +205,7 @@ affil: Grinnell College
 ---
 name: Nicolas Mascot
 email: nmascot@math.u-bordeaux1.fr
-affil: University of Warwick
+affil: American University Beirut
 ---
 name: Mark McConnell
 email: mmcconnell17704@yahoo.com
@@ -226,7 +226,6 @@ affil: Université Paris 7
 ---
 name: Warren Moore
 email: warrenmoore30@yahoo.co.uk
-affil: University of Warwick
 ---
 name: Bartosz Naskręcki
 email: nasqret@gmail.com
@@ -242,7 +241,7 @@ affil: Grinnell College
 name: Aurel Page
 url: http://www.normalesup.org/~page/index-en.html
 email: aurel.page@normalesup.org
-affil: University of Warwick
+affil: University of Bordeaux
 ---
 name: Jennifer Paulhus
 affil: Grinnell College
@@ -255,6 +254,10 @@ url: http://www.maths.bris.ac.uk/~madjp/
 name: Robert Pollack
 affil: Boston University
 url: http://math.bu.edu/people/rpollack/
+---
+name: Alexander D. Rahm
+affil: University of Luxembourg
+url: http://math.uni.lu/~rahm
 ---
 name: Heather Ratcliffe
 affil: University of Warwick
@@ -276,6 +279,9 @@ affil: Bucknell University
 name: George J. Schaeffer
 email: gschaeff@stanford.edu
 affil: Stanford University
+---
+name: Ciaran Schembri
+affil: University of Sheffield
 ---
 name: Sam Schiavone
 url: https://math.dartmouth.edu/~samschiavone/
@@ -344,8 +350,7 @@ url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
 name: Alex Torzewski
-url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/torzewski/
-affil: University of Warwick
+affil: University College London
 ---
 name: Christelle Vincent
 affil: University of Vermont
