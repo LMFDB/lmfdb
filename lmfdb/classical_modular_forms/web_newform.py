@@ -222,7 +222,7 @@ class WebNewform(object):
             if len(self.char_labels)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
                 # properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim)
-                return '<script id="properties_script">properties_lfun(%r, %r, %r, %r, %r) </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.lfunction_labels:
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
