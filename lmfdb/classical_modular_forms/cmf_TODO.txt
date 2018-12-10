@@ -2,7 +2,6 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
-* code snippets for form and space pages (Drew)
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * 2d tables (self_twist_type: neither (0), is_CM (1), is_RM (2), both (3))
 * (count by level/dimension) (David)
@@ -17,6 +16,7 @@ IMPORTANT:
 * Update to use field_poly_is_real_cyclotomic, field_poly_is_cyclotomic in choosing variable name.
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
 -------------------------- Pull Request Line -------------------------------------------------
+* code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
