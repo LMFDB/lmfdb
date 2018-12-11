@@ -7,9 +7,8 @@ IMPORTANT:
 * Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2.
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
-* Switch from spaces to search again
-* On inner twist form knowl, explain what * means
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
+*  On inner twist form knowl, explain what * means
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
@@ -19,7 +18,10 @@ IMPORTANT:
 * avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
 
-KNOWL FEATURES:
+
+
+
+KNOWL FEATURES: (March)
 * Revision history and reversion (all versions stored in kwl_knowls table)
 * Multiple versions for beta and prod (needs a review status column)
 * Status column (smallint): reviewed, beta, deleted
