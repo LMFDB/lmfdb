@@ -221,16 +221,19 @@ def render_newform_webpage(label):
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
     maxm = min(newform.dim, 20)
-    info['m'] = info.get('m', '1-%s'%maxm)
+    info['m'] = infom = info.get('m', '1-%s'%maxm)
     try:
-        info['CC_m'] = integer_options(info['m'], 1000)
+        if '.' in infom:
+            # replace embedding codes with the corresponding integers
+            infom = re.sub(r'\d+\.\d+', newform.embedding_from_conrey, infom)
+        info['CC_m'] = integer_options(infom, 1000)
     except (ValueError, TypeError) as err:
         info['m'] = '1-%s'%maxm
         info['CC_m'] = range(1,maxm+1)
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
-            errs.append("<span style='color:black'>Embeddings</span> must be an integer, range of integers or comma separated list of integers")
+            errs.append("<span style='color:black'>Embeddings</span> must consist of integers or embedding codes")
     try:
         info['prec'] = int(info.get('prec',6))
         if info['prec'] < 1 or info['prec'] > 15:

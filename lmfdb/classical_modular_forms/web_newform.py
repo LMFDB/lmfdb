@@ -261,9 +261,11 @@ class WebNewform(object):
         an_formats = ['embed','analytic_embed',None]
         angles_formats = ['satake','satake_angle',None]
         m = info.get('m','1-%s'%(min(self.dim,20)))
+        if '.' in m:
+            m = re.sub(r'\d+\.\d+', self.embedding_from_conrey, m)
         n = info.get('n','1-10')
-        CC_m = info.get('CC_m', integer_options(m))
-        CC_n = info.get('CC_n', integer_options(n))
+        CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
+        CC_n = info['CC_m'] if 'CC_m' in info else integer_options(n)
         # convert CC_n to an interval in [1,an_storage_bound]
         CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
         an_keys = (CC_n[0]-1, CC_n[1])
@@ -315,7 +317,6 @@ class WebNewform(object):
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
-
 
     @staticmethod
     def by_label(label):
@@ -709,6 +710,11 @@ function switch_basis(btype) {
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=((m-1)%self.rel_dim)+1)
 
+    def embedding_from_conrey(self, elabel):
+        if not isinstance(elabel, basestring): # match object
+            elabel = elabel.group(0)
+        c, e = map(int, elabel.split('.'))
+        return str(self.rel_dim * self.char_labels.index(c) + e)
 
     def embedding(self, m, n=None, prec=6, format='embed'):
         """
