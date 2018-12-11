@@ -265,7 +265,7 @@ class WebNewform(object):
             m = re.sub(r'\d+\.\d+', self.embedding_from_conrey, m)
         n = info.get('n','1-10')
         CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
-        CC_n = info['CC_m'] if 'CC_m' in info else integer_options(n)
+        CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
         # convert CC_n to an interval in [1,an_storage_bound]
         CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
         an_keys = (CC_n[0]-1, CC_n[1])
