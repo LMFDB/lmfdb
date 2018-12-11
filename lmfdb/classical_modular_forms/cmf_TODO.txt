@@ -9,10 +9,8 @@ IMPORTANT:
 * 2d table for level/weight
 * 2d table for is_self_twist_type
 * Add is_CM, is_RM (in weight 1 and overall) (David)
-* Field display on list is broken (Drew)
 * On inner twist form knowl, explain what * means
 * 325.2.a.g (zeta12 should be sqrt(3))
-* Switch from spaces to search again
 * Add code to number field knowls to deal with real cyclotomic field
 * Update to use field_poly_is_real_cyclotomic, field_poly_is_cyclotomic in choosing variable name.
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
@@ -24,7 +22,10 @@ IMPORTANT:
 * avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
 
-KNOWL FEATURES:
+
+
+
+KNOWL FEATURES: (March)
 * Revision history and reversion (all versions stored in kwl_knowls table)
 * Multiple versions for beta and prod (needs a review status column)
 * Status column (smallint): reviewed, beta, deleted
