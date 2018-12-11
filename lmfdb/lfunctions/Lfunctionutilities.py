@@ -415,7 +415,9 @@ def lfuncEPhtml(L,fmt, prec = None):
     display_galois = True
     if L.degree <= 2  or L.degree >= 12:
         display_galois = False
-    if L.coefficient_field == "CDF":
+    elif L.coefficient_field == "CDF":
+        display_galois = False
+    elif any(None in elt for elt in L.localfactors):
         display_galois = False
 
     def pretty_poly(poly, prec = None):
@@ -433,11 +435,8 @@ def lfuncEPhtml(L,fmt, prec = None):
     eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
-    if L.degree > 2  and L.degree < 12:
-        display_galois = True
+    if display_galois:
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
-    else:
-        display_galois = False
     eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
