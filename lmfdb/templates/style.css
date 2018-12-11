@@ -962,10 +962,16 @@ table.euler tr .galois {
     text-align: center;
 }
 
+table.statgrid td {
+    text-align: right;
+}
+
 table.statgrid th.rhead {
+    border: 1px solid #ccc;
     border-right: 2px solid {{color.table_ntdata_border}};
 }
 table.statgrid th.chead {
+    border: 1px solid #ccc;
     border-bottom: 2px solid {{color.table_ntdata_border}};
 }
 table.statgrid td.prop {

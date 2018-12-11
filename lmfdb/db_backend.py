@@ -34,7 +34,7 @@ from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
-from lmfdb.utils import make_logger, format_percentage
+from lmfdb.utils import make_logger, format_percentage, range_formatter
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
@@ -3392,29 +3392,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 buckets = {cols[0]: buckets}
             else:
                 raise ValueError("Must specify keys for buckets")
-        def range_formatter(x, col=None): # accept an unused col argument for the 2d case.
-            if isinstance(x, dict):
-                if '$gte' in x:
-                    a = x['$gte']
-                elif '$gt' in x:
-                    a = x['$gt'] + 1
-                else:
-                    a = None
-                if '$lte' in x:
-                    b = x['$lte']
-                elif '$lt' in x:
-                    b = x['$lt'] - 1
-                else:
-                    b = None
-                if a == b:
-                    return str(a)
-                elif b is None:
-                    return "{0}-".format(a)
-                elif a is None:
-                    raise ValueError
-                else:
-                    return "{0}-{1}".format(a,b)
-            return str(x)
         if formatter is None:
             if buckets:
                 formatter = range_formatter
@@ -3470,7 +3447,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 else:
                     sk = sort_key[i] if isinstance(sort_key, list) else sort_key
                     rev = reverse[i] if isinstance(reverse, list) else reverse
-                    headers[i] = [formatter(val, col) for val in sorted(headers[i], key=sk, reverse=rev)]
+                    headers[i] = [formatter(val, col) for val in sorted(set(headers[i]), key=sk, reverse=rev)]
             row_headers, col_headers = headers
             grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
             if proportioner is not None:

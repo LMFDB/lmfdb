@@ -1,7 +1,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
-    CDF, ZZ, CBF, cached_method, vector, lcm
+    PowerSeriesRing, CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
     factor_base_factorization_latex
@@ -93,9 +93,9 @@ class WebNewform(object):
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
 
-
+        self._inner_twist = data.get('inner_twist',[])
         if self.has_inner_twist != 0:
-            if len(self.inner_twist == 1):
+            if len(self._inner_twist) == 1:
                 self.star_twist = 'inner twist'
             else:
                 self.star_twist = 'inner twists'
@@ -130,9 +130,6 @@ class WebNewform(object):
 
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
-        if self.has_inner_twist:
-            self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
@@ -178,10 +175,22 @@ class WebNewform(object):
                 elif self.is_rm == -1:
                     self.properties += [('RM', 'No')]
 
-        # Breadcrumbs
-        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
-
         self.title = "Newform %s"%(self.label)
+
+
+    @property
+    def inner_twist(self):
+        return [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self._inner_twist]
+
+    # Breadcrumbs
+    @property
+    def bread(self):
+        return get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+
+
+    @property
+    def char_conrey_link(self):
+        return url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
 
     @property
     def lfunction_labels(self):
@@ -471,7 +480,7 @@ class WebNewform(object):
 
     @property
     def _nu_latex(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
@@ -481,7 +490,7 @@ class WebNewform(object):
 
     @property
     def _nu_var(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
@@ -567,7 +576,7 @@ function switch_basis(btype) {
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
             return r'\(i = \sqrt{-1}\)'
-        elif self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+        elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -607,7 +616,7 @@ function switch_basis(btype) {
     def _get_Rgens(self):
         d = self.dim
         if self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
                 R = PolynomialRing(QQ, self._nu_var)
             else:
                 R = PolynomialRing(QQ, 'beta')
