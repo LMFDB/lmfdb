@@ -1,6 +1,7 @@
 from sage.all import UniqueRepresentation, lazy_attribute
 from flask import url_for
-from lmfdb.utils import format_percentage
+from lmfdb.utils import format_percentage, display_knowl
+from itertools import izip_longest
 
 def boolean_format(value):
     return 'True' if value else 'False'
@@ -237,16 +238,31 @@ class StatsDisplay(UniqueRepresentation):
     def distributions(self):
         dists = []
         for attr in self.stat_list:
-            # default value for top_title from row_title
-            if 'top_title' not in attr:
-                attr['top_title'] = attr['row_title']
-                if not attr['top_title'].endswith('s'):
-                    attr['top_title'] += 's'
-            attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
-            attr['base_url'] = url_for(self.baseurl_func)
             if isinstance(attr['cols'], basestring):
                 attr['cols'] = [attr['cols']]
             cols = attr['cols']
+            # default value for top_title from row_title
+            if 'top_title' not in attr:
+                if len(cols) == 1:
+                    top_title = attr['row_title']
+                    if not top_title.endswith('s'):
+                        top_title += 's'
+                    top_title = [top_title]
+                else:
+                    top_title = [col.replace('_',' ') for col in cols]
+            elif isinstance(attr['top_title'], basestring):
+                top_title = [attr['top_title']]
+            else:
+                top_title = attr['top_title']
+            if isinstance(attr['knowl'], basestring):
+                knowls = [attr['knowl']]
+            else:
+                knowls = attr['knowl']
+            joiner = attr.get('title_joiner', ' ' if None in knowls or len(knowls) < len(top_title) else ' and ')
+            attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
+                                            for knowl, title in izip_longest(knowls, top_title))
+            attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
+            attr['base_url'] = url_for(self.baseurl_func)
             table = attr.get('table',self.table)
             data = table.stats.display_data(**attr)
             attr['intro'] = attr.get('intro',[])

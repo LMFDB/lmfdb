@@ -2,18 +2,13 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
+* mf.elliptic.cm_form is wrong
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
-* 2d tables (self_twist_type: neither (0), is_CM (1), is_RM (2), both (3))
-* (count by level/dimension) (David)
-* 2d table for level/weight
-* 2d table for is_self_twist_type
-* Add is_CM, is_RM (in weight 1 and overall) (David)
-* Field display on list is broken (Drew)
-* On inner twist form knowl, explain what * means
-* 325.2.a.g (zeta12 should be sqrt(3))
+* Add stats specific to trivial character (David)
+* When we've added trivial character data, make sure dimension tables show N/A in large Nk2.
+* Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Switch from spaces to search again
-* Add code to number field knowls to deal with real cyclotomic field
-* Update to use field_poly_is_real_cyclotomic, field_poly_is_cyclotomic in choosing variable name.
+* On inner twist form knowl, explain what * means
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)

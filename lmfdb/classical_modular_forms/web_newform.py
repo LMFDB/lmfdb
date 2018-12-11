@@ -95,7 +95,7 @@ class WebNewform(object):
 
 
         if self.has_inner_twist != 0:
-            if len(self.inner_twist == 1):
+            if len(self.inner_twist) == 1:
                 self.star_twist = 'inner twist'
             else:
                 self.star_twist = 'inner twists'
@@ -471,7 +471,7 @@ class WebNewform(object):
 
     @property
     def _nu_latex(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
@@ -481,7 +481,7 @@ class WebNewform(object):
 
     @property
     def _nu_var(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
@@ -567,7 +567,7 @@ function switch_basis(btype) {
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
             return r'\(i = \sqrt{-1}\)'
-        elif self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+        elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
@@ -607,7 +607,7 @@ function switch_basis(btype) {
     def _get_Rgens(self):
         d = self.dim
         if self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
                 R = PolynomialRing(QQ, self._nu_var)
             else:
                 R = PolynomialRing(QQ, 'beta')

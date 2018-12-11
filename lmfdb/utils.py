@@ -1124,3 +1124,30 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
+
+def range_formatter(x, col=None): # accept an unused col argument for the 2d case.
+    """
+    Used by the display_data function in db_backend.
+    """
+    if isinstance(x, dict):
+        if '$gte' in x:
+            a = x['$gte']
+        elif '$gt' in x:
+            a = x['$gt'] + 1
+        else:
+            a = None
+        if '$lte' in x:
+            b = x['$lte']
+        elif '$lt' in x:
+            b = x['$lt'] - 1
+        else:
+            b = None
+        if a == b:
+            return str(a)
+        elif b is None:
+            return "{0}-".format(a)
+        elif a is None:
+            raise ValueError
+        else:
+            return "{0}-{1}".format(a,b)
+    return str(x)
