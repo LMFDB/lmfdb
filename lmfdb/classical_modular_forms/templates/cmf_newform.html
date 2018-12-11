@@ -192,7 +192,7 @@ function show_qexp(qstyle) {
     <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is {{ newform.hecke_ring_index_factored }}. </p>
     {% endif %} {# newform.hecke_ring_index == 1 #}
   {% elif newform.hecke_ring_index > 1 %}
-    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a multiple of {{ newform.hecke_ring_index_factored }}. </p>
+    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a divisor of {{ newform.hecke_ring_index_factored }}. </p>
   {% endif %} {# newform.hecke_ring_index_proven #}
   {% endif %} {# newform.dim > 1 #}
 </div>
