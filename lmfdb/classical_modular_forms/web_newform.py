@@ -92,19 +92,13 @@ class WebNewform(object):
         # We always print analytic conductor with 1 decimal digit
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-
-
-	self._inner_twist = data.get('inner_twist',[])
+        
+        self._inner_twist = data.get('inner_twist',[])
         if self.has_inner_twist != 0:
-            if self.inner_twist_proved:
-                if len(self._inner_twist) == 1:
-                    self.star_twist = 'inner twist'
-                else:
-                    self.star_twist = 'inner twists'
-            elif len(self._inner_twist) == 1:
-                self.star_twist = 'inner twist*'
+            if len(self._inner_twist == 1):
+                self.star_twist = 'inner twist'
             else:
-                self.star_twist = 'inner twists*'
+                self.star_twist = 'inner twists'
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])

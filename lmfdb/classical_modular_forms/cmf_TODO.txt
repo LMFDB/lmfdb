@@ -2,15 +2,21 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
-* code snippets for form and space pages (Drew)
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
-* 2d tables (is_CM, is_RM, both, neither) (count by level/dimension) (David)
+* 2d tables (self_twist_type: neither (0), is_CM (1), is_RM (2), both (3))
+* (count by level/dimension) (David)
+* 2d table for level/weight
+* 2d table for is_self_twist_type
 * Add is_CM, is_RM (in weight 1 and overall) (David)
 * Field display on list is broken (Drew)
 * On inner twist form knowl, explain what * means
 * 325.2.a.g (zeta12 should be sqrt(3))
 * Switch from spaces to search again
+* Add code to number field knowls to deal with real cyclotomic field
+* Update to use field_poly_is_real_cyclotomic, field_poly_is_cyclotomic in choosing variable name.
+* Update inner twist display on form pages using the inner_twist column (include what's proved).
 -------------------------- Pull Request Line -------------------------------------------------
+* code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
@@ -21,15 +27,20 @@ IMPORTANT:
 KNOWL FEATURES:
 * Revision history and reversion (all versions stored in kwl_knowls table)
 * Multiple versions for beta and prod (needs a review status column)
-* Status column (smallint): reviewed, ok??, beta, deleted
+* Status column (smallint): reviewed, beta, deleted
 * Renaming: change the id on every knowl (no history)
+* jsonb row with links to other knowls
+* search with wildcards
 * View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
 * Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
-* Label as annotation (column: boolean? or type?)
+* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
+* Link back to object from annotations (another field which is a link back to object)
 * Viewable diffs (on the fly)
-* Do we care about porting data from kwl_history table? We think no....
+* Do we care about porting data from kwl_history table? No.
 * Add column to user table giving power to review knowls
+* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
 * Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
+* Use KNOWL_INC more....
 
 COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
