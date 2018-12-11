@@ -422,7 +422,7 @@ def lfuncEPhtml(L,fmt, prec = None):
         out = "1"
         for i,elt in enumerate(poly):
             if elt is None or (i == prec and prec != len(poly) - 1):
-                out += "O(%s)" % (seriesvar(i, "polynomial"),)
+                out += "+O(%s)" % (seriesvar(i, "polynomial"),)
                 break;
             elif i > 0:
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
