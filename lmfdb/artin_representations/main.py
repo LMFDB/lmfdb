@@ -212,7 +212,7 @@ def reliability():
 
 @artin_representations_page.route("/Completeness")
 def cande():
-    t = 'Completeness of Artin representation Data'
+    t = 'Completeness of Artin Representation Data'
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
