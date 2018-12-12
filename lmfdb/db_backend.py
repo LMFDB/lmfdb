@@ -2918,13 +2918,17 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
+        - ``cols`` -- the columns to be displayed.  This will usually be a list of strings of length 1 or 2.
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
             The buckets are the values between these break points.  Repeating break points
             makes one bucket consist of just that point.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
         - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
         """
-        # Need to check that the buckets cover all cases.
+        # Conceptually, it makes sense to have the bucket keys included in the columns,
+        # but they should be removed in order to treat the bucketed_constraint properly
+        # as a constraint.
+        cols = [col for col in cols if col not in buckets]
         for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
             self.add_stats(cols, bucketed_constraint, commit=commit)
 
@@ -3115,10 +3119,12 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 common_cols.append(col)
         return common_cols
 
-    def _clear_stats_counts(self):
+    def _clear_stats_counts(self, extra=True, cols=None):
         deleter = SQL("DELETE FROM {0}")
-        self._execute(deleter.format(Identifier(self.counts)))
         self._execute(deleter.format(Identifier(self.stats)))
+        if not extra:
+            deleter = SQL("DELETE FROM {0} WHERE extra IS NOT TRUE") # false and null
+        self._execute(deleter.format(Identifier(self.counts)))
 
     def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
         with DelayCommit(self, silence=True):
@@ -3728,9 +3734,6 @@ class PostgresDatabase(PostgresBase):
             return getattr(self, name)
         else:
             raise ValueError("%s is not a search table"%name)
-
-
-
 
     def table_sizes(self):
         """
