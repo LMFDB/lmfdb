@@ -298,9 +298,12 @@ class StatsDisplay(UniqueRepresentation):
                     attr['table'].stats._clear_stats_counts(extra=False)
         for attr in self.stat_list:
             cols = attr["cols"]
+            buckets = attr.get("buckets")
+            # Deal with the length 1 shortcuts
             if isinstance(cols, basestring):
                 cols = [cols]
-            buckets = attr.get("buckets")
+            if isinstance(buckets, list) and len(cols) == 1:
+                buckets = {cols[0]: buckets}
             constraint = attr.get("constraint")
             include_upper = attr.get("include_upper",True)
             table = attr.get("table", self.table)
