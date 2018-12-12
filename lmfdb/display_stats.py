@@ -305,9 +305,12 @@ class StatsDisplay(UniqueRepresentation):
             if isinstance(buckets, list) and len(cols) == 1:
                 buckets = {cols[0]: buckets}
             constraint = attr.get("constraint")
-            include_upper = attr.get("include_upper",True)
+            include_upper = attr.get("include_upper", True)
             table = attr.get("table", self.table)
+            split_list = attr.get("split_list", False)
             if buckets:
+                if split_list:
+                    raise ValueError("split_list not supported with buckets")
                 table.stats.add_bucketed_counts(cols, buckets, constraint, include_upper)
             else:
-                table.stats.add_stats(cols, constraint)
+                table.stats.add_stats(cols, constraint, split_list)
