@@ -630,9 +630,9 @@ def tor_struct_search_nf(prefill="any"):
     def fix(t):
         return t + ' selected = "yes"' if prefill==t else t
     def cyc(n):
-        return [fix("["+str(n)+"]"), "$C_{{{}}}$".format(n)]
+        return [fix("["+str(n)+"]"), "C{}".format(n)]
     def cyc2(m,n):
-        return [fix("[{},{}]".format(m,n)), "$C_{{{}}}\\times C_{{{}}}$".format(m,n)]
+        return [fix("[{},{}]".format(m,n)), "C{}&times;C{}".format(m,n)]
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
 
     tors = get_torsion_structures()
