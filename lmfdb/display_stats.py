@@ -313,4 +313,4 @@ class StatsDisplay(UniqueRepresentation):
                     raise ValueError("split_list not supported with buckets")
                 table.stats.add_bucketed_counts(cols, buckets, constraint, include_upper)
             else:
-                table.stats.add_stats(cols, constraint, split_list)
+                table.stats.add_stats(cols, constraint, split_list=split_list)
