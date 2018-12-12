@@ -292,10 +292,10 @@ class StatsDisplay(UniqueRepresentation):
         stats and counts from that table will also be deleted.
         """
         if delete:
-            self.table._clear_stats_counts(extra=False)
+            self.table.stats._clear_stats_counts(extra=False)
             for attr in self.stat_list:
                 if 'table' in attr:
-                    attr['table']._clear_stats_counts(extra=False)
+                    attr['table'].stats._clear_stats_counts(extra=False)
         for attr in self.stat_list:
             cols = attr["cols"]
             if isinstance(cols, basestring):
