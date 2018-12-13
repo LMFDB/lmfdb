@@ -231,6 +231,12 @@ class CmfTest(LmfdbTest):
         assert '0.727606' in page.data
         assert '0.685994' in page.data
 
+        # specifying embeddings
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=2.1%2C+95.10&prec=6&format=embed')
+        for elt in ['2.1','95.10','1.05074','0.946093', '2.90567', '0.305398']:
+            assert elt in page.data
+
+
 
 
     def test_download(self):
