@@ -192,7 +192,7 @@ class WebNewformSpace(object):
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
+        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]

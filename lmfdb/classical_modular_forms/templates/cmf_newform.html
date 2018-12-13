@@ -28,13 +28,7 @@
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td>{{ newform.level }}.{{ newform.char_orbit_label }} ({% if newform.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ newform.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ newform.char_degree }}\){% endif %})</td>
-  </tr>
-  <tr>
-    <td> Representative {{ KNOWL('mf.elliptic.character', title='character') }}: </td>
-    <td> \( \chi \) </td>
-    <td>=</td>
-    <td><a href="{{ newform.char_conrey_link | safe }}">\({{ newform.char_conrey_str }}\)</a>{% if newform.char_degree > 1 %} (minimal {{ KNOWL('character.dirichlet.conrey', title='Conrey label') }} in orbit){% endif %}</td>
+    <td><a href="{{ newform.char_conrey_link | safe }}">{{ newform.level }}.{{ newform.char_orbit_label }}</a> ({% if newform.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ newform.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ newform.char_degree }}\){% endif %})</td>
   </tr>
 </table>
 
@@ -430,7 +424,7 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 
 {# TODO we might wish to have some disclaimer here about provability #}
 {% if newform.has_inner_twist == 1 %}
-<p>This newform admits {{ newform.inner_twist | length }} nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}.</p>
+{{ newform.display_inner_twists() | safe }}
 {% elif newform.has_inner_twist == -1 %}
 <p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}.</p>
 {% endif %}
