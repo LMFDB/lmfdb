@@ -129,6 +129,22 @@ class CmfTest(LmfdbTest):
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension Search Results' in page.data
+        assert '227' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
+        assert '456' in page.data
+        assert 'Dimension Search Results' in page.data
+
+        #the other dim table
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
+        assert '7' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/2/")
+        for elt in map(str,[9,4,5]):
+            assert elt in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/59/8/")
+        for elt in map(str,[1044, 1042, 2, 986, 0, 58, 56]):
+            assert elt in page.data
+        for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
+            assert elt in page.data
 
     def test_character_parity(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/c/")
