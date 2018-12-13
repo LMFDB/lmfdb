@@ -313,8 +313,8 @@ class CmfTest(LmfdbTest):
 
     def test_is_self_dual(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List' ,  follow_redirects=True)
-        for elt in ['23.1.b.a', '31.b.a', '11.2.a.a']:
+        for elt in ['23.1.b.a', '31.1.b.a', '11.2.a.a']:
             assert elt in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List' ,  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List',  follow_redirects=True)
         for elt in ['13.2.e.a', '52.1.j.a', '57.1.h.a']:
             assert elt in page.data
