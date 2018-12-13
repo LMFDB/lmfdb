@@ -280,3 +280,32 @@ class CmfTest(LmfdbTest):
             check(page)
 
 
+
+    def test_AL_search(self):
+        r"""
+        Test that we display AL eigenvals/signs
+        """
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&char_order=1&search_type=List',  follow_redirects=True)
+        assert 'A-L signs' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?&search_type=Spaces', follow_redirects=True)
+        assert 'AL-dims.' in page.data
+        assert '\(0\)+\(1\)+\(0\)+\(0\)' in page.data
+
+
+
+
+    def test_Fricke_signs_search(self):
+        r"""
+        Test that we display Fricke sings
+        """
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&char_order=1&search_type=List',  follow_redirects=True)
+        assert 'Fricke sign' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?char_order=1&search_type=List',  follow_redirects=True)
+        assert 'Fricke sign' in page.data
+
+
+    def displaying_weight1_search(self):
+        for typ in ['List', 'Traces', 'Dimensions']:
+            for search in ['weight=1', 'rm_discs=5','has_self_twist=rm','cm_discs=-3%2C+-39']:
+                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?%s&search_type=%s' % (search, typ),  follow_redirects=True)
+                assert 'Only for weight 1:' in page.data
