@@ -309,3 +309,12 @@ class CmfTest(LmfdbTest):
             for search in ['weight=1', 'rm_discs=5','has_self_twist=rm','cm_discs=-3%2C+-39']:
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?%s&search_type=%s' % (search, typ),  follow_redirects=True)
                 assert 'Only for weight 1:' in page.data
+
+
+    def test_is_self_dual(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List' ,  follow_redirects=True)
+        for elt in ['23.1.b.a', '31.b.a', '11.2.a.a']:
+            assert elt in page
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List' ,  follow_redirects=True)
+        for elt in ['13.2.e.a', '52.1.j.a', '57.1.h.a']:
+            assert elt in page

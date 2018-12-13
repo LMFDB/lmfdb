@@ -110,7 +110,7 @@
       <select name='is_self_dual' style="width: 150px;">
         {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
         {% for val, text in is_self_dual_values %}
-        <option value="{{ val }}"{% if info.is_self_dual_values == val %} selected='yes'{% endif %}>{{ text }}</option>
+        <option value="{{ val }}"{% if info.is_self_dual == val %} selected='yes'{% endif %}>{{ text }}</option>
         {% endfor %}
       </select>
     </td>
