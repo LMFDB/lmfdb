@@ -614,18 +614,22 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
+    @cached_method
     def _get_Rgens(self):
         d = self.dim
+        # the order='negdeglex' assures constant terms come first
         if self.single_generator:
+            # univariate polynomial rings don't support order, 
+            # we work around it by introducing a dummy variable
             if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
-                R = PolynomialRing(QQ, self._nu_var)
+                R = PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
             else:
-                R = PolynomialRing(QQ, 'beta')
-            beta = R.gen()
-            return [beta**i for i in range(d)]
+                R = PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
+            beta = R.gens()[0]
+            return [beta**i for i in range(0,d)]
         else:
-            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
-            return [1] + [g for g in R.gens()]
+            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)], order = 'negdeglex')
+            return [1] + list(R.gens())
 
     def display_character_values(self):
         Rgens = self._get_Rgens()
