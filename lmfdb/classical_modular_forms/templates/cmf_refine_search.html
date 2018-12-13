@@ -79,7 +79,7 @@
   <tr>
     <td>
       <select name='has_self_twist' style="width: 150px;">
-          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
+        {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
         {% for val, text in self_twist_values %}
         <option value="{{ val }}"{% if info.has_self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
         {% endfor %}
@@ -108,12 +108,10 @@
     </td>
     <td>
       <select name='is_self_dual' style="width: 150px;">
-        <option value=""{% if not info.is_self_dual %} selected='yes'{% endif %}>unrestricted</option>
-        <option value="yes"{% if info.is_self_dual == 'yes' %} selected='yes'{% endif %}>yes</option>
-        <option value="not_no"{% if info.is_self_dual == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
-        <option value="unknown"{% if info.is_self_dual == 'unknown' %} selected='yes'{% endif %}>unknown</option>
-        <option value="not_yes"{% if info.is_self_dual == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
-        <option value="no"{% if info.is_self_dual == 'no' %} selected='yes'{% endif %}>no</option>
+        {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
+        {% for val, text in is_self_dual_values %}
+        <option value="{{ val }}"{% if info.is_self_dual_values == val %} selected='yes'{% endif %}>{{ text }}</option>
+        {% endfor %}
       </select>
     </td>
   </tr>

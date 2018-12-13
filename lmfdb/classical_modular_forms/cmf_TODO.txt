@@ -8,7 +8,7 @@ IMPORTANT:
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2.
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
-*  On inner twist form knowl, explain what * means
+* On inner twist form knowl, explain what * means
 * Increase coverage to at least 90% for classical modular forms (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)

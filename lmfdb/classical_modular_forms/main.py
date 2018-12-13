@@ -688,7 +688,7 @@ def newform_parse(info, query):
     parse_ints(info, query, 'analytic_rank')
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
-    parse_bool_unknown(info, query, 'is_self_dual')
+    parse_bool(info, query, 'is_self_dual')
     parse_noop(info, query, 'projective_image')
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")

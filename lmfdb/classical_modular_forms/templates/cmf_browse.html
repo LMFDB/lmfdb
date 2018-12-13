@@ -197,12 +197,10 @@ Info was: {{info}}
       <td colspan=2>{{ KNOWL('lfunction.self-dual', title='Is self dual') }}</td>
       <td>
         <select name='is_self_dual' style="width: 140px;">
-          <option value="" selected>unrestricted</option>
-          <option value="yes">yes</option>
-          <option value="not_no">yes or unknown</option>
-          <option value="unknown">unknown</option>
-          <option value="not_yes">no or unknown</option>
-          <option value="no">no</option>
+          {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
+          {% for val, text in is_self_dual_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
         </select>
       </td>
     </tr>
