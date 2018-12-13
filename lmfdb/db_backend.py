@@ -1136,7 +1136,7 @@ class PostgresTable(PostgresBase):
     # Convenience methods for accessing statistics                   #
     ##################################################################
 
-    def max(self, col):
+    def max(self, col, constraint=None):
         """
         The maximum value attained by the given column.
 
@@ -1146,7 +1146,7 @@ class PostgresTable(PostgresBase):
             sage: db.nf_fields.max('class_number')
             1892503075117056
         """
-        return self.stats.max(col)
+        return self.stats.max(col, constraint)
 
     def distinct(self, col, query={}):
         """

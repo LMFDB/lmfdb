@@ -31,16 +31,24 @@ def credit():
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
 
 @cached_function
-def Nk2_bound():
-    return db.mf_newforms.max('Nk2')
+def Nk2_bound(nontriv=None):
+    if nontriv:
+        return db.mf_newforms.max('Nk2',{'char_order':{'$ne':1}})
+    else:
+        return db.mf_newforms.max('Nk2')
 @cached_function
-def weight_bound():
-    return db.mf_newforms.max('weight')
+def weight_bound(nontriv=None):
+    if nontriv:
+        return db.mf_newforms.max('weight',{'char_order':{'$ne':1}})
+    else:
+        return db.mf_newforms.max('weight')
 
 @cached_function
-def level_bound():
-    return db.mf_newforms.max('level')
-
+def level_bound(nontriv=None):
+    if nontriv:
+        return db.mf_newforms.max('level',{'char_order':{'$ne':1}})
+    else:
+        return db.mf_newforms.max('level')
 
 def ALdims_knowl(al_dims, level, weight):
     dim_dict = {}
@@ -648,7 +656,15 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
             raise ValueError("You must use the orbit label when searching by primitive character")
         query[conrey_field] = {'$contains': int(orbit)}
 
-newform_only_fields = ['dim', 'nf_label', 'is_self_twist', 'cm_discs', 'rm_discs', 'is_twist_minimal', 'has_inner_twist', 'analytic_rank']
+newform_only_fields = {
+    'dim': 'Dimension',
+    'nf_label': 'Coefficient field',
+    'is_self_twist': 'Has self twist',
+    'cm_discs': 'CM discriminant',
+    'rm_discs': 'RM discriminant',
+    'has_inner_twist': 'Has inner twist',
+    'analytic_rank': 'Analytic rank',
+}
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
@@ -779,17 +795,24 @@ def set_rows_cols(info, query):
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 10000 entries")
 
+def has_data_nontriv(N, k):
+    return N*k*k <= Nk2_bound(nontriv=True)
 def has_data(N, k):
     return N*k*k <= Nk2_bound()
 
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
-    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
+    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
+        hasdata = has_data
+    else:
+        hasdata = has_data_nontriv
+    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for space in res:
         dims = DimGrid.from_db(space)
         N = space['level']
         k = space['weight']
-        dim_dict[N,k] += dims
+        if hasdata(N, k):
+            dim_dict[N,k] += dims
     if query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
@@ -809,7 +832,7 @@ def dimension_space_postprocess(res, info, query):
     info['one_type'] = False
     info['switch_text'] = switch_text
     info['url_generator'] = url_generator
-    info['has_data'] = has_data
+    info['has_data'] = hasdata
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
@@ -882,6 +905,11 @@ def dimension_space_search(info, query):
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):
+    for key, display in newform_only_fields.items():
+        if key in info:
+            msg = "%s not valid when searching for spaces" % display
+            flash_error(msg)
+            raise ValueError(msg)
     common_parse(info, query)
     parse_ints(info, query, 'dim', name='Dimension')
     parse_ints(info, query, 'num_forms', name='Number of newforms')
