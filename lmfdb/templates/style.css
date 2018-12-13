@@ -206,7 +206,7 @@ body.knowl #header {
     color: {{color.header_text_title}};
 }
 
-#header #title .MathJax{
+#header #title .katex{
     font-weight: bold !important;
 }
 
