@@ -26,7 +26,7 @@
       <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
-      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> A-L signs</th>
+      <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> {{ KNOWL('mf.elliptic.atkinlehner', title='A-L signs' }}</th>
       {% elif Fricke_sign %}
       <th class="center" rowspan=2>{{ KNOWL('mf.elliptic.fricke', title='Fricke sign') }}</th>
       {% endif %}
