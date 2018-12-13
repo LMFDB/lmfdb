@@ -733,35 +733,7 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         return str(self.rel_dim * self.char_labels.index(c) + e)
 
-    def embedding(self, m, n=None, prec=6, format='embed'):
-        """
-        Return the value of the ``m``th embedding on a specified input.
-        Should only be used when all of the entries in this column are either real
-        or imaginary.
-
-        INPUT:
-
-        - ``m`` -- an integer, specifying which embedding to use.
-        - ``n`` -- a positive integer, specifying which a_n.  If None, returns the image of
-            the generator of the field (i.e. the root corresponding to this embedding).
-        - ``prec`` -- the precision to display floating point values
-        - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
-        """
-        if n is None:
-            x = self.cc_data[m].get('embedding_root_real', None)
-            y = self.cc_data[m].get('embedding_root_imag', None)
-            if x is None or y is None:
-                return '?' # we should never see this if we have an exact qexp
-        else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
-                x *= self.analytic_shift[n]
-                y *= self.analytic_shift[n]
-        if self.cc_data[m]['real']:
-            return display_float(x, prec)
-        else:
-            return display_complex(x, y, prec)
-
+    
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
@@ -786,6 +758,18 @@ function switch_basis(btype) {
             return r"+"
         elif y < 0:
             return r"&minus;"
+
+    #    Return the value of the ``m``th embedding on a specified input.
+    #    Should only be used when all of the entries in this column are either real
+    #    or imaginary.
+
+    #    INPUT:
+
+    #    - ``m`` -- an integer, specifying which embedding to use.
+    #    - ``n`` -- a positive integer, specifying which a_n.  If None, returns the image of
+    #        the generator of the field (i.e. the root corresponding to this embedding).
+    #    - ``prec`` -- the precision to display floating point values
+    #    - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
 
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:
