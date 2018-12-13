@@ -2,7 +2,6 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
-* mf.elliptic.cm_form is wrong
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2.
