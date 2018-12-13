@@ -9,6 +9,7 @@ IMPORTANT:
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
 *  On inner twist form knowl, explain what * means
+* Increase coverage to at least 90% for classical modular forms (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
@@ -17,8 +18,6 @@ IMPORTANT:
 * form pages: weight 1 link to Artin rep (Drew)
 * avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
-
-
 
 
 KNOWL FEATURES: (March)
