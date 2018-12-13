@@ -230,7 +230,8 @@ class WebNewformSpace(object):
                 self.dim_str = r"\(%s + %s\)"%(self.plus_dim, self.minus_dim)
         else:
             self.trivial_character = False
-            character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
+            character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
+            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Cuspidal Newforms of Weight %s, Level %s and %s"%(self.weight, self.level, character_str)
         self.friends = []
