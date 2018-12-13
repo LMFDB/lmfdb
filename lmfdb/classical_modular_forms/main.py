@@ -152,6 +152,10 @@ def set_info_funcs(info):
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
 
+
+favorite_newform_labels = ('1.12.a.a', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
+favorite_space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
+
 @cmf.route("/")
 def index():
     if len(request.args) > 0:
@@ -174,10 +178,8 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
-    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
-    space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
-    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
+    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_newform_labels ]
+    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_space_labels ]
     info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
     info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
     return render_template("cmf_browse.html",

@@ -37,6 +37,16 @@ class CmfTest(LmfdbTest):
                         assert str(k) in rv.data
                         assert str(N)+'.'+str(k) in rv.data
 
+    def test_favorite(self):
+        from lmfdb.classical_forms.main import favorite_newform_labels, favorite_space_labels
+        for elt in favorite_newform_labels:
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+            assert ("Newform %s" % elt) in page.data
+        for elt in favorite_space_labels:
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+            assert elt in page.data
+            assert "Space of Cuspidal Newforms of " in page.data
+
     def test_delta(self):
         r"""
         Check that the Delta function is ok....
@@ -125,6 +135,20 @@ class CmfTest(LmfdbTest):
     def test_decomposition(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/6/12/", follow_redirects=True)
         assert r'Decomposition</a> of \(S_{12}^{\mathrm{new}}(\Gamma_1(6))\)' in page.data
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/38/9/')
+         for elt in map(str,[378, 120, 258, 342, 120, 222, 36]):
+            assert elt in page.data
+        for elt in ['38.9.b','38.9.d','38.9.f']:
+            assert elt in page.data
+            assert elt + '.a' in page.data
+        for elt in ['Decomposition', r"S_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
+            assert elt in page.data
+
+    def test_convert_conreylabels(self):
+        for c in [27, 31]:
+            for e in range(1, 13):
+                page = self.tc.get('ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/',follow_redirects=True)
+                assert "Newform 38.9.d.a" in page.data
 
     def test_dim_table(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
