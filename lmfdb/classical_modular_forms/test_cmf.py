@@ -287,7 +287,7 @@ class CmfTest(LmfdbTest):
         """
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&char_order=1&search_type=List',  follow_redirects=True)
         assert 'A-L signs' in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?&search_type=Spaces', follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&search_type=Spaces', follow_redirects=True)
         assert 'AL-dims.' in page.data
         assert '\(0\)+\(1\)+\(0\)+\(0\)' in page.data
 
@@ -298,7 +298,7 @@ class CmfTest(LmfdbTest):
         r"""
         Test that we display Fricke sings
         """
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&char_order=1&search_type=List',  follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15%2C20&weight=2&dim=1&search_type=List,  follow_redirects=True)
         assert 'Fricke sign' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?char_order=1&search_type=List',  follow_redirects=True)
         assert 'Fricke sign' in page.data
