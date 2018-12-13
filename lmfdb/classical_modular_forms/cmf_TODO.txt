@@ -2,14 +2,13 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
 
 IMPORTANT:
-* mf.elliptic.cm_form is wrong
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * Add stats specific to trivial character (David)
-* When we've added trivial character data, make sure dimension tables show N/A in large Nk2.
+* When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
-* On inner twist form knowl, explain what * means
 * Increase coverage to at least 90% for classical modular forms (Edgar)
+* Change light gray
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
@@ -37,6 +36,7 @@ KNOWL FEATURES: (March)
 * Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
 * Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
 * Use KNOWL_INC more....
+* Preserve author history
 
 COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps

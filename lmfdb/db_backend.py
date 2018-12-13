@@ -1136,7 +1136,7 @@ class PostgresTable(PostgresBase):
     # Convenience methods for accessing statistics                   #
     ##################################################################
 
-    def max(self, col):
+    def max(self, col, constraint=None):
         """
         The maximum value attained by the given column.
 
@@ -1146,7 +1146,7 @@ class PostgresTable(PostgresBase):
             sage: db.nf_fields.max('class_number')
             1892503075117056
         """
-        return self.stats.max(col)
+        return self.stats.max(col, constraint)
 
     def distinct(self, col, query={}):
         """
@@ -2830,7 +2830,7 @@ class PostgresStatsTable(PostgresBase):
             nres = self._slow_count(query, record=record)
         return int(nres)
 
-    def max(self, col):
+    def max(self, col, constraint=None):
         """
         The maximum value attained by the given column, which must be in the search table.
 
@@ -2845,8 +2845,15 @@ class PostgresStatsTable(PostgresBase):
             return self.count()
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
-        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND constraint_cols IS NULL")
-        cur = self._execute(selecter.format(Identifier(self.stats)), ["max", [col]])
+        if constraint is None:
+            constraint = SQL("constraint_cols IS NULL")
+            values = ["max", [col]]
+        else:
+            ccols, cvals = self._split_dict(constraint)
+            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
+            values = ["max", [col], ccols, cvals]
+        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
+        cur = self._execute(selecter, values)
         if cur.rowcount:
             return cur.fetchone()[0]
         selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
