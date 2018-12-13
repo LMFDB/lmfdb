@@ -120,6 +120,7 @@ def set_info_funcs(info):
     # assumes the format Dn A4 S4 S5
     info["display_projective_image"] = lambda mf: ('%s_{%s}' % (mf['projective_image'][:1], mf['projective_image'][1:])) if 'projective_image' in mf else ''
 
+    # For spaces
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -149,6 +150,8 @@ def set_info_funcs(info):
             return ''
     info['display_ALdims'] = display_ALdims
 
+    info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
+
 @cmf.route("/")
 def index():
     if len(request.args) > 0:
@@ -171,9 +174,9 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a','11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
+    newform_labels = ('1.12.a.a', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
-    space_labels = ('20.5','60.2','55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
+    space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
     info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
     info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
@@ -202,7 +205,7 @@ def render_newform_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['format'] = info.get('format','embed' if newform.dim > 1 else 'satake')
+    info['format'] = info.get('format', 'embed' if newform.dim > 1 else 'satake')
     p, maxp = 2, 10
     if info['format'] in ['satake', 'satake_angle']:
         while p <= maxp:
@@ -384,14 +387,14 @@ class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
     data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
-    columns = ['level','weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
+    columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
 
     def _get_hecke_nf(self, label):
         try:
             code = encode_hecke_orbit(label)
         except ValueError:
             return abort(404, "Invalid label: %s"%label)
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n','an','trace_an'], sort=['n'])
+        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n', 'an', 'trace_an'], sort=['n'])
         if not eigenvals:
             return abort(404, "No form found for %s"%(label))
         data = []
@@ -438,7 +441,7 @@ class CMF_download(Downloader):
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             basis = poly = ''
         else:
-            hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators','hecke_ring_denominators', 'field_poly'])
+            hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
             if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
                 return abort(404, "Missing coefficient ring information for %s"%label)
             start = self.delim_start[lang]
@@ -484,10 +487,10 @@ class CMF_download(Downloader):
 
     def download_multiple_traces(self, info):
         lang = info.get(self.lang_key,'text').strip()
-        query = literal_eval(info.get('query','{}'))
+        query = literal_eval(info.get('query', '{}'))
         forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
         codes = [form['hecke_orbit_code'] for form in forms]
-        traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n','trace_an'], sort=[])
+        traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
         trace_dict = defaultdict(dict)
         for rec in traces:
             trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
@@ -500,7 +503,7 @@ class CMF_download(Downloader):
         s += ',\n'.join(form['label'] for form in forms)
         s += self.start_and_end[lang][1] + '\n\n'
         s += 'traces ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join('[' + ','.join(str(trace_dict[form['hecke_orbit_code']][n]) for n in range(1,1001)) + ']' for form in forms)
+        s += ',\n'.join('[' + ', '.join(str(trace_dict[form['hecke_orbit_code']][n]) for n in range(1,1001)) + ']' for form in forms)
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
 
@@ -518,7 +521,7 @@ class CMF_download(Downloader):
                      'embedding_root_real',
                      'embedding_root_imag',
                      col],
-                    sort=['conrey_label','embedding_index']):
+                    sort=['conrey_label', 'embedding_index']):
                 D = {'label':ev.get('lfunction_label'),
                      col:ev.get(col)}
                 root = (ev.get('embedding_root_real'),
@@ -574,7 +577,7 @@ class CMF_download(Downloader):
         except ValueError:
             return abort(404, "Label not found: %s"%label)
         data = {}
-        for attr in ['level','weight','label','oldspaces']:
+        for attr in ['level', 'weight', 'label', 'oldspaces']:
             data[attr] = getattr(space, attr)
         data['newspaces'] = [spc['label'] for spc, forms in space.decomp]
         data['newforms'] = sum([[form['label'] for form in forms] for spc, forms in space.decomp], [])
@@ -583,6 +586,22 @@ class CMF_download(Downloader):
                           label,
                           lang=lang,
                           title='Stored data for newspace %s,'%(label))
+
+    def download_spaces(self, info):
+        lang = info.get(self.lang_key,'text').strip()
+        query = literal_eval(info.get('query', '{}'))
+        proj = ['label', 'analytic_conductor', 'char_labels', 'char_order']
+        spaces = list(db.mf_newspaces.search(query, projection=proj))
+        s = ""
+        c = self.comment_prefix[lang]
+        s += c + ' Query "%s" returned %d spaces.\n\n' % (str(info.get('query')), len(spaces))
+        s += c + ' Below one list called data.\n'
+        s += c + ' Each entry in the list has the form:\n'
+        s += c + " %s\n" % proj
+        s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+        s += ',\n'.join('[' + ', '.join([str(spc[col]) for col in proj]) + ']' for spc in spaces)
+        s += self.start_and_end[lang][1]
+        return self._wrap(s, 'mf_newspaces', lang=lang)
 
 @cmf.route("/download_qexp/<label>")
 def download_qexp(label):
@@ -629,7 +648,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
             raise ValueError("You must use the orbit label when searching by primitive character")
         query[conrey_field] = {'$contains': int(orbit)}
 
-newform_only_fields = ['dim','nf_label','is_self_twist','cm_discs','rm_discs','is_twist_minimal','has_inner_twist','analytic_rank']
+newform_only_fields = ['dim', 'nf_label', 'is_self_twist', 'cm_discs', 'rm_discs', 'is_twist_minimal', 'has_inner_twist', 'analytic_rank']
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
@@ -649,7 +668,7 @@ def common_parse(info, query):
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
-    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier','exact')
+    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', 'exact')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
 def parse_self_twist(info, query):
@@ -657,7 +676,7 @@ def parse_self_twist(info, query):
     translate = {'cm': '1', 'rm': '2', 'cm_and_rm':'3'}
     inp = info.get('has_self_twist')
     if inp:
-        if inp in ['no','yes']:
+        if inp in ['no', 'yes']:
             info['is_self_twist'] = inp
             parse_bool(info, query, 'is_self_twist', name='Has self-twist')
         else:
@@ -726,7 +745,7 @@ def trace_postprocess(res, info, query):
              err_title='Newform Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_traces},
-             projection=['label','dim','hecke_orbit_code','weight'],
+             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
              postprocess=trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list,
@@ -785,8 +804,8 @@ def dimension_space_postprocess(res, info, query):
                       'E':' Eisenstein series'}
         return typ.capitalize() + space_type[X]
     info['pick_table'] = pick_table
-    info['cusp_types'] = ['M','S','E']
-    info['newness_types'] = ['all','new','old']
+    info['cusp_types'] = ['M', 'S', 'E']
+    info['newness_types'] = ['all', 'new', 'old']
     info['one_type'] = False
     info['switch_text'] = switch_text
     info['url_generator'] = url_generator
@@ -858,6 +877,7 @@ def dimension_space_search(info, query):
              table=db.mf_newspaces,
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
+             shortcuts={'download':CMF_download().download_spaces},
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
@@ -965,14 +985,14 @@ class CMF_stats(StatsDisplay):
     baseurl_func = ".index"
 
     stat_list = [
-        {'cols': ['level','weight'],
+        {'cols': ['level', 'weight'],
          'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000],
                     'weight':[1,1,2,3,4,5,10,20,40,62]},
          'knowl':['mf.elliptic.level', 'mf.elliptic.weight'],
          'proportioner': per_col_total,
          'totaler': sum_totaler(),
          'corner_label':r'\(N \backslash k\)'},
-        {'cols': ['level','dim'],
+        {'cols': ['level', 'dim'],
          'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000],
                     'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
          'top_title':['level', 'dimension'],
