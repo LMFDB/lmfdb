@@ -180,7 +180,7 @@ class WebNewform(object):
 
     @property
     def inner_twist(self):
-        return [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self._inner_twist]
+        return [(data,url_character(type='Dirichlet', modulus=data[2], number=cremona_letter_code(data[3]-1))) for data in self._inner_twist]
 
     # Breadcrumbs
     @property
@@ -190,7 +190,7 @@ class WebNewform(object):
 
     @property
     def char_conrey_link(self):
-        return url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
+        return url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
 
     @property
     def lfunction_labels(self):
@@ -643,6 +643,16 @@ function switch_basis(btype) {
             gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
             vals.append(r'      <td class="%s">\(%s\)</td>'%(color, latexterm))
         return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
+
+    def display_inner_twists(self):
+        total = 0
+        twists = ['<table class="ntdata">', '  <tr>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n  </tr>' % ('Character', 'Multiplicity', 'Proved')]
+        for (b, mult, M, orb), link in self.inner_twist:
+            total += mult
+            twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'Y' if b == 1 else 'N'))
+        twists.append('</table>')
+        para = '<p>This newform admits %d nontrivial %s.</p>\n' %(total, display_knowl('mf.elliptic.inner_twist', title='inner_twists'))
+        return para + '\n'.join(twists)
 
     def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
