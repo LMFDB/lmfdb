@@ -51,27 +51,6 @@ folders, e.g. /knowledge/templates/.
 [1] http://docs.python.org/tutorial/modules.html
 [2] http://flask.pocoo.org/docs/blueprints/
 
-Basic Organization / Editorial Board
-----------------------------
-
-Behind the Scenes:
- * Backend: Harald Schilly
- * Server: Jonathan Bober
- * Data Management: Ralf Furmaniak
-
-Sections:
- * Genus 2 Curves: Andrew Sutherland
- * Hilbert MF: John Voight
- * Elliptic Curves: John Cremona
- * L-functions: Stefan Lemurell
- * Siegeld MF: Nils Skoruppa
- * Elliptic MFs: Nathan Ryan
- * Maass Fs: Fredrik Stromberg
- * Number Fields / Galois Groups: John Jones
- * Artin Reps: Paul-Olivier Dehaye
- * Dirichlet Characters: Pascal Molin
- * Zeroes: Jonathan Bober
-
 Code Attribution
 ----------------
 Each file should begin with a short copyright information,
