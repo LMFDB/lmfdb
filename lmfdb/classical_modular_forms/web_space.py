@@ -3,7 +3,7 @@
 
 from lmfdb.db_backend import db
 from sage.all import ZZ
-from sage.databases.cremona import cremona_letter_code, class_to_int
+from sage.databases.cremona import cremona_letter_code
 from lmfdb.characters.utils import url_character
 from lmfdb.utils import display_knowl
 from flask import url_for

@@ -676,18 +676,19 @@ def common_parse(info, query):
 
 def parse_self_twist(info, query):
     # self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ]
-    translate = {'cm': '1', 'rm': '2', 'cm_and_rm':'3'}
+    translate = {'cm': {'is_cm': True}, 'rm': '2', 'cm_and_rm':'3'}
     inp = info.get('has_self_twist')
     if inp:
         if inp in ['no', 'yes']:
             info['is_self_twist'] = inp
             parse_bool(info, query, 'is_self_twist', name='Has self-twist')
         else:
-            try:
-                info['self_twist_type'] = translate[inp]
-                parse_ints(info, query, 'self_twist_type',name='Has self-twist')
-            except KeyError:
-                raise ValueError('%s not in %s' % (inp, translate.keys()))
+            if 'cm' in  inp:
+                info['is_cm'] = 'yes'
+            if 'rm' in inp:
+                info['is_rm'] = 'yes'
+            parse_bool(info, query, 'is_cm',name='Has self-twist')
+            parse_bool(info, query, 'is_rm',name='Has self-twist')
 
 def parse_discriminant(d, sign = 0):
     d = int(d)

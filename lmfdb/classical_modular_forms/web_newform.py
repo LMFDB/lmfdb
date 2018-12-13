@@ -344,7 +344,6 @@ class WebNewform(object):
     def projective_image_latex(self):
         if self.projective_image:
             return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
-        return None
 
     def field_display(self):
         # display the coefficient field
