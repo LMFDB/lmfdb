@@ -95,16 +95,3 @@ def parse_space_label(label):
     except ValueError:
         raise ValueError,"{0} is not a valid space label!".format(label)
 
-@cached_method
-def is_newform_in_db(newform_label):
-    return
-    from .web_newform import WebNewform
-    # first check that it is a valid label, otherwise raise ValueError
-    t = parse_newform_label(newform_label)
-    if len(t)==4:
-       level,weight,character,label = t
-    elif len(t)==5:
-        level,weight,character,label,emb = t
-    search = {'level':level,'weight':weight,'character':character,'label':label}
-    return WebNewform._find_document_in_db_collection(search).count() > 0
-
