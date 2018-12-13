@@ -692,7 +692,6 @@ def common_parse(info, query):
 
 def parse_self_twist(info, query):
     # self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ]
-    translate = {'cm': {'is_cm': True}, 'rm': '2', 'cm_and_rm':'3'}
     inp = info.get('has_self_twist')
     if inp:
         if inp in ['no', 'yes']:
