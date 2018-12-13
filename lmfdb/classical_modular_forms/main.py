@@ -120,6 +120,7 @@ def set_info_funcs(info):
     # assumes the format Dn A4 S4 S5
     info["display_projective_image"] = lambda mf: ('%s_{%s}' % (mf['projective_image'][:1], mf['projective_image'][1:])) if 'projective_image' in mf else ''
 
+    # For spaces
     def display_decomp(space):
         hecke_orbit_dims = space.get('hecke_orbit_dims')
         if hecke_orbit_dims is None: # shouldn't happen
@@ -148,6 +149,8 @@ def set_info_funcs(info):
         else:
             return ''
     info['display_ALdims'] = display_ALdims
+
+    info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
 
 @cmf.route("/")
 def index():
