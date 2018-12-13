@@ -666,6 +666,9 @@ table.ntdata a {
 table td.top {
   vertical-align:top;
 }
+table.ntdata td {
+  white-space: nowrap;
+}
 
 table a:hover {
     background: {{color.table_background_hover}};
