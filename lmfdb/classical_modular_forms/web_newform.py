@@ -1,7 +1,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
-    PowerSeriesRing, CDF, ZZ, CBF, cached_method, vector, lcm
+    CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
     factor_base_factorization_latex

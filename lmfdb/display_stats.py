@@ -192,8 +192,8 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
                 # We've already totaled rows, so have to skip if we don't want the corner
                 if not corner_count and i == num_cols:
                     break
-                total = sum(D['count'] for D in col)
-                query = common_link([D['query'] for D in col]) if include_links else '?'
+                total = sum(elt['count'] for elt in col)
+                query = common_link([elt['query'] for elt in col]) if include_links else '?'
                 if query[-1] == '?': # no common search queries
                     query = None
                 proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_proportion and i == num_cols) else ''

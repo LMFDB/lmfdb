@@ -3278,7 +3278,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             selecter_values = [split_list, allcols]
         positions = [allcols.index(x) for x in cols]
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
-        n = len(cols)
         headers = [[] for _ in cols]
         default_proportion = '      0.00' if len(cols) == 1 else ''
         def make_count_dict(values, cnt):
@@ -3410,8 +3409,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         base_url = base_url + '?'
         if url_extras:
             base_url += url_extras
+
         if len(cols) == 1:
-            display_mode = 'rows'
             col = cols[0]
             headers, counts = self._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
             if not buckets:
@@ -3463,7 +3462,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
         else:
             raise NotImplementedError
-        return data
 
     def create_oldstats(self, filename):
         name = self.search_table + "_oldstats"
