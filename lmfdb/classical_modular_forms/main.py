@@ -386,7 +386,7 @@ def jump_box(info):
 class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
-    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
+    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces']
     columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
 
     def _get_hecke_nf(self, label):
