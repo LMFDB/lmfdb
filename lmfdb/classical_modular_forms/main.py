@@ -499,7 +499,13 @@ class CMF_download(Downloader):
     def download_multiple_traces(self, info):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
-        forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code'],limit=1000))
+        count = db.mf_newforms.count(query)
+        limit = 500
+        if count > limit:
+            msg = "We limit downloads of traces to %d forms" % limit
+            flash_error(msg)
+            return redirect(url_for('.index'))
+        forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
         codes = [form['hecke_orbit_code'] for form in forms]
         traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
         trace_dict = defaultdict(dict)
