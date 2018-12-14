@@ -51,7 +51,7 @@ class CmfTest(LmfdbTest):
         assert '686' in data
 
     def test_level_bread(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?level=10', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/', follow_redirects = True)
         assert '1124.1.d.a' in page.data
         assert r'\Q(\sqrt{-281})' in page.data
         assert '1124.1.d.d' in page.data
@@ -379,11 +379,11 @@ class CmfTest(LmfdbTest):
         assert '0.406839418685' in page.data
 
     def test_download_search(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=Traces&n=1-40&Submit=sage', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=Traces&n=1-40&Submit=sage&download=1', follow_redirects = True)
         assert '5.10.a.a' in page.data
         assert '1, -8, -114, -448, -625, 912, 4242, 7680, -6687, 5000, -46208, 51072, -115934, -33936' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=List&n=1-40&Submit=sage', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=List&n=1-40&Submit=sage&download=1', follow_redirects = True)
         assert '5.10.a.a' in page.data
         assert '5, 10, 1, 501.65797898, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
 
@@ -496,7 +496,7 @@ class CmfTest(LmfdbTest):
         assert "3992.ba" in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/190/2/i/a/')
-        for elt in ['5.c', '19.c', '95.i']:
+        for elt in ['5.b', '19.c', '95.i']:
             assert elt in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1816/1/l/a/')
