@@ -17,11 +17,11 @@ class CmfTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/").data
         assert '?search_type=Dimensions' in data
         assert '?search_type=Dimensions&char_order=1' in data
+        assert "/ModularForm/GL2/Q/holomorphic/stats" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions",follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/19/5/">69</a>' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&char_order=1", follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">13</a>' in data
-        assert "/ModularForm/GL2/Q/holomorphic/stats" in data
 
     def test_stats(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/stats")
@@ -44,7 +44,7 @@ class CmfTest(LmfdbTest):
         assert '343.1.d.a' in data
         assert '49.4.a.a' in data
         assert '7.7.d.a' in data
-        assert '−686' in data
+        assert '686' in data
 
 
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
@@ -88,6 +88,10 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-&search_type=List', follow_redirects=True)
         assert "No matches" in page.data
         assert "Only for weight 1" in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
+        assert "is not a valid input for" in page.data
+
+
         
 
     def test_delta(self):
@@ -206,7 +210,7 @@ class CmfTest(LmfdbTest):
         assert '426' in page.data
         assert '128' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions", follow_redirects=True)
-        assert '128' in page.data
+        assert '0' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions", follow_redirects=True)
         assert 'n/a' in page.data
 
@@ -333,8 +337,8 @@ class CmfTest(LmfdbTest):
         assert "up to 1000 are available" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=3.5&prec=6&format=embed')
         assert "must be an integer, range of integers or comma separated list of integers" in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed')
-        assert "Web interface only supports 1000 embeddings at a time. Use download link to get more (may take some time)." in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed', follow_redirects=True)
+        assert "Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time)." in page.data
 
 
 
@@ -400,7 +404,7 @@ class CmfTest(LmfdbTest):
             assert elt in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&search_type=Traces&n=1-40&n_primality=prime_powers&an_constraints=a3%3D0%2Ca37%3D0', follow_redirects = True)
         assert "Results (displaying all 3 matches)" in page.data
-        for elt in map(str,[-6,-68, 3224, 206, 4240, -408, -598, 1048]):
+        for elt in map(str,[-6,-68, 3224, 206, 4240, -408, -598, 1058]):
             assert elt in page.data
 
 
