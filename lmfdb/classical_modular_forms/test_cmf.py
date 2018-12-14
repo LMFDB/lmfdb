@@ -101,7 +101,7 @@ class CmfTest(LmfdbTest):
             assert l in page.data
 
     def test_jump(self):
-        for j, l in [['3.6.1.a', '3.6.a.a'], ['55.3.d', '55.3.d'], ['55.3.54', '55.3.d'], ['20.5', '20.5'], ['yes','23.1.b.a'], ['yes&weight=2','11.2.a.a'], ['yes&weight=-2', 'There are no newforms specified by the query']]:
+        for j, l in [['10','10.3.c.a'], ['3.6.1.a', '3.6.a.a'], ['55.3.d', '55.3.d'], ['55.3.54', '55.3.d'], ['20.5', '20.5'], ['yes','23.1.b.a'], ['yes&weight=2','11.2.a.a'], ['yes&weight=-2', 'There are no newforms specified by the query']]:
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
             assert l in page.data
 
@@ -374,6 +374,8 @@ class CmfTest(LmfdbTest):
         """
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/27.2.e.a', follow_redirects=True)
         assert '[8,11,-17,-11,-4,3,0,-15,-1,-3,4,7]' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/887.2.a.b', follow_redirects=True)
+        assert 'No q-expansion found for 887.2.a.b'
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
@@ -488,6 +490,15 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get(s,  follow_redirects=True)
                 for elt in begin[1]:
                     assert elt in page.data, s
+
+    def test_parity(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&search_type=List')
+        assert '11.2.a.a' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&char_parity=odd&search_type=List')
+        assert '23.1.b.a' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&weight=3&search_type=List')
+        asser "No matches" in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=odd&search_type=List')
 
 
     def test_coefficient_fields(self):
