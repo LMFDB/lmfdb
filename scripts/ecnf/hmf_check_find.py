@@ -36,6 +36,7 @@ fld=None # else after re-reading this file fld gets left set to 6.6.905177.1
 #
 
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField, str2ideal
+from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf
 from scripts.ecnf.import_utils import make_curves_line
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
@@ -136,7 +137,7 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
 
     for ec in cursor:
         hmf_label = "-".join([ec['field_label'], ec['conductor_label'], ec['iso_label']])
-        f = forms.lucky({'field_label': field_label, 'label': hmf_label})
+        f = get_hmf(hmf_label)
         if f:
             if verbose:
                 print("hmf with label %s found" % hmf_label)
@@ -237,7 +238,11 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
 # associated curves, look to see if a suitable curve exists, and if
 # not to create a Magma script to search for one.
 #
-#
+# NB the first version find_curve_labels() just outputs a Magma
+# script; after running Magma, use export_magma_output() to priduce a
+# file of curves.  Or (simpler when Magma is available on the same
+# machine) use the scond version, find_curves(), which runs Magma
+# itself and outputs the resulting curves.
 
 
 def output_magma_field(field_label, K, Plist, outfilename=None, verbose=False):
@@ -381,8 +386,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
         query['level_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = forms.search(query)
-    cursor.sort([('level_norm', pymongo.ASCENDING)])
+    cursor = forms.search(query, sort=['level_norm'])
     labels = [f['label'] for f in cursor]
     nfound = 0
     nnotfound = 0
@@ -401,8 +405,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
 
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
-        f = forms.lucky({'label': curve_label})
-        h = hecke.lucky({'label': curve_label})
+        f = get_hmf(curve_label)
         ec = nfcurves.lucky({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -413,7 +416,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
             aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:30]]
-            f_aplist = [int(a) for a in h['hecke_eigenvalues'][:40]]
+            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:40]]
             f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag][:30]
             if aplist == f_aplist:
                 nok += 1
@@ -473,7 +476,14 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
                 print("... found form, outputting Magma search code")
             output_magma_curve_search(K, form, outfilename, verbose=verbose, effort=effort)
 
-
+# Use the following by preference, assuming that Magma is available.
+# If outfilename=None (the default) then no searching is done and no
+# output file produced, but this can be used to check that curves
+# matching newforms do exist.  By default all newforms (with dimension
+# 1) for the given field are processed; one can also specify a range
+# of level norms, or an individual newform label (without the field
+# prefix).
+            
 def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, outfilename=None, verbose=False, effort=500):
     r""" Go through all Hilbert Modular Forms with the given field label,
     assumed totally real, for level norms in the given range, test
@@ -487,7 +497,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
         print("No curve search or output, just checking")
     query = {}
     query['field_label'] = field_label
-    if fields.search({'label': field_label}).count() == 0:
+    if not fields.exists({'label': field_label}):
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
@@ -500,8 +510,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
         query['level_norm'] = {'$gte': int(min_norm)}
         if max_norm:
             query['level_norm']['$lte'] = int(max_norm)
-    cursor = forms.search(query)
-    cursor.sort([('level_norm', pymongo.ASCENDING)])
+    cursor = forms.search(query, sort=['level_norm'])
     labels = [f['label'] for f in cursor]
     nfound = 0
     nnotfound = 0
@@ -521,8 +530,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     print("looping through {} forms".format(len(labels)))
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
-        f = forms.lucky({'label': curve_label})
-        h = hecke.lucky({'label': curve_label})
+        f = get_hmf(curve_label)
         ec = nfcurves.lucky({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
@@ -530,11 +538,17 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             nfound += 1
             ainvsK = parse_ainvs(K.K(), ec['ainvs'])
             E = EllipticCurve(ainvsK)
+            if verbose:
+                print("constructed elliptic curve {}".format(E.ainvs()))
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
             aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes]
-            f_aplist = [int(a) for a in h['hecke_eigenvalues']]
+            if verbose:
+                print("computed ap from elliptic curve")
+            f_aplist = [int(a) for a in f['hecke_eigenvalues']]
             f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag]
+            if verbose:
+                print("recovered ap from HMF")
             nap = min(len(aplist), len(f_aplist))
             if aplist[:nap] == f_aplist[:nap]:
                 nok += 1
@@ -612,8 +626,8 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     for nf_label in missing_curves:
         if verbose:
             print("Curve %s is missing from the database..." % nf_label)
-        form = forms.lucky({'field_label': field_label, 'short_label': nf_label})
-        h = hecke.lucky({'label': field_label+"-"+nf_label})
+        form_label = field_label+"-"+nf_label
+        form = get_hmf(form_label)
         if not form:
             print("... form %s not found!" % nf_label)
         else:
@@ -622,13 +636,13 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
 
             print("Conductor = %s" % form['level_ideal'].replace(" ",""))
             N = K.ideal(form['level_label'])
-            neigs = len(h['hecke_eigenvalues'])
+            neigs = len(f['hecke_eigenvalues'])
             Plist = [P['ideal'] for P in K.primes_iter(neigs)]
             goodP = [(i, P) for i, P in enumerate(Plist)
                      if not P.divides(N)
                      and not P.norm() in bad_p
                      and P.residue_class_degree()==1]
-            aplist = [int(h['hecke_eigenvalues'][i]) for i, P in goodP]
+            aplist = [int(f['hecke_eigenvalues'][i]) for i, P in goodP]
             Plist = [P for i,P in goodP]
             nap = len(Plist)
             neigs0 = min(nap,100)
@@ -834,6 +848,9 @@ def rqf_iterator(d1, d2):
         if is_fundamental_discriminant(d):
             yield d, '2.2.%s.1' % d
 
+# The following function has *not* been converted for postgres since
+# it was a one-off, and the curve upload script now adds the
+# iso_nlabel field itself.
 
 def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=False):
     r""" One-off utility to add a numeric conversion of the letter-coded
