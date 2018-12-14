@@ -9,6 +9,10 @@ IMPORTANT:
 * Update inner twist display on form pages using the inner_twist column (include what's proved).
 * Increase coverage to at least 90% for classical modular forms (Edgar)
 * Change light gray
+* Change formatting for buckets, add input boxes on dynamic stats, auto bucketing
+* Use include in dynamic template for stat display
+* Add inputs for options (e.g. totaller, etc)
+
 -------------------------- Pull Request Line -------------------------------------------------
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)

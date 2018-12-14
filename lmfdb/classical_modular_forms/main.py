@@ -1084,3 +1084,50 @@ class CMF_stats(StatsDisplay):
 def statistics():
     title = 'Cupsidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
+
+col_display = {
+    'none': 'None',
+    'level':'Level',
+    'weight':'Weight',
+    'dim':'Dimension',
+    'analytic_conductor':'Analytic conductor',
+    'char_order':'Character order',
+    'self_twist_type':'Self twist type',
+    'has_inner_twist':'Has inner twist',
+    'analytic_rank':'Analytic rank',
+    'char_parity':'Character parity',
+    'projective_image':'Projective image',
+    'projective_image_type':'Projective image type',
+    'artin_degree':'Artin degree',
+}
+def attribute_parse(info, attributes):
+    # testing
+    cols = []
+    if 'col1' in info and info['col1'] != 'none':
+        cols.append(info['col1'])
+    if 'col2' in info and info['col2'] != 'none':
+        cols.append(info['col2'])
+    attributes['cols'] = cols
+    #attributes['buckets'] = [1,1,2,3,4,5,10,20,100,1000]
+    attributes['row_title'] = col_display.get('col1', 'none')
+    attributes['knowl'] = 'mf.elliptic.level'
+
+@cmf.route("/stats_dynamic")
+def dynamic_statistics():
+    if len(request.args) > 0:
+        info = to_dict(request.args)
+    else:
+        info = {}
+    info["parent_page"] = "cmf_refine_search.html"
+    info["stats"] = stats = CMF_stats()
+    info["search_type"] = 'DynStats'
+    info["all_weight1"] = lambda x: True
+    constraint = {}
+    newform_parse(info, constraint)
+    attributes = {'constraint': constraint}
+    attribute_parse(info, attributes)
+    stats.setup(attributes=[attributes])
+    info["d"] = stats.prep(attributes)
+    info["valid_columns"] = col_display.items()
+    title = 'Dynamic Statistics'
+    return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

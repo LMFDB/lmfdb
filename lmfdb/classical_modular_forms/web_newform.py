@@ -647,14 +647,17 @@ function switch_basis(btype) {
     def display_inner_twists(self):
         total = 0
         twists = ['<table class="ntdata">',
+                  '<thead>',
                   '  <tr>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n  </tr>' %
                   (display_knowl('character.dirichlet.galois_orbit_label', title='Character'),
                    display_knowl('mf.elliptic.inner_twist_multiplicity', title='Multiplicity'),
-                   display_knowl('mf.elliptic.inner_twist_proved', title='Proved'))]
+                   display_knowl('mf.elliptic.inner_twist_proved', title='Proved')),
+                  '</thead>',
+                  '<tbody>']
         for (b, mult, M, orb), link in self.inner_twist:
             total += mult
-            twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'Y' if b == 1 else 'N'))
-        twists.append('</table>')
+            twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'yes' if b == 1 else 'no'))
+        twists.extend(['</tbody>','</table>'])
         para = '<p>This newform admits %d nontrivial %s.</p>\n' %(total, display_knowl('mf.elliptic.inner_twist', title='inner_twists'))
         return para + '\n'.join(twists)
 

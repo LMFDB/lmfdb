@@ -236,54 +236,53 @@ class StatsDisplay(UniqueRepresentation):
     """
     @lazy_attribute
     def distributions(self):
-        dists = []
-        for attr in self.stat_list:
-            if isinstance(attr['cols'], basestring):
-                attr['cols'] = [attr['cols']]
-            cols = attr['cols']
-            # default value for top_title from row_title
-            if 'top_title' not in attr:
-                if len(cols) == 1:
-                    top_title = attr['row_title']
-                    if not top_title.endswith('s'):
-                        top_title += 's'
-                    top_title = [top_title]
-                else:
-                    top_title = [col.replace('_',' ') for col in cols]
-            elif isinstance(attr['top_title'], basestring):
-                top_title = [attr['top_title']]
-            else:
-                top_title = attr['top_title']
-            if isinstance(attr['knowl'], basestring):
-                knowls = [attr['knowl']]
-            else:
-                knowls = attr['knowl']
-            joiner = attr.get('title_joiner', ' ' if None in knowls or len(knowls) < len(top_title) else ' and ')
-            attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
-                                            for knowl, title in izip_longest(knowls, top_title))
-            attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
-            attr['base_url'] = url_for(self.baseurl_func)
-            table = attr.get('table',self.table)
-            data = table.stats.display_data(**attr)
-            attr['intro'] = attr.get('intro',[])
-            if len(cols) == 1:
-                max_rows = attr.get('max_rows',6)
-                counts = data['counts']
-                rows = [counts[i:i+10] for i in range(0,len(counts),10)]
-                if len(rows) > max_rows:
-                    short_rows = rows[:max_rows]
-                    divs = [(short_rows, "short_table_" + hsh, "short"),
-                            (rows, "long_table_" + hsh + " nodisplay", "long")]
-                else:
-                    divs = [(rows, "short_table", "none")]
-                dists.append({'attribute':attr, 'divs':divs})
-            elif len(cols) == 2:
-                attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*cols))
-                data['attribute'] = attr
-                dists.append(data)
-        return dists
+        return [self.prep(attr) for attr in self.stat_list]
 
-    def setup(self, delete=False):
+    def prep(self, attr):
+        if isinstance(attr['cols'], basestring):
+            attr['cols'] = [attr['cols']]
+        cols = attr['cols']
+        # default value for top_title from row_title
+        if 'top_title' not in attr:
+            if len(cols) == 1:
+                top_title = attr['row_title']
+                if not top_title.endswith('s'):
+                    top_title += 's'
+                top_title = [top_title]
+            else:
+                top_title = [col.replace('_',' ') for col in cols]
+        elif isinstance(attr['top_title'], basestring):
+            top_title = [attr['top_title']]
+        else:
+            top_title = attr['top_title']
+        if isinstance(attr['knowl'], basestring):
+            knowls = [attr['knowl']]
+        else:
+            knowls = attr['knowl']
+        joiner = attr.get('title_joiner', ' ' if None in knowls or len(knowls) < len(top_title) else ' and ')
+        attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
+                                        for knowl, title in izip_longest(knowls, top_title))
+        attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
+        attr['base_url'] = url_for(self.baseurl_func)
+        table = attr.get('table',self.table)
+        data = table.stats.display_data(**attr)
+        attr['intro'] = attr.get('intro',[])
+        data['attribute'] = attr
+        if len(cols) == 1:
+            max_rows = attr.get('max_rows',6)
+            counts = data['counts']
+            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
+            if len(rows) > max_rows:
+                short_rows = rows[:max_rows]
+                data['divs'] = [(short_rows, "short_table_" + hsh, "short"),
+                                (rows, "long_table_" + hsh + " nodisplay", "long")]
+            else:
+                data['divs'] = [(rows, "short_table", "none")]
+        elif len(cols) == 2:
+            attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*cols))
+        return data
+
+    def setup(self, delete=False, attributes=None):
         """
         This function should be called manually at the Sage prompt to add
         the appropriate data to the stats table.
@@ -291,13 +290,17 @@ class StatsDisplay(UniqueRepresentation):
         Warning: if delete is True and an entry in the stat_list includes the 'table' attribute,
         stats and counts from that table will also be deleted.
         """
+        if attributes is None:
+            attributes = self.stat_list
         if delete:
             self.table.stats._clear_stats_counts(extra=False)
-            for attr in self.stat_list:
+            for attr in attributes:
                 if 'table' in attr:
                     attr['table'].stats._clear_stats_counts(extra=False)
-        for attr in self.stat_list:
+        for attr in attributes:
             cols = attr["cols"]
+            if not cols:
+                continue
             buckets = attr.get("buckets")
             # Deal with the length 1 shortcuts
             if isinstance(cols, basestring):

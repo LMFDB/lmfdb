@@ -2174,7 +2174,7 @@ class PostgresTable(PostgresBase):
             self._swap(tables, indexes if indexed else [], '_tmp', '')
             for table in tables:
                 self._db.grant_select(table)
-                if table.endswith("_counts"):
+                if table.endswith("_counts") or table.endswith("_stats"):
                     self._db.grant_insert(table)
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
 
@@ -3408,7 +3408,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             if buckets:
                 formatter = range_formatter
             else:
-                formatter = lambda x: x
+                def formatter(x, col=None):
+                    return x
         if query_formatter is None:
             def query_formatter(x, col):
                 F = formatter(x) if len(cols) == 1 else formatter(x, col)
@@ -3467,6 +3468,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             if totaler is not None:
                 totaler(grid, row_headers, col_headers, self)
             return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
+        elif len(cols) == 0:
+            return {}
         else:
             raise NotImplementedError
 
@@ -3959,6 +3962,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
             self.grant_select(name+"_stats")
+            self.grant_insert(name+"_stats")
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
             print "Table %s created in %.3f secs"%(name, time.time()-now)
