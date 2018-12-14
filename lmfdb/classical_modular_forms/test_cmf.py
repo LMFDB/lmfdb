@@ -451,6 +451,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=10&weight=1-14&dim=1&search_type=List', follow_redirects = True)
         assert "displaying all 14 matches" in page.data
         assert 'A-L signs' in page.data
+
     def test_traces(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&count=50&search_type=Traces', follow_redirects = True)
         assert "Results (displaying all 18 matches)" in page.data
@@ -460,6 +461,13 @@ class CmfTest(LmfdbTest):
         assert "Results (displaying all 3 matches)" in page.data
         for elt in map(str,[-6,-68, 3224, 206, 4240, -408, -598, 1058]):
             assert elt in page.data
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=7&weight=7&search_type=Traces&n=1-10&n_primality=all")
+        assert "Results (displaying all 4 matches)" in page.data
+        for elt in map(str,[17,0,-80,60,3780,-1200]):
+            assert elt in page.data
+
+
 
 
     def test_trivial_searches(self):
@@ -497,7 +505,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&char_parity=odd&search_type=List')
         assert '23.1.b.a' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&weight=3&search_type=List')
-        asser "No matches" in page.data
+        assert "No matches" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=odd&search_type=List')
 
 
