@@ -95,6 +95,11 @@ class CmfTest(LmfdbTest):
             assert elt in page.data
             assert "Space of Cuspidal Newforms of " in page.data
 
+    def test_trace_hash(self):
+        for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a']:
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=#%d" % t, follow_redirects=True)
+            assert l in page.data
+
 
     def test_failure(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
@@ -389,6 +394,8 @@ class CmfTest(LmfdbTest):
         # dim = 1
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/11.7.b.a')
         assert "0, 1, 0, 10, 64, 74, 0, 0, 0, -629, 0, -1331, 640, 0, 0, 740, 4096, 0, 0, 0, 4736, 0, 0, -12670" in page.data
+
+
 
     def test_download_search(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
