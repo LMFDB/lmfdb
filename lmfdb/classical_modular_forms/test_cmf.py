@@ -39,9 +39,9 @@ class CmfTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").data
         assert 'Labels for classical modular forms' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Completeness").data
-        assert "Completeness of classical modular form data" in page.data
+        assert "Completeness of classical modular form data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").data
-        assert "Reliability of classical modular form data" in paga.data
+        assert "Reliability of classical modular form data" in data
 
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
