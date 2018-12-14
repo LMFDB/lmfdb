@@ -2,33 +2,23 @@
 r""" Functions to check consistency of data between elliptic curves and
 Hilbert Modular Forms databases:  """
 
+# 2018-12-14: converted to work with the postgres database (JEC)
+
 import os.path
 import sys
 import os
 import pymongo
 from sage.all import ZZ, EllipticCurve, Magma, srange, oo
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-C['admin'].authenticate('lmfdb', 'lmfdb')
-
-def authenticate():
-    print "authenticating on the elliptic_curves database"
-    import yaml
-    pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-    username = pw_dict['data']['username']
-    password = pw_dict['data']['password']
-    C['elliptic_curves'].authenticate(username, password)
+from lmfdb.db_backend import db
 
 print "setting nfcurves"
-nfcurves = C.elliptic_curves.nfcurves
-qcurves = C.elliptic_curves.curves
+nfcurves = db.ec_nfcurves
+qcurves = db.ec_curves
 
 print "setting hmfs, forms, fields"
-hmfs = C.hmfs
-forms = hmfs.forms
-fields = hmfs.fields
-hecke = hmfs.hecke        # contains eigenvalues
+forms = db.hmf_forms
+fields = db.hmf_fields
+hecke = db.hmf_hecke        # contains eigenvalues
 
 flabels = fields.distinct('label')
 flab2 = [fld for fld in flabels if '2.2.' in fld]
@@ -45,14 +35,13 @@ fld=None # else after re-reading this file fld gets left set to 6.6.905177.1
 #
 #
 
-from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
+from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField, str2ideal
 from scripts.ecnf.import_utils import make_curves_line
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
 def make_conductor(ecnfdata, hfield):
-    N, c, d = [ZZ(c) for c in ecnfdata['conductor_ideal'][1:-1].split(',')]
-    return hfield.K().ideal([N // d, c + d * hfield.K().gen()])
-
+    _, _, I, _ = str2ideal(hfield.K(), ecnfdata['conductor_ideal'])
+    return I
 
 def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     r""" Go through all curves with the given field label, assumed totally
@@ -66,7 +55,7 @@ def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = nfcurves.search(query)
     K = HilbertNumberField(field_label)
     # NB We used to have 20 in the next line but that is insufficient
     # to distinguish the a_p for forms 2.2.12.1-150.1-a and
@@ -116,7 +105,6 @@ def check_ideal_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
 #
 #
 
-
 def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     r""" Go through all curves with the given field label, assumed totally
     real, test whether a Hilbert Modular Form exists with the same
@@ -130,7 +118,7 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = nfcurves.search(query)
     nfound = 0
     nnotfound = 0
     nok = 0
@@ -148,7 +136,7 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
 
     for ec in cursor:
         hmf_label = "-".join([ec['field_label'], ec['conductor_label'], ec['iso_label']])
-        f = forms.find_one({'field_label': field_label, 'label': hmf_label})
+        f = forms.lucky({'field_label': field_label, 'label': hmf_label})
         if f:
             if verbose:
                 print("hmf with label %s found" % hmf_label)
@@ -158,7 +146,8 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
             good_flags = [E.has_good_reduction(P) for P in primes]
             good_primes = [P for (P, flag) in zip(primes, good_flags) if flag]
             aplist = [E.reduction(P).trace_of_frobenius() for P in good_primes[:10]]
-            f_aplist = [int(a) for a in f['hecke_eigenvalues'][:30]]
+            f_hecke = hecke.lucky({'label': hmf_label}, projection=['hecke_eigenvalues'])
+            f_aplist = [int(a) for a in f_hecke['hecke_eigenvalues'][:30]]
             f_aplist = [ap for ap, flag in zip(f_aplist, good_flags) if flag][:10]
             if aplist == f_aplist:
                 nok += 1
@@ -221,7 +210,7 @@ def check_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=Fal
         query = {}
         query['field_label'] = field_label
         query['conductor_label'] = level
-        cursor = nfcurves.find(query)
+        cursor = nfcurves.search(query)
         for ec in cursor:
             iso = ec['iso_label']
             if iso in perm:
@@ -381,7 +370,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     """
     query = {}
     query['field_label'] = field_label
-    if fields.find({'label': field_label}).count() == 0:
+    if fields.search({'label': field_label}).count() == 0:
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
@@ -392,7 +381,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
         query['level_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = forms.find(query)
+    cursor = forms.search(query)
     cursor.sort([('level_norm', pymongo.ASCENDING)])
     labels = [f['label'] for f in cursor]
     nfound = 0
@@ -412,9 +401,9 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
 
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
-        f = forms.find_one({'label': curve_label})
-        h = hecke.find_one({'label': curve_label})
-        ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
+        f = forms.lucky({'label': curve_label})
+        h = hecke.lucky({'label': curve_label})
+        ec = nfcurves.lucky({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
                 print("curve with label %s found" % curve_label)
@@ -476,7 +465,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     for nf_label in missing_curves:
         if verbose:
             print("Curve %s is missing..." % nf_label)
-        form = forms.find_one({'field_label': field_label, 'short_label': nf_label})
+        form = forms.lucky({'field_label': field_label, 'short_label': nf_label})
         if not form:
             print("... form %s not found!" % nf_label)
         else:
@@ -498,7 +487,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
         print("No curve search or output, just checking")
     query = {}
     query['field_label'] = field_label
-    if fields.find({'label': field_label}).count() == 0:
+    if fields.search({'label': field_label}).count() == 0:
         if verbose:
             print("No HMF data for field %s" % field_label)
         return None
@@ -511,7 +500,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
         query['level_norm'] = {'$gte': int(min_norm)}
         if max_norm:
             query['level_norm']['$lte'] = int(max_norm)
-    cursor = forms.find(query)
+    cursor = forms.search(query)
     cursor.sort([('level_norm', pymongo.ASCENDING)])
     labels = [f['label'] for f in cursor]
     nfound = 0
@@ -532,9 +521,9 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     print("looping through {} forms".format(len(labels)))
     for curve_label in labels:
         # We find the forms again since otherwise the cursor might timeout during the loop.
-        f = forms.find_one({'label': curve_label})
-        h = hecke.find_one({'label': curve_label})
-        ec = nfcurves.find_one({'field_label': field_label, 'class_label': curve_label, 'number': 1})
+        f = forms.lucky({'label': curve_label})
+        h = hecke.lucky({'label': curve_label})
+        ec = nfcurves.lucky({'field_label': field_label, 'class_label': curve_label, 'number': 1})
         if ec:
             if verbose:
                 print("curve with label %s found in the database" % curve_label)
@@ -623,8 +612,8 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
     for nf_label in missing_curves:
         if verbose:
             print("Curve %s is missing from the database..." % nf_label)
-        form = forms.find_one({'field_label': field_label, 'short_label': nf_label})
-        h = hecke.find_one({'label': field_label+"-"+nf_label})
+        form = forms.lucky({'field_label': field_label, 'short_label': nf_label})
+        h = hecke.lucky({'label': field_label+"-"+nf_label})
         if not form:
             print("... form %s not found!" % nf_label)
         else:
@@ -859,7 +848,7 @@ def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=Fa
         query['conductor_norm']['$lte'] = int(max_conductor_norm)
     else:
         max_conductor_norm = oo
-    curves_to_fix = nfcurves.find(query)
+    curves_to_fix = nfcurves.search(query)
     print("%s curves to examine of conductor norm between %s and %s."
           % (curves_to_fix.count(),min_conductor_norm,max_conductor_norm))
     for c in curves_to_fix:
