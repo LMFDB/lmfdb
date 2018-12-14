@@ -190,7 +190,7 @@ class CmfTest(LmfdbTest):
     def test_convert_conreylabels(self):
         for c in [27, 31]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/%d/a/' % c,follow_redirects=True)
-                assert "Newform 38.9.d.a" in page.data
+            assert "Newform 38.9.d.a" in page.data
             for e in range(1, 13):
                 page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/d/a/%d/%d/' % (c, e),follow_redirects=True)
                 assert "Newform 38.9.d.a" in page.data
