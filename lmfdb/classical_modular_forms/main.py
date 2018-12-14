@@ -500,7 +500,7 @@ class CMF_download(Downloader):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
         count = db.mf_newforms.count(query)
-        limit = 2000
+        limit = 1000
         if count > limit:
             msg = "We limit downloads of traces to %d forms" % limit
             flash_error(msg)
