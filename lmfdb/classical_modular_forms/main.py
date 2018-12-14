@@ -446,7 +446,7 @@ class CMF_download(Downloader):
         code = ''
         if dim == 1:
             func_body = self.get('qexp_dim1_function_body',{}).get(lang,[])
-            data += ', '.join([an[0] for an in qexp])
+            data += ', '.join([str(an[0]) for an in qexp])
             data += self.start_and_end[lang][1]
             explain += c + ' The q-expansion is given as a list of integers.\n'
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
