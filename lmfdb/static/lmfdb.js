@@ -190,10 +190,6 @@ function knowl_click_handler($el) {
       // assume we are in a td or th tag, go 2 levels up
       var td_tag = $el.parent();
       var tr_tag = td_tag.parent();
-      var tds = tr_tag.children();
-      var len = tds.length;
-      var cols = 0;
-      var max_rowspan = 0;
 
       // figure out max_width
       var row_width = tr_tag.width();
@@ -216,15 +212,13 @@ function knowl_click_handler($el) {
       log("max_width: " + max_width);
       var style_wrapwidth = "style='max-width: " + max_width+"px; white-space: normal;'";
 
-      for (var i = 0; i < len; i++) {
-        log(tds[i]);
-        cols += $(tds[i]).prop("colSpan");
-        var rowspan = $(tds[i]).prop("rowSpan");
-        if (rowspan > max_rowspan)
-          max_rowspan = rowspan;
-      }
-      log("cols: " + cols);
+      //max rowspan of this row
+      var max_rowspan = Array.from(td_tag.siblings()).reduce((acc, td) => Math.max(acc, td.rowSpan), 0)
       log("max_rowspan: " + max_rowspan);
+  
+      //compute max number of columns in the table
+      var cols = Array.from(tr_tag.siblings()).reduce((acc, tr) => Math.max(acc, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)),0)
+      log("cols: " + cols);
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();
       tr_tag.after(
