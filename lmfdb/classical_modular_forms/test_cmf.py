@@ -241,6 +241,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions", follow_redirects=True)
         assert 'n/a' in page.data
 
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions')
+        for elt in map(str,[0,1,2,5,4,9,6,13,8,17,10]):
+            assert elt in page.data
+
+
         #the other dim table
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/")
         assert '7' in page.data
@@ -252,6 +257,8 @@ class CmfTest(LmfdbTest):
             assert elt in page.data
         for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
             assert elt in page.data
+
+
 
     def test_character_parity(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/c/")
