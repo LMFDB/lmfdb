@@ -50,6 +50,18 @@ class CmfTest(LmfdbTest):
         assert '7.7.d.a' in data
         assert '686' in data
 
+    def test_level_bread(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?level=10', follow_redirects = True)
+        assert '1124.1.d.a' in page.data
+        assert r'\Q(\sqrt{-281})' in page.data
+        assert '1124.1.d.d' in page.data
+        assert '\Q(\zeta_{20})^+' in page.data
+        assert '1124.1.ba.a' in page.data
+        assert '\Q(\zeta_{35})' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/?weight=10&level=10', follow_redirects=True)
+        assert 'Results (displaying all 4 matches)'
+        assert '10.10.b.a' in page.data
+        assert '2580' in page.data
 
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
@@ -236,16 +248,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/a/")
         assert 'since the weight is odd while the character is' in page.data
 
-    def test_coefficient_fields(self):
-        r"""
-        Test the display of coefficient fields.
-        """
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/9/8/a/')
-        assert '\Q(\sqrt{10})' in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/6/a/')
-        assert '3.3.54492.1' in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/27/2/e/a/')
-        assert '12.0.1952986685049.1' in page.data
+
 
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
@@ -343,6 +346,12 @@ class CmfTest(LmfdbTest):
         assert "must be an integer, range of integers or comma separated list of integers" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed', follow_redirects=True)
         assert "Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time)." in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=1-20&prec=16&format=embed')
+        assert 'must be a positive integer, at most 15 (for higher precision, use the download button)' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=999-1001&m=1-20&prec=6&format=embed')
+        assert 'Only' in page.data
+        assert 'up to 1000 are available' in page.data
+        assert 'a_{1000}' in page.data
 
 
 
@@ -368,6 +377,15 @@ class CmfTest(LmfdbTest):
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         assert '-12.531852282' in page.data
         assert '0.406839418685' in page.data
+
+    def test_download_search(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=Traces&n=1-40&Submit=sage', follow_redirects = True)
+        assert '5.10.a.a' in page.data
+        assert '1, -8, -114, -448, -625, 912, 4242, 7680, -6687, 5000, -46208, 51072, -115934, -33936' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=List&n=1-40&Submit=sage', follow_redirects = True)
+        assert '5.10.a.a' in page.data
+        assert '5, 10, 1, 501.65797898, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
 
 
     def test_random(self):
@@ -442,19 +460,82 @@ class CmfTest(LmfdbTest):
                     assert elt in page.data, s
 
 
-    def test_special_fields(self):
+    def test_coefficient_fields(self):
+        r"""
+        Test the display of coefficient fields.
+        """
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/9/8/a/')
+        assert '\Q(\sqrt{10})' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/6/a/')
+        assert '3.3.54492.1' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/27/2/e/a/')
+        assert '12.0.1952986685049.1' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-500&weight=2&nf_label=16.0.1048576000000000000.1&prime_quantifier=subsets&search_type=List')
         assert '\zeta_{40}' in page.data
         assert "Results (displaying all 6 matches)" in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&nf_label=9.9.16983563041.1&prime_quantifier=subsets&projective_image=D19&search_type=List')
         assert r"Q(\zeta_{19})^+" in page.data
         assert "Results (displaying all 32 matches)"
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=List')
         assert 'Results (displaying all 7 matches)' in page.data
         assert '\Q(\sqrt{2}, \sqrt{-3})' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&has_self_twist=no&search_type=List')
         assert "Results (displaying all 17 matches)" in page.data
         assert r"Q(\zeta_{20})" in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&dim=116&search_type=List')
+        assert "Results (displaying both matches)" in page.data
+        assert r"Q(\zeta_{177})" in page.data
+
+    def test_inner_twist(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/3992/1/ba/a/')
+        assert "499.g" in page.data
+        assert "3992.ba" in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/190/2/i/a/')
+        for elt in ['5.c', '19.c', '95.i']:
+            assert elt in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1816/1/l/a/')
+        for elt in ['227.c','1816.l']:
+            assert elt in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
+        for elt in ['3.b','5.b','197.b','2955.c']:
+            assert elt in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
+        assert "This newform does not admit any nontrivial" in page.data
+        assert "inner twists" in page.data
+
+    def test_self_twist(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
+        for elt in ['\Q(\sqrt{-591})','\Q(\sqrt{-15})', '\Q(\sqrt{985})']:
+            assert elt in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
+        for elt in ['\Q(\sqrt{-281})','\Q(\sqrt{-1})', '\Q(\sqrt{281})']:
+            assert elt in page.data
+
+    def test_projective(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
+        assert 'D_{2}' in page.data
+        assert '\Q(\sqrt{-15}, \sqrt{-591})' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
+        assert 'D_{2}' in page.data
+        assert '\Q(i, \sqrt{281})' in page.data
+
+    def test_artin(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
+        assert 'Artin representation 2.3_5_197.8t11.1c1' in page.data
+        assert 'D_4:C_2' in page.data
+        assert '8.0.1964705625.1' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
+        assert 'Artin representation 2.2e2_281.4t3.2c1' in page.data
+        assert '4.0.4496.1' in page.data
+        assert 'D_4' in page.data
 
 
     def test_AL_search(self):
