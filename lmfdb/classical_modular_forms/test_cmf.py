@@ -379,11 +379,11 @@ class CmfTest(LmfdbTest):
         assert '0.406839418685' in page.data
 
     def test_download_search(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=Traces&n=1-40&Submit=sage&download=1', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
         assert '5.10.a.a' in page.data
         assert '1, -8, -114, -448, -625, 912, 4242, 7680, -6687, 5000, -46208, 51072, -115934, -33936' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight=10&dim=1-10&level_primes=5&search_type=List&n=1-40&Submit=sage&download=1', follow_redirects = True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=List', follow_redirects = True)
         assert '5.10.a.a' in page.data
         assert '5, 10, 1, 501.65797898, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
 
