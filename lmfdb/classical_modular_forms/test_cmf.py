@@ -96,9 +96,15 @@ class CmfTest(LmfdbTest):
             assert "Space of Cuspidal Newforms of " in page.data
 
     def test_trace_hash(self):
-        for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a']:
+        for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a',[0,'not found']]:
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=#%d" % t, follow_redirects=True)
             assert l in page.data
+
+    def test_jump(self):
+        for j, l in [['3.6.1.a', '3.6.a.a'], ['55.3.d', '55.3.d'], ['55.3.54', '55.3.d'], ['20.5', '20.5'], ['yes','23.1.b.a'], ['yes&weight=2','11.2.a.a'], ['yes&weight=-2', 'There are no newforms specified by the query']]:
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
+            assert l in page.data
+
 
 
     def test_failure(self):

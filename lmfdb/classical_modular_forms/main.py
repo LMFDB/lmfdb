@@ -386,6 +386,7 @@ def jump_box(info):
         jump = db.mf_newforms.lucky(query, 'label')
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"%(query)
+            jump = query
     if errmsg is None:
         try:
             return redirect(url_for_label(jump), 301)
