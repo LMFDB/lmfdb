@@ -378,6 +378,14 @@ class CmfTest(LmfdbTest):
         assert '-12.531852282' in page.data
         assert '0.406839418685' in page.data
 
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_full_space/20.5/')
+        assert r"""["20.5.b.a", "20.5.d.a", "20.5.d.b", "20.5.d.c", "20.5.f.a"]""" in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newspace/244.4.w')
+        assert "[7, 31, 35, 43, 51, 55, 59, 63, 67, 71, 79, 87, 91, 115, 139, 227]" in page.data
+        assert "244.4.w" in page.data
+
     def test_download_search(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=Traces', follow_redirects = True)
         assert '5.10.a.a' in page.data
@@ -386,6 +394,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=List', follow_redirects = True)
         assert '5.10.a.a' in page.data
         assert '5, 10, 1, 501.65797898, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
+        for elt in ["20.5.b", "20.5.d", "20.5.f"]:
+            assert elt in page.data
+
 
 
     def test_random(self):
@@ -509,6 +522,7 @@ class CmfTest(LmfdbTest):
         assert "This newform does not admit any nontrivial" in page.data
         assert "inner twists" in page.data
 
+
     def test_self_twist(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
         for elt in ['\Q(\sqrt{-591})','\Q(\sqrt{-15})', '\Q(\sqrt{985})']:
@@ -516,6 +530,23 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
         for elt in ['\Q(\sqrt{-281})','\Q(\sqrt{-1})', '\Q(\sqrt{281})']:
             assert elt in page.data
+
+
+    def test_selft_twist_disc(self):
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-40&weight=1-6&cm_discs=-3&search_type=List')
+        for elt in ['\Q(\sqrt{-39})','\Q(\sqrt{-3})']:
+            assert elt in page.data
+        assert 'Results (displaying all 22 matches)' in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&rm_discs=5&search_type=List')
+        for elt in [-55,-11,5,-5,-1,-95,19]:
+            assert ('\Q(\sqrt{%d})' % elt) in page.data
+        assert 'Results (displaying all 3 matches)' in page.data
+        for d in [3,-5]:
+            for m in ['rm','cm']:
+                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&%s_discs=%d&search_type=List' % (m, d))
+                assert 'is not a valid input for' in page.data
+
 
     def test_projective(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
@@ -576,3 +607,5 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List',  follow_redirects=True)
         for elt in ['13.2.e.a', '52.1.j.a', '57.1.h.a']:
             assert elt in page.data
+
+
