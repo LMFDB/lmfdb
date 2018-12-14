@@ -71,6 +71,7 @@ IT WOULD BE NICE IF:
 * form pages: provide downloads of q-expansions for Magma/pari
 
 FUTURE WORK:
+* data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
 * data: compute much more using pari
 * Review editorial review of CMFs to make sure issues have been addressed
 * data: add trace hash for ECNF L-fun
