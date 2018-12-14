@@ -385,7 +385,7 @@ def jump_box(info):
         newform_parse(info, query)
         jump = db.mf_newforms.lucky(query, 'label')
         if jump is None:
-            errmsg = "There are no newforms specified by the query %s"%(query)
+            errmsg = "There are no newforms specified by the query %s"
             jump = query
     if errmsg is None:
         try:

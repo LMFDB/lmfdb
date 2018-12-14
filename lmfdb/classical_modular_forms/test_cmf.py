@@ -556,7 +556,7 @@ class CmfTest(LmfdbTest):
         assert 'Results (displaying all 22 matches)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&rm_discs=5&search_type=List')
-        for elt in [-55,-11,5,-5,-1,-95,19]:
+        for elt in [-55,-11,5,-5,-1,-95,-19]:
             assert ('\Q(\sqrt{%d})' % elt) in page.data
         assert 'Results (displaying all 3 matches)' in page.data
         for d in [3,-5]:
