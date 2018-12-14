@@ -152,6 +152,11 @@ var knowl_id_counter = 0;
  * /w a freshness timeout of about 10 minutes */
 var knowl_cache = {};
 
+//something like this should work:
+//parseInt($('.knowl-output').css('border-left-width')) + parseInt($('.knowl-output').css('margin'));
+var table_border_knowl_width = 20;
+
+
 function knowl_click_handler($el) {
   // the knowl attribute holds the id of the knowl
   var knowl_id = $el.attr("knowl");
@@ -189,6 +194,28 @@ function knowl_click_handler($el) {
       var len = tds.length;
       var cols = 0;
       var max_rowspan = 0;
+
+      // figure out max_width
+      var row_width = tr_tag.width();
+      var sidebar = document.getElementById("sidebar");
+      if ( sidebar == undefined ) {
+        var sibebar_width = 0;
+      } else {
+        var sibebar_width = sidebar.offsetWidth;
+      }
+      var header_width = document.getElementById("header").offsetWidth;
+      var desired_main_width =  header_width - sibebar_width;
+      log("row_width: " + row_width);
+      log("desired_main_width: " + desired_main_width);
+      // no larger than the current row width (for normal tables)
+      // no larger than the desired main width (for extra large tables)
+      // at least 600px (for small tables)
+      // and deduce margins and borders
+      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - 2*table_border_knowl_width - parseInt(td_tag.css('padding-left')) - parseInt(td_tag.css('padding-right'));
+      
+      log("max_width: " + max_width);
+      var style_wrapwidth = "style='max-width: " + max_width+"px; white-space: normal;'";
+
       for (var i = 0; i < len; i++) {
         log(tds[i]);
         cols += $(tds[i]).prop("colSpan");
@@ -201,7 +228,7 @@ function knowl_click_handler($el) {
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();
       tr_tag.after(
-          "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div></td></tr>");
+        "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ style_wrapwidth + ">loading '"+knowl_id+"' …</div></td></tr>");
       // For alternatinvg color tables
       tr_tag.after("<tr class='hidden'></tr>")
     } else {
