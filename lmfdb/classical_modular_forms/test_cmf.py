@@ -39,6 +39,14 @@ class CmfTest(LmfdbTest):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels/").data
         assert 'Labels for classical modular forms' in data
 
+    def test_badp(self):
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
+        assert '343.1.d.a' in data
+        assert '49.4.a.a' in data
+        assert '7.7.d.a' in data
+        assert '−686' in data
+
+
     @unittest2.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
         from sage.all import ZZ, sqrt
