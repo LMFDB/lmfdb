@@ -660,7 +660,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
         query[conrey_field] = {'$contains': int(orbit)}
 
 newform_only_fields = {
-    'dim': 'Dimension',
+    #'dim': 'Dimension',
     'nf_label': 'Coefficient field',
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',
@@ -951,14 +951,6 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-def cm_format(D):
-    if D == 1:
-        return 'Not CM'
-    elif D == 0:
-        return 'Unknown'
-    else:
-        cm_label = "2.0.%s.1"%(-D)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
 
 def projective_image_sort_key(im_type):
     if im_type == 'A4':
@@ -1085,5 +1077,5 @@ class CMF_stats(StatsDisplay):
 
 @cmf.route("/stats")
 def statistics():
-    title = 'Cupsidal Newforms: Statistics'
+    title = 'Cuspidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
