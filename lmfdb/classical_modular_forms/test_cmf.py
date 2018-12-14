@@ -244,6 +244,8 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions')
         for elt in map(str,[0,1,2,5,4,9,6,13,8,17,10]):
             assert elt in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
+        assert 'Error: Table too large: must have at most 10000 entries'
 
 
         #the other dim table
@@ -257,6 +259,7 @@ class CmfTest(LmfdbTest):
             assert elt in page.data
         for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
             assert elt in page.data
+
 
 
 
