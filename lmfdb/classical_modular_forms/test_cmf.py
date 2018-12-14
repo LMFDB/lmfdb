@@ -390,7 +390,7 @@ class CmfTest(LmfdbTest):
         assert '0.406839418685' in page.data
 
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_full_space/20.5/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_full_space/20.5', follow_redirects = True)
         assert r"""["20.5.b.a", "20.5.d.a", "20.5.d.b", "20.5.d.c", "20.5.f.a"]""" in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newspace/244.4.w')
