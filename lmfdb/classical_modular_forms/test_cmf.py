@@ -42,6 +42,8 @@ class CmfTest(LmfdbTest):
         assert "Completeness of classical modular form data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").data
         assert "Reliability of classical modular form data" in data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Source").data
+        assert "Source of classical modular form data" in data
 
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
@@ -227,25 +229,44 @@ class CmfTest(LmfdbTest):
                 assert "Newform 38.9.d.a" in page.data
 
     def test_dim_table(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions", follow_redirects=True)
+        assert 'Dimension Search Results' in page.data
+        assert '1-12' in page.data
+        assert '1-24' in page.data
+        assert '227' in page.data
+
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension Search Results' in page.data
         assert '227' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
         assert '456' in page.data
         assert 'Dimension Search Results' in page.data
+
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=2-&search_type=Dimensions", follow_redirects=True)
         assert '426' in page.data
         assert '128' in page.data
+
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions", follow_redirects=True)
+        assert 'Dimension Search Results' in page.data
         assert '0' in page.data
+
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions", follow_redirects=True)
+        assert 'Dimension Search Results' in page.data
         assert 'n/a' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions')
         for elt in map(str,[0,1,2,5,4,9,6,13,8,17,10]):
             assert elt in page.data
+        assert 'Dimension Search Results' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
         assert 'Error: Table too large: must have at most 10000 entries'
+
+        # wrong search type
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=Dimensions')
+        assert 'Results (displaying all 7 matches)' in page.data
+        assert '\Q(\sqrt{2}, \sqrt{-3})' in page.data
 
 
         #the other dim table
@@ -367,6 +388,8 @@ class CmfTest(LmfdbTest):
         assert "must be an integer, range of integers or comma separated list of integers" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed', follow_redirects=True)
         assert "Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time)." in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=3.14&format=embed', follow_redirects=True)
+        assert "must consist of integers or embedding codes" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=1-20&prec=16&format=embed')
         assert 'must be a positive integer, at most 15 (for higher precision, use the download button)' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=999-1001&m=1-20&prec=6&format=embed')
