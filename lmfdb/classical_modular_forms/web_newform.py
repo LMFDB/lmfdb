@@ -647,7 +647,7 @@ function switch_basis(btype) {
             total += mult
             twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'Y' if b == 1 else 'N'))
         twists.append('</table>')
-        para = '<p>This newform admits %d nontrivial %s.</p>\n' %(total, display_knowl('mf.elliptic.inner_twist', title='inner_twists'))
+        para = '<p>This newform admits %d nontrivial %s.</p>\n' %(total, display_knowl('mf.elliptic.inner_twist', title='inner twists'))
         return para + '\n'.join(twists)
 
     def eigs_as_seqseq_to_qexp(self, prec_max):
