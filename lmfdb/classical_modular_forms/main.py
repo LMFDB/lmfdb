@@ -160,6 +160,10 @@ def set_info_funcs(info):
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
 
+
+favorite_newform_labels = ('1.12.a.a', '8.21.d.b', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
+favorite_space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
+
 @cmf.route("/")
 def index():
     if len(request.args) > 0:
@@ -182,10 +186,8 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    newform_labels = ('1.12.a.a', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
-    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in newform_labels ]
-    space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
-    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in space_labels ]
+    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_newform_labels ]
+    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_space_labels ]
     info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
     info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
     return render_template("cmf_browse.html",
@@ -347,7 +349,8 @@ def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
 def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_label, embedding):
     assert conrey_label > 0
     assert embedding > 0
-    return by_url_newform_label(level, weight, char_orbit_label, hecke_orbit)
+    label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
+    return redirect(url_for_label(label), code=301)
 
 
 
@@ -382,7 +385,8 @@ def jump_box(info):
         newform_parse(info, query)
         jump = db.mf_newforms.lucky(query, 'label')
         if jump is None:
-            errmsg = "There are no newforms specified by the query %s"%(query)
+            errmsg = "There are no newforms specified by the query %s"
+            jump = query
     if errmsg is None:
         try:
             return redirect(url_for_label(jump), 301)
@@ -394,7 +398,7 @@ def jump_box(info):
 class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
-    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminant', 'first few traces']
+    data_format = ['N=level', 'k=weight', 'dim', 'N*k^2', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces']
     columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
 
     def _get_hecke_nf(self, label):
@@ -443,7 +447,7 @@ class CMF_download(Downloader):
         code = ''
         if dim == 1:
             func_body = self.get('qexp_dim1_function_body',{}).get(lang,[])
-            data += ', '.join([an[0] for an in qexp])
+            data += ', '.join([str(an[0]) for an in qexp])
             data += self.start_and_end[lang][1]
             explain += c + ' The q-expansion is given as a list of integers.\n'
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
@@ -496,6 +500,12 @@ class CMF_download(Downloader):
     def download_multiple_traces(self, info):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
+        count = db.mf_newforms.count(query)
+        limit = 1000
+        if count > limit:
+            msg = "We limit downloads of traces to %d forms" % limit
+            flash_error(msg)
+            return redirect(url_for('.index'))
         forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
         codes = [form['hecke_orbit_code'] for form in forms]
         traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
@@ -657,7 +667,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
         query[conrey_field] = {'$contains': int(orbit)}
 
 newform_only_fields = {
-    'dim': 'Dimension',
+    #'dim': 'Dimension',
     'nf_label': 'Coefficient field',
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',
@@ -689,18 +699,18 @@ def common_parse(info, query):
 
 def parse_self_twist(info, query):
     # self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ]
-    translate = {'cm': '1', 'rm': '2', 'cm_and_rm':'3'}
     inp = info.get('has_self_twist')
     if inp:
         if inp in ['no', 'yes']:
             info['is_self_twist'] = inp
             parse_bool(info, query, 'is_self_twist', name='Has self-twist')
         else:
-            try:
-                info['self_twist_type'] = translate[inp]
-                parse_ints(info, query, 'self_twist_type',name='Has self-twist')
-            except KeyError:
-                raise ValueError('%s not in %s' % (inp, translate.keys()))
+            if 'cm' in  inp:
+                info['is_cm'] = 'yes'
+            if 'rm' in inp:
+                info['is_rm'] = 'yes'
+            parse_bool(info, query, 'is_cm',name='Has self-twist')
+            parse_bool(info, query, 'is_rm',name='Has self-twist')
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -948,14 +958,6 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
-def cm_format(D):
-    if D == 1:
-        return 'Not CM'
-    elif D == 0:
-        return 'Unknown'
-    else:
-        cm_label = "2.0.%s.1"%(-D)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
 
 def projective_image_sort_key(im_type):
     if im_type == 'A4':
@@ -1082,5 +1084,5 @@ class CMF_stats(StatsDisplay):
 
 @cmf.route("/stats")
 def statistics():
-    title = 'Cupsidal Newforms: Statistics'
+    title = 'Cuspidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())

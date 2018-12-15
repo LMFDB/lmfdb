@@ -3,7 +3,7 @@
 
 from lmfdb.db_backend import db
 from sage.all import ZZ
-from sage.databases.cremona import cremona_letter_code, class_to_int
+from sage.databases.cremona import cremona_letter_code
 from lmfdb.characters.utils import url_character
 from lmfdb.utils import display_knowl
 from flask import url_for
@@ -109,12 +109,6 @@ def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=Fa
         ans = r"{S}_{{{k}}}{typ}(\Gamma_{t}({N}){char})"
     return ans.format(S=S, k=weight, typ=typ, t=t, N=level, char=char)
 
-def minimal_conrey_in_character_orbit(level, weight, char_orbit):
-    if isinstance(char_orbit, basestring):
-        char_orbit = class_to_int(char_orbit) + 1
-    res = db.mf_newspaces.lucky({'level': level, 'weight': weight, 'char_orbit_index':char_orbit}, projection='char_labels')
-    return None if res is None else res[0]
-
 def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
     Returns the label for the space using the orbit index
@@ -124,8 +118,6 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     N, k, chi = map(int, spacelabel_conrey.split('.'))
     return db.mf_newspaces.lucky({'char_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
-def spacelabel_conrey_exists(spacelabel_conrey):
-    return convert_spacelabel_from_conrey(spacelabel_conrey) is not None
 
 class DimGrid(object):
     def __init__(self, grid=None):

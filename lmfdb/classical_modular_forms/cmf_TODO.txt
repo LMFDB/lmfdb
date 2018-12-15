@@ -1,20 +1,24 @@
 CRITICAL (BUGS):
-* knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
+* knowls: reliability, cande, source in the new paradigm (Drew)
+* if Hecke ring is the maximal order it should say this (it used to but seems to no longer do this)
 
 IMPORTANT:
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
-* Update inner twist display on form pages using the inner_twist column (include what's proved).
-* Increase coverage to at least 90% for classical modular forms (Edgar)
-* Change light gray
+* Make light gray lighter gray (?)
+* Change search on has_inner_twists to use inner_twist_count, add stats, add this to form page and property box (?)
+* Display hecke_ring_generator_nbound on form pages (and in property box?) (?)
+* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (?)
+* Add download link to create forms in magma (JV and Drew)
+* Prove image types for all weight one forms (Drew)
+* Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
 -------------------------- Pull Request Line -------------------------------------------------
+* Lift projective reps for weight one forms to artin reps whereever possible
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
-* data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
-* form pages: weight 1 link to Artin rep (Drew)
 * avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
 
