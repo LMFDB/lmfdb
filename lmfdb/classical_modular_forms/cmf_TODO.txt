@@ -1,0 +1,126 @@
+CRITICAL (BUGS):
+* knowls: reliability, cande, source in the new paradigm (and indicate that CM is rigorous but inner twist is numerical) (Drew)
+
+IMPORTANT:
+* Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
+* Add stats specific to trivial character (David)
+* When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
+* Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
+* Change light gray
+-------------------------- Pull Request Line -------------------------------------------------
+* code snippets for form and space pages (Drew)
+* add ECQD and genus 2 curves to friends (Edgar)
+* Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
+* data: compute exact Hecke eigenvalues in pari, compare with computed in Magma (JC, Drew)
+* form pages: weight 1 link to Artin rep (Drew)
+* avoid access exclusive lock with the alter table when using copy from
+* Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
+
+
+KNOWL FEATURES: (March)
+* Revision history and reversion (all versions stored in kwl_knowls table)
+* Multiple versions for beta and prod (needs a review status column)
+* Status column (smallint): reviewed, beta, deleted
+* Renaming: change the id on every knowl (no history)
+* jsonb row with links to other knowls
+* search with wildcards
+* View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
+* Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
+* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
+* Link back to object from annotations (another field which is a link back to object)
+* Viewable diffs (on the fly)
+* Do we care about porting data from kwl_history table? No.
+* Add column to user table giving power to review knowls
+* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
+* Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
+* Use KNOWL_INC more....
+* Preserve author history
+
+COLLABORATION SUGGESTIONS:
+* Forms that have no zeros except at the cusps
+* Protocol buffers
+
+GOOD:
+* col_type is cached add to FAQ
+* self-twist sometimes wraps
+* move the constant coefficient in q-exp coefficients to the left
+* merge L-function data of G2C, EC, ECNF with CMF using trace_hash
+* Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
+* Update Fricke eigenvalue to sign of the functional equation (after figuring out where this makes sense)
+* knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
+* knowls: make sure top and bottom knowls, explicit formulas are ported over
+* knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+
+FORMATTING:
+* Consider switching level and weight on browse and refine search input boxes
+
+IT WOULD BE NICE IF:
+* it would be nice if, if hecke field is cyclotomic don't use \zeta_3
+* show AL dimensions for old forms as well as new
+* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* LMFDB-wide: equal signs consistent in terms of math-mode or not
+* LMFDB-wide: change sort order in search results
+* knowls: more
+* form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
+* identify (if possible?) a more precise description of the twisting characters
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
+* form pages: download to Sage/Magma/pari (using cutters)
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
+* form pages: provide downloads of q-expansions for Magma/pari
+
+FUTURE WORK:
+* data: compute much more using pari
+* Review editorial review of CMFs to make sure issues have been addressed
+* data: add trace hash for ECNF L-fun
+* data: make friends with base changes of HMFs and BMFs
+* Add more data, in particular for weight 2 and trivial character
+* data: add data for is_twist_minimal
+
+NOT CMF STUFF:
+* reset start with javascript
+* generalize search_types
+* hidden != search clean hidden
+* add utf8 check to pyflakes
+* pick columns and sort order on search results
+* add UIs to pick random objects with contraints
+* bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
+* http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+* fix hmf and bmf l-functions
+* Shrink the sidebar with a button analogous to the properties shrinker
+* Related fields for dirichlet characters that are Kronecker symbols
+
+TO THINK ABOUT:
+* Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
+
+
+LMFDB issues to be addressed:
+- Weight 1 cusp forms #437
+- Data quality for classical modular forms #460
+- Determine planned extent of classical modular forms #873
+- Source and extent of data for classical modular forms #1224
+- Fix errors in classical modular form data and verify its correctness #1248
+
+
+ISSUES already addressed:
+- L-functions for modular forms should be in database #439
+- Make user adjust Fourier coefficient embeddings #653
+- Make pretty coefficients #654
+- Create separate page for each embedding of a newform #659
+- Tests for lcalc files #1257
+- Modular form history #1282 (we decided not to link it)
+- Search by analytic rank #1362
+- Plots of modular forms #1408
+- Random modular form #1434
+- Product L-functions for modular forms #1443
+- Sever error on classical modular form pages #1533
+- Resource intensive L-function zeros pages for classical modular forms #1680
+- Classical modular forms Gamma1(49) weight 3 #1991
+- Add Bober's modular form data #2196
+- no data for level = 100, k 7, chi = 99 #2340
+- Request for documentation on modular form web pages #2630
+
+Some progress on:
+- L-functions and modularity #2032
+- Galois conjugate objects: Hilbert, Bianchi, EC #2262
+- Display the L-function factors #2269
+

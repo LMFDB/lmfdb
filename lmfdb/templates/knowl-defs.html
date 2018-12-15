@@ -1,15 +1,15 @@
-{# 
+{#
    the following KNOWL macro enables to tag certain locations in the
    HTML documents to reference to saved "Knowls". They contain all
-   the information and form the stored knowledge. 
+   the information and form the stored knowledge.
     * the knowl's title ends up in the page
     * the content is either revealed or immediately included, depends on
       what the macro does.
    The macro itself is only there for the presentation of the data via suitable
-   HTML tags and associated javascript code. 
+   HTML tags and associated javascript code.
 
-   Arguments: 
-    * title: to overwrite the knowl's title, usually just leave it 
+   Arguments:
+    * title: to overwrite the knowl's title, usually just leave it
              to its default None.
 #}
 {% macro KNOWL(kid, title=none) -%}
@@ -22,14 +22,14 @@
     <span class="knowl knowl-error">
     '{{kid}}'
     <a href="{{ url_for('knowledge.edit', ID=kid) }}">Create it</a>.
-    </span> 
+    </span>
     {%- else -%}
     <a href="{{ url_for('knowledge.edit', ID=kid) }}"><span class="knowl knowl-error">{{title}}</span></a>
     {%- endif %}
 
   {%- else -%}
     {% if title is none -%}
-      <span class="knowl knowl-error">'{{knowlid}}'</span> 
+      <span class="knowl knowl-error">'{{kid}}'</span>
     {%- else -%}
       {{title|safe}}
     {%- endif %}
@@ -89,9 +89,9 @@
       <div class="knowl knowl-error">
        '{{knowlid}}'
        <a class="knowl-link" href="{{ url_for('knowledge.edit', ID=kid) }}">Create it</a>.
-      </div> 
+      </div>
     {%- else -%}
-      <span class="knowl knowl-error">'{{kid}}'</span> 
+      <span class="knowl knowl-error">'{{kid}}'</span>
     {%- endif %}
 {%- else -%}
   <a class="knowl-link" href='{{ url_for("knowledge.show", ID=kid) }}?{{kwargs|urlencode}}'>

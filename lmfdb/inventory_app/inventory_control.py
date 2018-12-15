@@ -6,8 +6,8 @@ def act(request):
     """Unpack requested action and trigger it
 
     Available actions:
-    mark_gone -- mark any collections that are gone (no longer in live db)
-    clean_gone -- clean up any collections which are marked 'gone'
+    mark_gone -- mark any tables that are gone (no longer in live db)
+    clean_gone -- clean up any tables which are marked 'gone'
 
     clean_scrapes -- Clean up any bad scrapes (i.e old but not complete)
     """
@@ -24,7 +24,7 @@ def act(request):
     elif action == 'mark_gone':
         result = ild.update_gone_list()
     elif action == 'clean_gone':
-        #result = ild.remove_gone_collections()
+        #result = ild.remove_gone_tables()
         result = False
         reply = 'Action TBC'
     elif action == 'clean_scrapes':

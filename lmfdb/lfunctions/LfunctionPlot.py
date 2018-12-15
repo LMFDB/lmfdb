@@ -3,13 +3,21 @@
 import math
 from flask import url_for
 from lmfdb.db_backend import db
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
+from lmfdb.classical_modular_forms.web_newform import WebNewform
+from lmfdb.classical_modular_forms.web_space import WebGamma1Space
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
 from lmfdb.utils import signtocolour
+from sage.databases.cremona import cremona_letter_code
 
+
+def svgBegin():
+    return ("<svg  xmlns='http://www.w3.org/2000/svg'"
+            " xmlns:xlink='http://www.w3.org/1999/xlink'>\n")
+
+def svgEnd():
+    return "</svg>"
 
 ###############################################################################
 # Maass form for GL(n) n>2
@@ -250,8 +258,7 @@ def paintSvgFileAll(glslist):  # list of group and level
     ticlength = 4
     radius = 3
 
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+    ans = svgBegin()
 
     paralist = []
     xMax = 0
@@ -295,7 +302,7 @@ def paintSvgFileAll(glslist):  # list of group and level
             ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
 
-    ans += "</svg>"
+    ans += svgEnd()
     return(ans)
 
 
@@ -309,46 +316,49 @@ def paintSvgFileAll(glslist):  # list of group and level
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
+def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
+    # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
-
-    for i in range(5, xMax + 1, 5):
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='" +
-                             str(height - 2 * ticlength) +
+    xsign = 1 if xMax >= 1 else -1
+    ysign = 1 if yMax >= 1 else -1
+    for i in range(xMin, xMax + 1, xsign * dashedx):
+        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='" +
+                             str(xsign * height - 2 * ticlength) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i) + "</text>\n")
+                             + str(i + xoffset) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * xfactor) +
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor) +
+                             "' y2='" + str(ysign * height) + "' x2='" +
+                             str(i * xsign * xfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
+    for i in range(1, xMax + 1, xsign):
+        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='" +
+                             str(ysign*height - ticlength) + "' x2='" +
+                             str(i * xfactor) + "' y2='" + str(ysign * height) +
                              "' style='stroke:rgb(0,0,0);'/>\n")
 
-    for i in range(5, yMax + 1, 5):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
+
+    # y-axis
+    xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
+    for i in range(1, yMax + 1, ysign*dashedy):
+        xmlText = xmlText + ("<text x='-10' y='" +
+                             str(ysign*height - i * ysign * yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
                              str(i) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" + str(width) +
-                             "' y2='" + str(height - i * yfactor) +
+                             str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width) +
+                             "' y2='" + str(height - i * ysign * yfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+    for i in range(yMin, yMax + 1, ysign*dashedy):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * ysign * yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i * ysign * yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
 
     return(xmlText)
 
@@ -362,44 +372,142 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 ## Returns the header, some information and the url for the svg-file for
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
-def getOneGraphHtmlHolo(Nmin, Nmax, kmin, kmax):
-    graphInfo = getGraphInfoHolo(Nmin, Nmax, kmin, kmax)
-# To  generate the graph:    ans = ("<embed src='" + graphInfo['src'] + "'
-# width='" + str(graphInfo['width']) +
-    image_url = url_for('static', filename='images/browseGraphHolo_22_14_5a.svg')
+def getOneGraphHtmlHolo(condmax):
+    #image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
+    image_url = url_for('static', filename='images/browseGraphHoloNew_201.svg')
     logger.debug(image_url)
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, str(graphInfo['width']), str(graphInfo['height'])) +
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 680) +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
 
 
+# TODO cleanup here
 ## ============================================
 ## Returns the url and width and height of the svg-file for
 ## the L-functions of holomorphic cusp form.
 ## ============================================
-def getGraphInfoHolo(Nmin, Nmax, kmin, kmax):
-    xfactor = 90
-    yfactor = 30
-    x_extraSpace = 50
-    y_extraSpace = 80
-
-    (width, height) = (x_extraSpace + xfactor * (Nmax), y_extraSpace + yfactor * (kmax))
-    url = url_for('.browseGraphHolo', Nmin=str(Nmin), Nmax=str(Nmax),
-                  kmin=str(kmin), kmax=str(kmax))
-
-    ans = {'src': url}
-    ans['width'] = width
-    ans['height'] = height
-
-    return(ans)
+#def getGraphInfoHolo(condmax):
+#    xfactor = 90
+#    yfactor = 30
+#    x_extraSpace = 50
+#    y_extraSpace = 80
+#
+#    (width, height) = (x_extraSpace + xfactor * (Nmax), y_extraSpace + yfactor * (kmax))
+#    url = url_for('.browseGraphHolo', Nmin=str(Nmin), Nmax=str(Nmax),
+#                  kmin=str(kmin), kmax=str(kmax))
+#
+#    ans = {'src': url}
+#    ans['width'] = width
+#    ans['height'] = height
+#
+#    return(ans)
 
 ## ============================================
 ## Returns the contents (as a string) of the svg-file for
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 
+
+def paintSvgHoloNew(condmax):
+
+    def colorsForWeights(num_weights):
+        """
+        Given a total number of weights returns a list of RGB tuples
+        """
+        # do sage -pip install seaborn
+        import seaborn
+        # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
+        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=1.5, light=.75, rot=3.8))
+
+
+    radius = 3.3
+    #top_space = 4*radius
+
+    values = {}
+    max_k = 0 # the largest weight we see
+
+    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','char_labels','dim','char_degree']):
+        level, k, _, hecke_letter = nf['label'].split('.')
+        if int(k) > max_k:
+            max_k = int(k)
+        if nf['analytic_conductor'] not in values:
+            values[nf['analytic_conductor']] = []
+        if nf['dim'] == 1:
+            lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(nf['label'].split('.'))
+            z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
+            if z1 is not None:
+                values[nf['analytic_conductor']].append([nf['label'].split('.'), z1, lfun_url])
+        else:
+            for character in nf['char_labels']:
+                for j in range(nf['dim']/nf['char_degree']):
+                    label = nf['label'].split('.') + [str(character), str(j + 1)]
+                    lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
+                    z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
+                    if z1 is not None:
+                        values[nf['analytic_conductor']].append([label, z1, lfun_url])
+
+
+    points = []
+    y_max = 0.0
+    x_max = 0.0
+    y_scale = 60
+    x_scale = 6
+    x_offset = 40 # the first analytic conductor is 47 or something so this is pleasing
+    for Nk2 in sorted(values.keys()):
+        for label, z1, lfun_url in values[Nk2]:
+            N, k = label[:2]
+            x = x_scale*float(Nk2)
+            y = y_scale*z1
+            if y > y_max:
+                y_max = y
+            if x > x_max:
+                x_max = x
+            points.append((x, y, lfun_url, ".".join(map(str,label)), k))
+
+    # Begin drawing
+
+    ans = svgBegin()
+    ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
+
+    ans += "<g transform='translate(0 40)'>\n" # give ourselves a little space
+    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
+    ans += "</g>\n"
+
+    ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
+    cfw = colorsForWeights(max_k) # pick our colour pallette we need colors for weights 1 (at some point) to max_k inclusive
+
+    for p in points:
+        x = str(p[0])
+        y = str(y_scale*10 - p[1]) # flip the graph + a little space as the largest value is approx 9.2
+        ans += "<a xlink:href='" + "/L/" + p[2] + "/' target='_top'>\n"
+        ans += "<circle cx='" + x
+        ans += "' cy='" + y
+        ans += "' r='" + str(radius)
+        ans += "' fill='rgb" + cfw[int(p[4]) - 1] + "'>"
+        ans += "<title>" + p[3] + "</title>"
+        ans += "</circle></a>\n"
+
+    # Draw axes
+
+    #ans += ("<line x1='" + str(40*x_scale) + "' y1='0' x2='" + str(x_max + radius) +
+    #        "' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    #ans += ("<line x1='" + str(40*x_scale) + "' y1='0' x2='" + str(40*x_scale) + "' y2='" + str(y_max) + "' style='stroke:rgb(0,0,0);'/>\n")
+
+    # Increments for axes
+    #for i in range(40, -1):
+    #    ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
+    #            str(height - float(ybase) * yfactor)[0:7] +
+    #            "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
+    #            + str(numberwithlabel) + "</text>\n")
+
+    ans += "</g>\n"
+    ans += "</g>"
+
+    ans += svgEnd()
+
+    return ans
 
 def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     xfactor = 90
@@ -413,8 +521,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     colourminus = signtocolour(-1)
     maxdots = 5  # max number of dots to display
 
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+    ans = svgBegin()
 
     xMax = int(Nmax)
     yMax = int(kmax)
@@ -423,87 +530,89 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
     ans += paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength)
 
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+    #alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 # loop over levels and weights
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
-        for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
+        for y in range(int(kmin), int(kmax) + 1):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
-            WS = WebModFormSpace(level = x, weight = y)
-            numlabels = len(WS.hecke_orbits)  # one label per Galois orbit
-            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+            try:
+                WS = WebGamma1Space(level = x, weight = y)
+            except ValueError:
+                continue
+            newspaces = WS.decomp
+            #numlabels = len(WS.decomp)  # one label per Galois orbit
+            #thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
             # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
             ybaseplus = y  # baseline y-coord for plus cases
             ybaseminus = y  # baseline y-coord for minus cases
             numpluslabels = 0
             numminuslabels = 0
-            for label in thelabels:  # looping over Galois orbit
-                linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/" + label
-                MF = WebNewForm(level = x, weight = y, label = label)   # one of the Galois orbits for weight y, level x
-                numberwithlabel = MF.dimension  # number of forms in the Galois orbit
-                if x == 1:  # For level 1, the sign is always plus
-                    signfe = 1
-                else:
-                    frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
-                    signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
-                xbase = x - signfe * (xdotspacing / 2.0)
+            for newsp in newspaces:  # looping over Galois orbit
+                for MF in newsp[1]:
+                    print MF
+                    linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
+                    numberwithlabel = MF['dim'] # number of forms in the Galois orbit
+                    # frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
+                    self_dual = MF['char_is_real'] * (-1) ** float(y / 2)  # sign of functional equation
+                    xbase = x - self_dual * (xdotspacing / 2.0)
 
-                if signfe > 0:  # go to right in BLUE if plus
-                    ybase = ybaseplus
-                    ybaseplus += ydotspacing
-                    thiscolour = colourplus
-                    numpluslabels += 1
-                else:  # go to the left in RED of minus
-                    ybase = ybaseminus
-                    ybaseminus += ydotspacing
-                    thiscolour = colourminus
-                    numminuslabels += 1
+                    if self_dual > 0:  # go to right in BLUE if plus
+                        ybase = ybaseplus
+                        ybaseplus += ydotspacing
+                        thiscolour = colourplus
+                        numpluslabels += 1
+                    else:  # go to the left in RED of minus
+                        ybase = ybaseminus
+                        ybaseminus += ydotspacing
+                        thiscolour = colourminus
+                        numminuslabels += 1
 
-                if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
-                    xbase += 1.5 * signfe * xdotspacing
-                    if signfe < 0:   # move over more to position numbers on minus side.
-                        xbase += signfe * xdotspacing
-                    ybase += -0.5 * ydotspacing
-                    if (signfe > 0 and numpluslabels > 1) or (signfe < 0 and numminuslabels > 1):
-                        ybase += ydotspacing
-                    ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
+                    if numberwithlabel > maxdots:  # if more than maxdots in orbit, use number as symbol
+                        xbase += 1.5 * self_dual * xdotspacing
+                        if self_dual < 0:   # move over more to position numbers on minus side.
+                            xbase += self_dual * xdotspacing
+                        ybase += -0.5 * ydotspacing
+                        if (self_dual > 0 and numpluslabels > 1) or (self_dual < 0 and numminuslabels > 1):
+                            ybase += ydotspacing
+                        ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
 
-#  TODO: Implement when there is more than maxdots forms
+    #  TODO: Implement when there is more than maxdots forms
 
-                    ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
-                            str(height - float(ybase) * yfactor)[0:7] +
-                            "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
-                            + str(numberwithlabel) + "</text>\n")
-                    ans += "</a>\n"
-                    if signfe < 0:
-                        ybaseminus += 1.5 * ydotspacing
-                    else:
-                        ybaseplus += 1.5 * ydotspacing
-                else:  # otherwise, use one dot per form in orbit, connected with a line
-                    if numberwithlabel > 1:  # join dots if there are at least two
-# add lines first and then dots to prevent line from hiding link
-                        firstcenterx = xbase + signfe * xdotspacing
-                        firstcentery = ybase
-                        lastcenterx = xbase + (numberwithlabel * signfe * xdotspacing)
-                        lastcentery = ybase
-                        ans += "<line x1='%s' " % str(float(firstcenterx) * xfactor)[0:7]
-                        ans += "y1='%s' " % str(float(height - firstcentery * yfactor))[0:7]
-                        ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
-                        ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
-                        ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
-                    for number in range(0, numberwithlabel):
-                        xbase += signfe * xdotspacing
-                        ans += "<a xlink:href='" + linkurl + "/" + str(number) + "' target='_top'>\n"
-                        ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
-                        ans += "' cy='" + str(height - float(ybase) * yfactor)[0:7]
-                        ans += "' r='" + str(radius)
-                        ans += "' style='fill:" + thiscolour + "'>"
-                        ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
-                        ans += "</circle></a>\n"
+                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
+                                str(height - float(ybase) * yfactor)[0:7] +
+                                "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
+                                + str(numberwithlabel) + "</text>\n")
+                        ans += "</a>\n"
+                        if self_dual < 0:
+                            ybaseminus += 1.5 * ydotspacing
+                        else:
+                            ybaseplus += 1.5 * ydotspacing
+                    else:  # otherwise, use one dot per form in orbit, connected with a line
+                        if numberwithlabel > 1:  # join dots if there are at least two
+    # add lines first and then dots to prevent line from hiding link
+                            firstcenterx = xbase + self_dual * xdotspacing
+                            firstcentery = ybase
+                            lastcenterx = xbase + (numberwithlabel * self_dual * xdotspacing)
+                            lastcentery = ybase
+                            ans += "<line x1='%s' " % str(float(firstcenterx) * xfactor)[0:7]
+                            ans += "y1='%s' " % str(float(height - firstcentery * yfactor))[0:7]
+                            ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
+                            ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
+                            ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
+                        for number in range(0, numberwithlabel):
+                            xbase += self_dual * xdotspacing
+                            ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
+                            ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
+                            ans += "' cy='" + str(height - float(ybase) * yfactor)[0:7]
+                            ans += "' r='" + str(radius)
+                            ans += "' style='fill:" + thiscolour + "'>"
+                            ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
+                            ans += "</circle></a>\n"
 
-    ans += "</svg>"
+    ans += svgEnd()
     return ans
 
 
@@ -625,8 +734,7 @@ def paintSvgChar(min_cond, max_cond, min_order, max_order):
     colourminus = signtocolour(-1)
     # maxdots = 1  # max number of dots to display (not used)
 
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+    ans = svgBegin()
 
     xMax = int(max_order)
     yMax = int(max_cond)
@@ -712,7 +820,7 @@ def paintSvgChar(min_cond, max_cond, min_order, max_order):
                     ans += "<title>" + '(' + str(y) + ',' + str(current[1]) + ')' + "</title>"
                     ans += "</circle></a>\n"
 
-    ans += "</svg>"
+    ans += svgEnd()
 
     return ans
 
@@ -850,8 +958,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     # colourminus = signtocolour(-1) # not used
     maxdots = 5  # max number of dots to display
 
-    ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
-    ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
+    ans = svgBegin()
 
     xMax = int(Nmax)
     yMax = int(kmax)
@@ -870,8 +977,8 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebModFormSpace(level = x, weight = y)  # space of modular forms of weight y, level x
-            galois_orbits = WS.hecke_orbits   # make a list of Galois orbits
+            WS = WebGamma1Space(level = x, weight = y)  # space of modular forms of weight y, level x
+            galois_orbits = WS.decomp # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
@@ -917,7 +1024,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewForm(N = x, k = y, chi = 0, label = label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewform.by_label(label = label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1
@@ -946,7 +1053,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
-    ans += "</svg>"
+    ans += svgEnd()
     return(ans)
 
 #=====================

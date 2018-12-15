@@ -1,0 +1,92 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Defining parameters </h2>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>=</td>
+    <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> \( k \) </td>
+    <td>=</td>
+    <td>\( {{ space.weight }} \)</td>
+  </tr>
+</table>
+
+<h2> Dimensions </h2>
+
+<p>The following table gives the dimensions of various subspaces of \({{space.mf_latex()}}\).</p>
+
+<table class="dimgrid">
+  <thead>
+    <tr>
+      <th class="blank"></th>
+      <th> Total </th>
+      <th> New </th>
+      <th> Old </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for X in ['M', 'S', 'E'] %}
+    <tr>
+      <th class="left"> {{info.space_type[X]}} </td>
+      {% for typ in ['all','new','old'] %}
+      <td> {{ space.dim_grid[X][typ] }} </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if space.new_dim > 0 %}
+<h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
+
+<p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( {{space.summand_latex() }} \) we list the newforms together with their dimension.</p>
+
+<table class="mfdata">
+  <thead>
+    <tr class="oddrow">
+      <th>{{ KNOWL('mf.elliptic.label',title='Label') }}</th>
+      <th> {{ KNOWL('mf.elliptic.character', title='\(\chi\)') }}</th>
+      <th>{{ KNOWL('mf.elliptic.newform',title='Newforms') }}</th>
+      <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
+      <th>{{ KNOWL('character.dirichlet.degree',title='\(\chi\) degree') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for rowtype, chi_rep, num_chi, space, firstform, firstdim, others in space.decomposition() %}
+    <tr class="{{rowtype}}">
+      <td rowspan="{{others|length + 1}}"> {{ space | safe }} </td>
+      <td rowspan="{{others|length + 1}}"> {{ chi_rep | safe }} </td>
+      <td> {{ firstform | safe }} </td>
+      <td> {{ firstdim }} </td>
+      <td rowspan="{{others|length + 1}}"> {{ num_chi }} </td>
+    </tr>
+    {% for newform, dim in others %}
+    <tr class="{{rowtype}}">
+      <td> {{ newform | safe }} </td>
+      <td> {{ dim }} </td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<!-- Definitions for coefficient fields -->
+
+{% if space.old_dim > 0 %}
+<h2> {{ KNOWL('mf.elliptic.decomposition.old.gamma1', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+
+<div class="center">
+  \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}
+</div>
+{% endif %}
+
+{% endblock %}

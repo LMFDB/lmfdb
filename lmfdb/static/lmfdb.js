@@ -113,6 +113,36 @@ $(function() {
  $('textarea[example]').each(function(a,b) { $(b).watermark($(b).attr('example')+'   ', {useNative:false}  ) } )
 });
 
+
+/* javascript code to generate the properties box */
+function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
+  //body reference
+  var body = document.getElementById("properties_script").parentElement
+  var ul = document.createElement('ul');
+  function add_friend(ulelement, text, href) {
+    var friend = document.createElement('li');
+    var url = document.createElement('a');
+    url.appendChild(document.createTextNode(text));
+    url.href = href;
+    friend.appendChild(url);
+    ulelement.appendChild(friend);
+  }
+  // initialFriends
+  for (var k = 0; k < initialFriends.length; k++) {
+    add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
+  }
+
+  for (var i = 0; i < char_labels.length; i++) {
+    for (var j = 1; j <= rel_dim; j++) {
+      var lfun_text = 'L-function ' + label + '.' + char_labels[i].toString() + '.' + j.toString();
+      var lfun_url = '/L'+nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
+      add_friend(ul, lfun_text, lfun_url);
+    }
+  }
+  body.appendChild(ul);
+}
+
+
 /* javascript code for the knowledge db features */
 /* global counter, used to uniquely identify each knowl-output element
  * that's necessary because the same knowl could be referenced several times
@@ -121,6 +151,11 @@ var knowl_id_counter = 0;
 /* site wide cache, TODO html5 local storage to cover whole domain
  * /w a freshness timeout of about 10 minutes */
 var knowl_cache = {};
+
+//something like this should work:
+//parseInt($('.knowl-output').css('border-left-width')) + parseInt($('.knowl-output').css('margin'));
+var table_border_knowl_width = 20;
+
 
 function knowl_click_handler($el) {
   // the knowl attribute holds the id of the knowl
@@ -132,7 +167,7 @@ function knowl_click_handler($el) {
 
   // slightly different behaviour if we are inside a table, but
   // not in a knowl inside a table.
-  var table_mode = $el.parents().is("table") && !$el.parents().hasClass("knowl-content");
+  var table_mode = $el.parent().is("td") || $el.parent().is("th");
 
   // if we already have the content, toggle visibility
   if ($output_id.length > 0) {
@@ -153,9 +188,43 @@ function knowl_click_handler($el) {
     // otherwise assume its sitting inside a <div> or <p>
     if(table_mode) {
       // assume we are in a td or th tag, go 2 levels up
-      var cols = $el.parent().parent().children().length;
-      $el.parent().parent().after(
-          "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div></td></tr>");
+      var td_tag = $el.parent();
+      var tr_tag = td_tag.parent();
+
+      // figure out max_width
+      var row_width = tr_tag.width();
+      var sidebar = document.getElementById("sidebar");
+      if ( sidebar == undefined ) {
+        var sibebar_width = 0;
+      } else {
+        var sibebar_width = sidebar.offsetWidth;
+      }
+      var header_width = document.getElementById("header").offsetWidth;
+      var desired_main_width =  header_width - sibebar_width;
+      log("row_width: " + row_width);
+      log("desired_main_width: " + desired_main_width);
+      // no larger than the current row width (for normal tables)
+      // no larger than the desired main width (for extra large tables)
+      // at least 600px (for small tables)
+      // and deduce margins and borders
+      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - 2*table_border_knowl_width - parseInt(td_tag.css('padding-left')) - parseInt(td_tag.css('padding-right'));
+      
+      log("max_width: " + max_width);
+      var style_wrapwidth = "style='max-width: " + max_width+"px; white-space: normal;'";
+
+      //max rowspan of this row
+      var max_rowspan = Array.from(td_tag.siblings()).reduce((acc, td) => Math.max(acc, td.rowSpan), 0)
+      log("max_rowspan: " + max_rowspan);
+  
+      //compute max number of columns in the table
+      var cols = Array.from(tr_tag.siblings()).reduce((acc, tr) => Math.max(acc, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)),0)
+      log("cols: " + cols);
+      for (var i = 0; i < max_rowspan-1; i++)
+        tr_tag = tr_tag.next();
+      tr_tag.after(
+        "<tr><td colspan='"+cols+"'><div class='knowl-output'" +idtag+ style_wrapwidth + ">loading '"+knowl_id+"' …</div></td></tr>");
+      // For alternatinvg color tables
+      tr_tag.after("<tr class='hidden'></tr>")
     } else {
       $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
     }
@@ -164,8 +233,13 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    // cached? (no kwargs or empty string AND kid in cache)
-    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+    if(knowl_id == "dynamic_show") {
+      log("dynamic_show: " + kwargs);
+      $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+      MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
+      MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
+    } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+      // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
@@ -296,3 +370,50 @@ function get_count_callback(res) {
         $("#download-form").show();
     }
 };
+
+function simult_change(event) {
+    // simultaneously change all selects to the same value
+    $(".simult_select").each(function (i) { this.selectedIndex = event.target.selectedIndex;});
+};
+
+
+
+function resetStart()
+{
+  // resets start if not changing search_type
+  $('input[name=start]').val('')
+  // this will be cleaned by the cleanSubmit
+}
+
+function cleanSubmit(id)
+{
+  var myForm = document.getElementById(id);
+  var allInputs = myForm.getElementsByTagName('input');
+  var allSelects = myForm.getElementsByTagName('select');
+  var item, i, n = 0;
+  for(i = 0; item = allInputs[i]; i++) {
+    if (item.getAttribute('name') ) {
+      if (!item.value) {
+        item.setAttribute('name', '');
+      } else {
+        n++
+      };
+    }
+  }
+  for(i = 0; item = allSelects[i]; i++) {
+    if (item.getAttribute('name') ) {
+      if (!item.value) {
+        item.setAttribute('name', '');
+      } else {
+        n++
+      };
+    }
+  }
+  if (!n) {
+    var all = document.createElement('input');
+    all.type='hidden';
+    all.name='all';
+    all.value='1';
+    myForm.appendChild(all);
+  }
+}

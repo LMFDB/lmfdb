@@ -17,6 +17,8 @@ from sage.all import ZZ
 
 import re, random
 
+LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
+
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
     for b in breads:
@@ -31,7 +33,7 @@ def make_cond_key(D):
 
 def parse_artin_label(label):
     label = clean_input(label)
-    if re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$').match(label):
+    if LABEL_RE.match(label):
         return label
     else:
         raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
@@ -88,7 +90,7 @@ def search_input_error(info, bread):
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
-    return artin_representation_search(**{'dimension': dim, 'conductor': conductor})
+    return artin_representation_search({'dimension': dim, 'conductor': conductor})
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late.

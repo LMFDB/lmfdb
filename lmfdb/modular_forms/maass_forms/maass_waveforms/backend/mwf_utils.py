@@ -231,7 +231,6 @@ def MakeTitle(level, weight, character):
             ret += ",\(\chi_" + character + "\) (according to SAGE)"
     return ret
 
-# this is identical to ajax_once in lmfdb/modular_forms/elliptic_modular_forms/backend/emf_utils.py
 def ajax_once(callback, *arglist, **kwds):
     r"""
     """

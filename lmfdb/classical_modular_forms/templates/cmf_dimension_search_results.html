@@ -1,0 +1,79 @@
+{% extends 'cmf_refine_search.html' %}
+
+{% block show_results %}
+
+{% if info.one_type %}
+<p>The dimensions shown below are for the space of cuspidal newforms in each weight and level satisfying the specified conditions.</p>
+{% else %}
+<script>
+  function switch_space(newspace, title) {
+  $('.table_hidable').hide();
+  $('.table_' + newspace).show();
+  $('.a_switcher').removeClass('inactive');
+  $('.a_' + newspace).addClass('inactive');
+  $('.span_switcher').removeClass('disable-links');
+  $('.span_' + newspace).addClass('disable-links');
+  }
+</script>
+{% if not info.err %}
+<p> Use these links to change the kind of {{ KNOWL('mf.elliptic.space',title='modular form space') }} whose dimension is displayed in the table. </p>
+{% endif %}
+<table>
+  {% for X in info.cusp_types %}
+  <tr>
+    {% for typ in info.newness_types %}
+    <td><span class="span_switcher span_{{X}}{{typ}}{% if X=='S' and typ=='new' %} disable-links{% endif %}"><a class="a_switcher a_{{X}}{{typ}}{% if X=='S' and typ=='new' %} inactive{% endif %}" onclick="switch_space('{{X}}{{typ}}'); return false" href="#">{{ info.switch_text(X, typ) }}</a></span></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% set has_na = [] %}
+{% for X in info.cusp_types %}
+{% for typ in info.newness_types %}
+<table class="ntdata table_hidable table_{{X}}{{typ}}{% if X!='S' or typ!='new' %} nodisplay{% endif %}">
+  <thead>
+    <tr class="space">
+      <th class="spaceleft">Weight</th>
+      <th class="level" colspan="{{info.level_list|length}}">
+        <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
+      </th>
+    </tr>
+    <tr class="space">
+      <th class="spaceleft"></th>
+      {% for N in info.level_list %}
+      <th class="center" text-align="center">{{N}}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for k in info.weight_list %}
+    <tr>
+      <th class="left">{{k}}</th>
+      {% for N in info.level_list %}
+      <td>
+        {% if info.has_data(N, k) %}
+        <a href="{{ info.url_generator(N, k) }}">{{ info.pick_table(info.results[N,k],X,typ) }}</a>
+        {% else %}
+        {% if not has_na %}
+        {% do has_na.append(1) %}
+        {% endif %}
+        <small style="color:gray">n/a</small>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endfor %}
+{% endfor %}
+{% if has_na %}
+<p>
+<small>
+  "n/a" means that modular forms of that weight and level have not been added to the database yet.
+</small>
+</p>
+{% endif %}
+
+{% endblock %}

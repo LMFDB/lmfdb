@@ -3,15 +3,14 @@
 
 <div>
 <h3>
-Browse L-functions associated to {{
-KNOWL("mf.elliptic.newform",title="newforms")}} \(f\) on Hecke
-congruence groups $\Gamma_0(N)$ with trivial character:
+Browse \(L\)-functions associated to {{
+KNOWL("mf.elliptic.newform",title="newforms")}} \(f\)
 </h3>
 </p>
-These L-functions \(L(s,f) = \sum a_n n^{-s} \) have an {{
+These \(L\)-functions \(L(s,f) = \sum a_n n^{-s} \) have an {{
 KNOWL('lfunction.euler_product', title='Euler product')}} of the form
 \[ L(s,f)= \prod_{p\mid N} \left(1 - a_p p^{-s}
-\right)^{-1}\prod_{p\nmid N} \left(1 - a_p p^{-s} + p^{-2s}
+\right)^{-1}\prod_{p\nmid N} \left(1 - a_p p^{-s} + \chi(p) \cdot p\cdot p^{-2s}
 \right)^{-1} \] and satisfy the {{
 KNOWL("lfunction.functional_equation",title="functional equation")}}
 of the form \begin{equation} \Lambda(s,f) = N^{s/2} \Gamma_{\mathbb{C}
@@ -30,18 +29,24 @@ L-function.
 </div>
 <br>
 <div>
-In the plot below, the L-functions are organized by the ordered pair \((N,k)\).
-For a given \((N,k)\), the color indicates the {{ KNOWL('lfunction.sign', title='sign')}}
-of the functional equation, and the horizontal
-grouping indicates the {{ KNOWL('nf.degree', title='degree')}} of the field containing the arithmetically normalized coefficients.
-
-See the {{ KNOWL('lfunction.degree2holo.key', title='legend') }} for more details.
+In the plot below, each dot corresponds to a primitive \(L\)-functions of cups form.
+These are organized:
+<ul>
+  <li>
+ {{ KNOWL('mf.elliptic.analytic_conductor', title='analytic conductor')}}, in the $x$-axis;
+  </li>
+  <li>
+  imaginary part of the first postive nontrivial zero on the critical line, in the $y$-axis;
+  <li>
+{{ KNOWL('mf.elliptic.weight', title='weight')}}, the color of each dot.
+  </li>
+</ul>
 </div>
 
 
-
+<p>
 {{contents[0]|safe}}
-
+</p>
 
 
 {% endblock %}

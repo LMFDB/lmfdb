@@ -7,30 +7,30 @@ import re
 #############################################################################
 
 def evalpolelt(label,gen,genlabel='a'):
-    """ label is a compact polynomial expression in genlabel                    
-        ( '*' and '**' are removed )                                            
-    """                                                                         
-    res = 0                                                                     
-    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel                         
-    for m in re.finditer(regexp,label):                                         
-        s,c,e = m.groups()                                                      
-        if c == '' and e == None: break    
-        if c == '':          
-            c = 1                            
-        else:                                
+    """ label is a compact polynomial expression in genlabel
+        ( '*' and '**' are removed )
+    """
+    res = 0
+    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel
+    for m in re.finditer(regexp,label):
+        s,c,e = m.groups()
+        if c == '' and e == None: break
+        if c == '':
+            c = 1
+        else:
             """ c may be an int or a rational a/b """
             from sage.rings.rational import Rational
             c = str(c).replace('o','/')
-            c = Rational(c)                                                      
-        if s == '-': c = -c                                                     
-        if e == None:                                                           
-            e = 0                                                               
-        elif e == genlabel:                                                     
-            e = 1                                                               
+            c = Rational(c)
+        if s == '-': c = -c
+        if e == None:
+            e = 0
+        elif e == genlabel:
+            e = 1
         else:
-            e = int(e[1:])                                                                   
-        res += c*gen**e           
-    return res              
+            e = int(e[1:])
+        res += c*gen**e
+    return res
 
 def complex2str(g, digits=10):
     real = round(g.real(), digits)

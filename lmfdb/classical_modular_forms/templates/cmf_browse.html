@@ -1,0 +1,223 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<!-- Debugging! -->
+{% if false %}
+<hr>
+<div>
+Info was: {{info}}
+</div>
+{% endif %}
+
+<div>
+{{ KNOWL_INC('dq.mf.elliptic.extent') }}
+</div>
+
+<div>
+{{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse <a href="./stats">statistics</a> </h2>
+<h2> Browse {{ KNOWL('mf.elliptic',title='classical modular forms')}}</h2>
+
+<p>
+  By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?weight={{weight}}">{{weight}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{ KNOWL('mf.elliptic.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?level={{level}}">{{level}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  Using a <a href="?search_type=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
+</p>
+<p>
+  As a <a href="?search_type=Spaces&dim=1-">list</a> of {{ KNOWL('mf.elliptic.newspaces', title='spaces of newforms') }}</a>
+</p>
+
+<p>
+  Some interesting newforms:
+  {% for newform in info.newform_list %}
+  <a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  Some interesting spaces:
+  {% for space in info.space_list %}
+  <a href = "{{ space.url }}"> {{ space.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
+</p>
+
+<p>
+  A <a href={{url_for('.random_form')}}>random newform</a> from the database
+</p>
+
+<h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
+
+<form>
+<input type='text' name='jump' placeholder='3.6.1.a'>
+<button type='submit'>Search by label</button>
+<br><span class="formexample">e.g. 3.6.1.a, 55.3.d or 20.5 </span>
+</form>
+
+{# SEARCHING #}
+
+<h2> Search </h2>
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  <table>
+    <tr>
+
+      <td colspan=2>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td><input type='text' style="width: 130px;" name='level' placeholder='4'></td>
+      <td><span class="formexample"> e.g. 4, 1-20</td>
+      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
+
+      <td>
+        <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
+          <option></option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 130px;" name='weight' placeholder='2'></td>
+      <td><span class="formexample"> e.g. 2, 4-8 </span></td>
+    </tr>
+
+    <tr>
+      <td>
+        {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
+      </td>
+      <td>
+        <select name='prime_quantifier'>
+          <option value='subsets'>subset of</option>
+          <option value='' selected='yes'>equal to</option>
+          <option value='append'>superset of</option>
+        </select>
+      </td>
+      <td><input type='text' name='level_primes' example='2,3' style="width: 130px"></td>
+      <td><span class="formexample"> e.g. 2,3</span></td>
+
+
+      <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
+      <td>
+        <select class="simult_select" name="char_parity" onchange="simult_change(event);">
+          <option></option>
+          <option value="even">even only</option>
+          <option value="odd">odd only</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 130px;" name='char_label' placeholder='20.d'></td>
+      <td><span class="formexample"> e.g. 20.d </td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
+      <td><input type='text' style="width: 130px;" name='char_order' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</td>
+
+      <td colspan=2>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
+      <td><input type='text' style="width: 130px;" name='prim_label' placeholder='1.a'></td>
+      <td><span class="formexample"> e.g. 1.a </td>
+
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
+      <td><input type='text' style="width: 130px;" name='dim' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 2, 1-6 </span></td>
+
+      <td colspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+      <td><input type='text' style="width: 130px;" name='nf_label' placeholder='1.1.1.1'></td>
+      <td><span class="formexample"> e.g. 4.0.144.1, Qsqrt5 </span></td>
+    </tr>
+
+    <tr>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
+      <td><input type='text' style="width: 130px;" name='analytic_conductor' placeholder='47'></td>
+      <td><span class="formexample"> e.g. 47, 500-1000</span></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
+      <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+    </tr>
+
+    <tr>
+      <td colspan=2 rowspan=2 >{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
+      <td rowspan=2 >
+        <select name='has_self_twist' style="width: 140px;">
+          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
+          {% for val, text in self_twist_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td rowspan=2>
+      </td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='cm_discs' placeholder='-3'></td>
+      <td><span class="formexample"> e.g. -3 </span></td>
+    </tr>
+    <tr>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='RM discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='rm_discs' placeholder='5'></td>
+      <td><span class="formexample"> e.g. 5 </span></td>
+    </tr>
+
+    <tr>
+      {#
+      <td colspan=2>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
+      <td><select name='is_twist_minimal' style="width: 140px;">
+          <option ></option>
+          <option value='True'>Yes</option>
+          <option value='False'>No</option>
+        </select>
+      </td>
+      <td></td>
+      #}
+      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+      <td>
+        <select name='has_inner_twist' style="width: 140px">
+          <option value="" selected>unrestricted</option>
+          <option value="yes">yes</option>
+          <option value="not_no">yes or unknown</option>
+          <option value="unknown">unknown</option>
+          <option value="not_yes">no or unknown</option>
+          <option value="no">no</option>
+        </select>
+      </td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('lfunction.self-dual', title='Is self dual') }}</td>
+      <td>
+        <select name='is_self_dual' style="width: 140px;">
+          {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
+          {% for val, text in is_self_dual_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+
+    <tr>
+      <td align=left colspan=2>Newforms to display</td>
+      <td><input type='text' style="width: 130px;" name='count' value=50></td>
+    </tr>
+  </table>
+  <p>
+    <button type='submit' name='search_type' value='List'>List forms</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Spaces'>List spaces</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Dimensions'>Dimension Table</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Traces'>Traces Table</button> &nbsp; &nbsp;
+    <button type='submit' name='search_type' value='Random'>Random</button>
+  </p>
+</form>
+
+
+{% endblock %}

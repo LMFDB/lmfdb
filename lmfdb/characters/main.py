@@ -7,10 +7,19 @@ from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.characters.utils import url_character
-from lmfdb.WebCharacter import WebDirichletGroup, WebSmallDirichletGroup, WebDirichletCharacter, WebSmallDirichletCharacter
+from lmfdb.WebCharacter import (
+        WebDirichletGroup,
+        WebSmallDirichletGroup,
+        WebDirichletCharacter,
+        WebSmallDirichletCharacter,
+        WebDBDirichletCharacter,
+        WebDBDirichletGroup
+)
 from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.characters import characters_page
+from sage.databases.cremona import class_to_int
+from lmfdb.db_backend import db
 import ListCharacters
 
 #### make url_character available from templates
@@ -159,10 +168,10 @@ def extent_page():
 @characters_page.route("/Dirichlet/<modulus>/<number>")
 def render_Dirichletwebpage(modulus=None, number=None):
 
-    if modulus == None:
+    if modulus is None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-    if number == None and re.match('^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
+    if number is None and re.match('^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
         return redirect(url_for(".render_Dirichletwebpage", label=modulus), 301)
 
     args={}
@@ -182,8 +191,11 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
 
 
-    if number == None:
-        if modulus < 100000:
+    if number is None:
+        if modulus < 10000:
+            info = WebDBDirichletGroup(**args).to_dict()
+            info['show_orbit_label'] = True
+        elif modulus < 100000:
             info = WebDirichletGroup(**args).to_dict()
         else:
             info = WebSmallDirichletGroup(**args).to_dict()
@@ -201,11 +213,24 @@ def render_Dirichletwebpage(modulus=None, number=None):
     try:
         number = int(number)
     except ValueError:
-        number = 0;
+        # encoding Galois orbit
+        if modulus < 10000:
+            try:
+                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
+            except ValueError:
+                number = 0
+            else:
+                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')[0]
+        else:
+            number = 0
     if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
         flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
-    if modulus < 100000:
+    args['number'] = number
+    if modulus < 10000:
+        webchar = WebDBDirichletCharacter(**args)
+        info = webchar.to_dict()
+    elif modulus < 100000:
         webchar = WebDirichletCharacter(**args)
         info = webchar.to_dict()
     else:

@@ -114,7 +114,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 {% if motivic_weight %}
         <tr>
-        <td> {{ KNOWL('lfunction.motivic_weight', title="weight") }} </td>
+        <td> {{ KNOWL('lfunction.motivic_weight', title="motivic weight") }} </td>
         <td>&nbsp;=&nbsp;</td>
         <td> {{ motivic_weight }}
         </td>
@@ -207,7 +207,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
         <td> not available </td>
         {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_arithmetic[1] }}$ </td>
+        <td> {{ sv_edge_arithmetic[1] }}</td>
         {% endif %}
         </tr>
         <tr class="analytic nodisplay">
@@ -217,7 +217,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
         <td> not available </td>
         {% else %}
         <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_analytic[1] }}$ </td>
+        <td> {{ sv_edge_analytic[1] }} </td>
         {% endif %}
         </tr>
   {% endif %}
@@ -276,7 +276,7 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
     <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 
- {% if plotlink %}
+ {% if plotlink and degree <= 10  %}
     <img src="{{ plotlink|safe }}" >
  {% else %}
     <div>Plot not available.</div>
@@ -317,7 +317,6 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 {# This block is rendered in the properties box #}
 {% block more_props %}
-
-{{ rightnavig("Factors", factors) }}
-
+{{ rightnavig("Origins of factors", factors_origins) }}
 {% endblock %}
+

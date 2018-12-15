@@ -6,11 +6,10 @@ import re
 
 from lmfdb.db_backend import db
 from flask import render_template, request, url_for, redirect, abort
-from lmfdb.utils import image_callback, flash_error
+from lmfdb.utils import image_callback, flash_error, list_to_factored_poly_otherorder
 from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.transitive_group import small_group_display_knowl
-from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
 from lmfdb.hypergm import hypergm_page
 
