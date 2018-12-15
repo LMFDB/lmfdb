@@ -425,7 +425,7 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 {% if newform.inner_twist_count > 0 %}
 {{ newform.display_inner_twists() | safe }}
 {% else %}
-<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
+<p>This newform does not admit any (nontrivial) {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
