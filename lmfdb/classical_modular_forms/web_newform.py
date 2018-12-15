@@ -94,11 +94,6 @@ class WebNewform(object):
         self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
 
         self._inner_twist = data.get('inner_twist',[])
-        if self.has_inner_twist != 0:
-            if len(self._inner_twist) == 1:
-                self.star_twist = 'inner twist'
-            else:
-                self.star_twist = 'inner twists'
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
         eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
@@ -131,8 +126,6 @@ class WebNewform(object):
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
-
-        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
