@@ -404,6 +404,7 @@ function get_all_embeddings(num_embeddings) {
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
+{% if newform.has_further_properties %}
 <h2>Further properties</h2>
 
 {% if newform.is_cm != 0 %}
@@ -422,9 +423,9 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 {% endif %}
 
 {# TODO we might wish to have some disclaimer here about provability #}
-{% if newform.inner_twist_count > 0 %}
+{% if newform.inner_twist_count == 0 %}
 {{ newform.display_inner_twists() | safe }}
-{% else %}
+{% elif newform.inner_twist_count  > 0%}
 <p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 {% endif %}
 
@@ -450,6 +451,7 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 
 {% if newform.hecke_cutters %}
 {{ newform.display_hecke_cutters() | safe }}
+{% endif %}
 {% endif %}
 
 
