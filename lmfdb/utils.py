@@ -26,6 +26,7 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 from lmfdb.base import app
+from collections import defaultdict
 
 
 
