@@ -289,7 +289,7 @@ class StatsDisplay(UniqueRepresentation):
     @property
     def _formatters(self):
         A = defaultdict(lambda: range_formatter)
-        A.update(self.formatters)
+        A.update(getattr(self, 'formatters', {})
         return A
 
     @property
@@ -297,25 +297,25 @@ class StatsDisplay(UniqueRepresentation):
         def default_qformatter(col):
             return lambda x: '{0}={1}'.format(col, self._formatters[col](x))
         A = KeyedDefaultDict(default_qformatter)
-        A.update(self.query_formatters)
+        A.update(getattr(self, 'query_formatters', {})
         return A
 
     @property
     def _buckets(self):
         A = defaultdict(lambda: None)
-        A.update(self.buckets)
+        A.update(getattr(self, 'buckets', {}))
         return A
 
     @property
     def _sort_keys(self):
         A = defaultdict(lambda: None)
-        A.update(self.sort_keys)
+        A.update(getattr(self, 'sort_keys', {}))
         return A
 
     @property
     def _reverses(self):
         A = defaultdict(bool)
-        A.update(self.reverses)
+        A.update(getattr(self, 'reverses', {}))
         return A
 
     @property
@@ -327,25 +327,25 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 return rtitle
         A = KeyedDefaultDict(_default)
-        A.update(self.top_titles)
+        A.update(getattr(self, 'top_titles', {}))
         return A
 
     @property
     def _row_titles(self):
         A = KeyedDefaultDict(lambda col: col.replace('_', ' '))
-        A.update(self.row_titles)
+        A.update(getattr(self, 'row_titles', {}))
         return A
 
     @property
     def _knowls(self):
         A = defaultdict(lambda: None)
-        A.update(self.knowls)
+        A.update(getattr(self, 'knowls', {}))
         return A
 
     @property
     def _split_lists(self):
         A = defaultdict(bool)
-        A.update(self.split_lists)
+        A.update(getattr(self, 'split_lists', {}))
         return A
 
     def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
