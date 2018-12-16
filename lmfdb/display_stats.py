@@ -378,7 +378,7 @@ class StatsDisplay(UniqueRepresentation):
         if isinstance(cols, basestring):
             cols = [cols]
         if buckets is None:
-            buckets = self._buckets
+            buckets = {col: self._buckets[col] for col in cols if self._buckets[col]}
         elif isinstance(buckets, list):
             if len(cols) == 1:
                 buckets = {cols[0]: buckets}
