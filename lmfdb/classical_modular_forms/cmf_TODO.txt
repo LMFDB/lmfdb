@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* if Hecke ring is the maximal order it should say this (it used to but seems to no longer do this)
 
 IMPORTANT:
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
