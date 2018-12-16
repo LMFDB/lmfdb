@@ -249,9 +249,9 @@ def groups_history():
 @app.route("/editorial-board")
 @app.route("/management-board")
 @app.route("/management")
-def management_board():
-    t = "Management Board"
-    b = [(t, url_for("management_board"))]
+def editorial_board():
+    t = "Editorial Board"
+    b = [(t, url_for("editorial_board"))]
     return render_template('management.html', title=t, bread=b)
 
 @app.route("/citation")

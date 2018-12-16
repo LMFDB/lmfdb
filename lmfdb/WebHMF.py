@@ -110,51 +110,66 @@ class WebHMF:
 #            ans = ans + "=\\mathstrut & " + latex(self.sign) +\
 #                "\\overline{\\Lambda(1-\\overline{s})}\n\\end{align}\n"
 #        return(ans)
-#
-#
-#def latex(thetext):
-#    return str(thetext)
-#
-#
-#def seriescoeff(coeff, index, seriestype, truncation):
-#    rp = real_part(coeff)
-#    ip = imag_part(coeff)
-## below we use float(abs()) instead of abs() to avoid a sage bug
-#    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):
-#        return("+(" + latex(coeff) + ")" + seriesvar(index, seriestype))
-#    elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
-#        return("")
-## if we get this far, either pure real or pure imaginary
-#    if rp > truncation:
-#        if float(abs(rp - 1)) < truncation:
-#            return("+" + seriesvar(index, seriestype))
-#        else:
-#            return("+" + latex(rp) + seriesvar(index, seriestype))
-#    elif float(abs(rp + 1)) < truncation:
-#        return("-" + seriesvar(index, seriestype))
-#    elif ip > truncation:
-#        if float(abs(ip - 1)) < truncation:
-#            return("+" + seriesvar(index, seriestype))
-#        else:
-#            return("+" + latex(ip) + seriesvar(index, seriestype))
-#    elif float(abs(ip + 1)) < truncation:
-#        return("-" + seriesvar(index, seriestype))
-#    else:
-#        return(latex(coeff) + seriesvar(index, seriestype))
-#
-##---------
-#
-#
-#def seriesvar(index, seriestype):
-#    if seriestype == "dirichlet":
-#        return(" \\ " + str(index) + "^{-s}")
-#    else:
-#        return("\\, " + "q^{" + str(index) + "}")
-#
-#
-#def real_part(pair):
-#    return pair[0]
-#
-#
-#def imag_part(pair):
-#    return pair[1]
+
+#===========================
+    def lfuncFEtex(self, fmt):
+        ans = ""
+        if fmt == "lang":
+            ans = "\\begin{aligned}\n\\Lambda(s)=&"
+            ans = ans + latex(self.level) + "^{-\\frac{s}{2}}"
+            for mu in self.mu_fe:
+                ans = ans + "\Gamma_{\mathbb{R}}(s+" + latex(mu) + ")"
+            for nu in self.nu_fe:
+                ans = ans + "\Gamma_{\mathbb{C}}(s+" + latex(nu) + ")"
+            ans = ans + "\\cdot L(s)\\cr\n"
+            ans = ans + "=\\mathstrut & " + latex(self.sign) +\
+                "\\overline{\\Lambda(1-\\overline{s})}\n\\end{aligned}\n"
+        return(ans)
+
+
+def latex(thetext):
+    return str(thetext)
+
+
+def seriescoeff(coeff, index, seriestype, truncation):
+    rp = real_part(coeff)
+    ip = imag_part(coeff)
+# below we use float(abs()) instead of abs() to avoid a sage bug
+    if (float(abs(rp)) > truncation) & (float(abs(ip)) > truncation):
+        return("+(" + latex(coeff) + ")" + seriesvar(index, seriestype))
+    elif (float(abs(rp)) < truncation) & (float(abs(ip)) < truncation):
+        return("")
+# if we get this far, either pure real or pure imaginary
+    if rp > truncation:
+        if float(abs(rp - 1)) < truncation:
+            return("+" + seriesvar(index, seriestype))
+        else:
+            return("+" + latex(rp) + seriesvar(index, seriestype))
+    elif float(abs(rp + 1)) < truncation:
+        return("-" + seriesvar(index, seriestype))
+    elif ip > truncation:
+        if float(abs(ip - 1)) < truncation:
+            return("+" + seriesvar(index, seriestype))
+        else:
+            return("+" + latex(ip) + seriesvar(index, seriestype))
+    elif float(abs(ip + 1)) < truncation:
+        return("-" + seriesvar(index, seriestype))
+    else:
+        return(latex(coeff) + seriesvar(index, seriestype))
+
+#---------
+
+
+def seriesvar(index, seriestype):
+    if seriestype == "dirichlet":
+        return(" \\ " + str(index) + "^{-s}")
+    else:
+        return("\\, " + "q^{" + str(index) + "}")
+
+
+def real_part(pair):
+    return pair[0]
+
+
+def imag_part(pair):
+    return pair[1]
