@@ -1023,7 +1023,7 @@ class CMF_stats(StatsDisplay):
               'has_inner_twist': 'mf.elliptic.inner_twist',
               'self_twist_type': 'mf.elliptic.self_twist',
               'cm_discs': 'mf.elliptic.cm_form',
-              'rm_discs': 'knowl':'mf.elliptic.rm_form'}
+              'rm_discs': 'mf.elliptic.rm_form'}
     top_title = {'dim': 'dimension',
                  'has_inner_twist': 'inner twisting',
                  'cm_discs': 'complex multiplication',
