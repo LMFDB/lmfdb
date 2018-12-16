@@ -1,7 +1,32 @@
 from sage.all import UniqueRepresentation, lazy_attribute
 from flask import url_for
-from lmfdb.utils import format_percentage, display_knowl
+from lmfdb.utils import format_percentage, display_knowl, KeyedDefaultDict
 from itertools import izip_longest
+from collections import defualtdict
+
+def range_formatter(x):
+    if isinstance(x, dict):
+        if '$gte' in x:
+            a = x['$gte']
+        elif '$gt' in x:
+            a = x['$gt'] + 1
+        else:
+            a = None
+        if '$lte' in x:
+            b = x['$lte']
+        elif '$lt' in x:
+            b = x['$lt'] - 1
+        else:
+            b = None
+        if a == b:
+            return str(a)
+        elif b is None:
+            return "{0}-".format(a)
+        elif a is None:
+            raise ValueError
+        else:
+            return "{0}-{1}".format(a,b)
+    return str(x)
 
 def boolean_format(value):
     return 'True' if value else 'False'
@@ -234,41 +259,187 @@ class StatsDisplay(UniqueRepresentation):
 
     This object is then passed into the display_stats.html template as ``info``.
     """
-    @lazy_attribute
-    def distributions(self):
-        return [self.prep(attr) for attr in self.stat_list]
+    @property
+    def _formatter(self):
+        A = defaultdict(lambda: range_formatter)
+        A.update(self.formatter)
+        return A
+
+    @property
+    def _query_formatter(self):
+        default_qformatter = lambda x: '{0}={1}'.format(col, self._formatter[col](x))
+        A = defaultdict(lambda: default_qformatter)
+        A.update(self.query_formatter)
+        return A
+
+    @property
+    def _buckets(self):
+        A = defaultdict(lambda: None)
+        A.update(self.buckets)
+        return A
+
+    @property
+    def _sort_key(self):
+        A = defaultdict(lambda: None)
+        A.update(self.sort_key)
+        return A
+
+    @property
+    def _reverse(self):
+        A = defaultdict(bool)
+        A.update(self.reverse)
+        return A
+
+    @property
+    def _top_title(self):
+        A = KeyedDefaultDict(lambda col: self._row_title[col] + ('s' if (key and key[-1] != 's') else ''))
+        A.update(self.top_title)
+        return A
+
+    @property
+    def _row_title(self):
+        A = KeyedDefaultDict(lambda col: col.replace('_', ' '))
+        A.update(self.row_title)
+        return A
+
+    @property
+    def _split_list(self):
+        A = defaultdict(bool)
+        A.update(self.split_list)
+        return A
+
+    def display_data(self, table, cols, constraint=None, avg=None, formatter=None, buckets = None, split_list=False, totaler=None, query_formatter=None, sort_key=None, reverse=False, proportioner=None, base_url=None, url_extras=None, **kwds):
+        """
+        Returns statistics data in a common format that is used by page templates.
+
+        INPUT:
+
+        - ``table`` -- a ``PostgresStatsTable``
+        - ``cols`` -- a list of column names
+        - ``base_url`` -- a base url, to which col=value tags are appended.
+        - ``constraint`` -- a dictionary giving constraints on other columns.
+            Only rows satsifying those constraints are included in the counts.
+        - ``avg`` -- whether to include the average value of cols[0]
+            (cols must be of length 1 with no bucketing)
+        - ``formatter`` -- a dictionary describing how headers should be displayed.
+            The keys should be columns and each value a function producing a string.
+            If only one column, a function can be passed instead of a dictionary.
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.
+        - ``split_list`` -- whether count entries from lists individually.  For example,
+            a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
+        - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
+            Defaults to the number of rows in the table where the columns are non-null.
+                      -- (2d-case) a function taking inputs the grid, row headers, col headers
+                         and this object, which adds some totals to the grid
+        - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
+        - ``query_formatter`` -- a dictionary describing how values should be encoded into urls.
+            As for the ``formatter`` argument, keys should be columns and each value a function.
+            The functions need to accept both inputs and outputs from the formatter functions.
+        - ``sort_key`` -- a sort key for row/column headers (or a dictionary with columns as keys in the 2d case)
+        - ``reverse`` -- whether to sort in reverse order (or a dictionary with columns as keys).
+        - ``proprotioner`` -- a function for adding proportions to a 2d grid.
+            See display_stats.py for examples.
+        - ``kwds`` -- used to discard unused extraneous arguments.
+
+        OUTPUT:
+
+        A dictionary.
+
+        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
+        - ``value`` -- a tuple of values taken on by the given columns.
+        - ``count`` -- The number of rows with that tuple of values.
+        - ``query`` -- a url resulting in a list of entries with the given tuple of values.
+        - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
+
+        In the 2d case, it has two keys, ``grid`` and ``col_headers``.  ``grid`` is a list of pairs, the first being a row header and the second being a list of dictionaries as above.  ``col_headers`` is a list of column headers.
+        """
+        if isinstance(cols, basestring):
+            cols = [cols]
+        formatter = self._formatter
+        query_formatter = self._query_formatter
+        buckets = self._buckets
+        sort_key = self._sort_key
+        reverse = self._reverse
+        if base_url is None:
+            base_url = url_for(self.baseurl_func) + '?'
+        if url_extras:
+            base_url += url_extras
+        if table is None:
+            table = self.table
+
+        if len(cols) == 1:
+            col = cols[0]
+            headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            if not buckets:
+                if avg or totaler is None:
+                    total, avg = table._get_total_avg(cols, constraint, avg, split_list)
+                headers = [formatter[col](val) for val in sorted(headers, key=sort_key, reverse=reverse)]
+            elif cols == buckets.keys():
+                if split_list or avg or sort_key:
+                    raise ValueError
+                headers = [formatter[col](bucket) for bucket in buckets[col]]
+                if totaler is None:
+                    total = sum(counts[bucket]['count'] for bucket in headers)
+            else:
+                raise ValueError("Bucket keys must be subset of columns")
+            if totaler is None:
+                overall = total
+            else:
+                overall = table.count(totaler)
+            counts = [counts[val] for val in headers]
+            for D, val in zip(counts, headers):
+                D['value'] = val
+                D['proportion'] = format_percentage(D['count'], overall)
+            if avg:
+                counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
+                               'count':total,
+                               'query':"{0}?{1}".format(base_url, cols[0]),
+                               'proportion':format_percentage(total,overall)})
+            return {'counts': counts}
+        elif len(cols) == 2:
+            if split_list or avg:
+                raise ValueError
+            non_buckets = [col for col in cols if col not in buckets]
+            if len(buckets) + len(non_buckets) != 2:
+                raise ValueError("Bucket keys must be a subset of columns")
+            headers, grid = table._get_values_counts(cols, constraint, False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            for i, col in enumerate(cols):
+                if col in buckets:
+                    headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
+                else:
+                    headers[i] = [formatter[col](val) for val in
+                                  sorted(set(headers[i]), key=sort_key.get(col), reverse=reverse.get(col))]
+            row_headers, col_headers = headers
+            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
+            if proportioner is not None:
+                proportioner(grid, row_headers, col_headers, self)
+            if totaler is not None:
+                totaler(grid, row_headers, col_headers, self)
+            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
+        elif len(cols) == 0:
+            return {}
+        else:
+            raise NotImplementedError
 
     def prep(self, attr):
         if isinstance(attr['cols'], basestring):
             attr['cols'] = [attr['cols']]
         cols = attr['cols']
-        # default value for top_title from row_title
+        # default value for top_title from row_title/columns
         if 'top_title' not in attr:
-            if len(cols) == 1:
-                top_title = attr['row_title']
-                if not top_title.endswith('s'):
-                    top_title += 's'
-                top_title = [top_title]
-            else:
-                top_title = [col.replace('_',' ') for col in cols]
-        elif isinstance(attr['top_title'], basestring):
-            top_title = [attr['top_title']]
+            top_title = [(self._top_title[col], self._knowl[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        if isinstance(attr['knowl'], basestring):
-            knowls = [attr['knowl']]
-        else:
-            knowls = attr['knowl']
-        joiner = attr.get('title_joiner', ' ' if None in knowls or len(knowls) < len(top_title) else ' and ')
+        missing_knowl = any(knowl is None for text, knowl in top_title)
+        joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
         attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
-                                        for knowl, title in izip_longest(knowls, top_title))
+                                        for title, knowl in top_title)
         attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
-        attr['base_url'] = url_for(self.baseurl_func)
-        table = attr.get('table',self.table)
         data = table.stats.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
         if len(cols) == 1:
+            attr['row_title'] = self._row_title[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
             rows = [counts[i:i+10] for i in range(0,len(counts),10)]
@@ -281,6 +452,10 @@ class StatsDisplay(UniqueRepresentation):
         elif len(cols) == 2:
             attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*cols))
         return data
+
+    @lazy_attribute
+    def distributions(self):
+        return [self.prep(attr) for attr in self.stat_list]
 
     def setup(self, delete=False, attributes=None):
         """

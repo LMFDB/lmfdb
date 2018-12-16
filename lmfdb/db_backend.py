@@ -31,10 +31,10 @@ from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
+from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps, numeric_converter
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
-from lmfdb.utils import make_logger, format_percentage, range_formatter
+from lmfdb.utils import make_logger, format_percentage, KeyedDefaultDict
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
@@ -74,6 +74,18 @@ param_types_whitelist = [
     r"^(numeric|decimal)\s*\([1-9][0-9]*(,\s*(0|[1-9][0-9]*))?\)$",
 ]
 param_types_whitelist = [re.compile(s) for s in param_types_whitelist]
+
+# The following is used in bucketing for statistics
+pg_to_py = {}
+for typ in ["int2", "smallint", "smallserial", "serial2",
+    "int4", "int", "integer", "serial", "serial4",
+    "int8", "bigint", "bigserial", "serial8"]:
+    pg_to_py[typ] = int
+for typ in ["numeric", "decimal"]:
+    pg_to_py[typ] = numeric_converter
+for typ in ["float4", "real", "float8", "double precision"]:
+    pg_to_py[typ] = float
+
 # the non-default operator classes, used in creating indexes
 _operator_classes = {'brin':   ['inet_minmax_ops'],
                      'btree':  ['bpchar_pattern_ops', 'cidr_ops', 'record_image_ops',
@@ -2669,16 +2681,6 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
-class KeyedDefaultDict(defaultdict):
-    """
-    A defaultdict where the default value takes the key as input.
-    """
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError((key,))
-        self[key] = value = self.default_factory(key)
-        return value
-
 class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
@@ -2872,17 +2874,16 @@ class PostgresStatsTable(PostgresBase):
             pass
         return m
 
-    def _split_buckets(self, buckets, constraint, include_upper=True):
+    def _bucket_iterator(self, buckets, constraint, include_upper=True):
         """
         Utility function for adding buckets to a constraint
 
         INPUT:
 
-        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
-            The buckets are the values between these break points.  Repeating break points
-            makes one bucket consist of just that point.
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are
+            lists of strings giving either single integers or intervals.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
-        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
+        - ``include_upper`` -- when consecutive intervals overlap in one point, whether to use intervals of the form A < x <= B (vs A <= x < B).
 
         OUTPUT:
 
@@ -2891,22 +2892,15 @@ class PostgresStatsTable(PostgresBase):
         """
         expanded_buckets = []
         for col, divisions in buckets.items():
-            expanded_buckets.append([])
-            if len(divisions) < 2:
-                raise ValueError
-            divisions = [None] + sorted(divisions) + [None]
-            for a,b,c,d in zip(divisions[:-3],divisions[1:-2],divisions[2:-1],divisions[3:]):
-                if b == c:
-                    expanded_buckets[-1].append({col:b})
+            parse_singleton = pg_to_py[self.table.col_type[col]]
+            cur_list = []
+            for bucket in divisions:
+                if '-' in bucket:
+                    a, b = map(parse_singleton, bucket.split('-'))
+                    cur_list.append({col:{'$gte':a, '$lte':b}})
                 else:
-                    if include_upper:
-                        gt = True
-                        lt = (c == d)
-                    else:
-                        lt = True
-                        gt = (a == b)
-                    expanded_buckets[-1].append({col:{"$gt" if gt else "$gte": b,
-                                                      "$lt" if lt else "$lte": c}})
+                    cur_list.append({col:parse_singleton(bucket)})
+            expanded_buckets.append(cur_list)
         for X in cartesian_product_iterator(expanded_buckets):
             if constraint is None:
                 bucketed_constraint = {}
@@ -2936,7 +2930,7 @@ class PostgresStatsTable(PostgresBase):
         # but they should be removed in order to treat the bucketed_constraint properly
         # as a constraint.
         cols = [col for col in cols if col not in buckets]
-        for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
+        for bucketed_constraint in self._bucket_iterator(buckets, constraint, include_upper):
             self.add_stats(cols, bucketed_constraint, commit=commit)
 
     def _split_dict(self, D):
@@ -3289,9 +3283,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         default_proportion = '      0.00' if len(cols) == 1 else ''
         def make_count_dict(values, cnt):
             if isinstance(values, (list, tuple)):
-                query = base_url + '&'.join(query_formatter(val, col) for val, col in zip(values, cols))
+                query = base_url + '&'.join(query_formatter[col](val) for col, val in zip(cols, values))
             else:
-                query = base_url + query_formatter(values, cols[0])
+                query = base_url + query_formatter[cols[0]](values)
             return {'count': cnt,
                     'query': query,
                     'proportion': default_proportion, # will be overridden for nonzero cnts.
@@ -3303,9 +3297,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 header.append(val)
             D = make_count_dict(values, count)
             if len(cols) == 1:
-                values = formatter(values[0])
+                values = formatter[cols[0]](values[0])
             else:
-                values = tuple(formatter(val, col) for val, col in zip(values, cols))
+                values = tuple(formatter[col](val) for col, val in zip(cols, values))
             data[values] = D
         if len(cols) == 1:
             return headers[0], data
@@ -3350,128 +3344,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         else:
             avg = None
         return total, avg
-
-    def display_data(self, cols, base_url, constraint=None, avg=None, formatter=None, buckets = {}, split_list=False, totaler=None, include_upper=True, query_formatter=None, sort_key=None, reverse=False, proportioner=None, url_extras=None, **kwds):
-        """
-        Returns statistics data in a common format that is used by page templates.
-
-        INPUT:
-
-        - ``cols`` -- a list of column names
-        - ``base_url`` -- a base url, to which col=value tags are appended.
-        - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
-        - ``avg`` -- whether to include the average value of cols[0]
-            (cols must be of length 1 with no bucketing)
-        - ``formatter`` -- a function applied to the tuple of values for display.  It should be injective.
-        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
-            The buckets are the values between these break points.  Repeating break points
-            makes one bucket consist of just that point.  Values of these columns
-            are grouped based on which bucket they fall into.
-        - ``split_list`` -- whether count entries from lists individually.  For example,
-            a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
-        - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
-            Defaults to the number of rows in the table where the columns are non-null.
-                      -- (2d-case) a function taking inputs the grid, row headers, col headers
-                         and this object, which adds some totals to the grid
-        - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
-        - ``query_formatter`` -- a function for encoding the values into the url.
-            Needs to accept both inputs and outputs from the formatter function.
-            When cols has length 2, takes the col as a second argument.
-        - ``sort_key`` -- a sort key for row/column headers (or a list of two such in the 2d case)
-        - ``reverse`` -- whether to sort in reverse order.
-        - ``proprotioner`` -- a function for adding proportions to a 2d grid.
-            See display_stats.py for examples.
-        - ``url_extras`` -- an optional string to add to the base_url after the ?
-        - ``kwds`` -- used to discard unused extraneous arguments.
-
-        OUTPUT:
-
-        A dictionary.
-
-        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
-        - ``value`` -- a tuple of values taken on by the given columns.
-        - ``count`` -- The number of rows with that tuple of values.
-        - ``query`` -- a url resulting in a list of entries with the given tuple of values.
-        - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
-
-        In the 2d case, it has two keys, ``grid`` and ``col_headers``.  ``grid`` is a list of pairs, the first being a row header and the second being a list of dictionaries as above.  ``col_headers`` is a list of column headers.
-        """
-        if isinstance(cols, basestring):
-            cols = [cols]
-        if isinstance(buckets, list):
-            if len(cols) == 1:
-                buckets = {cols[0]: buckets}
-            else:
-                raise ValueError("Must specify keys for buckets")
-        if formatter is None:
-            if buckets:
-                formatter = range_formatter
-            else:
-                def formatter(x, col=None):
-                    return x
-        if query_formatter is None:
-            def query_formatter(x, col):
-                F = formatter(x) if len(cols) == 1 else formatter(x, col)
-                return '{0}={1}'.format(col, F)
-        base_url = base_url + '?'
-        if url_extras:
-            base_url += url_extras
-
-        if len(cols) == 1:
-            col = cols[0]
-            headers, counts = self._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
-            if not buckets:
-                if avg or totaler is None:
-                    total, avg = self._get_total_avg(cols, constraint, avg, split_list)
-                headers = [formatter(val) for val in sorted(headers, key=sort_key, reverse=reverse)]
-            elif cols == buckets.keys():
-                if split_list or avg or sort_key:
-                    raise ValueError
-                headers = [formatter(bucket[col]) for bucket in self._split_buckets(buckets, None, include_upper)]
-                if totaler is None:
-                    total = sum(counts[bucket]['count'] for bucket in headers)
-            else:
-                raise ValueError("Bucket keys must be subset of columns")
-            if totaler is None:
-                overall = total
-            else:
-                overall = self.count(totaler)
-            counts = [counts[val] for val in headers]
-            for D, val in zip(counts, headers):
-                D['value'] = val
-                D['proportion'] = format_percentage(D['count'], overall)
-            if avg:
-                counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
-                               'count':total,
-                               'query':"{0}?{1}".format(base_url, cols[0]),
-                               'proportion':format_percentage(total,overall)})
-            return {'counts': counts}
-        elif len(cols) == 2:
-            if split_list or avg:
-                raise ValueError
-            non_buckets = [col for col in cols if col not in buckets]
-            if len(buckets) + len(non_buckets) != 2:
-                raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = self._get_values_counts(cols, constraint, False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
-            for i, col in enumerate(cols):
-                if col in buckets:
-                    headers[i] = [formatter(bucket[col], col) for bucket in self._split_buckets({col:buckets[col]}, None, include_upper)]
-                else:
-                    sk = sort_key[i] if isinstance(sort_key, list) else sort_key
-                    rev = reverse[i] if isinstance(reverse, list) else reverse
-                    headers[i] = [formatter(val, col) for val in sorted(set(headers[i]), key=sk, reverse=rev)]
-            row_headers, col_headers = headers
-            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
-            if proportioner is not None:
-                proportioner(grid, row_headers, col_headers, self)
-            if totaler is not None:
-                totaler(grid, row_headers, col_headers, self)
-            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
-        elif len(cols) == 0:
-            return {}
-        else:
-            raise NotImplementedError
 
     def create_oldstats(self, filename):
         name = self.search_table + "_oldstats"

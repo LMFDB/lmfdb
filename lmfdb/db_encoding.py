@@ -50,7 +50,7 @@ class LmfdbRealLiteral(RealLiteral):
     def __repr__(self):
         return self.literal
 
-def numeric_converter(value, cur):
+def numeric_converter(value, cur=None):
     """
     Used for converting numeric values from Postgres to Python.
 
