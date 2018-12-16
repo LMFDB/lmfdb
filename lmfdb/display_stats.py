@@ -289,7 +289,7 @@ class StatsDisplay(UniqueRepresentation):
     @property
     def _formatters(self):
         A = defaultdict(lambda: range_formatter)
-        A.update(getattr(self, 'formatters', {})
+        A.update(getattr(self, 'formatters', {}))
         return A
 
     @property
@@ -297,7 +297,7 @@ class StatsDisplay(UniqueRepresentation):
         def default_qformatter(col):
             return lambda x: '{0}={1}'.format(col, self._formatters[col](x))
         A = KeyedDefaultDict(default_qformatter)
-        A.update(getattr(self, 'query_formatters', {})
+        A.update(getattr(self, 'query_formatters', {}))
         return A
 
     @property
