@@ -101,14 +101,7 @@
     </td>
     #}
     <td>
-      <select name='has_inner_twist' style="width: 150px;">
-        <option value=""{% if not info.has_inner_twist %} selected='yes'{% endif %}>unrestricted</option>
-        <option value="yes"{% if info.has_inner_twist == 'yes' %} selected='yes'{% endif %}>yes</option>
-        <option value="not_no"{% if info.has_inner_twist == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
-        <option value="unknown"{% if info.has_inner_twist == 'unknown' %} selected='yes'{% endif %}>unknown</option>
-        <option value="not_yes"{% if info.has_inner_twist == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
-        <option value="no"{% if info.has_inner_twist == 'no' %} selected='yes'{% endif %}>no</option>
-      </select>
+      <input type='text' style="width: 140px;" name='inner_twist_count' placeholder='1-' value='{{info.inner_twist_count}}'>
     </td>
     <td>
       <select name='is_self_dual' style="width: 150px;">

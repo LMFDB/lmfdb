@@ -672,7 +672,7 @@ newform_only_fields = {
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',
     'rm_discs': 'RM discriminant',
-    'has_inner_twist': 'Has inner twist',
+    'inner_twist_count': 'Inner twist count',
     'analytic_rank': 'Analytic rank',
 }
 def common_parse(info, query):
@@ -729,7 +729,7 @@ def newform_parse(info, query):
     parse_subset(info, query, 'cm_discs', name="CM discriminant", parse_singleton=lambda d: parse_discriminant(d, -1))
     parse_subset(info, query, 'rm_discs', name="RM discriminant", parse_singleton=lambda d: parse_discriminant(d, 1))
     parse_bool(info, query, 'is_twist_minimal')
-    parse_bool_unknown(info, query, 'has_inner_twist')
+    parse_ints(info, query, 'inner_twist_count')
     parse_ints(info, query, 'analytic_rank')
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
@@ -1020,20 +1020,21 @@ class CMF_stats(StatsDisplay):
               'analytic_rank': 'mf.elliptic.analytic_rank',
               'projective_image': 'mf.elliptic.projective_image',
               'num_forms': 'mf.elliptic.galois-orbits',
-              'has_inner_twist': 'mf.elliptic.inner_twist',
+              'inner_twist_count': 'mf.elliptic.inner_twist',
               'self_twist_type': 'mf.elliptic.self_twist',
               'cm_discs': 'mf.elliptic.cm_form',
               'rm_discs': 'mf.elliptic.rm_form'}
     top_titles = {'dim': 'dimension',
-                  'has_inner_twist': 'inner twisting',
+                  'inner_twist_count': 'inner twisting',
                   'cm_discs': 'complex multiplication',
                   'rm_discs': 'real multiplication'}
     row_titles = {'char_order': 'character order',
                   'num_forms': 'newforms',
+                  'inner_twist_count': 'inner twists',
                   'cm_discs': 'CM disc',
                   'rm_discs': 'RM disc'}
     formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
-                  'has_inner_twist': boolean_unknown_format,
+                  'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
                         'self_twist_type': self_twist_type_query_formatter}
@@ -1061,7 +1062,7 @@ class CMF_stats(StatsDisplay):
          'table':db.mf_newspaces,
          'top_title': [('number of newforms', 'mf.elliptic.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
          'url_extras': 'search_type=Spaces&'},
-        {'cols':'has_inner_twist'},
+        {'cols':'inner_twist_count'},
         {'cols':['self_twist_type', 'weight'],
          'title_joiner': ' by ',
          'proportioner': per_col_total,
@@ -1086,7 +1087,7 @@ col_display = {
     'analytic_conductor':'Analytic conductor',
     'char_order':'Character order',
     'self_twist_type':'Self twist type',
-    'has_inner_twist':'Has inner twist',
+    'inner_twist_count':'Num inner twists',
     'analytic_rank':'Analytic rank',
     'char_parity':'Character parity',
     'projective_image':'Projective image',

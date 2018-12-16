@@ -167,6 +167,8 @@ class WebNewform(object):
                     self.properties += [('RM discriminant', disc)]
                 elif self.is_rm == -1:
                     self.properties += [('RM', 'No')]
+        if self.inner_twist_count >= 0:
+            self.properties += [('Inner twists', str(self.inner_twist_count))]
 
         self.title = "Newform %s"%(self.label)
 

@@ -512,7 +512,7 @@ class CmfTest(LmfdbTest):
                 ('level=10%2C13%2C17&weight=1-8&dim=1',
                     ['Results (displaying all 12 matches)', '1373', 'No', '1093.6']
                     )]:
-            for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','has_inner_twist=no']):
+            for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=0']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
                 page = self.tc.get(s,  follow_redirects=True)
                 for elt in begin[1]:
