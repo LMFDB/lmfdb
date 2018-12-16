@@ -313,14 +313,20 @@ class G2C_stats(StatsDisplay):
     Class for creating and displaying statistics for genus 2 curves over Q
     """
     def __init__(self):
-        ncurves = comma(db.g2c_curves.count())
-        nclasses = comma(db.lfunc_instances.count({'type':'G2Q'}))
-        max_D = comma(db.g2c_curves.max('abs_disc'))
-        g2c_knowl = display_knowl('g2c.g2curve', title='genus 2 curves')
-        disc_knowl = display_knowl('g2c.abs_discriminant', title = "absolute discriminant")
+        self.ncurves = comma(db.g2c_curves.count())
+        self.max_D = comma(db.g2c_curves.max('abs_disc'))
+        self.disc_knowl = display_knowl('g2c.abs_discriminant', title = "absolute discriminant")
+
+    @property
+    def short_summary(self):
         stats_url = url_for(".statistics")
-        self.short_summary = 'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (ncurves, g2c_knowl, disc_knowl, max_D, stats_url)
-        self.summary = 'The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s.' % (ncurves, nclasses, disc_knowl, max_D)
+        g2c_knowl = display_knowl('g2c.g2curve', title='genus 2 curves')
+        return 'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves, g2c_knowl, self.disc_knowl, self.max_D, stats_url)
+
+    @property
+    def summary(self):
+        nclasses = comma(db.lfunc_instances.count({'type':'G2Q'}))
+        return 'The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s.' % (self.ncurves, nclasses, self.disc_knowl, self.max_D)
 
     table = db.g2c_curves
     baseurl_func = ".index_Q"
