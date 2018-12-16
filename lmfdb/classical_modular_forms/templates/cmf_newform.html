@@ -179,7 +179,7 @@ function show_qexp(qstyle) {
     {{ newform.order_basis() | safe}}
   {% endif %}
   {% if newform.dim > 1 %}
-  {% if newform.hecke_ring_index_proven %}
+  {% if newform.hecke_ring_index_proved %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
     {% else %} {# newform.hecke_ring_index == 1 #}
@@ -425,7 +425,7 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 {% if newform.inner_twist_count > 0 %}
 {{ newform.display_inner_twists() | safe }}
 {% else %}
-<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
+<p>This newform does not admit any (nontrivial) {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
