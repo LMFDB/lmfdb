@@ -365,8 +365,8 @@ class G2C_stats(StatsDisplay):
     stat_list = [
         {'cols': 'num_rat_pts', 'avg': True},
         {'cols': 'num_rat_wpts', 'avg': True},
-        {'cols': 'aut_grp_id'}
-        {'cols': 'geom_aut_grp_id',
+        {'cols': 'aut_grp_id'},
+        {'cols': 'geom_aut_grp_id'},
         {'cols': 'analytic_rank', 'avg': True},
         {'cols': 'two_selmer_rank', 'avg': True},
         {'cols': 'has_square_sha'},

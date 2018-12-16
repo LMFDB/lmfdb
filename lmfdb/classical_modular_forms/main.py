@@ -8,7 +8,7 @@ from lmfdb.classical_modular_forms import cmf
 from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl, range_formatter
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
