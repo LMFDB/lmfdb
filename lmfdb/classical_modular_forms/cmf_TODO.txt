@@ -1,5 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
+* clicking on spaces of odd weight and level 1,2 in Gamma1 table gives an error saying the space is not in the database (presumably because N=1,2 forces trivial character, so even parity), but in fact these (empty) spaces are present in mf_newspaces and their pages should be displayed (they are if you switch to Gamma0 search).
 
 IMPORTANT:
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
