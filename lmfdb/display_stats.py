@@ -50,7 +50,7 @@ def boolean_unknown_format(value):
 #   * a grid (list of lists) of dictionaries giving counts       #
 #   * a list giving unformatted row headers                      #
 #   * a list giving unformatted row headers                      #
-#   * a PostgresStatsTable                                       #
+#   * a StatsDisplay                                             #
 # and modifies the grid to include proportions                   #
 ##################################################################
 
@@ -176,7 +176,7 @@ def per_grid_recurse(attr):
 #   * a grid (list of lists) of dictionaries giving counts       #
 #   * a list giving unformatted row headers                      #
 #   * a list giving unformatted row headers                      #
-#   * a PostgresStatsTable                                       #
+#   * a StatsDisplay                                             #
 # and modifies the grid to include proportions                   #
 ##################################################################
 
@@ -247,15 +247,42 @@ class StatsDisplay(UniqueRepresentation):
     - a ``summary`` attribute, which is displayed at the top of the page
     - a ``table`` attribute, which is a PostgresTable
     - a ``stat_list`` attribute, which is a list of
-      dictionaries with the following keys:
+      dictionaries with the following keys (optional except ``cols``):
 
       - ``cols`` -- a list of columns to analyze.
-      - ``buckets`` -- (optional) a dictionary giving buckets.  See db_backend for more details.
-      - ``top_title`` -- text to be displayed before the rows associated to these columns
-      - ``row_title`` -- text to be displayed as a row label
-      - ``knowl`` -- a knowl describing the attribute being analyzed
-      - ``format`` -- (optional) a function to format the values from the database
-      - ``avg`` -- (optional boolean, default False) whether to display the average
+      - ``buckets`` -- a dictionary with columns as keys and list of strings such as '2-10' as values.
+      - ``table`` -- a PostgresStatsTable containing the columns.
+      - ``top_title`` -- a list of pairs (text, knowl) for the header of this statistics block.
+          Defaults to zipping the contents of the ``top_title`` and ``knowl`` dictionaries (described below).
+      - ``avg`` -- whether to display the average (1d only, default False)
+      - ``totaller`` -- When ``cols`` has length 1 (1d case), a query for determining the
+          denominator on proportions.  Defaults to the number of rows in the table
+          where the columns are non-null.  When ``cols`` has length 2 (2d case),
+          a function that adds row/column totals to the grid (see examples above).
+      - ``proportioner`` -- A function that adds proportions to the grid (2d only, see examples above).
+      - ``corner_label`` -- The contents of the top left corner (2d only)
+      - ``url_extras`` -- text to add to the urls after the '?'.
+      - ``title_joiner`` -- Text used to join the ``top_title`` list.  Defaults to ' ' or ' and ', depending on whether every text is paired with a knowl.
+      - ``intro`` -- Text displayed after the title of this stat block.
+
+    You can also set defaults for many options by adding the following attributes, each of which should be a dictionary with column names as keys.
+
+      - ``top_title`` -- strings as values. Text to be displayed in titles, paired with knowls.
+      - ``knowl`` -- strings as values.  Id for the knowl associated to this column.
+      - ``row_title`` -- strings as values.  Text to be displayed as a row label.
+      - ``buckets`` -- lists of strings as values.  For dividing values up into intervals
+          when there are too many for individual display.  Entries should be either single
+          values or ranges like '2-10'.
+      - ``formatter`` -- callables as values.  Input a database value or bucket,
+          output the text to display in the header.
+      - ``query_formatter`` -- callables as values.  Input a database value or output of formatter,
+          output the text to insert into the url, such as 'level=2-10'.
+      - ``sort_key`` -- callables as values.  Custom sorting for this column (as in ``sorted``)
+      - ``reverse`` -- boolean values.  Whether to reverse the order of the header (as in ``sorted``)
+      - ``split_list`` -- boolean values.  Whether to count entries from lists individually.
+          For example, a column with value [2,4,8] would increment the count of 2, 4 and 8
+          rather than [2,4,8].  An example is cm_discs in classical modular forms.
+
 
     This object is then passed into the display_stats.html template as ``info``.
     """
@@ -308,7 +335,7 @@ class StatsDisplay(UniqueRepresentation):
         A.update(self.split_list)
         return A
 
-    def display_data(self, table, cols, constraint=None, avg=None, formatter=None, buckets = None, split_list=False, totaler=None, query_formatter=None, sort_key=None, reverse=False, proportioner=None, base_url=None, url_extras=None, **kwds):
+    def display_data(self, table, cols, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -316,29 +343,19 @@ class StatsDisplay(UniqueRepresentation):
 
         - ``table`` -- a ``PostgresStatsTable``
         - ``cols`` -- a list of column names
-        - ``base_url`` -- a base url, to which col=value tags are appended.
         - ``constraint`` -- a dictionary giving constraints on other columns.
             Only rows satsifying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
-        - ``formatter`` -- a dictionary describing how headers should be displayed.
-            The keys should be columns and each value a function producing a string.
-            If only one column, a function can be passed instead of a dictionary.
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.
-        - ``split_list`` -- whether count entries from lists individually.  For example,
-            a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
         - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
-            Defaults to the number of rows in the table where the columns are non-null.
                       -- (2d-case) a function taking inputs the grid, row headers, col headers
                          and this object, which adds some totals to the grid
-        - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
-        - ``query_formatter`` -- a dictionary describing how values should be encoded into urls.
-            As for the ``formatter`` argument, keys should be columns and each value a function.
-            The functions need to accept both inputs and outputs from the formatter functions.
-        - ``sort_key`` -- a sort key for row/column headers (or a dictionary with columns as keys in the 2d case)
-        - ``reverse`` -- whether to sort in reverse order (or a dictionary with columns as keys).
         - ``proprotioner`` -- a function for adding proportions to a 2d grid.
-            See display_stats.py for examples.
+            See examples at the top of display_stats.py.
+        - ``base_url`` -- a base url, to which col=value tags are appended.
+            Defaults to the url for ``self.baseurl_func``.
+        - ``url_extras`` -- Text to add to the url after the '?'.
         - ``kwds`` -- used to discard unused extraneous arguments.
 
         OUTPUT:
@@ -349,15 +366,26 @@ class StatsDisplay(UniqueRepresentation):
         - ``value`` -- a tuple of values taken on by the given columns.
         - ``count`` -- The number of rows with that tuple of values.
         - ``query`` -- a url resulting in a list of entries with the given tuple of values.
-        - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
+        - ``proportion`` -- the fraction of rows having this tuple of values,
+            as a string formatted as a percentage.
 
-        In the 2d case, it has two keys, ``grid`` and ``col_headers``.  ``grid`` is a list of pairs, the first being a row header and the second being a list of dictionaries as above.  ``col_headers`` is a list of column headers.
+        In the 2d case, it has two keys, ``grid`` and ``col_headers``.
+
+        - ``grid`` is a list of pairs, the first being a row header and the second
+            being a list of dictionaries as above.
+        - ``col_headers`` is a list of column headers.
         """
         if isinstance(cols, basestring):
             cols = [cols]
+        if buckets is None:
+            buckets = self._buckets
+        elif isinstance(buckets, list):
+            if len(cols) == 1:
+                buckets = {cols[0]: buckets}
+            else:
+                raise ValueError("buckets should be a dictionary with columns as keys")
         formatter = self._formatter
         query_formatter = self._query_formatter
-        buckets = self._buckets
         sort_key = self._sort_key
         reverse = self._reverse
         if base_url is None:
@@ -369,14 +397,15 @@ class StatsDisplay(UniqueRepresentation):
 
         if len(cols) == 1:
             col = cols[0]
+            split_list = self._split_list[col]
             headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
             if not buckets:
                 if avg or totaler is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
                 headers = [formatter[col](val) for val in sorted(headers, key=sort_key, reverse=reverse)]
             elif cols == buckets.keys():
-                if split_list or avg or sort_key:
-                    raise ValueError
+                if split_list or avg or sort_key[col]:
+                    raise ValueError("Unsupported option")
                 headers = [formatter[col](bucket) for bucket in buckets[col]]
                 if totaler is None:
                     total = sum(counts[bucket]['count'] for bucket in headers)
@@ -397,8 +426,8 @@ class StatsDisplay(UniqueRepresentation):
                                'proportion':format_percentage(total,overall)})
             return {'counts': counts}
         elif len(cols) == 2:
-            if split_list or avg:
-                raise ValueError
+            if avg:
+                raise ValueError("unsupported option")
             non_buckets = [col for col in cols if col not in buckets]
             if len(buckets) + len(non_buckets) != 2:
                 raise ValueError("Bucket keys must be a subset of columns")
@@ -457,7 +486,7 @@ class StatsDisplay(UniqueRepresentation):
     def distributions(self):
         return [self.prep(attr) for attr in self.stat_list]
 
-    def setup(self, delete=False, attributes=None):
+    def setup(self, attributes=None, delete=False):
         """
         This function should be called manually at the Sage prompt to add
         the appropriate data to the stats table.
@@ -476,19 +505,18 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            buckets = attr.get("buckets")
+            buckets = attr.get('buckets', self._buckets)
             # Deal with the length 1 shortcuts
             if isinstance(cols, basestring):
                 cols = [cols]
             if isinstance(buckets, list) and len(cols) == 1:
                 buckets = {cols[0]: buckets}
             constraint = attr.get("constraint")
-            include_upper = attr.get("include_upper", True)
             table = attr.get("table", self.table)
-            split_list = attr.get("split_list", False)
+            split_list = all(self._split_list[col] for col in cols)
             if buckets:
                 if split_list:
                     raise ValueError("split_list not supported with buckets")
-                table.stats.add_bucketed_counts(cols, buckets, constraint, include_upper)
+                table.stats.add_bucketed_counts(cols, buckets, constraint)
             else:
                 table.stats.add_stats(cols, constraint, split_list=split_list)

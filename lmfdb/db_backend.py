@@ -2874,7 +2874,7 @@ class PostgresStatsTable(PostgresBase):
             pass
         return m
 
-    def _bucket_iterator(self, buckets, constraint, include_upper=True):
+    def _bucket_iterator(self, buckets, constraint):
         """
         Utility function for adding buckets to a constraint
 
@@ -2883,7 +2883,6 @@ class PostgresStatsTable(PostgresBase):
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are
             lists of strings giving either single integers or intervals.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
-        - ``include_upper`` -- when consecutive intervals overlap in one point, whether to use intervals of the form A < x <= B (vs A <= x < B).
 
         OUTPUT:
 
@@ -2910,7 +2909,7 @@ class PostgresStatsTable(PostgresBase):
                 bucketed_constraint.update(D)
             yield bucketed_constraint
 
-    def add_bucketed_counts(self, cols, buckets, constraint={}, include_upper=True, commit=True):
+    def add_bucketed_counts(self, cols, buckets, constraint={}, commit=True):
         """
         A convenience function for adding statistics on a given set of columns,
         where rows are grouped into intervals by a bucketing dictionary.
@@ -2924,13 +2923,12 @@ class PostgresStatsTable(PostgresBase):
             The buckets are the values between these break points.  Repeating break points
             makes one bucket consist of just that point.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
-        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
         """
         # Conceptually, it makes sense to have the bucket keys included in the columns,
         # but they should be removed in order to treat the bucketed_constraint properly
         # as a constraint.
         cols = [col for col in cols if col not in buckets]
-        for bucketed_constraint in self._bucket_iterator(buckets, constraint, include_upper):
+        for bucketed_constraint in self._bucket_iterator(buckets, constraint):
             self.add_stats(cols, bucketed_constraint, commit=commit)
 
     def _split_dict(self, D):
