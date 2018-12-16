@@ -139,6 +139,7 @@ class Downloader(object):
         data_format = self.get('data_format', proj)
         if isinstance(data_format, dict):
             data_format = data_format[lang]
+        assert len(data_format) == len(proj)
         if label_col:
             proj = [label_col] + proj
         # reissue query here

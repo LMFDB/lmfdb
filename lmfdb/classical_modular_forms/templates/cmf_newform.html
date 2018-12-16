@@ -179,7 +179,7 @@ function show_qexp(qstyle) {
     {{ newform.order_basis() | safe}}
   {% endif %}
   {% if newform.dim > 1 %}
-  {% if newform.hecke_ring_index_proven %}
+  {% if newform.hecke_ring_index_proved %}
     {% if newform.hecke_ring_index == 1 %}
     <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
     {% else %} {# newform.hecke_ring_index == 1 #}
@@ -404,7 +404,6 @@ function get_all_embeddings(num_embeddings) {
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
-{% if newform.has_further_properties %}
 <h2>Further properties</h2>
 
 {% if newform.is_cm != 0 %}
@@ -423,10 +422,10 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 {% endif %}
 
 {# TODO we might wish to have some disclaimer here about provability #}
-{% if newform.has_inner_twist == 1 %}
+{% if newform.inner_twist_count > 0 %}
 {{ newform.display_inner_twists() | safe }}
-{% elif newform.has_inner_twist == -1 %}
-<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title=newform.star_twist) }}.</p>
+{% else %}
+<p>This newform does not admit any (nontrivial) {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
@@ -451,7 +450,6 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 
 {% if newform.hecke_cutters %}
 {{ newform.display_hecke_cutters() | safe }}
-{% endif %}
 {% endif %}
 
 
