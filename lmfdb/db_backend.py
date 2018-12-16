@@ -3000,7 +3000,15 @@ class PostgresStatsTable(PostgresBase):
         if self._has_stats(cols, ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
-        self.logger.info("Adding stats to {0} for {1} ({2})".format(self.search_table, ", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
+        msg = "Adding stats to " + self.search_table
+        if cols:
+            msg += "for " + ", ".join(cols)
+        if constraint:
+            from lmfdb.display_stats import range_formatter
+            msg += ": " + ", ".join("{col} = {disp}".format(col=col, disp=range_formatter(val)) for col, val in constraint.items())
+        if threshold:
+            msg += " (threshold=%s)" % threshold
+        self.logger.info(msg)
         having = SQL("")
         if threshold is not None:
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
