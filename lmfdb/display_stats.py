@@ -505,7 +505,7 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            buckets = attr.get('buckets', self._buckets)
+            buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             # Deal with the length 1 shortcuts
             if isinstance(cols, basestring):
                 cols = [cols]
