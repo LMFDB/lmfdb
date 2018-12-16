@@ -381,13 +381,13 @@ class Belyi_stats(StatsDisplay):
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
-    row_title = {'deg': 'degree',
-                 'orbit_size': 'size',
-                 'g': 'genus'}
-    top_title = {'orbit_size': 'Galois orbit size'}
-    knowl = {'deg': 'belyi.degree',
-             'orbit_size': 'belyi.orbit_size',
-             'g': 'belyi.genus'}
+    row_titles = {'deg': 'degree',
+                  'orbit_size': 'size',
+                  'g': 'genus'}
+    top_titles = {'orbit_size': 'Galois orbit size'}
+    knowls = {'deg': 'belyi.degree',
+              'orbit_size': 'belyi.orbit_size',
+              'g': 'belyi.genus'}
     stat_list = [{'cols':col, 'avg':True} for col in ['deg', 'orbit_size', 'g']]
 
 @belyi_page.route("/stats")

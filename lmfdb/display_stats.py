@@ -253,7 +253,7 @@ class StatsDisplay(UniqueRepresentation):
       - ``buckets`` -- a dictionary with columns as keys and list of strings such as '2-10' as values.
       - ``table`` -- a PostgresStatsTable containing the columns.
       - ``top_title`` -- a list of pairs (text, knowl) for the header of this statistics block.
-          Defaults to zipping the contents of the ``top_title`` and ``knowl`` dictionaries (described below).
+          Defaults to zipping the contents of the ``top_title`` and ``knowls`` dictionaries (described below).
       - ``avg`` -- whether to display the average (1d only, default False)
       - ``totaller`` -- When ``cols`` has length 1 (1d case), a query for determining the
           denominator on proportions.  Defaults to the number of rows in the table
@@ -267,19 +267,19 @@ class StatsDisplay(UniqueRepresentation):
 
     You can also set defaults for many options by adding the following attributes, each of which should be a dictionary with column names as keys.
 
-      - ``top_title`` -- strings as values. Text to be displayed in titles, paired with knowls.
-      - ``knowl`` -- strings as values.  Id for the knowl associated to this column.
-      - ``row_title`` -- strings as values.  Text to be displayed as a row label.
+      - ``top_titles`` -- strings as values. Text to be displayed in titles, paired with knowls.
+      - ``knowls`` -- strings as values.  Id for the knowl associated to this column.
+      - ``row_titles`` -- strings as values.  Text to be displayed as a row label.
       - ``buckets`` -- lists of strings as values.  For dividing values up into intervals
           when there are too many for individual display.  Entries should be either single
           values or ranges like '2-10'.
-      - ``formatter`` -- callables as values.  Input a database value or bucket,
+      - ``formatters`` -- callables as values.  Input a database value or bucket,
           output the text to display in the header.
-      - ``query_formatter`` -- callables as values.  Input a database value or output of formatter,
+      - ``query_formatters`` -- callables as values.  Input a database value or output of formatter,
           output the text to insert into the url, such as 'level=2-10'.
-      - ``sort_key`` -- callables as values.  Custom sorting for this column (as in ``sorted``)
-      - ``reverse`` -- boolean values.  Whether to reverse the order of the header (as in ``sorted``)
-      - ``split_list`` -- boolean values.  Whether to count entries from lists individually.
+      - ``sort_keys`` -- callables as values.  Custom sorting for this column (as in ``sorted``)
+      - ``reverses`` -- boolean values.  Whether to reverse the order of the header (as in ``sorted``)
+      - ``split_lists`` -- boolean values.  Whether to count entries from lists individually.
           For example, a column with value [2,4,8] would increment the count of 2, 4 and 8
           rather than [2,4,8].  An example is cm_discs in classical modular forms.
 
@@ -287,16 +287,17 @@ class StatsDisplay(UniqueRepresentation):
     This object is then passed into the display_stats.html template as ``info``.
     """
     @property
-    def _formatter(self):
+    def _formatters(self):
         A = defaultdict(lambda: range_formatter)
-        A.update(self.formatter)
+        A.update(self.formatters)
         return A
 
     @property
-    def _query_formatter(self):
-        default_qformatter = lambda x: '{0}={1}'.format(col, self._formatter[col](x))
-        A = defaultdict(lambda: default_qformatter)
-        A.update(self.query_formatter)
+    def _query_formatters(self):
+        def default_qformatter(col):
+            return lambda x: '{0}={1}'.format(col, self._formatters[col](x))
+        A = KeyedDefaultDict(default_qformatter)
+        A.update(self.query_formatters)
         return A
 
     @property
@@ -306,36 +307,48 @@ class StatsDisplay(UniqueRepresentation):
         return A
 
     @property
-    def _sort_key(self):
+    def _sort_keys(self):
         A = defaultdict(lambda: None)
-        A.update(self.sort_key)
+        A.update(self.sort_keys)
         return A
 
     @property
-    def _reverse(self):
+    def _reverses(self):
         A = defaultdict(bool)
-        A.update(self.reverse)
+        A.update(self.reverses)
         return A
 
     @property
-    def _top_title(self):
-        A = KeyedDefaultDict(lambda col: self._row_title[col] + ('s' if (key and key[-1] != 's') else ''))
-        A.update(self.top_title)
+    def _top_titles(self):
+        def _default(col):
+            rtitle = self._row_titles[col]
+            if rtitle and rtitle[-1] != 's':
+                return rtitle + 's'
+            else:
+                return rtitle
+        A = KeyedDefaultDict(_default)
+        A.update(self.top_titles)
         return A
 
     @property
-    def _row_title(self):
+    def _row_titles(self):
         A = KeyedDefaultDict(lambda col: col.replace('_', ' '))
-        A.update(self.row_title)
+        A.update(self.row_titles)
         return A
 
     @property
-    def _split_list(self):
-        A = defaultdict(bool)
-        A.update(self.split_list)
+    def _knowls(self):
+        A = defaultdict(lambda: None)
+        A.update(self.knowls)
         return A
 
-    def display_data(self, table, cols, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
+    @property
+    def _split_lists(self):
+        A = defaultdict(bool)
+        A.update(self.split_lists)
+        return A
+
+    def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -384,25 +397,26 @@ class StatsDisplay(UniqueRepresentation):
                 buckets = {cols[0]: buckets}
             else:
                 raise ValueError("buckets should be a dictionary with columns as keys")
-        formatter = self._formatter
-        query_formatter = self._query_formatter
-        sort_key = self._sort_key
-        reverse = self._reverse
+        formatter = self._formatters
+        query_formatter = self._query_formatters
+        sort_key = self._sort_keys
+        reverse = self._reverses
         if base_url is None:
             base_url = url_for(self.baseurl_func) + '?'
         if url_extras:
             base_url += url_extras
         if table is None:
             table = self.table
+        table = table.stats
 
         if len(cols) == 1:
             col = cols[0]
-            split_list = self._split_list[col]
+            split_list = self._split_lists[col]
             headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
             if not buckets:
                 if avg or totaler is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
-                headers = [formatter[col](val) for val in sorted(headers, key=sort_key, reverse=reverse)]
+                headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
             elif cols == buckets.keys():
                 if split_list or avg or sort_key[col]:
                     raise ValueError("Unsupported option")
@@ -431,13 +445,13 @@ class StatsDisplay(UniqueRepresentation):
             non_buckets = [col for col in cols if col not in buckets]
             if len(buckets) + len(non_buckets) != 2:
                 raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = table._get_values_counts(cols, constraint, False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            headers, grid = table._get_values_counts(cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
             for i, col in enumerate(cols):
                 if col in buckets:
                     headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
                 else:
                     headers[i] = [formatter[col](val) for val in
-                                  sorted(set(headers[i]), key=sort_key.get(col), reverse=reverse.get(col))]
+                                  sorted(set(headers[i]), key=sort_key[col], reverse=reverse[col])]
             row_headers, col_headers = headers
             grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
             if proportioner is not None:
@@ -456,7 +470,7 @@ class StatsDisplay(UniqueRepresentation):
         cols = attr['cols']
         # default value for top_title from row_title/columns
         if 'top_title' not in attr:
-            top_title = [(self._top_title[col], self._knowl[col]) for col in cols]
+            top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
         missing_knowl = any(knowl is None for text, knowl in top_title)
@@ -464,11 +478,11 @@ class StatsDisplay(UniqueRepresentation):
         attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
                                         for title, knowl in top_title)
         attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
-        data = table.stats.display_data(**attr)
+        data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
         if len(cols) == 1:
-            attr['row_title'] = self._row_title[cols[0]]
+            attr['row_title'] = self._row_titles[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
             rows = [counts[i:i+10] for i in range(0,len(counts),10)]
@@ -505,15 +519,14 @@ class StatsDisplay(UniqueRepresentation):
             cols = attr["cols"]
             if not cols:
                 continue
-            buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
-            # Deal with the length 1 shortcuts
             if isinstance(cols, basestring):
                 cols = [cols]
+            buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:
                 buckets = {cols[0]: buckets}
             constraint = attr.get("constraint")
             table = attr.get("table", self.table)
-            split_list = all(self._split_list[col] for col in cols)
+            split_list = all(self._split_lists[col] for col in cols)
             if buckets:
                 if split_list:
                     raise ValueError("split_list not supported with buckets")

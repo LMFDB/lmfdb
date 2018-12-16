@@ -1011,8 +1011,8 @@ class CMF_stats(StatsDisplay):
                'weight':['1','2','3','4','5','6-10','11-20','21-40','41-62'],
                'dim':['1','2','3','4','5-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
-    reverse = {'cm_discs': True}
-    sort_key = {'projective_image': projective_image_sort_key}
+    reverses = {'cm_discs': True}
+    sort_keys = {'projective_image': projective_image_sort_key}
     knowls = {'level': 'mf.elliptic.level',
               'weight': 'mf.elliptic.weight',
               'dim': 'mf.elliptic.dimension',
@@ -1024,21 +1024,21 @@ class CMF_stats(StatsDisplay):
               'self_twist_type': 'mf.elliptic.self_twist',
               'cm_discs': 'mf.elliptic.cm_form',
               'rm_discs': 'mf.elliptic.rm_form'}
-    top_title = {'dim': 'dimension',
-                 'has_inner_twist': 'inner twisting',
-                 'cm_discs': 'complex multiplication',
-                 'rm_discs': 'real multiplication'}
-    row_title = {'char_order': 'character order',
-                 'num_forms': 'newforms',
-                 'cm_discs': 'CM disc',
-                 'rm_discs': 'RM disc'}
-    formatter = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
-                 'has_inner_twist': boolean_unknown_format,
-                 'self_twist_type': self_twist_type_formatter}
-    query_formatter = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
-                       'self_twist_type': self_twist_type_query_formatter}
-    split_list = {'cm_discs': True,
-                  'rm_discs': True}
+    top_titles = {'dim': 'dimension',
+                  'has_inner_twist': 'inner twisting',
+                  'cm_discs': 'complex multiplication',
+                  'rm_discs': 'real multiplication'}
+    row_titles = {'char_order': 'character order',
+                  'num_forms': 'newforms',
+                  'cm_discs': 'CM disc',
+                  'rm_discs': 'RM disc'}
+    formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+                  'has_inner_twist': boolean_unknown_format,
+                  'self_twist_type': self_twist_type_formatter}
+    query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
+                        'self_twist_type': self_twist_type_query_formatter}
+    split_lists = {'cm_discs': True,
+                   'rm_discs': True}
     stat_list = [
         {'cols': ['level', 'weight'],
          'proportioner': per_col_total,
