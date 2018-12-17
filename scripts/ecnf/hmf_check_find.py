@@ -4,11 +4,8 @@ Hilbert Modular Forms databases:  """
 
 # 2018-12-14: converted to work with the postgres database (JEC)
 
-import os.path
 import sys
-import os
-import pymongo
-from sage.all import ZZ, EllipticCurve, Magma, srange, oo
+from sage.all import EllipticCurve, Magma, srange, oo
 from lmfdb.db_backend import db
 
 print "setting nfcurves"

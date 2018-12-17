@@ -915,8 +915,8 @@ def add_isogs_to_one(c):
 def update_stats(verbose=True):
     from data_mgt.utilities.rewrite import update_attribute_stats
     from bson.code import Code
-    ec = C.elliptic_curves
-    ecdbstats = ec.nfcurves.stats
+    ec = db.ec_nfcurves
+    ecdbstats = db.ec_nfcurves.stats
 
     # get list of degrees
 
@@ -1088,7 +1088,7 @@ def make_IQF_ideal_table(infile, insert=False):
     print("read {} lines from {}".format(n,infile))
     if insert:
         print("inserting into IQF_labels collection")
-        C['elliptic_curves']['IQF_labels'].insert_many(items)
+        db.ec_iqf_labels.insert_many(items)
     else:
         print("No insertion, dummy run")
 
