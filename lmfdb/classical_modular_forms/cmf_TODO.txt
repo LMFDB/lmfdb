@@ -18,6 +18,8 @@ IMPORTANT:
 * Use include in dynamic template for stat display (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
 * Header for space pages (newspaces and gamma1) should list level first then weight to be consistent with bread crumbs
+* Compare trivial char data with Stein database (Drew)
+* Compare dihedral weight one data with Magma (Drew)
 -------------------------- Pull Request Line -------------------------------------------------
 * Lift projective reps for weight one forms to artin reps whereever possible
 * code snippets for form and space pages (Drew)
