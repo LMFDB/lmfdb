@@ -1025,7 +1025,7 @@ class CMF_stats(StatsDisplay):
               'cm_discs': 'mf.elliptic.cm_form',
               'rm_discs': 'mf.elliptic.rm_form'}
     top_titles = {'dim': 'dimension',
-                  'inner_twist_count': 'inner twisting',
+                  'inner_twist_count': 'inner twists',
                   'cm_discs': 'complex multiplication',
                   'rm_discs': 'real multiplication'}
     row_titles = {'char_order': 'character order',
