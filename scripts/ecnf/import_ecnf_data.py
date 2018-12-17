@@ -131,7 +131,6 @@ directory, start sage and use the command
 import os.path
 import re
 import os
-import pymongo
 import pprint
 from lmfdb.db_backend import db
 from lmfdb.utils import web_latex
@@ -731,10 +730,6 @@ def make_isoclass_line(ec):
 #
 ##############
 
-def make_indices():
-    for x in ['field_label', 'degree', 'number', 'label', 'base_change', 'isogeny_degrees', 'class_label', 'torsion_order']:
-        nfcurves.create_index(x)
-    nfcurves.create_index([(x,pymongo.ASCENDING) for x in ['field_label', 'conductor_norm', 'conductor_label', 'iso_nlabel', 'number']])
 
 ########################################################
 #
