@@ -7,13 +7,64 @@ information. If the entry does not exist then it creates it and
 returns that.
 
 Initial version (Arizona March 2014) based on import_ec_data.py: John Cremona
-Revised continuously 2014-2015 by John Cremona: now uncludes download functions too.
+Revised continuously 2014-2018 by John Cremona: now includes download functions too.
 
-The documents in the collection 'nfcurves' in the database
-'elliptic_curves' have the following keys (* denotes a mandatory
-field) and value types (with examples).  Here the base field is
-K=Q(w) of degree d.
+2018-12-14: updated for postgres interface instead of mongo
 
+The only relevant postgres table is ec_nfcurves (the mongo equivalent was elliptic_curves.nfcurves)
+
+The table ec_nfcurves has the following columns (i.e. keys) and value
+types (with examples).  Here the base field is K=Q(w) of degree d.
+
+NB see ec_nfcurves.col_type for an up-to-date list.
+
+"""
+ec_nfcurves_col_types = {
+ u'abs_disc': 'bigint',
+ u'ainvs': 'text',
+ u'analytic_rank': 'smallint',
+ u'base_change': 'jsonb',
+ u'class_deg': 'integer',
+ u'class_label': 'text',
+ u'class_size': 'smallint',
+ u'cm': 'integer',
+ u'conductor_ideal': 'text',
+ u'conductor_label': 'text',
+ u'conductor_norm': 'bigint',
+ u'degree': 'smallint',
+ u'equation': 'text',
+ u'field_label': 'text',
+ u'galois_images': 'jsonb',
+ u'gens': 'jsonb',
+ u'heights': 'jsonb',
+ u'id': 'bigint',
+ u'iso_label': 'text',
+ u'iso_nlabel': 'smallint',
+ u'isogeny_degrees': 'jsonb',
+ u'isogeny_matrix': 'jsonb',
+ u'jinv': 'text',
+ u'label': 'text',
+ u'local_data': 'jsonb',
+ u'minD': 'text',
+ u'ngens': 'smallint',
+ u'non-surjective_primes': 'jsonb',
+ u'non_min_p': 'jsonb',
+ u'number': 'smallint',
+ u'q_curve': 'boolean',
+ u'rank': 'smallint',
+ u'rank_bounds': 'jsonb',
+ u'reg': 'numeric',
+ u'short_class_label': 'text',
+ u'short_label': 'text',
+ u'signature': 'jsonb',
+ u'torsion_gens': 'jsonb',
+ u'torsion_order': 'smallint',
+ u'torsion_structure': 'jsonb',
+ u'trace_hash': 'bigint',
+}
+
+
+r"""
  An NFelt-string is a string representing an element of K as a
  comma-separated list of rational coefficients with respect to the
  power basis.
@@ -82,7 +133,7 @@ import re
 import os
 import pymongo
 import pprint
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
 from sage.databases.cremona import cremona_to_lmfdb
@@ -90,21 +141,9 @@ from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
 from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
-print "getting connection"
-C= getDBConnection()
-
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
-print "setting nfcurves"
-oldnfcurves = C.elliptic_curves.nfcurves.old
-nfcurves = C.elliptic_curves.nfcurves
-qcurves = C.elliptic_curves.curves
-C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
-
+print "setting nfcurves and qcurves"
+nfcurves = db.ec_nfcurves
+qcurves = db.ec_curves
 
 # We have to look up number fields in the database from their labels,
 # but only want to do this once for each label, so we will maintain a
@@ -125,11 +164,11 @@ def nf_lookup(label):
         #print "We already have it: %s" % nf_lookup_table[label]
         return nf_lookup_table[label]
     #print "We do not have it yet, finding in database..."
-    field = C.numberfields.fields.find_one({'label': label})
+    field = db.nf_fields.lucky({'label': label})
     if not field:
         raise ValueError("Invalid field label: %s" % label)
     #print "Found it!"
-    coeffs = [ZZ(c) for c in field['coeffs'].split(",")]
+    coeffs = [ZZ(c) for c in field['coeffs']]
     gen_name = special_names.get(label,'a')
     K = NumberField(PolynomialRing(QQ, 'x')(coeffs), gen_name)
     #print "The field with label %s is %s" % (label, K)
@@ -181,9 +220,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = C.elliptic_curves.nfcurves.find(query)
-    ASC = pymongo.ASCENDING
-    res = cursor.sort([('conductor_norm', ASC), ('conductor_label', ASC), ('iso_nlabel', ASC), ('number', ASC)])
+    res = nfcurves.search(query, sort = ['conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
@@ -364,10 +401,6 @@ def curves(line, verbose=False):
 
     return label, edata
 
-
-
-
-
 def add_heights(data, verbose = False):
     r""" If data holds the data fields for a curve this returns the same
     with the heights of the points included as a new field with key
@@ -530,10 +563,13 @@ def readgalreps(base_path, filename):
 #
 # galrepdat=readgalreps("/home/jec/ecnf-data/", "nfcurves_galois_images.txt")
 #
-# then use rewrite like this:
-# %runfile data_mgt/utilities/rewrite.py
-# rewrite_collection(C.elliptic_curves, "nfcurves", "nfcurves.new", add_galrep_data_to_nfcurve)
+# then use the rewrite method for the ec_nfcurves table like this:
 #
+# %runfile data_mgt/utilities/rewrite.py
+# db.ec_nfcurves.rewrite(add_galrep_data_to_nfcurve)
+#
+# NB Not yet tested on postgres.  See ec_nfcurves.rewrite? for more documentation; in particular columns cannot be added this way, use add_column() for that
+
 galrepdat = {} # for pyflakes
 
 def add_galrep_data_to_nfcurve(cu):
@@ -546,9 +582,10 @@ filename_base_list = ['curves', 'curve_data']
 #
 
 def upload_to_db(base_path, filename_suffix, insert=True, test=True):
-    r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label is already in the database; otherwise uses update_one()
-    with upsert=True
+    r""" Uses insert_many() if insert=True, which is faster but will create
+    duplicates and cause problems if any of the the labels are already
+    in the database; otherwise uses upsert() which will update a
+    single row, or add a row.
     """
     curves_filename = 'curves.%s' % (filename_suffix)
     curve_data_filename = 'curve_data.%s' % (filename_suffix)
@@ -598,7 +635,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     for val in vals:
         val = add_heights(val)
 
-    if isoclass_filename in file_list: # code added March 2017, not yet tested
+    if isoclass_filename in file_list:
         print("processing isogeny matrices")
         isogmats = read1isogmats(base_path, filename_suffix)
         for val in vals:
@@ -624,7 +661,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         print("inserting data one curve at a time...")
         for val in vals:
             #print val
-            nfcurves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            nfcurves.upsert({'label': val['label']}, val)
             count += 1
             if count % 100 == 0:
                 print "inserted %s" % (val['label'])
@@ -705,7 +742,7 @@ def make_indices():
 #
 ########################################################
 
-def check_database_consistency(collection, field=None, degree=None, ignore_ranks=False):
+def check_database_consistency(table, field=None, degree=None, ignore_ranks=False):
     r""" Check that for given field (or all) every database entry has all
     the fields it should, and that these have the correct type.
     """
@@ -724,6 +761,8 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'short_label':  str_type,
                       'class_label':  str_type,
                       'short_class_label':  str_type,
+                      'class_deg':  int_type,
+                      'class_size':  int_type,
                       'conductor_label': str_type,
                       'conductor_ideal': str_type,
                       'conductor_norm': int_type,
@@ -745,7 +784,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'isogeny_matrix': list_type, # of lists of ints
                       'isogeny_degrees': list_type, # of ints
                       #'class_deg': int_type,
-                      'non_surjective_primes': list_type, # of ints
+                      'non-surjective_primes': list_type, # of ints
                       #'non-maximal_primes': list_type, # of ints
                       'galois_images': list_type, # of strings
                       #'mod-p_images': list_type, # of strings
@@ -757,6 +796,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
                       'reg': float_type, # or int(1)
                       'q_curve': bool_type,
                       'base_change': list_type, # of strings
+                      'trace_hash': type(long())
     }
 
     key_set = Set(keys_and_types.keys())
@@ -789,7 +829,7 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
         query['degree'] = int(degree)
 
     count=0
-    for c in C.elliptic_curves.get_collection(collection).find(query):
+    for c in table.search(query):
         count +=1
         if count%1000==0:
             print("Checked {} entries...".format(count))
@@ -800,7 +840,10 @@ def check_database_consistency(collection, field=None, degree=None, ignore_ranks
             expected_keys = expected_keys - number_1_only_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys
-        db_keys = Set([str(k) for k in c.keys()]) - ['_id', 'class_deg', 'class_size']
+        if c['degree'] > 2:
+            expected_keys = expected_keys - ['trace_hash']
+            
+        db_keys = Set([str(k) for k in c.keys()]) - ['_id']
         if ignore_ranks:
             db_keys = db_keys - rank_keys
         if c['degree']==6:
@@ -859,10 +902,9 @@ def add_isogs_to_one(c):
     return c
 
 #
-# 3. in a call to rewrite_collection such as
+# 3. in a call to rewrite() such as
 #
-#  %runfile data_mgt/utilities/rewrite.py
-#  rewrite_collection(C.elliptic_curves,'nfcurves','nfcurves.new',add_isogs_to_one)
+#  db.ec_nfcurves.rewrite(add_isogs_to_one)
 
 ################################################################################
 #
@@ -1031,6 +1073,10 @@ def update_stats(verbose=True):
     entry.update(field_data)
     ecdbstats.insert_one(entry)
 
+# functions below here not yet adapted for postgres
+
+# This was a one-off and can probably be deleted:
+
 def make_IQF_ideal_table(infile, insert=False):
     items = []
     n = 0
@@ -1046,6 +1092,9 @@ def make_IQF_ideal_table(infile, insert=False):
     else:
         print("No insertion, dummy run")
 
+# Various functions for attempting to correctly add Q-curve flags.
+# Not yet fully implemented.
+        
 
 # function to give to rewrite_collection() to fix q_curve flags (only touches quadratic field so far)
 
