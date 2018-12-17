@@ -1148,7 +1148,7 @@ class PostgresTable(PostgresBase):
     # Convenience methods for accessing statistics                   #
     ##################################################################
 
-    def max(self, col, constraint=None):
+    def max(self, col, constraint={}):
         """
         The maximum value attained by the given column.
 
@@ -2832,7 +2832,46 @@ class PostgresStatsTable(PostgresBase):
             nres = self._slow_count(query, record=record)
         return int(nres)
 
-    def max(self, col, constraint=None):
+    def _quick_max(self, col, ccols, cvals):
+        if ccols is None:
+            constraint = SQL("constraint_cols IS NULL")
+            values = ["max", [col]]
+        else:
+            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
+            values = ["max", [col], ccols, cvals]
+        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
+        cur = self._execute(selecter, values)
+        if cur.rowcount:
+            return cur.fetchone()[0]
+
+    def _slow_max(self, col, constraint):
+        qstr, values = self.table._parse_dict(constraint)
+        if qstr is None:
+            where = SQL("")
+            values = []
+        else:
+            where = SQL(" WHERE {0}").format(qstr)
+        base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0} DESC ").format(
+            Identifier(col), Identifier(self.search_table), where)
+        selecter = base_selecter + SQL("LIMIT 1")
+        cur = self._execute(selecter, values)
+        m = cur.fetchone()[0]
+        if m is None:
+            # the default order ends with NULLs, so we now have to use NULLS LAST,
+            # preventing the use of indexes.
+            selecter = base_selecter + SQL("NULLS LAST LIMIT 1")
+            cur = self._execute(selecter, values)
+            m = cur.fetchone()[0]
+        return m
+
+    def _record_max(self, col, ccols, cvals, m):
+        try:
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values) VALUES (%s, %s, %s, %s, %s)")
+            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m, ccols, cvals])
+        except Exception:
+            pass
+
+    def max(self, col, constraint={}, record=True):
         """
         The maximum value attained by the given column, which must be in the search table.
 
@@ -2847,31 +2886,11 @@ class PostgresStatsTable(PostgresBase):
             return self.count()
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
-        if constraint is None:
-            constraint = SQL("constraint_cols IS NULL")
-            values = ["max", [col]]
-        else:
-            ccols, cvals = self._split_dict(constraint)
-            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
-            values = ["max", [col], ccols, cvals]
-        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
-        cur = self._execute(selecter, values)
-        if cur.rowcount:
-            return cur.fetchone()[0]
-        selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
-        cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
-        m = cur.fetchone()[0]
+        ccols, cvals = self._split_dict(constraint)
+        m = self._quick_max(col, ccols, cvals)
         if m is None:
-            # the default order ends with NULLs, so we now have to use NULLS LAST,
-            # preventing the use of indexes.
-            selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC NULLS LAST LIMIT 1")
-            cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
-            m = cur.fetchone()[0]
-        try:
-            inserter = SQL("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)")
-            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m])
-        except Exception:
-            pass
+            m = self._slow_max(col, constraint)
+            self._record_max(col, ccols, cvals, m)
         return m
 
     def _bucket_iterator(self, buckets, constraint):

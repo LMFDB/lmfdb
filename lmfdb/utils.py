@@ -83,7 +83,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
                         if vcf[i] < 0:
                             outstr += '+' # we haven't added the +
                         outstr += 'O(%s)' % variableterm
-                        break;
+                        break
                     if vcf[i] == 1:
                         outstr += variableterm
                     elif abs(vcf[i]) != 1:
@@ -326,7 +326,7 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
         try:
             k2 = ZZ(2*x)
         except TypeError:
-            pass;
+            pass
         # the second statment checks for overflow
         if k2 == 2*x and (2*x + 1) - k2 == 1:
             if k2 % 2 == 0:
@@ -393,7 +393,7 @@ def display_complex(x, y, digits, method = "truncate", parenthesis = False, extr
             sign = " + "
     y = display_float(y, digits, method = method, extra_truncation_digits = extra_truncation_digits)
     if y == "1":
-        y = "";
+        y = ""
     res = x + sign + y + r"i"
     if parenthesis and x != "":
         res = "(" + res + ")"
