@@ -8,7 +8,7 @@ from lmfdb.classical_modular_forms import cmf
 from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl, range_formatter
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
@@ -672,7 +672,7 @@ newform_only_fields = {
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',
     'rm_discs': 'RM discriminant',
-    'has_inner_twist': 'Has inner twist',
+    'inner_twist_count': 'Inner twist count',
     'analytic_rank': 'Analytic rank',
 }
 def common_parse(info, query):
@@ -729,7 +729,7 @@ def newform_parse(info, query):
     parse_subset(info, query, 'cm_discs', name="CM discriminant", parse_singleton=lambda d: parse_discriminant(d, -1))
     parse_subset(info, query, 'rm_discs', name="RM discriminant", parse_singleton=lambda d: parse_discriminant(d, 1))
     parse_bool(info, query, 'is_twist_minimal')
-    parse_bool_unknown(info, query, 'has_inner_twist')
+    parse_ints(info, query, 'inner_twist_count')
     parse_ints(info, query, 'analytic_rank')
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
@@ -969,32 +969,26 @@ def projective_image_sort_key(im_type):
     else:
         return int(im_type[1:])
 
-def self_twist_type_formatter(x, col):
-    if col == 'weight':
-        return range_formatter(x)
-    else:
-        if x == 0:
-            return 'neither'
-        if x == 1:
-            return 'CM only'
-        if x == 2:
-            return 'RM only'
-        if x == 3:
-            return 'both'
-        return x # c = 'neither', 'CM only', 'RM only' or 'both'
+def self_twist_type_formatter(x):
+    if x == 0:
+        return 'neither'
+    if x == 1:
+        return 'CM only'
+    if x == 2:
+        return 'RM only'
+    if x == 3:
+        return 'both'
+    return x # c = 'neither', 'CM only', 'RM only' or 'both'
 
-def self_twist_type_query_formatter(x, col):
-    if col == 'weight':
-        return 'weight=' + range_formatter(x)
-    else:
-        if x in [0, 'neither']:
-            return 'has_self_twist=no'
-        elif x in [1, 'CM only']:
-            return 'has_self_twist=cm'
-        elif x in [2, 'RM only']:
-            return 'has_self_twist=rm'
-        elif x in [3, 'both']:
-            return 'has_self_twist=cm_and_rm'
+def self_twist_type_query_formatter(x):
+    if x in [0, 'neither']:
+        return 'has_self_twist=no'
+    elif x in [1, 'CM only']:
+        return 'has_self_twist=cm'
+    elif x in [2, 'RM only']:
+        return 'has_self_twist=rm'
+    elif x in [3, 'both']:
+        return 'has_self_twist=cm_and_rm'
 
 class CMF_stats(StatsDisplay):
     """
@@ -1013,76 +1007,121 @@ class CMF_stats(StatsDisplay):
 
     table = db.mf_newforms
     baseurl_func = ".index"
-
+    buckets = {'level':['1','2-10','11-100','101-200','201-400','401-600','601-800','801-1000','1001-2000','2001-4000'],
+               'weight':['1','2','3','4','5','6-10','11-20','21-40','41-62'],
+               'dim':['1','2','3','4','5-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
+               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
+    reverses = {'cm_discs': True}
+    sort_keys = {'projective_image': projective_image_sort_key}
+    knowls = {'level': 'mf.elliptic.level',
+              'weight': 'mf.elliptic.weight',
+              'dim': 'mf.elliptic.dimension',
+              'char_order': 'character.dirichlet.order',
+              'analytic_rank': 'mf.elliptic.analytic_rank',
+              'projective_image': 'mf.elliptic.projective_image',
+              'num_forms': 'mf.elliptic.galois-orbits',
+              'inner_twist_count': 'mf.elliptic.inner_twist',
+              'self_twist_type': 'mf.elliptic.self_twist',
+              'cm_discs': 'mf.elliptic.cm_form',
+              'rm_discs': 'mf.elliptic.rm_form'}
+    top_titles = {'dim': 'dimension',
+                  'inner_twist_count': 'inner twisting',
+                  'cm_discs': 'complex multiplication',
+                  'rm_discs': 'real multiplication'}
+    row_titles = {'char_order': 'character order',
+                  'num_forms': 'newforms',
+                  'inner_twist_count': 'inner twists',
+                  'cm_discs': 'CM disc',
+                  'rm_discs': 'RM disc'}
+    formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+                  'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
+                  'self_twist_type': self_twist_type_formatter}
+    query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
+                        'self_twist_type': self_twist_type_query_formatter}
+    split_lists = {'cm_discs': True,
+                   'rm_discs': True}
     stat_list = [
         {'cols': ['level', 'weight'],
-         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000],
-                    'weight':[1,1,2,3,4,5,10,20,40,62]},
-         'knowl':['mf.elliptic.level', 'mf.elliptic.weight'],
          'proportioner': per_col_total,
          'totaler': sum_totaler(),
          'corner_label':r'\(N \backslash k\)'},
         {'cols': ['level', 'dim'],
-         'buckets':{'level':[1,1,10,100,200,400,600,800,1000,2000,4000],
-                    'dim':[1,1,2,3,4,10,20,100,1000,10000,100000]},
-         'top_title':['level', 'dimension'],
-         'knowl':['mf.elliptic.level', 'mf.elliptic.dimension'],
          'proportioner': per_row_total,
          'totaler': sum_totaler(),
          'corner_label':r'\(N \backslash d\)',
         },
-        {'cols':'char_order',
-         'buckets':[1,1,2,3,4,5,10,20,100,1000],
-         'row_title':'character order',
-         'knowl':'character.dirichlet.order'},
+        {'cols':'char_order'},
         {'cols':'analytic_rank',
-         'top_title':['analytic ranks', 'for forms of weight greater than 1'],
-         'row_title':'analytic rank',
-         'knowl':'lfunction.analytic_rank',
+         'top_title':[('analytic ranks', 'mf.elliptic.analytic_rank'),
+                      ('for forms of weight greater than 1', None)],
          'avg':True},
         {'cols':'projective_image',
-         'top_title':['projective images', 'for weight 1 forms'],
-         'row_title':'projective image',
-         'sort_key': projective_image_sort_key,
-         'knowl':'mf.elliptic.projective_image',
-         'formatter': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
-         'query_formatter':(lambda t,x: r'projective_image=%s%s' % (t[0], t[1:]))},
+         'top_title':[('projective images', 'mf.elliptic.projective_image'),
+                      ('for weight 1 forms', None)]},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
-         'top_title': ['number of newforms', r'in \(S_k(N, \chi)\)'],
-         'row_title': 'newforms',
-         'knowl': 'mf.elliptic.galois-orbits',
+         'top_title': [('number of newforms', 'mf.elliptic.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
          'url_extras': 'search_type=Spaces&'},
-        {'cols':'has_inner_twist',
-         'top_title':'inner twisting',
-         'row_title':'has inner twist',
-         'knowl':'mf.elliptic.inner_twist',
-         'formatter':boolean_unknown_format},
+        {'cols':'inner_twist_count'},
         {'cols':['self_twist_type', 'weight'],
-         'buckets':{'weight':[1,1,2,3,4,5,10,20,40,62]},
-         'knowl':['mf.elliptic.self_twist', 'mf.elliptic.weight'],
          'title_joiner': ' by ',
-         'formatter':self_twist_type_formatter,
-         'query_formatter':self_twist_type_query_formatter,
          'proportioner': per_col_total,
          'totaler': sum_totaler(col_counts=False, corner_count=False),
          'corner_label':'weight'},
         {'cols': 'cm_discs',
-         'top_title':'complex multiplication',
-         'row_title':'CM disc',
-         'knowl':'mf.elliptic.cm_form',
-         'totaler':{},
-         'reverse':True,
-         'split_list':True},
+         'totaler':{}},
         {'cols': 'rm_discs',
-         'top_title':'real multiplication',
-         'row_title':'RM disc',
-         'knowl':'mf.elliptic.rm_form',
-         'totaler':{},
-         'split_list':True},
+         'totaler':{}},
     ]
 
 @cmf.route("/stats")
 def statistics():
     title = 'Cuspidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
+
+col_display = {
+    'none': 'None',
+    'level':'Level',
+    'weight':'Weight',
+    'dim':'Dimension',
+    'analytic_conductor':'Analytic conductor',
+    'char_order':'Character order',
+    'self_twist_type':'Self twist type',
+    'inner_twist_count':'Num inner twists',
+    'analytic_rank':'Analytic rank',
+    'char_parity':'Character parity',
+    'projective_image':'Projective image',
+    'projective_image_type':'Projective image type',
+    'artin_degree':'Artin degree',
+}
+def attribute_parse(info, attributes):
+    # testing
+    cols = []
+    if 'col1' in info and info['col1'] != 'none':
+        cols.append(info['col1'])
+    if 'col2' in info and info['col2'] != 'none':
+        cols.append(info['col2'])
+    attributes['cols'] = cols
+    #attributes['buckets'] = [1,1,2,3,4,5,10,20,100,1000]
+    attributes['row_title'] = col_display.get('col1', 'none')
+    attributes['knowl'] = 'mf.elliptic.level'
+
+@cmf.route("/stats_dynamic")
+def dynamic_statistics():
+    if len(request.args) > 0:
+        info = to_dict(request.args)
+    else:
+        info = {}
+    info["parent_page"] = "cmf_refine_search.html"
+    info["stats"] = stats = CMF_stats()
+    info["search_type"] = 'DynStats'
+    info["all_weight1"] = lambda x: True
+    constraint = {}
+    newform_parse(info, constraint)
+    attributes = {'constraint': constraint}
+    attribute_parse(info, attributes)
+    stats.setup(attributes=[attributes])
+    info["d"] = stats.prep(attributes)
+    info["valid_columns"] = col_display.items()
+    title = 'Dynamic Statistics'
+    return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

@@ -113,7 +113,7 @@ class AVTest(LmfdbTest):
 
     def test_split_Frobenius_angles(self):
         r"""
-        Check that the Frobenius angles are split into multiple mathjax boxes
+        Check that the Frobenius angles are split into multiple math elements
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         assert r"$\pm0.15043295046$, $\pm0.544835058382$" in page

@@ -99,8 +99,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#modform_output").load("{{info.modform_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+            {# render the output #}
+            renderMathInElement($("#modform_output").get(0), katexOpts);
         });
 }
 $(function() {

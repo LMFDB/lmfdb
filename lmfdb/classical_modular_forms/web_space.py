@@ -193,7 +193,7 @@ class WebNewformSpace(object):
 
         # Properties
         self.properties = [('Label',self.label)]
-        if self.plot is not None:
+        if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
         self.properties +=[
             ('Level',str(self.level)),
@@ -315,7 +315,7 @@ class WebGamma1Space(object):
 
         self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
         self.properties = [('Label',self.label),]
-        if self.plot is not None:
+        if self.plot is not None and self.new_dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
         self.properties +=[
             ('Level',str(self.level)),

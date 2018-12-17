@@ -26,6 +26,7 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 from lmfdb.base import app
+from collections import defaultdict
 
 
 
@@ -497,14 +498,14 @@ def pol_to_html(p):
 
 
 ################################################################################
-#  latex/mathjax utilities
+#  latex/math rendering utilities
 ################################################################################
 
 def web_latex(x, enclose=True):
     """
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to make it a mathjax equation.
+    `\(` and `\)` to tag it as an equation in html.
 
     Note:
     if input is a factored ideal, use web_latex_ideal_fact instead.
@@ -525,7 +526,7 @@ def web_latex_ideal_fact(x, enclose=True):
     """
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
-    `\)` to make it a mathjax equation.
+    `\)` to tag it as an equation in html.
 
     sage puts many parentheses around latex representations of factored ideals.
     This function removes excessive parentheses.
@@ -747,15 +748,11 @@ def list_to_latex_matrix(li):
 
     Example:
     >>> list_to_latex_matrix([[1,0],[0,1]])
-    '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0 & 1\\end{array}\\right)'
+    '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
-    dim = str(len(li[0]))
-    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
-    for row in li:
-        row = [str(a) for a in row]
-        mm += ' & '.join(row)
-        mm += r'\\'
-    mm = mm[:-2] # remove final line break
+    dim = len(li[0])
+    mm = r"\left(\begin{array}{"+dim*"r" +"}"
+    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
     mm += r'\end{array}\right)'
     return mm
 
@@ -1081,7 +1078,7 @@ def ajax_more(callback, *arg_list, **kwds):
         res = ''
     if arg_list:
         url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
+        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
 
@@ -1125,29 +1122,12 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
 
-def range_formatter(x, col=None): # accept an unused col argument for the 2d case.
+class KeyedDefaultDict(defaultdict):
     """
-    Used by the display_data function in db_backend.
+    A defaultdict where the default value takes the key as input.
     """
-    if isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            raise ValueError
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError((key,))
+        self[key] = value = self.default_factory(key)
+        return value

@@ -313,75 +313,74 @@ class G2C_stats(StatsDisplay):
     Class for creating and displaying statistics for genus 2 curves over Q
     """
     def __init__(self):
-        ncurves = comma(db.g2c_curves.count())
-        nclasses = comma(db.lfunc_instances.count({'type':'G2Q'}))
-        max_D = comma(db.g2c_curves.max('abs_disc'))
-        g2c_knowl = display_knowl('g2c.g2curve', title='genus 2 curves')
-        disc_knowl = display_knowl('g2c.abs_discriminant', title = "absolute discriminant")
+        self.ncurves = comma(db.g2c_curves.count())
+        self.max_D = comma(db.g2c_curves.max('abs_disc'))
+        self.disc_knowl = display_knowl('g2c.abs_discriminant', title = "absolute discriminant")
+
+    @property
+    def short_summary(self):
         stats_url = url_for(".statistics")
-        self.short_summary = 'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (ncurves, g2c_knowl, disc_knowl, max_D, stats_url)
-        self.summary = 'The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s.' % (ncurves, nclasses, disc_knowl, max_D)
+        g2c_knowl = display_knowl('g2c.g2curve', title='genus 2 curves')
+        return 'The database currently contains %s %s over $\Q$ of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (self.ncurves, g2c_knowl, self.disc_knowl, self.max_D, stats_url)
+
+    @property
+    def summary(self):
+        nclasses = comma(db.lfunc_instances.count({'type':'G2Q'}))
+        return 'The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s.' % (self.ncurves, nclasses, self.disc_knowl, self.max_D)
 
     table = db.g2c_curves
     baseurl_func = ".index_Q"
+    knowls = {'num_rat_pts': 'g2c.num_rat_pts',
+              'num_rat_wpts': 'g2c.num_rat_wpts',
+              'aut_grp_id': 'g2c.aut_grp',
+              'geom_aut_grp_id': 'g2c.geom_aut_grp',
+              'analytic_rank': 'g2c.analytic_rank',
+              'two_selmer_rank': 'g2c.two_selmer_rank',
+              'has_square_sha': 'g2c.has_square_sha',
+              'locally_solvable': 'g2c.locally_solvable',
+              'is_gl2_type': 'g2c.gl2type',
+              'real_geom_end_alg': 'g2c.st_group_identity_component',
+              'st_group': 'g2c.st_group',
+              'torsion_order': 'g2c.torsion_order'}
+    row_titles = {'num_rat_pts': 'rational points',
+                  'num_rat_wpts': 'Weierstrass points',
+                 'aut_grp_id': 'automorphism group',
+                  'geom_aut_grp_id': 'automorphism group',
+                  'two_selmer_rank': '2-Selmer rank',
+                  'has_square_sha': 'has square Sha',
+                  'is_gl2_type': 'is of GL2-type',
+                  'real_geom_end_alg': 'identity component',
+                  'st_group': 'Sato-Tate group',
+                  'torsion_order': 'torsion order'}
+    top_titles = {'num_rat_wpts': 'rational Weierstrass points',
+                  'aut_grp_id': '$\mathrm{Aut}(X)$',
+                  'geom_aut_grp_id': '$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$',
+                  'has_square_sha': 'squareness of &#1064;',
+                  'locally_solvable': 'local solvability',
+                  'is_gl2_type': '$\mathrm{GL}_2$-type',
+                  'real_geom_end_alg': 'Sato-Tate group identity components',
+                  'torsion_order': 'torsion subgroup orders'}
+    formatters = {'aut_grp_id': aut_grp_format,
+                  'geom_aut_grp_id': geom_aut_grp_format,
+                  'has_square_sha': boolean_format,
+                  'is_gl2_type': boolean_format,
+                  'real_geom_end_alg': boolean_format,
+                  'real_geom_end_alg': st0_group_format,
+                  'st_group': st_group_format}
 
     stat_list = [
-        {'cols': 'num_rat_pts',
-         'row_title': 'rational points',
-         'knowl': 'g2c.num_rat_pts',
-         'avg': True},
-        {'cols': 'num_rat_wpts',
-         'top_title': 'rational Weierstrass points',
-         'row_title': 'Weierstrass points',
-         'knowl': 'g2c.num_rat_wpts',
-         'avg': True},
-        {'cols': 'aut_grp_id',
-         'top_title': '$\mathrm{Aut}(X)$',
-         'row_title': 'automorphism group',
-         'knowl': 'g2c.aut_grp',
-         'formatter': aut_grp_format},
-        {'cols': 'geom_aut_grp_id',
-         'top_title': '$\mathrm{Aut}(X_{\overline{\mathbb{Q}}})$',
-         'row_title': 'automorphism group',
-         'knowl': 'g2c.geom_aut_grp',
-         'formatter': geom_aut_grp_format},
-        {'cols': 'analytic_rank',
-         'row_title': 'analytic rank',
-         'knowl': 'g2c.analytic_rank',
-         'avg': True},
-        {'cols': 'two_selmer_rank',
-         'row_title': '2-Selmer rank',
-         'knowl': 'g2c.two_selmer_rank',
-         'avg': True},
-        {'cols': 'has_square_sha',
-         'top_title': 'squareness of &#1064;',
-         'row_title': 'has square Sha',
-         'knowl': 'g2c.has_square_sha',
-         'formatter': boolean_format},
-        {'cols': 'locally_solvable',
-         'top_title': 'local solvability',
-         'row_title': 'locally solvable',
-         'knowl': 'g2c.locally_solvable',
-         'formatter': boolean_format},
-        {'cols': 'is_gl2_type',
-         'top_title': '$\mathrm{GL}_2$-type',
-         'row_title': 'is of GL2-type',
-         'knowl': 'g2c.gl2type',
-         'formatter': boolean_format},
-        {'cols': 'real_geom_end_alg',
-         'top_title': 'Sato-Tate group identity components',
-         'row_title': 'identity component',
-         'knowl': 'g2c.st_group_identity_component',
-         'formatter': st0_group_format},
-        {'cols': 'st_group',
-         'row_title': 'Sato-Tate group',
-         'knowl': 'g2c.st_group',
-         'formatter': st_group_format},
-        {'cols': 'torsion_order',
-         'top_title': 'torsion subgroup orders',
-         'row_title': 'torsion order',
-         'knowl': 'g2c.torsion_order',
-         'avg': True},
+        {'cols': 'num_rat_pts', 'avg': True},
+        {'cols': 'num_rat_wpts', 'avg': True},
+        {'cols': 'aut_grp_id'},
+        {'cols': 'geom_aut_grp_id'},
+        {'cols': 'analytic_rank', 'avg': True},
+        {'cols': 'two_selmer_rank', 'avg': True},
+        {'cols': 'has_square_sha'},
+        {'cols': 'locally_solvable'},
+        {'cols': 'is_gl2_type'},
+        {'cols': 'real_geom_end_alg'},
+        {'cols': 'st_group'},
+        {'cols': 'torsion_order', 'avg': True},
     ]
 
 @g2c_page.route("/Q/stats")

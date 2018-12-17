@@ -1,19 +1,23 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* if Hecke ring is the maximal order it should say this (it used to but seems to no longer do this)
+* clicking on spaces of odd weight and level 1,2 in Gamma1 table gives an error saying the space is not in the database (presumably because N=1,2 forces trivial character, so even parity), but in fact these (empty) spaces are present in mf_newspaces and their pages should be displayed (they are if you switch to Gamma0 search).
 
 IMPORTANT:
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
-* Make light gray lighter gray (?)
-* Change search on has_inner_twists to use inner_twist_count, add stats, add this to form page and property box (?)
-* Display hecke_ring_generator_nbound on form pages (and in property box?) (?)
-* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (?)
+* Make light gray lighter gray (David)
+* Change search on has_inner_twists to use inner_twist_count, add stats, add this to form page and property box (David)
+* Display hecke_ring_generator_nbound on form pages (and in property box?) (David)
+* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
+* Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
+* Use include in dynamic template for stat display (David)
+* Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
+* Header for space pages (newspaces and gamma1) should list level first then weight to be consistent with bread crumbs
 -------------------------- Pull Request Line -------------------------------------------------
 * Lift projective reps for weight one forms to artin reps whereever possible
 * code snippets for form and space pages (Drew)
@@ -75,6 +79,7 @@ IT WOULD BE NICE IF:
 * form pages: provide downloads of q-expansions for Magma/pari
 
 FUTURE WORK:
+* data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
 * data: compute much more using pari
 * Review editorial review of CMFs to make sure issues have been addressed
 * data: add trace hash for ECNF L-fun

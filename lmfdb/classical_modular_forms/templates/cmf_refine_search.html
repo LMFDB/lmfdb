@@ -9,7 +9,11 @@
 {% else %}
 {% set weight1options = 'err' in info or info.all_weight1(info.results) %}
 {% endif %}
+{% if info.search_type == 'DynStats' %}
+<h2>Constraints </h2>
+{% else %}
 <h2>Refine search </h2>
+{% endif %}
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
@@ -97,14 +101,7 @@
     </td>
     #}
     <td>
-      <select name='has_inner_twist' style="width: 150px;">
-        <option value=""{% if not info.has_inner_twist %} selected='yes'{% endif %}>unrestricted</option>
-        <option value="yes"{% if info.has_inner_twist == 'yes' %} selected='yes'{% endif %}>yes</option>
-        <option value="not_no"{% if info.has_inner_twist == 'not_no' %} selected='yes'{% endif %}>yes or unknown</option>
-        <option value="unknown"{% if info.has_inner_twist == 'unknown' %} selected='yes'{% endif %}>unknown</option>
-        <option value="not_yes"{% if info.has_inner_twist == 'not_yes' %} selected='yes'{% endif %}>no or unknown</option>
-        <option value="no"{% if info.has_inner_twist == 'no' %} selected='yes'{% endif %}>no</option>
-      </select>
+      <input type='text' style="width: 140px;" name='inner_twist_count' placeholder='1-' value='{{info.inner_twist_count}}'>
     </td>
     <td>
       <select name='is_self_dual' style="width: 150px;">
@@ -141,6 +138,31 @@
   {% endif %}
   <tr>
   </tr>
+  {% if info.search_type == 'DynStats' %}
+  <tr>
+    <td> Column 1</td>
+    <td> Column 2</td>
+  </tr>
+  <tr>
+    <td>
+      <select name='col1' style="width: 150px;">
+        {% for col, disp in info.valid_columns %}
+        <option value="{{ col }}">{{ disp }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <select name='col2' style="width: 150px;">
+        {% for col, disp in info.valid_columns %}
+        <option value="{{ col }}">{{ disp }}</option>
+        {% endfor %}
+      </select>
+    </td>
+  </tr>
+  <tr style="height:50px">
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px">Generate statistics</button></td>
+  </tr>
+  {% else %}
   <tr style="height:50px">
     <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px" onclick='resetStart()'>Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
@@ -150,6 +172,7 @@
     {% endif %}
     {% endfor %}
   </tr>
+  {% endif %}
 </table>
 {% if info.search_type == 'Traces' %}
 <br>

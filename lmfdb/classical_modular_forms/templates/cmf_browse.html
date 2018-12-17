@@ -182,18 +182,11 @@ Info was: {{info}}
       </td>
       <td></td>
       #}
-      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist_multiplicity', title='Inner twist count') }}</td>
       <td>
-        <select name='has_inner_twist' style="width: 140px">
-          <option value="" selected>unrestricted</option>
-          <option value="yes">yes</option>
-          <option value="not_no">yes or unknown</option>
-          <option value="unknown">unknown</option>
-          <option value="not_yes">no or unknown</option>
-          <option value="no">no</option>
-        </select>
+        <input type='text' style="width: 130px;" name='inner_twist_count' placeholder='1-'></td>
       </td>
-      <td></td>
+      <td><span class="formexample"> e.g. 0, 1-, 2-3</span></td>
       <td colspan=2>{{ KNOWL('lfunction.self-dual', title='Is self dual') }}</td>
       <td>
         <select name='is_self_dual' style="width: 140px;">
