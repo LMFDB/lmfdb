@@ -2,8 +2,6 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 
 IMPORTANT:
-* Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
-* Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
@@ -14,10 +12,15 @@ IMPORTANT:
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
+* Add stats specific to trivial character (David)
 * Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
 * Use include in dynamic template for stat display (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
 * Header for space pages (newspaces and gamma1) should list level first then weight to be consistent with bread crumbs
+
+FINAL CHECKS:
+* Make sure indexes are appropriate (Edgar)
+
 -------------------------- Pull Request Line -------------------------------------------------
 * Lift projective reps for weight one forms to artin reps whereever possible
 * code snippets for form and space pages (Drew)
