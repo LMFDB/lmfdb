@@ -48,7 +48,7 @@
     <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.analytic_rank }}</td>
+    <td>{{ newform.analytic_rank }}{% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
   </tr>
   {% endif %}
   <tr>
@@ -179,15 +179,17 @@ function show_qexp(qstyle) {
     {{ newform.order_basis() | safe}}
   {% endif %}
   {% if newform.dim > 1 %}
+  <p>
   {% if newform.hecke_ring_index_proved %}
     {% if newform.hecke_ring_index == 1 %}
-    <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
+    The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field.
     {% else %} {# newform.hecke_ring_index == 1 #}
-    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is {{ newform.hecke_ring_index_factored }}. </p>
+    The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is {{ newform.hecke_ring_index_factored }}.
     {% endif %} {# newform.hecke_ring_index == 1 #}
   {% elif newform.hecke_ring_index > 1 %}
-    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a divisor of {{ newform.hecke_ring_index_factored }}. </p>
-  {% endif %} {# newform.hecke_ring_index_proven #}
+    The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a divisor of {{ newform.hecke_ring_index_factored }}.
+  {% endif %} {# newform.hecke_ring_index_proved #}
+  </p>
   {% endif %} {# newform.dim > 1 #}
 </div>
 {% else %}
@@ -204,7 +206,7 @@ function show_qexp(qstyle) {
   </div></td></tr></table>
 
   <p>
-    <div class="toggle">Display precision:
+    <div class="toggle">Display
       <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
       <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
     </div>

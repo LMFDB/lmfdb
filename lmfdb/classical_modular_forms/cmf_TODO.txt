@@ -1,12 +1,12 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* clicking on spaces of odd weight and level 1,2 in Gamma1 table gives an error saying the space is not in the database (presumably because N=1,2 forces trivial character, so even parity), but in fact these (empty) spaces are present in mf_newspaces and their pages should be displayed (they are if you switch to Gamma0 search).
 
 IMPORTANT:
 * Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
 * Add stats specific to trivial character (David)
 * When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
+* Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Make light gray lighter gray (David)
 * Change search on has_inner_twists to use inner_twist_count, add stats, add this to form page and property box (David)
 * Display hecke_ring_generator_nbound on form pages (and in property box?) (David)

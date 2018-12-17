@@ -298,7 +298,11 @@ class WebGamma1Space(object):
         # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
-            raise ValueError("Space not in database")
+            # In small level, there can be no nontrivial spaces.  In this case, we include
+            # spaces with the wrong parity.
+            newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
+            if not newspaces:
+                raise ValueError("Space not in database")
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
