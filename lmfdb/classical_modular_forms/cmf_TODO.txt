@@ -2,24 +2,31 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 
 IMPORTANT:
-* Create appropriate indexes -> look at slow queries from cmfs.lmfdb.xyz and when running tests (Edgar)
-* Add stats specific to trivial character (David)
-* When we've added trivial character data, make sure dimension tables show N/A in large Nk2. (Drew, David)
+* Add check in display_float to not use half integer code when abs value larger than 10^prec. (Edgar)
 * Use field_poly_is_real_cyclotomic once we can express q-expansions in terms of zetas here (Drew, David)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Make light gray lighter gray (David)
-* Change search on has_inner_twists to use inner_twist_count, add stats, add this to form page and property box (David)
-* Display hecke_ring_generator_nbound on form pages (and in property box?) (David)
-* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (David)
+* Display hecke_ring_generator_nbound on form pages (David)
+* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
+* Add stats specific to trivial character (David)
 * Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
 * Use include in dynamic template for stat display (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
-* Header for space pages (newspaces and gamma1) should list level first then weight to be consistent with bread crumbs
+* Header for space pages (newspaces and gamma1) should list level first then weight to be consistent with bread crumbs (David)
+* Swap level and weight for space refine search (David)
+* Create mf_hecke_traces table (hecke_orbit_code, n, trace_an) (Drew)
+* Modify mf_hecke_nf table (hecke_orbit_code, an (array of arrays of integers), ap (array of arrays of integers)) (Drew)
+* Compare trivial char data with Stein database (Drew)
+* Compare dihedral weight one data with Magma (Drew)
+
+FINAL CHECKS:
+* Make sure indexes are appropriate (Edgar)
+
 -------------------------- Pull Request Line -------------------------------------------------
-* Lift projective reps for weight one forms to artin reps whereever possible
+* Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
