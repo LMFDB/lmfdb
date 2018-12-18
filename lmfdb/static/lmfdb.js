@@ -229,15 +229,21 @@ function knowl_click_handler($el) {
           knowl_cache[knowl_id] = $output.html();
           $output.hide();
 
-         // if it is the outermost knowl, limit its height of the content to 600px
-         if ($output.parents('.knowl-output').length == 0) {
-           $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
-         }
+          // if it is the outermost knowl, limit its height of the content to 600px
+          if ($output.parents('.knowl-output').length == 0) {
+            $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
+          }
         }
-        // in any case, reveal the new output after math rendering has finished
-        renderMathInElement($output.get(0),katexOpts);
-        $output.slideDown("slow");
-      });
+         // in any case, reveal the new output after math rendering has finished
+         try
+         {
+           renderMathInElement($output.get(0), katexOpts);
+         }
+         catch(err) {
+           log("err:" + err)
+         }
+         $output.slideDown("slow");
+       });
     } // ~~ end not cached
   }
 } //~~ end click handler for *[knowl] elements
