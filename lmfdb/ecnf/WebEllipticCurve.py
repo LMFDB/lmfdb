@@ -470,7 +470,6 @@ class ECNF(object):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
             ld['kod'] = ld['kod'].replace('\\\\', '\\')
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
 
         # URLs of self and related objects:
         self.urls = {}
