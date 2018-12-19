@@ -133,6 +133,8 @@ class WebNewform(object):
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
+        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist is not None or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
+
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
         # properties box
