@@ -325,9 +325,10 @@ class WebNewform(object):
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            max_Nk2 = db.mf_newforms.max('Nk2')
-            if Nk2 > max_Nk2:
-                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\)."%(Nk2, max_Nk2))
+            nontriv = not (a == 'a')
+            if Nk2 > Nk2_bound(nontriv = nontriv):
+                ending = " for non trivial character." if nontriv else " for trivial character."
+                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\)"%(Nk2, max_Nk2) + ending)
             raise ValueError("Newform %s not found" % label)
         return WebNewform(data)
 
