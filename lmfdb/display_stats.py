@@ -493,7 +493,7 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 data['divs'] = [(rows, "short_table", "none")]
         elif len(cols) == 2:
-            attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*cols))
+            attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*[col.replace('_',' ') for col in cols]))
         return data
 
     @lazy_attribute

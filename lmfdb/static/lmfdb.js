@@ -192,17 +192,24 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    if(knowl_id == "dynamic_show") {
-      log("dynamic_show: " + kwargs);
-      $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
-      MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
-      MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
-    } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+    //if(knowl_id == "dynamic_show") {
+    //  log("dynamic_show: " + kwargs);
+    //  $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+    //  MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
+    //  MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
+    //} else 
+    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
-      renderMathInElement($output.get(0), katexOpts);
+      try
+      {
+        renderMathInElement($output.get(0), katexOpts);
+      }
+      catch(err) {
+        log("err:" + err)
+      }
       $output.slideDown("slow");
 
     } else {
@@ -222,15 +229,21 @@ function knowl_click_handler($el) {
           knowl_cache[knowl_id] = $output.html();
           $output.hide();
 
-         // if it is the outermost knowl, limit its height of the content to 600px
-         if ($output.parents('.knowl-output').length == 0) {
-           $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
-         }
+          // if it is the outermost knowl, limit its height of the content to 600px
+          if ($output.parents('.knowl-output').length == 0) {
+            $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
+          }
         }
-        // in any case, reveal the new output after math rendering has finished
-        renderMathInElement($output.get(0),katexOpts);
-        $output.slideDown("slow");
-      });
+         // in any case, reveal the new output after math rendering has finished
+         try
+         {
+           renderMathInElement($output.get(0), katexOpts);
+         }
+         catch(err) {
+           log("err:" + err)
+         }
+         $output.slideDown("slow");
+       });
     } // ~~ end not cached
   }
 } //~~ end click handler for *[knowl] elements
