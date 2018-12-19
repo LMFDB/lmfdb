@@ -45,6 +45,8 @@ def dogapthing(m1):
         except TypeError:
             m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
     else:
+        # Fix multiple backslashes
+        m1[2] = re.sub(r'\\+', r'\\', m1[2])
         m1[2] = '$%s$'% m1[2]
     return m1
 

@@ -187,8 +187,8 @@ function value_handler(evt) {
     var val = $("#calc-value-input").val();
     $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
-        {# tell mathjx to render the output #}
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
+        {# render the output #}
+        renderMathInElement($("#calc-value-output").get(0), katexOpts);
      });
 }
         {% if type=='Dirichlet' and charsums %}
@@ -197,8 +197,8 @@ function gauss_handler(evt) {
     var val = $("#calc-gauss-input").val();
     $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
      function() {
-        {# tell mathjx to render the output #}
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
+        {# render the output #}
+        renderMathInElement($("#calc-gauss-output").get(0), katexOpts);
      });
 }
 function jacobi_handler(evt) {
@@ -206,8 +206,8 @@ function jacobi_handler(evt) {
    var val = $("#calc-jacobi-input").val();
    $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
      function() {
-       {# tell mathjx to render the output #}
-       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
+       {# render the output #}
+       renderMathInElement($("#calc-jacobi-output").get(0), katexOpts);
      });
 }
 
@@ -216,8 +216,8 @@ function kloosterman_handler(evt) {
    var val = $("#calc-kloosterman-input").val();
    $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
      function() {
-       {# tell mathjx to render the output #}
-       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
+       {# render the output #}
+       renderMathInElement($("#calc-kloosterman-output").get(0), katexOpts);
      });
 }
         {% endif %}

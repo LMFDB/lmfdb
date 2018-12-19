@@ -63,10 +63,10 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('mathjax$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
-md.inlinePatterns.add('mathjax$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
-md.inlinePatterns.add('mathjax\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
-md.inlinePatterns.add('mathjax\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+md.inlinePatterns.add('math$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
+md.inlinePatterns.add('math$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
+md.inlinePatterns.add('math\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
+md.inlinePatterns.add('math\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
 
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
@@ -154,7 +154,7 @@ def ref_to_link(txt):
         elif ref.startswith("doi"):
             ref = ref.replace(":","")  # could be doi:: or doi: or doi
             the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","http://dx.doi.org/' + the_doi + '")| safe }}'
+            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
             ref = ref.replace(":","")
             the_mr = ref[2:]    # remove the "MR"

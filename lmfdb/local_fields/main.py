@@ -222,9 +222,9 @@ def render_field_webpage(args):
         else:
             rffriend = "/LocalNumberField/%s" % rflabel
         gsm = data['gsm']
-        if gsm == '0':
+        if gsm == [0]:
             gsm = 'Not computed'
-        elif gsm == '-1':
+        elif gsm == [-1]:
             gsm = 'Does not exist'
         else:
             gsm = web_latex(coeff_to_poly(gsm))

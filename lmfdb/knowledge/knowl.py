@@ -135,7 +135,7 @@ class KnowlBackend(PostgresBase):
         """
         saves history tokens in a collection "history".
         each entry has the _id of the updated knowl and at least a timestamp
-        and a reference to who has edtited it. also, the title is nice to
+        and a reference to who has edited it. Also, the title is nice to
         avoid an additional lookup when listing the history!
         'state' can either be 'saved' (for the recent changes list) or 'locked'.
         TODO also calculate a diff with python's difflib and store it here.
