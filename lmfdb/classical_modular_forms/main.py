@@ -1034,6 +1034,7 @@ class CMF_stats(StatsDisplay):
                   'cm_discs': 'CM disc',
                   'rm_discs': 'RM disc'}
     formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+                  'char_parity': (lambda t: 'odd' if t == -1 else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
@@ -1079,6 +1080,24 @@ def statistics():
     title = 'Cuspidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
+def attribute_parse(info, attributes):
+    stats = info["stats"]
+    cols = []
+    buckets = {}
+    for cname, bname in [('col1', 'buckets1'), ('col2', 'buckets2')]:
+        if cname in info and info[cname] != 'none':
+            col = info[cname]
+            if col in cols:
+                raise ValueError("Cannot repeat")
+            cols.append(col)
+            if bname in info:
+                cur_buckets = info[bname].replace(' ','')
+                if cur_buckets:
+                    buckets[col] = cur_buckets.split(',')
+    attributes['cols'] = cols
+    attributes['buckets'] = buckets
+    attributes['corner_label'] = ''
+
 col_display = {
     'none': 'None',
     'level':'Level',
@@ -1094,34 +1113,31 @@ col_display = {
     'projective_image_type':'Projective image type',
     'artin_degree':'Artin degree',
 }
-def attribute_parse(info, attributes):
-    # testing
-    cols = []
-    if 'col1' in info and info['col1'] != 'none':
-        cols.append(info['col1'])
-    if 'col2' in info and info['col2'] != 'none':
-        cols.append(info['col2'])
-    attributes['cols'] = cols
-    #attributes['buckets'] = [1,1,2,3,4,5,10,20,100,1000]
-    attributes['row_title'] = col_display.get('col1', 'none')
-    attributes['knowl'] = 'mf.elliptic.level'
 
 @cmf.route("/stats_dynamic")
 def dynamic_statistics():
+    stats = CMF_stats()
     if len(request.args) > 0:
         info = to_dict(request.args)
+        info["stats"] = stats
+        constraint = {}
+        try:
+            newform_parse(info, constraint)
+            attributes = {'constraint': constraint}
+            attribute_parse(info, attributes)
+            stats.setup(attributes=[attributes])
+            info["d"] = stats.prep(attributes)
+        except Exception as e:
+            raise
     else:
-        info = {}
+        info = {"d": stats.prep({'cols':[], 'buckets':{}}),
+                "stats": stats}
+    info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
+    info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
     info["parent_page"] = "cmf_refine_search.html"
-    info["stats"] = stats = CMF_stats()
+    info["default_buckets"] = [(col, ','.join(buckets)) for col, buckets in stats.buckets.items()]
     info["search_type"] = 'DynStats'
-    info["all_weight1"] = lambda x: True
-    constraint = {}
-    newform_parse(info, constraint)
-    attributes = {'constraint': constraint}
-    attribute_parse(info, attributes)
-    stats.setup(attributes=[attributes])
-    info["d"] = stats.prep(attributes)
+    info["all_weight1"] = lambda x: True # always want weight 1 columns available
     info["valid_columns"] = col_display.items()
     title = 'Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

@@ -10,6 +10,18 @@
 {% set weight1options = 'err' in info or info.all_weight1(info.results) %}
 {% endif %}
 {% if info.search_type == 'DynStats' %}
+<script>
+var default_buckets = {};
+{% for col, buckets in info.default_buckets %}
+default_buckets['{{col}}'] = '{{buckets}}';
+{% endfor %}
+function set_buckets(col_selecter, bucket_id) {
+  if (col_selecter.value in default_buckets) {
+    $('#' + bucket_id).val(default_buckets[col_selecter.value]);
+  }
+}
+</script>
+
 <h2>Constraints </h2>
 {% else %}
 <h2>Refine search </h2>
@@ -139,26 +151,25 @@
   <tr>
   </tr>
   {% if info.search_type == 'DynStats' %}
+  <tr style="height:30px"></tr>
   <tr>
-    <td> Column 1</td>
-    <td> Column 2</td>
+    <td></td>
+    <td>Buckets</td>
   </tr>
+  {% for i in [1,2] %}
   <tr>
     <td>
-      <select name='col1' style="width: 150px;">
+      <select id="col{{i}}_select" name='col{{i}}' style="width: 150px;" onchange="set_buckets(this, 'buckets{{i}}')">
         {% for col, disp in info.valid_columns %}
-        <option value="{{ col }}">{{ disp }}</option>
+        <option value="{{ col }}"{% if col==info.get_col(i) %} selected='yes'{% endif %}>{{ disp }}</option>
         {% endfor %}
       </select>
     </td>
     <td>
-      <select name='col2' style="width: 150px;">
-        {% for col, disp in info.valid_columns %}
-        <option value="{{ col }}">{{ disp }}</option>
-        {% endfor %}
-      </select>
-    </td>
+      <input id="buckets{{i}}" type='text' style="width: 140px" name='buckets{{i}}' value='{{ info.get_bucket(i) }}'>
+    <td>
   </tr>
+  {% endfor %}
   <tr style="height:50px">
     <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px">Generate statistics</button></td>
   </tr>

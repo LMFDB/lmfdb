@@ -225,7 +225,7 @@ class WebNewformSpace(object):
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
             self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of Cuspidal Newforms of Weight %s, Level %s and %s"%(self.weight, self.level, character_str)
+        self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
         self.friends = []
 
     @staticmethod
@@ -329,7 +329,7 @@ class WebGamma1Space(object):
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]
-        self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
+        self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []
 
     @staticmethod

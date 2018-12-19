@@ -85,6 +85,8 @@ for typ in ["numeric", "decimal"]:
     pg_to_py[typ] = numeric_converter
 for typ in ["float4", "real", "float8", "double precision"]:
     pg_to_py[typ] = float
+for typ in ["text", "char", "character", "character varying", "varchar"]:
+    pg_to_py[typ] = str
 
 # the non-default operator classes, used in creating indexes
 _operator_classes = {'brin':   ['inet_minmax_ops'],

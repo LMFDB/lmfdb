@@ -175,7 +175,7 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.dim > 2 and not newform.hecke_ring_power_basis %}
-    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{% if newform.field_poly_root_of_unity == 0 %} in terms of a root \(\nu\) of {{ newform.defining_polynomial() }}{% endif %}:</p>
+    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
   {% if newform.dim > 1 %}

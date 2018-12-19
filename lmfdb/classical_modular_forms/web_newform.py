@@ -91,32 +91,38 @@ class WebNewform(object):
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
         # We always print analytic conductor with 1 decimal digit
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
-        self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-
-        self._inner_twist = data.get('inner_twist',[])
-        self.has_analytic_rank = data.get('analytic_rank') is not None
-
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
-        if eigenvals:  # this should always be true
-            self.has_exact_qexp = True
-            zero = [0] * self.dim
-            self.qexp = [zero]
-            self.texp = [0]
-            for i, ev in enumerate(eigenvals, 1):
-                if ev['n'] != i:
-                    raise ValueError("Missing eigenvalue")
-                self.texp.append(ev['trace_an'])
-                if ev.get('an'):
-                    self.qexp.append(ev['an'])
-                else:
-                    # only had traces
-                    self.has_exact_qexp = False
-            self.qexp_prec = len(self.qexp)
-            self.texp_prec = len(self.texp)
-        else:
-            self.has_exact_qexp = False
         self.rel_dim = self.dim // self.char_degree
 
+        self._inner_twists = data.get('inner_twists',[])
+        self.has_analytic_rank = data.get('analytic_rank') is not None
+
+        traces = db.mf_hecke_traces.search({'hecke_orbit_code':self.hecke_orbit_code, 'n': {'$lt': 100}}, ['n', 'trace_an'], sort=['n'])
+        if not traces:
+            raise ValueError("Traces missing")
+        self.texp = [0]
+        for i, tr in enumerate(traces, 1):
+            if tr['n'] != i:
+                raise ValueError("Missing eigenvalues")
+            self.texp.append(tr['trace_an'])
+        self.texp_prec = len(self.texp)
+
+        hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
+        eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
+        if eigenvals:
+            self.has_exact_qexp = True
+            for attr in hecke_cols:
+                setattr(self, attr, eigenvals.get(attr))
+            m = self.hecke_ring_cyclotomic_generator
+            if m is None or m == 0:
+                zero = [0] * self.dim
+            else:
+                zero = []
+            self.qexp = [zero] + eigenvals['an']
+            self.qexp_prec = len(self.qexp)
+            self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+        else: # k > 1 and dim > 20
+            self.has_exact_qexp = False
+            self.single_generator = None
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
@@ -176,8 +182,8 @@ class WebNewform(object):
 
 
     @property
-    def inner_twist(self):
-        return [(data,url_character(type='Dirichlet', modulus=data[2], number=cremona_letter_code(data[3]-1))) for data in self._inner_twist]
+    def inner_twists(self):
+        return [(data,url_character(type='Dirichlet', modulus=data[2], number=cremona_letter_code(data[3]-1))) for data in self._inner_twists]
 
     # Breadcrumbs
     @property
@@ -357,9 +363,16 @@ class WebNewform(object):
             else:
                 return 'Unknown'
         elif label == u'1.1.1.1':  # rationals, special case
-            return nf_display_knowl(label, name=r"\(\Q\)")
+            name = r"\(\Q\)"
         else:
-            return nf_display_knowl(label, field_pretty(label))
+            m = self.field_poly_root_of_unity
+            if self.field_poly_is_cyclotomic:
+                name = r"\(\Q(\zeta_{%s})\)" % m
+            elif self.field_poly_is_real_cyclotomic:
+                name = r"\(\Q(\zeta_{%s})^+\)" % m
+            else:
+                name = field_pretty(label)
+        return nf_display_knowl(label, name=name)
 
     @property
     def artin_field_display(self):
@@ -496,6 +509,18 @@ class WebNewform(object):
         else:
             return r"nu"
 
+    @property
+    def _zeta_print(self):
+        # This will often be the same as _nu_var, since self.hecke_ring_cyclotomic_generator
+        # is often the same as field_poly_root_of_unity
+        m = self.hecke_ring_cyclotomic_generator
+        if m == 4:
+            return 'i'
+        elif m is None or m == 0:
+            raise ValueError
+        else:
+            return r"zeta%s" % m
+
     def _make_table(self, basis):
         s = '<table class="coeff_ring_basis">\n'
         for LHS, RHS in basis:
@@ -611,30 +636,59 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
-    @cached_method
-    def _get_Rgens(self):
-        d = self.dim
+    def order_gen_below(self):
+        m = self.field_poly_root_of_unity
+        if m == 0:
+            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial()
+        elif self.field_poly_is_real_cyclotomic:
+            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\)" % (m, m)
+        else:
+            return ""
+
+    @property
+    def _PrintRing(self):
         # the order='negdeglex' assures constant terms come first
         if self.single_generator:
-            # univariate polynomial rings don't support order, 
+            # univariate polynomial rings don't support order,
             # we work around it by introducing a dummy variable
-            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
-                R = PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
+            m = self.hecke_ring_cyclotomic_generator
+            if m is not None and m != 0:
+                return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
+            elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
+                return PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
             else:
-                R = PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
-            beta = R.gens()[0]
-            return [beta**i for i in range(0,d)]
+                return PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
         else:
-            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)], order = 'negdeglex')
+            return PolynomialRing(QQ, ['beta%s' % i for i in range(1, self.dim)], order = 'negdeglex')
+
+    @property
+    def _Rgens(self):
+        R = self._PrintRing
+        if self.single_generator:
+            beta = R.gen(0)
+            return [beta**i for i in range(0, self.dim)]
+        else:
             return [1] + list(R.gens())
 
+    def _elt(self, data):
+        """
+        Returns an element of a polynomial ring whose print representation
+        agrees with the specified data
+        """
+        m = self.hecke_ring_cyclotomic_generator
+        if m is None or m == 0:
+            # normal representation: as a list of coefficients
+            return sum(c * gen for c, gen in zip(data, self._Rgens))
+        else:
+            # sum of powers of zeta_m
+            zeta = self._PrintRing.gen(0)
+            return sum(c * zeta**e for c,e in data)
+
     def display_character_values(self):
-        Rgens = self._get_Rgens()
-        d = self.dim
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
         vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
         for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
-            term = sum(Rgens[i]*chi_g[i] for i in range(d))
+            term = self._elt(chi_g)
             latexterm = latex(term)
             color = "dark" if j%2 else "light"
             gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
@@ -651,7 +705,7 @@ function switch_basis(btype) {
                    display_knowl('mf.elliptic.inner_twist_proved', title='Proved')),
                   '</thead>',
                   '<tbody>']
-        for (b, mult, M, orb), link in self.inner_twist:
+        for (b, mult, M, orb), link in self.inner_twists:
             total += mult
             twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'yes' if b == 1 else 'no'))
         twists.append('</table>')
@@ -664,17 +718,15 @@ function switch_basis(btype) {
         return para + '\n'.join(twists)
 
     def eigs_as_seqseq_to_qexp(self, prec_max):
-        # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
+        # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
         # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
         prec = min(self.qexp_prec, prec_max)
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
-        d = self.dim
-        Rgens = self._get_Rgens()
         s = ''
         for j in range(len(eigseq)):
-            term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
+            term = self._elt(eigseq[j])
             if term != 0:
                 latexterm = latex(term)
                 if term.number_of_terms() > 1:
@@ -739,7 +791,6 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         return str(self.rel_dim * self.char_labels.index(c) + e)
 
-    
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
