@@ -579,8 +579,6 @@ class CMF_download(Downloader):
                           title='Stored data for newform %s,'%(label))
 
     def download_newform_to_magma(self, label, lang='text'):
-        outstr = "HELLO"
-        """
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
@@ -593,7 +591,6 @@ class CMF_download(Downloader):
             data = self._get_hecke_nf(label)
             qexp = [0] + [an for an, trace_an in data]
             outstr += magma_newform_modfrm_heigs_code_string(form,qexp,include_char=False)
-        """
         return self._wrap(outstr,
                           label,
                           lang=lang,

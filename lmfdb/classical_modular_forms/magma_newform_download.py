@@ -25,15 +25,18 @@ def magma_newform_modsym_cutters_code_string(r,include_char=True):
     returns a string containing magma code to create the newform 
     Galois orbit as a modular symbols space using Hecke cutters in magma.
     """
-    assert k >= 2   # modular symbols only in weight >= 2
     N = r.level
     k = r.weight
     o = r.char_orbit_label
+
+    assert k >= 2   # modular symbols only in weight >= 2
 
     cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in r.hecke_cutters]) + "]"
 
     if include_char:
         s = magma_char_code_string(r)
+    else:
+        s = ""
 
     s += "function MakeNewformModSym_%s()\n"%(r.label.replace(".","_"))
     s += "    R<x> := PolynomialRing(Rationals());\n"
