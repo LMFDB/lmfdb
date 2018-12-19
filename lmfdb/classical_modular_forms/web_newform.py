@@ -327,8 +327,8 @@ class WebNewform(object):
             Nk2 = int(N) * int(k) * int(k)
             nontriv = not (a == 'a')
             if Nk2 > Nk2_bound(nontriv = nontriv):
-                ending = " for non trivial character." if nontriv else " for trivial character."
-                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\)"%(Nk2, max_Nk2) + ending)
+                nontriv_text = "non trivial" if nontriv else "trivial"
+                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for non %s character"%(Nk2, max_Nk2, nontriv_text) )
             raise ValueError("Newform %s not found" % label)
         return WebNewform(data)
 

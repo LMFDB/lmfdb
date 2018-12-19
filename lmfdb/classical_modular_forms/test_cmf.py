@@ -112,6 +112,10 @@ class CmfTest(LmfdbTest):
     def test_failure(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
+        asert " for non trivial character." in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1000/4000/a/a/', follow_redirects=True)
+        assert "Level and weight too large" in page.data
+        asert " for trivial character." in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/100/2/z/a/', follow_redirects=True)
         assert "Newform 100.2.z.a not found" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1000&weight=100-&search_type=List', follow_redirects=True)
