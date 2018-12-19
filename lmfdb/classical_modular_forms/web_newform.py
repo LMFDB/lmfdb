@@ -233,6 +233,8 @@ class WebNewform(object):
     @property
     def downloads(self):
         downloads = []
+        if self.hecke_cutters or self.has_exact_qexp:
+            downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
         if self.has_exact_qexp:
             downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
         downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))

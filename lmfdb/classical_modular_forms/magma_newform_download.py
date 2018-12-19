@@ -5,10 +5,10 @@ def magma_char_code_string(r):
     returns a string containing magma code to create the character 
     for r in magma using the default generators.
     """
-    N = r["level"]
-    k = r["weight"]
-    o = r["char_orbit_label"]
-    cv = r["char_values"]
+    N = r.level
+    k = r.weight
+    o = r.char_orbit_label
+    cv = r.char_values
 
     s = "function MakeCharacter_%d_%s()\n"%(N,o)
     s += "    N := %d; n := %d; u := %s; v := %s;\n"%(cv[0],cv[1],cv[2],cv[3])
@@ -26,16 +26,16 @@ def magma_newform_modsym_cutters_code_string(r,include_char=True):
     Galois orbit as a modular symbols space using Hecke cutters in magma.
     """
     assert k >= 2   # modular symbols only in weight >= 2
-    N = r["level"]
-    k = r["weight"]
-    o = r["char_orbit_label"]
+    N = r.level
+    k = r.weight
+    o = r.char_orbit_label
 
-    cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in r["hecke_cutters"]]) + "]"
+    cutters = "[" + ",".join(["<%d,R!%s"%(c[0],c[1])+">" for c in r.hecke_cutters]) + "]"
 
     if include_char:
         s = magma_char_code_string(r)
 
-    s += "function MakeNewformModSym_%s()\n"%(r["label"].replace(".","_"))
+    s += "function MakeNewformModSym_%s()\n"%(r.label.replace(".","_"))
     s += "    R<x> := PolynomialRing(Rationals());\n"
     s += "    chi := MakeCharacter_%d_%s();\n"%(N,o)
     s += "    // SetVerbose(\"ModularSymbols\", true);\n"
@@ -55,18 +55,18 @@ def magma_newform_modfrm_heigs_code_string(r,v,include_char=True):
     returns a string containing magma code to create the newform
     as a representative q-expansion (type ModFrm) in magma.
     """
-    N = r["level"]
-    k = r["weight"]
-    o = r["char_orbit_label"]
-    fv = r["field_poly"]  
-    Rf_num = r["hecke_ring_numerators"]  
-    Rf_den = r["hecke_ring_denominators"]  
+    N = r.level
+    k = r.weight
+    o = r.char_orbit_label
+    fv = r.field_poly  
+    Rf_num = r.hecke_ring_numerators  
+    Rf_den = r.hecke_ring_denominators
     n = len(v) # q-expansion precision
 
     if include_char:
         s = magma_char_code_string(r)
     
-    s += "function MakeNewformModFrm_%s()\n"%(r["label"].replace(".","_"))
+    s += "function MakeNewformModFrm_%s()\n"%(r.label.replace(".","_"))
     s += "    chi := MakeCharacter_%d_%s();\n"%(N,o)
     s += "    // SetVerbose(\"ModularForms\", true);\n"
     s += "    // SetVerbose(\"ModularSymbols\", true);\n"

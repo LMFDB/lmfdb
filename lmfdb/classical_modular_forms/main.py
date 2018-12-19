@@ -12,6 +12,7 @@ from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_know
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.magma_newform_download import magma_char_code_string, magma_newform_modsym_cutters_code_string, magma_newform_modfrm_heigs_code_string
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
@@ -577,6 +578,27 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
+    def download_newform_to_magma(self, label, lang='text'):
+        outstr = "HELLO"
+        """
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        form = WebNewform(data)
+
+        outstr = magma_char_code_string(form)
+        if form.hecke_cutters:
+            outstr += magma_newform_modsym_cutters_code_string(form,include_char=False)
+        if form.has_exact_qexp:
+            data = self._get_hecke_nf(label)
+            qexp = [0] + [an for an, trace_an in data]
+            outstr += magma_newform_modfrm_heigs_code_string(form,qexp,include_char=False)
+        """
+        return self._wrap(outstr,
+                          label,
+                          lang=lang,
+                          title='Make newform %s in Magma,'%(label))
+
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
@@ -636,6 +658,10 @@ def download_cc_data(label):
 @cmf.route("/download_satake_angles/<label>")
 def download_satake_angles(label):
     return CMF_download().download_satake_angles(label)
+
+@cmf.route("/download_newform_to_magma/<label>")
+def download_newform_to_magma(label):
+    return CMF_download().download_newform_to_magma(label)
 
 @cmf.route("/download_newform/<label>")
 def download_newform(label):
