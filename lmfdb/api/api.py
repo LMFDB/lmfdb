@@ -98,7 +98,10 @@ def stats():
         indexSize += sizes['index_bytes']
         if csize >= int(info['minsize']):
             dname, name = split_db(tablename)
-            link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if name not in db.tablenames:
+                link = tablename
+            else:
+                link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
             if sizes['nrows']:
                 avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
             else:
