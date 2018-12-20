@@ -202,7 +202,6 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
-      log("rendered?")
       $output.slideDown("slow");
     } else 
     if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
