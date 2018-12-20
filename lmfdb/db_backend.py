@@ -3869,7 +3869,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
-        self.log_db_change('create_table', tablename=name, {'name': name, 'search_columns': search_columns, 'label_col' : label_col, 'sort' : sort, 'id_ordered': id_ordered, 'extra_columns': extra_columns,  'search_order' : search_order, 'extra_order' : extra_order} )
+        self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
 
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
