@@ -10,7 +10,7 @@ from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
+from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl, cyc_display, field_display_gen
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
@@ -62,22 +62,12 @@ def ALdims_knowl(al_dims, level, weight):
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
     def nf_link(mf):
-        nf_label = mf.get('nf_label')
-        if nf_label:
-            name = field_pretty(nf_label)
-            if name == nf_label and len(name) > 16:
-                # truncate if too long
-                parts = nf_label.split('.')
-                parts[2] = r'\(\cdots\)'
-                name = '.'.join(parts)
-            return nf_display_knowl(nf_label, name)
-        elif mf['dim'] == mf['char_degree'] and mf.get('field_poly_root_of_unity'):
-            return r'\(\Q(\zeta_{%s})\)' % mf['field_poly_root_of_unity']
+        m = mf.get('field_poly_root_of_unity')
+        d = mf.get('dim')
+        if m and d != 2:
+            return cyc_display(m, d, mf.get('field_poly_is_real_cyclotomic'))
         else:
-            poly = mf.get('field_poly')
-            if poly:
-                return polyquo_knowl(poly)
-            return ""
+            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc'), truncate=16)
 
     info["nf_link"] = nf_link
 

@@ -16,7 +16,7 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF
+from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF, Factorization
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -680,9 +680,11 @@ def bigint_knowl(n, cutoff=8, sides=2):
     else:
         return r'\(%s\)'%n
 
-def polyquo_knowl(f):
+def polyquo_knowl(f, disc=None):
     short = r'\mathbb{Q}[x]/(x^{%s} + \cdots)'%(len(f) - 1)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    if disc is not None:
+        long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):

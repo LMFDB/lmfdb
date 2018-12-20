@@ -71,6 +71,64 @@ def quad_field_knowl(disc):
     field_name = field_pretty(field_label)
     return nf_display_knowl(field_label, field_name)
 
+def field_display_gen(label, poly, disc=None, truncate=0):
+    """
+    This function is used to display a number field knowl.  When the field
+    is not in the LMFDB, it uses a dynamic knowl displaying the polynomial
+    and discriminant.  Otherwise, it uses the standard LMFDB number field knowl.
+
+    INPUT:
+
+    - ``label`` -- the LMFDB label for the field (``None`` if not in the LMFDB)
+    - ``poly`` -- the defining polynomial for the field
+    - ``disc`` -- the discriminant of the field, as a list of (p, e) pairs
+    - ``truncate`` -- an integer, the maximum length of the field label before truncation.
+        If 0, no truncation will occur.
+    """
+    if label is None:
+        if poly:
+            return polyquo_knowl(poly, disc)
+        else:
+            return ''
+    else:
+        name = field_pretty(label)
+        if truncate and name == label and len(name) > truncate:
+            parts = nf_label.split('.')
+            parts[2] = r'\(\cdots\)'
+            name = '.'.join(parts)
+        return nf_display_knowl(label, name)
+
+def cyc_display(m, d, real_sub):
+    r"""
+    Used to display cyclotomic fields and their real subfields.
+
+    INPUT:
+
+    - ``m`` -- the order of the root of unity generating the field.
+    - ``d`` -- the degree of the cyclotomic field over Q
+    - ``real_sub`` -- whether to display the real subfield instead.
+
+    OUTPUT:
+
+    A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
+    """
+    if d == 1:
+        name = r'\(\Q\)'
+    elif m == 4:
+        name = r'\(\Q(i)\)'
+    elif real_sub:
+        name = r'\(\Q(\zeta_{%s})^+\)' % m
+    else:
+        name = r'\(\Q(\zeta_{%s})\)' % m
+    if d < 24:
+        if real_sub:
+            label = rcyclolookup[m]
+        else:
+            label = cyclolookup[m]
+        return nf_display_knowl(label, name=name)
+    else:
+        return name
+
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):
         #TODO validate data
@@ -89,6 +147,10 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        if 'field_disc' not in data: # Until we have search results include nulls
+            self.field_disc = None
+        else:
+            self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
         # We always print analytic conductor with 1 decimal digit
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.rel_dim = self.dim // self.char_degree
@@ -360,25 +422,11 @@ class WebNewform(object):
         """
         # display the coefficient field
         m = self.field_poly_root_of_unity
-        if m and self.dim != 2:
-            return self.cyc_display(m, self.field_poly_is_real_cyclotomic)
+        d = self.dim
+        if m and d != 2:
+            return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
-            return self.field_display_gen(self.nf_label, self.field_poly)
-
-    def field_display_gen(self, label, poly):
-        """
-        This function is used to display a number field knowl.  When the field
-        is not in the LMFDB (indicated by having ``None`` for the ``label``),
-        it uses a dynamic knowl displaying the polynomial and discriminant.
-        Otherwise, it uses the standard LMFDB number field knowl.
-        """
-        if label is None:
-            if poly:
-                return polyquo_knowl(poly)
-            else:
-                return 'Unknown'
-        else:
-            return nf_display_knowl(label, name=field_pretty(label))
+            return field_display_gen(self.nf_label, self.field_poly, self.field_disc)
 
     @property
     def artin_field_display(self):
@@ -386,7 +434,7 @@ class WebNewform(object):
         For weight 1 forms, displays the Artin field.
         """
         label, poly = self.artin_field_label, self.artin_field
-        return self.field_display_gen(label, poly)
+        return field_display_gen(label, poly)
 
     @property
     def projective_field_display(self):
@@ -394,7 +442,7 @@ class WebNewform(object):
         For weight 1 forms, displays the kernel of the projective Galois rep.
         """
         label, poly = self.projective_field_label, self.projective_field
-        return self.field_display_gen(label, poly)
+        return field_display_gen(label, poly)
 
     @property
     def artin_image_display(self):
@@ -425,8 +473,6 @@ class WebNewform(object):
 
         A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
         """
-        name = None
-        d = self.dim
         if m is None:
             m = self.char_order
             d = self.char_degree
@@ -436,22 +482,7 @@ class WebNewform(object):
                 m = self.field_poly_root_of_unity
         else:
             d = self.dim
-        if d == 1:
-            name = r'\(\Q\)'
-        elif m == 4:
-            name = r'\(\Q(i)\)'
-        elif real_sub:
-            name = r'\(\Q(\zeta_{%s})^+\)' % m
-        else:
-            name = r'\(\Q(\zeta_{%s})\)' % m
-        if d < 24:
-            if real_sub:
-                label = rcyclolookup[m]
-            else:
-                label = cyclolookup[m]
-            return nf_display_knowl(label, name=name)
-        else:
-            return name
+        return cyc_display(m, d, real_sub)
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
