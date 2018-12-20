@@ -349,16 +349,16 @@ def lfuncDShtml(L, fmt):
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
-            ans = "\[\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \]\n"
+            ans = "\[\\begin{aligned} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{aligned} \]\n"
 
         elif L.Ltype() == "dirichlet":
-            ans = "\[\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{aligned}\]"
             ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
             ans = ans + ", number " + str(L.characternumber) + "."
 
         else:
-            ans = "\[\\begin{equation} \n " + L.texname + \
-                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n " + L.texname + \
+                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{aligned}\]"
     return(ans)
 
 
@@ -374,9 +374,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = "\\begin{equation} \n " + L.texname_arithmetic + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname_arithmetic + " = "
         else:
-            ans = "\\begin{equation} \n " + L.texname + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += "\\prod_p (1 - p^{-s})^{-1}"
         elif L.Ltype() == "dirichlet":
@@ -413,7 +413,7 @@ def lfuncEPtex(L, fmt):
 
         else:
             return("No information is available about the Euler product.")
-        ans += " \n \\end{equation}"
+        ans += " \n \\end{aligned}\]"
         return(ans)
     else:
         return("No information is available about the Euler product.")
@@ -611,7 +611,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
+        ans = "\\begin{aligned}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
             # ans+=latex(L.level)+"^{\\frac{s}{2}}"
             ans += latex(L.level) + "^{s/2}"
@@ -654,7 +654,7 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-        ans += "\n\\end{align}\n"
+        ans += "\n\\end{aligned}\n"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + ",\\ "
         ans += str(int(L.level)) + ",\\ "

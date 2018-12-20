@@ -75,7 +75,8 @@ def global_numberfield_summary():
 
 def learnmore_list():
     return [(Completename, url_for(".render_discriminants_page")), 
-            ('How data was computed', url_for(".how_computed_page")), 
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
             ('Global number field labels', url_for(".render_labels_page")), 
             ('Galois group labels', url_for(".render_groups_page")), 
             ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
@@ -101,12 +102,20 @@ def poly_to_field_label(pol):
 def NF_redirect():
     return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
-@nf_page.route("/HowComputed")
-def how_computed_page():
-    learnmore = learnmore_list_remove('was computed')
-    t = 'How Number Field Data was Computed'
+@nf_page.route("/Source")
+def source():
+    learnmore = learnmore_list_remove('Source')
+    t = 'Source of Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
-    return render_template("single.html", kid='dq.nf.howcomputed', 
+    return render_template("single.html", kid='rcs.source.nf', 
+        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+
+@nf_page.route("/Reliability")
+def reliability():
+    learnmore = learnmore_list_remove('Reliability')
+    t = 'Reliability of Number Field Data'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Reliability', ' ')]
+    return render_template("single.html", kid='rcs.rigor.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 @nf_page.route("/GaloisGroups")
@@ -126,12 +135,12 @@ def render_labels_page():
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
-@nf_page.route("/Discriminants")
+@nf_page.route("/Completeness")
 def render_discriminants_page():
     learnmore = learnmore_list_remove('Completeness')
     t = 'Completeness of Global Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
-    return render_template("single.html", kid='dq.nf.completeness', 
+    return render_template("single.html", kid='rcs.cande.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 
@@ -287,8 +296,7 @@ def number_field_render_webpage():
         }
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(args)
 
@@ -681,10 +689,7 @@ def number_field_jump(info):
                         'download':download_search},
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
-             learnmore=lambda:[('Global number field labels', url_for(".render_labels_page")),
-                               ('Galois group labels', url_for(".render_groups_page")),
-                               (Completename, url_for(".render_discriminants_page")),
-                               ('Quadratic imaginary class groups', url_for(".render_class_group_data"))])
+             learnmore=learnmore_list)
 def number_field_search(info, query):
     parse_ints(info,query,'degree')
     parse_galgrp(info,query, qfield=('degree', 'galt'))

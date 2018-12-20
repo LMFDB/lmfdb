@@ -98,7 +98,7 @@ class WebHMF:
     def lfuncFEtex(self, fmt):
         ans = ""
         if fmt == "lang":
-            ans = "\\begin{align}\n\\Lambda(s)=&"
+            ans = "\\begin{aligned}\n\\Lambda(s)=&"
             ans = ans + latex(self.level) + "^{-\\frac{s}{2}}"
             for mu in self.mu_fe:
                 ans = ans + "\Gamma_{\mathbb{R}}(s+" + latex(mu) + ")"
@@ -106,7 +106,7 @@ class WebHMF:
                 ans = ans + "\Gamma_{\mathbb{C}}(s+" + latex(nu) + ")"
             ans = ans + "\\cdot L(s)\\cr\n"
             ans = ans + "=\\mathstrut & " + latex(self.sign) +\
-                "\\overline{\\Lambda(1-\\overline{s})}\n\\end{align}\n"
+                "\\overline{\\Lambda(1-\\overline{s})}\n\\end{aligned}\n"
         return(ans)
 
 

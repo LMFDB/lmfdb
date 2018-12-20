@@ -92,7 +92,7 @@ var $update    = $("#knowl-update");
 var update_id     = null;
 var reparse_latex = false;
 /* parameters */
-var UPDATE_TIMEOUT = 5000;
+var UPDATE_TIMEOUT = 2000;
 
 function update() {
   if (update_id) {
@@ -107,20 +107,18 @@ function update() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $title.get()]);
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub, $content.get()]);
-      MathJax.Hub.Queue(function () {  
-        update_id = null;
-        // MathJax tells us it is done.
-        // has there been a call in the meantime and we have to do this again?
-        if (reparse_latex) {
+      renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
+      renderMathInElement($content.get(0), katexOpts);
+      update_id = null;
+      // once rendering is done.
+      // has there been a call in the meantime and we have to do this again?
+      if (reparse_latex) {
           /* console.log("reparse_latex == true"); */
           reparse_latex = false;
           update();
-        } 
-      });
+      }
       /* finally, set the title and hide the refresh link */
-      MathJax.Hub.Queue(function() {$title.html($ktitle.val())});
+      $title.html($ktitle.val());
       $update.fadeOut();
     }).error(function() { $title.html("ERROR"); })
 }

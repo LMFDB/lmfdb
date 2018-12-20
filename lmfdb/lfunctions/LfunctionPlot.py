@@ -60,7 +60,7 @@ def getAllMaassGraphHtml(degree, signature=""):
 
 ## ============================================
 ## Returns the header and information about the Gamma-factors for the
-## group with name group (in html and MathJax)
+## group with name group (in html and with math)
 ## ============================================
 
 
@@ -69,11 +69,11 @@ def getGroupHtml(group):
         ans = "<h3 id='r0r0r0'>L-functions of signature (0,0,0;)</h3>\n"
         ans += "<div>"
         ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s + i \\mu_3)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
         ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
         ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
@@ -82,12 +82,12 @@ def getGroupHtml(group):
         ans = "<h3 id='r0r0r0r0'>L-functions of signature (0,0,0,0;)</h3>\n"
         ans += "<div>\n"
         ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s + i \\mu_3)"
         ans += "\\Gamma_\\R(s + i \\mu_4)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
         ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
         ans += "</div>\n"
@@ -95,12 +95,12 @@ def getGroupHtml(group):
         ans = "<h3 id='r0r0r0r0selfdual'>L-functions of signature (0,0,0,0;) with real coefficients</h3>\n"
         ans += "<div>\n"
         ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s - i \\mu_1)"
         ans += "\\Gamma_\\R(s - i \\mu_2)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "with \\(\\mu_j\\) real.  By renaming and rearranging, we may assume \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
 
     # groups, soon to be obsolete
@@ -109,12 +109,12 @@ def getGroupHtml(group):
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GSp(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s - i \\mu_1)"
         ans += "\\Gamma_\\R(s - i \\mu_2)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "with \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
 
     elif group == 'GL4':
@@ -122,12 +122,12 @@ def getGroupHtml(group):
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GL(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\R(s + i \\mu_1)"
         ans += "\\Gamma_\R(s + i \\mu_2)"
         ans += "\\Gamma_\R(s - i \\mu_3)"
         ans += "\\Gamma_\R(s - i \\mu_4)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
 # template code to generate a knowl
@@ -145,11 +145,11 @@ def getGroupHtml(group):
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GL(3) of levels 1 and 4. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s - i \\mu_3)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3\\).</div>\n"
 
     else:
@@ -161,7 +161,7 @@ def getGroupHtml(group):
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
 ## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation) (in html and MathJax)
+## sign (of the functional equation) (in html with math)
 ## ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:

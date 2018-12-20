@@ -21,75 +21,54 @@
 <script type="text/javascript" src="{{ url_for('static', filename='jquery-ui-1.8.14.custom.min.js') }}"></script> 
 <script type="text/javascript" src="https://www.google.com/jsapi"></script> 
 
-<link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/> 
-
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js","asciimath2jax.js","MathMenu.js","MathZoom.js",
-               "TeX/autobold.js" {% if not user_is_authenticated -%},"TeX/noErrors.js","TeX/noUndefined.js" {%- endif %} ],
-  jax: ["input/TeX","input/AsciiMath","output/HTML-CSS"],
-  TeX: {
-   Macros: {
-    C: '{\\mathbb{C}}',
-    R: '{\\mathbb{R}}',
-    Q: '{\\mathbb{Q}}',
-    Z: '{\\mathbb{Z}}',
-    F: '{\\mathbb{F}}',
-    H: '{\\mathbb{H}}',
-    HH: '{\\mathcal{H}}',
-    integers: '{\\mathcal{O}}',
-    SL: '{\\textrm{SL}}',
-    GL: '{\\textrm{GL}}',
-    PSL: '{\\textrm{PSL}}',
-    PGL: '{\\textrm{PGL}}',
-    Sp: '{\\textrm{Sp}}',
-    GSp: '{\\textrm{GSp}}',
-    Gal: '{\\mathop{\\rm Gal}}',
-    Aut: '{\\mathop{\\rm Aut}}',
-    Sym: '{\\mathop{\\rm Sym}}',
-    End: '{\\mathop{\\rm End}}',
-    Reg: '{\\mathop{\\rm Reg}}',
-    Ord: '{\\mathop{\\rm Ord}}',
-    sgn: '{\\mathop{\\rm sgn}}',
-    trace: '{\\mathop{\\rm trace}}',
-    Res: '{\\mathop{\\rm Res}}',
-    ideal: ['{\\mathfrak{ #1 }}',1],
-    classgroup: ['{Cl(#1)}',1],
-    modstar: ['{\\left( #1/#2 \\right)^\\times}',2],
-   },
-  },
-  tex2jax: {
-    inlineMath: [['$','$'],["\\(","\\)"]],
-    processEscapes: true,
-  },
-  asciimath2jax: { delimiters: [['#(',')#'], ['#[',']#']] },
-  "HTML-CSS": { scale: 85 },
-  menuSettings: { zscale: "150%", zoom: "Double-Click" }
-
+<link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css" integrity="sha384-9eLZqc9ds8eNjO3TmqPeYcDj8n+Qfa4nuSiGYa6DjLNcv9BtN69ZIulL9+8CqC9Y" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.js" integrity="sha384-K3vbOmF2BtaVai+Qk37uypf7VrgBubhQreNQe9aGsz9lB63dIFiQVlJbr92dw2Lx" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>
+katexOpts = {
+    delimiters: [
+    {left: "$$", right: "$$", display: true},
+    {left: "\\[", right: "\\]", display: true},
+    {left: "$", right: "$", display: false},
+    {left: "\\(", right: "\\)", display: false}
+    ],
+    macros: {
+        "\\C": '{\\mathbb{C}}',
+        "\\R": '{\\mathbb{R}}',
+        "\\Q": '{\\mathbb{Q}}',
+        "\\Z": '{\\mathbb{Z}}',
+        "\\F": '{\\mathbb{F}}',
+        "\\H": '{\\mathbb{H}}',
+        "\\HH": '{\\mathcal{H}}',
+        "\\integers": '{\\mathcal{O}}',
+        "\\SL": '{\\textrm{SL}}',
+        "\\GL": '{\\textrm{GL}}',
+        "\\PSL": '{\\textrm{PSL}}',
+        "\\PGL": '{\\textrm{PGL}}',
+        "\\Sp": '{\\textrm{Sp}}',
+        "\\GSp": '{\\textrm{GSp}}',
+        "\\Gal": '{\\mathop{\\rm Gal}}',
+        "\\Aut": '{\\mathop{\\rm Aut}}',
+        "\\Sym": '{\\mathop{\\rm Sym}}',
+        "\\End": '{\\mathop{\\rm End}}',
+        "\\Reg": '{\\mathop{\\rm Reg}}',
+        "\\Ord": '{\\mathop{\\rm Ord}}',
+        "\\sgn": '{\\mathop{\\rm sgn}}',
+        "\\trace": '{\\mathop{\\rm trace}}',
+        "\\Res": '{\\mathop{\\rm Res}}',
+        "\\mathstrut": '\\vphantom(',
+        "\\ideal": '{\\mathfrak{ #1 }}',
+        "\\classgroup": '{Cl(#1)}',
+        "\\modstar": '{\\left( #1/#2 \\right)^\\times}',
+        },
+    };
+document.addEventListener("DOMContentLoaded", function() {
+	renderMathInElement(document.body, katexOpts);
 });
-MathJax.Hub.Register.StartupHook("MathEvents Ready",function () { 
-  var EVENT = MathJax.Extension.MathEvents.Event, 
-      MENU = EVENT.Menu, 
-      HUB = MathJax.Hub; 
-  EVENT.Menu = function (event) { 
-    if (!HUB.getJaxFor(this).noContextualMenu) {return MENU.apply(this,arguments)} 
-        return true; 
-  } 
-}); 
-MathJax.Hub.Queue( 
-  function () { 
-    var jax = MathJax.Hub.getAllJax("sidebar"); 
-    for (var i = 0, m = jax.length; i < m; i++) { 
-      jax[i].noContextualMenu = true; 
-    } 
-  } 
-); 
 </script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js"></script>
-{#- <script type="text/javascript" src="http://www.lmfdb.org/MathJax/MathJax.js"></script> -#}
-{#- append this: ?config=default if the script complains about a missing config -#}
 
-{#- the defs for the knowls, need to be after mathjax, before analytics -#}
+{#- the defs for the knowls, needed to be after mathjax, before analytics, but we do not use mathjax any more -#}
 {%- include "knowl-defs.html" -%}
 {%- from "knowl-defs.html" import KNOWL with context -%}
 {%- from "knowl-defs.html" import KNOWL_LINK with context -%}
