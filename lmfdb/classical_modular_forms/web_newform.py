@@ -97,7 +97,7 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
     else:
         name = field_pretty(label)
         if truncate and name == label and len(name) > truncate:
-            parts = nf_label.split('.')
+            parts = label.split('.')
             parts[2] = r'\(\cdots\)'
             name = '.'.join(parts)
         return nf_display_knowl(label, name)
