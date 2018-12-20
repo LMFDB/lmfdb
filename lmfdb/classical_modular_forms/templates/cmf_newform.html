@@ -174,7 +174,7 @@ function show_qexp(qstyle) {
     </p>
   </form>
 
-  {% if newform.dim > 2 and not newform.hecke_ring_power_basis %}
+  {% if newform.dim > 2 and newform.hecke_ring_cyclotomic_generator == 0 and not newform.hecke_ring_power_basis %}
     <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
