@@ -149,7 +149,7 @@ class WebNewform(object):
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
         if 'field_disc' not in data: # Until we have search results include nulls
             self.field_disc = None
-        else:
+        elif self.field_disc:
             self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
         # We always print analytic conductor with 1 decimal digit
         self.analytic_conductor = '%.1f'%(self.analytic_conductor)
@@ -170,7 +170,7 @@ class WebNewform(object):
 
         hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
         eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
-        if eigenvals:
+        if eigenvals and eigenvals.get('an'):
             self.has_exact_qexp = True
             for attr in hecke_cols:
                 setattr(self, attr, eigenvals.get(attr))

@@ -192,12 +192,18 @@ function knowl_click_handler($el) {
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
-    //if(knowl_id == "dynamic_show") {
-    //  log("dynamic_show: " + kwargs);
-    //  $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
-    //  MathJax.Hub.Queue(['Typeset', MathJax.Hub, $output.get(0)]);
-    //  MathJax.Hub.Queue([ function() { $output.slideDown(50); }]);
-    //} else 
+    if(knowl_id == "dynamic_show") {
+      log("dynamic_show: " + kwargs);
+      $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+      try
+      {
+        renderMathInElement($output.get(0), katexOpts);
+      }
+      catch(err) {
+        log("err:" + err)
+      }
+      $output.slideDown("slow");
+    } else 
     if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
