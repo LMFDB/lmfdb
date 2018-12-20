@@ -1,5 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
+* fix newform pages throwing server errors (eg http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/983/2/c/a/)
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 * fix coefficient field knowl (Edgar)
 
