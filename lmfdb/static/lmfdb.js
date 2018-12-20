@@ -207,7 +207,6 @@ function knowl_click_handler($el) {
       log("cache hit: " + knowl_id);
       $output.hide();
       $output.html(knowl_cache[knowl_id]);
-      $output.slideDown("slow");
       try
       {
         renderMathInElement($output.get(0), katexOpts);
@@ -215,6 +214,8 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
+      log("rendered?")
+      $output.slideDown("slow");
 
     } else {
       $output.addClass("loading");
