@@ -1,30 +1,26 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* fix newform pages throwing server errors (eg http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/983/2/c/a/)
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 * fix coefficient field knowl (Edgar)
-* update first line of q-expansion description to remove mention of hecke ring basis when cyclotomic rep is used, as on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3829/1/cu/a/ for example.
 
 IMPORTANT:
 * Remove empty table when there are no inner twists (but leave line saying there are none) (David)
 * Add check in display_float to not use half integer code when abs value larger than 10^prec. (Edgar)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
-* Make light gray lighter gray (David)
-* Display hecke_ring_generator_nbound on form pages (David)
-* Display field_disc on form pages when present and field is not cyclotomic (or real cyclotomic) and not in the LMFDB (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
+* Compare trivial char data with Stein database (Drew)
+* Compare dihedral weight one data with Magma (Drew)
+* Stop asking for passwords when registering changes on localhost (Edgar)
+* Make light gray lighter gray (David)
+* Fix drop_column so that it deletes statistics including that column (David)
+
 * Don't duplicate in statistics setup (David)
-* Add stats specific to trivial character (David)
 * Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
 * Use include in dynamic template for stat display (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
-* Compare trivial char data with Stein database (Drew)
-* Compare dihedral weight one data with Magma (Drew)
-* Fix drop_column so that it deletes statistics including that column (David)
 * Delete buckets when no default (David)
-* Stop asking for passwords when registering changes on localhost (Edgar)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)

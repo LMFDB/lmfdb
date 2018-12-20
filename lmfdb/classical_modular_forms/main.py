@@ -1,6 +1,7 @@
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
 from collections import defaultdict
+from itertools import izip_longest
 from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
@@ -396,15 +397,18 @@ class CMF_download(Downloader):
             code = encode_hecke_orbit(label)
         except ValueError:
             return abort(404, "Invalid label: %s"%label)
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n', 'an', 'trace_an'], sort=['n'])
-        if not eigenvals:
+        an = db.mf_hecke_nf.lucky({'hecke_orbit_code':code}, 'an')
+        if an is None:
+            an = []
+        traces = db.mf_hecke_traces.search({'hecke_orbit_code':code}, ['n', 'trace_an'], sort=['n'])
+        if not traces:
             return abort(404, "No form found for %s"%(label))
-        data = []
-        for i, ev in enumerate(eigenvals):
-            if ev['n'] != i+1:
+        tr = []
+        for i, trace in enumerate(traces):
+            if trace['n'] != i+1:
                 return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
-            data.append((ev.get('an'),ev.get('trace_an')))
-        return data
+            tr.append(trace)
+        return list(izip_longest(an, tr))
 
     qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
                                    'f = R(poly_data)',
@@ -422,13 +426,14 @@ class CMF_download(Downloader):
         dim = None
         qexp = []
         for an, trace_an in data:
-            if not an:
-                # only had traces
-                return abort(404, "No q-expansion found for %s"%(label))
+            if not an: # only traces left
+                break
             if dim is None:
                 dim = len(an)
                 qexp.append([0] * dim)
             qexp.append(an)
+        if not qexp:
+            return abort(404, "No q-expansion found for %s"%(label))
         c = self.comment_prefix[lang]
         func_start = self.get('function_start',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
@@ -443,7 +448,7 @@ class CMF_download(Downloader):
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             basis = poly = ''
         else:
-            hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
+            hecke_data = db.mf_hecke_nf.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
             if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
                 return abort(404, "Missing coefficient ring information for %s"%label)
             start = self.delim_start[lang]
@@ -498,7 +503,7 @@ class CMF_download(Downloader):
             return redirect(url_for('.index'))
         forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
         codes = [form['hecke_orbit_code'] for form in forms]
-        traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
+        traces = db.mf_hecke_traces.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
         trace_dict = defaultdict(dict)
         for rec in traces:
             trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
@@ -749,7 +754,7 @@ def trace_postprocess(res, info, query):
     if res:
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        for rec in db.mf_hecke_nf.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
+        for rec in db.mf_hecke_traces.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
         for mf in res:
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
