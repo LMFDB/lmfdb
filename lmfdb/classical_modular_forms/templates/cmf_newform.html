@@ -145,8 +145,8 @@ function show_qexp(qstyle) {
 <h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp">
   {% if newform.dim > 1 %}
-    <p> Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() }}.
-      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.</p>
+    <p> {% if not newform.hecke_ring_cyclotomic_generator %} Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.{% else %} The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }} are shown below.{% endif %}</p>
   {% endif %}
   <form id="qexp">
     <table class="qexp-table">

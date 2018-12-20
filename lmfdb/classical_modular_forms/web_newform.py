@@ -71,7 +71,7 @@ def quad_field_knowl(disc):
     field_name = field_pretty(field_label)
     return nf_display_knowl(field_label, field_name)
 
-def field_display_gen(label, poly, disc=None, truncate=0):
+def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
     """
     This function is used to display a number field knowl.  When the field
     is not in the LMFDB, it uses a dynamic knowl displaying the polynomial
@@ -80,14 +80,18 @@ def field_display_gen(label, poly, disc=None, truncate=0):
     INPUT:
 
     - ``label`` -- the LMFDB label for the field (``None`` if not in the LMFDB)
-    - ``poly`` -- the defining polynomial for the field
+    - ``poly`` -- the defining polynomial for the field as a list
     - ``disc`` -- the discriminant of the field, as a list of (p, e) pairs
     - ``truncate`` -- an integer, the maximum length of the field label before truncation.
         If 0, no truncation will occur.
     """
     if label is None:
         if poly:
-            return polyquo_knowl(poly, disc)
+            if self_dual:
+                unit = ZZ(1)
+            else:
+                unit = ZZ(-1)**((len(poly)-1)//2)
+            return polyquo_knowl(poly, disc, unit)
         else:
             return ''
     else:

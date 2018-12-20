@@ -680,7 +680,7 @@ def bigint_knowl(n, cutoff=8, sides=2):
     else:
         return r'\(%s\)'%n
 
-def polyquo_knowl(f, disc=None):
+def polyquo_knowl(f, disc=None, unit=1):
     quo = "x^{%s}" % (len(f) - 1)
     i = len(f) - 2
     while i >= 0 and f[i] == 0:
@@ -693,7 +693,7 @@ def polyquo_knowl(f, disc=None):
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
     if disc is not None:
-        long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc)._latex_())
+        long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
