@@ -3550,8 +3550,7 @@ class PostgresDatabase(PostgresBase):
         if self.__editor is None:
             print "Please log in using your knowl username and password,"
             print "so that we can associate database changes with individuals"
-            print "Note that you can permanently log in by setting the editor
-        field in the logging section of your config.ini file."
+            print "Note that you can permanently log in by setting the editor field in the logging section of your config.ini file."
             uid = raw_input("Username: ")
             pwd = getpass.getpass()
             selecter = SQL("SELECT bcpassword FROM userdb.users WHERE username = %s")
