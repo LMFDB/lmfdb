@@ -3,7 +3,7 @@
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
     CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup,\
     factor_base_factorization_latex
 
 from lmfdb.number_fields.number_field import field_pretty
@@ -350,37 +350,49 @@ class WebNewform(object):
             return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
 
     def field_display(self):
+        """
+        This function is used to display the coefficient field.
+
+        When the relative dimension is 1 (and dimension larger than 2),
+        it displays the coefficient field as a cyclotomic field.  Otherwise,
+        if the field is in the lmfdb it displays it using the standard number
+        field knowl; if not it uses a dynamic knowl showing the coefficient field.
+        """
         # display the coefficient field
-        if self.rel_dim == 1:
-            return self.cyc_display()
+        m = self.field_poly_root_of_unity
+        if m and self.dim != 2:
+            return self.cyc_display(m, self.field_poly_is_real_cyclotomic)
         else:
             return self.field_display_gen(self.nf_label, self.field_poly)
 
     def field_display_gen(self, label, poly):
+        """
+        This function is used to display a number field knowl.  When the field
+        is not in the LMFDB (indicated by having ``None`` for the ``label``),
+        it uses a dynamic knowl displaying the polynomial and discriminant.
+        Otherwise, it uses the standard LMFDB number field knowl.
+        """
         if label is None:
             if poly:
                 return polyquo_knowl(poly)
             else:
                 return 'Unknown'
-        elif label == u'1.1.1.1':  # rationals, special case
-            name = r"\(\Q\)"
         else:
-            m = self.field_poly_root_of_unity
-            if self.field_poly_is_cyclotomic:
-                name = r"\(\Q(\zeta_{%s})\)" % m
-            elif self.field_poly_is_real_cyclotomic:
-                name = r"\(\Q(\zeta_{%s})^+\)" % m
-            else:
-                name = field_pretty(label)
-        return nf_display_knowl(label, name=name)
+            return nf_display_knowl(label, name=field_pretty(label))
 
     @property
     def artin_field_display(self):
+        """
+        For weight 1 forms, displays the Artin field.
+        """
         label, poly = self.artin_field_label, self.artin_field
         return self.field_display_gen(label, poly)
 
     @property
     def projective_field_display(self):
+        """
+        For weight 1 forms, displays the kernel of the projective Galois rep.
+        """
         label, poly = self.projective_field_label, self.projective_field
         return self.field_display_gen(label, poly)
 
@@ -391,8 +403,6 @@ class WebNewform(object):
             return pretty if pretty else self.artin_image
         return None
 
-
-
     def rm_and_cm_field_knowl(self, sign  = 1):
         if self.self_twist_discs:
             disc = [ d for d in self.self_twist_discs if sign*d > 0 ]
@@ -400,21 +410,46 @@ class WebNewform(object):
         else:
             return ''
 
-    def cyc_display(self):
-        if self.char_degree == 1:
-            name = r'\(\Q\)'
-        else:
+    def cyc_display(self, m=None, real_sub=False):
+        r"""
+        Used to display cyclotomic fields and their real subfields.
+
+        INPUT:
+
+        - ``m`` -- if ``None``, m is set to the order of the character
+        (or the order of the field generator when the defining polynomial
+        is cyclotomic and the relative dimension is 1).
+        - ``real_sub`` -- If ``True``, will display the real subfield instead.
+
+        OUTPUT:
+
+        A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
+        """
+        name = None
+        d = self.dim
+        if m is None:
             m = self.char_order
+            d = self.char_degree
             if self.dim == self.char_degree and self.field_poly_root_of_unity:
                 # the relative dimension is 1 and the coefficient field is cyclotomic
                 # We want to display it using the appropriate root of unity
                 m = self.field_poly_root_of_unity
-            if m == 4:
-                name = r'\(\Q(i)\)'
+        else:
+            d = self.dim
+        if d == 1:
+            name = r'\(\Q\)'
+        elif m == 4:
+            name = r'\(\Q(i)\)'
+        elif real_sub:
+            name = r'\(\Q(\zeta_{%s})^+\)' % m
+        else:
+            name = r'\(\Q(\zeta_{%s})\)' % m
+        if d < 24:
+            if real_sub:
+                label = rcyclolookup[m]
             else:
-                name = r'\(\Q(\zeta_{%s})\)' % m
-        if self.char_degree < 24:
-            return nf_display_knowl(cyclolookup[self.char_order], name=name)
+                label = cyclolookup[m]
+            return nf_display_knowl(label, name=name)
         else:
             return name
 
@@ -606,9 +641,12 @@ function switch_basis(btype) {
             D = b**2 - 4*a*c
             d = D.squarefree_part()
             s = (D//d).isqrt()
-            k, l = map(ZZ, self.hecke_ring_numerators[1])
-            k = k / self.hecke_ring_denominators[1]
-            l = l / self.hecke_ring_denominators[1]
+            if self.hecke_ring_power_basis:
+                k, l = ZZ(0), ZZ(1)
+            else:
+                k, l = map(ZZ, self.hecke_ring_numerators[1])
+                k = k / self.hecke_ring_denominators[1]
+                l = l / self.hecke_ring_denominators[1]
             beta = vector((k - (b*l)/(2*a), ((s*l)/(2*a)).abs()))
             den = lcm(beta[0].denom(), beta[1].denom())
             beta *= den
@@ -648,13 +686,13 @@ function switch_basis(btype) {
     @property
     def _PrintRing(self):
         # the order='negdeglex' assures constant terms come first
-        if self.single_generator:
-            # univariate polynomial rings don't support order,
-            # we work around it by introducing a dummy variable
-            m = self.hecke_ring_cyclotomic_generator
-            if m is not None and m != 0:
-                return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
-            elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
+        # univariate polynomial rings don't support order,
+        # we work around it by introducing a dummy variable
+        m = self.hecke_ring_cyclotomic_generator
+        if m is not None and m != 0:
+            return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
+        elif self.single_generator:
+            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
                 return PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
             else:
                 return PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
