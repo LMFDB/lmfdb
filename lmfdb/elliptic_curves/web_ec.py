@@ -126,10 +126,10 @@ class WebEC(object):
         self.mod_p_images = dbdata['modp_images']
 
         # Next lines because the python identifiers cannot start with 2
-        self.twoadic_index = dbdata.get('index_2adic')
-        self.twoadic_log_level = dbdata.get('log_level_2adic')
-        self.twoadic_gens = dbdata.get('gens_2adic')
-        self.twoadic_label = dbdata.get('label_2adic')
+        self.twoadic_index = dbdata.get('2adic_index')
+        self.twoadic_log_level = dbdata.get('2adic_log_level')
+        self.twoadic_gens = dbdata.get('2adic_gens')
+        self.twoadic_label = dbdata.get('2adic_label')
         # All other fields are handled here
         self.make_curve()
 
