@@ -98,7 +98,7 @@ def stats():
         indexSize += sizes['index_bytes']
         if csize >= int(info['minsize']):
             dname, name = split_db(tablename)
-            if name not in db.tablenames:
+            if tablename not in db.tablenames:
                 link = tablename
             else:
                 link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
