@@ -3,6 +3,7 @@ CRITICAL (BUGS):
 * fix newform pages throwing server errors (eg http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/983/2/c/a/)
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 * fix coefficient field knowl (Edgar)
+* update first line of q-expansion description to remove mention of hecke ring basis when cyclotomic rep is used, as on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3829/1/cu/a/ for example.
 
 IMPORTANT:
 * Remove empty table when there are no inner twists (but leave line saying there are none) (David)
