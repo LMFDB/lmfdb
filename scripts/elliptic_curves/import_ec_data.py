@@ -151,7 +151,7 @@ def parse_tgens(s):
 
 def parse_ainvs(s):
     r"""
-    Given a string like '[a1,a2,a3,a4,a6]' returns the list of substrings ['a1','a2','a3','a4','a6']
+    Given a string like '[a1,a2,a3,a4,a6]' returns the list of integers [a1,a2,a3,a4,a6]
     """
     return [ZZ(a) for a in s[1:-1].split(',')]
 
@@ -914,3 +914,4 @@ def update_torsion_growth_stats(verbose=True):
     tor_gro_degs.sort()
     tor_gro_counts = dict([(str(d),curvesnew.count({'tor_degs': d})) for d in tor_gro_degs])
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
+                                                             
