@@ -1791,7 +1791,7 @@ class PostgresTable(PostgresBase):
             elif cur.rowcount == 1: # update
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
-                    if len(data) == 1:
+                    if len(dat) == 1:
                         updater = SQL("UPDATE {0} SET {1} = {2} WHERE {3}")
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
