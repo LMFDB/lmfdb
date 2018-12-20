@@ -202,7 +202,10 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
-    } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+      log("rendered?")
+      $output.slideDown("slow");
+    } else 
+    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
       $output.hide();
@@ -214,7 +217,6 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
-      log("rendered?")
       $output.slideDown("slow");
 
     } else {
