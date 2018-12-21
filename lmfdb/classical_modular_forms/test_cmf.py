@@ -31,7 +31,7 @@ class CmfTest(LmfdbTest):
         assert "count" in page.data
         assert "CM disc" in page.data
         assert "RM disc" in page.data
-        assert "has inner twist" in page.data
+        assert "inner twists" in page.data
         assert "projective image" in page.data
         assert "character order" in page.data
 
@@ -174,7 +174,7 @@ class CmfTest(LmfdbTest):
         Check that non-trivial characters are also working.
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/e/a/")
-        assert r'\Q(\zeta_{6})' in page.data
+        assert r'\Q(\sqrt{-3})' in page.data
         assert '0.866025' in page.data
         assert r'6q^{6}' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/4/b/a/")
@@ -267,10 +267,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
         assert 'Error: Table too large: must have at most 10000 entries'
 
-        # wrong search type
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=Dimensions')
-        assert 'Results (displaying all 7 matches)' in page.data
-        assert '\Q(\sqrt{2}, \sqrt{-3})' in page.data
 
 
         #the other dim table
@@ -393,7 +389,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed', follow_redirects=True)
         assert "Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time)." in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=3.14&format=embed', follow_redirects=True)
-        assert "must consist of integers or embedding codes" in page.data
+        assert "must be an integer, range of integers or comma separated list of integers" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=1-20&prec=16&format=embed')
         assert 'must be a positive integer, at most 15 (for higher precision, use the download button)' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=999-1001&m=1-20&prec=6&format=embed')
@@ -414,7 +410,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/887.2.a.b', follow_redirects=True)
         assert 'No q-expansion found for 887.2.a.b'
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
-        assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
+        assert '[3, -27, 108, -258, 420, -504, 463, -330, 186, -80, 27, -6, 1]' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
         assert '0.5, -2.2282699087' in page.data
         assert '-12.531852282' in page.data
@@ -561,7 +557,7 @@ class CmfTest(LmfdbTest):
         assert "Results (displaying all 6 matches)" in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&nf_label=9.9.16983563041.1&prime_quantifier=subsets&projective_image=D19&search_type=List')
-        assert r"Q(\zeta_{19})^+" in page.data
+        assert r"Q(\zeta_{38})^+" in page.data
         assert "Results (displaying all 32 matches)"
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets&search_type=List')
@@ -575,6 +571,10 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-4000&weight=1&dim=116&search_type=List')
         assert "Results (displaying both matches)" in page.data
         assert r"Q(\zeta_{177})" in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=2&dim=4&nf_label=4.0.576.2&prime_quantifier=subsets')
+        assert 'Results (displaying all 7 matches)' in page.data
+        assert '\Q(\sqrt{2}, \sqrt{-3})' in page.data
 
     def test_inner_twist(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/3992/1/ba/a/')
@@ -592,8 +592,8 @@ class CmfTest(LmfdbTest):
         for elt in ['3.b','5.b','197.b','2955.c']:
             assert elt in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
-        assert "This newform does not admit any nontrivial" in page.data
-        assert "inner twists" in page.data
+        assert "This newform does not admit any (nontrivial)" in page.data
+        assert "inner twist" in page.data
 
 
     def test_self_twist(self):
