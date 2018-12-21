@@ -6,14 +6,15 @@ from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool,\
+        parse_primes, parse_nf_string, parse_noop, parse_equality_constraints,\
+        integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
-from lmfdb.WebNumberField import field_pretty, nf_display_knowl
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl, cyc_display, field_display_gen
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
-from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, per_row_total, per_col_total, sum_totaler
+from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
 import re
@@ -1076,7 +1077,7 @@ def statistics():
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
 def attribute_parse(info, attributes):
-    stats = info["stats"]
+    #stats = info["stats"]
     cols = []
     buckets = {}
     for cname, bname in [('col1', 'buckets1'), ('col2', 'buckets2')]:
@@ -1122,7 +1123,7 @@ def dynamic_statistics():
             attribute_parse(info, attributes)
             stats.setup(attributes=[attributes])
             info["d"] = stats.prep(attributes)
-        except Exception as e:
+        except Exception:
             raise
     else:
         info = {"d": stats.prep({'cols':[], 'buckets':{}}),

@@ -1,7 +1,6 @@
 from sage.all import UniqueRepresentation, lazy_attribute
 from flask import url_for
 from lmfdb.utils import format_percentage, display_knowl, KeyedDefaultDict
-from itertools import izip_longest
 from collections import defaultdict
 
 def range_formatter(x):
