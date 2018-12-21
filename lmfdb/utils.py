@@ -16,7 +16,8 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF, Factorization
+from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, RealField, RIF, ZZ
+from sage.all import factor, latex, valuation
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -680,6 +681,22 @@ def bigint_knowl(n, cutoff=8, sides=2):
     else:
         return r'\(%s\)'%n
 
+def factor_base_factor(n, fb):
+    return [[p, valuation(n,p)] for p in fb]
+
+def factor_base_factorization_latex(fbf):
+    ans = ''
+    if len(fbf)==0:
+        return '1'
+    for pm in fbf:
+        if pm[1]==1:
+            ans += r'\cdot %d'%(pm[0])
+        elif pm[1]>1:
+            ans += r'\cdot %d^{%d}'%(pm[0],pm[1])
+    return ans[6:]
+
+
+
 def polyquo_knowl(f, disc=None, unit=1):
     quo = "x^{%s}" % (len(f) - 1)
     i = len(f) - 2
@@ -693,7 +710,10 @@ def polyquo_knowl(f, disc=None, unit=1):
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
     if disc is not None:
-        long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
+        if isinstance(disc, list):
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
+        else:
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):

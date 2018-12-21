@@ -3,15 +3,13 @@
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
     CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup,\
-    factor_base_factorization_latex
-
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
     web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
-    display_knowl
+    display_knowl, factor_base_factorization_latex
 from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from lmfdb.search_parsing import integer_options

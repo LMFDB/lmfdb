@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import sage
-from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, valuation
+from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari
 import yaml, os
 from sage.misc.cachefunc import cached_function
-from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html, display_multiset
+from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html,\
+        display_multiset, factor_base_factor, factor_base_factorization_latex
 from flask import url_for
 from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
@@ -109,19 +110,6 @@ def is_fundamental_discriminant(d):
     else:
         return d % 16 in [8, 12] and (d // 4).is_squarefree()
 
-def factor_base_factor(n, fb):
-    return [[p, valuation(n,p)] for p in fb]
-
-def factor_base_factorization_latex(fbf):
-    ans = ''
-    if len(fbf)==0:
-        return '1'
-    for pm in fbf:
-        if pm[1]==1:
-            ans += r'\cdot %d'%(pm[0])
-        elif pm[1]>1:
-            ans += r'\cdot %d^{%d}'%(pm[0],pm[1])
-    return ans[6:]
 
 @cached_function
 def field_pretty(label):
