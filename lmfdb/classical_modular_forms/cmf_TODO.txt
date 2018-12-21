@@ -1,11 +1,9 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
-* fix coefficient field knowl (Edgar)
 
 IMPORTANT:
 * Remove empty table when there are no inner twists (but leave line saying there are none) (David)
-* Add check in display_float to not use half integer code when abs value larger than 10^prec. (Edgar)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)

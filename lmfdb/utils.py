@@ -322,7 +322,7 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     k = round_to_half_int(x)
-    if k == x:
+    if k == x and abs(x) < 10.**digits:
         k2 = None
         try:
             k2 = ZZ(2*x)
