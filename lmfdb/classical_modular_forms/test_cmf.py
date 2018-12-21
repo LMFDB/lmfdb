@@ -233,23 +233,29 @@ class CmfTest(LmfdbTest):
                 assert "Newform 38.9.d.a" in page.data
 
     def test_dim_table(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
+        assert 'Dimension Search Results' in page.data
+        assert '229' in page.data # Level 23, Weight 12
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
+        assert 'Dimension Search Results' in page.data
+        assert '229' in page.data # Level 23, Weight 12
+
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions", follow_redirects=True)
         assert 'Dimension Search Results' in page.data
         assert '1-12' in page.data
         assert '1-24' in page.data
-        assert '227' in page.data
+        assert '229' in page.data # Level 23, Weight 12
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
-        assert 'Dimension Search Results' in page.data
-        assert '227' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
-        assert '456' in page.data
+        assert '253' in page.data # Level 23, Weight 13
+        assert '229' in page.data # Level 23, Weight 12
         assert 'Dimension Search Results' in page.data
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=2-&search_type=Dimensions", follow_redirects=True)
-        assert '426' in page.data
-        assert '128' in page.data
+        assert '426' in page.data # Level 3999, Weight 1
+        assert '128' in page.data # Level 4000, Weight 1
 
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions", follow_redirects=True)
         assert 'Dimension Search Results' in page.data
