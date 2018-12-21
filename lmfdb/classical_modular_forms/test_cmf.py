@@ -112,7 +112,7 @@ class CmfTest(LmfdbTest):
     def test_failure(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
-        assert " for non trivial character." in page.data
+        assert "for non trivial character." in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1000/4000/a/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
         assert " for trivial character." in page.data
