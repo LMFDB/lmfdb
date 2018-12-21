@@ -408,7 +408,7 @@ class CMF_download(Downloader):
         for i, trace in enumerate(traces):
             if trace['n'] != i+1:
                 return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
-            tr.append(trace)
+            tr.append(trace['trace_an'])
         return list(izip_longest(an, tr))
 
     qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
