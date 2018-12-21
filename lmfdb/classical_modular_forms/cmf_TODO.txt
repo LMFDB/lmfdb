@@ -13,7 +13,6 @@ IMPORTANT:
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
 * Compare trivial char data with Stein database (Drew)
 * Compare dihedral weight one data with Magma (Drew)
-* Stop asking for passwords when registering changes on localhost (Edgar)
 * Make light gray lighter gray (David)
 * Fix drop_column so that it deletes statistics including that column (David)
 

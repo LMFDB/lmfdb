@@ -3548,24 +3548,15 @@ class PostgresDatabase(PostgresBase):
         field in the logging section of your config.ini file.
         """
         if self.__editor is None:
-            print "Please log in using your knowl username and password,"
-            print "so that we can associate database changes with individuals"
-            print "Note that you can permanently log in by setting the editor field in the logging section of your config.ini file."
+            print "Please provide your knowl username,"
+            print "so that we can associate database changes with individuals."
+            print "Note that you can also do this by setting the editor field in the logging section of your config.ini file."
             uid = raw_input("Username: ")
-            pwd = getpass.getpass()
-            selecter = SQL("SELECT bcpassword FROM userdb.users WHERE username = %s")
+            selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
             if cur.rowcount == 0:
                 raise ValueError("That username not present in database!")
-            bcpass = cur.fetchone()[0]
-            from lmfdb.users.pwdmanager import userdb
-            if bcpass:
-                if bcpass == userdb.bchash(pwd, existing_hash = bcpass):
-                    self.__editor = uid
-                else:
-                    raise ValueError("Password invalid")
-            else:
-                raise ValueError("Old-style password: please log in to the website to update")
+            self.__editor = uid
         return self.__editor
 
     def log_db_change(self, operation, tablename=None, **data):
