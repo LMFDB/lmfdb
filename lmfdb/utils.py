@@ -688,17 +688,18 @@ def factor_base_factorization_latex(fbf):
     ans = ''
     if len(fbf)==0:
         return '1'
-    if fbf == [[-1,1]]:
-        return '-1'
+    sign = 1
     for pm in fbf:
-        if pm[0] == -1 and (pm[1] %2) == 1:
-            ans += r'\cdot -'
-        if pm[1]==1:
+        if pm[0] == -1:
+            if (pm[1] %2) == 1:
+                sign *= -1
+        elif pm[1]==1:
             ans += r'\cdot %d'%(pm[0])
         elif pm[1]>1:
             ans += r'\cdot %d^{%d}'%(pm[0],pm[1])
     # get rid of the initial '\cdot '
-    return ans[6:]
+    ans = ans[6:]
+    return '- ' + ans if sign == -1 else ans
 
 
 
