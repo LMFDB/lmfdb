@@ -17,7 +17,6 @@ import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
 from web_space import convert_spacelabel_from_conrey, get_bread
-from main import Nk2_bound
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import bisect
 
@@ -397,6 +396,7 @@ class WebNewform(object):
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
             nontriv = not (a == 'a')
+            from main import Nk2_bound
             if Nk2 > Nk2_bound(nontriv = nontriv):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for non %s character"%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
