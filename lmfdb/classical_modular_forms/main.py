@@ -68,7 +68,7 @@ def set_info_funcs(info):
         if m and d != 2:
             return cyc_display(m, d, mf.get('field_poly_is_real_cyclotomic'))
         else:
-            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), [(ZZ(p),ZZ(e)) for p,e in mf.get('field_disc')], truncate=16)
+            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc'), truncate=16)
 
     info["nf_link"] = nf_link
 
