@@ -43,6 +43,12 @@
     <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
   </tr>
   {% endif %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
+    <td> \(A\) </td>
+    <td>=</td>
+    <td>\({{ newform.analytic_conductor }}\)</td>
+  </tr>
   {% if newform.has_analytic_rank %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
@@ -51,12 +57,6 @@
     <td>{{ newform.analytic_rank }}{% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
   </tr>
   {% endif %}
-  <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
-    <td> \(A\) </td>
-    <td>=</td>
-    <td>\({{ newform.analytic_conductor }}\)</td>
-  </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
     <td> </td>
