@@ -1,6 +1,7 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
+* fix display problem with coefficient field knowls with big polynomials extending outside the knowl boundary, e.g. as on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/8/21/d/b/
 
 IMPORTANT:
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
