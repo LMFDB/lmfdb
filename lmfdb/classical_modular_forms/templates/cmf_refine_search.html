@@ -6,13 +6,16 @@
 {% set weight1options = false %}
 {% elif info.search_type == 'Dimensions' %}
 {% set weight1options = (info.weight == '1') %}
+{% elif info.search_type == 'DynStats' %}
+{% set weight1options = true %}
 {% else %}
 {% set weight1options = 'err' in info or info.all_weight1(info.results) %}
 {% endif %}
+
 {% if info.search_type == 'DynStats' %}
 <script>
 var default_buckets = {};
-{% for col, buckets in info.default_buckets %}
+{% for col, buckets in info.stats._default_buckets %}
 default_buckets['{{col}}'] = '{{buckets}}';
 {% endfor %}
 function set_buckets(col_selecter, bucket_id) {
@@ -160,7 +163,7 @@ function set_buckets(col_selecter, bucket_id) {
   <tr>
     <td>
       <select id="col{{i}}_select" name='col{{i}}' style="width: 150px;" onchange="set_buckets(this, 'buckets{{i}}')">
-        {% for col, disp in info.valid_columns %}
+        {% for col, disp in info.stats._dynamic_cols %}
         <option value="{{ col }}"{% if col==info.get_col(i) %} selected='yes'{% endif %}>{{ disp }}</option>
         {% endfor %}
       </select>

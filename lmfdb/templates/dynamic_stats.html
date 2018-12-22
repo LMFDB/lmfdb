@@ -1,96 +1,12 @@
 {% extends info.parent_page %}
 {% block show_results %}
 
-<div>
-{{ info.summary | safe }}
-</div>
-
-<script>
-function show_rows(hsh, to_show) {
-  $('.short_table_' + hsh).hide();
-  $('.long_table_' + hsh).hide();
-  $('.' + to_show + '_table_' + hsh).show();
-  var elementBottom = $('#' + hsh + '-anchor').offset().top() + $('#' + hsh + '-anchor').outerHeight();
-  var viewportTop = $(window).scrollTop();
-  return elementBottom < viewportTop;
-}
-</script>
-
-{% if (info.d.attribute.cols | length) == 1 %}
-{% for rows, div_classes, span_class in info.d.divs %}
-<div class="{{div_classes}}">
-<table border=1>
-  {% for r in rows %}
-  <tr>
-    <th>{{info.d.attribute.row_title}}</th>
-    {% for c in r %}
-    <td>{{c.value|safe}}</td>
-    {% endfor %}
-  </tr>
-  <tr>
-    <th>count</th>
-    {% for c in r %}
-    <td><a href='{{c.query}}'>{{c.count}}</a></td>
-    {% endfor %}
-  </tr>
-  <tr>
-    <th>proportion</th>
-    {% for c in r %}
-    <td>{{c.proportion}}%</td>
-    {% endfor %}
-  </tr>
-  <tr height = 10px></tr>
-  {% endfor %} {# r in rows #}
-</table>
-{% if span_class == 'short' %}
-<div class="toggle">Display
-  <span class="short_table_{{info.d.attribute.hash}}"><a onclick="return show_rows('{{info.d.attribute.hash}}','long');" href="#{{info.d.attribute.hash}}-anchor">more</a></span>
-</div>
-{% elif span_class == 'long' %}
-<div class="toggle">Display
-  <span class="long_table_{{info.d.attribute.hash}} nodisplay"><a onclick="return show_rows('{{info.d.attribute.hash}}','short');" href="#{{info.d.attribute.hash}}-anchor">less</a></span>
-</div>
+{% set d = info.d %}
+{% if (d.attribute.cols | length) == 1 %}
+{% include 'stat_1d.html' %}
+{% else %}
+{% include 'stat_2d.html' %}
 {% endif %}
-</div>
-{% endfor %} {# info.d.divs #}
-{% else %} {# info.d.attribute.cols | length == 2 #}
-<table class="statgrid">
-  <tr>
-    <th>{{ info.d.attribute.corner_label }}</th>
-    {% for chead in info.d.col_headers %}
-    <th class="chead">{{ chead }}</th>
-    {% endfor %}
-  </tr>
-  {% for rhead, row in info.d.grid %}
-  <tr>
-    <th class="rhead" rowspan=2>{{ rhead }}</th>
-    {% for c in row %}
-    {% if c.count %}
-    {% if c.query %}
-    <td class="cnt"><a href='{{c.query}}'>{{c.count}}</a></td>
-    {% else %}
-    <td class="cnt">{{c.count}}</td>
-    {% endif %}
-    {% else %}
-    <td class="cnt"></td>
-    {% endif %}
-    {% endfor %}
-  </tr>
-  <tr>
-    {% for c in row %}
-    {% if c.proportion %}
-    <td class="prop">{{c.proportion}}%</td>
-    {% else %}
-    <td class="prop"></td>
-    {% endif %}
-    {% endfor %}
-  </tr>
-  {% endfor %} {# info.d.grid #}
-</table>
 
-{% endif %} {# info.d.attribute.cols #}
-
-<p>
-</p>
 
 {% endblock %}

@@ -364,7 +364,6 @@ class G2C_stats(StatsDisplay):
                   'geom_aut_grp_id': geom_aut_grp_format,
                   'has_square_sha': boolean_format,
                   'is_gl2_type': boolean_format,
-                  'real_geom_end_alg': boolean_format,
                   'real_geom_end_alg': st0_group_format,
                   'st_group': st_group_format}
 

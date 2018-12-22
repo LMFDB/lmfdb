@@ -16,7 +16,8 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF
+from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, RealField, RIF, ZZ
+from sage.all import factor, latex, valuation
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -321,7 +322,7 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     k = round_to_half_int(x)
-    if k == x:
+    if k == x and abs(x) < 10.**digits:
         k2 = None
         try:
             k2 = ZZ(2*x)
@@ -680,9 +681,45 @@ def bigint_knowl(n, cutoff=8, sides=2):
     else:
         return r'\(%s\)'%n
 
-def polyquo_knowl(f):
-    short = r'\mathbb{Q}[x]/(x^{%s} + \cdots)'%(len(f) - 1)
+def factor_base_factor(n, fb):
+    return [[p, valuation(n,p)] for p in fb]
+
+def factor_base_factorization_latex(fbf):
+    if len(fbf) == 0:
+        return '1'
+    ans = ''
+    sign = 1
+    for p, e in fbf:
+        if p == -1:
+            if (e % 2) == 1:
+                sign *= -1
+        elif e == 1:
+            ans += r'\cdot %d' % p
+        elif e != 0:
+            ans += r'\cdot %d^{%d}' % (p, e)
+    # get rid of the initial '\cdot '
+    ans = ans[6:]
+    return '- ' + ans if sign == -1 else ans
+
+
+
+def polyquo_knowl(f, disc=None, unit=1):
+    quo = "x^{%s}" % (len(f) - 1)
+    i = len(f) - 2
+    while i >= 0 and f[i] == 0:
+        i -= 1
+    if i >= 0: # nonzero terms
+        if f[i] > 0:
+            quo += r" + \cdots"
+        else:
+            quo += r" - \cdots"
+    short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    if disc is not None:
+        if isinstance(disc, list):
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
+        else:
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):

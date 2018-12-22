@@ -26,7 +26,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging, tempfile, re, os, time, random, traceback, datetime, getpass
+import logging, tempfile, re, os, time, random, traceback, datetime
 from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -34,7 +34,7 @@ from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps, numeric_converter
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
-from lmfdb.utils import make_logger, format_percentage, KeyedDefaultDict
+from lmfdb.utils import make_logger, KeyedDefaultDict
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
@@ -1791,7 +1791,7 @@ class PostgresTable(PostgresBase):
             elif cur.rowcount == 1: # update
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
-                    if len(data) == 1:
+                    if len(dat) == 1:
                         updater = SQL("UPDATE {0} SET {1} = {2} WHERE {3}")
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
@@ -3548,23 +3548,15 @@ class PostgresDatabase(PostgresBase):
         field in the logging section of your config.ini file.
         """
         if self.__editor is None:
-            print "Please log in using your knowl username and password,"
-            print "so that we can associate database changes with individuals"
+            print "Please provide your knowl username,"
+            print "so that we can associate database changes with individuals."
+            print "Note that you can also do this by setting the editor field in the logging section of your config.ini file."
             uid = raw_input("Username: ")
-            pwd = getpass.getpass()
-            selecter = SQL("SELECT bcpassword FROM userdb.users WHERE username = %s")
+            selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
             if cur.rowcount == 0:
                 raise ValueError("That username not present in database!")
-            bcpass = cur.fetchone()[0]
-            from lmfdb.users.pwdmanager import userdb
-            if bcpass:
-                if bcpass == userdb.bchash(pwd, existing_hash = bcpass):
-                    self.__editor = uid
-                else:
-                    raise ValueError("Password invalid")
-            else:
-                raise ValueError("Old-style password: please log in to the website to update")
+            self.__editor = uid
         return self.__editor
 
     def log_db_change(self, operation, tablename=None, **data):
@@ -3868,6 +3860,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
+        self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
 
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):

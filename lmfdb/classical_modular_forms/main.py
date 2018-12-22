@@ -1,16 +1,18 @@
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
 from collections import defaultdict
+from itertools import izip_longest
 from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
 from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool, parse_bool_unknown, parse_primes, parse_nf_string, parse_noop, parse_equality_constraints, integer_options, search_parser, parse_subset
+from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool,\
+        parse_primes, parse_nf_string, parse_noop, parse_equality_constraints,\
+        integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl, polyquo_knowl
-from lmfdb.WebNumberField import field_pretty, nf_display_knowl
-from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl
+from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl, cyc_display, field_display_gen
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.classical_modular_forms.magma_newform_download import magma_char_code_string, magma_newform_modsym_cutters_code_string, magma_newform_modfrm_heigs_code_string
 from lmfdb.display_stats import StatsDisplay, boolean_unknown_format, per_row_total, per_col_total, sum_totaler
@@ -63,22 +65,12 @@ def ALdims_knowl(al_dims, level, weight):
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
     def nf_link(mf):
-        nf_label = mf.get('nf_label')
-        if nf_label:
-            name = field_pretty(nf_label)
-            if name == nf_label and len(name) > 16:
-                # truncate if too long
-                parts = nf_label.split('.')
-                parts[2] = r'\(\cdots\)'
-                name = '.'.join(parts)
-            return nf_display_knowl(nf_label, name)
-        elif mf['dim'] == mf['char_degree'] and mf.get('field_poly_root_of_unity'):
-            return r'\(\Q(\zeta_{%s})\)' % mf['field_poly_root_of_unity']
+        m = mf.get('field_poly_root_of_unity')
+        d = mf.get('dim')
+        if m and d != 2:
+            return cyc_display(m, d, mf.get('field_poly_is_real_cyclotomic'))
         else:
-            poly = mf.get('field_poly')
-            if poly:
-                return polyquo_knowl(poly)
-            return ""
+            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc'), truncate=16)
 
     info["nf_link"] = nf_link
 
@@ -407,15 +399,18 @@ class CMF_download(Downloader):
             code = encode_hecke_orbit(label)
         except ValueError:
             return abort(404, "Invalid label: %s"%label)
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':code}, ['n', 'an', 'trace_an'], sort=['n'])
-        if not eigenvals:
+        an = db.mf_hecke_nf.lucky({'hecke_orbit_code':code}, 'an')
+        if an is None:
+            an = []
+        traces = db.mf_hecke_traces.search({'hecke_orbit_code':code}, ['n', 'trace_an'], sort=['n'])
+        if not traces:
             return abort(404, "No form found for %s"%(label))
-        data = []
-        for i, ev in enumerate(eigenvals):
-            if ev['n'] != i+1:
+        tr = []
+        for i, trace in enumerate(traces):
+            if trace['n'] != i+1:
                 return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
-            data.append((ev.get('an'),ev.get('trace_an')))
-        return data
+            tr.append(trace['trace_an'])
+        return list(izip_longest(an, tr))
 
     qexp_function_body = {'sage': ['R.<x> = PolynomialRing(QQ)',
                                    'f = R(poly_data)',
@@ -433,13 +428,14 @@ class CMF_download(Downloader):
         dim = None
         qexp = []
         for an, trace_an in data:
-            if not an:
-                # only had traces
-                return abort(404, "No q-expansion found for %s"%(label))
+            if not an: # only traces left
+                break
             if dim is None:
                 dim = len(an)
                 qexp.append([0] * dim)
             qexp.append(an)
+        if not qexp:
+            return abort(404, "No q-expansion found for %s"%(label))
         c = self.comment_prefix[lang]
         func_start = self.get('function_start',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
@@ -454,7 +450,7 @@ class CMF_download(Downloader):
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             basis = poly = ''
         else:
-            hecke_data = db.mf_newforms.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
+            hecke_data = db.mf_hecke_nf.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
             if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
                 return abort(404, "Missing coefficient ring information for %s"%label)
             start = self.delim_start[lang]
@@ -509,7 +505,7 @@ class CMF_download(Downloader):
             return redirect(url_for('.index'))
         forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
         codes = [form['hecke_orbit_code'] for form in forms]
-        traces = db.mf_hecke_nf.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
+        traces = db.mf_hecke_traces.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
         trace_dict = defaultdict(dict)
         for rec in traces:
             trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
@@ -782,7 +778,7 @@ def trace_postprocess(res, info, query):
     if res:
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        for rec in db.mf_hecke_nf.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
+        for rec in db.mf_hecke_traces.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
         for mf in res:
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
@@ -1097,6 +1093,22 @@ class CMF_stats(StatsDisplay):
         {'cols': 'rm_discs',
          'totaler':{}},
     ]
+    # Used for dynamic stats
+    dynamic_cols = [
+        ('level','Level'),
+        ('weight','Weight'),
+        ('dim','Dimension'),
+        ('analytic_conductor','Analytic conductor'),
+        ('char_order','Character order'),
+        ('self_twist_type','Self twist type'),
+        ('inner_twist_count','Num inner twists'),
+        ('analytic_rank','Analytic rank'),
+        ('char_parity','Character parity'),
+        ('projective_image','Projective image'),
+        ('projective_image_type','Projective image type'),
+        ('artin_degree','Artin degree'),
+    ]
+
 
 @cmf.route("/stats")
 def statistics():
@@ -1104,7 +1116,7 @@ def statistics():
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
 def attribute_parse(info, attributes):
-    stats = info["stats"]
+    #stats = info["stats"]
     cols = []
     buckets = {}
     for cname, bname in [('col1', 'buckets1'), ('col2', 'buckets2')]:
@@ -1121,22 +1133,6 @@ def attribute_parse(info, attributes):
     attributes['buckets'] = buckets
     attributes['corner_label'] = ''
 
-col_display = {
-    'none': 'None',
-    'level':'Level',
-    'weight':'Weight',
-    'dim':'Dimension',
-    'analytic_conductor':'Analytic conductor',
-    'char_order':'Character order',
-    'self_twist_type':'Self twist type',
-    'inner_twist_count':'Num inner twists',
-    'analytic_rank':'Analytic rank',
-    'char_parity':'Character parity',
-    'projective_image':'Projective image',
-    'projective_image_type':'Projective image type',
-    'artin_degree':'Artin degree',
-}
-
 @cmf.route("/stats_dynamic")
 def dynamic_statistics():
     stats = CMF_stats()
@@ -1150,7 +1146,7 @@ def dynamic_statistics():
             attribute_parse(info, attributes)
             stats.setup(attributes=[attributes])
             info["d"] = stats.prep(attributes)
-        except Exception as e:
+        except Exception:
             raise
     else:
         info = {"d": stats.prep({'cols':[], 'buckets':{}}),
@@ -1158,9 +1154,6 @@ def dynamic_statistics():
     info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
     info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
     info["parent_page"] = "cmf_refine_search.html"
-    info["default_buckets"] = [(col, ','.join(buckets)) for col, buckets in stats.buckets.items()]
     info["search_type"] = 'DynStats'
-    info["all_weight1"] = lambda x: True # always want weight 1 columns available
-    info["valid_columns"] = col_display.items()
     title = 'Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

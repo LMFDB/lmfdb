@@ -30,7 +30,7 @@ class RootTest(LmfdbTest):
     def test_javscript(self):
         js = self.tc.get("/static/lmfdb.js").data
         # click handler def for knowls
-        assert '''$("body").on("click", "*[knowl]", function(evt)''' in js
+        assert r"""$("body").on("click", "*[knowl]", debounce(knowl_handle,500, true));""" in js
 
     def test_css(self):
         css = self.tc.get("/style.css").data

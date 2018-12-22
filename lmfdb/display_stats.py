@@ -1,7 +1,6 @@
 from sage.all import UniqueRepresentation, lazy_attribute
 from flask import url_for
 from lmfdb.utils import format_percentage, display_knowl, KeyedDefaultDict
-from itertools import izip_longest
 from collections import defaultdict
 
 def range_formatter(x):
@@ -305,6 +304,14 @@ class StatsDisplay(UniqueRepresentation):
         A = defaultdict(lambda: None)
         A.update(getattr(self, 'buckets', {}))
         return A
+
+    @property
+    def _dynamic_cols(self):
+        return [('none', 'None')] + self.dynamic_cols
+
+    @property
+    def _default_buckets(self):
+        return [(col, ','.join(self._buckets.get(col, []))) for col, label in self._dynamic_cols]
 
     @property
     def _sort_keys(self):
