@@ -1070,6 +1070,22 @@ class CMF_stats(StatsDisplay):
         {'cols': 'rm_discs',
          'totaler':{}},
     ]
+    # Used for dynamic stats
+    dynamic_cols = [
+        ('level','Level'),
+        ('weight','Weight'),
+        ('dim','Dimension'),
+        ('analytic_conductor','Analytic conductor'),
+        ('char_order','Character order'),
+        ('self_twist_type','Self twist type'),
+        ('inner_twist_count','Num inner twists'),
+        ('analytic_rank','Analytic rank'),
+        ('char_parity','Character parity'),
+        ('projective_image','Projective image'),
+        ('projective_image_type','Projective image type'),
+        ('artin_degree','Artin degree'),
+    ]
+
 
 @cmf.route("/stats")
 def statistics():
@@ -1094,22 +1110,6 @@ def attribute_parse(info, attributes):
     attributes['buckets'] = buckets
     attributes['corner_label'] = ''
 
-col_display = {
-    'none': 'None',
-    'level':'Level',
-    'weight':'Weight',
-    'dim':'Dimension',
-    'analytic_conductor':'Analytic conductor',
-    'char_order':'Character order',
-    'self_twist_type':'Self twist type',
-    'inner_twist_count':'Num inner twists',
-    'analytic_rank':'Analytic rank',
-    'char_parity':'Character parity',
-    'projective_image':'Projective image',
-    'projective_image_type':'Projective image type',
-    'artin_degree':'Artin degree',
-}
-
 @cmf.route("/stats_dynamic")
 def dynamic_statistics():
     stats = CMF_stats()
@@ -1131,9 +1131,6 @@ def dynamic_statistics():
     info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
     info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
     info["parent_page"] = "cmf_refine_search.html"
-    info["default_buckets"] = [(col, ','.join(buckets)) for col, buckets in stats.buckets.items()]
     info["search_type"] = 'DynStats'
-    info["all_weight1"] = lambda x: True # always want weight 1 columns available
-    info["valid_columns"] = col_display.items()
     title = 'Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

@@ -501,9 +501,9 @@ class WebNewform(object):
     def ring_index_display(self):
         fac = self.hecke_ring_index_factored
         if self.hecke_ring_index_proved:
-            return r'\(%s\)' % fac
+            return fac
         else:
-            return r'divisor of \(%s\)' % fac
+            return r'divisor of %s' % fac
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('

@@ -306,6 +306,14 @@ class StatsDisplay(UniqueRepresentation):
         return A
 
     @property
+    def _dynamic_cols(self):
+        return [('none', 'None')] + self.dynamic_cols
+
+    @property
+    def _default_buckets(self):
+        return [(col, ','.join(self._buckets.get(col, []))) for col, label in self._dynamic_cols]
+
+    @property
     def _sort_keys(self):
         A = defaultdict(lambda: None)
         A.update(getattr(self, 'sort_keys', {}))

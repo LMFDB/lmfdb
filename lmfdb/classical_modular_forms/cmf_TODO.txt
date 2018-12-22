@@ -3,7 +3,6 @@ CRITICAL (BUGS):
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 
 IMPORTANT:
-* Remove empty table when there are no inner twists (but leave line saying there are none) (David)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
@@ -13,14 +12,7 @@ IMPORTANT:
 * Make light gray lighter gray (David)
 
 * Don't duplicate in statistics setup (David)
-* Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
-* Use include in dynamic template for stat display (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
-* Delete buckets when no default (David)
-
-PROBABLY SOLVED:
-* Move information about the coefficient ring from below the q-expansion to the invariants section, display as "Coefficient ring: Z[a_1,...,a_n] where n=hecke_ring_generator_nbound and "Coefficient ring index: XXX" where XXX is either m or "multiple of m" with m=hecke_ring_index, depending on whether hecke_ring_index_proved is set or not.
-
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)

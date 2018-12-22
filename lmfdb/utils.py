@@ -695,7 +695,7 @@ def factor_base_factorization_latex(fbf):
                 sign *= -1
         elif e == 1:
             ans += r'\cdot %d' % p
-        elif pm[1] != 0:
+        elif e != 0:
             ans += r'\cdot %d^{%d}' % (p, e)
     # get rid of the initial '\cdot '
     ans = ans[6:]
