@@ -3,6 +3,7 @@ CRITICAL (BUGS):
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 
 IMPORTANT:
+* Move information about the coefficient ring from below the q-expansion to the invariants section, display as "Coefficient ring: Z[a_1,...,a_n] where n=hecke_ring_generator_nbound and "Coefficient ring index: XXX" where XXX is either m or "multiple of m" with m=hecke_ring_index, depending on whether hecke_ring_index_proved is set or not.
 * Remove empty table when there are no inner twists (but leave line saying there are none) (David)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
@@ -11,7 +12,6 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Compare dihedral weight one data with Magma (Drew)
 * Make light gray lighter gray (David)
-* Fix drop_column so that it deletes statistics including that column (David)
 
 * Don't duplicate in statistics setup (David)
 * Change formatting for buckets, add input boxes on dynamic stats, auto bucketing (David)
@@ -23,6 +23,7 @@ FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Fix drop_column method so that it deletes statistics including that column (David)
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * code snippets for form and space pages (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
