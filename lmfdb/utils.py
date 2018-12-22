@@ -685,18 +685,18 @@ def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
 
 def factor_base_factorization_latex(fbf):
-    ans = ''
-    if len(fbf)==0:
+    if len(fbf) == 0:
         return '1'
+    ans = ''
     sign = 1
-    for pm in fbf:
-        if pm[0] == -1:
-            if (pm[1] %2) == 1:
+    for p, e in fbf:
+        if p == -1:
+            if (e % 2) == 1:
                 sign *= -1
-        elif pm[1]==1:
-            ans += r'\cdot %d'%(pm[0])
-        elif pm[1]>1:
-            ans += r'\cdot %d^{%d}'%(pm[0],pm[1])
+        elif e == 1:
+            ans += r'\cdot %d' % p
+        elif pm[1] != 0:
+            ans += r'\cdot %d^{%d}' % (p, e)
     # get rid of the initial '\cdot '
     ans = ans[6:]
     return '- ' + ans if sign == -1 else ans

@@ -404,12 +404,6 @@ class WebNewform(object):
         return WebNewform(data)
 
     @property
-    def hecke_ring_index_factored(self):
-        if self.hecke_ring_index_factorization is not None:
-            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
-        return None
-
-    @property
     def projective_image_latex(self):
         if self.projective_image:
             return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
@@ -486,6 +480,30 @@ class WebNewform(object):
         else:
             d = self.dim
         return cyc_display(m, d, real_sub)
+
+    def ring_display(self):
+        if self.dim == 1:
+            return r'\(\Z\)'
+        nbound = self.hecke_ring_generator_nbound
+        if nbound == 2:
+            return r'\(\Z[a_1, a_2]\)'
+        elif nbound == 3:
+            return r'\(\Z[a_1, a_2, a_3]\)'
+        else:
+            return r'\(\Z[a_1, \ldots, a_{%s}]\)' % nbound
+
+    @property
+    def hecke_ring_index_factored(self):
+        if self.hecke_ring_index_factorization is not None:
+            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+        return None
+
+    def ring_index_display(self):
+        fac = self.hecke_ring_index_factored
+        if self.hecke_ring_index_proved:
+            return r'\(%s\)' % fac
+        else:
+            return r'divisor of \(%s\)' % fac
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
