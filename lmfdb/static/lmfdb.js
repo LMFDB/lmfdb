@@ -166,7 +166,8 @@ function knowl_click_handler($el) {
       // no larger than the desired main width (for extra large tables)
       // at least 600px (for small tables)
       // and deduce margins and borders
-      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - 2*table_border_knowl_width - parseInt(td_tag.css('padding-left')) - parseInt(td_tag.css('padding-right'));
+      var margins_and_borders = 2*table_border_knowl_width + parseInt(td_tag.css('padding-left')) + parseInt(td_tag.css('padding-right'))
+      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - margins_and_borders;
       
       log("max_width: " + max_width);
       var style_wrapwidth = "style='max-width: " + max_width+"px; white-space: normal;'";
@@ -202,9 +203,14 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
+      // adjust width to assure that every katex block is inside of the knowl
+      var knowl = document.getElementById(output_id.substring(1))
+      var new_width = Array.from(knowl.getElementsByClassName("katex")).reduce((acc, elt) => Math.max(acc, elt.offsetWidth), 0) + margins_and_borders;
+      if( new_width > max_width ) {
+        knowl.style.maxWidth = new_width + "px";
+      }
       $output.slideDown("slow");
-    } else 
-    if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
+    } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
       $output.hide();
