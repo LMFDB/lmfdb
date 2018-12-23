@@ -18,6 +18,8 @@ IMPORTANT:
 * Make light gray lighter gray (David)
 * Make sure all source modular form data passes all validation tests (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres (Drew)
+* Compute and upload subspace decomposition data for Nk^2 <= 40000 (Drew)
+* Clarify text on inner twist display to exclude self twists and get plurals right.
 
 * Don't duplicate in statistics setup (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
