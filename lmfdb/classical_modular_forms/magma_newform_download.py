@@ -10,7 +10,8 @@ def magma_char_code_string(r):
     o = r.char_orbit_label
     cv = r.char_values
 
-    s = "function MakeCharacter_%d_%s()\n"%(N,o)
+    s = '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"\n'%(N,o)
+    s += "function MakeCharacter_%d_%s()\n"%(N,o)
     s += "    N := %d; n := %d; u := %s; v := %s;\n"%(cv[0],cv[1],cv[2],cv[3])
     s += "    assert UnitGenerators(DirichletGroup(N)) eq u;\n"
     s += "    F := CyclotomicField(n);\n"
@@ -38,19 +39,25 @@ def magma_newform_modsym_cutters_code_string(r,include_char=True):
     else:
         s = ""
 
+    s += '// To make the Hecke irreducible modular symbols subspace (type ModSym)\n'
+    s += '// containing the newform, type "MakeNewformModSym_%s();".\n'%(r.label.replace(".","_"))
+    s += '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.\n'
     s += "function MakeNewformModSym_%s()\n"%(r.label.replace(".","_"))
     s += "    R<x> := PolynomialRing(Rationals());\n"
     s += "    chi := MakeCharacter_%d_%s();\n"%(N,o)
     s += "    // SetVerbose(\"ModularSymbols\", true);\n"
     s += "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,-1)));\n"%(k)
     s += "    Vf := Kernel(%s,Snew);\n"%(cutters)
+    s += "    return Vf;\n"
     s += "end function;\n\n"
     return s
 
-def magma_newform_modfrm_heigs_code_string(r,v,include_char=True):
+def magma_newform_modfrm_heigs_code_string(r,h,v,include_char=True):
     """
     Given a row r from mf_newforms containing columns
        label,level,weight,char_orbit_label,char_values
+    and h a row from mf_hecke_nf containing columns
+       hecke_ring_numerators,hecke_ring_denominators
     and v a list whose nth entry is the entry an from the table mf_hecke_nf
     (consisting of a list of integers giving the Hecke eigenvalue 
     as a linear combination of the basis specified in the orbit table)
@@ -62,27 +69,37 @@ def magma_newform_modfrm_heigs_code_string(r,v,include_char=True):
     k = r.weight
     o = r.char_orbit_label
     fv = r.field_poly  
-    Rf_num = r.hecke_ring_numerators  
-    Rf_den = r.hecke_ring_denominators
+    Rf_powbasis = h['hecke_ring_power_basis']
+    if not Rf_powbasis:
+        Rf_num = h['hecke_ring_numerators']
+        Rf_den = h['hecke_ring_denominators']
     n = len(v) # q-expansion precision
 
     if include_char:
         s = magma_char_code_string(r)
+    else:
+        s = ""
     
+    s += '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".\n'%(r.label.replace(".","_"))
+    s += '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.\n'
     s += "function MakeNewformModFrm_%s()\n"%(r.label.replace(".","_"))
     s += "    chi := MakeCharacter_%d_%s();\n"%(N,o)
     s += "    // SetVerbose(\"ModularForms\", true);\n"
     s += "    // SetVerbose(\"ModularSymbols\", true);\n"
-    s += "    Kf<nu> := NumberField(Polynomial(%s));\n"%(fv)   # Hecke field
+    s += "    Kf := NumberField(Polynomial(%s));\n"%(fv)   # Hecke field
+    s += '    if Degree(Kf) gt 1 then AssignNames(~Kf, ["nu"]); end if;\n'
     s += "    S := CuspidalSubspace(ModularForms(chi,%d));\n"%(k)   
           # weight 1 does not have NewSpace functionality, and anyway that 
           # would be an extra possibly expensive linear algebra step
     s += "    S := BaseChange(S, Kf);\n";
     s += "    S_basismat := Matrix([AbsEltseq(g) : g in Basis(S,%d)]);\n"%(n)
     s += "    S_basismat := ChangeRing(S_basismat,Kf);\n"
-    s += "    Rf_basisnums := ChangeUniverse(%s,Kf);\n"%(Rf_num)   
-    s += "    Rf_basisdens := %s;\n"%(Rf_den)
-    s += "    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];\n"    # Basis of Hecke ring
+    if Rf_powbasis:
+        s += "    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];\n"
+    else:
+        s += "    Rf_basisnums := ChangeUniverse(%s,Kf);\n"%(Rf_num)   
+        s += "    Rf_basisdens := %s;\n"%(Rf_den)
+        s += "    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];\n"    # Basis of Hecke ring
     s += "    f_seq := %s;\n"%(v)
     s += "    f_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix(f_seq)),Kf);\n"
     s += "    f_lincom := Solution(S_basismat,f_vec);\n"

@@ -54,7 +54,7 @@
     <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
     <td> </td>
     <td> </td>
-    <td>{{ newform.analytic_rank }}{% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
+    <td>\({{ newform.analytic_rank }}\){% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
   </tr>
   {% endif %}
   <tr>
@@ -84,6 +84,25 @@
     <td> </td>
     <td> </td>
     <td> {{ newform.ring_display() | safe }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> {{ newform.ring_index_display() | safe }}</td>
+  </tr>
+  {% elif newform.dim == 1 %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> \(\mathbb{Q}\)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> \(\mathbb{Z}\)</td>
   </tr>
   <tr>
     <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
