@@ -3,6 +3,10 @@ CRITICAL (BUGS):
 * fix downloads for coefficients and trace form (also need to handle sparse cyclotomic rep)
 * fix display problem with coefficient field knowls with big polynomials extending outside the knowl boundary, e.g. as on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/8/21/d/b/
 * fix error when clicking on unknown entry in stats table: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?inner_twist_count=Unknown
+* add missing inner twist data for weight 1 modular forms of dimension 1 (they never have inner twists but this is not always indicated) (Drew)
+* fix rank generator bounds for trivial character forms (Drew)
+* fix trace form display on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3168/2/a/bf/ (for example)
+* specify identity matrix for coefficienb ring basis using power basis to void special cases in download code (Drew)
 
 IMPORTANT:
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
