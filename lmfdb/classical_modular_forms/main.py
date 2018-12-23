@@ -14,6 +14,7 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error, to_dict, comma, display_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl, cyc_display, field_display_gen
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
+from lmfdb.classical_modular_forms.magma_newform_download import magma_char_code_string, magma_newform_modsym_cutters_code_string, magma_newform_modfrm_heigs_code_string
 from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
@@ -417,6 +418,12 @@ class CMF_download(Downloader):
                                    'betas = [K([c/den for c in num]) for num, den in basis_data]',
                                    'S.<q> = PowerSeriesRing(K)',
                                    'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
+    qexp_function_body_powbasis = {'sage': ['R.<x> = PolynomialRing(QQ)',
+                                   'f = R(poly_data)',
+                                   'K.<a> = NumberField(f)',
+                                   'betas = [a^i for i in range(len(poly_data))]',
+                                   'S.<q> = PowerSeriesRing(K)',
+                                   'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
     qexp_dim1_function_body = {'sage': ['S.<q> = PowerSeriesRing(QQ)',
                                         'return S(data)']}
     def download_qexp(self, label, lang='sage'):
@@ -449,24 +456,29 @@ class CMF_download(Downloader):
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             basis = poly = ''
         else:
-            hecke_data = db.mf_hecke_nf.lucky({'label':label},['hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
-            if not hecke_data or not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'):
+            hecke_data = db.mf_hecke_nf.lucky({'label':label},['hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
+            if not hecke_data or (not hecke_data['hecke_ring_power_basis'] and (not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'))):
                 return abort(404, "Missing coefficient ring information for %s"%label)
             start = self.delim_start[lang]
             end = self.delim_end[lang]
-            func_body = self.get('qexp_function_body',{}).get(lang,[])
             data += ",\n".join(start + ",".join(str(c) for c in an) + end for an in qexp)
             data += self.start_and_end[lang][1] + '\n'
             explain += c + ' The q-expansion is given as a list of lists.\n'
             explain += c + ' Each entry gives a Hecke eigenvalue a_n.\n'
             explain += c + ' Each a_n is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
-            basis = '\n' + c + ' The entries in the following list give a basis for the\n'
-            basis += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
-            basis += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-            basis += 'basis_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-            basis += ",\n".join(start + start + ",".join(str(c) for c in num) + end + ', %s' % den + end for num, den in zip(hecke_data['hecke_ring_numerators'], hecke_data['hecke_ring_denominators']))
-            basis += self.start_and_end[lang][1] + '\n'
+            if hecke_data['hecke_ring_power_basis']:
+                basis = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
+                basis += c + ' in the root of the defining polynomial above.\n'
+                func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
+            else:
+                basis = '\n' + c + ' The entries in the following list give a basis for the\n'
+                basis += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
+                basis += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
+                basis += 'basis_data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
+                basis += ",\n".join(start + start + ",".join(str(c) for c in num) + end + ', %s' % den + end for num, den in zip(hecke_data['hecke_ring_numerators'], hecke_data['hecke_ring_denominators']))
+                basis += self.start_and_end[lang][1] + '\n'
+                func_body = self.get('qexp_function_body',{}).get(lang,[])
             if lang in ['sage']:
                 explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
             poly = '\n' + c + ' The following line gives the coefficients of\n'
@@ -573,6 +585,39 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
+    def download_newform_to_magma(self, label, lang='text'):
+        data = db.mf_newforms.lookup(label)
+        if data is None:
+            return abort(404, "Label not found: %s"%label)
+        form = WebNewform(data)
+
+        outstr = magma_char_code_string(form)
+        if form.hecke_cutters:
+            outstr += magma_newform_modsym_cutters_code_string(form,include_char=False)
+        if form.has_exact_qexp:
+            data = self._get_hecke_nf(label)
+            qexp = []
+            dim = None
+            for an, trace_an in data:
+                if not an: # only traces left
+                    break
+                if dim is None:
+                    dim = len(an)
+                    qexp.append([0] * dim)
+                qexp.append(an)
+            if not qexp:
+                return abort(404, "No q-expansion found for %s"%(label))
+
+            hecke_data = db.mf_hecke_nf.lucky({'label':label},['hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly'])
+            if not hecke_data or (not hecke_data['hecke_ring_power_basis'] and (not hecke_data.get('hecke_ring_numerators') or not hecke_data.get('hecke_ring_denominators') or not hecke_data.get('field_poly'))):
+                return abort(404, "Missing coefficient ring information for %s"%label)
+
+            outstr += magma_newform_modfrm_heigs_code_string(form,hecke_data,qexp,include_char=False)
+        return self._wrap(outstr,
+                          label,
+                          lang=lang,
+                          title='Make newform %s in Magma,'%(label))
+
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
@@ -632,6 +677,10 @@ def download_cc_data(label):
 @cmf.route("/download_satake_angles/<label>")
 def download_satake_angles(label):
     return CMF_download().download_satake_angles(label)
+
+@cmf.route("/download_newform_to_magma/<label>")
+def download_newform_to_magma(label):
+    return CMF_download().download_newform_to_magma(label)
 
 @cmf.route("/download_newform/<label>")
 def download_newform(label):
