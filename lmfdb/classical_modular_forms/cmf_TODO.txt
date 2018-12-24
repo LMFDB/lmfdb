@@ -4,7 +4,7 @@ CRITICAL (BUGS):
 * Forms with no self twists should say so.  For example, as can be seen at http://cmfs.lmfdb.xyz/api/mf_newforms/?label=3481.1.d.b the form 3841.d.b has is_self_twist=False (and self_twist_proved=True) but this information is not displayed on the forms home page: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3481/1/d/b/
 
 IMPORTANT:
-* We should use ... display of large coefficients for field poly as well as basis, see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1/200/a/a/ for an example of why we need this.
+* We should use ... display of large coefficients for field poly as we do in the coefficient ring basis, see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1/200/a/a/ for example, and also in traces listed in search results (see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1/200/a/)
 * update buckets on stats pages to reflect Nk^2 <= 40000 data set.
 * decide what to do about providing dimension table data for spaces where we don't currently have data, and what to display on gamma1 space pages when we don't have all the subspaces (e.g. only trivial character).
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
