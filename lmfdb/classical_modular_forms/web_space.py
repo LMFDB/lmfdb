@@ -47,10 +47,13 @@ def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
     al_dims = sorted(al_dims, key=lambda x:tuple(-ev for (p,ev) in x[0]))
     header = []
-    primes = [p for (p,ev) in al_dims[0][0]]
+    first_row = al_dims[0][0]
+    primes = [p for (p,ev) in first_row]
     num_primes = len(primes)
-    for p, ev in al_dims[0][0]:
+    for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
+    if len(first_row) > 1:
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.elliptic.fricke', title='Fricke')))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
@@ -67,6 +70,8 @@ def ALdim_table(al_dims, level, weight):
                 s += '-'
                 symb = '-'
             row.append(r'<td>\(%s\)</td>'%(symb))
+        if len(vec) > 1:
+            row.append(r"<td class='right'>\(%s\)</td>"%('+' if sign == 1 else '-'))
         query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':s}
         if cnt == 1:
             query['jump'] = 'yes'
@@ -83,8 +88,8 @@ def ALdim_table(al_dims, level, weight):
         plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('mf.elliptic.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 

@@ -493,3 +493,14 @@ function debounce(func, wait, immediate){
 
 	return debounced;
 };
+
+/* Contracting and expanding statistics displays */
+
+function show_stats_rows(hsh, to_show) {
+  $('.short_table_' + hsh).hide();
+  $('.long_table_' + hsh).hide();
+  $('.' + to_show + '_table_' + hsh).show();
+  var elementBottom = $('#' + hsh + '-anchor').offset().top() + $('#' + hsh + '-anchor').outerHeight();
+  var viewportTop = $(window).scrollTop();
+  return elementBottom < viewportTop;
+};

@@ -154,7 +154,7 @@ class WebNewform(object):
         elif self.field_disc:
             self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
         # We always print analytic conductor with 1 decimal digit
-        self.analytic_conductor = '%.1f'%(self.analytic_conductor)
+        #self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.rel_dim = self.dim // self.char_degree
 
         self._inner_twists = data.get('inner_twists',[])
@@ -212,7 +212,7 @@ class WebNewform(object):
 
         if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-        self.properties += [('Analytic conductor', self.analytic_conductor)]
+        self.properties += [('Analytic conductor', '%.1f'%(self.analytic_conductor))]
 
         if self.analytic_rank is not None:
             self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
@@ -305,6 +305,8 @@ class WebNewform(object):
     @property
     def downloads(self):
         downloads = []
+        if self.hecke_cutters or self.has_exact_qexp:
+            downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
         if self.has_exact_qexp:
             downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
         downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
@@ -404,12 +406,6 @@ class WebNewform(object):
         return WebNewform(data)
 
     @property
-    def hecke_ring_index_factored(self):
-        if self.hecke_ring_index_factorization is not None:
-            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
-        return None
-
-    @property
     def projective_image_latex(self):
         if self.projective_image:
             return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
@@ -486,6 +482,30 @@ class WebNewform(object):
         else:
             d = self.dim
         return cyc_display(m, d, real_sub)
+
+    def ring_display(self):
+        if self.dim == 1:
+            return r'\(\Z\)'
+        nbound = self.hecke_ring_generator_nbound
+        if nbound == 2:
+            return r'\(\Z[a_1, a_2]\)'
+        elif nbound == 3:
+            return r'\(\Z[a_1, a_2, a_3]\)'
+        else:
+            return r'\(\Z[a_1, \ldots, a_{%s}]\)' % nbound
+
+    @property
+    def hecke_ring_index_factored(self):
+        if self.hecke_ring_index_factorization is not None:
+            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+        return None
+
+    def ring_index_display(self):
+        fac = self.hecke_ring_index_factored
+        if self.hecke_ring_index_proved:
+            return fac
+        else:
+            return r'divisor of %s' % fac
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
@@ -781,11 +801,11 @@ function switch_basis(btype) {
             total += mult
             twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'yes' if b == 1 else 'no'))
         twists.append('</table>')
-        para = '<p>This newform admits %d (nontrivial) ' %(total)
+        para = '<p>This newform admits %d (%s) ' % (total, display_knowl('mf.elliptic.nontrivial_twist', title='nontrivial'))
         if total == 1:
-            para += '%s' %(display_knowl('mf.elliptic.inner_twist', title='inner twist'))
+            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twist'))
         else:
-            para += '%s' %(display_knowl('mf.elliptic.inner_twist', title='inner twists'))
+            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twists'))
         para += '.</p>\n'
         return para + '\n'.join(twists)
 
