@@ -712,7 +712,7 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
         query[conrey_field] = {'$contains': int(orbit)}
 
 newform_only_fields = {
-    #'dim': 'Dimension',
+    'dim': 'Dimension',
     'nf_label': 'Coefficient field',
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',
@@ -902,7 +902,7 @@ def dimension_form_postprocess(res, info, query):
         dim_dict[N,k] += form['dim']
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
-        info_copy['submit'] = 'Search'
+        info_copy['search_type'] = 'List'
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
@@ -1083,7 +1083,8 @@ class CMF_stats(StatsDisplay):
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
-                        'self_twist_type': self_twist_type_query_formatter}
+                        'self_twist_type': self_twist_type_query_formatter,
+                        'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1'))}
     split_lists = {'cm_discs': True,
                    'rm_discs': True}
     stat_list = [

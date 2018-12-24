@@ -154,7 +154,7 @@ class WebNewform(object):
         elif self.field_disc:
             self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
         # We always print analytic conductor with 1 decimal digit
-        self.analytic_conductor = '%.1f'%(self.analytic_conductor)
+        #self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.rel_dim = self.dim // self.char_degree
 
         self._inner_twists = data.get('inner_twists',[])
@@ -212,7 +212,7 @@ class WebNewform(object):
 
         if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-        self.properties += [('Analytic conductor', self.analytic_conductor)]
+        self.properties += [('Analytic conductor', '%.1f'%(self.analytic_conductor))]
 
         if self.analytic_rank is not None:
             self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
@@ -801,11 +801,11 @@ function switch_basis(btype) {
             total += mult
             twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'yes' if b == 1 else 'no'))
         twists.append('</table>')
-        para = '<p>This newform admits %d (nontrivial) ' %(total)
+        para = '<p>This newform admits %d (%s) ' % (total, display_knowl('mf.elliptic.nontrivial_twist', title='nontrivial'))
         if total == 1:
-            para += '%s' %(display_knowl('mf.elliptic.inner_twist', title='inner twist'))
+            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twist'))
         else:
-            para += '%s' %(display_knowl('mf.elliptic.inner_twist', title='inner twists'))
+            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twists'))
         para += '.</p>\n'
         return para + '\n'.join(twists)
 
