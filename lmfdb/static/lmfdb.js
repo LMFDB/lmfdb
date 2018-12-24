@@ -206,7 +206,9 @@ function knowl_click_handler($el) {
       // adjust width to assure that every katex block is inside of the knowl
       var knowl = document.getElementById(output_id.substring(1))
       var new_width = Array.from(knowl.getElementsByClassName("katex")).reduce((acc, elt) => Math.max(acc, elt.offsetWidth), 0) + margins_and_borders;
+      log("new_width:" + new_width)
       if( new_width > max_width ) {
+        log("setting maxWidth:" + new_width)
         knowl.style.maxWidth = new_width + "px";
       }
       $output.slideDown("slow");
