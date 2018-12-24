@@ -203,6 +203,7 @@ function knowl_click_handler($el) {
       catch(err) {
         log("err:" + err)
       }
+      $output.slideDown("slow");
       // adjust width to assure that every katex block is inside of the knowl
       var knowl = document.getElementById(output_id.substring(1))
       var new_width = Array.from(knowl.getElementsByClassName("katex")).reduce((acc, elt) => Math.max(acc, elt.offsetWidth), 0) + margins_and_borders;
@@ -211,7 +212,6 @@ function knowl_click_handler($el) {
         log("setting maxWidth:" + new_width)
         knowl.style.maxWidth = new_width + "px";
       }
-      $output.slideDown("slow");
     } else if((!kwargs || kwargs.length == 0) && (knowl_id in knowl_cache)) {
       // cached? (no kwargs or empty string AND kid in cache)
       log("cache hit: " + knowl_id);
