@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * Update downloads for coefficients, trace form, magma to handle spare cyclotomic rep (David, JV)
 * Forms with no self twists should say so.  For example, as can be seen at http://cmfs.lmfdb.xyz/api/mf_newforms/?label=3481.1.d.b the form 3841.d.b has is_self_twist=False (and self_twist_proved=True) but this information is not displayed on the forms home page: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3481/1/d/b/
+* Newspace search is broken due to recent changes: clicking on the "list" of spaces link on the browse page gives an error because dimension is set to one (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?search_type=Spaces&dim=1-) and setting number of newforms to 1- (which should have the same effect) produces an ill-formatted search results table: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?search_type=Spaces&dim=1-
 
 IMPORTANT:
 * Insert \cdots in decomposition column in search results for dimensions that occur with multiplicity greater than 3, e.g. on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?search_type=Spaces&num_forms=128 the decomposition should be displayed as 1+\cdots+1+2+\cdots+2.
