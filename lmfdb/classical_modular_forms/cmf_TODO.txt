@@ -7,7 +7,7 @@ CRITICAL (BUGS):
 IMPORTANT:
 * Insert \cdots in decomposition column in search results for dimensions that occur with multiplicity greater than 3, e.g. on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?search_type=Spaces&num_forms=128 the decomposition should be displayed as 1+\cdots+1+2+\cdots+2.
 * We should use \cdots with knowl to display of large coefficients for field poly as we do in the coefficient ring basis, see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1/200/a/a/ for example, and also in traces listed in search results (see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1/200/a/)
-* update buckets on stats pages to reflect Nk^2 <= 40000 data set.
+* update buckets on stats pages to reflect Nk^2 <= 40000 dataset.
 * decide what to do about providing dimension table data for spaces where we don't currently have data, and what to display on gamma1 space pages when we don't have all the subspaces (e.g. only trivial character).
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
