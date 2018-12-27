@@ -15,7 +15,8 @@ def magma_char_code_string(r):
     s += "    N := %d; n := %d; u := %s; v := %s;\n"%(cv[0],cv[1],cv[2],cv[3])
     s += "    assert UnitGenerators(DirichletGroup(N)) eq u;\n"
     s += "    F := CyclotomicField(n);\n"
-    s += "    return DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),[F|F.1^n:n in v]);\n"
+    s += "    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),[F|F.1^n:n in v]);\n"
+    s += "    return MinimalBaseRingCharacter(chi);\n"
     s += "end function;\n\n"
     return s
 
@@ -71,8 +72,8 @@ def magma_newform_modfrm_heigs_code_string(r,h,v,include_char=True):
     fv = r.field_poly  
     Rf_powbasis = h['hecke_ring_power_basis']
     if not Rf_powbasis:
-        Rf_num = h['hecke_ring_numerators']
-        Rf_den = h['hecke_ring_denominators']
+        Rf_num = str(h['hecke_ring_numerators']).replace("L","")
+        Rf_den = str(h['hecke_ring_denominators']).replace("L","")
     n = len(v) # q-expansion precision
 
     if include_char:
