@@ -27,6 +27,7 @@ FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Display disriminant of coefficient ring on newform pages
 * Fix drop_column method so that it deletes statistics including that column (David)
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * code snippets for form and space pages (Drew)
