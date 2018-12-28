@@ -450,7 +450,7 @@ class WebNewform(object):
             return pretty if pretty else self.artin_image
         return None
 
-    def rm_and_cm_field_knowl(self, sign  = 1):
+    def rm_and_cm_field_knowl(self, sign=1):
         if self.self_twist_discs:
             disc = [ d for d in self.self_twist_discs if sign*d > 0 ]
             return ' and '.join( map(quad_field_knowl, disc) )
@@ -555,7 +555,7 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.field_poly:
-            return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
+            return web_latex_poly(self.field_poly, superscript=True, cutoff=16)
         return None
 
     def Qnu(self):

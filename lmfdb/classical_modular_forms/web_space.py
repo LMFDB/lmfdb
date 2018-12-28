@@ -38,10 +38,10 @@ def get_search_bread():
 def get_dim_bread():
     return get_bread(other='Dimension table')
 
-def newform_search_link(text, **kwd):
+def newform_search_link(text, title=None, **kwd):
     query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
     link = "%s?%s"%(url_for('.index'), query)
-    return "<a href='%s'>%s</a>"%(link, text)
+    return "<a href='%s'%s>%s</a>"%(link, "" if title is None else " title='%s'"%title, text)
 
 def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
@@ -53,7 +53,7 @@ def ALdim_table(al_dims, level, weight):
     for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
     if len(first_row) > 1:
-        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.elliptic.fricke', title='Fricke')))
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.elliptic.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}

@@ -178,7 +178,7 @@ function show_qexp(qstyle) {
   {% if newform.dim > 1 %}
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}
-      Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() }}.
+      Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() | safe }}.
       We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.
       {% else %}
       The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }} are shown below.
@@ -212,7 +212,7 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.dim > 2 and (newform.hecke_ring_cyclotomic_generator is none or newform.hecke_ring_cyclotomic_generator == 0) and not newform.hecke_ring_power_basis %}
-    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() }}:</p>
+    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
 </div>
@@ -433,15 +433,14 @@ function get_all_embeddings(num_embeddings) {
 {% if newform.has_further_properties %}
 <h2>Further properties</h2>
 
-{% if newform.is_cm != 0 %}
-<p>This newform is
-{{ "not" if newform.is_cm == -1 }}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_cm == 1 %}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}{% endif %}.</p>
+{% if newform.is_cm %}
+<p>This newform is a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}.</p>
 {% endif %}
-{% if newform.weight == 1 and newform.is_rm != 0 %}
-<p>This newform is
-{{ "not" if newform.is_rm == -1 }}
-a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_rm == 1 %}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}{% endif %}.</p>
+{% if newform.is_rm %}
+<p>This newform is an {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}.</p>
+{% endif %}
+{% if not newform.is_cm and not newform.is_rm %}
+<p>This newform does not admit a {{ KNOWL('mf.elliptic.self_twist', title='self-twist') }}.</p>
 {% endif %}
 
 {% if newform.is_twist_minimal %}

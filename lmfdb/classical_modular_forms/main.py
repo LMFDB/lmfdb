@@ -11,7 +11,7 @@ from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool,\
         integer_options, search_parser, parse_subset
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl
+from lmfdb.utils import flash_error, to_dict, comma, display_knowl, bigint_knowl
 from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey, encode_hecke_orbit, quad_field_knowl, cyc_display, field_display_gen
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.classical_modular_forms.magma_newform_download import magma_char_code_string, magma_newform_modsym_cutters_code_string, magma_newform_modfrm_heigs_code_string
@@ -135,10 +135,15 @@ def set_info_funcs(info):
             query = {'weight':space['weight'],
                      'char_label':'%s.%s'%(space['level'],space['char_orbit_label']),
                      'dim':dim}
-            short = '+'.join([r'\(%s\)'%dim]*count)
+            if count > 3:
+                short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
+                title = '%s newforms' % count
+            else:
+                short = '+'.join([r'\(%s\)'%dim]*count)
+                title=None
             if count == 1:
                 query['jump'] = 'yes'
-            link = newform_search_link(short, **query)
+            link = newform_search_link(short, title=title, **query)
             terms.append(link)
         return r'+'.join(terms)
     info['display_decomp'] = display_decomp
@@ -152,6 +157,7 @@ def set_info_funcs(info):
     info['display_ALdims'] = display_ALdims
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
+    info['bigint_knowl'] = bigint_knowl
 
 
 favorite_newform_labels = ('1.12.a.a', '8.21.d.b', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
@@ -165,7 +171,10 @@ def index():
         info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
 
         if search_type == 'Dimensions':
-            for key in newform_only_fields:
+            # We have to handle dim separately since we want to allow it as a parameter
+            # for Space searches, but it doesn't make to display a dimension grid
+            # with constrained dimension
+            for key in newform_only_fields.keys() + ['dim']:
                 if key in info:
                     return dimension_form_search(info)
             return dimension_space_search(info)
@@ -712,7 +721,6 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='char_
         query[conrey_field] = {'$contains': int(orbit)}
 
 newform_only_fields = {
-    'dim': 'Dimension',
     'nf_label': 'Coefficient field',
     'is_self_twist': 'Has self twist',
     'cm_discs': 'CM discriminant',

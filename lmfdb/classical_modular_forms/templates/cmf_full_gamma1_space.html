@@ -47,7 +47,7 @@
 {% if space.new_dim > 0 %}
 <h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
 
-<p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( {{space.summand_latex() }} \) we list the newforms together with their dimension.</p>
+<p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.odd_weight else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( S_k^{\mathrm{new}}(N, \chi) \) we list the newforms together with their dimension.</p>
 
 <table class="mfdata">
   <thead>
