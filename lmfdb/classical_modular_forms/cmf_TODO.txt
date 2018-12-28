@@ -15,6 +15,7 @@ IMPORTANT:
 * Compare dihedral weight one data with Magma (Drew)
 * Make light gray lighter gray (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres (Drew)
+* Diagonalize basis matrix when it is the product of a diagonal matrix and a permutation matrix (Drew)
 
 * Don't duplicate in statistics setup (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
