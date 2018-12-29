@@ -22,11 +22,7 @@
   </tr>
   <tr>
     {% for c in row %}
-    {% if c.proportion %}
-    <td class="prop">{{c.proportion}}%</td>
-    {% else %}
-    <td class="prop"></td>
-    {% endif %}
+    <td class="prop">{{c.proportion}}</td>
     {% endfor %}
   </tr>
   {% endfor %} {# d.grid #}

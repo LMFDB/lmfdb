@@ -15,10 +15,13 @@
     {% endfor %}
   </tr>
   <tr>
+    {# Omit if first (and thus all) blank #}
+    {% if r[0].proportion %}
     <th>proportion</th>
     {% for c in r %}
-    <td>{{c.proportion}}%</td>
+    <td>{{c.proportion}}</td>
     {% endfor %}
+    {% endif %}
   </tr>
   <tr height = 10px></tr>
   {% endfor %} {# r in rows #}

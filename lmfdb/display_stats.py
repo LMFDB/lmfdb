@@ -53,14 +53,14 @@ def boolean_unknown_format(value):
 # and modifies the grid to include proportions                   #
 ##################################################################
 
-def _format_percentage(cnt, total):
+def _format_percentage(cnt, total, show_zero=False):
     """
-    Variant of format_percentage that returns blanks for 0.
+    Variant of format_percentage that returns blanks for 0 and includes the % sign.
     """
-    if cnt == 0:
+    if total == 0 or (cnt == 0 and not show_zero):
         return ""
     else:
-        return format_percentage(cnt, total)
+        return format_percentage(cnt, total) + '%'
 
 def per_row_total(grid, row_headers, col_headers, stats):
     """
@@ -441,12 +441,12 @@ class StatsDisplay(UniqueRepresentation):
             counts = [counts[val] for val in headers]
             for D, val in zip(counts, headers):
                 D['value'] = val
-                D['proportion'] = format_percentage(D['count'], overall)
+                D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
             if avg:
                 counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
                                'count':total,
                                'query':"{0}{1}".format(base_url, cols[0]),
-                               'proportion':format_percentage(total,overall)})
+                               'proportion':_format_percentage(total, overall, show_zero=True)})
             return {'counts': counts}
         elif len(cols) == 2:
             if avg:
