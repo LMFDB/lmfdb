@@ -190,8 +190,8 @@ def index():
     info = {"stats": CMF_stats()}
     info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_newform_labels ]
     info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_space_labels ]
-    info["weight_list"] = ('1', '2', '3', '4', '5', '6-10', '11-20', '21-40', '41-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-100', '101-500', '501-1000', '1001-2000', '2001-%d' % level_bound() )
+    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -727,6 +727,8 @@ newform_only_fields = {
     'rm_discs': 'RM discriminant',
     'inner_twist_count': 'Inner twist count',
     'analytic_rank': 'Analytic rank',
+    'has_self_twist': 'Has self-twist',
+    'is_self_dual': 'Is self dual',
 }
 def common_parse(info, query):
     parse_ints(info, query, 'weight', name="Weight")
@@ -758,12 +760,12 @@ def parse_self_twist(info, query):
             info['is_self_twist'] = inp
             parse_bool(info, query, 'is_self_twist', name='Has self-twist')
         else:
-            if 'cm' in  inp:
+            if 'cm' in inp:
                 info['is_cm'] = 'yes'
             if 'rm' in inp:
                 info['is_rm'] = 'yes'
-            parse_bool(info, query, 'is_cm',name='Has self-twist')
-            parse_bool(info, query, 'is_rm',name='Has self-twist')
+            parse_bool(info, query, 'is_cm', name='Has self-twist')
+            parse_bool(info, query, 'is_rm', name='Has self-twist')
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -1060,8 +1062,8 @@ class CMF_stats(StatsDisplay):
 
     table = db.mf_newforms
     baseurl_func = ".index"
-    buckets = {'level':['1','2-10','11-100','101-200','201-400','401-600','601-800','801-1000','1001-2000','2001-4000'],
-               'weight':['1','2','3','4','5','6-10','11-20','21-40','41-62'],
+    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-10000'],
+               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-200'],
                'dim':['1','2','3','4','5-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}

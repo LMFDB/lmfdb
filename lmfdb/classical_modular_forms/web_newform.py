@@ -555,7 +555,7 @@ class WebNewform(object):
 
     def defining_polynomial(self):
         if self.field_poly:
-            return web_latex_poly(self.field_poly, superscript=True, cutoff=16)
+            return web_latex_poly(self.field_poly, superscript=True)
         return None
 
     def Qnu(self):
@@ -621,7 +621,7 @@ class WebNewform(object):
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
             numsize = sum(len(str(c)) for c in num if c)
             if numsize > 80:
-                num = web_latex_poly(num, self._nu_latex, superscript=True, cutoff=8)
+                num = web_latex_poly(num, self._nu_latex, superscript=True)
             else:
                 num = web_latex(coeff_to_poly(num, self._nu_var))
             betai = r'\(\beta_{%s}\)'%i
@@ -631,7 +631,7 @@ class WebNewform(object):
     def _order_basis_inverse(self):
         basis = [('\(1\)', r'\(\beta_0\)')]
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
-            num = web_latex_poly(num, r'\beta', superscript=False, cutoff=40)
+            num = web_latex_poly(num, r'\beta', superscript=False)
             if i == 0:
                 nupow = r'\(%s\)' % self._nu_latex
             else:

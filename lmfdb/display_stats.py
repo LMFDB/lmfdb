@@ -412,6 +412,8 @@ class StatsDisplay(UniqueRepresentation):
             base_url = url_for(self.baseurl_func) + '?'
         if url_extras:
             base_url += url_extras
+        if constraint:
+            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items())
         if table is None:
             table = self.table
         table = table.stats
@@ -443,7 +445,7 @@ class StatsDisplay(UniqueRepresentation):
             if avg:
                 counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
                                'count':total,
-                               'query':"{0}?{1}".format(base_url, cols[0]),
+                               'query':"{0}{1}".format(base_url, cols[0]),
                                'proportion':format_percentage(total,overall)})
             return {'counts': counts}
         elif len(cols) == 2:

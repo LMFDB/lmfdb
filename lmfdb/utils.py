@@ -673,7 +673,7 @@ def display_knowl(kid, title=None, kwargs={}):
         else:
             return ''
 
-def bigint_knowl(n, cutoff=8, sides=2):
+def bigint_knowl(n, cutoff=16, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
