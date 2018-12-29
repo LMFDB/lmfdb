@@ -1,7 +1,8 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * Update downloads for coefficients, trace form, magma to handle spare cyclotomic rep (David, JV)
-* On Gamma1 pages where we do not have all the forms like http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/500/3/ and http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1500/2/ the dimensions displayed in the 3x3 grid are wrong (they are just sums of the dimensions of the forms we have, which in some cases is zero!), and the listed decomposition of S_k^new(Gamma1(N)) is incomplete (sometimes empty).  These pages can be reached via bread crumbs, so we need to fix them.
+* On Gamma1 pages where we do not have all the forms like http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/500/3/ and http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1500/2/ the dimensions displayed in the 3x3 grid are wrong (they are just sums of the dimensions of the forms we have, which in some cases is zero!), and the listed decomposition of S_k^new(Gamma1(N)) is incomplete (sometimes empty).  These pages can be reached via bread crumbs, so we need to fix them (Drew, David)
+* Filtering by self twist and is self dual do not seem to be working on the dimension table (e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=None&hidden_search_type=Dimensions&level=1-24&weight=1-12&has_self_twist=cm_and_rm&search_type=Dimensions should be hitting only wt 1 forms with projective image D2)
 
 IMPORTANT:
 * update buckets on stats pages to reflect Nk^2 <= 40000 dataset.
@@ -14,6 +15,7 @@ IMPORTANT:
 * Compare dihedral weight one data with Magma (Drew)
 * Make light gray lighter gray (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres (Drew)
+* Diagonalize basis matrix when it is the product of a diagonal matrix and a permutation matrix (Drew)
 
 * Don't duplicate in statistics setup (David)
 * Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
