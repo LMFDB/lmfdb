@@ -4,6 +4,7 @@ CRITICAL (BUGS):
 * Update Gamma1 pages where we do not have all the forms like http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/500/3/ and http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1500/2/ to display n/a in newforms column if the num_forms column in the mf_newspace row is not set and use dimension from mf_newspace table, don't sum neform dimensions
 * Update Gamma1 dimension table to display dimension and links for spaces that have an entry in mf_newspaces
 * Update WebNewforsmSpace to handle newspaces where trace_bound and num_forms are not set, and update newspace pages to handle this case (the page should display dimension and oldspace decomposition info, but not Hecke orbit decomposition).
+* The newspace search should filter for spaces where num_newforms is set, it is currently broken (e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=Spaces&level=3000&weight=2&dim=1-&prime_quantifier=exact&search_type=Spaces)
 
 IMPORTANT:
 * When displaying character orbits in newspace tables like http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1500/2/ use ... to abbreviate long lists of Conrey labels, e.g. for the space 1500.2.bi the character orbit should be shown as \chi_1500([17,\ldots,1433]).
