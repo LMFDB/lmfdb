@@ -77,6 +77,9 @@
     {% endfor %}
   </tbody>
 </table>
+{% if space.has_uncomputed_char %}
+<p><small>"n/a" means that newforms for that character have not been added to the database yet</small></p>
+{% endif %}
 {% endif %}
 
 <!-- Definitions for coefficient fields -->

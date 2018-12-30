@@ -864,13 +864,15 @@ def has_data_nontriv(N, k):
     return N*k*k <= Nk2_bound(nontriv=True)
 def has_data(N, k):
     return N*k*k <= Nk2_bound()
+def has_data_mixed(N, k):
+    if k == 1:
+        return N <= Nk2_bound(nontriv=True)
+    else:
+        return has_data(N, k)
 
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
-    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
-        hasdata = has_data
-    else:
-        hasdata = has_data_nontriv
+    hasdata = has_data_mixed
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for space in res:
         dims = DimGrid.from_db(space)
@@ -905,7 +907,11 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     set_rows_cols(info, query)
-    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if has_data(N,k)}
+    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
+        hasdata = has_data
+    else:
+        hasdata = has_data_nontriv
+    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for form in res:
         N = form['level']
         k = form['weight']
@@ -924,7 +930,7 @@ def dimension_form_postprocess(res, info, query):
     info['newness_types'] = ['new']
     info['one_type'] = True
     info['url_generator'] = url_generator
-    info['has_data'] = has_data
+    info['has_data'] = hasdata
     return dim_dict
 
 @search_wrap(template="cmf_dimension_search_results.html",
@@ -978,6 +984,9 @@ def space_search(info, query):
     common_parse(info, query)
     parse_ints(info, query, 'dim', name='Dimension')
     parse_ints(info, query, 'num_forms', name='Number of newforms')
+    if 'num_forms' not in query:
+        # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
+        query['num_forms'] = {'$exists':True}
     set_info_funcs(info)
 
 @cmf.route("/Completeness")

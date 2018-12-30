@@ -208,8 +208,12 @@ class WebNewformSpace(object):
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm bound',str(self.sturm_bound)),
-            ('Trace bound',str(self.trace_bound))
         ]
+        if data.get('trace_bound') is not None:
+            self.properties.append(('Trace bound',str(self.trace_bound)))
+        # Work around search results not including None
+        if data.get('num_forms') is None:
+            self.num_forms = None
 
         # Breadcrumbs
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
@@ -318,10 +322,15 @@ class WebGamma1Space(object):
         self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
+        self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
-        self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
-                       for space in newspaces]
-
+        self.has_uncomputed_char = False
+        for space in newspaces:
+            if space.get('num_forms') is None:
+                self.decomp.append((space, None))
+                self.has_uncomputed_char = True
+            else:
+                self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
         self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.new_dim > 0:
@@ -421,8 +430,10 @@ class WebGamma1Space(object):
 
             num_chi = space['char_degree']
             link = self._link(space['level'], space['char_orbit_label'])
-            if not forms:
-                ans.append((rowtype, chi_rep, num_chi, link, "None", 0, []))
+            if forms is None:
+                ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
+            elif len(forms) == 0:
+                ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
