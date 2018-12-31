@@ -1060,7 +1060,7 @@ class CMF_stats(StatsDisplay):
     """
     def __init__(self):
         nforms = comma(db.mf_newforms.count())
-        nspaces = comma(db.mf_newspaces.count())
+        nspaces = comma(db.mf_newspaces.count({'num_forms':{'$exists':True}}))
         ndim = comma(db.mf_hecke_cc.count())
         weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
         level_knowl = display_knowl('mf.elliptic.level', title='level')
