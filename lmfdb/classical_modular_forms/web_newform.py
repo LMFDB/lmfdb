@@ -285,7 +285,7 @@ class WebNewform(object):
 
         # fake it until you make it
         # display L-functions from Artin
-        if self.weight == 1:
+        if self.weight == 1 and self.level > 1000:
             res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
         else:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
