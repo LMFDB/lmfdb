@@ -13,6 +13,7 @@ IMPORTANT:
 * Make light gray lighter gray (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres (Drew)
 * Diagonalize basis matrix when it is the product of a diagonal matrix and a permutation matrix (Drew)
+* When displaying basis elements with a single term (e.g. in a diagonal basis) don't parenthesize numerator (see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/529/2/c/j/ for example)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 
 * Don't duplicate in statistics setup (David)
