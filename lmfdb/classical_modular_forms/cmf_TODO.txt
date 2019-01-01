@@ -3,6 +3,7 @@ CRITICAL (BUGS):
 * Update downloads for coefficients, trace form, magma to handle spare cyclotomic rep (David, JV)
 
 IMPORTANT:
+* Newspace pages should have related object link to Gamma1 page (like newforms do)
 * Use analytic_rank_proved once we have conjectural analytic ranks in weight 1 (Edgar, David)
 * Add download link to create forms in magma (JV and Drew)
 * Prove image types for all weight one forms (Drew)
