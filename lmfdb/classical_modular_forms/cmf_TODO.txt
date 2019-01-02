@@ -3,6 +3,7 @@ CRITICAL (BUGS):
 * Update downloads for coefficients, trace form, magma to handle spare cyclotomic rep (David, JV)
 * Searching weight 1 analytic rank 0 gives no results (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=List&weight=1&analytic_rank=0&search_type=List) but searching rank 0 shows weight 1 forms (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?analytic_rank=0).db.
 * Possibly related to above: db.mf_newforms.count({'analytic_rank':0,'weight':1}) returns 0 but len([r for r in db.mf_newforms.search({'analytic_rank':0,'weight':1})]) returns 2130.  Similar problem when counting records in mf_hecke_nf with hecke_ring_power_basis set to True or False, and db.mf_newforms.count({'hecke_ring_proved':False}) gives the wrong answer (it should be 1486).
+* Look at rescaling y-axis of z-plots like http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/775/1/w/a/61/1/
 
 IMPORTANT:
 * Newspace pages should have related object link to Gamma1 page (like newform page do)
