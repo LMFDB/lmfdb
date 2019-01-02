@@ -3369,7 +3369,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             cur_avg = self._execute(totaler, values=totaler_values)
             avg = cur_avg.fetchone()[0]
         else:
-            avg = None
+            avg = False
         return total, avg
 
     def create_oldstats(self, filename):

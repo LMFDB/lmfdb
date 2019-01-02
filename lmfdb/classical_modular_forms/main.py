@@ -982,6 +982,9 @@ def space_search(info, query):
             flash_error(msg)
             raise ValueError(msg)
     common_parse(info, query)
+    if not info.get('dim').strip():
+        # Only show non-empty spaces
+        info['dim'] = '1-'
     parse_ints(info, query, 'dim', name='Dimension')
     parse_ints(info, query, 'num_forms', name='Number of newforms')
     if 'num_forms' not in query:
@@ -1098,7 +1101,7 @@ class CMF_stats(StatsDisplay):
                   'cm_discs': 'CM disc',
                   'rm_discs': 'RM disc'}
     formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
-                  'char_parity': (lambda t: 'odd' if t == -1 else 'even'),
+                  'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
@@ -1120,7 +1123,7 @@ class CMF_stats(StatsDisplay):
         {'cols':'analytic_rank',
          'top_title':[('analytic ranks', 'mf.elliptic.analytic_rank'),
                       ('for forms of weight greater than 1', None)],
-         'avg':True},
+         'totaler':{'avg':True}},
         {'cols':'projective_image',
          'top_title':[('projective images', 'mf.elliptic.projective_image'),
                       ('for weight 1 forms', None)]},
@@ -1140,6 +1143,8 @@ class CMF_stats(StatsDisplay):
          'totaler':{}},
     ]
     # Used for dynamic stats
+    dynamic_parse = staticmethod(newform_parse)
+    dynamic_parent_page = "cmf_refine_search.html"
     dynamic_cols = [
         ('level','Level'),
         ('weight','Weight'),
@@ -1161,45 +1166,12 @@ def statistics():
     title = 'Cuspidal Newforms: Statistics'
     return render_template("display_stats.html", info=CMF_stats(), credit=credit(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
-def attribute_parse(info, attributes):
-    #stats = info["stats"]
-    cols = []
-    buckets = {}
-    for cname, bname in [('col1', 'buckets1'), ('col2', 'buckets2')]:
-        if cname in info and info[cname] != 'none':
-            col = info[cname]
-            if col in cols:
-                raise ValueError("Cannot repeat")
-            cols.append(col)
-            if bname in info:
-                cur_buckets = info[bname].replace(' ','')
-                if cur_buckets:
-                    buckets[col] = cur_buckets.split(',')
-    attributes['cols'] = cols
-    attributes['buckets'] = buckets
-    attributes['corner_label'] = ''
-
-@cmf.route("/stats_dynamic")
+@cmf.route("/dynamic_stats")
 def dynamic_statistics():
-    stats = CMF_stats()
     if len(request.args) > 0:
         info = to_dict(request.args)
-        info["stats"] = stats
-        constraint = {}
-        try:
-            newform_parse(info, constraint)
-            attributes = {'constraint': constraint}
-            attribute_parse(info, attributes)
-            stats.setup(attributes=[attributes])
-            info["d"] = stats.prep(attributes)
-        except Exception:
-            raise
     else:
-        info = {"d": stats.prep({'cols':[], 'buckets':{}}),
-                "stats": stats}
-    info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
-    info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
-    info["parent_page"] = "cmf_refine_search.html"
-    info["search_type"] = 'DynStats'
-    title = 'Dynamic Statistics'
+        info = {}
+    CMF_stats().dynamic_setup(info)
+    title = 'Cuspdial Newforms: Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())

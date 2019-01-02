@@ -388,7 +388,7 @@ class Belyi_stats(StatsDisplay):
     knowls = {'deg': 'belyi.degree',
               'orbit_size': 'belyi.orbit_size',
               'g': 'belyi.genus'}
-    stat_list = [{'cols':col, 'avg':True} for col in ['deg', 'orbit_size', 'g']]
+    stat_list = [{'cols':col, 'totaler': {'avg':True}} for col in ['deg', 'orbit_size', 'g']]
 
 @belyi_page.route("/stats")
 def statistics():

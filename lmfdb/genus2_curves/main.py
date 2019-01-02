@@ -368,18 +368,18 @@ class G2C_stats(StatsDisplay):
                   'st_group': st_group_format}
 
     stat_list = [
-        {'cols': 'num_rat_pts', 'avg': True},
-        {'cols': 'num_rat_wpts', 'avg': True},
+        {'cols': 'num_rat_pts', 'totaler': {'avg': True}},
+        {'cols': 'num_rat_wpts', 'totaler': {'avg': True}},
         {'cols': 'aut_grp_id'},
         {'cols': 'geom_aut_grp_id'},
-        {'cols': 'analytic_rank', 'avg': True},
-        {'cols': 'two_selmer_rank', 'avg': True},
+        {'cols': 'analytic_rank', 'totaler': {'avg': True}},
+        {'cols': 'two_selmer_rank', 'totaler': {'avg': True}},
         {'cols': 'has_square_sha'},
         {'cols': 'locally_solvable'},
         {'cols': 'is_gl2_type'},
         {'cols': 'real_geom_end_alg'},
         {'cols': 'st_group'},
-        {'cols': 'torsion_order', 'avg': True},
+        {'cols': 'torsion_order', 'totaler': {'avg': True}},
     ]
 
 @g2c_page.route("/Q/stats")

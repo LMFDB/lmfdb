@@ -15,7 +15,6 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 
 * Don't duplicate in statistics setup (David)
-* Add inputs in dynamic stats for options (e.g. totaller, etc) (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)

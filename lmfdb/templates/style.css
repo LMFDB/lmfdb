@@ -55,7 +55,7 @@ h2.link > a {
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
-#content > h3 {
+#content > h3, td.table_h2 {
     font-family: sans-serif;
     text-decoration: none;
     font-size: 110%;

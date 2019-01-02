@@ -154,28 +154,7 @@ function set_buckets(col_selecter, bucket_id) {
   <tr>
   </tr>
   {% if info.search_type == 'DynStats' %}
-  <tr style="height:30px"></tr>
-  <tr>
-    <td></td>
-    <td>Buckets</td>
-  </tr>
-  {% for i in [1,2] %}
-  <tr>
-    <td>
-      <select id="col{{i}}_select" name='col{{i}}' style="width: 150px;" onchange="set_buckets(this, 'buckets{{i}}')">
-        {% for col, disp in info.stats._dynamic_cols %}
-        <option value="{{ col }}"{% if col==info.get_col(i) %} selected='yes'{% endif %}>{{ disp }}</option>
-        {% endfor %}
-      </select>
-    </td>
-    <td>
-      <input id="buckets{{i}}" type='text' style="width: 140px" name='buckets{{i}}' value='{{ info.get_bucket(i) }}'>
-    <td>
-  </tr>
-  {% endfor %}
-  <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px">Generate statistics</button></td>
-  </tr>
+  {% include 'dynamic_stats_input.html' %}
   {% else %}
   <tr style="height:50px">
     <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px" onclick='resetStart()'>Search again</button></td>
