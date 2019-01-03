@@ -987,7 +987,7 @@ def space_search(info, query):
         info['dim'] = '1-'
     parse_ints(info, query, 'dim', name='Dimension')
     parse_ints(info, query, 'num_forms', name='Number of newforms')
-    if 'num_forms' not in query:
+    if 'num_forms' not in query and info.get('all_spaces') != 'yes':
         # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
         query['num_forms'] = {'$exists':True}
     set_info_funcs(info)
