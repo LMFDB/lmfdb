@@ -6,7 +6,6 @@ CRITICAL (BUGS):
 * Update download q-expansion links to handle cyclotomic representation, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/3636.1.br.a.
 * Once the item above is addressed, update magma download links to also handle cyclotomic repsresentation.
 * Make sure q-expansion downloads include all the coefficients we have (at least 1000 in every case), e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/11.2.a.a only gives you 100, and the links for pages with cyclotomic q-expansion reps only give 10 (and do not work).
-* Fix server error in newspace search when no search parameters are set (it seems leaving cusp dim blank causes the problem), e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=Spaces&prime_quantifier=exact&all_spaces=no&search_type=Spaces
 
 IMPORTANT:
 * Prove image types for all weight one forms (Drew)

@@ -982,11 +982,15 @@ def space_search(info, query):
             flash_error(msg)
             raise ValueError(msg)
     common_parse(info, query)
-    if not info.get('dim').strip():
+    if not info.get('dim', '').strip():
         # Only show non-empty spaces
         info['dim'] = '1-'
     parse_ints(info, query, 'dim', name='Dimension')
     parse_ints(info, query, 'num_forms', name='Number of newforms')
+    if info.get('all_spaces') == 'yes' and 'num_forms' in query:
+        msg = "Cannot specify number of newforms while requesting all spaces"
+        flash_error(msg)
+        raise ValueError(msg)
     if 'num_forms' not in query and info.get('all_spaces') != 'yes':
         # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
         query['num_forms'] = {'$exists':True}
