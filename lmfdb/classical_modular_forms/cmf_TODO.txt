@@ -21,6 +21,7 @@ FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Add trace tables for newspaces once trace forms are present (David)
 * Add newspace portraits for all newspaces where we have the trace form (Drew)
 * Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
 * Display disriminant of coefficient ring on newform pages
