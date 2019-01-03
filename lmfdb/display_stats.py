@@ -490,7 +490,7 @@ class StatsDisplay(UniqueRepresentation):
             show_total = bool(totaler)
             col = cols[0]
             split_list = self._split_lists[col]
-            headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
             if not buckets:
                 if show_total or proportioner is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
@@ -520,7 +520,7 @@ class StatsDisplay(UniqueRepresentation):
                          'query':"{0}{1}".format(base_url, cols[0]),
                          'proportion':_format_percentage(total, self._overall, show_zero=True)}
                 if avg is False: # Want to show avg even if 0
-                    total['value'] = ''
+                    total['value'] = 'Total'
                 else:
                     total['value'] = '\(\\mathrm{avg}\\ %.2f\)'%avg
                 counts.append(total)
@@ -531,7 +531,7 @@ class StatsDisplay(UniqueRepresentation):
             non_buckets = [col for col in cols if col not in buckets]
             if len(buckets) + len(non_buckets) != 2:
                 raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = table._get_values_counts(cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
+            headers, grid = table._get_values_counts(cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
             for i, col in enumerate(cols):
                 if col in buckets:
                     headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
@@ -592,8 +592,8 @@ class StatsDisplay(UniqueRepresentation):
 
     def setup(self, attributes=None, delete=False):
         """
-        This function should be called manually at the Sage prompt to add
-        the appropriate data to the stats table; it is also called in dynamic_setup below.
+        This function can be called manually at the Sage prompt to add
+        the appropriate data to the stats table
 
         Warning: if delete is True and an entry in the stat_list includes the 'table' attribute,
         stats and counts from that table will also be deleted.
@@ -674,12 +674,6 @@ class StatsDisplay(UniqueRepresentation):
                 attr = {'constraint': constraint}
                 # add in the columns and proportioner+totaller strategies
                 self._dyn_attribute_parse(info, attr)
-                if info.get('proportions') == 'recurse':
-                    unconstrained_attr = dict(attr)
-                    unconstrained_attr['constraint'] = {}
-                    self.setup(attributes=[attr, unconstrained_attr])
-                else:
-                    self.setup(attributes=[attr])
             except Exception:
                 # Should provide nice error message
                 raise

@@ -3281,12 +3281,14 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         return ans
 
-    def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url):
+    def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url, buckets=None):
         """
         Utility function used in ``display_data``.
 
         Returns a list of pairs (value, count), where value is a list of values taken on by the specified
         columns and count is an integer giving the number of rows with those values.
+
+        If the relevant statistics are not available, it will compute and insert them.
 
         INPUT:
 
@@ -3307,7 +3309,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         positions = [allcols.index(x) for x in cols]
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         headers = [[] for _ in cols]
-        default_proportion = '      0.00' if len(cols) == 1 else ''
+        default_proportion = '      0.00%' if len(cols) == 1 else ''
         def make_count_dict(values, cnt):
             if isinstance(values, (list, tuple)):
                 query = base_url + '&'.join(query_formatter[col](val) for col, val in zip(cols, values))
@@ -3318,6 +3320,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     'proportion': default_proportion, # will be overridden for nonzero cnts.
             }
         data = KeyedDefaultDict(lambda key: make_count_dict(key, 0))
+        if buckets:
+            buckets_seen = set()
+            bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
             for val, header in zip(values, headers):
@@ -3328,6 +3333,29 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             else:
                 values = tuple(formatter[col](val) for col, val in zip(cols, values))
             data[values] = D
+            if buckets:
+                buckets_seen.add(tuple(values[i] for i in bucket_positions))
+        # Ensure that we have all the statistics necessary
+        ok = True
+        if buckets == {}:
+            # Just check that the results are nonempty
+            if not data:
+                self.add_stats(cols, constraint, split_list=split_list)
+                ok = False
+        elif buckets:
+            # Make sure that every bucket is hit in data
+            bcols = set(col for col in cols if col in buckets)
+            ucols = [col for col in cols if col not in buckets]
+            for bucketed_constraint in self._bucket_iterator(buckets, constraint):
+                ccols, cvals = self._split_dict(bucketed_constraint)
+                cvals = tuple(formatter[cc](cv) for cc, cv in zip(ccols, cvals) if cc in bcols)
+                if cvals not in buckets_seen:
+                    logging.info("Adding statistics for %s with constraints %s" % (", ".join(cols), ", ".join("%s:%s" % (cc, cv) for cc, cv in zip(ccols, cvals))))
+                    self.add_stats(ucols, bucketed_constraint)
+                    ok = False
+        if not ok:
+            # Set buckets=False so we have no chance of infinite recursion
+            return self._get_values_counts(cols, constraint, split_list, formatter, query_formatter, base_url, buckets=False)
         if len(cols) == 1:
             return headers[0], data
         else:
