@@ -601,10 +601,10 @@ class StatsDisplay(UniqueRepresentation):
         if attributes is None:
             attributes = self.stat_list
         if delete:
-            self.table.stats._clear_stats_counts(extra=False)
+            self.table.stats._clear_stats_counts()
             for attr in attributes:
                 if 'table' in attr:
-                    attr['table'].stats._clear_stats_counts(extra=False)
+                    attr['table'].stats._clear_stats_counts()
         for attr in attributes:
             cols = attr["cols"]
             if not cols:
