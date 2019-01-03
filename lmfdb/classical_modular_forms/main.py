@@ -594,7 +594,7 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
-    def download_newform_to_magma(self, label, lang='text'):
+    def download_newform_to_magma(self, label, lang='magma'):
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
