@@ -235,7 +235,8 @@ class WebNewformSpace(object):
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
-        self.friends = []
+        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
+        self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
     @staticmethod
     def by_label(label):

@@ -571,12 +571,19 @@ class WebNewform(object):
             return r"\(=\)"
 
     def _make_frac(self, num, den):
+        paren = ('+' in num or '-' in num)
         if den == 1:
             return num
         elif den < 10**8:
-            return r"\((\)%s\()/%s\)"%(num, den)
+            if paren:
+                return r"\((\)%s\()/%s\)" % (num, den)
+            else:
+                return "%s\(/%s\)" % (num, den)
         else:
-            return r"\((\)%s\()/\)%s"%(num, bigint_knowl(den))
+            if paren:
+                return r"\((\)%s\()/\)%s" % (num, bigint_knowl(den))
+            else:
+                return r"%s\(/\)%s" % (num, bigint_knowl(den))
 
     @property
     def _nu_latex(self):
