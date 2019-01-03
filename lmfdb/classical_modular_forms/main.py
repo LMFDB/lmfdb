@@ -1057,6 +1057,20 @@ def self_twist_type_query_formatter(x):
     elif x in [3, 'both']:
         return 'has_self_twist=cm_and_rm'
 
+def level_primes_formatter(x):
+    subset = x.get('$containedin')
+    if subset:
+        return 'level_primes=%s&prime_quantifier=subsets' % (','.join(map(str, subset)))
+    supset = x.get('$contains')
+    if supset:
+        return 'level_primes=%s&prime_quantifier=append' % (','.join(map(str, supset)))
+    raise ValueError
+
+def level_radical_formatter(x):
+    # Hopefully people won't enter multiple large primes....
+    factors = [p for p,e in ZZ(x).factor()]
+    return 'level_primes=%s' % (','.join(map(str, factors)))
+
 class CMF_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for classical modular forms
@@ -1106,7 +1120,9 @@ class CMF_stats(StatsDisplay):
                   'self_twist_type': self_twist_type_formatter}
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
                         'self_twist_type': self_twist_type_query_formatter,
-                        'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1'))}
+                        'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1')),
+                        'level_primes': level_primes_formatter,
+                        'level_radical': level_radical_formatter}
     split_lists = {'cm_discs': True,
                    'rm_discs': True}
     stat_list = [
