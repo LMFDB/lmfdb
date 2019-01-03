@@ -2183,3 +2183,8 @@ table.qexp-table td.output {
 .mjx_basic {
     font-family: MJX_Math;
 }
+
+input::-webkit-input-placeholder {
+    color: #cccccc;
+}
+

@@ -2595,8 +2595,14 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             if name in self._search_cols:
                 table = self.search_table
+                counts_table = table + "_counts"
+                stats_table = table + "_stats"
                 deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                self._execute(deleter, [self.search_table, [name]])
+                self._execute(deleter, [table, [name]])
+                deleter = SQL("DELETE FROM {0} WHERE cols @> %s").format(Identifier(counts_table))
+                self._execute(deleter, [[name]])
+                deleter = SQL("DELETE FROM {0} WHERE cols @> %s OR constraint_cols @> %s").format(Identifier(stats_table))
+                self._execute(deleter, [[name], [name]])
                 self._search_cols.remove(name)
             elif name in self._extra_cols:
                 table = self.extra_table
