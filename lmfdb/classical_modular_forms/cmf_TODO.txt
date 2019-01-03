@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * Update downloads for coefficients, trace form, magma to handle spare cyclotomic rep (David, JV)
-* Look at rescaling y-axis of z-plots like http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/775/1/w/a/61/1/ (Edgar)
 * Fix download to magma links so that comment character # on first line is replaced by //, see http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/11.2.a.a for example.
 * Update download q-expansion links to handle cyclotomic representation, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/3636.1.br.a.
 * Once the item above is addressed, update magma download links to also handle cyclotomic repsresentation.
