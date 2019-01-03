@@ -23,14 +23,14 @@ FINAL CHECKS:
 -------------------------- Pull Request Line -------------------------------------------------
 * Add trace tables for newspaces once trace forms are present (David)
 * Add newspace portraits for all newspaces where we have the trace form (Drew)
+* code snippets for form and space pages in Sage and Pari.
 * Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
-* Display disriminant of coefficient ring on newform pages
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
-* code snippets for form and space pages in Sage
 * add ECQD and genus 2 curves to friends (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
+* Consider displaying the disriminant of coefficient ring on newform pages when field discriminant is known (this is just the product of the index and the field discriminant)
 
 
 KNOWL FEATURES: (March)
