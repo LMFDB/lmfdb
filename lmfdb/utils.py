@@ -16,7 +16,8 @@ import sage
 from types import GeneratorType
 from urllib import urlencode
 
-from sage.all import latex, CC, factor, PolynomialRing, ZZ, NumberField, RealField, CBF, CDF, RIF
+from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, RealField, RIF, ZZ
+from sage.all import factor, latex, valuation
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -26,6 +27,7 @@ from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 from lmfdb.base import app
+from collections import defaultdict
 
 
 
@@ -82,7 +84,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
                         if vcf[i] < 0:
                             outstr += '+' # we haven't added the +
                         outstr += 'O(%s)' % variableterm
-                        break;
+                        break
                     if vcf[i] == 1:
                         outstr += variableterm
                     elif abs(vcf[i]) != 1:
@@ -320,12 +322,12 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     k = round_to_half_int(x)
-    if k == x:
+    if k == x and abs(x) < 10.**digits:
         k2 = None
         try:
             k2 = ZZ(2*x)
         except TypeError:
-            pass;
+            pass
         # the second statment checks for overflow
         if k2 == 2*x and (2*x + 1) - k2 == 1:
             if k2 % 2 == 0:
@@ -392,7 +394,7 @@ def display_complex(x, y, digits, method = "truncate", parenthesis = False, extr
             sign = " + "
     y = display_float(y, digits, method = method, extra_truncation_digits = extra_truncation_digits)
     if y == "1":
-        y = "";
+        y = ""
     res = x + sign + y + r"i"
     if parenthesis and x != "":
         res = "(" + res + ")"
@@ -497,14 +499,14 @@ def pol_to_html(p):
 
 
 ################################################################################
-#  latex/mathjax utilities
+#  latex/math rendering utilities
 ################################################################################
 
 def web_latex(x, enclose=True):
     """
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to make it a mathjax equation.
+    `\(` and `\)` to tag it as an equation in html.
 
     Note:
     if input is a factored ideal, use web_latex_ideal_fact instead.
@@ -525,7 +527,7 @@ def web_latex_ideal_fact(x, enclose=True):
     """
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
-    `\)` to make it a mathjax equation.
+    `\)` to tag it as an equation in html.
 
     sage puts many parentheses around latex representations of factored ideals.
     This function removes excessive parentheses.
@@ -671,7 +673,7 @@ def display_knowl(kid, title=None, kwargs={}):
         else:
             return ''
 
-def bigint_knowl(n, cutoff=8, sides=2):
+def bigint_knowl(n, cutoff=16, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
@@ -679,9 +681,45 @@ def bigint_knowl(n, cutoff=8, sides=2):
     else:
         return r'\(%s\)'%n
 
-def polyquo_knowl(f):
-    short = r'\mathbb{Q}[x]/(x^{%s} + \cdots)'%(len(f) - 1)
+def factor_base_factor(n, fb):
+    return [[p, valuation(n,p)] for p in fb]
+
+def factor_base_factorization_latex(fbf):
+    if len(fbf) == 0:
+        return '1'
+    ans = ''
+    sign = 1
+    for p, e in fbf:
+        if p == -1:
+            if (e % 2) == 1:
+                sign *= -1
+        elif e == 1:
+            ans += r'\cdot %d' % p
+        elif e != 0:
+            ans += r'\cdot %d^{%d}' % (p, e)
+    # get rid of the initial '\cdot '
+    ans = ans[6:]
+    return '- ' + ans if sign == -1 else ans
+
+
+
+def polyquo_knowl(f, disc=None, unit=1):
+    quo = "x^{%s}" % (len(f) - 1)
+    i = len(f) - 2
+    while i >= 0 and f[i] == 0:
+        i -= 1
+    if i >= 0: # nonzero terms
+        if f[i] > 0:
+            quo += r" + \cdots"
+        else:
+            quo += r" - \cdots"
+    short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    if disc is not None:
+        if isinstance(disc, list):
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
+        else:
+            long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
@@ -747,15 +785,11 @@ def list_to_latex_matrix(li):
 
     Example:
     >>> list_to_latex_matrix([[1,0],[0,1]])
-    '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0 & 1\\end{array}\\right)'
+    '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
-    dim = str(len(li[0]))
-    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
-    for row in li:
-        row = [str(a) for a in row]
-        mm += ' & '.join(row)
-        mm += r'\\'
-    mm = mm[:-2] # remove final line break
+    dim = len(li[0])
+    mm = r"\left(\begin{array}{"+dim*"r" +"}"
+    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
     mm += r'\end{array}\right)'
     return mm
 
@@ -1081,7 +1115,7 @@ def ajax_more(callback, *arg_list, **kwds):
         res = ''
     if arg_list:
         url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
+        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
 
@@ -1125,29 +1159,12 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
 
-def range_formatter(x, col=None): # accept an unused col argument for the 2d case.
+class KeyedDefaultDict(defaultdict):
     """
-    Used by the display_data function in db_backend.
+    A defaultdict where the default value takes the key as input.
     """
-    if isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            raise ValueError
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError((key,))
+        self[key] = value = self.default_factory(key)
+        return value

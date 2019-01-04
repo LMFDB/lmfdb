@@ -26,7 +26,7 @@
       <td class="mjx_basic right border-right"> {{ mf.dim }} </td>
       {% for n in info.Tr_n %}
       {% if n >= 1 and n <= 1000 %}
-      <td class="mjx_basic right"> {{ mf.tr_an[n] }} </td>
+      <td class="mjx_basic right"> {{ info.bigint_knowl(mf.tr_an[n]) }} </td>
       {% endif %}
       {% endfor %}
     </tr>

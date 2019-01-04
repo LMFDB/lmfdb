@@ -44,12 +44,14 @@
     <td></td>
     <td> \({{ space.sturm_bound }}\) </td>
   </tr>
+  {% if space.trace_bound %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.trace_bound }}\) </td>
   </tr>
+  {% endif %}
 </table>
 
 <h2> Dimensions </h2>
@@ -98,7 +100,11 @@
 {% if space.dim > 0 %}
 <h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
 
+{% if space.num_forms is none %}
+<p>The newforms in this space have not yet been added to the LMFDB.</p>
+{% else %}
 {% include 'cmf_newform_list.html' %}
+{% endif %}
 
 {% endif %}
 

@@ -43,20 +43,20 @@
     <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
   </tr>
   {% endif %}
-  {% if newform.has_analytic_rank %}
-  <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
-    <td> </td>
-    <td> </td>
-    <td>{{ newform.analytic_rank }}</td>
-  </tr>
-  {% endif %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
     <td> \(A\) </td>
     <td>=</td>
     <td>\({{ newform.analytic_conductor }}\)</td>
   </tr>
+  {% if newform.has_analytic_rank %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td>\({{ newform.analytic_rank }}\){% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
+  </tr>
+  {% endif %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
     <td> </td>
@@ -78,6 +78,37 @@
     <td> {{ newform.Qnu() }} </td>
     <td> {{ newform.Qeq() }} </td>
     <td> {{ newform.field_display() | safe }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> {{ newform.ring_display() | safe }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> {{ newform.ring_index_display() | safe }}</td>
+  </tr>
+  {% elif newform.dim == 1 %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> \(\mathbb{Q}\)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> \(\mathbb{Z}\)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
+    <td> </td>
+    <td> </td>
+    <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.char_order == 1 %}
@@ -145,8 +176,14 @@ function show_qexp(qstyle) {
 <h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp">
   {% if newform.dim > 1 %}
-    <p> Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() }}.
-      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.</p>
+    <p>
+      {% if not newform.hecke_ring_cyclotomic_generator %}
+      Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() | safe }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.
+      {% else %}
+      The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }} are shown below.
+      {% endif %}
+    </p>
   {% endif %}
   <form id="qexp">
     <table class="qexp-table">
@@ -174,21 +211,10 @@ function show_qexp(qstyle) {
     </p>
   </form>
 
-  {% if newform.dim > 2 and not newform.hecke_ring_power_basis %}
-    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{% if newform.field_poly_root_of_unity == 0 %} in terms of a root \(\nu\) of {{ newform.defining_polynomial() }}{% endif %}:</p>
+  {% if newform.dim > 2 and (newform.hecke_ring_cyclotomic_generator is none or newform.hecke_ring_cyclotomic_generator == 0) and not newform.hecke_ring_power_basis %}
+    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
-  {% if newform.dim > 1 %}
-  {% if newform.hecke_ring_index_proven %}
-    {% if newform.hecke_ring_index == 1 %}
-    <p> The coefficient ring is the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} in the coefficient field. </p>
-    {% else %} {# newform.hecke_ring_index == 1 #}
-    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is {{ newform.hecke_ring_index_factored }}. </p>
-    {% endif %} {# newform.hecke_ring_index == 1 #}
-  {% elif newform.hecke_ring_index > 1 %}
-    <p> The index of the coefficient ring in the {{ KNOWL('nf.ring_of_integers',title='maximal order') }} of the coefficient field is a divisor of {{ newform.hecke_ring_index_factored }}. </p>
-  {% endif %} {# newform.hecke_ring_index_proven #}
-  {% endif %} {# newform.dim > 1 #}
 </div>
 {% else %}
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
@@ -204,7 +230,7 @@ function show_qexp(qstyle) {
   </div></td></tr></table>
 
   <p>
-    <div class="toggle">Display precision:
+    <div class="toggle">Display
       <span class='smalloutput'><a onclick="show_qexp('mediumoutput'); return false" href='#'>100 coefficients</a></span>
       <span class='mediumoutput nodisplay'><a onclick="show_qexp('smalloutput'); return false" href='#'>10 coefficients</a></span>
     </div>
@@ -404,28 +430,25 @@ function get_all_embeddings(num_embeddings) {
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
+{% if newform.has_further_properties %}
 <h2>Further properties</h2>
 
-{% if newform.is_cm != 0 %}
-<p>This newform is
-{{ "not" if newform.is_cm == -1 }}
-a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_cm == 1 %}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}{% endif %}.</p>
+{% if newform.is_cm %}
+<p>This newform is a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}.</p>
 {% endif %}
-{% if newform.weight == 1 and newform.is_rm != 0 %}
-<p>This newform is
-{{ "not" if newform.is_rm == -1 }}
-a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}{% if newform.is_rm == 1 %}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}{% endif %}.</p>
+{% if newform.is_rm %}
+<p>This newform is an {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}.</p>
+{% endif %}
+{% if not newform.is_cm and not newform.is_rm %}
+<p>This newform does not admit a {{ KNOWL('mf.elliptic.self_twist', title='self-twist') }}.</p>
 {% endif %}
 
-{% if newform.is_twist_minimal %}
-<p>This newform is {{ "not" if not newform.is_twist_minimal }} {{ KNOWL('mf.elliptic.minimal',title='twist minimal') }}.</p>
-{% endif %}
 
 {# TODO we might wish to have some disclaimer here about provability #}
-{% if newform.inner_twist_count > 0 %}
+{% if newform.inner_twist_count == 0 %}
+<p>This newform does not admit any ({{KNOWL('mf.elliptic.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('mf.elliptic.inner_twist',title='inner twists') }}.</p>
+{% elif newform.inner_twist_count > 0 %}
 {{ newform.display_inner_twists() | safe }}
-{% else %}
-<p>This newform does not admit any nontrivial {{ KNOWL('mf.elliptic.inner_twist',title='inner twist') }}.</p>
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
@@ -450,6 +473,7 @@ a {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twis
 
 {% if newform.hecke_cutters %}
 {{ newform.display_hecke_cutters() | safe }}
+{% endif %}
 {% endif %}
 
 

@@ -53,7 +53,11 @@
       {% for N in info.level_list %}
       <td>
         {% if info.has_data(N, k) %}
+        {% if X=='S' and typ=='new' %}
         <a href="{{ info.url_generator(N, k) }}">{{ info.pick_table(info.results[N,k],X,typ) }}</a>
+        {% else %}
+        {{ info.pick_table(info.results[N,k],X,typ) }}
+        {% endif %} {# X=='S' and typ=='new' #}
         {% else %}
         {% if not has_na %}
         {% do has_na.append(1) %}

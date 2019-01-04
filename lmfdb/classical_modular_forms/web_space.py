@@ -38,19 +38,22 @@ def get_search_bread():
 def get_dim_bread():
     return get_bread(other='Dimension table')
 
-def newform_search_link(text, **kwd):
+def newform_search_link(text, title=None, **kwd):
     query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
     link = "%s?%s"%(url_for('.index'), query)
-    return "<a href='%s'>%s</a>"%(link, text)
+    return "<a href='%s'%s>%s</a>"%(link, "" if title is None else " title='%s'"%title, text)
 
 def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
     al_dims = sorted(al_dims, key=lambda x:tuple(-ev for (p,ev) in x[0]))
     header = []
-    primes = [p for (p,ev) in al_dims[0][0]]
+    first_row = al_dims[0][0]
+    primes = [p for (p,ev) in first_row]
     num_primes = len(primes)
-    for p, ev in al_dims[0][0]:
+    for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
+    if len(first_row) > 1:
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.elliptic.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
@@ -67,6 +70,8 @@ def ALdim_table(al_dims, level, weight):
                 s += '-'
                 symb = '-'
             row.append(r'<td>\(%s\)</td>'%(symb))
+        if len(vec) > 1:
+            row.append(r"<td class='right'>\(%s\)</td>"%('+' if sign == 1 else '-'))
         query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':s}
         if cnt == 1:
             query['jump'] = 'yes'
@@ -83,8 +88,8 @@ def ALdim_table(al_dims, level, weight):
         plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
         minus_knowl = display_knowl('mf.elliptic.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
-        rows.append("<tr><td colspan='%s'>%s</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
 
@@ -193,7 +198,7 @@ class WebNewformSpace(object):
 
         # Properties
         self.properties = [('Label',self.label)]
-        if self.plot is not None:
+        if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
         self.properties +=[
             ('Level',str(self.level)),
@@ -203,8 +208,12 @@ class WebNewformSpace(object):
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
             ('Sturm bound',str(self.sturm_bound)),
-            ('Trace bound',str(self.trace_bound))
         ]
+        if data.get('trace_bound') is not None:
+            self.properties.append(('Trace bound',str(self.trace_bound)))
+        # Work around search results not including None
+        if data.get('num_forms') is None:
+            self.num_forms = None
 
         # Breadcrumbs
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
@@ -225,8 +234,9 @@ class WebNewformSpace(object):
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
             # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
             self.dim_str = r"\(%s\)"%(self.dim)
-        self.title = r"Space of Cuspidal Newforms of Weight %s, Level %s and %s"%(self.weight, self.level, character_str)
-        self.friends = []
+        self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
+        gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
+        self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
 
     @staticmethod
     def by_label(label):
@@ -298,7 +308,11 @@ class WebGamma1Space(object):
         # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         if not newspaces:
-            raise ValueError("Space not in database")
+            # In small level, there can be no nontrivial spaces.  In this case, we include
+            # spaces with the wrong parity.
+            newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
+            if not newspaces:
+                raise ValueError("Space not in database")
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
@@ -309,13 +323,18 @@ class WebGamma1Space(object):
         self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
+        self.decomp = []
         newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
-        self.decomp = [(space, [form for form in newforms if form['space_label'] == space['label']])
-                       for space in newspaces]
-
+        self.has_uncomputed_char = False
+        for space in newspaces:
+            if space.get('num_forms') is None:
+                self.decomp.append((space, None))
+                self.has_uncomputed_char = True
+            else:
+                self.decomp.append((space, [form for form in newforms if form['space_label'] == space['label']]))
         self.plot =  db.mf_gamma1_portraits.lookup(self.label, projection = "portrait")
         self.properties = [('Label',self.label),]
-        if self.plot is not None:
+        if self.plot is not None and self.new_dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
         self.properties +=[
             ('Level',str(self.level)),
@@ -325,7 +344,7 @@ class WebGamma1Space(object):
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]
-        self.title = r"Space of Cuspidal Newforms of weight %s and level %s"%(self.weight, self.level)
+        self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []
 
     @staticmethod
@@ -412,8 +431,10 @@ class WebGamma1Space(object):
 
             num_chi = space['char_degree']
             link = self._link(space['level'], space['char_orbit_label'])
-            if not forms:
-                ans.append((rowtype, chi_rep, num_chi, link, "None", 0, []))
+            if forms is None:
+                ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
+            elif len(forms) == 0:
+                ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]

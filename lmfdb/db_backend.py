@@ -26,15 +26,15 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 """
 
 
-import logging, tempfile, re, os, time, random, traceback, datetime, getpass
+import logging, tempfile, re, os, time, random, traceback, datetime
 from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps
+from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps, numeric_converter
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
-from lmfdb.utils import make_logger, format_percentage, range_formatter
+from lmfdb.utils import make_logger, KeyedDefaultDict
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 SLOW_QUERY_LOGFILE = "slow_queries.log"
@@ -74,6 +74,20 @@ param_types_whitelist = [
     r"^(numeric|decimal)\s*\([1-9][0-9]*(,\s*(0|[1-9][0-9]*))?\)$",
 ]
 param_types_whitelist = [re.compile(s) for s in param_types_whitelist]
+
+# The following is used in bucketing for statistics
+pg_to_py = {}
+for typ in ["int2", "smallint", "smallserial", "serial2",
+    "int4", "int", "integer", "serial", "serial4",
+    "int8", "bigint", "bigserial", "serial8"]:
+    pg_to_py[typ] = int
+for typ in ["numeric", "decimal"]:
+    pg_to_py[typ] = numeric_converter
+for typ in ["float4", "real", "float8", "double precision"]:
+    pg_to_py[typ] = float
+for typ in ["text", "char", "character", "character varying", "varchar"]:
+    pg_to_py[typ] = str
+
 # the non-default operator classes, used in creating indexes
 _operator_classes = {'brin':   ['inet_minmax_ops'],
                      'btree':  ['bpchar_pattern_ops', 'cidr_ops', 'record_image_ops',
@@ -1136,7 +1150,7 @@ class PostgresTable(PostgresBase):
     # Convenience methods for accessing statistics                   #
     ##################################################################
 
-    def max(self, col, constraint=None):
+    def max(self, col, constraint={}):
         """
         The maximum value attained by the given column.
 
@@ -1777,7 +1791,7 @@ class PostgresTable(PostgresBase):
             elif cur.rowcount == 1: # update
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
-                    if len(data) == 1:
+                    if len(dat) == 1:
                         updater = SQL("UPDATE {0} SET {1} = {2} WHERE {3}")
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
@@ -2174,7 +2188,7 @@ class PostgresTable(PostgresBase):
             self._swap(tables, indexes if indexed else [], '_tmp', '')
             for table in tables:
                 self._db.grant_select(table)
-                if table.endswith("_counts"):
+                if table.endswith("_counts") or table.endswith("_stats"):
                     self._db.grant_insert(table)
         print "Swapped temporary tables for %s into place in %s secs\nNew backup at %s"%(self.search_table, time.time()-now, "{0}_old{1}".format(self.search_table, backup_number))
 
@@ -2581,8 +2595,14 @@ class PostgresTable(PostgresBase):
         with DelayCommit(self, commit, silence=True):
             if name in self._search_cols:
                 table = self.search_table
+                counts_table = table + "_counts"
+                stats_table = table + "_stats"
                 deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                self._execute(deleter, [self.search_table, [name]])
+                self._execute(deleter, [table, [name]])
+                deleter = SQL("DELETE FROM {0} WHERE cols @> %s").format(Identifier(counts_table))
+                self._execute(deleter, [[name]])
+                deleter = SQL("DELETE FROM {0} WHERE cols @> %s OR constraint_cols @> %s").format(Identifier(stats_table))
+                self._execute(deleter, [[name], [name]])
                 self._search_cols.remove(name)
             elif name in self._extra_cols:
                 table = self.extra_table
@@ -2668,16 +2688,6 @@ class PostgresTable(PostgresBase):
         Log changes to search tables.
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
-
-class KeyedDefaultDict(defaultdict):
-    """
-    A defaultdict where the default value takes the key as input.
-    """
-    def __missing__(self, key):
-        if self.default_factory is None:
-            raise KeyError((key,))
-        self[key] = value = self.default_factory(key)
-        return value
 
 class PostgresStatsTable(PostgresBase):
     """
@@ -2830,7 +2840,46 @@ class PostgresStatsTable(PostgresBase):
             nres = self._slow_count(query, record=record)
         return int(nres)
 
-    def max(self, col, constraint=None):
+    def _quick_max(self, col, ccols, cvals):
+        if ccols is None:
+            constraint = SQL("constraint_cols IS NULL")
+            values = ["max", [col]]
+        else:
+            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
+            values = ["max", [col], ccols, cvals]
+        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
+        cur = self._execute(selecter, values)
+        if cur.rowcount:
+            return cur.fetchone()[0]
+
+    def _slow_max(self, col, constraint):
+        qstr, values = self.table._parse_dict(constraint)
+        if qstr is None:
+            where = SQL("")
+            values = []
+        else:
+            where = SQL(" WHERE {0}").format(qstr)
+        base_selecter = SQL("SELECT {0} FROM {1}{2} ORDER BY {0} DESC ").format(
+            Identifier(col), Identifier(self.search_table), where)
+        selecter = base_selecter + SQL("LIMIT 1")
+        cur = self._execute(selecter, values)
+        m = cur.fetchone()[0]
+        if m is None:
+            # the default order ends with NULLs, so we now have to use NULLS LAST,
+            # preventing the use of indexes.
+            selecter = base_selecter + SQL("NULLS LAST LIMIT 1")
+            cur = self._execute(selecter, values)
+            m = cur.fetchone()[0]
+        return m
+
+    def _record_max(self, col, ccols, cvals, m):
+        try:
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values) VALUES (%s, %s, %s, %s, %s)")
+            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m, ccols, cvals])
+        except Exception:
+            pass
+
+    def max(self, col, constraint={}, record=True):
         """
         The maximum value attained by the given column, which must be in the search table.
 
@@ -2845,44 +2894,22 @@ class PostgresStatsTable(PostgresBase):
             return self.count()
         if col not in self.table._search_cols:
             raise ValueError("%s not a column of %s"%(col, self.search_table))
-        if constraint is None:
-            constraint = SQL("constraint_cols IS NULL")
-            values = ["max", [col]]
-        else:
-            ccols, cvals = self._split_dict(constraint)
-            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
-            values = ["max", [col], ccols, cvals]
-        selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
-        cur = self._execute(selecter, values)
-        if cur.rowcount:
-            return cur.fetchone()[0]
-        selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC LIMIT 1")
-        cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
-        m = cur.fetchone()[0]
+        ccols, cvals = self._split_dict(constraint)
+        m = self._quick_max(col, ccols, cvals)
         if m is None:
-            # the default order ends with NULLs, so we now have to use NULLS LAST,
-            # preventing the use of indexes.
-            selecter = SQL("SELECT {0} FROM {1} ORDER BY {0} DESC NULLS LAST LIMIT 1")
-            cur = self._execute(selecter.format(Identifier(col), Identifier(self.search_table)))
-            m = cur.fetchone()[0]
-        try:
-            inserter = SQL("INSERT INTO {0} (cols, stat, value) VALUES (%s, %s, %s)")
-            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m])
-        except Exception:
-            pass
+            m = self._slow_max(col, constraint)
+            self._record_max(col, ccols, cvals, m)
         return m
 
-    def _split_buckets(self, buckets, constraint, include_upper=True):
+    def _bucket_iterator(self, buckets, constraint):
         """
         Utility function for adding buckets to a constraint
 
         INPUT:
 
-        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
-            The buckets are the values between these break points.  Repeating break points
-            makes one bucket consist of just that point.
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are
+            lists of strings giving either single integers or intervals.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
-        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
 
         OUTPUT:
 
@@ -2891,22 +2918,15 @@ class PostgresStatsTable(PostgresBase):
         """
         expanded_buckets = []
         for col, divisions in buckets.items():
-            expanded_buckets.append([])
-            if len(divisions) < 2:
-                raise ValueError
-            divisions = [None] + sorted(divisions) + [None]
-            for a,b,c,d in zip(divisions[:-3],divisions[1:-2],divisions[2:-1],divisions[3:]):
-                if b == c:
-                    expanded_buckets[-1].append({col:b})
+            parse_singleton = pg_to_py[self.table.col_type[col]]
+            cur_list = []
+            for bucket in divisions:
+                if '-' in bucket:
+                    a, b = map(parse_singleton, bucket.split('-'))
+                    cur_list.append({col:{'$gte':a, '$lte':b}})
                 else:
-                    if include_upper:
-                        gt = True
-                        lt = (c == d)
-                    else:
-                        lt = True
-                        gt = (a == b)
-                    expanded_buckets[-1].append({col:{"$gt" if gt else "$gte": b,
-                                                      "$lt" if lt else "$lte": c}})
+                    cur_list.append({col:parse_singleton(bucket)})
+            expanded_buckets.append(cur_list)
         for X in cartesian_product_iterator(expanded_buckets):
             if constraint is None:
                 bucketed_constraint = {}
@@ -2916,7 +2936,7 @@ class PostgresStatsTable(PostgresBase):
                 bucketed_constraint.update(D)
             yield bucketed_constraint
 
-    def add_bucketed_counts(self, cols, buckets, constraint={}, include_upper=True, commit=True):
+    def add_bucketed_counts(self, cols, buckets, constraint={}, commit=True):
         """
         A convenience function for adding statistics on a given set of columns,
         where rows are grouped into intervals by a bucketing dictionary.
@@ -2930,13 +2950,12 @@ class PostgresStatsTable(PostgresBase):
             The buckets are the values between these break points.  Repeating break points
             makes one bucket consist of just that point.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
-        - ``include_upper`` -- whether to use intervals of the form A < x <= B (vs A <= x < B).
         """
         # Conceptually, it makes sense to have the bucket keys included in the columns,
         # but they should be removed in order to treat the bucketed_constraint properly
         # as a constraint.
         cols = [col for col in cols if col not in buckets]
-        for bucketed_constraint in self._split_buckets(buckets, constraint, include_upper):
+        for bucketed_constraint in self._bucket_iterator(buckets, constraint):
             self.add_stats(cols, bucketed_constraint, commit=commit)
 
     def _split_dict(self, D):
@@ -3008,7 +3027,15 @@ class PostgresStatsTable(PostgresBase):
         if self._has_stats(cols, ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
-        self.logger.info("Adding stats to {0} for {1} ({2})".format(self.search_table, ", ".join(cols), "no threshold" if threshold is None else "threshold = %s"%threshold))
+        msg = "Adding stats to " + self.search_table
+        if cols:
+            msg += "for " + ", ".join(cols)
+        if constraint:
+            from lmfdb.display_stats import range_formatter
+            msg += ": " + ", ".join("{col} = {disp}".format(col=col, disp=range_formatter(val)) for col, val in constraint.items())
+        if threshold:
+            msg += " (threshold=%s)" % threshold
+        self.logger.info(msg)
         having = SQL("")
         if threshold is not None:
             having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
@@ -3087,7 +3114,7 @@ class PostgresStatsTable(PostgresBase):
             else:
                 inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
-        self.logger.info("Added stats for %s in %.3f secs"%(", ".join(cols), time.time() - now))
+        self.logger.info("Added stats in %.3f secs"%(time.time() - now))
         return True
 
     def _approx_most_common(self, col, n):
@@ -3260,12 +3287,14 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         return ans
 
-    def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url):
+    def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url, buckets=None):
         """
         Utility function used in ``display_data``.
 
         Returns a list of pairs (value, count), where value is a list of values taken on by the specified
         columns and count is an integer giving the number of rows with those values.
+
+        If the relevant statistics are not available, it will compute and insert them.
 
         INPUT:
 
@@ -3286,27 +3315,53 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         positions = [allcols.index(x) for x in cols]
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         headers = [[] for _ in cols]
-        default_proportion = '      0.00' if len(cols) == 1 else ''
+        default_proportion = '      0.00%' if len(cols) == 1 else ''
         def make_count_dict(values, cnt):
             if isinstance(values, (list, tuple)):
-                query = base_url + '&'.join(query_formatter(val, col) for val, col in zip(values, cols))
+                query = base_url + '&'.join(query_formatter[col](val) for col, val in zip(cols, values))
             else:
-                query = base_url + query_formatter(values, cols[0])
+                query = base_url + query_formatter[cols[0]](values)
             return {'count': cnt,
                     'query': query,
                     'proportion': default_proportion, # will be overridden for nonzero cnts.
             }
         data = KeyedDefaultDict(lambda key: make_count_dict(key, 0))
+        if buckets:
+            buckets_seen = set()
+            bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
             for val, header in zip(values, headers):
                 header.append(val)
             D = make_count_dict(values, count)
             if len(cols) == 1:
-                values = formatter(values[0])
+                values = formatter[cols[0]](values[0])
             else:
-                values = tuple(formatter(val, col) for val, col in zip(values, cols))
+                values = tuple(formatter[col](val) for col, val in zip(cols, values))
             data[values] = D
+            if buckets:
+                buckets_seen.add(tuple(values[i] for i in bucket_positions))
+        # Ensure that we have all the statistics necessary
+        ok = True
+        if buckets == {}:
+            # Just check that the results are nonempty
+            if not data:
+                self.add_stats(cols, constraint, split_list=split_list)
+                ok = False
+        elif buckets:
+            # Make sure that every bucket is hit in data
+            bcols = set(col for col in cols if col in buckets)
+            ucols = [col for col in cols if col not in buckets]
+            for bucketed_constraint in self._bucket_iterator(buckets, constraint):
+                ccols, cvals = self._split_dict(bucketed_constraint)
+                cvals = tuple(formatter[cc](cv) for cc, cv in zip(ccols, cvals) if cc in bcols)
+                if cvals not in buckets_seen:
+                    logging.info("Adding statistics for %s with constraints %s" % (", ".join(cols), ", ".join("%s:%s" % (cc, cv) for cc, cv in zip(ccols, cvals))))
+                    self.add_stats(ucols, bucketed_constraint)
+                    ok = False
+        if not ok:
+            # Set buckets=False so we have no chance of infinite recursion
+            return self._get_values_counts(cols, constraint, split_list, formatter, query_formatter, base_url, buckets=False)
         if len(cols) == 1:
             return headers[0], data
         else:
@@ -3348,127 +3403,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             cur_avg = self._execute(totaler, values=totaler_values)
             avg = cur_avg.fetchone()[0]
         else:
-            avg = None
+            avg = False
         return total, avg
-
-    def display_data(self, cols, base_url, constraint=None, avg=None, formatter=None, buckets = {}, split_list=False, totaler=None, include_upper=True, query_formatter=None, sort_key=None, reverse=False, proportioner=None, url_extras=None, **kwds):
-        """
-        Returns statistics data in a common format that is used by page templates.
-
-        INPUT:
-
-        - ``cols`` -- a list of column names
-        - ``base_url`` -- a base url, to which col=value tags are appended.
-        - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
-        - ``avg`` -- whether to include the average value of cols[0]
-            (cols must be of length 1 with no bucketing)
-        - ``formatter`` -- a function applied to the tuple of values for display.  It should be injective.
-        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
-            The buckets are the values between these break points.  Repeating break points
-            makes one bucket consist of just that point.  Values of these columns
-            are grouped based on which bucket they fall into.
-        - ``split_list`` -- whether count entries from lists individually.  For example,
-            a column with value [2,4,8] would increment the count of 2, 4 and 8 rather than [2,4,8].
-        - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
-            Defaults to the number of rows in the table where the columns are non-null.
-                      -- (2d-case) a function taking inputs the grid, row headers, col headers
-                         and this object, which adds some totals to the grid
-        - ``include_upper`` -- For bucketing, whether to use intervals of the form A < x <= B (vs A <= x < B).
-        - ``query_formatter`` -- a function for encoding the values into the url.
-            Needs to accept both inputs and outputs from the formatter function.
-            When cols has length 2, takes the col as a second argument.
-        - ``sort_key`` -- a sort key for row/column headers (or a list of two such in the 2d case)
-        - ``reverse`` -- whether to sort in reverse order.
-        - ``proprotioner`` -- a function for adding proportions to a 2d grid.
-            See display_stats.py for examples.
-        - ``url_extras`` -- an optional string to add to the base_url after the ?
-        - ``kwds`` -- used to discard unused extraneous arguments.
-
-        OUTPUT:
-
-        A dictionary.
-
-        In the 1d case, it has one key, ``counts``, with value a list of dictionaries, each with four keys.
-        - ``value`` -- a tuple of values taken on by the given columns.
-        - ``count`` -- The number of rows with that tuple of values.
-        - ``query`` -- a url resulting in a list of entries with the given tuple of values.
-        - ``proportion`` -- the fraction of rows having this tuple of values, as a string formatted as a percentage.
-
-        In the 2d case, it has two keys, ``grid`` and ``col_headers``.  ``grid`` is a list of pairs, the first being a row header and the second being a list of dictionaries as above.  ``col_headers`` is a list of column headers.
-        """
-        if isinstance(cols, basestring):
-            cols = [cols]
-        if isinstance(buckets, list):
-            if len(cols) == 1:
-                buckets = {cols[0]: buckets}
-            else:
-                raise ValueError("Must specify keys for buckets")
-        if formatter is None:
-            if buckets:
-                formatter = range_formatter
-            else:
-                formatter = lambda x: x
-        if query_formatter is None:
-            def query_formatter(x, col):
-                F = formatter(x) if len(cols) == 1 else formatter(x, col)
-                return '{0}={1}'.format(col, F)
-        base_url = base_url + '?'
-        if url_extras:
-            base_url += url_extras
-
-        if len(cols) == 1:
-            col = cols[0]
-            headers, counts = self._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
-            if not buckets:
-                if avg or totaler is None:
-                    total, avg = self._get_total_avg(cols, constraint, avg, split_list)
-                headers = [formatter(val) for val in sorted(headers, key=sort_key, reverse=reverse)]
-            elif cols == buckets.keys():
-                if split_list or avg or sort_key:
-                    raise ValueError
-                headers = [formatter(bucket[col]) for bucket in self._split_buckets(buckets, None, include_upper)]
-                if totaler is None:
-                    total = sum(counts[bucket]['count'] for bucket in headers)
-            else:
-                raise ValueError("Bucket keys must be subset of columns")
-            if totaler is None:
-                overall = total
-            else:
-                overall = self.count(totaler)
-            counts = [counts[val] for val in headers]
-            for D, val in zip(counts, headers):
-                D['value'] = val
-                D['proportion'] = format_percentage(D['count'], overall)
-            if avg:
-                counts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%avg,
-                               'count':total,
-                               'query':"{0}?{1}".format(base_url, cols[0]),
-                               'proportion':format_percentage(total,overall)})
-            return {'counts': counts}
-        elif len(cols) == 2:
-            if split_list or avg:
-                raise ValueError
-            non_buckets = [col for col in cols if col not in buckets]
-            if len(buckets) + len(non_buckets) != 2:
-                raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = self._get_values_counts(cols, constraint, False, formatter=formatter, query_formatter=query_formatter, base_url=base_url)
-            for i, col in enumerate(cols):
-                if col in buckets:
-                    headers[i] = [formatter(bucket[col], col) for bucket in self._split_buckets({col:buckets[col]}, None, include_upper)]
-                else:
-                    sk = sort_key[i] if isinstance(sort_key, list) else sort_key
-                    rev = reverse[i] if isinstance(reverse, list) else reverse
-                    headers[i] = [formatter(val, col) for val in sorted(set(headers[i]), key=sk, reverse=rev)]
-            row_headers, col_headers = headers
-            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
-            if proportioner is not None:
-                proportioner(grid, row_headers, col_headers, self)
-            if totaler is not None:
-                totaler(grid, row_headers, col_headers, self)
-            return {'grid': zip(row_headers, grid), 'col_headers': col_headers}
-        else:
-            raise NotImplementedError
 
     def create_oldstats(self, filename):
         name = self.search_table + "_oldstats"
@@ -3646,23 +3582,15 @@ class PostgresDatabase(PostgresBase):
         field in the logging section of your config.ini file.
         """
         if self.__editor is None:
-            print "Please log in using your knowl username and password,"
-            print "so that we can associate database changes with individuals"
+            print "Please provide your knowl username,"
+            print "so that we can associate database changes with individuals."
+            print "Note that you can also do this by setting the editor field in the logging section of your config.ini file."
             uid = raw_input("Username: ")
-            pwd = getpass.getpass()
-            selecter = SQL("SELECT bcpassword FROM userdb.users WHERE username = %s")
+            selecter = SQL("SELECT username FROM userdb.users WHERE username = %s")
             cur = self._execute(selecter, [uid])
             if cur.rowcount == 0:
                 raise ValueError("That username not present in database!")
-            bcpass = cur.fetchone()[0]
-            from lmfdb.users.pwdmanager import userdb
-            if bcpass:
-                if bcpass == userdb.bchash(pwd, existing_hash = bcpass):
-                    self.__editor = uid
-                else:
-                    raise ValueError("Password invalid")
-            else:
-                raise ValueError("Old-style password: please log in to the website to update")
+            self.__editor = uid
         return self.__editor
 
     def log_db_change(self, operation, tablename=None, **data):
@@ -3959,12 +3887,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
             self.grant_select(name+"_stats")
+            self.grant_insert(name+"_stats")
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
             print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
+        self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
 
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):

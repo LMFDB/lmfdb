@@ -79,7 +79,7 @@ self_dual: true
 arithmetic: false
 ---
 first_zero: 2.32002097235490
-Lfunction_texname: $L(s,E, \mbox{Sym}^3)$
+Lfunction_texname: $L(s,E, \mathrm{Sym}^3)$
 gammaC: [$\frac32$, $\frac12$]
 level: 1331
 character: 1.1

@@ -3,7 +3,7 @@ This module provides functions for encoding data for storage in Postgres
 and decoding the results.
 """
 from psycopg2.extras import register_json, Json as pgJson
-from psycopg2.extensions import adapt, register_type, register_adapter, new_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
+from psycopg2.extensions import adapt, register_type, register_adapter, new_type, new_array_type, UNICODE, UNICODEARRAY, AsIs, ISQLQuote
 from sage.functions.other import ceil
 from sage.rings.real_mpfr import RealLiteral, RealField, RealNumber
 from sage.rings.complex_number import ComplexNumber
@@ -31,7 +31,11 @@ def setup_connection(conn):
     cur.execute("SELECT NULL::numeric")
     oid = cur.description[0][1]
     NUMERIC = new_type((oid,), "NUMERIC", numeric_converter)
+    cur.execute("SELECT NULL::numeric[]")
+    oid = cur.description[0][1]
+    NUMERICL = new_array_type((oid,), "NUMERIC[]", NUMERIC)
     register_type(NUMERIC, conn)
+    register_type(NUMERICL, conn)
     register_adapter(Integer, AsIs)
     register_adapter(RealNumber, RealEncoder)
     register_adapter(list, Json)
@@ -50,7 +54,7 @@ class LmfdbRealLiteral(RealLiteral):
     def __repr__(self):
         return self.literal
 
-def numeric_converter(value, cur):
+def numeric_converter(value, cur=None):
     """
     Used for converting numeric values from Postgres to Python.
 

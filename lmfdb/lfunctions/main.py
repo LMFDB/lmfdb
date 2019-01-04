@@ -853,7 +853,9 @@ def getLfunctionPlot(request, *args):
     plotrange = 30
     if hasattr(pythonL, 'plotpoints'):
         F = p2sage(pythonL.plotpoints)
-        plotrange = min(plotrange, F[-1][0]) #  F[-1][0] is the highest t-coordinated that we have a value for L
+        #  F[0][0] is the lowest t-coordinated that we have a value for L
+        #  F[-1][0] is the highest t-coordinated that we have a value for L
+        plotrange = min(plotrange, -F[0][0], F[-1][0]) 
         # aim to display at most 25 axis crossings
         if hasattr(pythonL, 'positive_zeros'):
             # we stored them ready to display
