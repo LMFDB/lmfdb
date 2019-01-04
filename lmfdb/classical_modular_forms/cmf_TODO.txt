@@ -14,7 +14,6 @@ IMPORTANT:
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000].
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000].
 * Compare trivial char data with Stein database (Drew)
-* Compare dihedral weight one data with Magma (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 
