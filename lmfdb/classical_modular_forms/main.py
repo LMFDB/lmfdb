@@ -443,7 +443,7 @@ class CMF_download(Downloader):
         dim = None
         qexp = []
         for an, trace_an in data:
-            if not an: # only traces left
+            if an is None: # only traces left
                 break
             if dim is None:
                 dim = len(an)
@@ -850,13 +850,19 @@ def set_rows_cols(info, query):
     """
     Sets weight_list and level_list, which are the row and column headers
     """
-    info['weight_list'] = integer_options(info['weight'], max_opts=100)
+    try:
+        info['weight_list'] = integer_options(info['weight'], max_opts=200)
+    except ValueError:
+        raise ValueError("Table too large: at most 200 options for weight")
     if 'odd_weight' in query:
         if query['odd_weight']:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
-    info['level_list'] = integer_options(info['level'], max_opts=2000)
+    try:
+        info['level_list'] = integer_options(info['level'], max_opts=2000)
+    except ValueError:
+        raise ValueError("Table too large: at most 2000 options for level")
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 10000 entries")
 
