@@ -22,7 +22,7 @@ IMPORTANT:
 * Update favorites lists (Drew)
 * Work on speed for dynamic stats, stretch buckets across two columns (David)
 * Merge RM/CM disc (Edgar)
-* Switch box for Analytic Conductor and Nk^2
+* Switch box for Analytic Conductor and Nk^2, fix this also in refining search spaces
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
