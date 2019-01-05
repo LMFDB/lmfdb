@@ -6,7 +6,7 @@
   </tr>
   <tr>
     <td></td>
-    <td>{{ KNOWL('stats.buckets', title='Buckets') }}</td>
+    <td colspan="2">{{ KNOWL('stats.buckets', title='Buckets') }}</td>
     <td>{{ KNOWL('stats.totals', title='Totals') }}</td>
     <td>{{ KNOWL('stats.proportions', title='Proportions') }}</td>
   </tr>
@@ -19,15 +19,15 @@
         {% endfor %}
       </select>
     </td>
-    <td>
-      <input id="buckets{{i}}" type='text' style="width: 140px" name='buckets{{i}}' value='{{ info.get_bucket(i) }}'>
+    <td colspan="2">
+      <input id="buckets{{i}}" type='text' style="width: 310px" name='buckets{{i}}' value='{{ info.get_bucket(i) }}'>
     </td>
     <td>
       <input name="totals{{i}}" value="yes" type='checkbox'{% if info.get_total(i) %} checked{% endif %}>
     </td>
     {% if i == 1 %}
     <td rowspan="2">
-      <select name="proportions">
+      <select name="proportions" style="width: 150px;">
         <option value="recurse"{% if info.proportions=='recurse' %} selected='yes'{% endif %}>Vs unconstrained</option>
         <option value="rows"{% if info.proportions=='rows' %} selected='yes'{% endif %}>By rows</option>
         <option value="cols"{% if info.proportions=='cols' %} selected='yes'{% endif %}>By columns</option>

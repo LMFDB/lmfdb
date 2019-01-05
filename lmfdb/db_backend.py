@@ -3034,9 +3034,13 @@ class PostgresStatsTable(PostgresBase):
             where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
         else:
             where = SQL("")
+        print "cols", cols
+        print "ccols", ccols
+        print "cvals", cvals
         if self._has_stats(cols, ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
+        print "Would have stats", self._has_stats(allcols, ccols, cvals, threshold, split_list)
         msg = "Adding stats to " + self.search_table
         if cols:
             msg += "for " + ", ".join(cols)
@@ -3359,6 +3363,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 self.add_stats(cols, constraint, split_list=split_list)
                 ok = False
         elif buckets:
+            print "BUCKETS SEEN", sorted(list(buckets_seen))
             # Make sure that every bucket is hit in data
             bcols = set(col for col in cols if col in buckets)
             ucols = [col for col in cols if col not in buckets]
@@ -3366,6 +3371,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 ccols, cvals = self._split_dict(bucketed_constraint)
                 cvals = tuple(formatter[cc](cv) for cc, cv in zip(ccols, cvals) if cc in bcols)
                 if cvals not in buckets_seen:
+                    print "MISSING", cvals
                     logging.info("Adding statistics for %s with constraints %s" % (", ".join(cols), ", ".join("%s:%s" % (cc, cv) for cc, cv in zip(ccols, cvals))))
                     self.add_stats(ucols, bucketed_constraint)
                     ok = False

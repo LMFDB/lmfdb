@@ -10,20 +10,27 @@ IMPORTANT:
 * Add traces and trace_display columns to mf_newspaces that will be a list of integer coefficients of the trace form for the space (sum of all newforms) -- this will be present both for spaces where we have the newforms and where we do not (at least whenever it is feasible to compute, we should easily be able to get to all spaces of level up to 1000).  Then add trace form display to newspace pages (Drew and David)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
- - Forms of weight 1 and level in [1001,4000].
- - Forms of weight \in [2, 15], trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000].
- - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000].
+ - Forms of weight 1 and level in [1001,4000] (ongoing at saint-germain)
+ - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
+    # [4001,10000]  ready for upload
+    # [10001,20000] (missing 44)
+    # [20001,40000] (ongoing @zeus.lmfdb.xyz)
+ - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Update favorites lists (Drew)
-* Work on speed for dynamic stats, stretch buckets across two columns (David)
-* Both dashes on self-dual and self-twist (David)
+* Work on speed for dynamic stats (David)
+* Merge RM/CM disc (self twist knowl) (Edgar)
+* Add box for Nk^2, move analytic rank to bottom
+* 4000- should be valid for analytic conductor
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* add a link to top of stats for dynamic
+* allow to customize from main stats
+* add constrains for the traces in dynamic stats
 * Add trace tables for newspaces once trace forms are present (David)
 * Add newspace portraits for all newspaces where we have the trace form (Drew)
 * code snippets for form and space pages in Sage and Pari.
@@ -76,6 +83,7 @@ FORMATTING:
 * Consider switching level and weight on browse and refine search input boxes
 
 IT WOULD BE NICE IF:
+* search on character degree?
 * it would be nice if, if hecke field is cyclotomic don't use \zeta_3
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
@@ -98,6 +106,7 @@ FUTURE WORK:
 * data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 * data: add data for is_twist_minimal
+* Improve modular form plots
 
 NOT CMF STUFF:
 * reset start with javascript
@@ -111,6 +120,7 @@ NOT CMF STUFF:
 * fix hmf and bmf l-functions
 * Shrink the sidebar with a button analogous to the properties shrinker
 * Related fields for dirichlet characters that are Kronecker symbols
+* Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
