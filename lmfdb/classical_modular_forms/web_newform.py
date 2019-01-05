@@ -283,21 +283,22 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
-        # fake it until you make it
-        # display L-functions from Artin
-        if self.weight == 1 and self.level > 1000:
-            res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
-        else:
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
-                res.append(('L-function ' + self.label, '/L' + nf_url))
-            if len(self.char_labels)*self.rel_dim > 50:
-                res = map(lambda elt : list(map(str, elt)), res)
-                # properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
-            if self.dim > 1:
-                for lfun_label in self.lfunction_labels:
-                    lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
-                    res.append(('L-function ' + lfun_label, lfun_url))
+        if self.Nk2 <= 4000:
+            if self.weight == 1 and self.level > 1000:
+                # fake it until you make it
+                # display L-functions from Artin
+                res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
+            else:
+                if db.lfunc_instances.exists({'url': nf_url[1:]}):
+                    res.append(('L-function ' + self.label, '/L' + nf_url))
+                if len(self.char_labels)*self.rel_dim > 50:
+                    res = map(lambda elt : list(map(str, elt)), res)
+                    # properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim)
+                    return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
+                if self.dim > 1:
+                    for lfun_label in self.lfunction_labels:
+                        lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
+                        res.append(('L-function ' + lfun_label, lfun_url))
 
         return res
 
