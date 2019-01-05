@@ -434,6 +434,8 @@ class CMF_download(Downloader):
                                    'betas = [a^i for i in range(len(poly_data))]',
                                    'S.<q> = PowerSeriesRing(K)',
                                    'return S([sum(c*beta for c, beta in zip(coeffs, betas)) for coeffs in data])']}
+    qexp_function_body_cyclo = {'sage': ['R.<x> = PolynomialRing(QQ)',
+                                         'f = R(poly_data)']} ## TODO
     qexp_dim1_function_body = {'sage': ['S.<q> = PowerSeriesRing(QQ)',
                                         'return S(data)']}
     def download_qexp(self, label, lang='sage'):
@@ -803,6 +805,7 @@ def newform_parse(info, query):
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
+             projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,

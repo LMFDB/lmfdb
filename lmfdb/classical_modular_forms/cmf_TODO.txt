@@ -18,6 +18,7 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Update favorites lists (Drew)
 * Work on speed for dynamic stats, stretch buckets across two columns (David)
+* Both dashes on self-dual and self-twist (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
