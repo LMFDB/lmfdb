@@ -243,6 +243,8 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
     if corner_count is None:
         corner_count = (row_counts and col_counts)
     def inner(grid, row_headers, col_headers, stats):
+        if not grid:
+            return
         num_cols = len(grid[0])
         recursive_prop = (stats._total_grid is not None)
         if corner_proportion is None:

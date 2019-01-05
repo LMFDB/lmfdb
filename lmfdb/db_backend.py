@@ -2921,11 +2921,21 @@ class PostgresStatsTable(PostgresBase):
             parse_singleton = pg_to_py[self.table.col_type[col]]
             cur_list = []
             for bucket in divisions:
-                if '-' in bucket:
-                    a, b = map(parse_singleton, bucket.split('-'))
-                    cur_list.append({col:{'$gte':a, '$lte':b}})
-                else:
+                if not bucket:
+                    continue
+                if bucket[-1] == '-':
+                    a = parse_singleton(bucket[:-1])
+                    cur_list.append({col:{'$gte':a}})
+                elif '-' not in bucket[1:]:
                     cur_list.append({col:parse_singleton(bucket)})
+                else:
+                    if bucket[0] == '-':
+                        L = bucket[1:].split('-')
+                        L[0] = '-' + L[0]
+                    else:
+                        L = bucket.split('-')
+                    a, b = map(parse_singleton, L)
+                    cur_list.append({col:{'$gte':a, '$lte':b}})
             expanded_buckets.append(cur_list)
         for X in cartesian_product_iterator(expanded_buckets):
             if constraint is None:

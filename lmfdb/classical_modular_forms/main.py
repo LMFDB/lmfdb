@@ -148,6 +148,7 @@ def set_info_funcs(info):
         return r'+'.join(terms)
     info['display_decomp'] = display_decomp
 
+    info['show_ALdims_col'] = lambda spaces: any('AL_dims' in space for space in spaces)
     def display_ALdims(space):
         al_dims = space.get('AL_dims')
         if al_dims:
@@ -860,11 +861,11 @@ def set_rows_cols(info, query):
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
     try:
-        info['level_list'] = integer_options(info['level'], max_opts=2000)
+        info['level_list'] = integer_options(info['level'], max_opts=1000)
     except ValueError:
-        raise ValueError("Table too large: at most 2000 options for level")
+        raise ValueError("Table too large: at most 1000 options for level")
     if len(info['weight_list']) * len(info['level_list']) > 10000:
-        raise ValueError("Table too large: must have at most 10000 entries")
+        raise ValueError("Table too large: must have at most 5000 entries")
 
 def has_data_nontriv(N, k):
     return N*k*k <= Nk2_bound(nontriv=True)
@@ -1094,7 +1095,7 @@ class CMF_stats(StatsDisplay):
         newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
         #stats_url = url_for(".statistics")
         self.short_summary = r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), ndim)
-        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound(), ndim)
+        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound(), ndim, url_for(".dynamic_statistics"))
 
     table = db.mf_newforms
     baseurl_func = ".index"

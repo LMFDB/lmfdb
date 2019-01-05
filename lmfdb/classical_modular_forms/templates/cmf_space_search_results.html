@@ -71,6 +71,7 @@
 
 {% include 'matches.html' %}
 {% if info.number %}
+{% set show_AL = info.show_ALdims_col(info.results) %}
 
 <table class="ntdata">
   <thead class="dark">
@@ -81,7 +82,9 @@
       <th class="center">{{ KNOWL('character.dirichlet.order', title='\(\operatorname{ord}(\chi)\)') }}</th>
       <th class="center">{{ KNOWL('mf.elliptic.display_dim', title='Dim.') }}</th>
       <th class="center">{{ KNOWL('mf.elliptic.dim_decomposition', title='Decomp.') }}</th>
+      {% if show_AL %}
       <th class="center">{{ KNOWL('mf.elliptic.atkin_lehner_dims', title='AL-dims.') }}</th>
+      {% endif %}
     </tr>
   </thead>
   <tbody>
@@ -93,7 +96,9 @@
       <td class="center"> \({{ space.char_order }}\) </td>
       <td class="center"> \({{ space.dim }}\) </td>
       <td class="nowrap center">{{ info.display_decomp(space) | safe}}</td>
+      {% if show_AL %}
       <td class="nowrap center">{{ info.display_ALdims(space) | safe}}</td>
+      {% endif %}
     </tr>
     {% endfor %}
   </tbody>
