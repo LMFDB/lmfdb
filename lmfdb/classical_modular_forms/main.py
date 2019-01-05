@@ -1200,5 +1200,5 @@ def dynamic_statistics():
     else:
         info = {}
     CMF_stats().dynamic_setup(info)
-    title = 'Cuspdial Newforms: Dynamic Statistics'
+    title = 'Cuspidal Newforms: Dynamic Statistics'
     return render_template("dynamic_stats.html", info=info, credit=credit(), title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
