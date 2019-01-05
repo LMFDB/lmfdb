@@ -5,7 +5,6 @@ CRITICAL (BUGS):
 * Update download q-expansion links to handle cyclotomic representation, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/3636.1.br.a. (Edgar)
 * Once the item above is addressed, update magma download links to also handle cyclotomic representation. (Edgar)
 * Include ap in the downloads, with a make_an snippet.  Afterward, check that http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/11.2.a.a has at least 1000 an. (Edgar)
-* do not display L-functions links (Edgar)
 
 IMPORTANT:
 * Add traces and trace_display columns to mf_newspaces that will be a list of integer coefficients of the trace form for the space (sum of all newforms) -- this will be present both for spaces where we have the newforms and where we do not (at least whenever it is feasible to compute, we should easily be able to get to all spaces of level up to 1000).  Then add trace form display to newspace pages (Drew and David)
