@@ -204,7 +204,7 @@ class WebNewform(object):
         # properties box
         self.properties = [('Label', self.label)]
         if self.plot is not None:
-            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', str(self.level)),
                             ('Weight', str(self.weight)),
