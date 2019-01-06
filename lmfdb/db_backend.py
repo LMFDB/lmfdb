@@ -3016,6 +3016,7 @@ class PostgresStatsTable(PostgresBase):
         values, ccols, cvals = [], None, None
         if constraint is None or constraint == (None, None):
             allcols = cols
+            constraint = None
         else:
             if isinstance(constraint, tuple):
                 # reconstruct constraint from ccols and cvals
