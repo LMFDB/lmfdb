@@ -309,7 +309,7 @@ class WebNewform(object):
         if self.hecke_cutters or self.has_exact_qexp:
             downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
         if self.has_exact_qexp:
-            downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
+            downloads.append(('Download q-expansion', url_for('.download_qexp', label=self.label)))
         downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
         if self.has_complex_qexp:
             downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
