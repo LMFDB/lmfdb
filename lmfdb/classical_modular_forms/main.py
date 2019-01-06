@@ -173,6 +173,7 @@ favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
                             ('163.3.b.a','Best q-expansion'),
                             ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
                             ('8.21.d.b','Large coefficient ring index'),
+                            ('3600.1.e.a','Many zeros in q-expansion'),
                             ('983.2.c.a','Large dimension'),
                             ('3997.1.cz.a','Largest projective image')]]
 favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
