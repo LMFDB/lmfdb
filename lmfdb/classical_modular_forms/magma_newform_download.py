@@ -118,7 +118,7 @@ def magma_newform_modfrm_heigs_code_string(prec, r, h, include_char=True):
         s += "    f_seq := [[1] cat [0 : i in [2..Degree(Kf)]]] cat f_seq;\n"
         s += "    f_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix(f_seq)),Kf);\n"
     s += "    f_lincom := Solution(S_basismat,f_vec);\n"
-    s += "    f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)];\n"
+    s += "    f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];\n"
     s += "    return f;\n"
     s += "end function;\n\n"
     return s
