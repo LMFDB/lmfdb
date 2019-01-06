@@ -20,9 +20,6 @@ IMPORTANT:
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Work on speed for dynamic stats (David)
-* Merge RM/CM disc (self twist knowl) (Edgar)
-* Add box for Nk^2, move analytic rank to bottom
-* 4000- should be valid for analytic conductor
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
