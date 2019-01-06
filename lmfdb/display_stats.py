@@ -473,6 +473,8 @@ class StatsDisplay(UniqueRepresentation):
                 buckets = {cols[0]: buckets}
             else:
                 raise ValueError("buckets should be a dictionary with columns as keys")
+        else:
+            buckets = {col: buckets[col] for col in cols if col in buckets}
         formatter = self._formatters
         query_formatter = self._query_formatters
         sort_key = self._sort_keys

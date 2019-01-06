@@ -157,8 +157,26 @@ def set_info_funcs(info):
     info['bigint_knowl'] = bigint_knowl
 
 
-favorite_newform_labels = ('1.12.a.a', '8.21.d.b', '11.2.a.a', '23.2.a.a', '39.1.d.a', '49.2.e.b', '95.6.a.a', '124.1.i.a', '148.1.f.a', '163.3.b.a', '633.1.m.b', '983.2.c.a')
-favorite_space_labels = ('20.5', '60.2', '55.3.d', '147.5.n', '148.4.q', '164.4.o', '244.4.w', '292.3.u', '847.2.f', '309.3.n', '356.3.n', '580.2.be')
+favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
+                            ('11.2.a.a','First weight 2 form'),
+                            ('39.1.d.a','First D2 form'),
+                            ('7.3.b.a','First CM-form with weight at least 2'),
+                            ('23.2.a.a','First trivial-character non-rational form'),
+                            ('1.12.a.a','Delta')],
+                           [('124.1.i.a','First non-dihedral weight 1 form'),
+                            ('148.1.f.a','First S4 form'),
+                            ('633.1.m.b','First A5 form'),
+                            ('163.3.b.a','Best q-expansion'),
+                            ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
+                            ('8.21.d.b','Large coefficient ring index'),
+                            ('3600.1.e.a','Many zeros in q-expansion'),
+                            ('983.2.c.a','Large dimension'),
+                            ('3997.1.cz.a','Largest projective image')]]
+favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
+                          ('3311.1.h', 'Most weight 1 forms'),
+                          ('1200.2.a', 'All forms rational'),
+                          ('9450.2.a','Most newforms'),
+                          ('4000.1.bf', 'Two large A5 forms')]]
 
 @cmf.route("/")
 def index():
@@ -185,8 +203,8 @@ def index():
             return newform_search(info)
         assert False
     info = {"stats": CMF_stats()}
-    info["newform_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_newform_labels ]
-    info["space_list"] = [ {'label':label,'url':url_for_label(label)} for label in favorite_space_labels ]
+    info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
+    info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
     info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
@@ -470,6 +488,7 @@ def common_parse(info, query):
             query['char_parity'] = -1
     parse_ints(info, query, 'level', name="Level")
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
+    parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
@@ -505,8 +524,7 @@ def newform_parse(info, query):
     parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_self_twist(info, query)
-    parse_subset(info, query, 'cm_discs', name="CM discriminant", parse_singleton=lambda d: parse_discriminant(d, -1))
-    parse_subset(info, query, 'rm_discs', name="RM discriminant", parse_singleton=lambda d: parse_discriminant(d, 1))
+    parse_subset(info, query, 'self_twist_discs', name="CM/RM discriminant", parse_singleton=lambda d: parse_discriminant(d))
     parse_bool(info, query, 'is_twist_minimal')
     parse_ints(info, query, 'inner_twist_count')
     parse_ints(info, query, 'analytic_rank')
@@ -526,6 +544,7 @@ def newform_parse(info, query):
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
+             projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,

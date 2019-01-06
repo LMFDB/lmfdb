@@ -3016,6 +3016,7 @@ class PostgresStatsTable(PostgresBase):
         values, ccols, cvals = [], None, None
         if constraint is None or constraint == (None, None):
             allcols = cols
+            constraint = None
         else:
             if isinstance(constraint, tuple):
                 # reconstruct constraint from ccols and cvals
@@ -3057,6 +3058,7 @@ class PostgresStatsTable(PostgresBase):
             vars = SQL("COUNT(*)")
             groupby = SQL("")
         now = time.time()
+        seen_one = False
         with DelayCommit(self, commit, silence=True):
             selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
             cur = self._execute(selecter, values)
@@ -3096,6 +3098,7 @@ class PostgresStatsTable(PostgresBase):
                 else:
                     to_add.append((allcols, allcolvals, count))
                     total += count
+                    seen_one = True
                 if onenumeric:
                     val = colvals[0]
                     avg += val * count
@@ -3103,14 +3106,14 @@ class PostgresStatsTable(PostgresBase):
                         mn = val
                     if mx is None or val > mx:
                         mx = val
-            if total == 0:
+            if not seen_one:
                 self.logger.info("No rows exceeded the threshold; returning after %.3f secs" % (time.time() - now))
                 return False
             if split_list:
                 stats = [(cols, "split_total", total, ccols, cvals, threshold)]
             else:
                 stats = [(cols, "total", total, ccols, cvals, threshold)]
-            if onenumeric:
+            if onenumeric and total != 0:
                 avg = float(avg) / total
                 stats.append((cols, "avg", avg, ccols, cvals, threshold))
                 stats.append((cols, "min", mn, ccols, cvals, threshold))
@@ -3346,11 +3349,13 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             D = make_count_dict(values, count)
             if len(cols) == 1:
                 values = formatter[cols[0]](values[0])
+                if buckets:
+                    buckets_seen.add((values,))
             else:
                 values = tuple(formatter[col](val) for col, val in zip(cols, values))
+                if buckets:
+                    buckets_seen.add(tuple(values[i] for i in bucket_positions))
             data[values] = D
-            if buckets:
-                buckets_seen.add(tuple(values[i] for i in bucket_positions))
         # Ensure that we have all the statistics necessary
         ok = True
         if buckets == {}:
@@ -3360,13 +3365,12 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 ok = False
         elif buckets:
             # Make sure that every bucket is hit in data
-            bcols = set(col for col in cols if col in buckets)
+            bcols = [col for col in cols if col in buckets]
             ucols = [col for col in cols if col not in buckets]
             for bucketed_constraint in self._bucket_iterator(buckets, constraint):
-                ccols, cvals = self._split_dict(bucketed_constraint)
-                cvals = tuple(formatter[cc](cv) for cc, cv in zip(ccols, cvals) if cc in bcols)
-                if cvals not in buckets_seen:
-                    logging.info("Adding statistics for %s with constraints %s" % (", ".join(cols), ", ".join("%s:%s" % (cc, cv) for cc, cv in zip(ccols, cvals))))
+                cseen = tuple(formatter[col](bucketed_constraint[col]) for col in bcols)
+                if cseen not in buckets_seen:
+                    logging.info("Adding statistics for %s with constraints %s" % (", ".join(cols), ", ".join("%s:%s" % (cc, cv) for cc, cv in bucketed_constraint.items())))
                     self.add_stats(ucols, bucketed_constraint)
                     ok = False
         if not ok:

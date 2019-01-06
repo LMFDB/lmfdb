@@ -5,7 +5,7 @@ from lmfdb.db_backend import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.characters.utils import url_character
-from lmfdb.utils import display_knowl
+from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
 from flask import url_for
 import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
@@ -211,6 +211,7 @@ class WebNewformSpace(object):
         ]
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
+        self.has_trace_form = (data.get('traces') is not None)
         # Work around search results not including None
         if data.get('num_forms') is None:
             self.num_forms = None
@@ -294,6 +295,10 @@ class WebNewformSpace(object):
 
     def ALdim_table(self):
         return ALdim_table(self.AL_dims, self.level, self.weight)
+
+    def trace_expansion(self, prec_max=10):
+        prec = min(len(self.traces)+1, prec_max)
+        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):

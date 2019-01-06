@@ -5,9 +5,9 @@ CRITICAL (BUGS):
 * Update download q-expansion links to handle cyclotomic representation, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/3636.1.br.a. (Edgar)
 * Once the item above is addressed, update magma download links to also handle cyclotomic representation. (Edgar)
 * Include ap in the downloads, with a make_an snippet.  Afterward, check that http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_qexp/11.2.a.a has at least 1000 an. (Edgar)
+* change references to mf.sturm_bound to use mf.elliptic.sturm_bound (and in general, we should be using mf.elliptic knowls unless the knowl really applies to modular forms in greater generality)
 
 IMPORTANT:
-* Add traces and trace_display columns to mf_newspaces that will be a list of integer coefficients of the trace form for the space (sum of all newforms) -- this will be present both for spaces where we have the newforms and where we do not (at least whenever it is feasible to compute, we should easily be able to get to all spaces of level up to 1000).  Then add trace form display to newspace pages (Drew and David)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight 1 and level in [1001,4000] (ongoing at saint-germain)
@@ -19,10 +19,6 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Update favorites lists (Drew)
-* Work on speed for dynamic stats, stretch buckets across two columns (David)
-* Merge RM/CM disc (Edgar)
-* Switch box for Analytic Conductor and Nk^2, fix this also in refining search spaces
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
@@ -109,6 +105,7 @@ FUTURE WORK:
 * data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 * data: add data for is_twist_minimal
+* Improve modular form plots
 
 NOT CMF STUFF:
 * reset start with javascript
@@ -122,6 +119,7 @@ NOT CMF STUFF:
 * fix hmf and bmf l-functions
 * Shrink the sidebar with a button analogous to the properties shrinker
 * Related fields for dirichlet characters that are Kronecker symbols
+* Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
