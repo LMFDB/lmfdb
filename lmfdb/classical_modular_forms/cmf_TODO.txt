@@ -45,6 +45,9 @@ FINAL CHECKS:
 * Add completeness table and metadata in order to make claims about provability
 * checklist is broken
 
+CRITICAL DB:
+* on a delete, if restat fails on a delete command it still commits the delete command
+
 KNOWL FEATURES: (March)
 * Revision history and reversion (all versions stored in kwl_knowls table)
 * Multiple versions for beta and prod (needs a review status column)

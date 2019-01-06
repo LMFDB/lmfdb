@@ -54,11 +54,37 @@ class Downloader(object):
                       'gp':['make_data() = ','{']}
     function_end = {'magma':['end function;'],
                     'gp':['}']}
+    none = {'gp': 'null', 'sage' : 'None', 'text' : 'NULL', 'magma' : 'False'}
     make_data_comment = {
         'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
         'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
         'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
     }
+
+    def to_lang(self, lang, inp, level = 0):
+        if inp is None:
+            return none[lang]
+        if isinstance(inp, str) or isinstance(inp, unicode):
+            return str(inp)
+        if level == 0:
+            start, end = self.start_and_end[lang]
+            sep = ',\n'
+        else:
+            start = self.delim_start[lang]
+            end = self.delim_end[lang]
+            sep = ','
+        try:
+            if level == 0:
+                return start + '\\\n' +  sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+            else:
+                return start + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+        except TypeError:
+            # not an iterable object
+            return str(inp)
+
+    def assign(self, lang, name, elt, level = 0):
+        return name + ' ' + self.assignment_defn[lang] + self.to_lang(lang, elt, level) + self.line_end[lang] + '\n'
+
     def display(self, column_values):
         return ', '.join(str(val) for val in column_values)
     def get(self, name, default=None):

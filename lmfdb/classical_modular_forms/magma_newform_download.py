@@ -53,12 +53,13 @@ def magma_newform_modsym_cutters_code_string(r,include_char=True):
     s += "end function;\n\n"
     return s
 
-def magma_newform_modfrm_heigs_code_string(r,h,v,include_char=True):
+def magma_newform_modfrm_heigs_code_string(prec, r, h, include_char=True):
     """
     Given a row r from mf_newforms containing columns
        label,level,weight,char_orbit_label,char_values
     and h a row from mf_hecke_nf containing columns
-       hecke_ring_numerators,hecke_ring_denominators
+       hecke_ring_numerators,hecke_ring_denominators,
+       hecke_ring_cyclotomic_generator
     and v a list whose nth entry is the entry an from the table mf_hecke_nf
     (consisting of a list of integers giving the Hecke eigenvalue 
     as a linear combination of the basis specified in the orbit table)
@@ -69,46 +70,58 @@ def magma_newform_modfrm_heigs_code_string(r,h,v,include_char=True):
     N = r.level
     k = r.weight
     o = r.char_orbit_label
-    fv = r.field_poly  
+    v = h['ap']
+    fv = r.field_poly
     Rf_powbasis = h['hecke_ring_power_basis']
+    m = h['hecke_ring_cyclotomic_generator']
     if not Rf_powbasis:
         Rf_num = str(h['hecke_ring_numerators']).replace("L","")
         Rf_den = str(h['hecke_ring_denominators']).replace("L","")
-    n = len(v) # q-expansion precision
 
     if include_char:
         s = magma_char_code_string(r)
     else:
         s = ""
-    
-    s += '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".\n'%(r.label.replace(".","_"))
+
+    s += '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".\n' % (r.label.replace(".","_"),)
     s += '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.\n'
-    s += "function MakeNewformModFrm_%s()\n"%(r.label.replace(".","_"))
-    s += "    chi := MakeCharacter_%d_%s();\n"%(N,o)
+    s += "function MakeNewformModFrm_%s(:prec:=%d)\n"%(r.label.replace(".","_"), prec)
+    s += "    prec := Min(prec, NextPrime(%d) - 1);\n" % h['maxp']
+    s += "    chi := MakeCharacter_%d_%s();\n" % (N, o)
     s += "    // SetVerbose(\"ModularForms\", true);\n"
     s += "    // SetVerbose(\"ModularSymbols\", true);\n"
-    s += "    Kf := NumberField(Polynomial(%s));\n"%(fv)   # Hecke field
-    s += '    if Degree(Kf) gt 1 then AssignNames(~Kf, ["nu"]); end if;\n'
-    s += "    S := CuspidalSubspace(ModularForms(chi,%d));\n"%(k)   
-          # weight 1 does not have NewSpace functionality, and anyway that 
-          # would be an extra possibly expensive linear algebra step
-    s += "    S := BaseChange(S, Kf);\n";
-    s += "    S_basismat := Matrix([AbsEltseq(g) : g in Basis(S,%d)]);\n"%(n)
-    s += "    S_basismat := ChangeRing(S_basismat,Kf);\n"
-    if Rf_powbasis:
-        s += "    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];\n"
+    if m > 0: # sparse generic representation
+        s += "    Kf := CyclotomicField(%d);\n" % m;
     else:
-        s += "    Rf_basisnums := ChangeUniverse(%s,Kf);\n"%(Rf_num)   
-        s += "    Rf_basisdens := %s;\n"%(Rf_den)
-        s += "    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];\n"    # Basis of Hecke ring
-    s += "    f_seq := %s;\n"%(v)
-    s += "    f_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix(f_seq)),Kf);\n"
+        s += "    Kf := NumberField(Polynomial(%s));\n" % (fv,)   # Hecke field
+    s += '    if Degree(Kf) gt 1 then AssignNames(~Kf, ["nu"]); end if;\n'
+    s += "    S := CuspidalSubspace(ModularForms(chi,%d));\n" % k
+          # weight 1 does not have NewSpace functionality, and anyway that
+          # would be an extra possibly expensive linear algebra step
+    s += "    S := BaseChange(S, Kf);\n"
+    s += "    primes := PrimesUpTo(prec);\n"
+    s += "    indexes := [ i + 1 : i in [1] cat primes];\n"
+    s += "    B := Basis(S, prec + 1);\n"
+    s += "    S_basismat := Matrix([AbsEltseq(g)[indexes]: g in B]);\n"
+    s += "    S_basismat := ChangeRing(S_basismat,Kf);\n"
+    s += "    f_seq_untruncated := %s;\n" % (v,)
+    s += "    f_seq := f_seq_untruncated[1..#primes];\n"
+    if m > 0:
+        s += "    f_vec := Vector([Kf!1] cat [ #ap eq 0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in ap]  : ap in f_seq]);\n"
+    else:
+        if Rf_powbasis:
+            s += "    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];\n"
+        else:
+            s += "    Rf_basisnums := ChangeUniverse(%s,Kf);\n"%(Rf_num)
+            s += "    Rf_basisdens := %s;\n"%(Rf_den)
+            s += "    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];\n"    # Basis of Hecke ring
+        s += "    f_seq := [[1] cat [0 : i in [2..Degree(Kf)]]] cat f_seq;\n"
+        s += "    f_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix(f_seq)),Kf);\n"
     s += "    f_lincom := Solution(S_basismat,f_vec);\n"
-    s += "    f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];\n"
+    s += "    f := &+[f_lincom[i]*B[i] : i in [1..#B]];\n"
     s += "    return f;\n"
     s += "end function;\n\n"
     return s
-    
 
 
 
