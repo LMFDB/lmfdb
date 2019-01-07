@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 * make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* change references to mf.sturm_bound to use mf.elliptic.sturm_bound (and in general, we should be using mf.elliptic knowls unless the knowl really applies to modular forms in greater generality)
 
 IMPORTANT:
 * Add download link for trace form to newspace pages
