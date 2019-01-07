@@ -191,6 +191,7 @@ class WebNewformSpace(object):
         # The following can be removed once we change the behavior of lucky to include Nones
         self.num_forms = data.get('num_forms')
         self.trace_bound = data.get('trace_bound')
+        self.has_trace_form = (data.get('traces') is not None)
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
@@ -217,7 +218,6 @@ class WebNewformSpace(object):
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
-        self.has_trace_form = (data.get('traces') is not None)
         # Work around search results not including None
         if data.get('num_forms') is None:
             self.num_forms = None
@@ -325,6 +325,7 @@ class WebGamma1Space(object):
         self.num_forms = data.get('num_forms')
         self.num_spaces = data.get('num_spaces')
         self.trace_bound = data.get('trace_bound')
+        self.has_trace_form = (data.get('traces') is not None)
         # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
@@ -459,3 +460,7 @@ class WebGamma1Space(object):
                 forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
                 ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], zip(forms[1:], dims[1:])))
         return ans
+
+    def trace_expansion(self, prec_max=10):
+        prec = min(len(self.traces)+1, prec_max)
+        return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
