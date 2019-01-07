@@ -829,15 +829,21 @@ class CMF_stats(StatsDisplay):
     Class for creating and displaying statistics for classical modular forms
     """
     def __init__(self):
-        nforms = comma(db.mf_newforms.count())
-        nspaces = comma(db.mf_newspaces.count({'num_forms':{'$exists':True}}))
-        ndim = comma(db.mf_hecke_cc.count())
-        weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
-        level_knowl = display_knowl('mf.elliptic.level', title='level')
-        newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
+        self.nforms = comma(db.mf_newforms.count())
+        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$exists':True}}))
+        self.ndim = comma(db.mf_hecke_cc.count())
+        self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
+        self.level_knowl = display_knowl('mf.elliptic.level', title='level')
+        self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
         #stats_url = url_for(".statistics")
-        self.short_summary = r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (nforms, newform_knowl, weight_knowl, level_knowl, Nk2_bound(), ndim)
-        self.summary = r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (nforms, newform_knowl, nspaces, weight_knowl, level_knowl, Nk2_bound(), ndim, url_for(".dynamic_statistics"))
+
+    @property
+    def short_summary(self):
+        return r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (self.nforms, self.newform_knowl, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim)
+
+    @property
+    def summary(self):
+        return r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
 
     table = db.mf_newforms
     baseurl_func = ".index"

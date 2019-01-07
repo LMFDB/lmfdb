@@ -214,7 +214,7 @@ class WebNewformSpace(object):
             ('Dimension',str(self.dim)),
         ]
         if self.num_forms is not None:
-            self.properties.append(('Num. newforms',str(self.num_forms)))
+            self.properties.append(('Newforms',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))

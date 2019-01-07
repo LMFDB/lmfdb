@@ -567,10 +567,11 @@ class StatsDisplay(UniqueRepresentation):
             top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        missing_knowl = any(knowl is None for text, knowl in top_title)
-        joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
-        attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
-                                        for title, knowl in top_title)
+        if not isinstance(top_title, basestring):
+            missing_knowl = any(knowl is None for text, knowl in top_title)
+            joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
+            attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
+                                            for title, knowl in top_title)
         attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
