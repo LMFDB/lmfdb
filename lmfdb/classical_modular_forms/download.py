@@ -344,9 +344,10 @@ class CMF_download(Downloader):
                     zero = lambda x: all(elt == 0 for elt in x)
                 for i, elt in enumerate(hecke_data['ap']):
                     if not zero(elt):
-                        prec = max(prec, nth_prime(i+1))
+                        prec = nth_prime(i+1)
                         break
-            if prec <= hecke_data['maxp']:
+
+            if prec > hecke_data['maxp']:
                 return abort(404, "Not enough eigenvalues to reconstruct form in Magma")
             outstr += magma_newform_modfrm_heigs_code_string(prec, form, hecke_data, include_char=False)
         return self._wrap(outstr,
