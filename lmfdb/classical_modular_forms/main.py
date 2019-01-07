@@ -173,6 +173,7 @@ favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
                             ('983.2.c.a','Large dimension'),
                             ('3997.1.cz.a','Largest projective image')]]
 favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
+                          ('23.10', 'Mile high 11s'),
                           ('3311.1.h', 'Most weight 1 forms'),
                           ('1200.2.a', 'All forms rational'),
                           ('9450.2.a','Most newforms'),
