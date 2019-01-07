@@ -25,7 +25,7 @@ FINAL CHECKS:
 -------------------------- Pull Request Line -------------------------------------------------
 * add a link to top of stats for dynamic
 * allow to customize from main stats
-* add constrains for the traces in dynamic stats
+* add constraints for the traces in dynamic stats
 * Add trace tables for newspaces once trace forms are present (David)
 * Add newspace portraits for all newspaces where we have the trace form (Drew)
 * code snippets for form and space pages in Sage and Pari.
