@@ -1,9 +1,10 @@
 CRITICAL (BUGS):
 * make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
+* fix bug in displayling lfunctions of wt1 forms of prime level > 2000
 
 IMPORTANT:
-* Add download link for trace form to newspace pages
+* Add download link for trace form to newspace pages (David)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight 1 and level in [1001,4000] (ongoing at saint-germain)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
