@@ -1,7 +1,7 @@
 CRITICAL (BUGS):
 * make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* fix bug in displayling lfunctions of wt1 forms of prime level > 2000
+* http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/4000/1/bf/b/ not displaying z-plot
 
 IMPORTANT:
 * Add download link for trace form to newspace pages (David)
