@@ -311,37 +311,32 @@ class CMF_download(Downloader):
             if not isinstance(data,dict):
                 return data
 
-            # figure out prec
-            # Using Sec 9.4 of Stein - Modular forms, a computational approach. 
-            # it is key to cast these ints to ZZ for the code below to work
-            level, weight, char_conductor = map(ZZ, [form.level, form.weight, form.char_conductor])
-            m = Gamma0(level).index()
-            if level.is_squarefree():
-                # Theorem 9.21 - Improved Sturm bound for cusp forms with square free level
-                i = len(level.prime_divisors())
-                prec = ((m*weight)/ (12 * 2**i)).floor()
-            elif level > 4:
-                # Theorem 9.22 - Improved Sturm bound for cusp forms without square free level
-                notI = ZZ(level/char_conductor).prime_divisors();
-                levelp = level.prime_divisors()
-                I = [p  for p in levelp if p not in notI]
-                i = len(I)
-                prec = max(((m*weight)/ (12 * 2**i)).floor(), max(I))
-            else:
-                # Theorem 9.19 - Generic Sturm bound for cusp forms
-                prec = (m*weight/12  - (m - 1)/level).floor()
 
-            # if the dim > 1, we need at least one ap != 0
-            # so we can pin down the form in terms of the Z basis
-            if hecke_data['hecke_ring_cyclotomic_generator'] > 0:
-                zero = lambda x: len(x) == 0
+            # figure out prec
+            if form.hecke_cutters:
+                prec  = max(elt[0] for elt in form.hecke_cutters)
             else:
-                zero = lambda x: all(elt == 0 for elt in x)
-            for i, elt in enumerate(hecke_data['ap']):
-                if not zero(elt):
-                    prec = max(prec, nth_prime(i+1))
-                    break
-            assert prec <= hecke_data['maxp']
+                # Using Sec 9.4 of Stein - Modular forms, a computational approach. 
+                # it is key to cast these ints to ZZ for the code below to work
+                level, weight, char_conductor = map(ZZ, [form.level, form.weight, form.char_conductor])
+                m = Gamma0(level).index()
+                if level.is_squarefree():
+                    # Theorem 9.21 - Improved Sturm bound for cusp forms with square free level
+                    i = len(level.prime_divisors())
+                    prec = ((m*weight)/ (12 * 2**i)).floor()
+                elif level > 4:
+                    # Theorem 9.22 - Improved Sturm bound for cusp forms without square free level
+                    notI = ZZ(level/char_conductor).prime_divisors();
+                    levelp = level.prime_divisors()
+                    I = [p  for p in levelp if p not in notI]
+                    i = len(I)
+                    prec = max(((m*weight)/ (12 * 2**i)).floor(), 0 if len(I) == 0 else max(I))
+                else:
+                    # Theorem 9.19 - Generic Sturm bound for cusp forms
+                    prec = (m*weight/12  - (m - 1)/level).floor()
+
+            if prec > hecke_data['maxp']:
+                return abort(404, "Not enough eigenvalues to reconstruct form in Magma")
             outstr += magma_newform_modfrm_heigs_code_string(prec, form, hecke_data, include_char=False)
         return self._wrap(outstr,
                           label,
