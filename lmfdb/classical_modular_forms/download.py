@@ -335,7 +335,18 @@ class CMF_download(Downloader):
                     # Theorem 9.19 - Generic Sturm bound for cusp forms
                     prec = (m*weight/12  - (m - 1)/level).floor()
 
-            if prec > hecke_data['maxp']:
+            if prec == 1:
+                # if the dim > 1, we need at least one ap != 0
+                # so we can pin down the form in terms of the Z basis
+                if hecke_data['hecke_ring_cyclotomic_generator'] > 0:
+                    zero = lambda x: len(x) == 0
+                else:
+                    zero = lambda x: all(elt == 0 for elt in x)
+                for i, elt in enumerate(hecke_data['ap']):
+                    if not zero(elt):
+                        prec = max(prec, nth_prime(i+1))
+                        break
+            if prec <= hecke_data['maxp']:
                 return abort(404, "Not enough eigenvalues to reconstruct form in Magma")
             outstr += magma_newform_modfrm_heigs_code_string(prec, form, hecke_data, include_char=False)
         return self._wrap(outstr,
