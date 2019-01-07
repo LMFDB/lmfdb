@@ -3,10 +3,9 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 
 IMPORTANT:
-* Add download link for trace form to newspace pages
+* Add download link for trace form to newspace pages (David)
 * Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
- - Forms of weight 1 and level in [1001,4000] (ongoing at saint-germain)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [4001,10000]  ready for upload
     # [10001,20000] (missing 44)
@@ -15,6 +14,15 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
+* Add weight 1 dims to space pages and full_gamma1 (David)
+* Add hecke cutter primes to space pages if not null (David)
+* Add num_forms to defining parameters and property box for spaces and gamma1, num_spaces for gamma1 (David)
+* Add sturm bound for gamma1 (David)
+* Show trace_bound for spaces and gamma1 (David)
+* Add dynamic character knowls; include orbit index for orbit label (David)
+* Add orbit index on character pages (David)
+* Use hecke cutter bound instead of Sturm bound in download code (Edgar)
+* Bug in Magma download for 6003.2.a.s (Edgar)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
