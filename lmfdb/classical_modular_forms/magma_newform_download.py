@@ -6,7 +6,6 @@ def magma_char_code_string(r):
     for r in magma using the default generators.
     """
     N = r.level
-    k = r.weight
     o = r.char_orbit_label
     cv = r.char_values
 
