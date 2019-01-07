@@ -14,11 +14,6 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Add weight 1 dims to space pages and full_gamma1 (David)
-* Add hecke cutter primes to space pages if not null (David)
-* Add num_forms to defining parameters and property box for spaces and gamma1, num_spaces for gamma1 (David)
-* Add sturm bound for gamma1 (David)
-* Show trace_bound for spaces and gamma1 (David)
 * Add dynamic character knowls; include orbit index for orbit label (David)
 * Add orbit index on character pages (David)
 * Use hecke cutter bound instead of Sturm bound in download code (Edgar)

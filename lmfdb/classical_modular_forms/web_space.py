@@ -187,6 +187,10 @@ class WebNewformSpace(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
+        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
+        # The following can be removed once we change the behavior of lucky to include Nones
+        self.num_forms = data.get('num_forms')
+        self.trace_bound = data.get('trace_bound')
         self.char_conrey = self.char_labels[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
@@ -207,8 +211,10 @@ class WebNewformSpace(object):
             ('Rep. character',r'\(%s\)'%self.char_conrey_str),
             ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
-            ('Sturm bound',str(self.sturm_bound)),
         ]
+        if self.num_forms is not None:
+            self.properties.append(('Num. newforms',str(self.num_forms)))
+        self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if data.get('trace_bound') is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
         self.has_trace_form = (data.get('traces') is not None)
@@ -300,32 +306,35 @@ class WebNewformSpace(object):
         prec = min(len(self.traces)+1, prec_max)
         return web_latex_split_on_pm(web_latex(coeff_to_power_series([0] + self.traces[:prec-1],prec=prec),enclose=False))
 
+    def hecke_cutter_display(self):
+        return ", ".join(r"\(%d\)" % p for p in self.hecke_cutter_primes)
+
 class WebGamma1Space(object):
     def __init__(self, level, weight):
-        self.level = level
-        self.weight = weight
+        data = db.mf_gamma1.lucky({'level':level,'weight':weight})
+        if data is None:
+            raise ValueError("Space not in database")
+        self.__dict__.update(data)
         self.odd_weight = bool(self.weight % 2)
-        self.label = '%s.%s'%(self.level, self.weight)
         if level == 1 or ZZ(level).is_prime():
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(level).factor()._latex_()
+        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
+        # The following can be removed once we change the behavior of lucky to include Nones
+        self.num_forms = data.get('num_forms')
+        self.num_spaces = data.get('num_spaces')
+        self.trace_bound = data.get('trace_bound')
         # by default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
-        if not newspaces:
-            # In small level, there can be no nontrivial spaces.  In this case, we include
-            # spaces with the wrong parity.
-            newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight}))
-            if not newspaces:
-                raise ValueError("Space not in database")
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
         self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
-        self.mf_dim = sum(space['mf_dim'] for space in newspaces)
-        self.eis_dim = sum(space['eis_dim'] for space in newspaces)
-        self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
-        self.eis_old_dim = self.eis_dim - self.eis_new_dim
-        self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
+        #self.mf_dim = sum(space['mf_dim'] for space in newspaces)
+        #self.eis_dim = sum(space['eis_dim'] for space in newspaces)
+        #self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
+        #self.eis_old_dim = self.eis_dim - self.eis_new_dim
+        #self.cusp_dim = sum(space['cusp_dim'] for space in newspaces)
         self.new_dim = sum(space['dim'] for space in newspaces)
         self.old_dim = sum((space['cusp_dim']-space['dim']) for space in newspaces)
         self.decomp = []
@@ -344,8 +353,13 @@ class WebGamma1Space(object):
         self.properties +=[
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
-            ('Dimension',str(self.new_dim)),
+            ('Dimension',str(self.new_dim))
         ]
+        if self.num_spaces is not None:
+            self.properties.append(('Nonzero newspaces',str(self.num_spaces)))
+        if self.num_forms is not None:
+            self.properties.append(('Newforms',str(self.num_forms)))
+        self.properties.append(('Sturm bound',str(self.sturm_bound)))
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]

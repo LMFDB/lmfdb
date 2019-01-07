@@ -17,6 +17,36 @@
     <td>=</td>
     <td>\( {{ space.weight }} \)</td>
   </tr>
+  {% if space.num_spaces is not none %}
+  <tr>
+    <td> Nonzero {{ KNOWL('mf.elliptic.newspace', title='newspaces') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \( {{ space.num_spaces }} \) </td>
+  </tr>
+  {% endif %}
+  {% if space.num_forms is not none %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.newform', title='Newforms') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \( {{ space.num_forms }} \) </td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.sturm_bound_gamma1', title='Sturm bound') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \({{ space.sturm_bound }}\) </td>
+  </tr>
+  {% if space.trace_bound is not none %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \({{ space.trace_bound }}\) </td>
+  </tr>
+  {% endif %}
 </table>
 
 <h2> Dimensions </h2>
@@ -43,6 +73,33 @@
     {% endfor %}
   </tbody>
 </table>
+
+{% if space.has_projective_image_types %}
+
+<p>The following table gives the dimensions of subspaces with specified {{KNOWL('mf.elliptic.projective_image', title='projective image type')}}.</p>
+
+<table class="ntdata">
+  <thead>
+    <tr class='dark'>
+      <th></th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(D_n\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_4\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(S_4\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_5\)')}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class='dark'>Dimension</th>
+      <td>{{ space.dihedral_dim }}</td>
+      <td>{{ space.a4_dim }}</td>
+      <td>{{ space.s4_dim }}</td>
+      <td>{{ space.a5_dim }}</td>
+    </tr>
+  </tbody>
+</table>
+
+{% endif %}
 
 {% if space.new_dim > 0 %}
 <h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>

@@ -32,24 +32,39 @@
   </tr>
   {% endif %}
   <tr>
-  <tr>
     <td> {{ KNOWL('character.dirichlet.value_field', title='Character field') }}: </td>
     <td></td>
     <td></td>
     <td> \(\Q{% if space.char_degree != 1 %}(\zeta_{ {{space.char_order}} }){% endif %}\) </td>
   </tr>
+  {% if space.num_forms is not none %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.newform', title='Newforms') }}: </td>
+    <td></td>
+    <td></td>
+    <td> \( {{ space.num_forms }} \) </td>
+  </tr>
+  {% endif %}
   <tr>
     <td> {{ KNOWL('mf.elliptic.sturm_bound', title='Sturm bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.sturm_bound }}\) </td>
   </tr>
-  {% if space.trace_bound %}
+  {% if space.trace_bound is not none%}
   <tr>
     <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.trace_bound }}\) </td>
+  </tr>
+  {% endif %}
+  {% if space.hecke_cutter_primes %}
+  <tr>
+    <td> {{ KNOWL('mf.elliptic.distinguishing_primes', title='Distinguishing \(T_p\)') }}: </td>
+    <td></td>
+    <td></td>
+    <td> {{ space.hecke_cutter_display() }} </td>
   </tr>
   {% endif %}
 </table>
@@ -88,6 +103,34 @@
     {% endfor %}
   </tbody>
 </table>
+
+
+{% if space.weight == 1 %}
+
+<p>The following table gives the dimensions of subspaces with specified {{KNOWL('mf.elliptic.projective_image', title='projective image type')}}.</p>
+
+<table class="ntdata">
+  <thead>
+    <tr class='dark'>
+      <th></th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(D_n\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_4\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(S_4\)')}}</th>
+      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_5\)')}}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class='dark'>Dimension</th>
+      <td>{{ space.dihedral_dim }}</td>
+      <td>{{ space.a4_dim }}</td>
+      <td>{{ space.s4_dim }}</td>
+      <td>{{ space.a5_dim }}</td>
+    </tr>
+  </tbody>
+</table>
+
+{% endif %}
 
 {% if space.trivial_character and space.level != 1  and space.dim > 0%}
 <p>The following table gives the dimensions of the cuspidal new subspaces with specified eigenvalues for the {{ KNOWL('mf.elliptic.atkin-lehner',title='Atkin-Lehner operators') }}{% if space.factored_level %} and the {{ KNOWL('mf.elliptic.fricke',title='Fricke involution') }}{% endif %}.</p>
