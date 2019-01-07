@@ -1,6 +1,7 @@
 CRITICAL (BUGS):
 * make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
+* fix bug in displayling lfunctions of wt1 forms of prime level > 2000
 
 IMPORTANT:
 * Add download link for trace form to newspace pages
