@@ -3868,9 +3868,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if (not hasid):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
-        search_columns = process_columns(search_columns, search_order)
+        processed_search_columns = process_columns(search_columns, search_order)
         with DelayCommit(self, commit, silence=True):
-            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
+            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(processed_search_columns))
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
