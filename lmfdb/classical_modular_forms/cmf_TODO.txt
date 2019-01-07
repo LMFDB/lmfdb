@@ -4,7 +4,6 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Add download link for trace form to newspace pages
-* Prove image types for all weight one forms (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight 1 and level in [1001,4000] (ongoing at saint-germain)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
