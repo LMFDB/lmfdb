@@ -284,7 +284,7 @@ class WebNewform(object):
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
         if self.Nk2 <= 4000:
-            if self.weight == 1 and self.level > 1000:
+            if self.weight == 1 and self.level > 3500:
                 # fake it until you make it
                 # display L-functions from Artin
                 res += [ ('L-function ' + name.split(' ')[-1], '/L' + url) for name, url in res if url.startswith('/ArtinRepresentation/') ]
