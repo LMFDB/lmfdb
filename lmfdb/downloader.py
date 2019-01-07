@@ -54,7 +54,7 @@ class Downloader(object):
                       'gp':['make_data() = ','{']}
     function_end = {'magma':['end function;'],
                     'gp':['}']}
-    none = {'gp': 'null', 'sage' : 'None', 'text' : 'NULL', 'magma' : 'False'}
+    none = {'gp': 'null', 'sage' : 'None', 'text' : 'NULL', 'magma' : '[]'}
     make_data_comment = {
         'magma': 'To create a list of {short_name}, type "{var_name}:= make_data();"',
         'sage':'To create a list of {short_name}, type "{var_name} = make_data()"',
