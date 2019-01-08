@@ -134,7 +134,7 @@ class CMF_download(Downloader):
             '        euler_factor = [1, -ap, p**(weight - 1) * char_values[p]]',
             '        foo = (1/PS(euler_factor)).padded_list(k)',
             '        for i in range(1, k):',
-            '            an[p**i] = foo[i]      ',
+            '            an[p**i] = foo[i]',
             'extend_multiplicatively(an)',
             'return PS(an)']
 

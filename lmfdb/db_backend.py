@@ -3078,6 +3078,7 @@ class PostgresStatsTable(PostgresBase):
             if split_list:
                 allcols = tuple(allcols)
             for countvec in cur:
+                seen_one = True
                 colvals, count = countvec[:-1], countvec[-1]
                 if constraint is None:
                     allcolvals = colvals
@@ -3098,7 +3099,6 @@ class PostgresStatsTable(PostgresBase):
                 else:
                     to_add.append((allcols, allcolvals, count))
                     total += count
-                    seen_one = True
                 if onenumeric:
                     val = colvals[0]
                     avg += val * count
@@ -3868,9 +3868,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if (not hasid):
                 allcols.insert(0, SQL("id bigint"))
             return allcols
-        search_columns = process_columns(search_columns, search_order)
+        processed_search_columns = process_columns(search_columns, search_order)
         with DelayCommit(self, commit, silence=True):
-            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(search_columns))
+            creator = SQL('CREATE TABLE {0} ({1})').format(Identifier(name), SQL(", ").join(processed_search_columns))
             self._execute(creator)
             self.grant_select(name)
             if extra_columns is not None:
