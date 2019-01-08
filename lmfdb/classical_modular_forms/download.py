@@ -20,7 +20,7 @@ class CMF_download(Downloader):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
         data = db.mf_hecke_nf.lucky({'label':label}, proj)
         if not data:
-            return abort(404, "Missing coefficient ring information for %s"%label)
+            return abort(404, "No q-expansion found for %s"%label)
         # Make up for db_backend currently deleting Nones
         for elt in proj:
             if elt not in data:
@@ -81,22 +81,25 @@ class CMF_download(Downloader):
             'convert_elt_to_field = lambda elt: K(elt)']
 
     field_and_convert_sage_powbasis = [
-            'R.<x> = PolynomialRing(QQ)',
+            'from sage.all import PolynomialRing, NumberField',
+            'R = PolynomialRing(QQ, "x")',
             'f = R(poly_data)',
-            'K.<a> = NumberField(f)',
-            'betas = [a^i for i in range(len(poly_data))]',
+            'K = NumberField(f, "a")',
+            'betas = [K.gens()[0]**i for i in range(len(poly_data))]',
             'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_generic = [
-            'R.<x> = PolynomialRing(QQ)',
+            'from sage.all import PolynomialRing, NumberField',
+            'R = PolynomialRing(QQ, "x")',
             'f = R(poly_data)',
-            'K.<a> = NumberField(f)',
+            'K = NumberField(f, "a")',
             'betas = [K([c/den for c in num]) for num, den in basis_data]',
             'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_sparse_cyclotomic = [
-            'K.<z> = CyclotomicField(poly_data)',
-            'convert_elt_to_field = lambda elt: sum(c * z**e for c,e in elt)']
+            'from sage.all import CyclotomicField',
+            'K = CyclotomicField(poly_data, "z")',
+            'convert_elt_to_field = lambda elt: sum(c * K.gens()[0]**e for c,e in elt)']
 
     convert_aps = ['# convert aps to K elements',
             'primes = primes_first_n(len(aps_data))',
@@ -121,7 +124,8 @@ class CMF_download(Downloader):
             'an = [0]*an_list_bound',
             'an[1] = 1',
             '',
-            'PS.<q> = PowerSeriesRing(K)',
+            'from sage.all import PowerSeriesRing',
+            'PS = PowerSeriesRing(K, "q")',
             'for p, ap in zip(primes, aps):',
             '    if p.divides(level):',
             '        an[p] = ap',
@@ -134,10 +138,11 @@ class CMF_download(Downloader):
             'extend_multiplicatively(an)',
             'return PS(an)']
 
-    qexp_dim1_function_body = {'sage': extend_multiplicatively_sage + field_and_convert_sage_dim1 + convert_aps + ['char_values = dict(zip(good_primes, [1]*len(good_primes)))'] + an_code_sage }
-    qexp_function_body_generic = {'sage': discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_powbasis = {'sage': discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_sparse_cyclotomic = {'sage': discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
+    header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
+    qexp_dim1_function_body = {'sage': header + extend_multiplicatively_sage + field_and_convert_sage_dim1 + convert_aps + ['char_values = dict(zip(good_primes, [1]*len(good_primes)))'] + an_code_sage }
+    qexp_function_body_generic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_powbasis = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_sparse_cyclotomic = {'sage': header +  discrete_log_sage + extend_multiplicatively_sage +  field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
         data = self._get_hecke_nf(label)
