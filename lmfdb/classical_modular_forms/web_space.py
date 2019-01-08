@@ -226,7 +226,10 @@ class WebNewformSpace(object):
         self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
 
         # Downloads
-        self.downloads = [('Download all stored data', url_for('.download_newspace', label=self.label))]
+        self.downloads = [
+            ('Download traces', url_for('cmf.download_space_trace', label=self.label)),
+            ('Download all stored data', url_for('.download_newspace', label=self.label)),
+        ]
 
         if self.char_labels[0] == 1:
             self.trivial_character = True
@@ -365,7 +368,10 @@ class WebGamma1Space(object):
             self.properties.append(('Trace bound',str(self.trace_bound)))
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
-        self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]
+        self.downloads = [
+            ('Download traces', url_for('cmf.download_space_trace', label=self.label)),
+            ('Download all stored data', url_for('cmf.download_full_space', label=self.label))
+        ]
         self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []
 

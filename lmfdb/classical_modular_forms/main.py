@@ -442,6 +442,10 @@ def download_newform(label):
 def download_newspace(label):
     return CMF_download().download_newspace(label)
 
+@cmf.route("/download_space_trace/<label>")
+def download_space_trace(label):
+    return CMF_download().download_space_trace(label)
+
 @cmf.route("/download_full_space/<label>")
 def download_full_space(label):
     return CMF_download().download_full_space(label)
@@ -832,7 +836,7 @@ class CMF_stats(StatsDisplay):
     """
     def __init__(self):
         self.nforms = comma(db.mf_newforms.count())
-        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$exists':True}}))
+        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
         self.ndim = comma(db.mf_hecke_cc.count())
         self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
         self.level_knowl = display_knowl('mf.elliptic.level', title='level')
