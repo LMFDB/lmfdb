@@ -15,12 +15,9 @@ IMPORTANT:
 * Add orbit index on character pages (David)
 * Use hecke cutter bound instead of Sturm bound in download code (Edgar)
 * Bug in Magma download for 6003.2.a.s (Edgar)
-* Add validate_header function for copy_from, reload, etc (David)
-* Add replace_from function (David)
 * Knowl on Artin image (what is OD_64 for 2601.1.p.a) (David)
-* Fix server error if you ask to display trace 1001 (David)
-* Fix download_traces so that it gets traces from mf_newforms (David)
 * There are forms with nontrivial character, N=42, k=10.  Breaks dimension_form_postprocess before change (David)
+
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
@@ -43,6 +40,8 @@ FINAL CHECKS:
 * Add completeness table and metadata in order to make claims about provability
 * checklist is broken
 * knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/
+* Add validate_header function for copy_from, reload, etc (David)
+* Add replace_from function to db_backend (David)
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command

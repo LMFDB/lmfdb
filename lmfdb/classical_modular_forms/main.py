@@ -442,10 +442,6 @@ def download_newform(label):
 def download_newspace(label):
     return CMF_download().download_newspace(label)
 
-@cmf.route("/download_space_trace/<label>")
-def download_space_trace(label):
-    return CMF_download().download_space_trace(label)
-
 @cmf.route("/download_full_space/<label>")
 def download_full_space(label):
     return CMF_download().download_full_space(label)
@@ -580,9 +576,6 @@ def trace_postprocess(res, info, query):
              learnmore=learnmore_list,
              credit=credit)
 def trace_search(info, query):
-    newform_parse(info, query)
-    parse_equality_constraints(info, query, 'an_constraints', qfield='traces', shift=-1)
-    set_info_funcs(info)
     ns = info['n'] = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
@@ -592,7 +585,14 @@ def trace_search(info, query):
         Trn = [n for n in Trn if n > 1 and ZZ(n).is_prime_power()]
     else:
         Trn = [n for n in Trn if n > 1]
+    if any(n > 1000 for n in Trn):
+        msg = "Cannot display traces above 1000; more may be available by downloading individual forms"
+        flash_error(msg)
+        raise ValueError(msg)
     info['Tr_n'] = Trn
+    newform_parse(info, query)
+    parse_equality_constraints(info, query, 'an_constraints', qfield='traces', shift=-1)
+    set_info_funcs(info)
 
 def set_rows_cols(info, query):
     """
@@ -849,7 +849,7 @@ class CMF_stats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
 
     table = db.mf_newforms
     baseurl_func = ".index"
