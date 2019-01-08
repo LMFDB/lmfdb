@@ -710,6 +710,7 @@ def dimension_form_search(info, query):
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'char_labels', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list,

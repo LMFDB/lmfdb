@@ -13,8 +13,6 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Add dynamic character knowls; include orbit index for orbit label (David)
 * Add orbit index on character pages (David)
-* Use hecke cutter bound instead of Sturm bound in download code (Edgar)
-* Bug in Magma download for 6003.2.a.s (Edgar)
 * Knowl on Artin image (what is OD_64 for 2601.1.p.a) (David)
 * There are forms with nontrivial character, N=42, k=10.  Breaks dimension_form_postprocess before change (David)
 
