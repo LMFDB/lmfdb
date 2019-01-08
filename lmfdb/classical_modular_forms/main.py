@@ -665,7 +665,8 @@ def dimension_form_postprocess(res, info, query):
     for form in res:
         N = form['level']
         k = form['weight']
-        dim_dict[N,k] += form['dim']
+        if hasdata(N,k):
+            dim_dict[N,k] += form['dim']
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
