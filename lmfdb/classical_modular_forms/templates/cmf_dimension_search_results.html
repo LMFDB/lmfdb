@@ -52,7 +52,7 @@
       <th class="left">{{k}}</th>
       {% for N in info.level_list %}
       <td>
-        {% if info.has_data(N, k) %}
+        {% if (N, k) in info.results %}
         {% if X=='S' and typ=='new' %}
         <a href="{{ info.url_generator(N, k) }}">{{ info.pick_table(info.results[N,k],X,typ) }}</a>
         {% else %}

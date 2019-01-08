@@ -29,19 +29,17 @@ class CMF_download(Downloader):
         return data
 
     def _get_traces(self, label):
-        try:
-            code = encode_hecke_orbit(label)
-        except ValueError:
+        if label.count('.') == 1:
+            traces = db.mf_gamma1.lookup(label, projection='traces')
+        elif label.count('.') == 2:
+            traces = db.mf_newspaces.lookup(label, projection='traces')
+        elif label.count('.') == 3:
+            traces = db.mf_newforms.lookup(label, projection='traces')
+        else:
             return abort(404, "Invalid label: %s"%label)
-        traces = db.mf_hecke_traces.search({'hecke_orbit_code':code}, ['n', 'trace_an'], sort=['n'])
-        if not traces:
-            return abort(404, "No form found for %s"%(label))
-        tr = []
-        for i, trace in enumerate(traces):
-            if trace['n'] != i+1:
-                return abort(404, "Database error (please report): %s missing a(%s)"%(label, i+1))
-            tr.append(trace['trace_an'])
-        return tr
+        if traces is None:
+            return abort(404, "Label not found: %s"%label)
+        return [0] + traces
 
     # Sage functions to generate everything
     discrete_log_sage = [
@@ -214,8 +212,7 @@ class CMF_download(Downloader):
         # to return errors
         if not isinstance(data,list):
             return data
-        qexp = [0] + data
-        return self._wrap(Json.dumps(qexp),
+        return self._wrap(Json.dumps(data),
                           label + '.traces',
                           lang=lang,
                           title='Trace form for %s,'%(label))
@@ -387,20 +384,6 @@ class CMF_download(Downloader):
                           label,
                           lang=lang,
                           title='Stored data for newspace %s,'%(label))
-
-    def download_space_trace(self, label, lang='text'):
-        if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection='traces')
-        elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection='traces')
-        else:
-            return abort(404, "Malformed label: %s"%label)
-        if traces is None:
-            return abort(404, "Label not found: %s"%label)
-        return self._wrap(Json.dumps([0] + traces),
-                          label + '.traces',
-                          lang=lang,
-                          title='Trace form for %s,'%(label))
 
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()
