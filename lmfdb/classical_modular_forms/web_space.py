@@ -361,7 +361,8 @@ class WebGamma1Space(object):
         if self.num_forms is not None:
             self.properties.append(('Newforms',str(self.num_forms)))
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
-        self.properties.append(('Trace bound',str(self.trace_bound)))
+        if self.trace_bound is not None:
+            self.properties.append(('Trace bound',str(self.trace_bound)))
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [('Download all stored data', url_for('cmf.download_full_space', label=self.label))]
