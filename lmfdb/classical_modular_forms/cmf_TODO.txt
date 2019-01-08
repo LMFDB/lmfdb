@@ -1,7 +1,5 @@
 CRITICAL (BUGS):
-* make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/4000/1/bf/b/ not displaying z-plot
 
 IMPORTANT:
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
