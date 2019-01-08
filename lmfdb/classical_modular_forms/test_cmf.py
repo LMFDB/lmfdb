@@ -19,9 +19,9 @@ class CmfTest(LmfdbTest):
         assert '?search_type=Dimensions&char_order=1' in data
         assert "./stats" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions",follow_redirects=True).data
-        assert r'<a href="/ModularForm/GL2/Q/holomorphic/19/5/">69</a>' in data
+        assert r'<a href="/ModularForm/GL2/Q/holomorphic/23/12/">229</a>' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&char_order=1", follow_redirects=True).data
-        assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">13</a>' in data
+        assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">1</a>' in data
 
     def test_stats(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/stats")
@@ -81,25 +81,32 @@ class CmfTest(LmfdbTest):
                         assert str(N)+'.'+str(k) in rv.data
 
     def test_favorite(self):
+        main_page = self.tc.get("/ModularForm/GL2/Q/holomorphic/").data
         from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
-        for elt in favorite_newform_labels:
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-            assert ("Newform %s" % elt) in page.data
-            # redirect to the same page
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-            assert ("Newform %s" % elt) in page.data
-        for elt in favorite_space_labels:
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-            assert elt in page.data
-            # redirect to the same page
-            assert "Space of Cuspidal Newforms of " in page.data
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-            assert elt in page.data
-            assert "Space of Cuspidal Newforms of " in page.data
+        for l in favorite_newform_labels:
+            for elt, desc in l:
+                elt in main_page
+                desc in main_page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert ("Newform %s" % elt) in page.data
+                # redirect to the same page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert ("Newform %s" % elt) in page.data
+        for l in favorite_space_labels:
+            for elt, desc in l:
+                elt in main_page
+                desc in main_page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert elt in page.data
+                # redirect to the same page
+                assert "Space of Cuspidal Newforms of " in page.data
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert elt in page.data
+                assert "Space of Cuspidal Newforms of " in page.data
 
-    def test_trace_hash(self):
+    def test_tracehash(self):
         for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a'],[0,'not found']]:
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=#%d" % t, follow_redirects=True)
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%%23%d" % t, follow_redirects=True)
             assert l in page.data
 
     def test_jump(self):
@@ -192,11 +199,14 @@ class CmfTest(LmfdbTest):
 
     def test_empty(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/2/a/")
-        assert 'The following table gives the dimensions of various   subspaces of \(M_{2}(\Gamma_0(2))\).' in page.data
+        assert 'The following table gives the dimensions of various' in page.data   
+        assert 'subspaces' in page.data
+        assert '\(M_{2}(\Gamma_0(2))\)' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/a/")
         assert 'weight is odd while the character is ' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/6/a/")
-        assert 'Decomposition</a> of \(S_{6}^{\mathrm{old}}(\Gamma_0(12))\) into   lower level spaces' in page.data
+        for elt in ['Decomposition', 'S_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
+            assert elt in page.data
 
 
     def test_not_in_db(self):
@@ -407,14 +417,40 @@ class CmfTest(LmfdbTest):
 
 
 
+    def test_download_qexp(self):
+        for label, exp in [
+                ['11.7.b.a'
+                    , '[0, 10, -64]'],
+                ['11.2.a.a'
+                    , '[-2, -1, 2]'],
+                ['21.2.g.a'
+                    , '[0, -a - 1, 2*a - 2]'],
+                ['59.2.a.a'
+                    , '[-a^4 + 7*a^2 + 3*a - 5, a^4 - a^3 - 6*a^2 + 2*a + 3, a^3 - a^2 - 4*a + 3]'],
+                ['13.2.e.a'
+                    , '[-a - 1, 2*a - 2, a]'],
+                ['340.1.ba.b'
+                    , '[z, 0, 0]'],
+                ['24.3.h.a'
+                    , '[-2, 3, 0]'],
+                ['24.3.h.c'
+                    , '[a, -a^2 - 3, 0]'],
+                ]:
+            sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).data
+            assert "make_data" in sage_code
+            assert "aps_data" in sage_code
+            sage_code += "\n\nout = str(make_data().list()[2:5])\n"
+            exec(sage_code, globals())
+            global out
+            assert str(out) == exp
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/887.2.a.b', follow_redirects=True)
+        assert 'No q-expansion found for 887.2.a.b' in page.data
+
     def test_download(self):
         r"""
         Test download function
         """
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/27.2.e.a', follow_redirects=True)
-        assert '[3, -27, 108, -258, 420, -504, 463, -330, 186, -80, 27, -6, 1]' in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/887.2.a.b', follow_redirects=True)
-        assert 'No q-expansion found for 887.2.a.b'
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
@@ -438,9 +474,50 @@ class CmfTest(LmfdbTest):
         assert "[7, 31, 35, 43, 51, 55, 59, 63, 67, 71, 79, 87, 91, 115, 139, 227]" in page.data
         assert "244.4.w" in page.data
 
-        # dim = 1
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/11.7.b.a')
-        assert "0, 1, 0, 10, 64, 74, 0, 0, 0, -629, 0, -1331, 640, 0, 0, 740, 4096, 0, 0, 0, 4736, 0, 0, -12670" in page.data
+
+    def test_download_magma(self):
+        from sage.all import magma_free
+        # test MakeNewformModFrm
+        for label, expected in [
+                ['11.2.a.a',
+                    'q - 2*q^2 - q^3 + 2*q^4 + q^5 + 2*q^6 - 2*q^7 - 2*q^9 - 2*q^10 + q^11 + O(q^12)'],
+                ['21.2.g.a',
+                    'q + (-nu - 1)*q^3 + (2*nu - 2)*q^4 + (-3*nu + 2)*q^7 + 3*nu*q^9 + O(q^12)'],
+                ['59.2.a.a',
+                    'q + (-nu^4 + 7*nu^2 + 3*nu - 5)*q^2 + (nu^4 - nu^3 - 6*nu^2 + 2*nu + 3)*q^3 + (nu^4 - 6*nu^2 - 4*nu + 3)*q^5 + (-3*nu^4 + 6*nu^3 + 13*nu^2 - 19*nu + 5)*q^6 + (nu^3 - 2*nu^2 - 4*nu + 6)*q^7 + (3*nu^4 - 6*nu^3 - 13*nu^2 + 19*nu - 7)*q^8 + (2*nu^4 - 3*nu^3 - 10*nu^2 + 8*nu - 1)*q^9 + (3*nu^4 - 4*nu^3 - 15*nu^2 + 9*nu - 1)*q^10 + (-4*nu^4 + 4*nu^3 + 22*nu^2 - 6*nu - 6)*q^11 + O(q^12)'],
+                ['13.2.e.a',
+                    'q + (-nu - 1)*q^2 + (2*nu - 2)*q^3 + nu*q^4 + (-2*nu + 1)*q^5 + (-2*nu + 4)*q^6 + (2*nu - 1)*q^8 - nu*q^9 + (3*nu - 3)*q^10 + O(q^12)'],
+                ['340.1.ba.b',
+                    'q + nu*q^2 - nu^3*q^5 + nu^3*q^8 + O(q^12)'],
+                ['24.3.h.a',
+                    'q - 2*q^2 + 3*q^3 + 2*q^5 - 12*q^8 - 3*q^9 - 8*q^10 - 12*q^11 + O(q^12)'],
+                ['24.3.h.c',
+                    'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + (nu^3 + 2*nu)*q^5 + (nu^3 + 3*nu)*q^7 + (-nu^3 + 4*nu^2 - 6*nu + 8)*q^8 + 1/2*(-5*nu^3 + 4*nu^2 - 22*nu + 6)*q^9 + (-2*nu^3 - 6*nu - 8)*q^10 + 1/2*(-5*nu^3 + 4*nu^2 - 12*nu + 8)*q^11 + O(q^12)'],
+                ]:
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
+            makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
+            assert makenewform  in page.data
+            magma_code = page.data + '\n' + '%s();\n' % makenewform
+            assert expected == magma_free(magma_code)
+
+        for label, expected in [['24.3.h.a',
+                    'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 1 over Rational Field'],
+                ['24.3.h.c',
+                    'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 4 over Rational Field'],
+                ['54.2.e.a',
+                    'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 1 over Cyclotomic Field of order 9 and degree 6'],
+                ['54.2.e.b',
+                    'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
+                    ]
+                ]:
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
+            makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
+            assert makenewform  in page.data
+            magma_code = page.data + '\n' + '%s();\n' % makenewform
+            assert expected == magma_free(magma_code)
+
+
+
 
 
 
@@ -598,7 +675,8 @@ class CmfTest(LmfdbTest):
         for elt in ['3.b','5.b','197.b','2955.c']:
             assert elt in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
-        assert "This newform does not admit any (nontrivial)" in page.data
+        assert "This newform does not admit any (" in page.data
+        assert "nontrivial" in page.data
         assert "inner twist" in page.data
 
 
@@ -612,19 +690,18 @@ class CmfTest(LmfdbTest):
 
 
     def test_selft_twist_disc(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-40&weight=1-6&cm_discs=-3&search_type=List')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-40&weight=1-6&self_twist_discs=-3&search_type=List')
         for elt in ['\Q(\sqrt{-39})','\Q(\sqrt{-3})']:
             assert elt in page.data
         assert 'Results (displaying all 22 matches)' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&rm_discs=5&search_type=List')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&self_twist_discs=5&search_type=List')
         for elt in [-55,-11,5,-5,-1,-95,-19]:
             assert ('\Q(\sqrt{%d})' % elt) in page.data
         assert 'Results (displaying all 3 matches)' in page.data
         for d in [3,-5]:
-            for m in ['rm','cm']:
-                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&%s_discs=%d&search_type=List' % (m, d))
-                assert 'is not a valid input for' in page.data
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&self_twist_discs=%d&search_type=List' % d)
+            assert 'is not a valid input for' in page.data
 
 
     def test_projective(self):
