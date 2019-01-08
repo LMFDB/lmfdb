@@ -3078,6 +3078,7 @@ class PostgresStatsTable(PostgresBase):
             if split_list:
                 allcols = tuple(allcols)
             for countvec in cur:
+                seen_one = True
                 colvals, count = countvec[:-1], countvec[-1]
                 if constraint is None:
                     allcolvals = colvals
@@ -3098,7 +3099,6 @@ class PostgresStatsTable(PostgresBase):
                 else:
                     to_add.append((allcols, allcolvals, count))
                     total += count
-                    seen_one = True
                 if onenumeric:
                     val = colvals[0]
                     avg += val * count

@@ -26,6 +26,7 @@ IMPORTANT:
 * Fix server error if you ask to display trace 1001 (David)
 * Fix download_traces so that it gets traces from mf_newforms (David)
 * Fix stats (David)
+* There are forms with nontrivial character, N=42, k=10.  Breaks dimension_form_postprocess before change (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
