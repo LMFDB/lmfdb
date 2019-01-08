@@ -614,20 +614,26 @@ def set_rows_cols(info, query):
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 5000 entries")
 
+def has_data_nontriv(N, k):
+    return N*k*k <= Nk2_bound(nontriv=True)
+def has_data(N, k):
+    return N*k*k <= Nk2_bound()
+def has_data_mixed(N, k):
+    if k == 1:
+        return N <= Nk2_bound(nontriv=True)
+    else:
+        return has_data(N, k)
+
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
-    dim_dict = defaultdict(DimGrid)
-    maxNk2 = 0
+    hasdata = has_data_mixed
+    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for space in res:
         dims = DimGrid.from_db(space)
         N = space['level']
         k = space['weight']
-        maxNk2 = max(maxNk2, N*k*k)
-        dim_dict[N,k] += dims
-    for N in info['level_list']:
-        for k in info['weight_list']:
-            if N*k*k <= maxNk2 and (N,k) not in dim_dict:
-                dim_dict[N,k] = DimGrid()
+        if hasdata(N, k):
+            dim_dict[N,k] += dims
     if query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
@@ -647,6 +653,7 @@ def dimension_space_postprocess(res, info, query):
     info['one_type'] = False
     info['switch_text'] = switch_text
     info['url_generator'] = url_generator
+    info['has_data'] = hasdata
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
@@ -654,17 +661,16 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     set_rows_cols(info, query)
-    dim_dict = defaultdict(int)
-    maxNk2 = 0
+    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
+        hasdata = has_data
+    else:
+        hasdata = has_data_nontriv
+    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for form in res:
         N = form['level']
         k = form['weight']
-        maxNk2 = max(maxNk2, N*k*k)
-        dim_dict[N,k] += form['dim']
-    for N in info['level_list']:
-        for k in info['weight_list']:
-            if N*k*k <= maxNk2 and (N,k) not in dim_dict:
-                dim_dict[N,k] = 0
+        if hasdata(N,k):
+            dim_dict[N,k] += form['dim']
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
@@ -679,6 +685,7 @@ def dimension_form_postprocess(res, info, query):
     info['newness_types'] = ['new']
     info['one_type'] = True
     info['url_generator'] = url_generator
+    info['has_data'] = hasdata
     return dim_dict
 
 @search_wrap(template="cmf_dimension_search_results.html",
