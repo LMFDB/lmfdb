@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * make all tests pass (Edgar)
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/4000/1/bf/b/ not displaying z-plot
+* fix broken stats: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/stats
 
 IMPORTANT:
 * Add download link for trace form to newspace pages (David)
