@@ -12,6 +12,7 @@ from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
     display_knowl, factor_base_factorization_latex
 from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
+from lmfdb.transitive_group import small_group_label_display_knowl
 from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
@@ -256,10 +257,6 @@ class WebNewform(object):
 
 
     @property
-    def char_conrey_link(self):
-        return url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
-
-    @property
     def lfunction_labels(self):
         base_label = self.label.split('.')
         res = []
@@ -445,6 +442,9 @@ class WebNewform(object):
             pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
             return pretty if pretty else self.artin_image
         return None
+
+    def artin_image_knowl(self):
+        return small_group_label_display_knowl(self.artin_image)
 
     def rm_and_cm_field_knowl(self, sign=1):
         if self.self_twist_discs:
@@ -778,6 +778,19 @@ function switch_basis(btype) {
             # sum of powers of zeta_m
             zeta = self._PrintRing.gen(0)
             return sum(c * zeta**e for c,e in data)
+
+    @property
+    def char_conrey_link(self):
+        return '<a href="%s">%s.%s</a>' % (url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label), self.level, self.char_orbit_label)
+
+    def display_character(self):
+        if self.char_order == 1:
+            ord_deg = " (trivial)"
+        else:
+            ord_knowl = display_knowl('character.dirichlet.order', title='order')
+            deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
+            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
+        return self.char_conrey_link + ord_deg
 
     def display_character_values(self):
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']

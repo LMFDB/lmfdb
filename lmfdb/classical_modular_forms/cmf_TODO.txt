@@ -15,9 +15,6 @@ IMPORTANT:
 * Add orbit index on character pages (David)
 * Use hecke cutter bound instead of Sturm bound in download code (Edgar)
 * Bug in Magma download for 6003.2.a.s (Edgar)
-* Knowl on Artin image (what is OD_64 for 2601.1.p.a) (David)
-* There are forms with nontrivial character, N=42, k=10.  Breaks dimension_form_postprocess before change (David)
-
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
