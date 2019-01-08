@@ -388,6 +388,20 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newspace %s,'%(label))
 
+    def download_space_trace(self, label, lang='text'):
+        if label.count('.') == 1:
+            traces = db.mf_gamma1.lookup(label, projection='traces')
+        elif label.count('.') == 2:
+            traces = db.mf_newspaces.lookup(label, projection='traces')
+        else:
+            return abort(404, "Malformed label: %s"%label)
+        if traces is None:
+            return abort(404, "Label not found: %s"%label)
+        return self._wrap(Json.dumps([0] + traces),
+                          label + '.traces',
+                          lang=lang,
+                          title='Trace form for %s,'%(label))
+
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
