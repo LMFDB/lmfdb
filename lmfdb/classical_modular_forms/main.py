@@ -849,7 +849,7 @@ class CMF_stats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
 
     table = db.mf_newforms
     baseurl_func = ".index"
