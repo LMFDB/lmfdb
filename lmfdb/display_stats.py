@@ -243,6 +243,8 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
     if corner_count is None:
         corner_count = (row_counts and col_counts)
     def inner(grid, row_headers, col_headers, stats):
+        if not grid:
+            return
         num_cols = len(grid[0])
         recursive_prop = (stats._total_grid is not None)
         if corner_proportion is None:
@@ -471,6 +473,8 @@ class StatsDisplay(UniqueRepresentation):
                 buckets = {cols[0]: buckets}
             else:
                 raise ValueError("buckets should be a dictionary with columns as keys")
+        else:
+            buckets = {col: buckets[col] for col in cols if col in buckets}
         formatter = self._formatters
         query_formatter = self._query_formatters
         sort_key = self._sort_keys
@@ -563,10 +567,11 @@ class StatsDisplay(UniqueRepresentation):
             top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
         else:
             top_title = attr['top_title']
-        missing_knowl = any(knowl is None for text, knowl in top_title)
-        joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
-        attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
-                                        for title, knowl in top_title)
+        if not isinstance(top_title, basestring):
+            missing_knowl = any(knowl is None for text, knowl in top_title)
+            joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
+            attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
+                                            for title, knowl in top_title)
         attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])

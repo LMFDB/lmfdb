@@ -176,12 +176,19 @@ def makeLfromdata(L):
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
     L.bad_lfactors = data.get('bad_lfactors', None)
+
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
         pairtoCDF = lambda x: CDF(tuple(x))
         pairtoCDF = lambda x: CDF(*tuple(x))
         L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
         L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
+
+    # add missing bad factors
+    known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
+    for p in sorted([elt[0] for elt in L.level_factored]):
+        if p not in known_bad_lfactors:
+            L.bad_lfactors.append([p, [1, None]])
 
 
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that

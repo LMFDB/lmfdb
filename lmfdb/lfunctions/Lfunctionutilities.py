@@ -416,7 +416,7 @@ def lfuncEPhtml(L,fmt, prec = None):
         display_galois = False
     elif L.coefficient_field == "CDF":
         display_galois = False
-    elif any(None in elt for elt in L.localfactors):
+    elif all(None in elt for elt in (L.localfactors + L.bad_lfactors)):
         display_galois = False
 
     def pretty_poly(poly, prec = None):
@@ -444,6 +444,7 @@ def lfuncEPhtml(L,fmt, prec = None):
         try:
             if L.coefficient_field == "CDF" or None in poly:
                 factors = str(pretty_poly(poly, prec = prec))
+                gal_groups = [[0,0]]
             elif not display_galois:
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:

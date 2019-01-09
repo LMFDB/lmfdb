@@ -10,10 +10,6 @@ Info was: {{info}}
 {% endif %}
 
 <div>
-{{ KNOWL_INC('dq.mf.elliptic.extent') }}
-</div>
-
-<div>
 {{ info.stats.short_summary | safe }}
 </div>
 
@@ -39,19 +35,27 @@ Info was: {{info}}
   As a <a href="?search_type=Spaces&dim=1-">list</a> of {{ KNOWL('mf.elliptic.newspaces', title='spaces of newforms') }}</a>
 </p>
 
+{% for sublist in info.newform_list %}
 <p>
+  {% if loop.index == 1 %}
   Some interesting newforms:
-  {% for newform in info.newform_list %}
-  <a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
+  {% endif %}
+  {% for newform in sublist %}
+  <a href="{{ newform.url }}" title="{{ newform.reason }}"> {{ newform.label}} </a>&nbsp;
   {% endfor %}
 </p>
+{% endfor %}
 
+{% for sublist in info.space_list %}
 <p>
+  {% if loop.index == 1 %}
   Some interesting spaces:
-  {% for space in info.space_list %}
-  <a href = "{{ space.url }}"> {{ space.label}} </a>&nbsp;
+  {% endif %}
+  {% for space in sublist %}
+  <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
   {% endfor %}
 </p>
+{% endfor %}
 
 <p>
   A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
@@ -142,16 +146,16 @@ Info was: {{info}}
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
-      <td><input type='text' style="width: 130px;" name='analytic_conductor' placeholder='47'></td>
-      <td><span class="formexample"> e.g. 47, 500-1000</span></td>
-      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
-      <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
-      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+      <td><input type='text' style="width: 130px;" name='analytic_conductor' placeholder='40-100'></td>
+      <td><span class="formexample"> e.g. 40-100</span></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
+      <td><input type='text' style="width: 130px;" name='Nk2' placeholder='40-100'></td>
+      <td><span class="formexample"> e.g. 40-100</span></td>
     </tr>
 
     <tr>
-      <td colspan=2 rowspan=2 >{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
-      <td rowspan=2 >
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
+      <td>
         <select name='has_self_twist' style="width: 140px;">
           {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
           {% for val, text in self_twist_values %}
@@ -159,16 +163,10 @@ Info was: {{info}}
           {% endfor %}
         </select>
       </td>
-      <td rowspan=2>
-      </td>
-      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='cm_discs' placeholder='-3'></td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM/RM discriminant')}}</td>
+      <td><input type='text' style="width: 130px;" name='self_twist_discs' placeholder='-3'></td>
       <td><span class="formexample"> e.g. -3 </span></td>
-    </tr>
-    <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='RM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='rm_discs' placeholder='5'></td>
-      <td><span class="formexample"> e.g. 5 </span></td>
     </tr>
 
     <tr>
@@ -187,7 +185,7 @@ Info was: {{info}}
         <input type='text' style="width: 130px;" name='inner_twist_count' placeholder='1-'></td>
       </td>
       <td><span class="formexample"> e.g. 0, 1-, 2-3</span></td>
-      <td colspan=2>{{ KNOWL('lfunction.self-dual', title='Is self dual') }}</td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.selfdual', title='Is self-dual') }}</td>
       <td>
         <select name='is_self_dual' style="width: 140px;">
           {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
@@ -201,6 +199,10 @@ Info was: {{info}}
     <tr>
       <td align=left colspan=2>Newforms to display</td>
       <td><input type='text' style="width: 130px;" name='count' value=50></td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
+      <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
     </tr>
   </table>
   <p>

@@ -677,7 +677,7 @@ def bigint_knowl(n, cutoff=16, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(n, short)
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="\(%s\)">\(%s\)</a>'%(n, short)
     else:
         return r'\(%s\)'%n
 

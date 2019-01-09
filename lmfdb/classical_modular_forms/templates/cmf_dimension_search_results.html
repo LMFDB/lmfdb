@@ -74,9 +74,7 @@
 {% endfor %}
 {% if has_na %}
 <p>
-<small>
-  "n/a" means that modular forms of that weight and level have not been added to the database yet.
-</small>
+  {{ info.na_msg }}
 </p>
 {% endif %}
 

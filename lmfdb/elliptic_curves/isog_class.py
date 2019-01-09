@@ -103,7 +103,7 @@ class ECisog_class(object):
                            ]
 
 
-        self.downloads = [('Download coefficients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
+        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:

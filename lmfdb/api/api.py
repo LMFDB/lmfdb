@@ -65,7 +65,7 @@ def full_index():
 @api_page.route("/stats")
 def stats():
     def mb(x):
-        return int(round(x/1000000.0))
+        return int(round(x/2**20.))
     info={}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()

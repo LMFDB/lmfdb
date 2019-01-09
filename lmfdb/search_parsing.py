@@ -6,7 +6,7 @@ import re
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
-LIST_FLOAT_RE = re.compile(r'^({0}|{0}-{0})(,({0}|{0}-{0}))*$'.format(FLOAT_STR))
+LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -286,19 +286,25 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
         raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_floats(inp, query, qfield):
+def parse_floats(inp, query, qfield, allow_singletons=False):
     parse_endpoint = float
-    def parse_singleton(a):
-        if isinstance(a, basestring) and '.' in a:
-            prec = len(a) - a.find('.') - 1
-        else:
-            prec = 0
-        a = float(a)
-        return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
+    if allow_singletons:
+        msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
+        def parse_singleton(a):
+            if isinstance(a, basestring) and '.' in a:
+                prec = len(a) - a.find('.') - 1
+            else:
+                prec = 0
+            a = float(a)
+            return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
+    else:
+        msg = "It must be a range of floats (such as 2.1-8.7) or a comma-separated list of these (such as 4-25.1, 81-121)."
+        def parse_singleton(a):
+            raise ValueError(msg)
     if LIST_FLOAT_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton, parse_endpoint), query)
     else:
-        raise ValueError("It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121).")
+        raise ValueError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):

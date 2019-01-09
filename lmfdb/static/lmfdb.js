@@ -168,16 +168,17 @@ function knowl_click_handler($el) {
       // and deduce margins and borders
       var margins_and_borders = 2*table_border_knowl_width + parseInt(td_tag.css('padding-left')) + parseInt(td_tag.css('padding-right'))
       var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - margins_and_borders;
-      
+
       log("max_width: " + max_width);
-      var style_wrapwidth = "style='max-width: " + max_width+"px; white-space: normal;'";
+      var style_wrapwidth = "style='max-width: " + max_width + "px; white-space: normal;'";
 
       //max rowspan of this row
-      var max_rowspan = Array.from(td_tag.siblings()).reduce((acc, td) => Math.max(acc, td.rowSpan), 0)
+      var max_rowspan = Array.from(tr_tag.children()).reduce((acc, td) => Math.max(acc, td.rowSpan), 0)
       log("max_rowspan: " + max_rowspan);
-  
+
       //compute max number of columns in the table
-      var cols = Array.from(tr_tag.siblings()).reduce((acc, tr) => Math.max(acc, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)),0)
+      var cols = Array.from(tr_tag.children()).reduce((acc, td) => acc + td.colSpan, 0)
+      cols = Array.from(tr_tag.siblings()).reduce((ac, tr) => Math.max(ac, Array.from(tr.children).reduce((acc, td) => acc + td.colSpan, 0)), cols);
       log("cols: " + cols);
       for (var i = 0; i < max_rowspan-1; i++)
         tr_tag = tr_tag.next();
@@ -189,7 +190,7 @@ function knowl_click_handler($el) {
       $el.parent().after("<div class='knowl-output'" +idtag+ ">loading '"+knowl_id+"' …</div>");
     }
 
-    // "select" where the output is and get a hold of it 
+    // "select" where the output is and get a hold of it
     var $output = $(output_id);
     var kwargs = $el.attr("kwargs");
 
