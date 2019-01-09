@@ -623,9 +623,15 @@ def has_data_mixed(N, k):
         return N <= Nk2_bound(nontriv=True)
     else:
         return has_data(N, k)
+na_msg_nontriv = '"n/a" means that not all modular forms of this weight and level are available, but those of trivial character may be; set character order to 1 to restrict to newforms of trivial character.'
+na_msg_triv = '"n/a" means that no modular forms of this weight and level are available.'
 
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
+    if info['weight_list'] == [1]:
+        na_msg = na_msg_triv
+    else:
+        na_msg = na_msg_nontriv
     hasdata = has_data_mixed
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for space in res:
@@ -654,6 +660,7 @@ def dimension_space_postprocess(res, info, query):
     info['switch_text'] = switch_text
     info['url_generator'] = url_generator
     info['has_data'] = hasdata
+    info['na_msg'] = na_msg
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
@@ -663,8 +670,10 @@ def dimension_form_postprocess(res, info, query):
     set_rows_cols(info, query)
     if query.get('char_order') == 1 or query.get('char_conductor') == 1:
         hasdata = has_data
+        na_msg = na_msg_triv
     else:
         hasdata = has_data_nontriv
+        na_msg = na_msg_nontriv
     dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for form in res:
         N = form['level']
@@ -686,6 +695,7 @@ def dimension_form_postprocess(res, info, query):
     info['one_type'] = True
     info['url_generator'] = url_generator
     info['has_data'] = hasdata
+    info['na_msg'] = na_msg
     return dim_dict
 
 @search_wrap(template="cmf_dimension_search_results.html",

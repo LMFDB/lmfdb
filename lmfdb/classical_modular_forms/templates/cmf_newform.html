@@ -28,7 +28,7 @@
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td><a href="{{ newform.char_conrey_link | safe }}">{{ newform.level }}.{{ newform.char_orbit_label }}</a> ({% if newform.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ newform.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ newform.char_degree }}\){% endif %})</td>
+    <td> {{ newform.display_character() | safe }} </td>
   </tr>
 </table>
 
@@ -148,7 +148,7 @@
     <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image') }}</td>
     <td> </td>
     <td> </td>
-    <td>\({{ newform.artin_image_display }}\)</td>
+    <td>{{ newform.artin_image_knowl() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.artin_field %}
