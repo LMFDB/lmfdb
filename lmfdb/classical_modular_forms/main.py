@@ -628,11 +628,13 @@ na_msg_triv = '"n/a" means that no modular forms of this weight and level are av
 
 def dimension_space_postprocess(res, info, query):
     set_rows_cols(info, query)
-    if info['weight_list'] == [1]:
+    if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
+        hasdata = has_data
         na_msg = na_msg_triv
     else:
+        hasdata = has_data_nontriv
         na_msg = na_msg_nontriv
-    hasdata = has_data_mixed
+    #hasdata = has_data_mixed
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
     for space in res:
         dims = DimGrid.from_db(space)
@@ -668,7 +670,7 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     set_rows_cols(info, query)
-    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
+    if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
         hasdata = has_data
         na_msg = na_msg_triv
     else:
