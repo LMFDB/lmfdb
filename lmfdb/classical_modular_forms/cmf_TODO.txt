@@ -1,6 +1,5 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
-* when character order is set to 1 the n/a message should not suggest setting the character order to 1 as on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=None&hidden_search_type=Dimensions&level=9900-10000&weight=1-12&char_order=1&search_type=Dimensions for example
 
 IMPORTANT:
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
