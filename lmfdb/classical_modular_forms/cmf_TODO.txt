@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 
 IMPORTANT:
+* Input to projective image search box should not be case sensitive (so "d2" should work as well as D2")
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [4001,10000]  ready for upload
