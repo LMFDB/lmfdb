@@ -356,14 +356,27 @@ def curves(line, verbose=False):
     # problems except that the bad_reduction_type is then None which
     # cannot be converted to an integer.  The bad reduction types are
     # coded as (Sage) integers in {-1,0,1}.
+    if any([ld.bad_reduction_type()==0 for ld in E.local_data()]):
+        mE = magma(E) # for local root numbers if not semistable
+    def local_root_number(ldp): # ldp is a component of E.local_data()
+        red_type = ldp.bad_reduction_type()
+        if red_type==0: # additive reduction: call Magma
+            eps = mE.RootNumber(ldp.prime())
+        elif red_type==+1:
+            eps = -1
+        else:  # good or non-split multiplcative reduction
+            eps = +1
+        return int(eps)
+
     local_data = [{'p': ideal_to_string(ld.prime()),
                    'normp': str(ld.prime().norm()),
-                   'ord_cond':int(ld.conductor_valuation()),
-                   'ord_disc':int(ld.discriminant_valuation()),
-                   'ord_den_j':int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red':None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
-                   'kod':web_latex(ld.kodaira_symbol()).replace('$',''),
-                   'cp':int(ld.tamagawa_number())}
+                   'ord_cond': int(ld.conductor_valuation()),
+                   'ord_disc': int(ld.discriminant_valuation()),
+                   'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
+                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'rootno': local_root_number(ld),
+                   'kod': web_latex(ld.kodaira_symbol()).replace('$',''),
+                   'cp': int(ld.tamagawa_number())}
                   for ld in E.local_data()]
 
     non_minimal_primes = [ideal_to_string(P) for P in E.non_minimal_primes()]
@@ -900,6 +913,53 @@ def add_isogs_to_one(c):
 # 3. in a call to rewrite() such as
 #
 #  db.ec_nfcurves.rewrite(add_isogs_to_one)
+
+# The following function was used in a rewrite to add local root
+# numbers to all curves in the database:
+
+def add_root_number(C, verbose=False):
+    """
+    Adds local root number to an elliptic curve record, for each prime in its local_data field.
+
+    NB Requires Magma
+    """
+    ld = C['local_data']
+    # This is a list with one dict for each prime ideal dividing the
+    # discriminant of the stored model, which will be empty for a
+    # global minimal model of a curve with everywhere good reduction.
+    if len(ld)==0:
+        return C
+    if all(['rootno' in ldp for ldp in ld]): # already have root numbers
+        return C
+    if verbose:
+        print("Adding root numbers to {}".format(C['label']))
+
+    # test for easy case of a semistable curve (no additive primes)
+    # when we do not have to construct the curve at all:
+    if any([ldp['red']==0 for ldp in ld]):
+        K = nf_lookup(C['field_label'])
+        if verbose:
+            print("Field %s created, gen_name = %s" % (C['field_label'],str(K.gen())))
+        ainvsK = parse_ainvs(K,C['ainvs'])  # list of K-elements
+        mE = magma(EllipticCurve(ainvsK))
+    for i, ldp in enumerate(ld):
+        red_type = ldp['red']
+        if red_type==0:
+            eps = mE.RootNumber(ideal_from_string(K,ldp['p']))
+        elif red_type==+1:
+            eps = -1
+        elif red_type==-1:
+            eps = +1
+        else:  # good reduction
+            eps = +1
+        ldp['rootno'] = int(eps)
+        if verbose:
+            print("P={}, root number = {}".format(ldp['p'],eps))
+        ld[i] = ldp
+    C['local_data'] = ld
+    return C
+
+
 
 ################################################################################
 #
