@@ -1828,7 +1828,7 @@ class PostgresTable(PostgresBase):
             self._break_stats()
             self.log_db_change("upsert", query=query, data=data)
 
-    def insert_many(self, search_data, extras_data=None, resort=True, reindex=False, restat=True, commit=True):
+    def insert_many(self, data, resort=True, reindex=False, restat=True, commit=True):
         """
         Insert multiple rows.
 
@@ -1836,12 +1836,10 @@ class PostgresTable(PostgresBase):
 
         INPUT:
 
-        - ``search_data`` -- a list of dictionaries, whose keys are columns and values the values to be set
-          in the search table.  All dictionaries should have the same set of keys;
+        - ``data`` -- a list of dictionaries, whose keys are columns and values the values to be set.
+          All dictionaries should have the same set of keys;
           if this assumption is broken, some values may be set to their default values
           instead of the desired value, or an error may be raised.
-        - ``extras_data`` -- a list of dictionaries with data to be inserted into the extras table.
-          Must be present, and of the same length as search_data, if the extras table exists.
         - ``resort`` -- whether to sort the ids after copying in the data.  Only relevant for tables that are id_ordered.
         - ``reindex`` -- boolean (default False). Whether to drop the indexes
           before insertion and restore afterward.  Note that if there is an exception during insertion
@@ -1851,12 +1849,15 @@ class PostgresTable(PostgresBase):
         If the search table has an id, the dictionaries will be updated with the ids of the inserted records,
         though note that those ids will change if the ids are resorted.
         """
-        if not search_data:
+        if not data:
             raise ValueError("No data provided")
-        if (extras_data is None) != (self.extra_table is None):
-            raise ValueError("extras_data must be present iff extra_table is")
-        if extras_data is not None and len(search_data) != len(extras_data):
-            raise ValueError("search_data and extras_data must have same length")
+        if self.extra_table is not None:
+            search_cols = [col for col in self._search_cols if col in data[0]]
+            extra_cols = [col for col in self._extra_cols if col in data[0]]
+            search_data = [{col: D[col] for col in search_cols} for D in data]
+            extra_data = [{col: D[col] for col in extra_cols} for D in data]
+        else:
+            search_data = data
         with DelayCommit(self, commit):
             if reindex:
                 self.drop_pkeys()
@@ -1864,10 +1865,10 @@ class PostgresTable(PostgresBase):
             for i, SD in enumerate(search_data):
                 SD["id"] = self.stats.total + i + 1
             cases = [(self.search_table, search_data)]
-            if extras_data is not None:
-                for i, ED in enumerate(extras_data):
+            if self.extra_table is not None:
+                for i, ED in enumerate(extra_data):
                     ED["id"] = self.stats.total + i + 1
-                cases.append((self.extra_table, extras_data))
+                cases.append((self.extra_table, extra_data))
             now = time.time()
             for table, L in cases:
                 template = SQL("({0})").format(SQL(", ").join(map(Placeholder, L[0].keys())))
