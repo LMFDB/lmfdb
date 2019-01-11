@@ -1,8 +1,8 @@
 def magma_char_code_string(r):
     """
-    Given a row r from mf_newforms containing columns 
+    Given a WebNewform r from mf_newforms containing columns
        level,weight,char_orbit_label,char_values
-    returns a string containing magma code to create the character 
+    returns a string containing magma code to create the character
     for r in magma using the default generators.
     """
     N = r.level
@@ -21,9 +21,9 @@ def magma_char_code_string(r):
 
 def magma_newform_modsym_cutters_code_string(r,include_char=True):
     """
-    Given a row r from mf_newforms containing columns 
-       label,level,weight,char_orbit_label,char_values,cutters 
-    returns a string containing magma code to create the newform 
+    Given a WebNewform r from mf_newforms containing columns
+       label,level,weight,char_orbit_label,char_values,cutters
+    returns a string containing magma code to create the newform
     Galois orbit as a modular symbols space using Hecke cutters in magma.
     """
     N = r.level
@@ -54,13 +54,13 @@ def magma_newform_modsym_cutters_code_string(r,include_char=True):
 
 def magma_newform_modfrm_heigs_code_string(prec, r, h, include_char=True):
     """
-    Given a row r from mf_newforms containing columns
+    Given a WebNewform r from mf_newforms containing columns
        label,level,weight,char_orbit_label,char_values
     and h a row from mf_hecke_nf containing columns
        hecke_ring_numerators,hecke_ring_denominators,
        hecke_ring_cyclotomic_generator
     and v a list whose nth entry is the entry an from the table mf_hecke_nf
-    (consisting of a list of integers giving the Hecke eigenvalue 
+    (consisting of a list of integers giving the Hecke eigenvalue
     as a linear combination of the basis specified in the orbit table)
     so in particular v[0] = 0 and v[1] = 1,
     returns a string containing magma code to create the newform
