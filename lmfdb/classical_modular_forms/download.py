@@ -351,7 +351,8 @@ class CMF_download(Downloader):
 
             if prec > hecke_data['maxp']:
                 return abort(404, "Not enough eigenvalues to reconstruct form in Magma")
-            outstr += magma_newform_modfrm_heigs_code_string(prec, form, hecke_data, include_char=False)
+            # for the moment we use all the aps
+            outstr += magma_newform_modfrm_heigs_code_string(hecke_data['maxp'], form, hecke_data, include_char=False)
         return self._wrap(outstr,
                           label,
                           lang=lang,

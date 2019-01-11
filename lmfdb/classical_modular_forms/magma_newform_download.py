@@ -103,7 +103,8 @@ def magma_newform_modfrm_heigs_code_string(prec, r, h, include_char=True):
     s += "    B := Basis(S, prec + 1);\n"
     s += "    S_basismat := Matrix([AbsEltseq(g)[indexes]: g in B]);\n"
     s += "    S_basismat := ChangeRing(S_basismat,Kf);\n"
-    s += "    f_seq_untruncated := %s;\n" % (v,)
+    # we should use downloader.assign
+    s += "    f_seq_untruncated := %s;\n" % (str(v).replace("L",""),)
     s += "    f_seq := f_seq_untruncated[1..#primes];\n"
     if m > 0:
         s += "    f_vec := Vector([Kf!1] cat [ #ap eq 0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in ap]  : ap in f_seq]);\n"

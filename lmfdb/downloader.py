@@ -66,6 +66,8 @@ class Downloader(object):
             return self.none[lang]
         if isinstance(inp, str) or isinstance(inp, unicode):
             return str(inp)
+        if isinstance(inp, int):
+            return str(inp)
         if level == 0:
             start, end = self.start_and_end[lang]
             sep = ',\n'
