@@ -332,7 +332,7 @@ def copy_dumps(inp, typ):
     elif isinstance(inp, RealLiteral):
         return inp.literal
     elif isinstance(inp, (int, long, Integer, float)):
-        return str(inp)
+        return str(inp).replace('L','')
     elif typ=='boolean':
         return 't' if inp else 'f'
     elif isinstance(inp, (datetime.date, datetime.time, datetime.datetime)):
