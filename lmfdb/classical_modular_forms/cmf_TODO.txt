@@ -1,5 +1,6 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
+* Dirichlet character pages are missing a lot of information (compare http://cmfs.lmfdb.xyz/Character/Dirichlet/9/7 to http://dev.lmfdb.xyz/Character/Dirichlet/9/7), and the orbit index is not being displayed.
 
 IMPORTANT:
 * Update LMFDB universe to say "classical" rather than "elliptic"
