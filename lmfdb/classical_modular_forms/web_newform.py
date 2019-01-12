@@ -154,8 +154,6 @@ class WebNewform(object):
             self.field_disc = None
         elif self.field_disc:
             self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
-        # We always print analytic conductor with 1 decimal digit
-        #self.analytic_conductor = '%.1f'%(self.analytic_conductor)
         self.rel_dim = self.dim // self.char_degree
 
         self._inner_twists = data.get('inner_twists',[])
@@ -213,7 +211,7 @@ class WebNewform(object):
 
         if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-        self.properties += [('Analytic conductor', '%.1f'%(self.analytic_conductor))]
+        self.properties += [('Analytic conductor', '%.3f'%(self.analytic_conductor))]
 
         if self.analytic_rank is not None:
             self.properties += [('Analytic rank', str(int(self.analytic_rank)))]

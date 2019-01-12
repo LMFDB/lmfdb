@@ -532,7 +532,7 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
-    parse_noop(info, query, 'projective_image')
+    parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
 
@@ -890,11 +890,12 @@ class CMF_stats(StatsDisplay):
                   'inner_twist_count': 'inner twists',
                   'cm_discs': 'complex multiplication',
                   'rm_discs': 'real multiplication'}
-    row_titles = {'char_order': 'character order',
-                  'num_forms': 'newforms',
-                  'inner_twist_count': 'inner twists',
-                  'cm_discs': 'CM disc',
-                  'rm_discs': 'RM disc'}
+    short_display = {'char_order': 'character order',
+                     'num_forms': 'newforms',
+                     'inner_twist_count': 'inner twists',
+                     'cm_discs': 'CM disc',
+                     'rm_discs': 'RM disc',
+                     'dim': 'dimension'}
     formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
                   'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
@@ -909,13 +910,10 @@ class CMF_stats(StatsDisplay):
     stat_list = [
         {'cols': ['level', 'weight'],
          'proportioner': per_col_total,
-         'totaler': sum_totaler(),
-         'corner_label':r'\(N \backslash k\)'},
+         'totaler': sum_totaler()},
         {'cols': ['level', 'dim'],
          'proportioner': per_row_total,
-         'totaler': sum_totaler(),
-         'corner_label':r'\(N \backslash d\)',
-        },
+         'totaler': sum_totaler()},
         {'cols':'char_order'},
         {'cols':'analytic_rank',
          'top_title':[('analytic ranks', 'mf.elliptic.analytic_rank'),
@@ -932,8 +930,7 @@ class CMF_stats(StatsDisplay):
         {'cols':['self_twist_type', 'weight'],
          'title_joiner': ' by ',
          'proportioner': per_col_total,
-         'totaler': sum_totaler(col_counts=False, corner_count=False),
-         'corner_label':'weight'},
+         'totaler': sum_totaler(col_counts=False, corner_count=False)},
         {'cols': 'cm_discs',
          'totaler':{}},
         {'cols': 'rm_discs',
@@ -942,21 +939,7 @@ class CMF_stats(StatsDisplay):
     # Used for dynamic stats
     dynamic_parse = staticmethod(newform_parse)
     dynamic_parent_page = "cmf_refine_search.html"
-    dynamic_cols = [
-        ('level','Level'),
-        ('weight','Weight'),
-        ('dim','Dimension'),
-        ('analytic_conductor','Analytic conductor'),
-        ('char_order','Character order'),
-        ('self_twist_type','Self twist type'),
-        ('inner_twist_count','Num inner twists'),
-        ('analytic_rank','Analytic rank'),
-        ('char_parity','Character parity'),
-        ('projective_image','Projective image'),
-        ('projective_image_type','Projective image type'),
-        ('artin_degree','Artin degree'),
-    ]
-
+    dynamic_cols = ['level', 'weight', 'dim', 'analytic_conductor', 'char_order', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
 
 @cmf.route("/stats")
 def statistics():

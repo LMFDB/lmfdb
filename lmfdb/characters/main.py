@@ -162,7 +162,7 @@ def extent_page():
                            **info)
 
 def make_webchar(args):
-    modulus = args['modulus']
+    modulus = int(args['modulus'])
     if modulus < 10000:
         return WebDBDirichletCharacter(**args)
     elif modulus < 100000:

@@ -507,3 +507,4 @@ function show_stats_rows(hsh, to_show) {
   var viewportTop = $(window).scrollTop();
   return elementBottom < viewportTop;
 };
+

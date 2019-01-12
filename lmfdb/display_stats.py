@@ -328,7 +328,6 @@ class StatsDisplay(UniqueRepresentation):
           where the columns are non-null.  When ``cols`` has length 2 (2d case),
           a function that adds row/column totals to the grid (see examples above).
       - ``proportioner`` -- A function that adds proportions to the grid (2d only, see examples above).
-      - ``corner_label`` -- The contents of the top left corner (2d only)
       - ``url_extras`` -- text to add to the urls after the '?'.
       - ``title_joiner`` -- Text used to join the ``top_title`` list.  Defaults to ' ' or ' and ', depending on whether every text is paired with a knowl.
       - ``intro`` -- Text displayed after the title of this stat block.
@@ -337,7 +336,7 @@ class StatsDisplay(UniqueRepresentation):
 
       - ``top_titles`` -- strings as values. Text to be displayed in titles, paired with knowls.
       - ``knowls`` -- strings as values.  Id for the knowl associated to this column.
-      - ``row_titles`` -- strings as values.  Text to be displayed as a row label.
+      - ``short_display`` -- strings as values.  Text to be displayed as a row label.
       - ``buckets`` -- lists of strings as values.  For dividing values up into intervals
           when there are too many for individual display.  Entries should be either single
           values or ranges like '2-10'.
@@ -376,7 +375,7 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _dynamic_cols(self):
-        return [('none', 'None')] + self.dynamic_cols
+        return [('none', 'None')] + [(col, self._short_display[col].capitalize()) for col in self.dynamic_cols]
 
     @property
     def _default_buckets(self):
@@ -397,7 +396,7 @@ class StatsDisplay(UniqueRepresentation):
     @property
     def _top_titles(self):
         def _default(col):
-            rtitle = self._row_titles[col]
+            rtitle = self._short_display[col]
             if rtitle and rtitle[-1] != 's':
                 return rtitle + 's'
             else:
@@ -407,9 +406,9 @@ class StatsDisplay(UniqueRepresentation):
         return A
 
     @property
-    def _row_titles(self):
+    def _short_display(self):
         A = KeyedDefaultDict(lambda col: col.replace('_', ' '))
-        A.update(getattr(self, 'row_titles', {}))
+        A.update(getattr(self, 'short_display', {}))
         return A
 
     @property
@@ -577,7 +576,7 @@ class StatsDisplay(UniqueRepresentation):
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
         if len(cols) == 1:
-            attr['row_title'] = self._row_titles[cols[0]]
+            attr['row_title'] = self._short_display[cols[0]]
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
             rows = [counts[i:i+10] for i in range(0,len(counts),10)]
@@ -588,7 +587,8 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 data['divs'] = [(rows, "short_table", "none")]
         elif len(cols) == 2:
-            attr['corner_label'] = attr.get('corner_label',r'\({0} \backslash {1}\)'.format(*[col.replace('_',' ') for col in cols]))
+            attr['row_title'] = self._short_display[cols[0]]
+            attr['col_title'] = self._short_display[cols[1]]
         return data
 
     @lazy_attribute
@@ -650,7 +650,6 @@ class StatsDisplay(UniqueRepresentation):
                 totals.append(info.get(tname, False))
         attributes['cols'] = cols
         attributes['buckets'] = buckets
-        attributes['corner_label'] = ''
         prop = info.get('proportions')
         if len(cols) == 1:
             if totals[0]:

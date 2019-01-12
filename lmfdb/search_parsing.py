@@ -717,7 +717,9 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
     query[qfield] = process(inp)
 
 @search_parser
-def parse_noop(inp, query, qfield):
+def parse_noop(inp, query, qfield, func=None):
+    if func is not None:
+        inp = func(inp)
     query[qfield] = inp
 
 @search_parser

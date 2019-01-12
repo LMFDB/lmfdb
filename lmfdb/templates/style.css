@@ -2188,3 +2188,18 @@ input::-webkit-input-placeholder {
     color: #cccccc;
 }
 
+.table_rotate {
+  /* FF3.5+ */
+  -moz-transform: rotate(180deg);
+  /* Opera 10.5 */
+  -o-transform: rotate(180deg);
+  /* Saf3.1+, Chrome */
+  -webkit-transform: rotate(180deg);
+  /* IE6,IE7 */
+  filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=0.166);
+  /* IE8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.166)";
+  /* Standard */
+  transform: rotate(180deg);
+  writing-mode: vertical-lr;
+}

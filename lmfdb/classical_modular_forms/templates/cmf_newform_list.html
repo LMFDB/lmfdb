@@ -50,7 +50,7 @@
     <tr>
       <td> <a href="{{ info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
       <td> \({{ mf.dim }}\) </td>
-      <td> \({{ "%.1f" | format(mf.analytic_conductor|float) }}\) </td>
+      <td> \({{ "%.3f" | format(mf.analytic_conductor|float) }}\) </td>
       <td> {{ info.nf_link(mf) | safe }} </td>
       {% if Projective_image %}
       <td class="center">
