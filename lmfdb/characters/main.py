@@ -161,6 +161,40 @@ def extent_page():
     return render_template("single.html", kid='dq.character.dirichlet.extent',
                            **info)
 
+def make_webchar(args):
+    modulus = args['modulus']
+    if modulus < 10000:
+        return WebDBDirichletCharacter(**args)
+    elif modulus < 100000:
+        return WebDirichletCharacter(**args)
+    else:
+        return WebSmallDirichletCharacter(**args)
+
+def label_to_number(modulus, number):
+    """
+    Takes the second part of a character label and converts it to the second
+    part of a Conrey label.  This could be trivial (just casting to an int)
+    or could require converting from an orbit label to a number.
+
+    If the label is invalid, returns 0.
+    """
+    try:
+        number = int(number)
+    except ValueError:
+        # encoding Galois orbit
+        if modulus < 10000:
+            try:
+                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
+            except ValueError:
+                return 0
+            else:
+                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')[0]
+        else:
+            return 0
+    if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
+        return 0
+    return number
+
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 @characters_page.route("/Dirichlet/<modulus>")
@@ -210,31 +244,13 @@ def render_Dirichletwebpage(modulus=None, number=None):
             info['generators'] = ', '.join([r'<a href="%s">$\chi_{%s}(%s,\cdot)$'%(url_for(".render_Dirichletwebpage",modulus=modulus,number=g),modulus,g) for g in info['gens']])
         return render_template('CharGroup.html', **info)
 
-    try:
-        number = int(number)
-    except ValueError:
-        # encoding Galois orbit
-        if modulus < 10000:
-            try:
-                orbit_label = '{0}.{1}'.format(modulus, 1 + class_to_int(number))
-            except ValueError:
-                number = 0
-            else:
-                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')[0]
-        else:
-            number = 0
-    if number <= 0 or gcd(modulus,number) != 1 or number > modulus:
+    number = label_to_number(modulus, number)
+    if number == 0:
         flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
     args['number'] = number
-    if modulus < 10000:
-        webchar = WebDBDirichletCharacter(**args)
-        info = webchar.to_dict()
-    elif modulus < 100000:
-        webchar = WebDirichletCharacter(**args)
-        info = webchar.to_dict()
-    else:
-        info = WebSmallDirichletCharacter(**args).to_dict()
+    webchar = make_webchar(args)
+    info = webchar.to_dict()
     info['bread'] = [('Characters', url_for(".render_characterNavigation")),
                      ('Dirichlet', url_for(".render_Dirichletwebpage")),
                      ('%s'%modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
@@ -243,6 +259,40 @@ def render_Dirichletwebpage(modulus=None, number=None):
     info['code'] = dict([(k[4:],info[k]) for k in info if k[0:4] == "code"])
     info['code']['show'] = { lang:'' for lang in info['codelangs'] } # use default show names
     return render_template('Character.html', **info)
+
+def _dir_knowl_data(label, orbit=False):
+    modulus, number = label.split('.')
+    modulus = int(modulus)
+    number = label_to_number(modulus, number)
+    if number == 0:
+        return "Invalid label for Dirichlet character: %s" % label
+    args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
+    webchar = make_webchar(args)
+    if orbit and modulus <= 10000:
+        inf = "Dirichlet Character Orbit %d.%s\n" % (modulus, webchar.orbit_label)
+    else:
+        inf = "Dirichlet Character \chi_{%d}(%d, \cdot)\n" % (modulus, number)
+    inf += "<div>\nConductor: %d\n<br>\n" % (webchar.conductor)
+    inf += "Order: %d\n<br>\n" % (webchar.order)
+    #inf += "Degree: %d\n<br>\n" % (webchar.degree)
+    if modulus <= 10000:
+        if not orbit:
+            inf += "Orbit Label: %d.%s\n</div>" % (modulus, webchar.orbit_label)
+        inf += "Orbit Index: %d\n</div>" % (webchar.orbit_index)
+    inf += ('<div align="right">\n<a href="%s">%s home page</a>\n</div>' %
+            (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number), label))
+    return inf
+
+def dirichlet_character_data(label):
+    return _dir_knowl_data(label, orbit=False)
+
+def dirichlet_orbit_data(label):
+    return _dir_knowl_data(label, orbit=True)
+
+@app.context_processor
+def ctx_dirchar():
+    return {'dirichlet_character_data': dirichlet_character_data,
+            'dirichlet_orbit_data': dirichlet_orbit_data}
 
 @characters_page.route('/Dirichlet/random')
 def random_Dirichletwebpage():

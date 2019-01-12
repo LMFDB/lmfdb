@@ -15,6 +15,7 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Add dynamic character knowls; include orbit index for orbit label (David)
 * Add orbit index on character pages (David)
+* Write character.dirichlet.galois_orbit_index and update character.dirichelt.galois_orbit_label (is it really "the index of the minimal Conrey label among the characters in the Galois orbit" and not based on the values of the character?)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)

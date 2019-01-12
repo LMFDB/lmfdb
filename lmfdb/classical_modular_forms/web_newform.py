@@ -781,7 +781,9 @@ function switch_basis(btype) {
 
     @property
     def char_conrey_link(self):
-        return '<a href="%s">%s.%s</a>' % (url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label), self.level, self.char_orbit_label)
+        label = '%s.%s' % (self.level, self.char_orbit_label)
+        return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+        #return '<a href="%s">%s.%s</a>' % (url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label), self.level, self.char_orbit_label)
 
     def display_character(self):
         if self.char_order == 1:
