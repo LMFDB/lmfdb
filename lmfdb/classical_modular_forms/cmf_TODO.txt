@@ -1,8 +1,13 @@
 CRITICAL (BUGS):
 * knowls: reliability, cande, source in the new paradigm (Drew)
 * Dirichlet character pages are missing a lot of information (compare http://cmfs.lmfdb.xyz/Character/Dirichlet/9/7 to http://dev.lmfdb.xyz/Character/Dirichlet/9/7), and the orbit index is not being displayed.
+* Fix analytic conductors
 
 IMPORTANT:
+* When the Hecke cutter is the empty list (as opposed to null), this means the form is the unique form in its space and we should note this on the newforms home page (in the same place where we would normally list Hecke cutters)
+* Add relative degree to mf_newforms
+* For k > 1 add Sato-Tate group to mf_newforms
+* Add data for N <= 10 and Nk^2 <= 100000 and other boxes.
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [4001,10000]  ready for upload
@@ -12,7 +17,6 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Write character.dirichlet.galois_orbit_index and update character.dirichelt.galois_orbit_label (is it really "the index of the minimal Conrey label among the characters in the Galois orbit" and not based on the values of the character?)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
