@@ -302,7 +302,6 @@ class WebDirichlet(WebCharObject):
             if chi.is_primitive():
                 return m, n
 
-
 #############################################################################
 ###  Hecke type
 
@@ -779,6 +778,10 @@ class WebDBDirichlet(WebDirichlet):
         if self.number:
             self.number = int(self.number)
         self.numlabel = self.number
+        if self.modulus and self.number and self.modulus < 1000:
+            # Needed for Gauss sums, etc
+            self.H = DirichletGroup_conrey(self.modulus)
+            self.chi = self.H[self.number]
         self.maxcols = 30
         self.credit = ''
         self.codelangs = ('pari', 'sage')
@@ -1067,24 +1070,96 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
             return symbol_numerator(self.conductor, True)
         return symbol_numerator(self.conductor, False)
 
-#######################
 # The parts responsible for allowing computation of Gauss sums, etc. on page
+
     @property
-    def charsums(self, *args):
-        return False
+    def charsums(self):
+        if self.modulus < 1000:
+            return { 'gauss': self.gauss_sum(2),
+                     'jacobi': self.jacobi_sum(1),
+                     'kloosterman': self.kloosterman_sum('1,2') }
+        else:
+            return None
 
-    def gauss_sum(self, *args):
-        return None
+    def gauss_sum(self, val):
+        val = int(val)
+        mod, num = self.modulus, self.number
+        chi = self.chi.sage_character()
+        g = chi.gauss_sum_numerical(100, val)
+        g = complex2str(g)
+        from sage.rings.rational import Rational
+        x = Rational('%s/%s' % (val, mod))
+        n = x.numerator()
+        n = str(n) + "r" if not n == 1 else "r"
+        d = x.denominator()
+        Gtex = '\Z/%s\Z' % mod
+        chitex = self.char2tex(mod, num, tag=False)
+        chitexr = self.char2tex(mod, num, 'r', tag=False)
+        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
+        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
+    @property
+    def codegauss(self):
+        return { 'sage': 'chi.sage_character().gauss_sum(a)',
+                 'pari': 'znchargauss(g,chi,a)' }
 
-    def jacobi_sum(self, *args):
-        return None
+    def jacobi_sum(self, val):
+        mod, num = self.modulus, self.number
+        val = int(val)
+        if gcd(mod, val) > 1:
+            raise Warning ("n must be coprime to the modulus : %s"%mod)
+        psi = self.H[val]
+        chi = self.chi.sage_character()
+        psi = psi.sage_character()
+        jacobi_sum = chi.jacobi_sum(psi)
+        chitex = self.char2tex(mod, num, tag=False)
+        psitex = self.char2tex(mod, val, tag=False)
+        Gtex = '\Z/%s\Z' % mod
+        chitexr = self.char2tex(mod, num, 'r', tag=False)
+        psitex1r = self.char2tex(mod, val, '1-r', tag=False)
+        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
+        from sage.all import latex
+        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
+    @property
+    def codejacobi(self):
+        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
 
-    def kloosterman_sum(self, *args):
-        return None
+    def kloosterman_sum(self, arg):
+        a, b = map(int, arg.split(','))
+        modulus, number = self.modulus, self.number
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""
+            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
+            = \sum_{r \in \Z/\Z}
+                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
+            = 1 \)
+            """ % (a, b, a, b)
+        chi = self.chi.sage_character()
+        k = chi.kloosterman_sum_numerical(100, a, b)
+        k = complex2str(k, 10)
+        return r"""
+        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
+        = \sum_{r \in \Z/%s\Z}
+             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
+        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+    @property
+    def codekloosterman(self):
+        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
 
-    def value(self, *args):
-        return None
-########################
+    def value(self, val):
+        val = int(val)
+        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
+        # FIXME: bug in dirichlet_conrey logvalue
+        if gcd(val, self.modulus) == 1:
+            val = self.texlogvalue(self.chi.logvalue(val))
+        else:
+            val = 0
+        return '\(%s=%s\)'%(chartex,val)
+
+    @property
+    def codevalue(self):
+        return { 'sage': 'chi(x) # x integer',
+                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
     @property
     def previous(self):
@@ -1343,99 +1418,6 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     def codegenvalues(self):
         return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
-
-    def value(self, val):
-        val = int(val)
-        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
-        # FIXME: bug in dirichlet_conrey logvalue
-        if gcd(val, self.modulus) == 1:
-            val = self.texlogvalue(self.chi.logvalue(val))
-        else:
-            val = 0
-        return '\(%s=%s\)'%(chartex,val)
-
-    @property
-    def codevalue(self):
-        return { 'sage': 'chi(x) # x integer',
-                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
-
-    @property
-    def charsums(self):
-        if self.modulus < 1000:
-            return { 'gauss': self.gauss_sum(2),
-                     'jacobi': self.jacobi_sum(1),
-                     'kloosterman': self.kloosterman_sum('1,2') }
-        else:
-            return None
-
-    def gauss_sum(self, val):
-        val = int(val)
-        mod, num = self.modulus, self.number
-        chi = self.chi.sage_character()
-        g = chi.gauss_sum_numerical(100, val)
-        g = complex2str(g)
-        from sage.rings.rational import Rational
-        x = Rational('%s/%s' % (val, mod))
-        n = x.numerator()
-        n = str(n) + "r" if not n == 1 else "r"
-        d = x.denominator()
-        Gtex = '\Z/%s\Z' % mod
-        chitex = self.char2tex(mod, num, tag=False)
-        chitexr = self.char2tex(mod, num, 'r', tag=False)
-        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
-        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
-
-    @property
-    def codegauss(self):
-        return { 'sage': 'chi.sage_character().gauss_sum(a)',
-                 'pari': 'znchargauss(g,chi,a)' }
-
-    def jacobi_sum(self, val):
-        mod, num = self.modulus, self.number
-        val = int(val)
-        if gcd(mod, val) > 1:
-            raise Warning ("n must be coprime to the modulus : %s"%mod)
-        psi = self.H[val]
-        chi = self.chi.sage_character()
-        psi = psi.sage_character()
-        jacobi_sum = chi.jacobi_sum(psi)
-        chitex = self.char2tex(mod, num, tag=False)
-        psitex = self.char2tex(mod, val, tag=False)
-        Gtex = '\Z/%s\Z' % mod
-        chitexr = self.char2tex(mod, num, 'r', tag=False)
-        psitex1r = self.char2tex(mod, val, '1-r', tag=False)
-        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
-        from sage.all import latex
-        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
-
-    @property
-    def codejacobi(self):
-        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
-
-    def kloosterman_sum(self, arg):
-        a, b = map(int, arg.split(','))
-        modulus, number = self.modulus, self.number
-        if modulus == 1:
-            # there is a bug in sage for modulus = 1
-            return r"""
-            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
-            = \sum_{r \in \Z/\Z}
-                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
-            = 1 \)
-            """ % (a, b, a, b)
-        chi = self.chi.sage_character()
-        k = chi.kloosterman_sum_numerical(100, a, b)
-        k = complex2str(k, 10)
-        return r"""
-        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
-        = \sum_{r \in \Z/%s\Z}
-             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
-        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
-
-    @property
-    def codekloosterman(self):
-        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
-
 
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
