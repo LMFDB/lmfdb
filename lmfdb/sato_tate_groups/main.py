@@ -375,7 +375,7 @@ def su2_mu_portrait(n):
     return encode_plot(plot)
 
 
-def NU1_mu_info(w,n):
+def nu1_mu_info(w,n):
     """ return data for ST group N(U(1)) x mu(n) (of any wt > 0); these groups are not stored in the database """
     assert w > 0 and n > 0
     n = ZZ(n)
@@ -409,7 +409,7 @@ def NU1_mu_info(w,n):
     rec['counts'] = [['a_1', [[0,n]]]]
     return rec
 
-def NU1_mu_portrait(n):
+def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.05,fill=true)
