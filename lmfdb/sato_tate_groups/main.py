@@ -345,7 +345,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  sum([line([(2*cos(pi*m/n),2*sin(pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thinkness=3) for m in range(n)])
+        plot =  sum([line([(2*cos(pi*m/n),2*sin(pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))]) for m in range(n)])
     else:
         plot = circle((0,0),2,thickness=3,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
