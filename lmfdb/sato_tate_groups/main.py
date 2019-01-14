@@ -56,7 +56,10 @@ def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
     if re.match(SU2_MU_LABEL_RE, label):
-        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)\\times\\mu(%s)'%label.split('.')[3])
+        if label.split('.')[13] == '1':
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)')
+        else:
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)\\times\\mu(%s)'%label.split('.')[3])
     data = db.gps_sato_tate.lookup(label)
     if not data:
         return label
@@ -78,10 +81,6 @@ def st0_pretty(st0_name):
         return '\\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
     if re.match('SU\(2\)\_\d+', st0_name):
         return '\\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
-    print st0_name
-    print st0_dict.keys()
-    print st0_dict[st0_name]
-    print st0_dict.get(st0_name)
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
@@ -423,7 +422,7 @@ def render_st_group(info, portrait=None):
         ('Real dimension', '%d'%info['real_dimension']),
         ('Components', '%d'%info['components']),
         ('Contained in','\(%s\)'%info['ambient']),
-        ('Identity Component', '\(%s\)'%info['st0_name']),
+        ('Identity Component', '\(%s\)'%info['identity_component']),
         ('Component group', '\(%s\)'%info['component_group']),
     ]
     bread = [
