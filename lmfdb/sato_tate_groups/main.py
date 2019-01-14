@@ -16,9 +16,8 @@ from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
 ###############################################################################
 
 MU_LABEL_RE = '^0\.1\.[1-9][0-9]*$'
-NEW_MU_LABEL_RE = '^0\.1\.c[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
-NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.d[1-9][0-9]*$'
+NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
 SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
 ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
 ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
