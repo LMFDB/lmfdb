@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
-* knowls: reliability, cande, source in the new paradigm (Drew)
-* Dirichlet character pages are missing a lot of information (compare http://cmfs.lmfdb.xyz/Character/Dirichlet/9/7 to http://dev.lmfdb.xyz/Character/Dirichlet/9/7), and the orbit index is not being displayed.
-* Fix analytic conductors
+* Dirichlet character pages are missing some information (compare http://cmfs.lmfdb.xyz/Character/Dirichlet/9/7 to http://dev.lmfdb.xyz/Character/Dirichlet/9/7)/
+* Fix analytic conductor normalization (Drew)
 
 IMPORTANT:
 * When the Hecke cutter is the empty list (as opposed to null), this means the form is the unique form in its space and we should note this on the newforms home page (in the same place where we would normally list Hecke cutters)
