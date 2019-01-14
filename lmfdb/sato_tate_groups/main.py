@@ -9,7 +9,7 @@ from lmfdb.db_backend import db
 from lmfdb.base import ctx_proc_userdata
 from psycopg2.extensions import QueryCanceledError
 
-from sage.all import ZZ, cos, sin, pi, list_plot, circle, line
+from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
 
 ###############################################################################
 # Globals
@@ -355,7 +355,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  sum([line.line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
         plot = circle((0,0),2,thickness=3,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
