@@ -421,14 +421,14 @@ def render_by_label(label):
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
     if re.match(NU1_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
-        n = ZZ(label.split('.')[3])[1:]
+        n = ZZ(label.split('.')[3][1:])
         if 2*n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", 2*n)
             return redirect(url_for(".index"))
         return render_st_group(nu1_mu_info(w,n), portrait=su2_mu_portrait(n))
     if re.match(SU2_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
-        n = ZZ(label.split('.')[3])[1:]
+        n = ZZ(label.split('.')[3][1:])
         if n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
