@@ -20,6 +20,7 @@ IMPORTANT:
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
+* Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * add a link to top of stats for dynamic
