@@ -17,6 +17,7 @@ from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
 MU_LABEL_RE = '^0\.1\.[1-9][0-9]*'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
+SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.[1-9][0-9]*'
 ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
 ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
@@ -153,6 +154,9 @@ def search_by_label(label):
     # check for labels of the form 0.1.n corresponding to mu(n)
     if re.match(MU_LABEL_RE, label):
         return render_by_label(label)
+    # check for labels of the form w.2.3.n corresponding to SU(2) x mu(n)
+    if re.match(ST_MU_LABEL_RE, label):
+        return render_by_label(label)
     # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
     if re.match(MU_LABEL_NAME_RE, label):
         return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
@@ -274,7 +278,7 @@ def mu_info(n):
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{O}(1)' if n <= 2 else '\mathrm{U}(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
-    rec['st0_name'] = '\mathrm{SO}(1)'
+    rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = '\\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
@@ -301,10 +305,50 @@ def mu_info(n):
 def mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n, axes=False)
+        plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n,axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
     plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
+    plot.set_aspect_ratio(4.0/3.0)
+    return encode_plot(plot)
+
+def su2_mu_info(w,n):
+    """ return data for ST group mu(n); for n > 2 these groups are irrational and not stored in the database """
+    n = ZZ(n)
+    rec = {}
+    rec['label'] = "%d.2.3.%d"%(w,n)
+    rec['weight'] = 1
+    rec['degree'] = 2
+    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['name'] = 'SU(2) x mu(%d)'%n
+    rec['pretty'] = '\mathrm{SU}(2)\times\mu(%d)'%n
+    rec['real_dimension'] = 3
+    rec['components'] = int(n)
+    rec['ambient'] = '\mathrm{U}(2)'
+    rec['connected'] = boolean_name(rec['components'] == 1)
+    rec['st0_name'] = 'SU(2)'
+    rec['identity_component'] = st0_pretty(rec['st0_name'])
+    rec['st0_description'] = '\\mathrm{SU}(2)'
+    rec['component_group'] = 'C_{%d}'%n
+    rec['trace_zero_density']='0'
+    rec['gens'] = r'\left[\zeta_{%d}\right]'%n
+    rec['numgens'] = 1
+    rec['subgroups'] = comma_separated_list([st_link("0.1.%d"%(n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("1.2.3.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
+    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['trace_moments'] = trace_moments(rec['moments'])
+    rec['counts'] = []
+    return rec
+
+def su2_mu_portrait(n):
+    """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
+    if n <= 120:
+        plot =  sum([line([(2*cos(pi*m/n),2*sin(pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thinkness=3,axes=False) for m in range(n)])
+    else:
+        plot = circle((0,0),2,thickness=3,fill=True)
+    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
     plot.set_aspect_ratio(4.0/3.0)
     return encode_plot(plot)
 
@@ -316,6 +360,13 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
+    if re.match(SU2_MU_LABEL_RE, label):
+        w = ZZ(label.split('.')[0])
+        n = ZZ(label.split('.')[3])
+        if n > 10**20:
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
+            return redirect(url_for(".index"))
+        return render_st_group(su2_mu_info(w,n), portrait=su2_mu_portrait(n))
     data = db.gps_sato_tate.lookup(label)
     info = {}
     if data is None:
