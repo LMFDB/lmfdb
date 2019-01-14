@@ -58,7 +58,7 @@ def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
     if re.match(NU1_MU_LABEL_RE, label):
-        if label.split('.')[3] == 'c1':
+        if label.split('.')[3] == 'd1':
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))')
         else:
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))\times\mu(%s)'%label.split('.')[3][1:])
@@ -340,7 +340,7 @@ def su2_mu_info(w,n):
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'SU(2) x mu(%d)'%n if n > 1 else 'SU(2)'
-    rec['pretty'] = '\mathrm{SU}(2)\\times\mu(%d)'%n if n > 1 else '\mathrm{SU}(2)'
+    rec['pretty'] = r'\mathrm{SU}(2)\times\mu(%d)'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{U}(2)'
@@ -385,7 +385,7 @@ def nu1_mu_info(w,n):
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'N(U(1)) x mu(%d)'%n if n > 1 else 'N(U(1))'
-    rec['pretty'] = 'N(\mathrm{U}(1)\\times\mu(%d)'%n if n > 1 else 'N(\mathrm{U}(1))'
+    rec['pretty'] = r'N(\mathrm{U}(1))\times\mu(%d)'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
     rec['components'] = int(2*n)
     rec['ambient'] = '\mathrm{U}(2)'
@@ -412,7 +412,7 @@ def nu1_mu_info(w,n):
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.05,fill=true)
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(1,0,0)fill=true)
     else:
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
