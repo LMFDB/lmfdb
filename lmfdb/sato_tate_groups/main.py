@@ -168,7 +168,7 @@ def search_by_label(label):
 
     if label == '1.2.1.d1':
         label = '1.2.1.2.1a' # treat N(U(1)) x mu(1) like N(U(1)) in wt 1
-    if lable == '1.2.3.c1':
+    if label == '1.2.3.c1':
         label = '1.2.3.1.1a' # treat SU(2) x mu(1) like SU(2) in wt 1
     if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
