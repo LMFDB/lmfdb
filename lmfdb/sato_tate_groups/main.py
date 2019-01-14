@@ -59,11 +59,15 @@ def st_link(label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
     if re.match(NU1_MU_LABEL_RE, label):
         if label.split('.')[3] == 'd1':
+            if label.split('.')[0] == '1':
+                label = '1.2.1.2.1a'
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))')
         else:
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))\times\mu(%s)'%label.split('.')[3][1:])
     if re.match(SU2_MU_LABEL_RE, label):
         if label.split('.')[3] == 'c1':
+            if label.split('.')[0] == '1':
+                label = '1.2.3.1.1a'
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)')
         else:
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)\times\mu(%s)'%label.split('.')[3][1:])
@@ -162,6 +166,10 @@ def by_label(label):
 def search_by_label(label):
     """ search for Sato-Tate group by label and render if found """
 
+    if label == '1.2.1.d1':
+        label = '1.2.1.2.1a' # treat N(U(1)) x mu(1) like N(U(1)) in wt 1
+    if lable == '1.2.3.c1':
+        label = '1.2.3.1.1a' # treat SU(2) x mu(1) like SU(2) in wt 1
     if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
     if re.match(ST_LABEL_SHORT_RE, label):
@@ -366,6 +374,8 @@ def su2_mu_info(w,n):
 
 def su2_mu_portrait(n):
     """ returns an encoded line plot of SU(2) x mu(n) in the complex plane """
+    if n == 1:
+        return db.gps_sato_tate.lookup('1.2.3.1.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
@@ -411,8 +421,10 @@ def nu1_mu_info(w,n):
 
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
+    if n == 1:
+        return db.gps_sato_tate.lookup('1.2.1.2.1a').get('trace_histogram')
     if n <= 120:
-        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.5,fill=true)
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
