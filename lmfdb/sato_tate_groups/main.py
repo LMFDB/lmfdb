@@ -425,7 +425,7 @@ def nu1_mu_portrait(n):
         print db.gps_sato_tate_lookup('1.2.1.2.1a')
         return db.gps_sato_tate.lookup('1.2.1.2.1a').get('trace_histogram')
     if n <= 120:
-        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.3,fill=True)
     else:
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
@@ -446,7 +446,7 @@ def render_by_label(label):
         if 2*n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", 2*n)
             return redirect(url_for(".index"))
-        return render_st_group(nu1_mu_info(w,n), portrait=su2_mu_portrait(n))
+        return render_st_group(nu1_mu_info(w,n), portrait=nu1_mu_portrait(n))
     if re.match(SU2_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
         n = ZZ(label.split('.')[3][1:])
