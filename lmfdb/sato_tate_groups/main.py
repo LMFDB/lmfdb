@@ -317,11 +317,11 @@ def su2_mu_info(w,n):
     n = ZZ(n)
     rec = {}
     rec['label'] = "%d.2.3.%d"%(w,n)
-    rec['weight'] = 1
+    rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'SU(2) x mu(%d)'%n
-    rec['pretty'] = '\mathrm{SU}(2)\times\mu(%d)'%n
+    rec['pretty'] = '\mathrm{SU}(2)\\times\mu(%d)'%n
     rec['real_dimension'] = 3
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{U}(2)'
@@ -333,8 +333,8 @@ def su2_mu_info(w,n):
     rec['trace_zero_density']='0'
     rec['gens'] = r'\left[\zeta_{%d}\right]'%n
     rec['numgens'] = 1
-    rec['subgroups'] = comma_separated_list([st_link("0.1.%d"%(n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("1.2.3.%d"%(p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
     rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
     rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
@@ -345,7 +345,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  sum([line([(2*cos(pi*m/n),2*sin(pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))]) for m in range(n)])
+        plot =  sum([line([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))]) for m in range(n)])
     else:
         plot = circle((0,0),2,thickness=3,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
