@@ -341,7 +341,7 @@ def su2_mu_info(w,n):
     rec['cyclic'] = boolean_name(True)
     rec['solvable'] = boolean_name(True)
     rec['trace_zero_density']='0'
-    rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_%d\end{bmatrix}'%n
+    rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
     rec['subgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,n/p)) for p in n.prime_factors()])
     rec['supgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
