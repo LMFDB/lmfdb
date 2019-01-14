@@ -56,12 +56,17 @@ def string_matrix(m):
 
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
-        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    if re.match(SU2_MU_LABEL_RE, label):
-        if label.split('.')[3] == '1':
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)')
+        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
+    if re.match(NU1_MU_LABEL_RE, label):
+        if label.split('.')[3] == 'c1':
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))')
         else:
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)\\times\\mu(%s)'%label.split('.')[3])
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))\\times\\mu(%s)'%label.split('.')[3][1:])
+    if re.match(SU2_MU_LABEL_RE, label):
+        if label.split('.')[3] == 'c1':
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)')
+        else:
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)\\times\\mu(%s)'%label.split('.')[3][1:])
     data = db.gps_sato_tate.lookup(label)
     if not data:
         return label
