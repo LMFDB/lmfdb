@@ -16,8 +16,10 @@ from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
 ###############################################################################
 
 MU_LABEL_RE = '^0\.1\.[1-9][0-9]*$'
+NEW_MU_LABEL_RE = '^0\.1\.c[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
-SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.[1-9][0-9]*$'
+NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.d[1-9][0-9]*$'
+SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
 ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
 ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
@@ -31,6 +33,7 @@ st0_dict = {
     'SO(1)':'\\mathrm{SO}(1)',
     'U(1)':'\\mathrm{U}(1)',
     'SU(2)':'\\mathrm{SU}(2)',
+    'U(2)':'\\mathrm{U}(2)',
     'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
     'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
     'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
@@ -92,6 +95,7 @@ def sg_pretty(sg_label):
 # dictionary for quick and dirty prettification that does not access the database
 st_pretty_dict = {
     'USp(4)':'\\mathrm{USp}(4)',
+    'U(2)':'\\mathrm{U}(2)',
     'SU(2)':'\\mathrm{SU}(2)',
     'U(1)':'\\mathrm{U}(1)',
     'N(U(1))':'N(\\mathrm{U}(1))'
@@ -287,7 +291,7 @@ def mu_info(n):
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\mathrm{trivial}'
+    rec['st0_description'] = r'\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
     rec['abelian'] = boolean_name(True)
@@ -320,10 +324,11 @@ def mu_portrait(n):
     return encode_plot(plot)
 
 def su2_mu_info(w,n):
-    """ return data for ST group mu(n); for n > 2 these groups are irrational and not stored in the database """
+    """ return data for ST group SU(2) x mu(n) (of any wt > 0); these groups are not stored in the database """
+    assert w > 0 and n > 0
     n = ZZ(n)
     rec = {}
-    rec['label'] = "%d.2.3.%d"%(w,n)
+    rec['label'] = "%d.2.3.c%d"%(w,n)
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
@@ -335,7 +340,7 @@ def su2_mu_info(w,n):
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SU(2)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&\\beta\\\\-\\bar\\beta&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha+\\beta\\bar\\beta = 1,\\ \\alpha,\\beta\\in\\mathbb{C}\\right\\}'
+    rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&\beta\\-\bar\beta&\bar\alpha\end{bmatrix}:\alpha\bar\alpha+\beta\bar\beta = 1,\ \alpha,\beta\in\mathbb{C}\right\}'
     rec['component_group'] = 'C_{%d}'%n
     rec['abelian'] = boolean_name(True)
     rec['cyclic'] = boolean_name(True)
@@ -343,8 +348,8 @@ def su2_mu_info(w,n):
     rec['trace_zero_density']='0'
     rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
-    rec['subgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,n/p)) for p in n.prime_factors()])
-    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
     rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
     su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
     rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
@@ -353,11 +358,56 @@ def su2_mu_info(w,n):
     return rec
 
 def su2_mu_portrait(n):
-    """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
+    """ returns an encoded line plot of SU(2) x mu(n) in the complex plane """
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
-        plot = circle((0,0),2,thickness=3,fill=True)
+        plot = circle((0,0),2,fill=True)
+    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
+    plot.set_aspect_ratio(4.0/3.0)
+    return encode_plot(plot)
+
+
+def NU1_mu_info(w,n):
+    """ return data for ST group N(U(1)) x mu(n) (of any wt > 0); these groups are not stored in the database """
+    assert w > 0 and n > 0
+    n = ZZ(n)
+    rec = {}
+    rec['label'] = "%d.2.1.d%d"%(w,n)
+    rec['weight'] = w
+    rec['degree'] = 2
+    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['name'] = 'N(U(1)) x mu(%d)'%n if n > 1 else 'N(U(1))'
+    rec['pretty'] = 'N(\mathrm{U}(1)\\times\mu(%d)'%n if n > 1 else 'N(\mathrm{U}(1))'
+    rec['real_dimension'] = 1
+    rec['components'] = int(2*n)
+    rec['ambient'] = '\mathrm{U}(2)'
+    rec['connected'] = boolean_name(rec['components'] == 1)
+    rec['st0_name'] = 'U(1)'
+    rec['identity_component'] = st0_pretty(rec['st0_name'])
+    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&0\\\\0&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha = 1,\\ \\alpha\\in\\mathbb{C}\\right\\}'
+    rec['component_group'] = 'D_{%d}'%n
+    rec['abelian'] = boolean_name(n <= 2)
+    rec['cyclic'] = boolean_name(n <= 1)
+    rec['solvable'] = boolean_name(True)
+    rec['trace_zero_density']='1/2'
+    rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ 1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
+    rec['numgens'] = 2
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
+    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['trace_moments'] = trace_moments(rec['moments'])
+    rec['counts'] = [['a_1', [[0,n]]]]
+    return rec
+
+def NU1_mu_portrait(n):
+    """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
+    if n <= 120:
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.05,fill=true)
+    else:
+        plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
     plot.set_aspect_ratio(4.0/3.0)
     return encode_plot(plot)
@@ -370,9 +420,22 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
+    if re.match(NEW_MU_LABEL_RE, label):
+        n = ZZ(label.split('.')[2])[1:]
+        if n > 10**20:
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
+            return redirect(url_for(".index"))
+        return render_st_group(mu_info(n), portrait=mu_portrait(n))
+    if re.match(NU1_MU_LABEL_RE, label):
+        w = ZZ(label.split('.')[0])
+        n = ZZ(label.split('.')[3])[1:]
+        if 2*n > 10**20:
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", 2*n)
+            return redirect(url_for(".index"))
+        return render_st_group(nu1_mu_info(w,n), portrait=su2_mu_portrait(n))
     if re.match(SU2_MU_LABEL_RE, label):
         w = ZZ(label.split('.')[0])
-        n = ZZ(label.split('.')[3])
+        n = ZZ(label.split('.')[3])[1:]
         if n > 10**20:
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
