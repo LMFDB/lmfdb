@@ -447,7 +447,8 @@ def render_by_label(label):
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
-    info['st0_name']=st0['pretty']
+    info['st0_name']=st0['name']
+    info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
     G = db.gps_small.lookup(data['component_group'])
     if not G:
