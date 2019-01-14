@@ -327,7 +327,7 @@ def su2_mu_info(w,n):
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
-    rec['name'] = 'SU(2) x mu(%d)'%n
+    rec['name'] = 'SU(2) x mu(%d)'%n if n > 1 else 'SU(2)'
     rec['pretty'] = '\mathrm{SU}(2)\\times\mu(%d)'%n if n > 1 else '\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
@@ -341,7 +341,7 @@ def su2_mu_info(w,n):
     rec['cyclic'] = boolean_name(True)
     rec['solvable'] = boolean_name(True)
     rec['trace_zero_density']='0'
-    rec['gens'] = r'\left[\zeta_{%d}\right]'%n
+    rec['gens'] = r'\\left\\{\\begin{bmatrix} 1 & 0 \\\\ 0 & \\zeta_%d\\end{bmatrix}'%n
     rec['numgens'] = 1
     rec['subgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,n/p)) for p in n.prime_factors()])
     rec['supgroups'] = comma_separated_list([st_link("%d.2.3.%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
@@ -354,7 +354,7 @@ def su2_mu_info(w,n):
 
 def su2_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
-    if n <= 120:
+    if n <= 360:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
         plot = circle((0,0),2,thickness=3,fill=True)
