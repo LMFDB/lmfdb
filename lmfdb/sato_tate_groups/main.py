@@ -56,7 +56,7 @@ def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
     if re.match(SU2_MU_LABEL_RE, label):
-        if label.split('.')[13] == '1':
+        if label.split('.')[3] == '1':
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)')
         else:
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mathrm{SU}(2)\\times\\mu(%s)'%label.split('.')[3])
