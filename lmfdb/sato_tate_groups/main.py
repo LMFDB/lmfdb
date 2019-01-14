@@ -31,8 +31,6 @@ st0_dict = {
     'SO(1)':'\\mathrm{SO}(1)',
     'U(1)':'\\mathrm{U}(1)',
     'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)_2':'\\mathrm{U}(1)_2',
-    'SU(2)_2':'\\mathrm{SU}(2)_2',
     'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
     'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
     'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
@@ -74,6 +72,10 @@ def trace_moments(moments):
 def st0_pretty(st0_name):
     if re.match('SO\(1\)\_\d+', st0_name):
         return '\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match('U\(1\)\_\d+', st0_name):
+        return '\\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match('SU\(2\)\_\d+', st0_name):
+        return '\\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
@@ -328,7 +330,7 @@ def su2_mu_info(w,n):
     rec['connected'] = boolean_name(rec['components'] == 1)
     rec['st0_name'] = 'SU(2)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\mathrm{SU}(2)'
+    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&\\beta\\\\-\\bar\\beta&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha+\\beta\\bar\\beta = 1,\\ \\alpha,\\beta\\in\\mathbb{C}\\right\\}'
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
     rec['gens'] = r'\left[\zeta_{%d}\right]'%n
