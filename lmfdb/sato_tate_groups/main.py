@@ -328,7 +328,7 @@ def su2_mu_info(w,n):
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
     rec['name'] = 'SU(2) x mu(%d)'%n
-    rec['pretty'] = '\mathrm{SU}(2)\\times\mu(%d)'%n
+    rec['pretty'] = '\mathrm{SU}(2)\\times\mu(%d)'%n if n > 1 else '\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{U}(2)'
@@ -337,6 +337,9 @@ def su2_mu_info(w,n):
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&\\beta\\\\-\\bar\\beta&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha+\\beta\\bar\\beta = 1,\\ \\alpha,\\beta\\in\\mathbb{C}\\right\\}'
     rec['component_group'] = 'C_{%d}'%n
+    rec['abelian'] = boolean_name(True)
+    rec['cyclic'] = boolean_name(True)
+    rec['solvable'] = boolean_name(True)
     rec['trace_zero_density']='0'
     rec['gens'] = r'\left[\zeta_{%d}\right]'%n
     rec['numgens'] = 1
@@ -352,7 +355,7 @@ def su2_mu_info(w,n):
 def su2_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  sum([line([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))]) for m in range(n)])
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
     else:
         plot = circle((0,0),2,thickness=3,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
