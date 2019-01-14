@@ -9,7 +9,7 @@ from lmfdb.db_backend import db
 from lmfdb.base import ctx_proc_userdata
 from psycopg2.extensions import QueryCanceledError
 
-from sage.all import ZZ, cos, sin, pi, list_plot, circle
+from sage.all import ZZ, cos, sin, pi, list_plot, circle, line
 
 ###############################################################################
 # Globals
