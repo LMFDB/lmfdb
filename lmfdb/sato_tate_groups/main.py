@@ -155,7 +155,7 @@ def search_by_label(label):
     if re.match(MU_LABEL_RE, label):
         return render_by_label(label)
     # check for labels of the form w.2.3.n corresponding to SU(2) x mu(n)
-    if re.match(ST_MU_LABEL_RE, label):
+    if re.match(SU2_MU_LABEL_RE, label):
         return render_by_label(label)
     # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
     if re.match(MU_LABEL_NAME_RE, label):
