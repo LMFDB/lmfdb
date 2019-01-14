@@ -157,6 +157,10 @@ def by_label(label):
     clean_label = clean_input(label)
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
+    if label == '1.2.1.d1':
+        label = '1.2.1.2.1a' # redirect N(U(1)) x mu(1) to N(U(1)) in wt 1
+    if label == '1.2.3.c1':
+        label = '1.2.3.1.1a' # redirect SU(2) x mu(1) to SU(2) in wt 1
     return search_by_label(label)
 
 ###############################################################################
@@ -166,10 +170,6 @@ def by_label(label):
 def search_by_label(label):
     """ search for Sato-Tate group by label and render if found """
 
-    if label == '1.2.1.d1':
-        label = '1.2.1.2.1a' # treat N(U(1)) x mu(1) like N(U(1)) in wt 1
-    if label == '1.2.3.c1':
-        label = '1.2.3.1.1a' # treat SU(2) x mu(1) like SU(2) in wt 1
     if re.match(ST_LABEL_RE, label):
         return render_by_label(label)
     if re.match(ST_LABEL_SHORT_RE, label):
