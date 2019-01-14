@@ -158,9 +158,9 @@ def by_label(label):
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
     if label == '1.2.1.d1':
-        label = '1.2.1.2.1a' # redirect N(U(1)) x mu(1) to N(U(1)) in wt 1
+        return redirect(url_for('.by_label', label='1.2.1.2.1a'), 301)
     if label == '1.2.3.c1':
-        label = '1.2.3.1.1a' # redirect SU(2) x mu(1) to SU(2) in wt 1
+        return redirect(url_for('.by_label', label='1.2.3.1.1a'), 301)
     return search_by_label(label)
 
 ###############################################################################
@@ -422,6 +422,7 @@ def nu1_mu_info(w,n):
 def nu1_mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n == 1:
+        print db.gps_sato_tate_lookup('1.2.1.2.1a')
         return db.gps_sato_tate.lookup('1.2.1.2.1a').get('trace_histogram')
     if n <= 120:
         plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
