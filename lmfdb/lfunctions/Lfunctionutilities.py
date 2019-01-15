@@ -24,7 +24,7 @@ def p2sage(s):
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
     else:
-        Qa = PolynomialRing(RationalField(),"a");
+        Qa = PolynomialRing(RationalField(),"a")
         for f in [ZZ, RR, CC, Qa]:
             try:
                 return f(z)
@@ -424,7 +424,7 @@ def lfuncEPhtml(L,fmt, prec = None):
         for i,elt in enumerate(poly):
             if elt is None or (i == prec and prec != len(poly) - 1):
                 out += "+O(%s)" % (seriesvar(i, "polynomial"),)
-                break;
+                break
             elif i > 0:
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
@@ -449,7 +449,7 @@ def lfuncEPhtml(L,fmt, prec = None):
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>";
+            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
                 if gal_groups[0]==[0,0]:
@@ -892,20 +892,20 @@ def getConductorIsogenyFromLabel(label):
 # in the database, instead of trying to extract this from a URL
 # FIXME move this to somewhere else
 def name_and_object_from_url(url):
-    url_split = url.rstrip('/').lstrip('/').split("/");
-    name = '??';
-    obj_exists = False;
+    url_split = url.rstrip('/').lstrip('/').split("/")
+    name = '??'
+    obj_exists = False
 
     if url_split[0] == "EllipticCurve":
         if url_split[1] == 'Q':
             # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:]);
+            label_isogeny_class = ".".join(url_split[-2:])
             obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
         else:
             # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:]);
+            label_isogeny_class =  "-".join(url_split[-3:])
             obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class;
+        name = 'Isogeny class ' + label_isogeny_class
 
     elif url_split[0] == "Character":
         # Character/Dirichlet/19/8
@@ -917,9 +917,9 @@ def name_and_object_from_url(url):
     elif url_split[0] == "Genus2Curve":
         # Genus2Curve/Q/310329/a
         assert url_split[1] == 'Q'
-        label_isogeny_class = ".".join(url_split[-2:]);
+        label_isogeny_class = ".".join(url_split[-2:])
         obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class;
+        name = 'Isogeny class ' + label_isogeny_class
 
 
     elif url_split[0] == "ModularForm":
@@ -934,25 +934,34 @@ def name_and_object_from_url(url):
                 elif len(url_split) == 8:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a
                     newform_label = ".".join(url_split[-4:])
-                    name =  'Modular form ' + newform_label;
+                    name =  'Modular form ' + newform_label
                     obj_exists = db.mf_newforms.label_exists(newform_label)
 
 
             elif  url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                label = url_split[-1];
-                name =  'Hilbert modular form ' + label;
-                obj_exists = db.hmf_forms.label_exists(label);
+                label = url_split[-1]
+                name =  'Hilbert modular form ' + label
+                obj_exists = db.hmf_forms.label_exists(label)
 
             elif url_split[2] ==  'ImaginaryQuadratic':
                 # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
                 label = '-'.join(url_split[-3:])
-                name = 'Bianchi modular form ' + label;
-                obj_exists = db.bmf_forms.label_exists(label);
+                name = 'Bianchi modular form ' + label
+                obj_exists = db.bmf_forms.label_exists(label)
     elif url_split[0] == "ArtinRepresentation":
         label = url_split[1]
-        name =  'Artin representation ' + label;
-        obj_exists = db.artin_reps.label_exists(label.split('c')[0]);
+        name =  'Artin representation ' + label
+        obj_exists = db.artin_reps.label_exists(label.split('c')[0])
+    elif url_split[0] == "SatoTateGroup":
+        from lmfdb.sato_tate_groups.main import get_name
+        name, label = get_name(url_split[1])
+        if name is None:
+            name = label
+            obj_exists = False
+        else:
+            name = '$%s$' % name
+            obj_exists = True
 
     return name, obj_exists
 

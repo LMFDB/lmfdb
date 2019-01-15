@@ -101,7 +101,7 @@ Info was: {{info}}
         {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       </td>
       <td>
-        <select name='prime_quantifier'>
+        <select name='prime_quantifier' style="width: 85px;">
           <option value='subsets'>subset of</option>
           <option value='' selected='yes'>equal to</option>
           <option value='append'>superset of</option>
@@ -135,7 +135,13 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
+      <td colspan>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}</td>
+      <td>
+        <select name="dim_type" style="width: 85px;">
+          <option value="abs">absolute</option>
+          <option value="rel">relative</option>
+        </select>
+      </td>
       <td><input type='text' style="width: 130px;" name='dim' placeholder='1'></td>
       <td><span class="formexample"> e.g. 2, 1-6 </span></td>
 

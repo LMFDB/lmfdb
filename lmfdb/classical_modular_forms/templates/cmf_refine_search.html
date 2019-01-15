@@ -45,7 +45,12 @@ function set_buckets(col_selecter, bucket_id) {
         <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}</td>
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}
+      <div class="float-right"><select name="dim_type">
+        <option value="abs"{% if info.dim_type == 'abs' %} selected='yes'{% endif %}>absolute</option>
+        <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
+      </select></div>
+    </td>
     <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
   </tr>
@@ -163,28 +168,40 @@ function set_buckets(col_selecter, bucket_id) {
   <tr>
     <td colspan="2"> Columns to display </td>
     <td> Show </td>
+  </tr>
+  <tr>
+    <td>
+      <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. 3,7,19, 40-90 </span>
+    </td>
+    <td>
+      <select name='n_primality' style="width: 150px;">
+        <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
+        <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
+        <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
+      </select>
+    </td>
+  </tr>
+  <tr>
     <td colspan="2"> Trace constraints </td>
-    <tr>
-      <td>
-        <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
-      </td>
-      <td style="width: 150px;">
-        <span class="formexample"> e.g. 3,7,19, 40-90 </span>
-      </td>
-      <td>
-        <select name='n_primality' style="width: 150px;">
-          <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
-          <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
-          <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
-        </select>
-      </td>
-      <td>
-        <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
-      </td>
-      <td style="width: 150px;">
-        <span class="formexample"> e.g. a17=1, a8=0 </span>
-      </td>
-    </tr>
+    <td colspan="2"> Modulo </td>
+  </tr>
+  <tr>
+    <td>
+      <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. a17=1, a8=0 </span>
+    </td>
+    <td>
+      <input type='text' style="width: 140px;" name='an_modulo' value='{{info.an_modulo}}'>
+    </td>
+    <td style="width: 150px;">
+      <span class="formexample"> e.g. 5, 16 </span>
+    </td>
+  </tr>
 </table>
 {% endif %}
 </form>

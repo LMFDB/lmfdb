@@ -522,7 +522,10 @@ def parse_discriminant(d, sign = 0):
 
 def newform_parse(info, query):
     common_parse(info, query)
-    parse_ints(info, query, 'dim', name="Dimension")
+    if info.get('dim_type') == 'rel':
+        parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
+    else:
+        parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_self_twist(info, query)
     parse_subset(info, query, 'self_twist_discs', name="CM/RM discriminant", parse_singleton=lambda d: parse_discriminant(d))
@@ -591,7 +594,13 @@ def trace_search(info, query):
         raise ValueError(msg)
     info['Tr_n'] = Trn
     newform_parse(info, query)
-    parse_equality_constraints(info, query, 'an_constraints', qfield='traces', shift=-1)
+    q = info.get('an_modulo','').strip()
+    if q:
+        q = int(q)
+        parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
+                                   parse_singleton=(lambda x: {'$mod':[x,q]}))
+    else:
+        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
     set_info_funcs(info)
 
 def set_rows_cols(info, query):

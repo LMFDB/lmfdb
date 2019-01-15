@@ -54,27 +54,37 @@ def string_matrix(m):
         return ''
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(map(str, m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
 
-def st_link(label):
+def get_name(label):
     if re.match(MU_LABEL_RE, label):
-        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mu(%s)'%label.split('.')[2])
-    if re.match(NU1_MU_LABEL_RE, label):
+        name = r'\mu(%s)'%label.split('.')[2]
+    elif re.match(NU1_MU_LABEL_RE, label):
         if label.split('.')[3] == 'd1':
             if label.split('.')[0] == '1':
                 label = '1.2.1.2.1a'
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))')
+            name = r'N(\mathrm{U}(1))'
         else:
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:])
-    if re.match(SU2_MU_LABEL_RE, label):
+            name = r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:]
+    elif re.match(SU2_MU_LABEL_RE, label):
         if label.split('.')[3] == 'c1':
             if label.split('.')[0] == '1':
                 label = '1.2.3.1.1a'
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)')
+            name = r'\mathrm{SU}(2)'
         else:
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:])
-    data = db.gps_sato_tate.lookup(label)
-    if not data:
+            name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
+    else:
+        data = db.gps_sato_tate.lookup(label)
+        if data:
+            name = data['pretty']
+        else:
+            name = None
+    return name, label
+
+def st_link(label):
+    name, label = get_name(label)
+    if name is None:
         return label
-    return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
+    else:
+        return '<a href=%s>$%s$</a>' % (url_for('.by_label', label=label), name)
 
 def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree

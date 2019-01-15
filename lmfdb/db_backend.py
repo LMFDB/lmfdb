@@ -600,6 +600,12 @@ class PostgresTable(PostgresBase):
         elif key == '$notcontains':
             cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
             value = [[v] for v in value]
+        elif key == '$mod':
+            if not (isinstance(value, (list, tuple)) and len(value) == 2):
+                raise ValueError("Error building modulus operation: %s" % value)
+            # have to take modulus twice since MOD(-1,5) = -1 in postgres
+            cmd = SQL("MOD(%s + MOD({0}, %s), %s) = %s").format(col)
+            value = [value[1], value[1], value[1], value[0]]
         else:
             if key == '$lte':
                 cmd = SQL("{0} <= %s")
@@ -687,8 +693,13 @@ class PostgresTable(PostgresBase):
                     continue
                 if '.' in key:
                     path = [int(p) if p.isdigit() else p for p in key.split('.')]
-                    key, path = path[0], [SQL("->{0}").format(Literal(p)) for p in path[1:]]
-                    force_json = True
+                    key = path[0]
+                    if self.col_type.get(key) == 'jsonb':
+                        path = [SQL("->{0}").format(Literal(p)) for p in path[1:]]
+                        force_json = True
+                    else:
+                        path = [SQL("[{0}]").format(Literal(p)) for p in path[1:]]
+                        force_json = False
                 else:
                     path = []
                     force_json = (self.col_type[key] == 'jsonb')
