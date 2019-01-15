@@ -960,7 +960,7 @@ def name_and_object_from_url(url):
             name = label
             obj_exists = False
         else:
-            name = '$%s$' % name
+            name = 'Sato Tate group $%s$' % name
             obj_exists = True
 
     return name, obj_exists

@@ -559,10 +559,17 @@ def newform_search(info, query):
 
 def trace_postprocess(res, info, query):
     if res:
+        if info.get('view_modp') == 'reductions':
+            q = int(info['an_modulo'])
+        else:
+            q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
         for rec in db.mf_hecke_traces.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
-            trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
+            if q:
+                trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
+            else:
+                trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
         for mf in res:
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
@@ -596,11 +603,22 @@ def trace_search(info, query):
     newform_parse(info, query)
     q = info.get('an_modulo','').strip()
     if q:
-        q = int(q)
+        try:
+            q = int(q)
+            if q <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            msg = "Modulo must be a positive integer"
+            flash_error(msg)
+            raise ValueError(msg)
         parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
-                                   parse_singleton=(lambda x: {'$mod':[x,q]}))
+                                   parse_singleton=(lambda x: {'$mod':[int(x)%q,q]}))
     else:
         parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
+        if info.get('view_modp') == 'reductions':
+            msg = "Must set Modulo input in order to view reductions"
+            flash_error(msg)
+            raise ValueError(msg)
     set_info_funcs(info)
 
 def set_rows_cols(info, query):

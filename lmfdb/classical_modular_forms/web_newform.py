@@ -13,6 +13,7 @@ from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
 from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from lmfdb.transitive_group import small_group_label_display_knowl
+from lmfdb.sato_tate_groups.main import st_link
 from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
@@ -824,6 +825,12 @@ function switch_basis(btype) {
             para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twists'))
         para += '.</p>\n'
         return para + '\n'.join(twists)
+
+    def sato_tate_display(self):
+        if self.sato_tate_group:
+            return st_link(self.sato_tate_group)
+        else:
+            return ''
 
     def eigs_as_seqseq_to_qexp(self, prec_max):
         # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
