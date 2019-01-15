@@ -63,14 +63,14 @@ def st_link(label):
                 label = '1.2.1.2.1a'
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))')
         else:
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'N(\mathrm{U}(1))\times\mu(%s)'%label.split('.')[3][1:])
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:])
     if re.match(SU2_MU_LABEL_RE, label):
         if label.split('.')[3] == 'c1':
             if label.split('.')[0] == '1':
                 label = '1.2.3.1.1a'
             return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)')
         else:
-            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)\times\mu(%s)'%label.split('.')[3][1:])
+            return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:])
     data = db.gps_sato_tate.lookup(label)
     if not data:
         return label
@@ -347,8 +347,8 @@ def su2_mu_info(w,n):
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
-    rec['name'] = 'SU(2) x mu(%d)'%n if n > 1 else 'SU(2)'
-    rec['pretty'] = r'\mathrm{SU}(2)\times\mu(%d)'%n if n > 1 else r'\mathrm{SU}(2)'
+    rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
+    rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{U}(2)'
@@ -394,8 +394,8 @@ def nu1_mu_info(w,n):
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = boolean_name(True if n <= 2 else False)
-    rec['name'] = 'N(U(1)) x mu(%d)'%n if n > 1 else 'N(U(1))'
-    rec['pretty'] = r'N(\mathrm{U}(1))\times\mu(%d)'%n if n > 1 else r'N(\mathrm{U}(1))'
+    rec['name'] = 'U(1)[D%d]'%n if n > 1 else 'N(U(1))'
+    rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
     rec['components'] = int(2*n)
     rec['ambient'] = '\mathrm{U}(2)'
