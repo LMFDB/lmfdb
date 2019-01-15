@@ -19,6 +19,7 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* show complex embeddings no matter what??
 * allow to customize from main stats
 * add constraints for the traces in dynamic stats
 * Add trace tables for newspaces once trace forms are present (David)
@@ -65,6 +66,7 @@ COLLABORATION SUGGESTIONS:
 * Protocol buffers
 
 GOOD:
+* figure out the sort order for lfunc_lfunctions
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage
 * col_type is cached add to FAQ
 * self-twist sometimes wraps
