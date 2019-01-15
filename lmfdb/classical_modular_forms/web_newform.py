@@ -150,10 +150,10 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
-        if 'field_disc' not in data: # Until we have search results include nulls
-            self.field_disc = None
-        elif self.field_disc:
-            self.field_disc = [(ZZ(p), ZZ(e)) for p, e in self.field_disc]
+        if 'field_disc_factorization' not in data: # Until we have search results include nulls
+            self.field_disc_factorization = None
+        elif self.field_disc_factorization:
+            self.field_disc_factorization = [(ZZ(p), ZZ(e)) for p, e in self.field_disc_factorization]
         self.rel_dim = self.dim // self.char_degree
 
         self._inner_twists = data.get('inner_twists',[])
@@ -192,7 +192,7 @@ class WebNewform(object):
                                # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
-        self.char_conrey = self.char_labels[0]
+        self.char_conrey = self.conrey_indexes[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
@@ -258,7 +258,7 @@ class WebNewform(object):
     def lfunction_labels(self):
         base_label = self.label.split('.')
         res = []
-        for character in self.char_labels:
+        for character in self.conrey_indexes:
             for j in range(self.dim/self.char_degree):
                 label = base_label + [str(character), str(j + 1)]
                 lfun_label = '.'.join(label)
@@ -281,10 +281,10 @@ class WebNewform(object):
         if self.Nk2 <= 4000:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if len(self.char_labels)*self.rel_dim > 50:
+            if len(self.conrey_indexes)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
-                # properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim)
-                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.char_labels, self.rel_dim)
+                # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.lfunction_labels:
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
@@ -368,7 +368,7 @@ class WebNewform(object):
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
-                chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
+                chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
                 for p in self.cc_data.values()[0]['angles'].keys():
                     if p.divides(self.level):
                         continue
@@ -416,7 +416,7 @@ class WebNewform(object):
         if m and d != 2:
             return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
-            return field_display_gen(self.nf_label, self.field_poly, self.field_disc)
+            return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
     def artin_field_display(self):
@@ -897,7 +897,7 @@ function switch_basis(btype) {
         if not isinstance(elabel, basestring): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
-        return str(self.rel_dim * self.char_labels.index(c) + e)
+        return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):

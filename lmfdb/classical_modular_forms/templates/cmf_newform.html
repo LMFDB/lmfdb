@@ -471,7 +471,7 @@ function get_all_embeddings(num_embeddings) {
 </table>
 {% endif %}
 
-{% if newform.hecke_cutters %}
+{% if newform.hecke_cutters is not none %}
 {{ newform.display_hecke_cutters() | safe }}
 {% endif %}
 {% endif %}

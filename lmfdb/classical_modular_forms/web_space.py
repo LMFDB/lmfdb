@@ -121,7 +121,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'char_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 
 class DimGrid(object):
@@ -192,12 +192,12 @@ class WebNewformSpace(object):
         self.num_forms = data.get('num_forms')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        self.char_conrey = self.char_labels[0]
+        self.char_conrey = self.conrey_indexes[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
 
@@ -231,7 +231,7 @@ class WebNewformSpace(object):
             ('Download all stored data', url_for('.download_newspace', label=self.label)),
         ]
 
-        if self.char_labels[0] == 1:
+        if self.conrey_indexes[0] == 1:
             self.trivial_character = True
             character_str = "Trivial Character"
             if self.dim == 0:
@@ -242,7 +242,7 @@ class WebNewformSpace(object):
         else:
             self.trivial_character = False
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
-            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
+            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
@@ -262,7 +262,7 @@ class WebNewformSpace(object):
         return WebNewformSpace(data)
 
     def _vec(self):
-        return [self.level, self.weight, self.char_labels[0]]
+        return [self.level, self.weight, self.conrey_indexes[0]]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -292,7 +292,7 @@ class WebNewformSpace(object):
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, self.char_labels[0], "S", 0, "new" if new else "", symbolic_chi=True)
+        return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
@@ -451,10 +451,10 @@ class WebGamma1Space(object):
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
-            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['char_labels'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_indexes'][0])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
-                                             number=space['char_labels'][0])
+                                             number=space['conrey_indexes'][0])
             chi_rep += '">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']

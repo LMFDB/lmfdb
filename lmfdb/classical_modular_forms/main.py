@@ -66,7 +66,7 @@ def set_info_funcs(info):
         if m and d != 2:
             return cyc_display(m, d, mf.get('field_poly_is_real_cyclotomic'))
         else:
-            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc'), truncate=16)
+            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc_factorization'), truncate=16)
 
     info["nf_link"] = nf_link
 
@@ -447,7 +447,7 @@ def download_full_space(label):
     return CMF_download().download_full_space(label)
 
 @search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
-def parse_character(inp, query, qfield, level_field='level', conrey_field='char_labels'):
+def parse_character(inp, query, qfield, level_field='level', conrey_field='conrey_indexes'):
     pair = inp.split('.')
     if len(pair) != 2:
         raise ValueError("It must be of the form N.i")
@@ -545,7 +545,7 @@ def newform_parse(info, query):
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
-             projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
+             projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'field_disc_factorization', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,
@@ -723,9 +723,9 @@ def dimension_form_search(info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              # temporary, all cols except trace
-             projection = ['AL_dims',  'weight',  'level_radical',  'char_labels',  'char_parity',  'char_conductor',  'level_primes',  'prim_orbit_index',  'id',  'sturm_bound',  'char_orbit_index',  'analytic_conductor',  'char_degree',  'label',  'char_order',  'dim',  'char_values',  'odd_weight',  'eis_new_dim',  'mf_new_dim',  'cusp_dim',  'trace_bound',  'char_orbit_label',  'mf_dim',  'eis_dim',  'level',  'char_is_real',  'hecke_orbit_dims',  'Nk2',  'plus_dim',  'num_forms'],
+             projection = ['AL_dims',  'weight',  'level_radical',  'conrey_indexes',  'char_parity',  'char_conductor',  'level_primes',  'prim_orbit_index',  'id',  'sturm_bound',  'char_orbit_index',  'analytic_conductor',  'char_degree',  'label',  'char_order',  'dim',  'char_values',  'odd_weight',  'eis_new_dim',  'mf_new_dim',  'cusp_dim',  'trace_bound',  'char_orbit_label',  'mf_dim',  'eis_dim',  'level',  'char_is_real',  'hecke_orbit_dims',  'Nk2',  'plus_dim',  'num_forms'],
              # the minimal set
-             #projection=['label', 'analytic_conductor', 'level', 'weight', 'char_labels', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
+             #projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list,
