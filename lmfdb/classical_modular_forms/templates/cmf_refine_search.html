@@ -45,7 +45,7 @@ function set_buckets(col_selecter, bucket_id) {
         <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Dimension') }}
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}
       <div class="float-right"><select name="dim_type">
         <option value="abs"{% if info.dim_type == 'abs' %} selected='yes'{% endif %}>absolute</option>
         <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
@@ -187,6 +187,7 @@ function set_buckets(col_selecter, bucket_id) {
   <tr>
     <td colspan="2"> Trace constraints </td>
     <td colspan="2"> Modulo </td>
+    <td> View </td>
   </tr>
   <tr>
     <td>
@@ -200,6 +201,12 @@ function set_buckets(col_selecter, bucket_id) {
     </td>
     <td style="width: 150px;">
       <span class="formexample"> e.g. 5, 16 </span>
+    </td>
+    <td>
+      <select name='view_modp' style="width: 150px;">
+        <option value="integers"{{ "selected" if info.view_modp == 'integers' }}>integers</option>
+        <option value="reductions"{{ "selected" if info.view_modp == 'reductions' }}>reductions</option>
+      </select>
     </td>
   </tr>
 </table>
