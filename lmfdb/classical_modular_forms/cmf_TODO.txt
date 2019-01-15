@@ -7,7 +7,7 @@ IMPORTANT:
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [4001,10000]  ready for upload
     # [10001,20000] (missing 44)
-    # [20001,40000] (ongoing @zeus.lmfdb.xyz)
+    # [20001,40000] (missing 62)
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
@@ -20,6 +20,7 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* show complex embeddings no matter what??
 * allow to customize from main stats
 * add constraints for the traces in dynamic stats
 * Add trace tables for newspaces once trace forms are present (David)
@@ -66,6 +67,7 @@ COLLABORATION SUGGESTIONS:
 * Protocol buffers
 
 GOOD:
+* figure out the sort order for lfunc_lfunctions
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage
 * col_type is cached add to FAQ
 * self-twist sometimes wraps
