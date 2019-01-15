@@ -418,7 +418,7 @@ def nu1_mu_info(w,n):
     rec['cyclic'] = boolean_name(n <= 1)
     rec['solvable'] = boolean_name(True)
     rec['trace_zero_density']='1/2'
-    rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ 1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
+    rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
     rec['numgens'] = 2
     rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
     rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
