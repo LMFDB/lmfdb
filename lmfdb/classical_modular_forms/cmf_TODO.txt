@@ -3,7 +3,8 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Add relative degree to mf_newforms (Drew), consider adding search on this (David)
-* Add "mod-p mod" to trace table lookup (requires schema change)
+* Add "mod-p mode" to trace table lookup (requires schema change)
+* Add Sato-Tate group to mf_newforms for k > 1 (Drew)
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes.
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
@@ -20,7 +21,6 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* Add Sato-Tate group to mf_newforms for k > 1 (Drew)
 * allow to customize from main stats
 * add constraints for the traces in dynamic stats
 * Add trace tables for newspaces once trace forms are present (David)
