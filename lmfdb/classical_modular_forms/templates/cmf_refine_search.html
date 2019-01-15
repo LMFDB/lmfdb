@@ -152,11 +152,11 @@ function set_buckets(col_selecter, bucket_id) {
   {% include 'dynamic_stats_input.html' %}
   {% else %}
   <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 110px" onclick='resetStart()'>Search again</button></td>
+    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px;" onclick='resetStart()'>Search again</button></td>
     {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
     {% for type, desc in search_types %}
     {% if info.search_type != type %}
-    <td class="button"><button type='submit' name='search_type' value='{{ type }}'>{{ desc }}</button> &nbsp; &nbsp; </td>
+    <td class="button"><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
     {% endif %}
     {% endfor %}
   </tr>
