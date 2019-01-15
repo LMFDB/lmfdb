@@ -40,7 +40,7 @@ function set_buckets(col_selecter, bucket_id) {
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
+        <option>any parity</option>
         <option value="even"{% if info.weight_parity == 'even' %} selected='yes'{% endif %}>even</option>
         <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
       </select></div>
@@ -73,7 +73,7 @@ function set_buckets(col_selecter, bucket_id) {
     </td>
     <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-          <option></option>
+          <option>any parity</option>
           <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
           <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
         </select></div>

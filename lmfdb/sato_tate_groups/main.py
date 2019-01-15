@@ -84,7 +84,7 @@ def st_link(label):
     if name is None:
         return label
     else:
-        return '<a href=%s>$%s$</a>' % (url_for('.by_label', label=label), name)
+        return '<a href=%s>$%s$</a>' % (url_for('st.by_label', label=label), name)
 
 def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree

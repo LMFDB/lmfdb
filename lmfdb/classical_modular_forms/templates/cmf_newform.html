@@ -159,6 +159,13 @@
     <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
+  {% if newform.weight > 1 %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.sato_tate', title='Sato-Tate group') }}</td>
+    <td>\(\operatorname{ST}(f)\)</td>
+    <td>\(=\)</td>
+    <td>{{ newform.sato_tate_display() | safe }}</td>
+  {% endif %}
 </table>
 
 <script>
