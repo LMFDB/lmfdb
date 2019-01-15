@@ -171,10 +171,10 @@ function set_buckets(col_selecter, bucket_id) {
     {% endfor %}
     <td>
       <select name='sort_order' style="width: 150px;">
-        <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>an. cond.</option>
+        <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>analytic conductor</option>
         <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
-        <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dim.</option>
-        <option value='reldim'{% if info.sort_order=='reldim' %} selected{% endif %}>rel. dim.</option>
+        <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
+        <option value='reldim'{% if info.sort_order=='reldim' %} selected{% endif %}>relative dimension</option>
         <option value='N'{% if info.sort_order=='N' %} selected{% endif %}>level</option>
         <option value='k'{% if info.sort_order=='k' %} selected{% endif %}>weight</option>
       </select>
