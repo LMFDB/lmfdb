@@ -71,7 +71,7 @@ function set_buckets(col_selecter, bucket_id) {
           <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
         </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
+    <td>{{ KNOWL('mf.elliptic.character', title='Char.') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
           <option>any parity</option>
           <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
