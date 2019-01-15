@@ -1,5 +1,4 @@
 CRITICAL (BUGS):
-* Mod-p trace constraints need to handle negative numbers, e.g. a2=-1 mod 5 gives no results http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=Traces&dim_type=abs&search_type=Traces&n=1-40&n_primality=primes&an_constraints=a2%3D-1&an_modulo=5 but a2=4 mod 5 gives 7515: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=Traces&dim_type=abs&search_type=Traces&n=1-40&n_primality=primes&an_constraints=a2%3D4&an_modulo=5
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes.
@@ -15,17 +14,16 @@ IMPORTANT:
 * Use character values to generate the an from ap in Magma code (Edgar)
 * Sort by A, Nk2, dim, reldim, level, weight
 * Kill axes in Sato Tate pictures
+* Add related objects to L-functions, move duals
+* when showing zeta6 in q-expansion, have coefficient field displayed as Q(zeta6)
+* switch default from Satake parameters to complex embeddings when dimension 1
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* show complex embeddings no matter what??
-* allow to customize from main stats
-* add constraints for the traces in dynamic stats
-* Add trace tables for newspaces once trace forms are present (David)
-* Add newspace portraits for all newspaces where we have the trace form (Drew)
+* Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
 * Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
@@ -68,6 +66,7 @@ COLLABORATION SUGGESTIONS:
 * Protocol buffers
 
 GOOD:
+* allow to customize from main stats
 * figure out the sort order for lfunc_lfunctions
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage
 * col_type is cached add to FAQ

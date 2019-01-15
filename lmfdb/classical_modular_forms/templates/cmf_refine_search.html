@@ -151,14 +151,34 @@ function set_buckets(col_selecter, bucket_id) {
   {% if info.search_type == 'DynStats' %}
   {% include 'dynamic_stats_input.html' %}
   {% else %}
-  <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px;" onclick='resetStart()'>Search again</button></td>
-    {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
+  {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
+  <tr style="height:20px"></tr>
+  <tr>
+    <td></td>
     {% for type, desc in search_types %}
     {% if info.search_type != type %}
-    <td class="button"><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
+    <td></td>
     {% endif %}
     {% endfor %}
+    <td>{{ KNOWL('mf.elliptic.sort_order', title='Sort order') }}</td>
+  </tr>
+  <tr>
+    <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px;" onclick='resetStart()'>Search again</button></td>
+    {% for type, desc in search_types %}
+    {% if info.search_type != type %}
+    <td><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
+    {% endif %}
+    {% endfor %}
+    <td>
+      <select name='sort_order' style="width: 150px;">
+        <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>an. cond.</option>
+        <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
+        <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dim.</option>
+        <option value='reldim'{% if info.sort_order=='reldim' %} selected{% endif %}>rel. dim.</option>
+        <option value='N'{% if info.sort_order=='N' %} selected{% endif %}>level</option>
+        <option value='k'{% if info.sort_order=='k' %} selected{% endif %}>weight</option>
+      </select>
+    </td>
   </tr>
   {% endif %}
 {% if info.search_type == 'Traces' %}

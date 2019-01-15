@@ -538,6 +538,18 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
+    if info.get('sort_order') == 'A':
+        query['__sort__'] = ['analytic_conductor', 'level', 'char_orbit_index', 'hecke_orbit']
+    elif info.get('sort_order') == 'Nk2':
+        query['__sort__'] = ['Nk2', 'level', 'char_orbit_index', 'hecke_orbit']
+    elif info.get('sort_order') == 'dim':
+        query['__sort__'] = ['dim', 'level', 'weight', 'char_orbit_index', 'hecke_orbit']
+    elif info.get('sort_order') == 'reldim':
+        query['__sort__'] = ['relative_dim', 'level', 'weight', 'char_orbit_index', 'hecke_orbit']
+    elif info.get('sort_order') == 'N':
+        query['__sort__'] = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
+    elif info.get('sort_order') == 'k':
+        query['__sort__'] = ['weight', 'level', 'char_orbit_index', 'hecke_orbit']
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
