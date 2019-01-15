@@ -94,7 +94,7 @@
     <tr>
       <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
       <td> \({{ space.analytic_conductor }}\) </td>
-      <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
+      <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['conrey_indexes'][0]) }}"> \( \chi_{ {{space.level}} }({{space.conrey_indexes[0]}}, \cdot) \)</a> </td>
       <td class="center"> \({{ space.char_order }}\) </td>
       <td class="center"> \({{ space.dim }}\) </td>
       <td class="nowrap center">{{ info.display_decomp(space) | safe}}</td>

@@ -11,12 +11,16 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Use character values to generate the an from ap in Magma code (Edgar)
 * Sort by A, Nk2, dim, reldim, level, weight
 * Kill axes in Sato Tate pictures
 * Add related objects to L-functions, move duals
 * when showing zeta6 in q-expansion, have coefficient field displayed as Q(zeta6)
 * switch default from Satake parameters to complex embeddings when dimension 1
+* add ECQD and genus 2 curves to friends (Edgar)
+* Use character values to generate the an from ap in Magma code (Edgar)
+* just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
+* knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/
+
 
 FINAL CHECKS:
 * Make sure indexes are appropriate (Edgar)
@@ -27,15 +31,12 @@ FINAL CHECKS:
 * code snippets for form and space pages in Sage and Pari.
 * Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
-* add ECQD and genus 2 curves to friends (Edgar)
 * add L-functions instances for Artin rep (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * avoid access exclusive lock with the alter table when using copy from
-* Compute completions at global fields (primes dividing level), compute decomposition groups, embeddings (David)
-* Consider displaying the disriminant of coefficient ring on newform pages when field discriminant is known (this is just the product of the index and the field discriminant)
+* Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
 * Add completeness table and metadata in order to make claims about provability
 * checklist is broken
-* knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/
 * Add validate_header function for copy_from, reload, etc (David)
 * Add replace_from function to db_backend (David)
 
@@ -63,14 +64,10 @@ KNOWL FEATURES: (March)
 
 COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
-* Protocol buffers
 
 GOOD:
 * allow to customize from main stats
 * figure out the sort order for lfunc_lfunctions
-* just creating a q-exp as a power series in Magma without using ModForms just like in Sage
-* col_type is cached add to FAQ
-* self-twist sometimes wraps
 * move the constant coefficient in q-exp coefficients to the left
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
@@ -121,6 +118,7 @@ NOT CMF STUFF:
 * Shrink the sidebar with a button analogous to the properties shrinker
 * Related fields for dirichlet characters that are Kronecker symbols
 * Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
+* col_type is cached, add to FAQ
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
