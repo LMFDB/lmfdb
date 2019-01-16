@@ -74,7 +74,7 @@ $(function() {
 
 
 /* javascript code to generate the properties box */
-function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
+function properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim) {
   //body reference
   var body = document.getElementById("properties_script").parentElement
   var ul = document.createElement('ul');
@@ -91,10 +91,10 @@ function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
     add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
   }
 
-  for (var i = 0; i < char_labels.length; i++) {
+  for (var i = 0; i < conrey_indexes.length; i++) {
     for (var j = 1; j <= rel_dim; j++) {
-      var lfun_text = 'L-function ' + label + '.' + char_labels[i].toString() + '.' + j.toString();
-      var lfun_url = '/L'+nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
+      var lfun_text = 'L-function ' + label + '.' + conrey_indexes[i].toString() + '.' + j.toString();
+      var lfun_url = '/L'+nf_url + '/' + conrey_indexes[i].toString() + '/' + j.toString();
       add_friend(ul, lfun_text, lfun_url);
     }
   }

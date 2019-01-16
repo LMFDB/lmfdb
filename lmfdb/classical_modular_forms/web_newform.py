@@ -414,7 +414,7 @@ class WebNewform(object):
         # display the coefficient field
         m = self.field_poly_root_of_unity
         d = self.dim
-        if m and d != 2:
+        if m and (d != 2 or self.hecke_ring_cyclotomic_generator):
             return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)

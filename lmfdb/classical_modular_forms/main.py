@@ -237,7 +237,7 @@ def render_newform_webpage(label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['format'] = info.get('format', 'embed' if newform.dim > 1 else 'satake')
+    info['format'] = info.get('format', 'embed')
     p, maxp = 2, 10
     if info['format'] in ['satake', 'satake_angle']:
         while p <= maxp:

@@ -590,7 +590,7 @@ class CmfTest(LmfdbTest):
         from sage.all import Subsets
         for begin in [
                 ('level=10&weight=1-20&dim=1',
-                    ['Results (displaying all 21 matches)', '171901114', 'No', '4003.3', 'A-L signs']
+                    ['Results (displaying all 21 matches)', '171901114', 'No', '10.723', 'A-L signs']
                     ),
                 ('level=10%2C13%2C17&weight=1-8&dim=1',
                     ['Results (displaying all 12 matches)', '1373', 'No', '1093.6']

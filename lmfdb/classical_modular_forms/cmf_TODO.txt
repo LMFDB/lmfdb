@@ -13,7 +13,6 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Kill axes in Sato Tate pictures (Edgar)
 * Add related objects to L-functions, move duals (Edgar)
-* when showing zeta6 in q-expansion, have coefficient field displayed as Q(zeta6) (David)
 * switch default from Satake parameters to complex embeddings when dimension 1 (David)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)

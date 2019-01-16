@@ -392,7 +392,7 @@ class CMF_download(Downloader):
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
-        proj = ['label', 'analytic_conductor', 'char_labels', 'char_order']
+        proj = ['label', 'analytic_conductor', 'conrey_indexes', 'char_order']
         spaces = list(db.mf_newspaces.search(query, projection=proj))
         s = ""
         c = self.comment_prefix[lang]

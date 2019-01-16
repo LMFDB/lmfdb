@@ -428,7 +428,7 @@ def paintSvgHoloNew(condmax):
     values = {}
     max_k = 0 # the largest weight we see
 
-    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','char_labels','dim','char_degree']):
+    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','conrey_indexes','dim','char_degree']):
         level, k, _, hecke_letter = nf['label'].split('.')
         if int(k) > max_k:
             max_k = int(k)
@@ -440,7 +440,7 @@ def paintSvgHoloNew(condmax):
             if z1 is not None:
                 values[nf['analytic_conductor']].append([nf['label'].split('.'), z1, lfun_url])
         else:
-            for character in nf['char_labels']:
+            for character in nf['conrey_indexes']:
                 for j in range(nf['dim']/nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
