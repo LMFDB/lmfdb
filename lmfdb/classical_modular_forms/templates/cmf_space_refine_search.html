@@ -64,10 +64,10 @@
   <tr style="height: 20px;"></tr>
   {% if info.search_type != 'SpaceDimensions' %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.include_all_spaces', title='All spaces') }}
+    <td>{{ KNOWL('mf.elliptic.include_all_spaces', title='Scope') }}
       <select name='all_spaces'>
-        <option value="no"{{ "selected" if info.all_spaces == 'no'}}>No</option>
-        <option value="yes"{{ "selected" if info.all_spaces == 'yes'}}>Yes</option>
+        <option value=""{{ "selected" if info.all_spaces == ''}}>split</option>
+        <option value="yes"{{ "selected" if info.all_spaces == 'yes'}}>all</option>
       </select>
     </td>
     {% for type, desc in search_types %}
