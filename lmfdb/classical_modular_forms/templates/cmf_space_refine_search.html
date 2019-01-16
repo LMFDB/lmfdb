@@ -14,12 +14,12 @@
     <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
     <td><div class="float-left">{{ KNOWL('mf.elliptic.weight', title='Weight') }}</div>
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
+        <option value="">any parity</option>
         <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
         <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Cusp. new dim.') }}</td>
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Newspace dim.') }}</td>
     <td>Num. {{ KNOWL('mf.elliptic.newform', title='newforms') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
   </tr>
@@ -42,7 +42,7 @@
     </td>
     <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
       <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
+        <option value="">any parity</option>
         <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
         <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
       </select>
@@ -97,7 +97,7 @@
     {% else %}
     <td>
       <select name='sort_order' style="width: 150px;">
-        <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>analytic conductor</option>
+        <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>
         <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
         <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
         <option value='N'{% if info.sort_order=='N' %} selected{% endif %}>level</option>

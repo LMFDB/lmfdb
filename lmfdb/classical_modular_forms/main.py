@@ -524,7 +524,7 @@ def parse_discriminant(d, sign = 0):
     return d
 
 def parse_sort(info, query, spaces=False):
-    if info.get('sort_order') == 'A':
+    if info.get('sort_order') == '':
         query['__sort__'] = ['analytic_conductor', 'level']
     elif info.get('sort_order') == 'Nk2':
         query['__sort__'] = ['Nk2', 'level']
