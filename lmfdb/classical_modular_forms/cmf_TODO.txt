@@ -1,7 +1,7 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
-* Add data for N <= 10 and Nk^2 <= 100000 and other boxes.
+* Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [4001,10000]  ready for upload
@@ -11,17 +11,17 @@ IMPORTANT:
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
-* Sort by A, Nk2, dim, reldim, level, weight
-* Kill axes in Sato Tate pictures
-* Add related objects to L-functions, move duals
-* when showing zeta6 in q-expansion, have coefficient field displayed as Q(zeta6)
-* switch default from Satake parameters to complex embeddings when dimension 1
+* Kill axes in Sato Tate pictures (Edgar)
+* Add related objects to L-functions, move duals (Edgar)
+* when showing zeta6 in q-expansion, have coefficient field displayed as Q(zeta6) (David)
+* switch default from Satake parameters to complex embeddings when dimension 1 (David)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
-* knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/
-* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow...
-* When more than 1000 results, don't offer a download but instead explain that we don't support large downloads.
+* knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/ (David)
+* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
+* When more than 1000 results, don't offer a download but instead explain that we don't support large downloads. (David)
+* Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything) (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -30,16 +30,11 @@ FINAL CHECKS:
 -------------------------- Pull Request Line -------------------------------------------------
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
-* Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * add L-functions instances for Artin rep (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
-* avoid access exclusive lock with the alter table when using copy from
 * Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
 * Add completeness table and metadata in order to make claims about provability
-* checklist is broken
-* Add validate_header function for copy_from, reload, etc (David)
-* Add replace_from function to db_backend (David)
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -67,10 +62,9 @@ COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
 
 GOOD:
-* allow to customize from main stats
+* Create links to dynamics stats from each entry in the currated stats
 * figure out the sort order for lfunc_lfunctions
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
-* Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything)
 * knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
@@ -115,7 +109,11 @@ NOT CMF STUFF:
 * Related fields for dirichlet characters that are Kronecker symbols
 * Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
 * col_type is cached, add to FAQ
-* clean up division between json and arrays in db_backend and db_encoding.  The design was based on using json for everything, and now that that's no longer true it's a bit of a mess.
+* Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
+* avoid access exclusive lock with the alter table when using copy from
+* checklist is broken
+* Add validate_header function for copy_from, reload, etc (David)
+* Add replace_from function to db_backend (David)
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)

@@ -2726,9 +2726,9 @@ class PostgresStatsTable(PostgresBase):
 
         INPUT:
 
-        - ``jcols`` -- a list of the columns to be accumulated.
-        - ``ccols`` -- a list of the constraint columns.
-        - ``cvals`` -- a list of the values required for the constraint columns.
+        - ``jcols`` -- a list of the columns to be accumulated (wrapped in Json).
+        - ``ccols`` -- a list of the constraint columns (wrapped in Json).
+        - ``cvals`` -- a list of the values required for the constraint columns (wrapped in Json).
         - ``threshold`` -- an integer: if the number of rows with a given tuple of
            values for the accumulated columns is less than this threshold, those
            rows are thrown away.
@@ -3038,7 +3038,7 @@ class PostgresStatsTable(PostgresBase):
                 ccols, cvals = self._split_dict(constraint)
             # We need to include the constraints in the count table if we're not grouping by that column
             allcols = sorted(list(set(cols + constraint.keys())))
-            if any(key.startswith('$') for key in ccols):
+            if any(key.startswith('$') for key in constraint.keys()):
                 raise ValueError("Top level special keys not allowed")
             qstr, values = self.table._parse_dict(constraint)
             if qstr is not None:
@@ -3047,7 +3047,7 @@ class PostgresStatsTable(PostgresBase):
             where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
         else:
             where = SQL("")
-        if self._has_stats(cols, ccols, cvals, threshold, split_list):
+        if self._has_stats(Json(cols), ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
         msg = "Adding stats to " + self.search_table
@@ -3109,7 +3109,7 @@ class PostgresStatsTable(PostgresBase):
                         total += count
                         to_add[(allcols, vals)] += count
                 else:
-                    to_add.append((allcols, allcolvals, count))
+                    to_add.append((Json(allcols), Json(allcolvals), count))
                     total += count
                 if onenumeric:
                     val = colvals[0]
@@ -3121,20 +3121,21 @@ class PostgresStatsTable(PostgresBase):
             if not seen_one:
                 self.logger.info("No rows exceeded the threshold; returning after %.3f secs" % (time.time() - now))
                 return False
+            jcols = Json(cols)
             if split_list:
-                stats = [(cols, "split_total", total, ccols, cvals, threshold)]
+                stats = [(jcols, "split_total", total, ccols, cvals, threshold)]
             else:
-                stats = [(cols, "total", total, ccols, cvals, threshold)]
+                stats = [(jcols, "total", total, ccols, cvals, threshold)]
             if onenumeric and total != 0:
                 avg = float(avg) / total
-                stats.append((cols, "avg", avg, ccols, cvals, threshold))
-                stats.append((cols, "min", mn, ccols, cvals, threshold))
-                stats.append((cols, "max", mx, ccols, cvals, threshold))
+                stats.append((jcols, "avg", avg, ccols, cvals, threshold))
+                stats.append((jcols, "min", mn, ccols, cvals, threshold))
+                stats.append((jcols, "max", mx, ccols, cvals, threshold))
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             if split_list:
-                to_add = [(c, v, ct, True) for ((c, v), ct) in to_add.items()]
+                to_add = [(Json(c), Json(v), ct, True) for ((c, v), ct) in to_add.items()]
                 inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
             else:
                 inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
@@ -3198,7 +3199,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     logging.info("Starting level %s/%s (%s/%s colvecs)"%(level, len(cols), len(curlevel), binomial(len(cols), level)))
                     while i < len(curlevel):
                         colvec, _ = curlevel[i]
-                        if self._has_stats(cols, ccols, cvals, threshold=threshold, threshold_inequality=True):
+                        if self._has_stats(Json(cols), ccols, cvals, threshold=threshold, threshold_inequality=True):
                             i += 1
                             continue
                         added_any = self.add_stats(colvec, constraint=constraint, threshold=threshold)
@@ -3323,17 +3324,18 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``cols`` -- a list of column names that are stored in the counts table.
         - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
         """
+        print "Starting _get_values_counts"
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
-            selecter_values = [split_list, allcols]
+            selecter_values = [split_list, Json(allcols)]
             for i, x in enumerate(allcols):
                 if x in constraint:
                     selecter_constraints.append(SQL("values->{0} = %s".format(i)))
                     selecter_values.append(Json(constraint[x]))
         else:
             allcols = sorted(cols)
-            selecter_values = [split_list, allcols]
+            selecter_values = [split_list, Json(allcols)]
         positions = [allcols.index(x) for x in cols]
         selecter = SQL("SELECT values, count FROM {0} WHERE {1}").format(Identifier(self.counts), SQL(" AND ").join(selecter_constraints))
         headers = [[] for _ in cols]
@@ -3351,6 +3353,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         if buckets:
             buckets_seen = set()
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
+        print "About to execute"
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
             for val, header in zip(values, headers):
@@ -3366,6 +3369,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     buckets_seen.add(tuple(values[i] for i in bucket_positions))
             data[values] = D
         # Ensure that we have all the statistics necessary
+        print "Checking completeness"
         ok = True
         if buckets == {}:
             # Just check that the results are nonempty
@@ -3383,8 +3387,10 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     self.add_stats(ucols, bucketed_constraint)
                     ok = False
         if not ok:
+            print "Recursing"
             # Set buckets=False so we have no chance of infinite recursion
             return self._get_values_counts(cols, constraint, split_list, formatter, query_formatter, base_url, buckets=False)
+        print cols, headers, len(data)
         if len(cols) == 1:
             return headers[0], data
         else:
@@ -3407,15 +3413,16 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - the total number of rows satisying the constraint
         - the average value of the given column (only possible if cols has length 1), or None if the average not requested.
         """
+        jcols = Json(cols)
         total_str = "split_total" if split_list else "total"
         totaler = SQL("SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL").format(Identifier(self.stats))
         if constraint:
             ccols, cvals = self._split_dict(constraint)
             totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
-            totaler_values = [cols, total_str, ccols, cvals]
+            totaler_values = [jcols, total_str, ccols, cvals]
         else:
             totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
-            totaler_values = [cols, total_str]
+            totaler_values = [jcols, total_str]
         cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
