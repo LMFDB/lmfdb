@@ -213,16 +213,15 @@ Info was: {{info}}
   </table>
   <br>
   <table>
+    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')]),
+                             ('mf.elliptic.newspace', 'Newspaces', [('Spaces', 'List'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random')])] %}
     <tr>
-      {% for type, desc in [('List', 'List forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')] %}
+      <td>{{KNOWL(knowl, title=ktitle)}}:</td>
+      {% for type, desc in buttons %}
       <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
       {% endfor %}
     </tr>
-    <tr>
-      {% for type, desc in [('Spaces', 'List spaces'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random space')] %}
-      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
-      {% endfor %}
-    </tr>
+    {% endfor %}
   </table>
 </form>
 
