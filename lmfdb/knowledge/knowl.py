@@ -96,7 +96,7 @@ class KnowlBackend(PostgresBase):
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
                 restrictions.append(SQL("_keywords @> %s"))
-                values.append(keywords)
+                values.append(Json(keywords))
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
             values.append(Json(author))
@@ -139,7 +139,7 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        values = (Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
+        values = (Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, Json(history), Json(search_keywords))
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
@@ -148,7 +148,9 @@ class KnowlBackend(PostgresBase):
         self.cached_titles[knowl.id] = knowl.title
 
     def update(self, kid, key, value):
-        if key not in self._default_fields + ['history', '_keywords']:
+        if key in ['authors', 'history', '_keywords']:
+            value = Json(value)
+        elif key not in self._default_fields:
             raise ValueError("Bad key")
         updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
@@ -242,7 +244,7 @@ class KnowlBackend(PostgresBase):
             for kid, content, title in cur:
                 cat = extract_cat(kid)
                 search_keywords = make_keywords(content, kid, title)
-                self._execute(updater, (cat, search_keywords, kid))
+                self._execute(updater, (cat, Json(search_keywords), kid))
             hcount = 0
             selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(selecter)
@@ -250,7 +252,7 @@ class KnowlBackend(PostgresBase):
             for kid, history in cur:
                 if len(history) > max_h:
                     hcount += 1
-                    self._execute(updater, (history[-max_h:], kid))
+                    self._execute(updater, (Json(history[-max_h:]), kid))
             counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(counter)
             reindex_count = int(cur.fetchone()[0])

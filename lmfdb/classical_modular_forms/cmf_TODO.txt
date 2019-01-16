@@ -22,6 +22,7 @@ IMPORTANT:
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
 * When more than 1000 results, don't offer a download but instead explain that we don't support large downloads. (David)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything) (David)
+* Fix links from dimension space table. (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
