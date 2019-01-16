@@ -65,7 +65,7 @@ function set_buckets(col_selecter, bucket_id) {
     <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       <div class="float-right"><select name='prime_quantifier'>
           <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-          <option value=''{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+          <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
           <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
         </select></div>
     </td>

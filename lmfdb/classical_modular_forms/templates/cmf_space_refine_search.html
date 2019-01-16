@@ -36,7 +36,7 @@
     <td> {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       <select name='prime_quantifier'>
         <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
+        <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
         <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
       </select>
     </td>

@@ -391,7 +391,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         add_condition('$containedin')
     elif mode == 'append':
         add_condition('$contains')
-    elif mode == 'exact':
+    elif mode == 'exact' or mode == '': # empty mode since exact is often default
         if radical is not None:
             query[radical] = product(inp)
             return
