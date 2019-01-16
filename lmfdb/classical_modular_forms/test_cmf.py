@@ -528,7 +528,7 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=List', follow_redirects = True)
         assert '5.10.a.a' in page.data
-        assert '5, 10, 1, 501.65797898, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
+        assert '5, 10, 1, 2.57517918082, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:
@@ -758,10 +758,10 @@ class CmfTest(LmfdbTest):
 
     def test_is_self_dual(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&search_type=List' ,  follow_redirects=True)
-        for elt in ['23.1.b.a', '31.1.b.a', '11.2.a.a']:
+        for elt in ['23.1.b.a', '31.1.b.a', '111.1.d.a']:
             assert elt in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_self_dual=no&search_type=List',  follow_redirects=True)
-        for elt in ['13.2.e.a', '52.1.j.a', '57.1.h.a']:
+        for elt in ['52.1.j.a', '57.1.h.a', '111.1.h.a']:
             assert elt in page.data
 
 
