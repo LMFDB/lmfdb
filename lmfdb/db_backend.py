@@ -628,6 +628,8 @@ class PostgresTable(PostgresBase):
                     cmd = SQL("NOT ({0} = ANY(%s)")
             elif key == '$contains':
                 cmd = SQL("{0} @> %s")
+                if not force_json:
+                    value = [value]
             elif key == '$containedin':
                 cmd = SQL("{0} <@ %s")
             elif key == '$startswith':
