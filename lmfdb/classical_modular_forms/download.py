@@ -217,33 +217,37 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Trace form for %s,'%(label))
 
-    def download_multiple_traces(self, info):
+    def download_multiple_traces(self, info, spaces=False):
         lang = info.get(self.lang_key,'text').strip()
         query = literal_eval(info.get('query', '{}'))
-        count = db.mf_newforms.count(query)
+        if spaces:
+            count = db.mf_newspaces.count(query)
+        else:
+            count = db.mf_newforms.count(query)
         limit = 1000
         if count > limit:
             msg = "We limit downloads of traces to %d forms" % limit
             flash_error(msg)
             return redirect(url_for('.index'))
-        forms = list(db.mf_newforms.search(query, projection=['label', 'hecke_orbit_code']))
-        codes = [form['hecke_orbit_code'] for form in forms]
-        traces = db.mf_hecke_traces.search({'hecke_orbit_code':{'$in':codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[])
-        trace_dict = defaultdict(dict)
-        for rec in traces:
-            trace_dict[rec['hecke_orbit_code']][rec['n']] = rec['trace_an']
+        if spaces:
+            res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
+        else:
+            res = list(db.mf_newforms.search(query, projection=['label', 'traces']))
         s = ""
         c = self.comment_prefix[lang]
-        s += c + ' Query "%s" returned %d forms.\n\n' % (str(info.get('query')), len(forms))
+        s += c + ' Query "%s" returned %d %s.\n\n' % (str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
         s += c + ' Below are two lists, one called labels, and one called traces (in matching order).\n'
         s += c + ' Each list of traces starts with a_1 (giving the dimension).\n\n'
         s += 'labels ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join(form['label'] for form in forms)
+        s += ',\n'.join(rec['label'] for rec in res)
         s += self.start_and_end[lang][1] + '\n\n'
         s += 'traces ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join('[' + ', '.join(str(trace_dict[form['hecke_orbit_code']][n]) for n in range(1,1001)) + ']' for form in forms)
+        s += ',\n'.join('[' + ', '.join(str(t) for t in rec['traces']) for rec in res)
         s += self.start_and_end[lang][1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
+
+    def download_multiple_space_traces(self, info):
+        return self.download_multiple_traces(info, spaces=True)
 
     def _download_cc(self, label, lang, col, suffix, title):
         try:

@@ -14,6 +14,7 @@ from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
+from sage.misc.misc_c import prod
 import re
 
 def learnmore_list():
@@ -186,22 +187,25 @@ def index():
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
 
-        if search_type == 'Dimensions':
-            # We have to handle dim separately since we want to allow it as a parameter
-            # for Space searches, but it doesn't make to display a dimension grid
-            # with constrained dimension
-            for key in newform_only_fields.keys() + ['dim']:
-                if key in info:
-                    return dimension_form_search(info)
-            return dimension_space_search(info)
+        if search_type == 'List':
+            return newform_search(info)
         elif search_type == 'Spaces':
             return space_search(info)
+        elif search_type == 'Dimensions':
+            return dimension_form_search(info)
+        elif search_type == 'SpaceDimensions':
+            bad_keys = [key for key in newform_only_fields if key in info]
+            if bad_keys:
+                flash_error("%s invalid for searching spaces" % (", ".join(bad_keys)))
+            return dimension_space_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
+        elif search_type == 'SpaceTraces':
+            return space_trace_search(info)
         elif search_type == 'Random':
             return newform_search(info, random=True)
-        elif search_type == 'List':
-            return newform_search(info)
+        elif search_type == 'RandomSpace':
+            return space_search(info, random=True)
         assert False
     info = {"stats": CMF_stats()}
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
@@ -519,6 +523,25 @@ def parse_discriminant(d, sign = 0):
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
 
+def parse_sort(info, query, spaces=False):
+    if info.get('sort_order') == 'A':
+        query['__sort__'] = ['analytic_conductor', 'level']
+    elif info.get('sort_order') == 'Nk2':
+        query['__sort__'] = ['Nk2', 'level']
+    elif info.get('sort_order') == 'dim':
+        query['__sort__'] = ['dim', 'level', 'weight']
+    elif info.get('sort_order') == 'reldim':
+        query['__sort__'] = ['relative_dim', 'level', 'weight']
+    elif info.get('sort_order') == 'N':
+        query['__sort__'] = ['level', 'weight']
+    elif info.get('sort_order') == 'k':
+        query['__sort__'] = ['weight', 'level']
+    else:
+        return
+    if spaces:
+        query['__sort__'].append('char_orbit_index')
+    else:
+        query['__sort__'].extend(['char_orbit_index', 'hecke_orbit'])
 
 def newform_parse(info, query):
     common_parse(info, query)
@@ -538,18 +561,33 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
-    if info.get('sort_order') == 'A':
-        query['__sort__'] = ['analytic_conductor', 'level', 'char_orbit_index', 'hecke_orbit']
-    elif info.get('sort_order') == 'Nk2':
-        query['__sort__'] = ['Nk2', 'level', 'char_orbit_index', 'hecke_orbit']
-    elif info.get('sort_order') == 'dim':
-        query['__sort__'] = ['dim', 'level', 'weight', 'char_orbit_index', 'hecke_orbit']
-    elif info.get('sort_order') == 'reldim':
-        query['__sort__'] = ['relative_dim', 'level', 'weight', 'char_orbit_index', 'hecke_orbit']
-    elif info.get('sort_order') == 'N':
-        query['__sort__'] = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
-    elif info.get('sort_order') == 'k':
-        query['__sort__'] = ['weight', 'level', 'char_orbit_index', 'hecke_orbit']
+    parse_sort(info, query)
+
+def newspace_parse(info, query):
+    for key, display in newform_only_fields.items():
+        if key in info:
+            msg = "%s not valid when searching for spaces" % display
+            flash_error(msg)
+            raise ValueError(msg)
+    if info.get('dim_type') == 'rel':
+        msg = "Relative dimension not valid when searching for spaces"
+        flash_error(msg)
+        raise ValueError(msg)
+    common_parse(info, query)
+    if not info.get('dim', '').strip():
+        # Only show non-empty spaces
+        info['dim'] = '1-'
+    parse_ints(info, query, 'dim', name='Dimension')
+    parse_ints(info, query, 'num_forms', name='Number of newforms')
+    if info.get('all_spaces') == 'yes' and 'num_forms' in query:
+        msg = "Cannot specify number of newforms while requesting all spaces"
+        flash_error(msg)
+        raise ValueError(msg)
+    if 'num_forms' not in query and info.get('all_spaces') != 'yes':
+        # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
+        query['num_forms'] = {'$exists':True}
+    parse_sort(info, query, spaces=True)
+
 
 @search_wrap(template="cmf_newform_search_results.html",
              table=db.mf_newforms,
@@ -585,19 +623,44 @@ def trace_postprocess(res, info, query):
         for mf in res:
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
-
-@search_wrap(template="cmf_trace_search_results.html",
-             table=db.mf_newforms,
-             title='Newform Search Results',
-             err_title='Newform Search Input Error',
-             shortcuts={'jump':jump_box,
-                        'download':CMF_download().download_multiple_traces},
-             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
-             postprocess=trace_postprocess,
-             bread=get_search_bread,
-             learnmore=learnmore_list,
-             credit=credit)
-def trace_search(info, query):
+def space_trace_postprocess(res, info, query):
+    # Should be removed in favor of the above once spaces have hecke_orbit_codes and traces are added to mf_hecke_traces
+    if res:
+        if info.get('view_modp') == 'reductions':
+            q = int(info['an_modulo'])
+        else:
+            q = None
+        Trn = info['Tr_n']
+        for space in res:
+            space['tr_an'] = D = {}
+            traces = space['traces']
+            if q:
+                for n in Trn:
+                    D[n] = (traces[n-1] % q)
+            else:
+                for n in Trn:
+                    D[n] = traces[n-1]
+    return res
+def process_an_constraints(info, query):
+    q = info.get('an_modulo','').strip()
+    if q:
+        try:
+            q = int(q)
+            if q <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            msg = "Modulo must be a positive integer"
+            flash_error(msg)
+            raise ValueError(msg)
+        parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
+                                   parse_singleton=(lambda x: {'$mod':[int(x),q]}))
+    else:
+        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
+        if info.get('view_modp') == 'reductions':
+            msg = "Must set Modulo input in order to view reductions"
+            flash_error(msg)
+            raise ValueError(msg)
+def set_Trn(info, query):
     ns = info['n'] = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
@@ -612,25 +675,39 @@ def trace_search(info, query):
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
+
+@search_wrap(template="cmf_trace_search_results.html",
+             table=db.mf_newforms,
+             title='Newform Search Results',
+             err_title='Newform Search Input Error',
+             shortcuts={'jump':jump_box,
+                        'download':CMF_download().download_multiple_traces},
+             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
+             postprocess=trace_postprocess,
+             bread=get_search_bread,
+             learnmore=learnmore_list,
+             credit=credit)
+def trace_search(info, query):
+    set_Trn(info, query)
     newform_parse(info, query)
-    q = info.get('an_modulo','').strip()
-    if q:
-        try:
-            q = int(q)
-            if q <= 0:
-                raise ValueError
-        except (ValueError, TypeError):
-            msg = "Modulo must be a positive integer"
-            flash_error(msg)
-            raise ValueError(msg)
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces',
-                                   parse_singleton=(lambda x: {'$mod':[int(x)%q,q]}))
-    else:
-        parse_equality_constraints(info, query, 'an_constraints', qfield='traces')
-        if info.get('view_modp') == 'reductions':
-            msg = "Must set Modulo input in order to view reductions"
-            flash_error(msg)
-            raise ValueError(msg)
+    process_an_constraints(info, query)
+    set_info_funcs(info)
+
+@search_wrap(template="cmf_space_trace_search_results.html",
+             table=db.mf_newspaces,
+             title='Newform Space Search Results',
+             err_title='Newform Space Search Input Error',
+             shortcuts={'jump':jump_box,
+                        'download':CMF_download().download_multiple_space_traces},
+             projection=['label', 'dim', 'weight', 'traces'], # Add hecke_orbit_code, remove traces
+             postprocess=space_trace_postprocess, # Fix once switch to mf_hecke_traces lookup
+             bread=get_search_bread,
+             learnmore=learnmore_list,
+             credit=credit)
+def space_trace_search(info, query):
+    set_Trn(info, query)
+    newspace_parse(info, query)
+    process_an_constraints(info, query)
     set_info_funcs(info)
 
 def set_rows_cols(info, query):
@@ -652,6 +729,21 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: at most 1000 options for level")
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 5000 entries")
+    if info['prime_quantifier'] == 'exact':
+        rad = query.get('level_radical')
+        if rad:
+            info['level_list'] = [N for N in info['level_list'] if ZZ(N).radical() == rad]
+    else:
+        primes = info.get('level_primes','').strip()
+        if primes:
+            try:
+                rad = prod(map(ZZ, primes.split(',')))
+                if info['prime_quantifier'] == 'subsets':
+                    info['level_list'] = [N for N in info['level_list'] if (rad % ZZ(N).radical()) == 0]
+                elif info['prime_quantifier'] == 'append':
+                    info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
+            except (ValueError, TypeError):
+                pass
 
 def has_data_nontriv(N, k):
     return N*k*k <= Nk2_bound(nontriv=True)
@@ -665,22 +757,22 @@ def has_data_mixed(N, k):
 na_msg_nontriv = '"n/a" means that not all modular forms of this weight and level are available, but those of trivial character may be; set character order to 1 to restrict to newforms of trivial character.'
 na_msg_triv = '"n/a" means that no modular forms of this weight and level are available.'
 
-def dimension_space_postprocess(res, info, query):
+def dimension_common_postprocess(info, query, cusp_types, newness_types, url_generator, pick_table, switch_text=None):
     set_rows_cols(info, query)
     if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
-        hasdata = has_data
-        na_msg = na_msg_triv
+        info['has_data'] = has_data
+        info['na_msg'] = na_msg_triv
     else:
-        hasdata = has_data_nontriv
-        na_msg = na_msg_nontriv
-    #hasdata = has_data_mixed
-    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
-    for space in res:
-        dims = DimGrid.from_db(space)
-        N = space['level']
-        k = space['weight']
-        if hasdata(N, k):
-            dim_dict[N,k] += dims
+        info['has_data'] = has_data_nontriv
+        info['na_msg'] = na_msg_nontriv
+    info['pick_table'] = pick_table
+    info['cusp_types'] = cusp_types
+    info['newness_types'] = newness_types
+    info['url_generator'] = url_generator
+    if switch_text:
+        info['switch_text'] = switch_text
+
+def dimension_space_postprocess(res, info, query):
     if query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
@@ -694,33 +786,23 @@ def dimension_space_postprocess(res, info, query):
                       'S':' cusp forms',
                       'E':' Eisenstein series'}
         return typ.capitalize() + space_type[X]
-    info['pick_table'] = pick_table
-    info['cusp_types'] = ['M', 'S', 'E']
-    info['newness_types'] = ['all', 'new', 'old']
-    info['one_type'] = False
-    info['switch_text'] = switch_text
-    info['url_generator'] = url_generator
-    info['has_data'] = hasdata
-    info['na_msg'] = na_msg
+    dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
+                                 url_generator, pick_table, switch_text)
+    hasdata = info['has_data']
+    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
+    print "QUERY", query
+    for space in res:
+        dims = DimGrid.from_db(space)
+        N = space['level']
+        k = space['weight']
+        if hasdata(N, k):
+            dim_dict[N,k] += dims
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
-    set_rows_cols(info, query)
-    if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
-        hasdata = has_data
-        na_msg = na_msg_triv
-    else:
-        hasdata = has_data_nontriv
-        na_msg = na_msg_nontriv
-    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
-    for form in res:
-        N = form['level']
-        k = form['weight']
-        if hasdata(N,k):
-            dim_dict[N,k] += form['dim']
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
@@ -730,13 +812,14 @@ def dimension_form_postprocess(res, info, query):
     def pick_table(entry, X, typ):
         # Only support one table
         return entry
-    info['pick_table'] = pick_table
-    info['cusp_types'] = ['S']
-    info['newness_types'] = ['new']
-    info['one_type'] = True
-    info['url_generator'] = url_generator
-    info['has_data'] = hasdata
-    info['na_msg'] = na_msg
+    dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
+    hasdata = info['has_data']
+    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
+    for form in res:
+        N = form['level']
+        k = form['weight']
+        if hasdata(N,k):
+            dim_dict[N,k] += form['dim']
     return dim_dict
 
 @search_wrap(template="cmf_dimension_search_results.html",
@@ -756,7 +839,7 @@ def dimension_form_search(info, query):
         info['level'] = '1-24'
     newform_parse(info, query)
 
-@search_wrap(template="cmf_dimension_search_results.html",
+@search_wrap(template="cmf_dimension_space_search_results.html",
              table=db.mf_newspaces,
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
@@ -775,35 +858,21 @@ def dimension_space_search(info, query):
         info['weight'] = '1-12'
     if 'level' not in info:
         info['level'] = '1-24'
-    common_parse(info, query)
+    newspace_parse(info, query)
+    set_info_funcs(info)
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
              title='Newform Space Search Results',
              err_title='Newform Space Search Input Error',
-             shortcuts={'download':CMF_download().download_spaces},
+             shortcuts={'jump':jump_box,
+                        'download':CMF_download().download_spaces},
+             url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
 def space_search(info, query):
-    for key, display in newform_only_fields.items():
-        if key in info:
-            msg = "%s not valid when searching for spaces" % display
-            flash_error(msg)
-            raise ValueError(msg)
-    common_parse(info, query)
-    if not info.get('dim', '').strip():
-        # Only show non-empty spaces
-        info['dim'] = '1-'
-    parse_ints(info, query, 'dim', name='Dimension')
-    parse_ints(info, query, 'num_forms', name='Number of newforms')
-    if info.get('all_spaces') == 'yes' and 'num_forms' in query:
-        msg = "Cannot specify number of newforms while requesting all spaces"
-        flash_error(msg)
-        raise ValueError(msg)
-    if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-        # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-        query['num_forms'] = {'$exists':True}
+    newspace_parse(info, query)
     set_info_funcs(info)
 
 @cmf.route("/Completeness")

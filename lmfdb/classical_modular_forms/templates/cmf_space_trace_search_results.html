@@ -5,7 +5,9 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-{% include 'cmf_space_list.html' %}
+<p> The following table gives {{ KNOWL('mf.elliptic.space_trace_form', title='traces') }} of \(a_n\) for the search results. </p>
+
+{% include 'cmf_trace_display.html' %}
 
 {% include 'forward_back.html' %}
 {% if info.download_spaces(info.results) %}

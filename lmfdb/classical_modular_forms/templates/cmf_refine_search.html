@@ -2,9 +2,7 @@
 
 {% block content %}
 
-{% if info.search_type == 'Spaces' %}
-{% set weight1options = false %}
-{% elif info.search_type == 'Dimensions' %}
+{% if info.search_type == 'Dimensions' %}
 {% set weight1options = (info.weight == '1') %}
 {% elif info.search_type == 'DynStats' %}
 {% set weight1options = true %}
@@ -152,7 +150,8 @@ function set_buckets(col_selecter, bucket_id) {
   {% include 'dynamic_stats_input.html' %}
   {% else %}
   {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
-  <tr style="height:20px"></tr>
+  <tr style="height: 20px;"></tr>
+  {% if info.search_type != 'Dimensions' %}
   <tr>
     <td></td>
     {% for type, desc in search_types %}
@@ -162,6 +161,9 @@ function set_buckets(col_selecter, bucket_id) {
     {% endfor %}
     <td>{{ KNOWL('mf.elliptic.sort_order', title='Sort order') }}</td>
   </tr>
+  {% else %}
+  <tr style="height: 22px;"></tr>
+  {% endif %}
   <tr>
     <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px;" onclick='resetStart()'>Search again</button></td>
     {% for type, desc in search_types %}
@@ -169,6 +171,7 @@ function set_buckets(col_selecter, bucket_id) {
     <td><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
     {% endif %}
     {% endfor %}
+    {% if info.search_type != 'Dimensions' %}
     <td>
       <select name='sort_order' style="width: 150px;">
         <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>analytic conductor</option>
@@ -179,56 +182,13 @@ function set_buckets(col_selecter, bucket_id) {
         <option value='k'{% if info.sort_order=='k' %} selected{% endif %}>weight</option>
       </select>
     </td>
+    {% endif %}
   </tr>
   {% endif %}
-{% if info.search_type == 'Traces' %}
-  <tr style="height:20px"></tr>
-  <tr>
-    <td colspan="2"> Columns to display </td>
-    <td> Show </td>
-  </tr>
-  <tr>
-    <td>
-      <input type='text' style="width: 140px;" name='n' placeholder='1-20' value='{{info.n}}'>
-    </td>
-    <td style="width: 150px;">
-      <span class="formexample"> e.g. 3,7,19, 40-90 </span>
-    </td>
-    <td>
-      <select name='n_primality' style="width: 150px;">
-        <option value="all" {{ "selected" if info.n_primality == 'all'}}>all</option>
-        <option value="prime_powers" {{ "selected" if info.n_primality == 'prime_powers'}}>prime powers</option>
-        <option value="primes" {{ "selected" if info.n_primality == 'primes'}}>primes only</option>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2"> Trace constraints </td>
-    <td colspan="2"> Modulo </td>
-    <td> View </td>
-  </tr>
-  <tr>
-    <td>
-      <input type='text' style="width: 140px;" name='an_constraints' placeholder='a3=2,a5=0' value='{{info.an_constraints}}'>
-    </td>
-    <td style="width: 150px;">
-      <span class="formexample"> e.g. a17=1, a8=0 </span>
-    </td>
-    <td>
-      <input type='text' style="width: 140px;" name='an_modulo' value='{{info.an_modulo}}'>
-    </td>
-    <td style="width: 150px;">
-      <span class="formexample"> e.g. 5, 16 </span>
-    </td>
-    <td>
-      <select name='view_modp' style="width: 150px;">
-        <option value="integers"{{ "selected" if info.view_modp == 'integers' }}>integers</option>
-        <option value="reductions"{{ "selected" if info.view_modp == 'reductions' }}>reductions</option>
-      </select>
-    </td>
-  </tr>
+  {% if info.search_type == 'Traces' %}
+  {% include 'cmf_trace_search_options.html' %}
+  {% endif %}
 </table>
-{% endif %}
 </form>
 
 {% block show_results %}{% endblock %}

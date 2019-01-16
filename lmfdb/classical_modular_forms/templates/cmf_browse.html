@@ -203,7 +203,7 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td align=left colspan=2>Newforms to display</td>
+      <td align=left colspan=2>Results to display</td>
       <td><input type='text' style="width: 130px;" name='count' value=50></td>
       <td></td>
       <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
@@ -211,13 +211,19 @@ Info was: {{info}}
       <td><span class="formexample"> e.g. 1, 2-4</span></td>
     </tr>
   </table>
-  <p>
-    <button type='submit' name='search_type' value='List'>List forms</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Spaces'>List spaces</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Dimensions'>Dimension Table</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Traces'>Traces Table</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Random'>Random</button>
-  </p>
+  <br>
+  <table>
+    <tr>
+      {% for type, desc in [('List', 'List forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')] %}
+      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for type, desc in [('Spaces', 'List spaces'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random space')] %}
+      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
+      {% endfor %}
+    </tr>
+  </table>
 </form>
 
 

@@ -526,7 +526,7 @@ class PostgresTable(PostgresBase):
             search_cols.insert(0, "id")
         return tuple(search_cols), tuple(extra_cols), 0 if (include_id or not extra_cols) else 1
 
-    def _parse_special(self, key, value, col):
+    def _parse_special(self, key, value, col, force_json):
         """
         Implements more complicated query conditions than just testing for equality:
         inequalities, containment and disjunctions.
@@ -548,7 +548,8 @@ class PostgresTable(PostgresBase):
             - ``$like`` -- for text columns, matches strings according to the LIKE operand in SQL.
             - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
-        - ``col`` -- The name of the column.
+        - ``col`` -- The name of the column, wrapped in SQL
+        - ``force_json`` -- whether the column is a jsonb column
 
         OUTPUT:
 
@@ -574,7 +575,7 @@ class PostgresTable(PostgresBase):
             ('"ramps" @> %s', [[2, 3, 5]])
         """
         if key in ['$or', '$and']:
-            pairs = [self._parse_dict(clause, outer=col) for clause in value]
+            pairs = [self._parse_dict(clause, outer=col, outer_json=force_json) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
                 strings, values = zip(*pairs)
@@ -584,12 +585,7 @@ class PostgresTable(PostgresBase):
                 return SQL("({0})").format(SQL(joiner).join(strings)), values
             else:
                 return None, None
-        if isinstance(col, Composable):
-            # Compound specifier like cc.1
-            force_json = True
-        else:
-            force_json = (self.col_type[col] == 'jsonb')
-            col = Identifier(col)
+
         # First handle the cases that have unusual values
         if key == '$exists':
             if value:
@@ -598,14 +594,17 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} IS NULL").format(col)
             value = []
         elif key == '$notcontains':
-            cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
-            value = [[v] for v in value]
+            if force_json:
+                cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
+                value = [Json(v) for v in value]
+            else:
+                cmd = SQL(" AND ").join(SQL("NOT (%s = ANY({0}))").format(col) * len(value))
         elif key == '$mod':
             if not (isinstance(value, (list, tuple)) and len(value) == 2):
                 raise ValueError("Error building modulus operation: %s" % value)
             # have to take modulus twice since MOD(-1,5) = -1 in postgres
             cmd = SQL("MOD(%s + MOD({0}, %s), %s) = %s").format(col)
-            value = [value[1], value[1], value[1], value[0]]
+            value = [value[1], value[1], value[1], value[0] % value[1]]
         else:
             if key == '$lte':
                 cmd = SQL("{0} <= %s")
@@ -618,11 +617,15 @@ class PostgresTable(PostgresBase):
             elif key == '$ne':
                 cmd = SQL("{0} != %s")
             elif key == '$in':
-                cmd = SQL("{0} = ANY(%s)")
-                value = Array(value)
+                if force_json:
+                    cmd = SQL("{0} <@ %s")
+                else:
+                    cmd = SQL("{0} = ANY(%s)")
             elif key == '$nin':
-                cmd = SQL("NOT ({0} = ANY(%s)")
-                value = Array(value)
+                if force_json:
+                    cmd = SQL("NOT ({0} <@ %s)")
+                else:
+                    cmd = SQL("NOT ({0} = ANY(%s)")
             elif key == '$contains':
                 cmd = SQL("{0} @> %s")
             elif key == '$containedin':
@@ -637,21 +640,20 @@ class PostgresTable(PostgresBase):
             else:
                 raise ValueError("Error building query: {0}".format(key))
             if force_json:
-                if isinstance(value, Array):
-                    raise ValueError("$in and $nin operators not supported for jsonb")
                 value = Json(value)
             cmd = cmd.format(col)
             value = [value]
         return cmd, value
 
-    def _parse_dict(self, D, outer=None):
+    def _parse_dict(self, D, outer=None, outer_json=None):
         """
         Parses a dictionary that specifies a query in something close to Mongo syntax into an SQL query.
 
         INPUT:
 
         - ``D`` -- a dictionary, or a scalar if outer is set
-        - ``outer`` -- the column that we are parsing (None if not yet parsing any column).  Used in recursion.
+        - ``outer`` -- the column that we are parsing (None if not yet parsing any column).  Used in recursion.  Should be wrapped in SQL.
+        - ``outer_json`` -- whether the outer column is a jsonb column
 
         OUTPUT:
 
@@ -673,10 +675,10 @@ class PostgresTable(PostgresBase):
             sage: db.nf_fields._parse_dict({})
             (None, None)
         """
-        if outer and not isinstance(D, dict):
-            if self.col_type[outer] == 'jsonb':
+        if outer is not None and not isinstance(D, dict):
+            if outer_json:
                 D = Json(D)
-            return SQL("{0} = %s").format(Identifier(outer)), [D]
+            return SQL("{0} = %s").format(outer), [D]
         if len(D) == 0:
             return None, None
         else:
@@ -686,7 +688,7 @@ class PostgresTable(PostgresBase):
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == '$':
-                    sub, vals = self._parse_special(key, value, outer)
+                    sub, vals = self._parse_special(key, value, outer, force_json=outer_json)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -696,28 +698,24 @@ class PostgresTable(PostgresBase):
                     key = path[0]
                     if self.col_type.get(key) == 'jsonb':
                         path = [SQL("->{0}").format(Literal(p)) for p in path[1:]]
-                        force_json = True
                     else:
                         path = [SQL("[{0}]").format(Literal(p)) for p in path[1:]]
-                        force_json = False
                 else:
-                    path = []
-                    force_json = (self.col_type[key] == 'jsonb')
+                    path = None
                 if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
+                # Have to determine whether key is jsonb before wrapping it in Identifier
+                force_json = (self.col_type[key] == 'jsonb')
                 if path:
-                    # Only call SQL for compound keys here so that _parse_special calls
-                    # can distinguish between basic and compound keys based on type
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
+                else:
+                    key = Identifier(key)
                 if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
-                    sub, vals = self._parse_dict(value, key)
+                    sub, vals = self._parse_dict(value, key, outer_json=force_json)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
                     continue
-                if not path:
-                    # Now need to make key an identifier
-                    key = Identifier(key)
                 if value is None:
                     strings.append(SQL("{0} IS NULL").format(key))
                 else:
@@ -2855,10 +2853,10 @@ class PostgresStatsTable(PostgresBase):
     def _quick_max(self, col, ccols, cvals):
         if ccols is None:
             constraint = SQL("constraint_cols IS NULL")
-            values = ["max", [col]]
+            values = ["max", Json([col])]
         else:
             constraint = SQL("constraint_cols = %s AND constraint_values = %s")
-            values = ["max", [col], ccols, cvals]
+            values = ["max", Json([col]), ccols, cvals]
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
         cur = self._execute(selecter, values)
         if cur.rowcount:
@@ -2887,7 +2885,7 @@ class PostgresStatsTable(PostgresBase):
     def _record_max(self, col, ccols, cvals, m):
         try:
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values) VALUES (%s, %s, %s, %s, %s)")
-            self._execute(inserter.format(Identifier(self.stats)), [[col], "max", m, ccols, cvals])
+            self._execute(inserter.format(Identifier(self.stats)), [Json([col]), "max", m, ccols, cvals])
         except Exception:
             pass
 
@@ -2985,9 +2983,10 @@ class PostgresStatsTable(PostgresBase):
         A utility function for splitting a dictionary into parallel lists of keys and values.
         """
         if D:
-            return zip(*sorted(D.items()))
+            ans = zip(*sorted(D.items()))
         else:
-            return [], []
+            ans = [], []
+        return map(Json, ans)
 
     def _join_dict(self, ccols, cvals):
         """
@@ -3034,6 +3033,7 @@ class PostgresStatsTable(PostgresBase):
                 # reconstruct constraint from ccols and cvals
                 ccols, cvals = constraint
                 constraint = self._join_dict(ccols, cvals)
+                ccols, cvals = Json(ccols), Json(cvals)
             else:
                 ccols, cvals = self._split_dict(constraint)
             # We need to include the constraints in the count table if we're not grouping by that column
@@ -3190,10 +3190,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             if cols is None:
                 cols = self._common_cols()
             for constraint in constraints:
-                if constraint is None:
-                    ccols, cvals = [], []
-                else:
-                    ccols, cvals = self._split_dict(constraint)
+                ccols, cvals = self._split_dict(constraint)
                 level = 0
                 curlevel = [([],None)]
                 while curlevel:

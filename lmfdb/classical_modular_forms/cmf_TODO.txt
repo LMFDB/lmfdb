@@ -20,10 +20,11 @@ IMPORTANT:
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/
-
+* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow...
+* When more than 1000 results, don't offer a download but instead explain that we don't support large downloads.
 
 FINAL CHECKS:
-* Make sure indexes are appropriate (Edgar)
+* Make sure indexes are appropriate, especially for new sort orders (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
@@ -114,6 +115,7 @@ NOT CMF STUFF:
 * Related fields for dirichlet characters that are Kronecker symbols
 * Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
 * col_type is cached, add to FAQ
+* clean up division between json and arrays in db_backend and db_encoding.  The design was based on using json for everything, and now that that's no longer true it's a bit of a mess.
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)

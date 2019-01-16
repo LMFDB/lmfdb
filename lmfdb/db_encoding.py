@@ -38,8 +38,6 @@ def setup_connection(conn):
     register_type(NUMERICL, conn)
     register_adapter(Integer, AsIs)
     register_adapter(RealNumber, RealEncoder)
-    register_adapter(list, Json)
-    register_adapter(tuple, Json)
     register_adapter(dict, Json)
     register_json(conn, loads=Json.loads)
 
