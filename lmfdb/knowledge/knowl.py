@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 
 from lmfdb.db_backend import db, PostgresBase, DelayCommit
-from lmfdb.db_encoding import Array
+from lmfdb.db_encoding import Json
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -91,7 +91,7 @@ class KnowlBackend(PostgresBase):
             values.append(category)
         if len(filters) > 0:
             restrictions.append(SQL("quality = ANY(%s)"))
-            values.append(Array([q for q in filters if q in knowl_qualities]))
+            values.append([q for q in filters if q in knowl_qualities])
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
@@ -99,7 +99,7 @@ class KnowlBackend(PostgresBase):
                 values.append(keywords)
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
-            values.append([author])
+            values.append(Json(author))
         selecter = SQL("SELECT id, title FROM kwl_knowls")
         if restrictions:
             selecter = SQL("{0} WHERE {1}").format(selecter, SQL(" AND ").join(restrictions))
@@ -139,7 +139,7 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
+        values = (Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))

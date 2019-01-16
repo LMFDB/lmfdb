@@ -31,7 +31,7 @@ from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError, InterfaceError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from lmfdb.db_encoding import setup_connection, Array, Json, copy_dumps, numeric_converter
+from lmfdb.db_encoding import setup_connection, Json, copy_dumps, numeric_converter
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
 from lmfdb.utils import make_logger, KeyedDefaultDict

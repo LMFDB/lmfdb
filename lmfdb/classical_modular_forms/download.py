@@ -1,5 +1,4 @@
 from flask import  url_for, redirect, abort
-from collections import defaultdict
 from ast import literal_eval
 from lmfdb.db_backend import db
 from lmfdb.db_encoding import Json
