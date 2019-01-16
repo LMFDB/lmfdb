@@ -3109,7 +3109,7 @@ class PostgresStatsTable(PostgresBase):
                         total += count
                         to_add[(allcols, vals)] += count
                 else:
-                    to_add.append((Json(allcols), Json(allcolvals), count))
+                    to_add.append((Json(allcols), Json(allcolvals), count, False))
                     total += count
                 if onenumeric:
                     val = colvals[0]
@@ -3134,11 +3134,9 @@ class PostgresStatsTable(PostgresBase):
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
+            inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
             if split_list:
                 to_add = [(Json(c), Json(v), ct, True) for ((c, v), ct) in to_add.items()]
-                inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
-            else:
-                inserter = SQL("INSERT INTO {0} (cols, values, count) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
         self.logger.info("Added stats in %.3f secs"%(time.time() - now))
         return True
@@ -3354,6 +3352,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             buckets_seen = set()
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
         print "About to execute"
+        print selecter.as_string(self.conn)
+        print selecter_values
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
             for val, header in zip(values, headers):
