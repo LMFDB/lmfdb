@@ -5,6 +5,7 @@ from lmfdb.db_backend import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.characters.utils import url_character
+from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
 from flask import url_for
 import re
@@ -42,6 +43,37 @@ def newform_search_link(text, title=None, **kwd):
     query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
     link = "%s?%s"%(url_for('.index'), query)
     return "<a href='%s'%s>%s</a>"%(link, "" if title is None else " title='%s'"%title, text)
+
+def cyc_display(m, d, real_sub):
+    r"""
+    Used to display cyclotomic fields and their real subfields.
+
+    INPUT:
+
+    - ``m`` -- the order of the root of unity generating the field.
+    - ``d`` -- the degree of the cyclotomic field over Q
+    - ``real_sub`` -- whether to display the real subfield instead.
+
+    OUTPUT:
+
+    A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
+    """
+    if d == 1:
+        name = r'\(\Q\)'
+    elif m == 4:
+        name = r'\(\Q(i)\)'
+    elif real_sub:
+        name = r'\(\Q(\zeta_{%s})^+\)' % m
+    else:
+        name = r'\(\Q(\zeta_{%s})\)' % m
+    if d < 24:
+        if real_sub:
+            label = rcyclolookup[m]
+        else:
+            label = cyclolookup[m]
+        return nf_display_knowl(label, name=name)
+    else:
+        return name
 
 def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
@@ -311,6 +343,9 @@ class WebNewformSpace(object):
 
     def hecke_cutter_display(self):
         return ", ".join(r"\(%d\)" % p for p in self.hecke_cutter_primes)
+
+    def display_character_field(self):
+        return cyc_display(self.char_order, self.char_degree, False)
 
 class WebGamma1Space(object):
     def __init__(self, level, weight):

@@ -14,11 +14,9 @@ IMPORTANT:
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
 * Kill axes in Sato Tate pictures (Edgar)
 * Add related objects to L-functions, move duals (Edgar)
-* switch default from Satake parameters to complex embeddings when dimension 1 (David)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
-* knowl field on Character field in newspace http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/54/2/e/ (David)
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
 * When more than 1000 results, don't offer a download but instead explain that we don't support large downloads. (David)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything) (David)

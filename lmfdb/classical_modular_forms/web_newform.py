@@ -3,7 +3,7 @@
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
     CDF, ZZ, CBF, cached_method, vector, lcm
 from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup
+from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
@@ -18,7 +18,7 @@ from lmfdb.search_parsing import integer_options
 import re
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code, class_to_int
-from web_space import convert_spacelabel_from_conrey, get_bread
+from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import bisect
 
@@ -101,37 +101,6 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
             parts[2] = r'\(\cdots\)'
             name = '.'.join(parts)
         return nf_display_knowl(label, name)
-
-def cyc_display(m, d, real_sub):
-    r"""
-    Used to display cyclotomic fields and their real subfields.
-
-    INPUT:
-
-    - ``m`` -- the order of the root of unity generating the field.
-    - ``d`` -- the degree of the cyclotomic field over Q
-    - ``real_sub`` -- whether to display the real subfield instead.
-
-    OUTPUT:
-
-    A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
-    """
-    if d == 1:
-        name = r'\(\Q\)'
-    elif m == 4:
-        name = r'\(\Q(i)\)'
-    elif real_sub:
-        name = r'\(\Q(\zeta_{%s})^+\)' % m
-    else:
-        name = r'\(\Q(\zeta_{%s})\)' % m
-    if d < 24:
-        if real_sub:
-            label = rcyclolookup[m]
-        else:
-            label = cyclolookup[m]
-        return nf_display_knowl(label, name=name)
-    else:
-        return name
 
 class WebNewform(object):
     def __init__(self, data, space=None, all_m = False, all_n = False):

@@ -35,7 +35,7 @@
     <td> {{ KNOWL('character.dirichlet.value_field', title='Character field') }}: </td>
     <td></td>
     <td></td>
-    <td> \(\Q{% if space.char_degree != 1 %}(\zeta_{ {{space.char_order}} }){% endif %}\) </td>
+    <td> {{ space.display_character_field() | safe }} </td>
   </tr>
   {% if space.num_forms is not none %}
   <tr>
