@@ -3322,7 +3322,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         - ``cols`` -- a list of column names that are stored in the counts table.
         - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
         """
-        print "Starting _get_values_counts"
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
             allcols = sorted(list(set(cols + constraint.keys())))
@@ -3351,9 +3350,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         if buckets:
             buckets_seen = set()
             bucket_positions = [i for (i, col) in enumerate(cols) if col in buckets]
-        print "About to execute"
-        print selecter.as_string(self.conn)
-        print selecter_values
         for values, count in self._execute(selecter, values=selecter_values):
             values = [values[i] for i in positions]
             for val, header in zip(values, headers):
@@ -3369,7 +3365,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     buckets_seen.add(tuple(values[i] for i in bucket_positions))
             data[values] = D
         # Ensure that we have all the statistics necessary
-        print "Checking completeness"
         ok = True
         if buckets == {}:
             # Just check that the results are nonempty
@@ -3387,10 +3382,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                     self.add_stats(ucols, bucketed_constraint)
                     ok = False
         if not ok:
-            print "Recursing"
             # Set buckets=False so we have no chance of infinite recursion
             return self._get_values_counts(cols, constraint, split_list, formatter, query_formatter, base_url, buckets=False)
-        print cols, headers, len(data)
         if len(cols) == 1:
             return headers[0], data
         else:
