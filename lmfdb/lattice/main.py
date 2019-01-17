@@ -7,7 +7,7 @@ import StringIO
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
@@ -25,7 +25,7 @@ lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and N
 
 from lmfdb.db_backend import db
 
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
@@ -109,9 +109,9 @@ def lattice_by_label_or_name(lab):
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % escape(lab)), "error")
     else:
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % escape(lab)), "error")
     return redirect(url_for(".lattice_render_webpage"))
 
 #download
@@ -195,7 +195,7 @@ def lattice_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (escape(gram))),"error")
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -210,7 +210,7 @@ def render_lattice_webpage(**args):
     if f is None:
         t = "Integral Lattices Search Error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (escape(lab))),"error")
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(f)
@@ -245,7 +245,7 @@ def render_lattice_webpage(**args):
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
     if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]),
 str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
         info['all_shortest']="no"
         info['download_shortest'] = [
