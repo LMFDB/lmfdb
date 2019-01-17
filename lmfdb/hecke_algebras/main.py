@@ -13,7 +13,7 @@ from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
 from lmfdb.search_parsing import parse_ints, clean_input
 from lmfdb.search_wrapper import search_wrap
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 import time
 import ast
@@ -81,9 +81,9 @@ def hecke_algebras_by_label(lab):
     if db.hecke_algebras.exists({'label':lab}):
         return render_hecke_algebras_webpage(label=lab)
     if hecke_algebras_label_regex.match(lab):
-        flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The Hecke Algebra <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % escape(lab)), "error")
     else:
-        flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No Hecke Algebras in the database has label <span style='color:black'>%s</span>" % escape(lab)), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def hecke_algebras_by_orbit_label(lab):
@@ -92,9 +92,9 @@ def hecke_algebras_by_orbit_label(lab):
         ol=sp[0]+'.'+sp[1]+'.'+sp[2]
         return render_hecke_algebras_webpage(label=ol)
     if hecke_algebras_orbit_label_regex.match(lab):
-        flash(Markup("The Hecke Algebra orbit <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The Hecke Algebra orbit <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % escape(lab)), "error")
     else:
-        flash(Markup("No Hecke Algebras orbit in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No Hecke Algebras orbit in the database has label <span style='color:black'>%s</span>" % escape(lab)), "error")
     return redirect(url_for(".hecke_algebras_render_webpage"))
 
 def download_search(info):
@@ -180,14 +180,14 @@ def hecke_algebras_search(info, query):
                     if info.get(field):
                         int(info.get(field))
             except ValueError:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(info.get('orbit_label'))),"error")
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and input Level or Weight are not compatible" %(escape(info.get('orbit_label')))),"error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('level'))),"error")
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Level <span style='color:black'>%s</span> are not compatible inputs" %(escape(info.get('orbit_label')), escape(info.get('level')))),"error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'weight' in info and info.get('weight'):
             if int(info.get('weight'))!=check[1]:
-                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible inputs" %(info.get('orbit_label'), info.get('weight'))), "error")
+                flash(Markup("Orbit label <span style='color:black'>%s</span> and Weight <span style='color:black'>%s</span> are not compatible inputs" %(escape(info.get('orbit_label')), escape(info.get('weight')))), "error")
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'ell' in info and info.get('ell'):
             return render_hecke_algebras_webpage_l_adic(orbit_label=info.get('orbit_label'), prime=info.get('ell'))
@@ -217,7 +217,7 @@ def render_hecke_algebras_webpage(**args):
     if data is None:
         t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a Hecke Algebras in the database." % (escape(lab))),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -302,7 +302,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     if data is None:
         t = "Hecke Algebras Search Error"
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for the &#x2113;-adic information for an Hecke Algebra orbit in the database." % (escape(lab))),"error")
         return render_template("hecke_algebras-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
@@ -425,7 +425,7 @@ def render_hecke_algebras_webpage_download(**args):
         response = make_response(download_hecke_algebras_full_lists_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'gen': 
+    elif args['obj'] == 'gen':
         response = make_response(download_hecke_algebras_full_lists_gen(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -474,10 +474,10 @@ def download_hecke_algebras_full_lists_gen(**args):
 @hecke_algebras_page.route('/<orbit_label>/<index>/<prime>/download/<lang>/<obj>')
 def render_hecke_algebras_webpage_ell_download(**args):
     if args['obj'] == 'operators':
-        response = make_response(download_hecke_algebras_full_lists_mod_op(**args)) 
+        response = make_response(download_hecke_algebras_full_lists_mod_op(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-    elif args['obj'] == 'idempotents': 
+    elif args['obj'] == 'idempotents':
         response = make_response(download_hecke_algebras_full_lists_id(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
@@ -494,7 +494,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
     lang = args['lang']
     c = download_comment_prefix[lang]
     field='GF(%s), %s, %s, '%(res['ell'], sqrt(len(res['operators'][0])), sqrt(len(res['operators'][0])))
-    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field 
+    mat_start = "Mat("+field if lang == 'gp' else "Matrix("+field
     mat_end = "~)" if lang == 'gp' else ")"
     entry = lambda r: "".join([mat_start,str(r),mat_end])
 
