@@ -48,7 +48,7 @@ class CmfTest(LmfdbTest):
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
         assert '343.1.d.a' in data
-        assert '49.4.a.a' in data
+        assert '343.2.a.a' in data
         assert '7.7.d.a' in data
         assert '686' in data
 
@@ -147,6 +147,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/?format=satake")
         assert '0.299366' in page.data
         assert '0.954138' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
@@ -159,7 +160,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert r'0.707106' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
@@ -171,10 +172,10 @@ class CmfTest(LmfdbTest):
     def test_triv_character(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
         assert r'1016q^{7}' in page.data
-        assert '0.375659' in page.data
+        assert '1680' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
         assert '168q^{8}' in page.data
-        assert '0.0536656' in page.data
+        assert '36' in page.data
 
     def test_non_triv_character(self):
         r"""
@@ -309,14 +310,14 @@ class CmfTest(LmfdbTest):
 
 
     def test_satake(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
         assert r'0.974679' in page.data
         assert r'0.288675' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?format=satake')
         assert r'0.750000' in page.data
         assert r'0.661437' in page.data
         assert r'0.272727' in page.data
@@ -381,7 +382,7 @@ class CmfTest(LmfdbTest):
         assert '0.237314' in page.data
         assert '0.637314' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/?format=satake&n=2-20')
         # alpha_11
         assert '0.603022' in page.data
         assert '0.797724' in page.data
@@ -593,7 +594,7 @@ class CmfTest(LmfdbTest):
                     ['Results (displaying all 21 matches)', '171901114', 'No', '10.723', 'A-L signs']
                     ),
                 ('level=10%2C13%2C17&weight=1-8&dim=1',
-                    ['Results (displaying all 12 matches)', '1373', 'No', '1093.6']
+                    ['Results (displaying all 12 matches)', '1373', 'No', '0.136']
                     )]:
             for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=0']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
@@ -604,7 +605,7 @@ class CmfTest(LmfdbTest):
         for begin in [
                 ('level=1-330&weight=1&projective_image=D2',
                     ['Results (displaying all 49 matches)',
-                        '328.1.c.a', '413.6', r"\sqrt{-82}", r"\sqrt{-323}", r"\sqrt{109}"]
+                        '328.1.c.a', r"\sqrt{-82}", r"\sqrt{-323}", r"\sqrt{109}"]
                     ),
                 ('level=900-1000&weight=1-&projective_image=D2',
                     ['Results (displaying all 26 matches)', r"\sqrt{-1}", r"\sqrt{-995}", r"\sqrt{137}"]

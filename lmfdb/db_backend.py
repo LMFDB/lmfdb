@@ -1133,12 +1133,18 @@ class PostgresTable(PostgresBase):
                 return self.lucky(query, projection=projection, offset=offset, sort=[])
         else:
             maxtries = 100
-            maxid = self.max('id')
+            # a temporary hack FIXME
+            #maxid = self.max('id')
+            maxid = self.max_id()
             if maxid == 0:
                 return None
+            # a temporary hack FIXME
+            minid = self.min_id()
             for _ in range(maxtries):
                 # The id may not exist if rows have been deleted
-                rid = random.randint(1, maxid)
+                # a temporary hack FIXME
+                #rid = random.randint(1, maxid)
+                rid = random.randint(minid, maxid)
                 res = self.lucky({'id':rid}, projection=projection)
                 if res: return res
             raise RuntimeError("Random selection failed!")
@@ -2096,7 +2102,7 @@ class PostgresTable(PostgresBase):
                 columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
-                    cur_count = self.max_id()
+                    cur_count = self.max_id(table)
                     seq_name = table + '_seq'
                     create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
                     self._execute(create_seq, [cur_count+1]*2);
@@ -2440,11 +2446,22 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
-    def max_id(self):
-        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(self.search_table))).fetchone()[0]
+    def max_id(self, table = None):
+        if table is None:
+            table = self.search_table
+        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(table))).fetchone()[0]
         if res is None:
             res = -1
         return res
+    #A temporary hack for RANDOM FIXME
+    def min_id(self, table = None):
+        if table is None:
+            table = self.search_table
+        res = db._execute(SQL("SELECT MIN(id) FROM {}".format(table))).fetchone()[0]
+        if res is None:
+            res = 0
+        return res
+
 
     def copy_from(self, searchfile, extrafile=None, resort=True, reindex=False, restat=True, commit=True, **kwds):
         """
