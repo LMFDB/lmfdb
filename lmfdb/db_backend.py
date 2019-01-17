@@ -2443,7 +2443,7 @@ class PostgresTable(PostgresBase):
     def max_id(self, table = None):
         if table is None:
             table = self.search_table
-        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(Identifier(table)))).fetchone()[0]
+        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(table))).fetchone()[0]
         if res is None:
             res = -1
         return res
