@@ -675,6 +675,7 @@ def set_Trn(info, query):
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
+    info['download_limit'] = 1000
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,

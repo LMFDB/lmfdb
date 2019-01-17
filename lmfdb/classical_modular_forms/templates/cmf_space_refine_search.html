@@ -33,19 +33,23 @@
   </tr>
 
   <tr>
-    <td> {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
-      <select name='prime_quantifier'>
-        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-        <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
-        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
-      </select>
+    <td><div class="float-left">{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}</div>
+      <div class="float-right">
+        <select name='prime_quantifier'>
+          <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+          <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
+          <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+        </select>
+      </div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
-      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option value="">any parity</option>
-        <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
-        <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
-      </select>
+    <td><div class="float-left">{{ KNOWL('mf.elliptic.character', title='Char.') }}</div>
+      <div class="float-right">
+        <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
+          <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
+        </select>
+      </div>
     </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
