@@ -482,9 +482,9 @@ def common_parse(info, query):
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
-            query['odd_weight'] = False
+            query['weight_parity'] = 1
         elif parity == 'odd':
-            query['odd_weight'] = True
+            query['weight_parity'] = -1
     if 'char_parity' in info:
         parity=info['char_parity']
         if parity == 'even':
@@ -719,8 +719,8 @@ def set_rows_cols(info, query):
         info['weight_list'] = integer_options(info['weight'], max_opts=200)
     except ValueError:
         raise ValueError("Table too large: at most 200 options for weight")
-    if 'odd_weight' in query:
-        if query['odd_weight']:
+    if 'weight_parity' in query:
+        if query['weight_parity'] == -1:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
@@ -845,7 +845,7 @@ def dimension_form_search(info, query):
              err_title='Dimension Search Input Error',
              per_page=None,
              # temporary, all cols except trace
-             projection = ['AL_dims',  'weight',  'level_radical',  'conrey_indexes',  'char_parity',  'char_conductor',  'level_primes',  'prim_orbit_index',  'id',  'sturm_bound',  'char_orbit_index',  'analytic_conductor',  'char_degree',  'label',  'char_order',  'dim',  'char_values',  'odd_weight',  'eis_new_dim',  'mf_new_dim',  'cusp_dim',  'trace_bound',  'char_orbit_label',  'mf_dim',  'eis_dim',  'level',  'char_is_real',  'hecke_orbit_dims',  'Nk2',  'plus_dim',  'num_forms'],
+             projection = ['AL_dims',  'weight',  'level_radical',  'conrey_indexes',  'char_parity',  'char_conductor',  'level_primes',  'prim_orbit_index',  'id',  'sturm_bound',  'char_orbit_index',  'analytic_conductor',  'char_degree',  'label',  'char_order',  'dim',  'char_values',  'weight_parity',  'eis_new_dim',  'mf_new_dim',  'cusp_dim',  'trace_bound',  'char_orbit_label',  'mf_dim',  'eis_dim',  'level',  'char_is_real',  'hecke_orbit_dims',  'Nk2',  'plus_dim',  'num_forms'],
              # the minimal set
              #projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
              postprocess=dimension_space_postprocess,
