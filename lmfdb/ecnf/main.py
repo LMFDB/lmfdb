@@ -22,7 +22,7 @@ from lmfdb.ecnf.isog_class import ECNF_isoclass
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
@@ -33,7 +33,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1" % escape(lab)), "error")
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -42,7 +42,7 @@ def split_full_label(lab):
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
         curve_number = re.search("\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % escape(lab)), "error")
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -53,7 +53,7 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1" % escape(lab)), "error")
         raise ValueError
     conductor_label = data[0]
     try:
@@ -61,7 +61,7 @@ def split_short_label(lab):
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
         curve_number = re.search("\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1" % escape(lab)), "error")
         raise ValueError
     return (conductor_label, isoclass_label, curve_number)
 
@@ -72,7 +72,7 @@ def split_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (number field label) - (conductor label) - (isogeny class label) (separated by dashes), such as 2.2.5.1-31.1-a" % escape(lab)), "error")
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -86,7 +86,7 @@ def split_short_class_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid isogeny class label. It must be of the form (conductor label) - (isogeny class label) (separated by dashes), such as 31.1-a" % escape(lab)), "error")
         raise ValueError
     conductor_label = data[0]
     isoclass_label = data[1]
@@ -98,7 +98,7 @@ def conductor_label_norm(lab):
     if re.match(r'\d+.\d+',s):
         return s.split('.')[0]
     else:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid conductor label. It must be of the form N.m or [N,c,d]" % escape(lab)), "error")
         raise ValueError
 
 def get_nf_info(lab):
@@ -107,7 +107,7 @@ def get_nf_info(lab):
         label = nf_string_to_label(lab)
         pretty = field_pretty (label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (lab,err)), "error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (escape(lab), escape(err))), "error")
         raise ValueError
     return label, pretty
 
