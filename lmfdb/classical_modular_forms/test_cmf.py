@@ -605,7 +605,7 @@ class CmfTest(LmfdbTest):
         for begin in [
                 ('level=1-330&weight=1&projective_image=D2',
                     ['Results (displaying all 49 matches)',
-                        '328.1.c.a', '413.6', r"\sqrt{-82}", r"\sqrt{-323}", r"\sqrt{109}"]
+                        '328.1.c.a', r"\sqrt{-82}", r"\sqrt{-323}", r"\sqrt{109}"]
                     ),
                 ('level=900-1000&weight=1-&projective_image=D2',
                     ['Results (displaying all 26 matches)', r"\sqrt{-1}", r"\sqrt{-995}", r"\sqrt{137}"]
