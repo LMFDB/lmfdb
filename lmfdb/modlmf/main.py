@@ -14,7 +14,7 @@ from lmfdb.search_parsing import parse_ints
 from lmfdb.search_wrapper import search_wrap
 from lmfdb.db_backend import db
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 import time
 import ast
@@ -23,7 +23,7 @@ import StringIO
 modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
 
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def print_q_expansion(list):
     list=[str(c) for c in list]
@@ -97,9 +97,9 @@ def modlmf_by_label(lab):
     if db.modlmf_forms.exists({'label': lab}):
         return render_modlmf_webpage(label=lab)
     if modlmf_label_regex.match(lab):
-        flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % escape(lab)), "error")
     else:
-        flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % escape(lab)), "error")
     return redirect(url_for(".modlmf_render_webpage"))
 
 #download
@@ -161,7 +161,7 @@ def render_modlmf_webpage(**args):
     if data is None:
         t = "Mod &#x2113; Modular Form Search Error"
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (escape(lab))),"error")
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)
