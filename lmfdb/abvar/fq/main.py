@@ -13,7 +13,7 @@ from search_parsing import parse_newton_polygon
 from isog_class import validate_label, AbvarFq_isoclass
 from stats import AbvarFqStats
 from flask import flash, render_template, url_for, request, redirect, send_file
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from sage.rings.all import PolynomialRing, ZZ
 
 logger = make_logger("abvarfq")
@@ -289,7 +289,9 @@ def by_label(label):
     try:
         validate_label(label)
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
+        l = escape(label)
+        e = escape(str(err))
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (l, e)), "error")
         return search_input_error()
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
