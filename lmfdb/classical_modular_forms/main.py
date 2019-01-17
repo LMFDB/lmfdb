@@ -210,8 +210,8 @@ def index():
     info = {"stats": CMF_stats()}
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
     info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
-    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64') #, '65-%d' % weight_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000') #, '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -457,8 +457,22 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='conre
         raise ValueError("It must be of the form N.i")
     level, orbit = pair
     level = int(level)
-    if level_field in query and query[level_field] != level:
-        raise ValueError("Inconsistent level")
+    def contains_level(D):
+        if D == level:
+            return True
+        if isinstance(D, dict):
+            a = D.get('$gte')
+            b = D.get('$lte')
+            return (a is None or level >= a) and (b is None or level <= b)
+    # Check that the provided constraint on level is consistent with the one
+    # given by the character, and update level/$or
+    if '$or' in query and all(level_field in D for D in query['$or']):
+        if not any(contains_level(D) for D in query['$or']):
+            raise ValueError("Inconsistent level")
+        del query['$or']
+    elif level_field in query:
+        if not contains_level(query[level_field]):
+            raise ValueError("Inconsistent level")
     query[level_field] = level
     if orbit.isalpha():
         query[qfield] = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
@@ -478,6 +492,9 @@ newform_only_fields = {
     'is_self_dual': 'Is self dual',
 }
 def common_parse(info, query):
+    parse_ints(info, query, 'level', name="Level")
+    parse_character(info, query, 'char_label', qfield='char_orbit_index')
+    parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
         parity=info['weight_parity']
@@ -491,11 +508,8 @@ def common_parse(info, query):
             query['char_parity'] = 1
         elif parity == 'odd':
             query['char_parity'] = -1
-    parse_ints(info, query, 'level', name="Level")
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
-    parse_character(info, query, 'char_label', qfield='char_orbit_index')
-    parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
@@ -577,8 +591,9 @@ def newspace_parse(info, query):
     if not info.get('dim', '').strip():
         # Only show non-empty spaces
         info['dim'] = '1-'
-    parse_ints(info, query, 'dim', name='Dimension')
-    parse_ints(info, query, 'num_forms', name='Number of newforms')
+    if info['search_type'] != 'SpaceDimensions':
+        parse_ints(info, query, 'dim', name='Dimension')
+        parse_ints(info, query, 'num_forms', name='Number of newforms')
     if info.get('all_spaces') == 'yes' and 'num_forms' in query:
         msg = "Cannot specify number of newforms while requesting all spaces"
         flash_error(msg)
@@ -724,13 +739,19 @@ def set_rows_cols(info, query):
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
         else:
             info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
-    try:
-        info['level_list'] = integer_options(info['level'], max_opts=1000)
-    except ValueError:
-        raise ValueError("Table too large: at most 1000 options for level")
-    if len(info['weight_list']) * len(info['level_list']) > 10000:
-        raise ValueError("Table too large: must have at most 5000 entries")
-    if info['prime_quantifier'] == 'exact':
+    if 'char_orbit_index' in query:
+        # Character was set, consistent with level
+        info['level_list'] = [query['level']]
+    else:
+        try:
+            info['level_list'] = integer_options(info['level'], max_opts=100000)
+        except ValueError:
+            raise ValueError("Table too large: at most 1000 options for level")
+        if not info['level_list']:
+            raise ValueError("Must include at least one level")
+    if 'char_conductor' in query:
+        info['level_list'] = [N for N in info['level_list'] if (N % query['char_conductor']) == 0]
+    if info['prime_quantifier'] == '':
         rad = query.get('level_radical')
         if rad:
             info['level_list'] = [N for N in info['level_list'] if ZZ(N).radical() == rad]
@@ -745,6 +766,12 @@ def set_rows_cols(info, query):
                     info['level_list'] = [N for N in info['level_list'] if (N % rad) == 0]
             except (ValueError, TypeError):
                 pass
+    if not info['level_list']:
+        raise ValueError("No valid levels consistent with specified characters and bad primes")
+    if len(info['level_list']) > 1000:
+        raise ValueError("Table too large: at most 1000 options for level")
+    if len(info['weight_list']) * len(info['level_list']) > 10000:
+        raise ValueError("Table too large: must have at most 10000 entries")
 
 def has_data_nontriv(N, k):
     return N*k*k <= Nk2_bound(nontriv=True)
@@ -760,6 +787,7 @@ na_msg_triv = '"n/a" means that no modular forms of this weight and level are av
 
 def dimension_common_postprocess(info, query, cusp_types, newness_types, url_generator, pick_table, switch_text=None):
     set_rows_cols(info, query)
+    set_info_funcs(info)
     if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
         info['has_data'] = has_data
         info['na_msg'] = na_msg_triv
@@ -774,9 +802,29 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
         info['switch_text'] = switch_text
 
 def dimension_space_postprocess(res, info, query):
-    if query.get('char_order') == 1:
+    if (query.get('odd_weight') is True  and query.get('char_parity') == 1 or
+        query.get('odd_weight') is False and query.get('char_parity') == -1):
+        raise ValueError("Inconsistent parity for character and weight")
+    urlgen_info = dict(info)
+    urlgen_info['count'] = 50
+    # Remove entries that are unused for dimension tables
+    urlgen_info.pop('hidden_search_type', None)
+    urlgen_info.pop('number', None)
+    urlgen_info.pop('numforms', None)
+    urlgen_info.pop('dim', None)
+    def url_generator_list(N, k):
+        info_copy = dict(urlgen_info)
+        info_copy['search_type'] = 'Spaces'
+        info_copy['level'] = str(N)
+        info_copy['weight'] = str(k)
+        return url_for(".index", **info_copy)
+    if 'char_orbit_index' in query or 'prim_orbit_index' in query:
+        url_generator = url_generator_list
+    elif query.get('char_order') == 1:
         def url_generator(N, k):
             return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
+    elif 'char_order' in query:
+        url_generator = url_generator_list
     else:
         def url_generator(N, k):
             return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
@@ -803,6 +851,8 @@ def dimension_space_postprocess(res, info, query):
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
+    urlgen_info.pop('hidden_search_type', None)
+    urlgen_info.pop('number', None)
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'List'
@@ -859,7 +909,6 @@ def dimension_space_search(info, query):
     if 'level' not in info:
         info['level'] = '1-24'
     newspace_parse(info, query)
-    set_info_funcs(info)
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,

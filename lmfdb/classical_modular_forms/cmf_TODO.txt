@@ -20,6 +20,14 @@ IMPORTANT:
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
 * Reduce clutter in the url (cleanSubmit doesn't seem to be getting everything) (David)
 * Fix links from dimension space table. (David)
+* Raise error if type in character that's not primitive (David)
+* Center dim table (David)
+* Switch to using weight_parity rather than odd_weight, then remove odd_weight (David)
+* Display error message "No good primes within range of n" if no Satake (David)
+* Raise error on negative n (David)
+* Placeholders values for m box and sig figures box (David)
+* Right align Satake angles (David)
+* If user deletes '1-' in Newspace dim box, it will be put back (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
