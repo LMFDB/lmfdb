@@ -175,7 +175,7 @@ class CmfTest(LmfdbTest):
         assert '1680' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
         assert '168q^{8}' in page.data
-        assert '36	' in page.data
+        assert '36' in page.data
 
     def test_non_triv_character(self):
         r"""
