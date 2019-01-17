@@ -497,7 +497,7 @@ def common_parse(info, query):
     parse_character(info, query, 'char_label', qfield='char_orbit_index')
     parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
     parse_ints(info, query, 'char_order', name="Character order")
-    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', 'exact')
+    prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
 
 def parse_self_twist(info, query):
@@ -675,6 +675,7 @@ def set_Trn(info, query):
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
+    info['download_limit'] = 1000
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
@@ -801,7 +802,6 @@ def dimension_space_postprocess(res, info, query):
 
 def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
-    urlgen_info['search_type'] = ''
     urlgen_info['count'] = 50
     def url_generator(N, k):
         info_copy = dict(urlgen_info)

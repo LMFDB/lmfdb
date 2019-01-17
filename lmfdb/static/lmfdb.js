@@ -345,19 +345,22 @@ function increase_start_by_count_and_submit_form(form_id) {
   $('form[id='+form_id+']').submit()
 };
 
-function get_count_of_results() {
+function get_count_of_results(download_limit) {
     var address = window.location.href
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
     address += "&result_count=1";
-    $.ajax({url: address, success: get_count_callback});
+    var callback = function(res) {
+        get_count_callback(res, download_limit);
+    }
+    $.ajax({url: address, success: callback});
 };
 
-function get_count_callback(res) {
+function get_count_callback(res, download_limit) {
     $('#result-count').html(res['nres']);
-    if (parseInt(res, 10) > 100000) {
+    if (parseInt(res['nres'], 10) > download_limit) {
         $("#download-msg").html("There are too many search results for downloading.");
     } else {
         $("#download-msg").html("");

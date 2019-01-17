@@ -133,12 +133,26 @@ Info was: {{info}}
       <td><span class="formexample"> e.g. 1.a </td>
 
     </tr>
-
+  </table>
+  <br>
+  <table>
+    {% for knowl, ktitle, buttons in [('mf.elliptic.newspace', 'Newspaces', [('Spaces', 'List newspaces'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random space')])] %}
+    <tr>
+      <td>{{KNOWL(knowl, title=ktitle)}}:</td>
+      {% for type, desc in buttons %}
+      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+  <br>
+  <br>
+  <table>
     <tr>
       <td colspan>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}</td>
       <td>
         <select name="dim_type" style="width: 85px;">
-          <option value="abs">absolute</option>
+          <option value="">absolute</option>
           <option value="rel">relative</option>
         </select>
       </td>
@@ -213,8 +227,7 @@ Info was: {{info}}
   </table>
   <br>
   <table>
-    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')]),
-                             ('mf.elliptic.newspace', 'Newspaces', [('Spaces', 'List'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random')])] %}
+    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')])] %}
     <tr>
       <td>{{KNOWL(knowl, title=ktitle)}}:</td>
       {% for type, desc in buttons %}
