@@ -2096,7 +2096,7 @@ class PostgresTable(PostgresBase):
                 columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
-                    cur_count = self.max_id()
+                    cur_count = self.max_id(table)
                     seq_name = table + '_seq'
                     create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
                     self._execute(create_seq, [cur_count+1]*2);
@@ -2440,8 +2440,10 @@ class PostgresTable(PostgresBase):
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table)))
                 print "Dropped {0}".format(table)
 
-    def max_id(self):
-        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(self.search_table))).fetchone()[0]
+    def max_id(self, table = None):
+        if table is None:
+            table = self.search_table
+        res = db._execute(SQL("SELECT MAX(id) FROM {}".format(Identifier(table)))).fetchone()[0]
         if res is None:
             res = -1
         return res
