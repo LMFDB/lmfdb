@@ -222,9 +222,9 @@ Info was: {{info}}
   </table>
   <br>
   <table>
-    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')])] %}
+    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List of forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')])] %}
     <tr>
-      <td>{{KNOWL(knowl, title=ktitle)}}:</td>
+      <td>Display: </td>
       {% for type, desc in buttons %}
       <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
       {% endfor %}
