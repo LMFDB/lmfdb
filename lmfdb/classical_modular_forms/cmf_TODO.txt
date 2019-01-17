@@ -95,6 +95,7 @@ FUTURE WORK:
 * Improve modular form plots
 
 NOT CMF STUFF:
+* max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript
 * generalize search_types
 * hidden != search clean hidden
