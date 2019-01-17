@@ -48,7 +48,7 @@ class CmfTest(LmfdbTest):
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data
         assert '343.1.d.a' in data
-        assert '49.4.a.a' in data
+        assert '343.2.a.a' in data
         assert '7.7.d.a' in data
         assert '686' in data
 
@@ -147,6 +147,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/")
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/?format=satake")
         assert '0.299366' in page.data
         assert '0.954138' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
