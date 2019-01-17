@@ -160,7 +160,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/")
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
-        assert r'0.707106' in page.data
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
