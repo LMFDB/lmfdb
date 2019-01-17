@@ -171,10 +171,10 @@ class CmfTest(LmfdbTest):
     def test_triv_character(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/8/a/a/")
         assert r'1016q^{7}' in page.data
-        assert '0.375659' in page.data
+        assert '1680' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/3/6/a/a/")
         assert '168q^{8}' in page.data
-        assert '0.0536656' in page.data
+        assert '−36	' in page.data
 
     def test_non_triv_character(self):
         r"""
@@ -309,14 +309,14 @@ class CmfTest(LmfdbTest):
 
 
     def test_satake(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
         assert r'0.707106' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
         assert r'0.974679' in page.data
         assert r'0.288675' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?format=satake')
         assert r'0.750000' in page.data
         assert r'0.661437' in page.data
         assert r'0.272727' in page.data
@@ -381,7 +381,7 @@ class CmfTest(LmfdbTest):
         assert '0.237314' in page.data
         assert '0.637314' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/?format=satake&n=2-20')
         # alpha_11
         assert '0.603022' in page.data
         assert '0.797724' in page.data
@@ -593,7 +593,7 @@ class CmfTest(LmfdbTest):
                     ['Results (displaying all 21 matches)', '171901114', 'No', '10.723', 'A-L signs']
                     ),
                 ('level=10%2C13%2C17&weight=1-8&dim=1',
-                    ['Results (displaying all 12 matches)', '1373', 'No', '1093.6']
+                    ['Results (displaying all 12 matches)', '1373', 'No', '0.136']
                     )]:
             for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=0']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
