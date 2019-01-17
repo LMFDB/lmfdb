@@ -14,7 +14,7 @@ Info was: {{info}}
 </div>
 
 <h2> Browse <a href="./stats">statistics</a> or <a href="./dynamic_stats">create your own</a> </h2>
-<h2> Browse {{ KNOWL('mf.elliptic',title='classical modular forms')}}</h2>
+<h2> Browse {{ KNOWL('mf.elliptic',title='newforms')}}</h2>
 
 <p>
   By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
@@ -28,12 +28,6 @@ Info was: {{info}}
   <a href="?level={{level}}">{{level}}</a>&nbsp;
   {% endfor %}
 </p>
-<p>
-  Using a <a href="?search_type=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
-</p>
-<p>
-  As a <a href="?search_type=Spaces&dim=1-">list</a> of {{ KNOWL('mf.elliptic.newspaces', title='spaces of newforms') }}</a>
-</p>
 
 {% for sublist in info.newform_list %}
 <p>
@@ -46,6 +40,29 @@ Info was: {{info}}
 </p>
 {% endfor %}
 
+<p>
+  A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
+</p>
+
+<h2> Browse {{ KNOWL('mf.elliptic',title='newspaces')}}</h2>
+
+<p>
+  By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{ KNOWL('mf.elliptic.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  Using a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
+</p>
+
 {% for sublist in info.space_list %}
 <p>
   {% if loop.index == 1 %}
@@ -56,14 +73,6 @@ Info was: {{info}}
   {% endfor %}
 </p>
 {% endfor %}
-
-<p>
-  A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
-</p>
-
-<p>
-  A <a href={{url_for('.random_form')}}>random newform</a> from the database
-</p>
 
 <h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
@@ -133,21 +142,7 @@ Info was: {{info}}
       <td><span class="formexample"> e.g. 1.a </td>
 
     </tr>
-  </table>
-  <br>
-  <table>
-    {% for knowl, ktitle, buttons in [('mf.elliptic.newspace', 'Newspaces', [('Spaces', 'List newspaces'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random space')])] %}
-    <tr>
-      <td>{{KNOWL(knowl, title=ktitle)}}:</td>
-      {% for type, desc in buttons %}
-      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 140px;">{{desc}}</button></td>
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </table>
-  <br>
-  <br>
-  <table>
+
     <tr>
       <td colspan>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}</td>
       <td>
