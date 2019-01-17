@@ -1133,15 +1133,17 @@ class PostgresTable(PostgresBase):
                 return self.lucky(query, projection=projection, offset=offset, sort=[])
         else:
             maxtries = 100
-            maxid = self.max('id')
+            # a temporary hack FIXME
+            #maxid = self.max('id')
+            maxid = self.max_id()
             if maxid == 0:
                 return None
             # a temporary hack FIXME
             minid = self.min_id()
             for _ in range(maxtries):
                 # The id may not exist if rows have been deleted
+                # a temporary hack FIXME
                 #rid = random.randint(1, maxid)
-                # FIXME
                 rid = random.randint(minid, maxid)
                 res = self.lucky({'id':rid}, projection=projection)
                 if res: return res
@@ -2455,7 +2457,7 @@ class PostgresTable(PostgresBase):
     def min_id(self, table = None):
         if table is None:
             table = self.search_table
-        res = db._execute(SQL("SELECT MID(id) FROM {}".format(table))).fetchone()[0]
+        res = db._execute(SQL("SELECT MIN(id) FROM {}".format(table))).fetchone()[0]
         if res is None:
             res = 0
         return res
