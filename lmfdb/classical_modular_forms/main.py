@@ -802,8 +802,7 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
         info['switch_text'] = switch_text
 
 def dimension_space_postprocess(res, info, query):
-    if (query.get('odd_weight') is True  and query.get('char_parity') == 1 or
-        query.get('odd_weight') is False and query.get('char_parity') == -1):
+    if query.get('weight_parity')*query.get('char_parity') == -1:
         raise ValueError("Inconsistent parity for character and weight")
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
