@@ -248,7 +248,7 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
-        if self.Nk2 <= 4000:
+        if self.Nk2 <= 20000:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if len(self.conrey_indexes)*self.rel_dim > 50:
