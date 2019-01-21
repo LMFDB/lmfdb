@@ -32,7 +32,9 @@ def alive():
 @app.route("/info")
 def info():
     from base import git_infos
-    output = "# GIT info\n";
+    from socket import gethostname
+    output = "HOSTNAME = %s\n\n" % gethostname()
+    output += "# GIT info\n";
     output += git_infos()[-1]
     output += "\n\n";
     from lmfdb.db_backend import db
