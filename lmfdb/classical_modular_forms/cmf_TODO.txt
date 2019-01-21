@@ -1,4 +1,4 @@
-CRITICAL (BUGS):
+CRITICAL (BUGS): Trace table search on newspaces can be very slow when combined with constraints (for example http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?count=50&hidden_search_type=SpaceTraces&dim=1000-&search_type=SpaceTraces&n=1-40&n_primality=primes&an_constraints=a2%3D3%2Ca5%3D2&view_modp=integers)  Note that we now have many more space trace forms loaded.
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew)
