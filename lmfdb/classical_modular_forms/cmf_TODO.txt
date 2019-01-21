@@ -20,7 +20,6 @@ IMPORTANT:
 * Fix links from dimension space table. (David)
 * Raise error if type in character that's not primitive (David)
 * Center dim table (David)
-* Switch to using weight_parity rather than odd_weight, then remove odd_weight (David)
 * Display error message "No good primes within range of n" if no Satake (David)
 * Raise error on negative n (David)
 * Placeholders values for m box and sig figures box (David)

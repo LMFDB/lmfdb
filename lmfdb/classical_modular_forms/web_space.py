@@ -353,7 +353,7 @@ class WebGamma1Space(object):
         if data is None:
             raise ValueError("Space not in database")
         self.__dict__.update(data)
-        self.odd_weight = bool(self.weight % 2)
+        self.weight_parity = -1 if (self.weight % 2) == 1 else 1
         if level == 1 or ZZ(level).is_prime():
             self.factored_level = ''
         else:
@@ -365,10 +365,10 @@ class WebGamma1Space(object):
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         # by default we sort on char_orbit_index
-        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
+        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
-        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
+        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces) if newspaces else DimGrid()
         #self.mf_dim = sum(space['mf_dim'] for space in newspaces)
         #self.eis_dim = sum(space['eis_dim'] for space in newspaces)
         #self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
