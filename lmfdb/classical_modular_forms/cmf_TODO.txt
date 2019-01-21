@@ -1,4 +1,4 @@
-CRITICAL (BUGS): http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1349/1/g/ incorrectly states that there are no newforms in this space because the character has even parity while the weight is odd, but this is false; char_parity is correctly set to -1 in the newspace reocrd for this form, so this is an issue in the display code not a data problem
+CRITICAL (BUGS):
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew)
