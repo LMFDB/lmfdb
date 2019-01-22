@@ -20,7 +20,6 @@ IMPORTANT:
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
 * Reduce clutter in the url: count, start, hidden_search_type (David)
-* Switch to using weight_parity rather than odd_weight, then remove odd_weight (David)
 * Center dim table (David)
 * Display error message "No good primes within range of n" if no Satake (David)
 * Raise error on negative n (David)
