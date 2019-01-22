@@ -450,8 +450,15 @@ def download_newspace(label):
 def download_full_space(label):
     return CMF_download().download_full_space(label)
 
-@search_parser(default_name='Character orbit label') # see SearchParser.__call__ for actual arguments when calling
-def parse_character(inp, query, qfield, level_field='level', conrey_field='conrey_indexes'):
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_character(inp, query, qfield, prim=False):
+    # qfield will be set to something by the logic in SearchParser.__call__, but we want it determined by prim
+    if prim:
+        qfield = 'prim_orbit_index'
+        level_field = 'char_conductor'
+    else:
+        qfield = 'char_orbit_index'
+        level_field = 'level'
     pair = inp.split('.')
     if len(pair) != 2:
         raise ValueError("It must be of the form N.i")
@@ -475,9 +482,19 @@ def parse_character(inp, query, qfield, level_field='level', conrey_field='conre
             raise ValueError("Inconsistent level")
     query[level_field] = level
     if orbit.isalpha():
-        query[qfield] = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
+        orbit = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
+        if prim:
+            if level > 10000:
+                raise ValueError("The level is too large.")
+            # Check that this character is actually primitive
+            conductor = db.char_dir_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            if conductor is None:
+                raise ValueError("No character orbit with this label exists.")
+            if conductor != level:
+                raise ValueError("It has level %d and is thus not primitive." % conductor)
+        query[qfield] = orbit
     else:
-        if conrey_field is None:
+        if prim:
             raise ValueError("You must use the orbit label when searching by primitive character")
         query[conrey_field] = {'$contains': int(orbit)}
 
@@ -493,8 +510,8 @@ newform_only_fields = {
 }
 def common_parse(info, query):
     parse_ints(info, query, 'level', name="Level")
-    parse_character(info, query, 'char_label', qfield='char_orbit_index')
-    parse_character(info, query, 'prim_label', qfield='prim_orbit_index', level_field='char_conductor', conrey_field=None)
+    parse_character(info, query, 'char_label', name='Character orbit', prim=False)
+    parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
         parity=info['weight_parity']
