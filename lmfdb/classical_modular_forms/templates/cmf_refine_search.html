@@ -30,7 +30,7 @@ function set_buckets(col_selecter, bucket_id) {
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="count" value="{{info.count if info.count != 50 else ''}}"/>
 <input type="hidden" name="hidden_search_type" value="{{info.search_type}}"/>
 
 <table>
@@ -174,7 +174,7 @@ function set_buckets(col_selecter, bucket_id) {
     {% if info.search_type != 'Dimensions' %}
     <td>
       <select name='sort_order' style="width: 150px;">
-        <option value='A'{% if info.sort_order=='A' %} selected{% endif %}>analytic conductor</option>
+        <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>
         <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
         <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
         <option value='reldim'{% if info.sort_order=='reldim' %} selected{% endif %}>relative dimension</option>
