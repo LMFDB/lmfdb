@@ -169,10 +169,10 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twists') }}</td>
       <td>
         <select name='has_self_twist' style="width: 140px;">
-          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
+          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has CM/RM'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no CM/RM')] %}
           {% for val, text in self_twist_values %}
           <option value="{{ val }}">{{ text }}</option>
           {% endfor %}
