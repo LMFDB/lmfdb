@@ -284,13 +284,11 @@ function get_all_embeddings(num_embeddings) {
 <table class="ntdata complex-cols">
   <thead>
     <tr>
-      {% if newform.dim > 1 %}
       <th class="sticky-head dark" style="min-width: 40px;">{{ KNOWL('mf.elliptic.embedding_label', title='Label')}}</th>
       {% if newform.has_exact_qexp %}
       <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\alpha)\)</th>
       {% endif %}
-      {% endif %}
-      {% for n in newform.an_range(info.CC_n, format=info.format) %}
+      {% for n in info.CC_n %}
       <th class="center dark" colspan="{{1 if single_columns else 3}}">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
       {% endfor %}
     </tr>
@@ -301,20 +299,19 @@ function get_all_embeddings(num_embeddings) {
     {% else %}
     {% set headcol_rowspan = 1 %}
     {% endif %}
-    {% for m in newform.m_range(info.CC_m) %}
+    {% for m in info.CC_m %}
     {% if loop.index is divisibleby(2) %}
     {% set shade = 'dark' %}
     {% else %}
     {% set shade = 'light' %}
     {% endif %}
     <tr>
-      {% if newform.dim > 1 %}
       <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;">{{ newform.conrey_from_embedding(m) }}</td>
       {% if loop.index == 1 and newform.has_exact_qexp %}
       {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
-      <td rowspan = "{{headcol_rowspan*(newform.m_range(info.CC_m) | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
+      <td rowspan = "{{headcol_rowspan*(info.CC_m | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
         <table class="sticky-embeddings">
-          {% for mm in newform.m_range(info.CC_m) %}
+          {% for mm in info.CC_m %}
           {% if loop.index is divisibleby(2) %}
           {% set mmshade = 'dark' %}
           {% else %}
@@ -322,13 +319,13 @@ function get_all_embeddings(num_embeddings) {
           {% endif %}
           <tr>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap real">
-              {{ newform.embedding_re(mm,prec=info.prec) | safe }}
+              {{ newform.embedding_re(mm,prec=info.emb_prec) | safe }}
             </td>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} op">
-              {{ newform.embedding_op(mm,prec=info.prec) | safe }}
+              {{ newform.embedding_op(mm,prec=info.emb_prec) | safe }}
             </td>
             <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap imag">
-              {{ newform.embedding_im(mm,prec=info.prec) | safe }}
+              {{ newform.embedding_im(mm,prec=info.emb_prec) | safe }}
             </td>
             {% if headcol_rowspan == 2 %}
             <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
@@ -341,35 +338,34 @@ function get_all_embeddings(num_embeddings) {
         </table>
       </td>
       {% endif %} {# loop.index == 1 and newform.has_exact_qexp #}
-      {% endif %} {# newform.dim > 1 #}
       {% if info.format == 'embed' or info.format == 'analytic_embed' %}
-      {% for n in newform.an_range(info.CC_n, format=info.format) %}
+      {% for n in info.CC_n %}
       <td class="nowrap real">
-        {{ newform.embedding_re(m,n,prec=info.prec,format=info.format) | safe }}
+        {{ newform.embedding_re(m,n,prec=info.emb_prec,format=info.format) | safe }}
       </td>
       <td class="op">
-        {{ newform.embedding_op(m,n,prec=info.prec) | safe }}
+        {{ newform.embedding_op(m,n,prec=info.emb_prec) | safe }}
       </td>
       <td class="nowrap imag">
-        {{ newform.embedding_im(m,n,prec=info.prec,format=info.format) | safe }}
+        {{ newform.embedding_im(m,n,prec=info.emb_prec,format=info.format) | safe }}
       </td>
       {% endfor %} {# n loop #}
       {% else %} {# info.format in ['satake', 'satake_angle'] #}
       {% for i in [0,1] %}
-      {% for n in newform.an_range(info.CC_n, format=info.format) %}
+      {% for n in info.CC_n %}
       {% if info.format == 'satake' %}
       <td class="nowrap real">
-        {{ newform.satake_re(m,n,i,prec=info.prec) | safe }}
+        {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}
       </td>
       <td class="op">
         {{ newform.satake_op(m,n,i) | safe }}
       </td>
       <td class="imag">
-        {{ newform.satake_im(m,n,i,prec=info.prec) | safe }}
+        {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
       </td>
-      {% else %} {# info.format == 'satake_angles' #}
-      <td class="nowrap middle">
-        {{ newform.satake_angle(m,n,i,prec=info.prec) | safe }}
+      {% else %} {# info.format == 'satake_angle' #}
+      <td class="nowrap right">
+        {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}
       </td>
       {% endif %} {# info.format #}
       {% endfor %} {# n loop #}
@@ -381,11 +377,11 @@ function get_all_embeddings(num_embeddings) {
       {% endif %} {# info.format #}
     </tr>
     {% endfor %} {# m loop #}
-    {% if info.CC_m[0] == 1 and (newform.m_range(info.CC_m) | length) < 100 and (newform.m_range(info.CC_m) | length) < newform.dim %}
+    {% if info.CC_m[0] == 1 and (info.CC_m | length) < 100 and (info.CC_m | length) < newform.dim %}
     <tr>
-      <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (newform.an_range(info.CC_n, format=info.format) | length)}}">
+      <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}">
         {% if newform.dim > 100 %}
-        <a onclick="get_all_embeddings({{100}}); return false" href="#">See next {{ 100 - (newform.m_range(info.CC_m) | length) }} embeddings (of {{newform.dim}} total)</a>
+        <a onclick="get_all_embeddings({{100}}); return false" href="#">See next {{ 100 - (info.CC_m | length) }} embeddings (of {{newform.dim}} total)</a>
         {% else %}
         <a onclick="get_all_embeddings({{newform.dim}}); return false" href="#">See all {{newform.dim}} embeddings</a>
         {% endif %}
@@ -406,17 +402,17 @@ function get_all_embeddings(num_embeddings) {
   <table>
     <tr>
       <td>\(n\): </td>
-      <td><input type='text' name='n' style="width: 160px" value="{{info.n}}"></td>
+      <td><input type='text' name='n' style="width: 160px" value="{{info.n}}" placeholder="{{info.default_nrange}}"></td>
     </tr>
     {% if newform.dim > 4 %}
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding',title='Embeddings') }}: </td>
-      <td><input type='text' name='m' style="width: 160px" value="{{info.m}}"></td>
+      <td><input type='text' name='m' style="width: 160px" value="{{info.m}}" placeholder="1-{{newform.dim}}"></td>
     </tr>
     {% endif %}
     <tr>
       <td>{{ KNOWL('dq.mf.elliptic.cc_prec', title='Significant digits') }}: </td>
-      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}"></td>
+      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
     </tr>
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
@@ -450,8 +446,6 @@ function get_all_embeddings(num_embeddings) {
 <p>This newform does not admit a {{ KNOWL('mf.elliptic.self_twist', title='self-twist') }}.</p>
 {% endif %}
 
-
-{# TODO we might wish to have some disclaimer here about provability #}
 {% if newform.inner_twist_count == 0 %}
 <p>This newform does not admit any ({{KNOWL('mf.elliptic.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('mf.elliptic.inner_twist',title='inner twists') }}.</p>
 {% elif newform.inner_twist_count > 0 %}

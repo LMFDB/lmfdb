@@ -105,6 +105,9 @@ def render_DirichletNavigation():
             m,n = int(slabel[0]), int(slabel[1])
             if m==n==1 or n < m and gcd(m,n) == 1:
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
+        if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
+            slabel = label.split('.')
+            return redirect(url_for(".render_Dirichletwebpage", modulus=int(slabel[0]), number=slabel[1]))
         if re.match(r'^[1-9][0-9]*$', label):
             return redirect(url_for(".render_Dirichletwebpage", modulus=label), 301)
 
@@ -205,8 +208,9 @@ def render_Dirichletwebpage(modulus=None, number=None):
     if modulus is None:
         return render_DirichletNavigation()
     modulus = modulus.replace(' ','')
-    if number is None and re.match('^[1-9][0-9]*\.[1-9][0-9]*$', modulus):
-        return redirect(url_for(".render_Dirichletwebpage", label=modulus), 301)
+    if number is None and re.match('^[1-9][0-9]*\.([1-9][0-9]*|[a-z]+)$', modulus):
+        modulus, number = modulus.split('.')
+        return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
     args={}
     args['type'] = 'Dirichlet'
