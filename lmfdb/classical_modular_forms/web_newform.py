@@ -216,7 +216,14 @@ class WebNewform(object):
 
     @property
     def inner_twists(self):
-        return [(data,url_character(type='Dirichlet', modulus=data[2], number=cremona_letter_code(data[3]-1))) for data in self._inner_twists]
+        twists = []
+        for data in self._inner_twists:
+            label = '%s.%s' % (data[2], cremona_letter_code(data[3]-1))
+            char_dir_label = '%s.%s' % (data[2], data[3])
+            parity = db.char_dir_orbits.lucky({'orbit_label':char_dir_label}, 'parity')
+            parity = 'Even' if parity == 1 else 'Odd'
+            twists.append((data, parity, display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})))
+        return twists
 
     # Breadcrumbs
     @property
@@ -751,7 +758,6 @@ function switch_basis(btype) {
     def char_conrey_link(self):
         label = '%s.%s' % (self.level, self.char_orbit_label)
         return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
-        #return '<a href="%s">%s.%s</a>' % (url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label), self.level, self.char_orbit_label)
 
     def display_character(self):
         if self.char_order == 1:
@@ -777,15 +783,16 @@ function switch_basis(btype) {
         total = 0
         twists = ['<table class="ntdata">',
                   '<thead>',
-                  '  <tr>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n  </tr>' %
+                  '  <tr>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n  </tr>' %
                   (display_knowl('character.dirichlet.galois_orbit_label', title='Character'),
+                   display_knowl('character.dirichlet.parity', title='Parity'),
                    display_knowl('mf.elliptic.inner_twist_multiplicity', title='Multiplicity'),
                    display_knowl('mf.elliptic.inner_twist_proved', title='Proved')),
                   '</thead>',
                   '<tbody>']
-        for (b, mult, M, orb), link in self.inner_twists:
+        for (b, mult, M, orb), parity, link in self.inner_twists:
             total += mult
-            twists.append('  <tr>\n    <td><a href="%s">%d.%s</a></td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, M, cremona_letter_code(orb-1), mult, 'yes' if b == 1 else 'no'))
+            twists.append('  <tr>\n    <td>%s</td>\n    <td>%s</td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, parity, mult, 'yes' if b == 1 else 'no'))
         twists.append('</table>')
         para = '<p>This newform admits %d (%s) ' % (total, display_knowl('mf.elliptic.nontrivial_twist', title='nontrivial'))
         if total == 1:

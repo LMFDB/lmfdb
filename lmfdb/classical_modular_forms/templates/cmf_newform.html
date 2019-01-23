@@ -446,8 +446,6 @@ function get_all_embeddings(num_embeddings) {
 <p>This newform does not admit a {{ KNOWL('mf.elliptic.self_twist', title='self-twist') }}.</p>
 {% endif %}
 
-
-{# TODO we might wish to have some disclaimer here about provability #}
 {% if newform.inner_twist_count == 0 %}
 <p>This newform does not admit any ({{KNOWL('mf.elliptic.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('mf.elliptic.inner_twist',title='inner twists') }}.</p>
 {% elif newform.inner_twist_count > 0 %}

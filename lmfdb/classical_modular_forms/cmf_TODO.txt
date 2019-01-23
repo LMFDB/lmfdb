@@ -6,10 +6,6 @@ IMPORTANT:
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
     # [20001,40000] (processing)
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
-* Add char parity column to inner twist table (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/1349/1/g/a/ is an exaple where both parities occur).
-* Dirichlet character browse page should support lookup by char orbit label (e.g. typing 17.d into the label input box should take you to http://cmfs.lmfdb.xyz/Character/Dirichlet/17/d).
-* Think about how to support searches that will capture all inner twists (including self twists), possibly involving changes to the "Has self twist" and "Inner twist count" search options.
-* Consider whether to put weight-1 specific search inputs (e.g. projective image type) on all search forms.
 * Compare trivial char data with Stein database (Drew)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
@@ -18,9 +14,15 @@ IMPORTANT:
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
-* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?level=50-100&search_type=Dimensions is slow (David)
 * Reduce clutter in the url: count, start, hidden_search_type (David)
 * If user deletes '1-' in Newspace dim box, it will be put back (David)
+* Hard code has_data: ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions should be "n/a" (David)
+* Should we add parity to the list of inner twists?  Currently need to do a query for each twist.
+* What else should be put on the Dirichlet character knowls?
+* Should the url for Dirichlet character 17.d switch to 17/2?
+* Consider whether to put weight-1 specific search inputs (e.g. projective image type) on all search forms.
+* Think about how to support searches that will capture all inner twists (including self twists), possibly involving changes to the "Has self twist" and "Inner twist count" search options.
+* Prevent all=1 in cleanSubmit when no arguments from browse page.
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -116,6 +118,7 @@ NOT CMF STUFF:
 * checklist is broken
 * Add validate_header function for copy_from, reload, etc (David)
 * Add replace_from function to db_backend (David)
+* In debug_info.html, queries with dollar signs aren't escaped, and katex tries to parse them.
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)

@@ -612,7 +612,6 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
     parse_sort(info, query)
-    print query
 
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
