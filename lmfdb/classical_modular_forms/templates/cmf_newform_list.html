@@ -62,10 +62,10 @@
           <td> {{ func(mf) | safe }}</td>
         {% endif %}
       {% endfor %}
-      <td class="right">{{ info.bigint_knowl(mf.trace_display[0]) | safe }}</td>
-      <td class="right">{{ info.bigint_knowl(mf.trace_display[1]) | safe }}</td>
-      <td class="right">{{ info.bigint_knowl(mf.trace_display[2]) | safe }}</td>
-      <td class="right">{{ info.bigint_knowl(mf.trace_display[3]) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[0], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[1], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[2], 12) | safe }}</td>
+      <td class="right">{{ info.bigint_knowl(mf.trace_display[3], 12) | safe }}</td>
       {% if AL_signs %}
       <td></td>
       {% for p, ev in mf.atkin_lehner_eigenvals %}

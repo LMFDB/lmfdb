@@ -1,7 +1,11 @@
 CRITICAL (BUGS):
-* Trace table with bigints not formatting correctly: http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?start=50&count=50&hidden_search_type=List&weight=201-&search_type=Traces
 
 IMPORTANT:
+* Add parity, order, self_twist_disc to the inner_twist column of mf_newforms (Drew)
+* Include self twists and trivial character in inner twist table, delete surrounding text (unless no twists),  change headers to 'Char orbit', 'Parity', 'Order', 'Mult', 'Self-twist', 'Proved' (David)
+* Add headers 'Atkin-Lehner signs' and 'Hecke kernels' (David)
+* Rename has_inner_twist to has_non_self_twist
+* Add inner twists knowl, reference inner twist group knowl, include that we've only computed for forms up to 20 and not all twists are proved, add asterisk to knowl on search page (David/Drew)
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
@@ -25,6 +29,7 @@ IMPORTANT:
 * Think about how to support searches that will capture all inner twists (including self twists), possibly involving changes to the "Has self twist" and "Inner twist count" search options.
 * Prevent all=1 in cleanSubmit when no arguments from browse page.
 * Should we add an hline below the embedding table?
+* base64 image test failures in http://cmfs.lmfdb.xyz/Variety/Abelian/Fq/2/4/ad_g
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -88,6 +93,7 @@ IT WOULD BE NICE IF:
 * What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
 * form pages: provide downloads of q-expansions for Magma/pari
 * Saved queries for demos (cf checklist)
+* Inner twist group structures
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
