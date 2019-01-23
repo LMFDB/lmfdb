@@ -346,6 +346,7 @@ def mu_portrait(n):
         plot = circle((0,0),1,thickness=3)
     plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
     plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
     return encode_plot(plot)
 
 def su2_mu_info(w,n):
@@ -392,6 +393,7 @@ def su2_mu_portrait(n):
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
     plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
     return encode_plot(plot)
 
 
@@ -439,6 +441,7 @@ def nu1_mu_portrait(n):
         plot = circle((0,0),2,fill=True)
     plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
     plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
     return encode_plot(plot)
 
 def render_by_label(label):
