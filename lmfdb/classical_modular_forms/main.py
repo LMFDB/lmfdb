@@ -13,7 +13,7 @@ from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Sp
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
 from sage.databases.cremona import class_to_int
-from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function
+from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range
 from sage.misc.misc_c import prod
 import re
 
@@ -145,7 +145,7 @@ def set_info_funcs(info):
         return r'+'.join(terms)
     info['display_decomp'] = display_decomp
 
-    info['show_ALdims_col'] = lambda spaces: any('AL_dims' in space for space in spaces)
+    info['show_ALdims_col'] = lambda spaces: any(space.get('AL_dims') for space in spaces)
     def display_ALdims(space):
         al_dims = space.get('AL_dims')
         if al_dims:
@@ -245,40 +245,59 @@ def render_newform_webpage(label):
                 maxp = next_prime(maxp)
             p = next_prime(p)
     errs = []
-    info['n'] = info.get('n', '2-%s'%maxp)
+    info['default_nrange'] = '2-%s'%maxp
+    nrange = info.get('n', '2-%s'%maxp)
     try:
-        info['CC_n'] = integer_options(info['n'], 1000)
+        info['CC_n'] = integer_options(nrange, 1000)
     except (ValueError, TypeError) as err:
-        info['n'] = '2-%s'%maxp
         info['CC_n'] = range(2,maxp+1)
         if err.args and err.args[0] == 'Too many options':
             errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
+    if min(info['CC_n']) < 2:
+        errs.append(r"We only show \(a_n\) with n at least 2")
+        info['CC_n'] = [n for n in info['CC_n'] if n >= 2]
+    if info['format'] in ['satake', 'satake_angle']:
+        info['CC_n'] = [p for p in info['CC_n'] if ZZ(p).is_prime() and newform.level % p != 0]
+        if len(info['CC_n']) == 0:
+            errs.append("No good primes within n range; resetting to default")
+            info['CC_n'] = [p for p in prime_range(maxp+1) if newform.level % p != 0]
+    elif len(info['CC_n']) == 0:
+        errs.append("No n in specified range; restting to default")
+        info['CC_n'] = range(maxp+1)
     maxm = min(newform.dim, 20)
-    info['m'] = infom = info.get('m', '1-%s'%maxm)
+    info['default_mrange'] = '1-%s'%maxm
+    mrange = info.get('m', '1-%s'%maxm)
     try:
-        if '.' in infom:
+        if '.' in mrange:
             # replace embedding codes with the corresponding integers
-            infom = re.sub(r'\d+\.\d+', newform.embedding_from_conrey, infom)
-        info['CC_m'] = integer_options(infom, 1000)
+            mrange = re.sub(r'\d+\.\d+', newform.embedding_from_conrey, mrange)
+        info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
-        info['m'] = '1-%s'%maxm
         info['CC_m'] = range(1,maxm+1)
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
             errs.append("<span style='color:black'>Embeddings</span> must consist of integers or embedding codes")
+    if max(info['CC_m']) > newform.dim:
+        errs.append("Only %s embeddings exist" % newform.dim)
+        info['CC_m'] = [m for m in info['CC_m'] if m <= newform.dim]
+    elif min(info['CC_m']) < 1:
+        errs.append("Embeddings are labeled by positive integers")
+        info['CC_m'] = [m for m in info['CC_m'] if m >= 1]
     try:
-        info['prec'] = int(info.get('prec',6))
-        if info['prec'] < 1 or info['prec'] > 15:
+        info['emb_prec'] = int(info.get('prec',6))
+        if info['emb_prec'] < 1 or info['emb_prec'] > 15:
             raise ValueError
     except (ValueError, TypeError):
-        info['prec'] = 6
+        info['emb_prec'] = 6
         errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
     newform.setup_cc_data(info)
-    if newform.cqexp_prec != 0 and max(info['CC_n']) >= newform.cqexp_prec:
-        errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+    if newform.cqexp_prec != 0:
+        if max(info['CC_n']) >= newform.cqexp_prec:
+            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+            info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_newform.html",
@@ -640,7 +659,7 @@ def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
 
-def trace_postprocess(res, info, query):
+def trace_postprocess(res, info, query, spaces=False):
     if res:
         if info.get('view_modp') == 'reductions':
             q = int(info['an_modulo'])
@@ -648,6 +667,7 @@ def trace_postprocess(res, info, query):
             q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
+        table = db.mf_hecke_newspace_traces if spaces else db.mf_hecke_traces
         for rec in db.mf_hecke_traces.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
@@ -657,23 +677,7 @@ def trace_postprocess(res, info, query):
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
 def space_trace_postprocess(res, info, query):
-    # Should be removed in favor of the above once spaces have hecke_orbit_codes and traces are added to mf_hecke_traces
-    if res:
-        if info.get('view_modp') == 'reductions':
-            q = int(info['an_modulo'])
-        else:
-            q = None
-        Trn = info['Tr_n']
-        for space in res:
-            space['tr_an'] = D = {}
-            traces = space['traces']
-            if q:
-                for n in Trn:
-                    D[n] = (traces[n-1] % q)
-            else:
-                for n in Trn:
-                    D[n] = traces[n-1]
-    return res
+    return trace_postprocess(res, info, query, True)
 def process_an_constraints(info, query):
     q = info.get('an_modulo','').strip()
     if q:
@@ -733,8 +737,8 @@ def trace_search(info, query):
              err_title='Newform Space Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_space_traces},
-             projection=['label', 'dim', 'weight', 'traces'], # Add hecke_orbit_code, remove traces
-             postprocess=space_trace_postprocess, # Fix once switch to mf_hecke_traces lookup
+             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
+             postprocess=space_trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list,
              credit=credit)
@@ -806,6 +810,8 @@ na_msg_triv = '"n/a" means that no modular forms of this weight and level are av
 def dimension_common_postprocess(info, query, cusp_types, newness_types, url_generator, pick_table, switch_text=None):
     set_rows_cols(info, query)
     set_info_funcs(info)
+    # We don't need to sort, since the dimensions are just getting added up
+    query['__sort__'] = []
     if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
         info['has_data'] = has_data
         info['na_msg'] = na_msg_triv
@@ -820,7 +826,7 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
         info['switch_text'] = switch_text
 
 def dimension_space_postprocess(res, info, query):
-    if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1) 
+    if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1)
             or
         (query.get('weight_parity') == 1  and query.get('char_parity') == -1)):
         raise ValueError("Inconsistent parity for character and weight")
@@ -858,7 +864,6 @@ def dimension_space_postprocess(res, info, query):
                                  url_generator, pick_table, switch_text)
     hasdata = info['has_data']
     dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
-    print "QUERY", query
     for space in res:
         dims = DimGrid.from_db(space)
         N = space['level']
@@ -896,6 +901,7 @@ def dimension_form_postprocess(res, info, query):
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
+             projection=['level', 'weight', 'dim'],
              postprocess=dimension_form_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list,
@@ -913,10 +919,7 @@ def dimension_form_search(info, query):
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
-             # temporary, all cols except trace
-             projection = ['AL_dims',  'weight',  'level_radical',  'conrey_indexes',  'char_parity',  'char_conductor',  'level_primes',  'prim_orbit_index',  'id',  'sturm_bound',  'char_orbit_index',  'analytic_conductor',  'char_degree',  'label',  'char_order',  'dim',  'char_values',  'weight_parity',  'eis_new_dim',  'mf_new_dim',  'cusp_dim',  'trace_bound',  'char_orbit_label',  'mf_dim',  'eis_dim',  'level',  'char_is_real',  'hecke_orbit_dims',  'Nk2',  'plus_dim',  'num_forms'],
-             # the minimal set
-             #projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list,
@@ -935,6 +938,7 @@ def dimension_space_search(info, query):
              err_title='Newform Space Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_spaces},
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list,

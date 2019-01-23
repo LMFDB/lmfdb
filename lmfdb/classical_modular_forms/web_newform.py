@@ -1008,13 +1008,3 @@ function switch_basis(btype) {
     def satake_op(self, m, p, i, prec=6):
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
-
-    def an_range(self, L, format='embed'):
-        if format in ['embed', 'analytic_embed']:
-            return [n for n in L if n >= 2 and n < self.cqexp_prec]
-        else:
-            return [p for p in L if p >= 2 and p < self.cqexp_prec and ZZ(p).is_prime() and not ZZ(p).divides(self.level)]
-
-    def m_range(self, L):
-        return [m for m in L if m >= 1 and m <= self.dim]
-
