@@ -259,10 +259,10 @@ def render_newform_webpage(label):
         errs.append(r"We only show \(a_n\) with n at least 2")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 2]
     if info['format'] in ['satake', 'satake_angle']:
-        info['CC_n'] = [p for p in info['CC_n'] if ZZ(p).is_prime() and newform.level % p != 0]
+        info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
             errs.append("No good primes within n range; resetting to default")
-            info['CC_n'] = [p for p in prime_range(maxp+1) if newform.level % p != 0]
+            info['CC_n'] = [n for n in prime_range(maxp+1) if newform.level % n != 0]
     elif len(info['CC_n']) == 0:
         errs.append("No n in specified range; restting to default")
         info['CC_n'] = range(maxp+1)
@@ -515,7 +515,7 @@ def parse_character(inp, query, qfield, prim=False):
     else:
         if prim:
             raise ValueError("You must use the orbit label when searching by primitive character")
-        query[conrey_field] = {'$contains': int(orbit)}
+        query['conrey_indexes'] = {'$contains': int(orbit)}
 
 newform_only_fields = {
     'nf_label': 'Coefficient field',
@@ -667,7 +667,7 @@ def trace_postprocess(res, info, query, spaces=False):
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
         table = db.mf_hecke_newspace_traces if spaces else db.mf_hecke_traces
-        for rec in db.mf_hecke_traces.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
+        for rec in table.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
             else:

@@ -24,6 +24,7 @@ IMPORTANT:
 * Consider whether to put weight-1 specific search inputs (e.g. projective image type) on all search forms.
 * Think about how to support searches that will capture all inner twists (including self twists), possibly involving changes to the "Has self twist" and "Inner twist count" search options.
 * Prevent all=1 in cleanSubmit when no arguments from browse page.
+* Should we add an hline below the embedding table?
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
