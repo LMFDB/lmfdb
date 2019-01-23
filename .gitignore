@@ -9,7 +9,6 @@ config.ini
 *.swp
 *~
 
-static/MathJax
 
 flasklog
 

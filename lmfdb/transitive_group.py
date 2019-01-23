@@ -346,12 +346,12 @@ def galois_module_knowl_guts(n, t, index):
     out += " = %sT%s " %(n, t)
     out += "<blockquote>"
     out += "Dimension: %s" % str(mymod['dim'])
-    out += r"<br>Action: $$\begin{align*}"
+    out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
         out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
     out = out[:-2]
-    out += r"\end{align*}$$"
+    out += r"\end{aligned}$$"
     out += "</blockquote>"
     return out
 

@@ -14,8 +14,8 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
- $("#calc-qexp-output").text(" {{ qexp }} ");
-MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-qexp-output"]);
+$("#calc-qexp-output").text(" {{ qexp }} ");
+renderMathInElement($("#calc-qexp-output").get(0), katexOpts);
 });
 </script>
 <script type="text/javascript">
@@ -24,8 +24,8 @@ function qexp_handler(evt) {
    var val = $("#qexp-input").val();
    $("#qexp-output").load("{{ url_for('emf.get_qexp', level=level,weight=weight,character=character,label=label)}}" + "?prec=" + val, 
      function() {
-       {# tell mathjx to render the output #}
-       MathJax.Hub.Queue(['Typeset', MathJax.Hub, "qexp-output"]);
+       {# render the output #}
+       renderMathInElement($("#qexp-output").get(0), katexOpts);
      });
 }
 $(function() {
