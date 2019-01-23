@@ -2,13 +2,6 @@
 
 {% block content %}
 
-{% if info.search_type == 'Dimensions' %}
-{% set weight1options = (info.weight == '1') %}
-{% elif info.search_type == 'DynStats' %}
-{% set weight1options = true %}
-{% else %}
-{% set weight1options = 'err' in info or info.all_weight1(info.results) %}
-{% endif %}
 
 {% if info.search_type == 'DynStats' %}
 <script>
@@ -122,14 +115,13 @@ function set_buckets(col_selecter, bucket_id) {
   </tr>
   <tr>
   </tr>
-  {% if weight1options %}
   <tr>
     <td rowspan="2">
       Only for weight 1:
     </td>
     <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
     <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image type') }}</td>
-    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size') }}</td>
+    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size*') }}</td>
   </tr>
   <tr>
     <td><input type='text' style="width: 140px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
@@ -143,7 +135,6 @@ function set_buckets(col_selecter, bucket_id) {
     </td>
     <td><input type='text' style="width: 140px" name='artin_degree' placeholder='4' value='{{info.artin_degree}}'></td>
   </tr>
-  {% endif %}
   <tr>
   </tr>
   {% if info.search_type == 'DynStats' %}
