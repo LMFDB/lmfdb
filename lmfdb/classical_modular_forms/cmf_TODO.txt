@@ -1,7 +1,9 @@
 CRITICAL (BUGS):
+* Fix inner twist count (multiplicities are not being accounted for) (Drew).
+* Fix line breaks in character orbit knowls where characters are listed (David).
 
 IMPORTANT:
-* Rename has_inner_twist to has_non_self_twist
+* Rename has_inner_twist to has_non_self_twist (Drew)
 * Add inner twists knowl, reference inner twist group knowl, include that we've only computed for forms up to 20 and not all twists are proved, add asterisk to knowl on search page (David/Drew)
 * Katex failure in the q^79 coefficient of 1.254.a.a
 * Bigint knowls for q-expansions (only if above 10^24, use 12 cutoff), coefficient field knowls
