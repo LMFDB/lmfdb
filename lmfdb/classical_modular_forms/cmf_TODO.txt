@@ -24,6 +24,7 @@ IMPORTANT:
 * base64 image test failures in http://cmfs.lmfdb.xyz/Variety/Abelian/Fq/2/4/ad_g
 * Is it okay that I changed cleanSubmit to strip "count=50"?
 * Add notes on provability/completeness to Artin image knowl (Drew)
+* Update level/weight buckets on main browse page to reflect larger data set
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
