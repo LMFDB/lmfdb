@@ -10,7 +10,6 @@ from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
     web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
     display_knowl, factor_base_factorization_latex
-from lmfdb.characters.utils import url_character
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from lmfdb.transitive_group import small_group_label_display_knowl
 from lmfdb.sato_tate_groups.main import st_link
@@ -240,7 +239,7 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
-        if self.Nk2 <= 20000:
+        if self.Nk2 <= 40000 and self.weight < 16:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if len(self.conrey_indexes)*self.rel_dim > 50:
