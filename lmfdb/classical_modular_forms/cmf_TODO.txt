@@ -3,7 +3,7 @@ CRITICAL (BUGS):
 * The embedding label 38.1 on http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/39/1/d/a/ is wrong, it should be 39.1.
 
 IMPORTANT:
-* Figure out why the order of inner twist characters does not always divide the number of inner twists (e.g. should http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/3481/1/d/a/ really have 58 inner twist?) (Drew)
+* Figure out why the order of inner twist characters does not always divide the number of inner twists (e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/361/2/e/d/ has 6 inner twists, 3 by characters of order 9) (Drew)
 * Put CM/RM discriminants in property box for D2 forms, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/39/1/d/a/.
 * Change "Self-twists" column heading in inner twists table to "Type" and in the CM/RM cases put "CM by blah" or "RM by blah", where blah is the appropriate quadratic field.
 * Rename has_inner_twist to has_non_self_twist (Drew)
