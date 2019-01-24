@@ -106,6 +106,10 @@ def set_info_funcs(info):
         return any(mf['char_order'] == 1 for mf in results)
     info["display_Fricke"] = display_Fricke
 
+    def all_weight1(results):
+        return all(mf.get('weight') == 1 for mf in results)
+    info["all_weight1"] = all_weight1
+
     def all_D2(results):
         return all(mf.get('projective_image') == 'D2' for mf in results)
     info["all_D2"] = all_D2
