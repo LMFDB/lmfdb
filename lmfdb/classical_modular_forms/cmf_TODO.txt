@@ -1,6 +1,6 @@
 CRITICAL (BUGS):
 * Fix inner twist count (multiplicities are not being accounted for) (Drew).
-* Fix line breaks in character orbit knowls where characters are listed (David).
+* Fix unexexpect line breaks in character orbit knowls when displayed inside inner twist table (cliick on the char orbit 5.c in the inner twist table http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/5/5/c/a/, for example).
 
 IMPORTANT:
 * Rename has_inner_twist to has_non_self_twist (Drew)
