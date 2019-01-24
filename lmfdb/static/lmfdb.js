@@ -390,7 +390,8 @@ function cleanSubmit(id)
   var item, i, n = 0;
   for(i = 0; item = allInputs[i]; i++) {
     if (item.getAttribute('name') ) {
-      if (!item.value) {
+        // Special case count so that we strip the default value
+        if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
         item.setAttribute('name', '');
       } else {
         n++

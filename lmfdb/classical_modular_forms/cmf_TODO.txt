@@ -16,12 +16,10 @@ IMPORTANT:
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
-* If user deletes '1-' in Newspace dim box, it will be put back (David)
 * Hard code has_data: ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions should be "n/a" (David).  No: do a search on Gamma1 table.
-* Add projective image/type to browse, make weight 1 options always show in refine search, asterisk on Artin degree (David)
-* Add degree, parity, a few Conrey labels to Dirichlet character knowl (David)
 * base64 image test failures in http://cmfs.lmfdb.xyz/Variety/Abelian/Fq/2/4/ad_g
-* Change hidden_search_type to hst (David)
+* Is it okay that I changed cleanSubmit to strip "count=50"?
+* Add notes on provability/completeness to Artin image knowl (Drew)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)

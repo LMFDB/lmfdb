@@ -4,7 +4,7 @@ from lmfdb.base import app
 import re
 import flask
 from flask import render_template, url_for, request, redirect
-from sage.all import gcd, randint
+from sage.all import gcd, randint, euler_phi
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.characters.utils import url_character
 from lmfdb.WebCharacter import (
@@ -173,7 +173,7 @@ def make_webchar(args):
     else:
         return WebSmallDirichletCharacter(**args)
 
-def label_to_number(modulus, number):
+def label_to_number(modulus, number, all=False):
     """
     Takes the second part of a character label and converts it to the second
     part of a Conrey label.  This could be trivial (just casting to an int)
@@ -191,11 +191,16 @@ def label_to_number(modulus, number):
             except ValueError:
                 return 0
             else:
-                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')[0]
+                number = db.char_dir_orbits.lucky({'orbit_label':orbit_label}, 'galois_orbit')
+                if number is None:
+                    return 0
+                if not all:
+                    number = number[0]
         else:
             return 0
-    if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
-        return 0
+    else:
+        if number <= 0 or gcd(modulus, number) != 1 or number > modulus:
+            return 0
     return number
 
 @characters_page.route("/Dirichlet")
@@ -267,9 +272,20 @@ def render_Dirichletwebpage(modulus=None, number=None):
 def _dir_knowl_data(label, orbit=False):
     modulus, number = label.split('.')
     modulus = int(modulus)
-    number = label_to_number(modulus, number)
-    if number == 0:
+    numbers = label_to_number(modulus, number, all=True)
+    if numbers == 0:
         return "Invalid label for Dirichlet character: %s" % label
+    if isinstance(numbers, list):
+        number = numbers[0]
+        def conrey_link(i):
+            return '<a href="%s"> %s.%s</a>' % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
+        if len(numbers) <= 2:
+            numbers = map(conrey_link, numbers)
+        else:
+            numbers = [conrey_link(numbers[0]), '...', conrey_link(numbers[-1])]
+    else:
+        number = numbers
+        numbers = None
     args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     webchar = make_webchar(args)
     if orbit and modulus <= 10000:
@@ -278,13 +294,16 @@ def _dir_knowl_data(label, orbit=False):
         inf = "Dirichlet Character \chi_{%d}(%d, \cdot)\n" % (modulus, number)
     inf += "<div>\nConductor: %d\n<br>\n" % (webchar.conductor)
     inf += "Order: %d\n<br>\n" % (webchar.order)
-    #inf += "Degree: %d\n<br>\n" % (webchar.degree)
+    inf += "Degree: %d\n<br>\n" % (euler_phi(webchar.order))
+    inf += "Parity: %s\n<br>\n" % ("Even" if webchar.parity == 1 else "Odd")
+    if numbers:
+        inf += "Characters: %s\n<br>\n" % (",".join(numbers))
     if modulus <= 10000:
         if not orbit:
             inf += "Orbit Label: %d.%s\n</div>" % (modulus, webchar.orbit_label)
         inf += "Orbit Index: %d\n</div>" % (webchar.orbit_index)
-    inf += ('<div align="right">\n<a href="%s">%s home page</a>\n</div>' %
-            (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number), label))
+    #inf += ('<div align="right">\n<a href="%s">%s home page</a>\n</div>' %
+    #        (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number), label))
     return inf
 
 def dirichlet_character_data(label):

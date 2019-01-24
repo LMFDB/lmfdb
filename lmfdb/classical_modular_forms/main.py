@@ -185,7 +185,7 @@ def index():
     if len(request.args) > 0:
         info = to_dict(request.args)
         # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hidden_search_type', 'List'))
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
 
         if search_type == 'List':
             return newform_search(info)
@@ -624,8 +624,8 @@ def newspace_parse(info, query):
         flash_error(msg)
         raise ValueError(msg)
     common_parse(info, query)
-    if 'dim' not in info:
-        # Only show non-empty spaces
+    if 'dim' not in info and 'hst' not in info:
+        # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
     if info['search_type'] != 'SpaceDimensions':
         parse_ints(info, query, 'dim', name='Dimension')
