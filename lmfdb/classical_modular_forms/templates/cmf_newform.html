@@ -433,27 +433,16 @@ function get_all_embeddings(num_embeddings) {
 
 <!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
 
-{% if newform.has_further_properties %}
-<h2>Further properties</h2>
+<h2>{{KNOWL('mf.elliptic.inner_twist', title='Inner twists')}}</h2>
 
-{% if newform.is_cm %}
-<p>This newform is a {{ KNOWL('mf.elliptic.cm_form',title='CM form' + ('*' if not newform.self_twist_proved else '')) }}, with CM by {{ newform.rm_and_cm_field_knowl(-1) |safe }}.</p>
-{% endif %}
-{% if newform.is_rm %}
-<p>This newform is an {{ KNOWL('mf.elliptic.rm_form',title='RM form' + ('*' if not newform.self_twist_proved else '')) }}, with RM by {{ newform.rm_and_cm_field_knowl(1) |safe }}.</p>
-{% endif %}
-{% if not newform.is_cm and not newform.is_rm %}
-<p>This newform does not admit a {{ KNOWL('mf.elliptic.self_twist', title='self-twist') }}.</p>
-{% endif %}
-
-{% if newform.inner_twist_count == 0 %}
+{% if newform.inner_twist_count == 1 %}
 <p>This newform does not admit any ({{KNOWL('mf.elliptic.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('mf.elliptic.inner_twist',title='inner twists') }}.</p>
-{% elif newform.inner_twist_count > 0 %}
+{% else %}
 {{ newform.display_inner_twists() | safe }}
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.level != 1 %}
-<p> It has {{ KNOWL('mf.elliptic.atkinlehner',title='Atkin-Lehner') }} signs given by</p>
+<h2>{{KNOWL('mf.elliptic.atkinlehner', title='Atkin-Lehner signs')}}</h2>
 <table class="ntdata">
   <thead>
     <tr>
@@ -473,8 +462,8 @@ function get_all_embeddings(num_embeddings) {
 {% endif %}
 
 {% if newform.hecke_cutters is not none %}
+<h2>{{KNOWL('mf.elliptic.hecke_kernels', 'Hecke kernels')}}</h2>
 {{ newform.display_hecke_cutters() | safe }}
-{% endif %}
 {% endif %}
 
 

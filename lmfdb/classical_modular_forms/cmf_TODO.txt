@@ -1,38 +1,30 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
-* Add parity, order, self_twist_disc to the inner_twist column of mf_newforms (Drew)
-* Include self twists and trivial character in inner twist table, delete surrounding text (unless no twists),  change headers to 'Char orbit', 'Parity', 'Order', 'Mult', 'Self-twist', 'Proved' (David)
-* Add headers 'Atkin-Lehner signs' and 'Hecke kernels' (David)
 * Rename has_inner_twist to has_non_self_twist
 * Add inner twists knowl, reference inner twist group knowl, include that we've only computed for forms up to 20 and not all twists are proved, add asterisk to knowl on search page (David/Drew)
+* Katex failure in the q^79 coefficient of 1.254.a.a
+* Bigint knowls for q-expansions (only if above 10^24, use 12 cutoff), coefficient field knowls
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
- - Forms of weight \in [2, 15], trivial character, with Nk^2 in:
-    # [20001,40000] (processing)
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
 * Compare trivial char data with Stein database (Drew, level <= 2500 done)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
-* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls.
+* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
 * Kill axes in Sato Tate pictures (Edgar)
 * Add related objects to L-functions, move duals (Edgar)
 * add ECQD and genus 2 curves to friends (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
-* Reduce clutter in the url: count, start, hidden_search_type (David)
 * If user deletes '1-' in Newspace dim box, it will be put back (David)
-* Hard code has_data: ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions should be "n/a" (David)
-* Should we add parity to the list of inner twists?  Currently need to do a query for each twist.
-* What else should be put on the Dirichlet character knowls?
-* Should the url for Dirichlet character 17.d switch to 17/2?
-* Consider whether to put weight-1 specific search inputs (e.g. projective image type) on all search forms.
-* Think about how to support searches that will capture all inner twists (including self twists), possibly involving changes to the "Has self twist" and "Inner twist count" search options.
-* Prevent all=1 in cleanSubmit when no arguments from browse page.
-* Should we add an hline below the embedding table?
+* Hard code has_data: ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions should be "n/a" (David).  No: do a search on Gamma1 table.
+* Add projective image/type to browse, make weight 1 options always show in refine search, asterisk on Artin degree (David)
+* Add degree, parity, a few Conrey labels to Dirichlet character knowl (David)
 * base64 image test failures in http://cmfs.lmfdb.xyz/Variety/Abelian/Fq/2/4/ad_g
+* Change hidden_search_type to hst (David)
 
 FINAL CHECKS:
-* Make sure indexes are appropriate, especially for new sort orders (Edgar)
+* Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
@@ -44,6 +36,8 @@ FINAL CHECKS:
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
 * Add completeness table and metadata in order to make claims about provability
+* Reduce clutter in the url: count, start, hidden_search_type (David)
+* Prevent all=1 in cleanSubmit when no arguments from browse page.
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -125,7 +119,7 @@ NOT CMF STUFF:
 * avoid access exclusive lock with the alter table when using copy from
 * checklist is broken
 * Add validate_header function for copy_from, reload, etc (David)
-* Add replace_from function to db_backend (David)
+* Add replace_from, copy_to+copy_from (with sort order) function to db_backend (David)
 * In debug_info.html, queries with dollar signs aren't escaped, and katex tries to parse them.
 
 TO THINK ABOUT:

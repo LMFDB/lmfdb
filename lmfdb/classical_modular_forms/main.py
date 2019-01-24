@@ -624,7 +624,7 @@ def newspace_parse(info, query):
         flash_error(msg)
         raise ValueError(msg)
     common_parse(info, query)
-    if not info.get('dim', '').strip():
+    if 'dim' not in info:
         # Only show non-empty spaces
         info['dim'] = '1-'
     if info['search_type'] != 'SpaceDimensions':

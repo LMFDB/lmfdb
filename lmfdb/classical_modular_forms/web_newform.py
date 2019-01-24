@@ -126,7 +126,6 @@ class WebNewform(object):
             self.field_disc_factorization = [(ZZ(p), ZZ(e)) for p, e in self.field_disc_factorization]
         self.rel_dim = self.dim // self.char_degree
 
-        self._inner_twists = data.get('inner_twists',[])
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
         traces = db.mf_hecke_traces.search({'hecke_orbit_code':self.hecke_orbit_code, 'n': {'$lt': 100}}, ['n', 'trace_an'], sort=['n'])
@@ -165,8 +164,6 @@ class WebNewform(object):
         self.char_conrey = self.conrey_indexes[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
-
-        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist is not None or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -208,22 +205,10 @@ class WebNewform(object):
                     self.properties += [('RM discriminant', disc)]
                 elif self.is_rm == -1:
                     self.properties += [('RM', 'No')]
-        if self.inner_twist_count >= 0:
+        if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', str(self.inner_twist_count))]
 
         self.title = "Newform %s"%(self.label)
-
-
-    @property
-    def inner_twists(self):
-        twists = []
-        for data in self._inner_twists:
-            label = '%s.%s' % (data[2], cremona_letter_code(data[3]-1))
-            char_dir_label = '%s.%s' % (data[2], data[3])
-            parity = db.char_dir_orbits.lucky({'orbit_label':char_dir_label}, 'parity')
-            parity = 'Even' if parity == 1 else 'Odd'
-            twists.append((data, parity, display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})))
-        return twists
 
     # Breadcrumbs
     @property
@@ -781,26 +766,34 @@ function switch_basis(btype) {
 
     def display_inner_twists(self):
         total = 0
-        twists = ['<table class="ntdata">',
-                  '<thead>',
-                  '  <tr>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n    <th>%s</th>\n  </tr>' %
-                  (display_knowl('character.dirichlet.galois_orbit_label', title='Character'),
-                   display_knowl('character.dirichlet.parity', title='Parity'),
-                   display_knowl('mf.elliptic.inner_twist_multiplicity', title='Multiplicity'),
-                   display_knowl('mf.elliptic.inner_twist_proved', title='Proved')),
-                  '</thead>',
-                  '<tbody>']
-        for (b, mult, M, orb), parity, link in self.inner_twists:
-            total += mult
-            twists.append('  <tr>\n    <td>%s</td>\n    <td>%s</td>\n    <td>%d</td>\n    <td>%s</td>\n  </tr>' % (link, parity, mult, 'yes' if b == 1 else 'no'))
-        twists.append('</table>')
-        para = '<p>This newform admits %d (%s) ' % (total, display_knowl('mf.elliptic.nontrivial_twist', title='nontrivial'))
-        if total == 1:
-            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twist'))
-        else:
-            para += '%s' % (display_knowl('mf.elliptic.inner_twist', title='inner twists'))
-        para += '.</p>\n'
-        return para + '\n'.join(twists)
+        def th_wrap(kwl, title):
+            return '    <th>%s</th>' % display_knowl(kwl, title=title)
+        def td_wrap(val):
+            return '    <td>%s</th>' % val
+        twists = ['<table class="ntdata">', '<thead>', '  <tr>',
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char. orbit'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  th_wrap('character.dirichlet.order', 'Order'),
+                  th_wrap('mf.elliptic.inner_twist_multiplicity', 'Mult.'),
+                  th_wrap('mf.elliptic.self_twist_col', 'Self-twists'),
+                  th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
+                  '  </tr>', '</thead>', '<tbody>']
+        for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
+            label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
+            parity = 'Even' if parity == 1 else 'Odd'
+            proved = 'yes' if proved == 1 else 'no'
+            link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+            if discriminant == 0:
+                field = ''
+            elif discriminant == 1:
+                field = 'trivial'
+            else:
+                field = quad_field_knowl(discriminant)
+            twists.append('  <tr>')
+            twists.extend(map(td_wrap, [link, parity, order, mult, field, proved]))
+            twists.append('  </tr>')
+        twists.extend(['</tbody>', '</table>'])
+        return '\n'.join(twists)
 
     def sato_tate_display(self):
         if self.sato_tate_group:
