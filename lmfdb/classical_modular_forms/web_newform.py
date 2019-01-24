@@ -764,7 +764,6 @@ function switch_basis(btype) {
         return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
 
     def display_inner_twists(self):
-        total = 0
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):
