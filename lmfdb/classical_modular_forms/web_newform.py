@@ -776,7 +776,7 @@ function switch_basis(btype) {
         twists = ['<table class="ntdata">', '<thead>', '  <tr>',
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char. orbit'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
-                  th_wrap('character.dirichlet.order', 'Order'),
+                  #th_wrap('character.dirichlet.order', 'Order'),
                   th_wrap('mf.elliptic.inner_twist_multiplicity', 'Mult.'),
                   th_wrap('mf.elliptic.self_twist_col', 'Type'),
                   th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
@@ -794,7 +794,7 @@ function switch_basis(btype) {
                 cmrm = 'CM by ' if discriminant < 0 else 'RM by '
                 field = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
-            twists.extend(map(td_wrap, [link, parity, order, mult, field, proved]))
+            twists.extend(map(td_wrap, [link, parity, mult, field, proved])) # add order back eventually
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
