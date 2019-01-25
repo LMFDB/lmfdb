@@ -278,11 +278,11 @@ def _dir_knowl_data(label, orbit=False):
     if isinstance(numbers, list):
         number = numbers[0]
         def conrey_link(i):
-            return '<a href="%s"> %s.%s</a>' % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
+            return "<a href='%s'> %s.%s</a>" % (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=i), modulus, i)
         if len(numbers) <= 2:
             numbers = map(conrey_link, numbers)
         else:
-            numbers = [conrey_link(numbers[0]), '...', conrey_link(numbers[-1])]
+            numbers = [conrey_link(numbers[0]), '&#8230;', conrey_link(numbers[-1])]
     else:
         number = numbers
         numbers = None
@@ -292,18 +292,20 @@ def _dir_knowl_data(label, orbit=False):
         inf = "Dirichlet Character Orbit %d.%s\n" % (modulus, webchar.orbit_label)
     else:
         inf = "Dirichlet Character \chi_{%d}(%d, \cdot)\n" % (modulus, number)
-    inf += "<div>\nConductor: %d\n<br>\n" % (webchar.conductor)
-    inf += "Order: %d\n<br>\n" % (webchar.order)
-    inf += "Degree: %d\n<br>\n" % (euler_phi(webchar.order))
-    inf += "Parity: %s\n<br>\n" % ("Even" if webchar.parity == 1 else "Odd")
+    inf += "<table class='chardata'>\n"
+    def row_wrap(header, val):
+        return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
+    inf += row_wrap('Conductor', webchar.conductor)
+    inf += row_wrap('Order', webchar.order)
+    inf += row_wrap('Degree', euler_phi(webchar.order))
+    inf += row_wrap('Parity', "Even" if webchar.parity == 1 else "Odd")
     if numbers:
-        inf += "Characters: %s\n<br>\n" % (",".join(numbers))
+        inf += row_wrap('Characters', ",&nbsp;".join(numbers))
     if modulus <= 10000:
         if not orbit:
-            inf += "Orbit Label: %d.%s\n</div>" % (modulus, webchar.orbit_label)
-        inf += "Orbit Index: %d\n</div>" % (webchar.orbit_index)
-    #inf += ('<div align="right">\n<a href="%s">%s home page</a>\n</div>' %
-    #        (url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number), label))
+            inf += row_wrap('Orbit Label', '%d.%s' % (modulus, webchar.orbit_label))
+        inf += row_wrap('Orbit Index', webchar.orbit_index)
+    inf += '</table>'
     return inf
 
 def dirichlet_character_data(label):

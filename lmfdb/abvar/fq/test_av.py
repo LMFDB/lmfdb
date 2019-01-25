@@ -92,7 +92,7 @@ class AVTest(LmfdbTest):
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         # The following is part of the base64 encoded image of the Newton
         # polygon for this isogeny class.
-        assert "4S8eKLeWaDFgkQAKBLwgPyECAAQFeEB%2BQlQACALggPKIMA" in page
+        assert "aCEAAQPxVRgACQOXEX30EIABUTPzVSQACQKXEX70EIABUSPzVTQACQ" in page
 
     def test_circle_plot(self):
         r"""
@@ -101,7 +101,7 @@ class AVTest(LmfdbTest):
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         # The following is part of the base64 encoded image of the circle plot
         # for this isogeny class.
-        assert "gMA4O7CwsJ06NAhDqLDaVBAYEkcQAcA4EccRIezo" in page
+        assert "iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAA10" in page
 
     def test_property_box(self):
         r"""

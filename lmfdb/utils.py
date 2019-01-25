@@ -673,13 +673,52 @@ def display_knowl(kid, title=None, kwargs={}):
         else:
             return ''
 
-def bigint_knowl(n, cutoff=16, sides=2):
+def bigint_knowl(n, cutoff=16, max_width=100, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="\(%s\)">\(%s\)</a>'%(n, short)
+        lng = str(n)
+        if len(lng) > max_width:
+            lines = 1 + (len(lng)-1) // max_width
+            width = 1 + (len(lng)-1) // lines
+            lng = [lng[i:i+width] for i in range(0,len(lng),width)]
+            lng = "<table>" + "".join(r"<tr><td>\(%s\)</td></tr>"%piece for piece in lng) + "</table>"
+        else:
+            lng = r"\(%s\)" % lng
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
     else:
         return r'\(%s\)'%n
+def too_big(L, threshold):
+    r"""
+    INPUT:
+
+    - ``L`` -- nested lists of integers
+    - ``threshold`` -- an integer
+
+    OUTPUT:
+
+    Whether any integer in ``L`` is at least ``threshold``
+    """
+    if isinstance(L, (list, tuple)):
+        return any(too_big(x, threshold) for x in L)
+    return L >= threshold
+
+def make_bigint(s, cutoff=12, max_width=100):
+    r"""
+    INPUT:
+
+    - ``s`` -- A string, the latex representation of an integer or polynomial.
+      It should include outer \( and \).
+    - ``cutoff`` -- an integer
+
+    OUTPUT:
+
+    The string ``s`` with integers at least 10^cutoff replaced by bigint_knowls.
+    """
+    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
+    def knowl_replacer(M):
+        return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
+    return Zmatcher.sub(knowl_replacer, s)
 
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
@@ -703,7 +742,7 @@ def factor_base_factorization_latex(fbf):
 
 
 
-def polyquo_knowl(f, disc=None, unit=1):
+def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
     quo = "x^{%s}" % (len(f) - 1)
     i = len(f) - 2
     while i >= 0 and f[i] == 0:
@@ -715,6 +754,8 @@ def polyquo_knowl(f, disc=None, unit=1):
             quo += r" - \cdots"
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
+    if cutoff:
+        long = make_bigint(long, cutoff, max_width=80).replace('"',"'")
     if disc is not None:
         if isinstance(disc, list):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))

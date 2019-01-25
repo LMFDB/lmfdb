@@ -1403,7 +1403,7 @@ class PostgresTable(PostgresBase):
         selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
         if columns:
             selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
-            columns = [[col] for col in columns]
+            columns = [Json(col) for col in columns]
         return self._execute(selecter, [self.search_table] + columns, silent=True)
 
     def drop_indexes(self, columns=[], suffix="", commit=True):
@@ -2630,12 +2630,13 @@ class PostgresTable(PostgresBase):
                 table = self.search_table
                 counts_table = table + "_counts"
                 stats_table = table + "_stats"
+                jname = Json(name)
                 deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                self._execute(deleter, [table, [name]])
+                self._execute(deleter, [table, jname])
                 deleter = SQL("DELETE FROM {0} WHERE cols @> %s").format(Identifier(counts_table))
-                self._execute(deleter, [[name]])
+                self._execute(deleter, [jname])
                 deleter = SQL("DELETE FROM {0} WHERE cols @> %s OR constraint_cols @> %s").format(Identifier(stats_table))
-                self._execute(deleter, [[name], [name]])
+                self._execute(deleter, [jname, jname])
                 self._search_cols.remove(name)
             elif name in self._extra_cols:
                 table = self.extra_table
@@ -2679,7 +2680,7 @@ class PostgresTable(PostgresBase):
                 if col in self._sort_keys:
                     raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
                 selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                cur = self._execute(selecter, [self.search_table, [col]])
+                cur = self._execute(selecter, [self.search_table, Json(col)])
                 if cur.rowcount > 0:
                     raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
                 typ = self.col_type[col]
