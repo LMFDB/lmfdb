@@ -596,7 +596,7 @@ class CmfTest(LmfdbTest):
                 ('level=10%2C13%2C17&weight=1-8&dim=1',
                     ['Results (displaying all 12 matches)', '1373', 'No', '0.136']
                     )]:
-            for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=0']):
+            for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=1']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
                 page = self.tc.get(s,  follow_redirects=True)
                 for elt in begin[1]:
@@ -675,7 +675,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/2955/1/c/e/')
         for elt in ['3.b','5.b','197.b','2955.c']:
             assert elt in page.data
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1124/1/d/a/')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/52/18/a/a/')
         assert "This newform does not admit any (" in page.data
         assert "nontrivial" in page.data
         assert "inner twist" in page.data

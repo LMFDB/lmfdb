@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
-* Add inner twists knowl, reference inner twist group knowl, include that we've only computed for forms up to 20 and not all twists are proved, add asterisk to knowl on search page (David/Drew)
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
@@ -14,6 +13,8 @@ IMPORTANT:
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
+* Check mf.elliptic.inner_twist_group and mf.elliptic.inner_twist_count (Drew)
+* abelian variety test (/Variety/Abelian/Fq/2/4/ad_g plots) still failing
 * Is it okay that I changed cleanSubmit to strip "count=50"?
 * If we search for "has RM", should it exclude both RM+CM?
 * Are the changes to Hecke cutters good?
