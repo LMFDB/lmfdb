@@ -380,7 +380,7 @@ body > .debug {
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
-  max-height: 426px; /* 21 items with padding: 22 + 21*19 + 5 */
+  max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
   overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
