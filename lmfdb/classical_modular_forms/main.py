@@ -210,8 +210,8 @@ def index():
     info = {"stats": CMF_stats()}
     info["newform_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_newform_labels]
     info["space_list"] = [[{'label':label,'url':url_for_label(label),'reason':reason} for label, reason in sublist] for sublist in favorite_space_labels]
-    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64') #, '65-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000') #, '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
     return render_template("cmf_browse.html",
                            info=info,
                            credit=credit(),
@@ -794,15 +794,6 @@ def set_rows_cols(info, query):
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 10000 entries")
 
-def has_data_nontriv(N, k):
-    return N*k*k <= Nk2_bound(nontriv=True)
-def has_data(N, k):
-    return N*k*k <= Nk2_bound()
-def has_data_mixed(N, k):
-    if k == 1:
-        return N <= Nk2_bound(nontriv=True)
-    else:
-        return has_data(N, k)
 na_msg_nontriv = '"n/a" means that not all modular forms of this weight and level are available, but those of trivial character may be; set character order to 1 to restrict to newforms of trivial character.'
 na_msg_triv = '"n/a" means that no modular forms of this weight and level are available.'
 
@@ -811,18 +802,41 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
     set_info_funcs(info)
     # We don't need to sort, since the dimensions are just getting added up
     query['__sort__'] = []
-    if all(k % 2 for k in info['weight_list']) or query.get('char_order') == 1 or query.get('char_conductor') == 1:
-        info['has_data'] = has_data
+    def restrict(D):
+        newD = {}
+        if '$or' in D:
+            or_clause = [restrict(x) for x in D['$or']]
+            or_clause = [x for x in or_clause if x]
+            if or_clause:
+                newD['$or'] = or_clause
+        for key in ['level', 'weight', 'num_forms']:
+            if key in D:
+                newD[key] = D[key]
+        return newD
+    na_query = restrict(query)
+    na_set = set()
+    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
+        na_query['char_order'] = 1
+        table = db.mf_newspaces
         info['na_msg'] = na_msg_triv
     else:
-        info['has_data'] = has_data_nontriv
-        info['na_msg'] = na_msg_nontriv
+        table = db.mf_gamma1
+        if all(k % 2 for k in info['weight_list']):
+            info['na_msg'] = na_msg_triv
+        else:
+            info['na_msg'] = na_msg_nontriv
+    if info.get('all_spaces') != 'yes':
+        na_query['num_forms'] = {'$exists':True}
+    for rec in table.search(na_query, ['level', 'weight']):
+        na_set.add((rec['level'], rec['weight']))
+    info['has_data'] = lambda N, k: (N,k) in na_set
     info['pick_table'] = pick_table
     info['cusp_types'] = cusp_types
     info['newness_types'] = newness_types
     info['url_generator'] = url_generator
     if switch_text:
         info['switch_text'] = switch_text
+    info['count'] = 50 # put count back in so that it doesn't show up as none in url
 
 def dimension_space_postprocess(res, info, query):
     if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1)
@@ -1048,8 +1062,8 @@ class CMF_stats(StatsDisplay):
 
     table = db.mf_newforms
     baseurl_func = ".index"
-    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-10000'],
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-200'],
+    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
+               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
                'dim':['1','2','3','4','5-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}

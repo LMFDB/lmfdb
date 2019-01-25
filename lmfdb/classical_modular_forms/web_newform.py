@@ -7,7 +7,7 @@ from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
-    web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
+    web_latex_split_on_pm, web_latex_poly, bigint_knowl, too_big, make_bigint,\
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
     display_knowl, factor_base_factorization_latex
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
@@ -90,7 +90,7 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
                 unit = ZZ(1)
             else:
                 unit = ZZ(-1)**((len(poly)-1)//2)
-            return polyquo_knowl(poly, disc, unit)
+            return polyquo_knowl(poly, disc, unit, 12)
         else:
             return ''
     else:
@@ -186,27 +186,27 @@ class WebNewform(object):
 
         if self.projective_image:
             self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
-        if self.artin_degree: # artin_degree > 0
-            self.properties += [('Artin image size', str(self.artin_degree))]
-        if self.artin_image:
-            self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
+        # Artin data would make the property box scroll
+        #if self.artin_degree: # artin_degree > 0
+        #    self.properties += [('Artin image size', str(self.artin_degree))]
+        #if self.artin_image:
+        #    self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
 
-        if self.is_self_twist ==1:
-            if self.is_cm == 1:
-                disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
-                self.properties += [('CM discriminant', disc)]
-            elif self.is_cm == -1:
-                self.properties += [('CM', 'No')]
-
-            if self.weight == 1:
-                if self.is_rm == 1:
-                    disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
-                    self.properties += [('RM discriminant', disc)]
-                elif self.is_rm == -1:
-                    self.properties += [('RM', 'No')]
+        if self.is_cm and self.is_rm:
+            disc = ', '.join([ str(d) for d in self.self_twist_discs ])
+            self.properties += [('CM/RM disc.', disc)]
+        elif self.is_cm:
+            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
+            self.properties += [('CM disc.', disc)]
+        elif self.is_rm:
+            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
+            self.properties += [('RM disc.', disc)]
+        elif self.weight == 1:
+            self.properties += [('CM/RM', 'No')]
+        else:
+            self.properties += [('CM', 'No')]
         if self.inner_twist_count >= 1:
             self.properties += [('Inner twists', str(self.inner_twist_count))]
-
         self.title = "Newform %s"%(self.label)
 
     # Breadcrumbs
@@ -473,21 +473,26 @@ class WebNewform(object):
     def display_hecke_cutters(self):
         polynomials = []
         truncated = False
+        use_knowl = too_big(self.hecke_cutters, 10**24)
         for p,F in self.hecke_cutters:
-            cut = len(F) - 1
-            count = 0
-            while cut >= 0 and count < 8:
-                if F[cut]:
-                    count += 1
-                cut -= 1
-            if count < 8 or cut == 0 and abs(F[0]) < 100:
-                F = latex(coeff_to_poly(F, 'T%s'%p))
-            else:
-                # truncate to the first 8 nonzero coefficients
-                F = [0]*(cut+1) + F[cut+1:]
-                F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
-                truncated = True
-            polynomials.append(web_latex_split_on_pm(F))
+            #cut = len(F) - 1
+            #count = 0
+            #while cut >= 0 and count < 8:
+            #    if F[cut]:
+            #        count += 1
+            #    cut -= 1
+            F = latex(coeff_to_poly(F, 'T%s'%p))
+            #if count < 8 or cut == 0 and abs(F[0]) < 100:
+            #    F = latex(coeff_to_poly(F, 'T%s'%p))
+            #else:
+            #    # truncate to the first 8 nonzero coefficients
+            #    F = [0]*(cut+1) + F[cut+1:]
+            #    F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
+            #    truncated = True
+            pol = web_latex_split_on_pm(F)
+            if use_knowl:
+                pol = make_bigint(pol)
+            polynomials.append(pol)
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
@@ -773,7 +778,7 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   th_wrap('character.dirichlet.order', 'Order'),
                   th_wrap('mf.elliptic.inner_twist_multiplicity', 'Mult.'),
-                  th_wrap('mf.elliptic.self_twist_col', 'Self-twists'),
+                  th_wrap('mf.elliptic.self_twist_col', 'Type'),
                   th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
         for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
@@ -786,7 +791,8 @@ function switch_basis(btype) {
             elif discriminant == 1:
                 field = 'trivial'
             else:
-                field = quad_field_knowl(discriminant)
+                cmrm = 'CM by ' if discriminant < 0 else 'RM by '
+                field = cmrm + quad_field_knowl(discriminant)
             twists.append('  <tr>')
             twists.extend(map(td_wrap, [link, parity, order, mult, field, proved]))
             twists.append('  </tr>')
@@ -806,14 +812,16 @@ function switch_basis(btype) {
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
+        use_knowl = too_big(eigseq, 10**24)
         s = ''
         for j in range(len(eigseq)):
             term = self._elt(eigseq[j])
             if term != 0:
                 latexterm = latex(term)
+                if use_knowl:
+                    latexterm = make_bigint(latexterm)
                 if term.number_of_terms() > 1:
-                    latexterm = r"\left(" +  latexterm + r"\right)"
-
+                    latexterm = r"(" +  latexterm + r")"
                 if j > 0:
                     if term == 1:
                         latexterm = ''
@@ -845,8 +853,10 @@ function switch_basis(btype) {
 
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
-
+        s = web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
+        if too_big(self.texp[:prec], 10**24):
+            s = make_bigint(s)
+        return s
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':
