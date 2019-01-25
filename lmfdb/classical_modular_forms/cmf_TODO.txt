@@ -94,7 +94,7 @@ FUTURE WORK:
 * data: make friends with base changes of HMFs and BMFs
 * Add more data, in particular for weight 2 and trivial character
 * data: add data for is_twist_minimal
-* Improve modular form plots
+* Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
 * have the call method on a table to do just a search
