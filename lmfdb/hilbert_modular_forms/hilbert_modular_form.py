@@ -151,7 +151,7 @@ def hilbert_modular_form_jump(info):
              table=db.hmf_forms,
              title='Hilbert Modular Form Search Results',
              err_title='Hilbert Modular Form Search Error',
-             per_page=100,
+             per_page=50,
              shortcuts={'label':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
@@ -313,7 +313,7 @@ def render_hmf_webpage(**args):
     try:
         info['count'] = args['count']
     except KeyError:
-        info['count'] = 10
+        info['count'] = 50
 
     hmf_field = get_hmf_field(data['field_label'])
     gen_name = findvar(hmf_field['ideals'])

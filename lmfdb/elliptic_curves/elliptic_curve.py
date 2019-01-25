@@ -76,7 +76,7 @@ def rational_elliptic_curves(err_args=None):
             err_args = {}
             for field in ['conductor', 'jinv', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure', 'msg']:
                 err_args[field] = ''
-            err_args['count'] = '100'
+            err_args['count'] = '50'
     counts = get_stats().counts()
 
     conductor_list_endpoints = [1, 100, 1000, 10000, 100000, counts['max_N'] + 1]
@@ -238,7 +238,7 @@ def download_search(info):
              table=db.ec_curves,
              title='Elliptic Curves Search Results',
              err_title='Elliptic Curve Search Input Error',
-             per_page=100,
+             per_page=50,
              shortcuts={'jump':elliptic_curve_jump,
                         'download':download_search},
              bread=lambda:[('Elliptic Curves', url_for("ecnf.index")),

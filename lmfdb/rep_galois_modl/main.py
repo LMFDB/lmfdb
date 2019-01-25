@@ -141,7 +141,7 @@ def download_search(info):
              table=db.modlgal_reps,
              title='Mod &#x2113; Galois representations Search Results',
              err_title='Mod &#x2113; Galois representations Search Results Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'download':download_search,
                         'label':lambda info:rep_galois_modl_by_label_or_name(info.get('label'))},
              projection=['label','dim','det','level','gram'],

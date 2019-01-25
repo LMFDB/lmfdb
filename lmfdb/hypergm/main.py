@@ -207,7 +207,7 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return hgm_search(request.args)
-    info = {'count': 20}
+    info = {'count': 50}
     return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
 
 
@@ -263,7 +263,7 @@ def hgm_jump(info):
              table=db.hgm_motives, # overridden if family search
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':hgm_jump},
              bread=lambda:get_bread([("Search Results", '')]),
              credit=lambda:HGM_credit,

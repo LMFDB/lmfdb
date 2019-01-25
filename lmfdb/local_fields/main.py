@@ -117,7 +117,7 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return local_field_search(request.args)
-    info = {'count': 20}
+    info = {'count': 50}
     learnmore = [#('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                 ('Local field labels', url_for(".labels_page"))]
@@ -138,7 +138,7 @@ def local_field_jump(info):
              table=db.lf_fields,
              title='Local Number Field Search Results',
              err_title='Local Field Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to': local_field_jump},
              bread=lambda:get_bread([("Search Results", ' ')]),
              credit=lambda:LF_credit)

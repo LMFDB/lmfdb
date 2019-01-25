@@ -126,7 +126,7 @@ def index():
         return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = range(2,genus_max+1)
-    info = {'count': 20,
+    info = {'count': 50,
             'genus_list': genus_list,
             'stats': HGCWAstats().stats(),}
 
@@ -394,7 +394,7 @@ def higher_genus_w_automorphisms_postprocess(res, info, query):
              table=db.hgcwa_passports,
              title='Families of Higher Genus Curves with Automorphisms Search Results',
              err_title='Families of Higher Genus Curve Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':higher_genus_w_automorphisms_jump},
              longcuts={'download_magma':(lambda res, info, query: hgcwa_code_download_search(res,'magma')),
                        'download_gap':(lambda res, info, query: hgcwa_code_download_search(res,'gap'))},

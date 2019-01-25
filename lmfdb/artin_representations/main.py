@@ -72,7 +72,7 @@ def artin_representation_jump(info):
              table=db.artin_reps,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
-             per_page=10,
+             per_page=50,
              learnmore=learnmore_list,
              shortcuts={'natural':artin_representation_jump},
              bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
