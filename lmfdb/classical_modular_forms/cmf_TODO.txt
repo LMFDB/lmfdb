@@ -1,7 +1,6 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
-* Missing link to character orbit in character knowl
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
  - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
