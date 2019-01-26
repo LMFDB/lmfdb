@@ -682,6 +682,8 @@ def bigint_knowl(n, cutoff=16, max_width=100, sides=2):
             lines = 1 + (len(lng)-1) // max_width
             width = 1 + (len(lng)-1) // lines
             lng = [lng[i:i+width] for i in range(0,len(lng),width)]
+            for i in range(len(lng)-1):
+                lng[i] += r'\\\\ '
             lng = "<table>" + "".join(r"<tr><td>\(%s\)</td></tr>"%piece for piece in lng) + "</table>"
         else:
             lng = r"\(%s\)" % lng

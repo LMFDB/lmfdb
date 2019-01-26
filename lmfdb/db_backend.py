@@ -1352,7 +1352,7 @@ class PostgresTable(PostgresBase):
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
             self._execute(creator, storage_params.values())
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
-            self._execute(inserter, [name, self.search_table, type, columns, modifiers, storage_params])
+            self._execute(inserter, [name, self.search_table, type, Json(columns), modifiers, storage_params])
         print "Index %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_index(self, name, suffix="", permanent=False, commit=True):
