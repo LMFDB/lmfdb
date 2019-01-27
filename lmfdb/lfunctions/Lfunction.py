@@ -100,7 +100,7 @@ def makeLfromdata(L):
     L.primitive = data.get('primitive', None)
     L.selfdual = data.get('self_dual', None)
     if data.get('root_number', None) is not None:
-        # we first need to convert from unicode to a regular strin
+        # we first need to convert from unicode to a regular string
         L.sign = str_to_CBF(data['root_number'])
     else:
         # this is a numeric converted to LMFDB_RealLiteral

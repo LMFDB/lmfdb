@@ -1,4 +1,8 @@
 CRITICAL (BUGS):
+* There some data errors in the lfunctions with id in [19435656, 22735454]
+  - For rational L-functions the Lhash string is not sorted and sign_arg is not rounded to 0 or 0.5
+  - For cc L-functions, if the root_number isn't 1 or -1, then sign_arg wasn't divided by 2 Pi
+
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
