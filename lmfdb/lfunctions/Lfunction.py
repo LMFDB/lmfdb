@@ -104,7 +104,7 @@ def makeLfromdata(L):
         L.sign = str_to_CBF(data['root_number'])
     else:
         # this is a numeric converted to LMFDB_RealLiteral
-        L.sign = 2*RBF(str(data.get('sign_arg'))).exppii()
+        L.sign = (2*CBF(str(data.get('sign_arg')))).exppii()
     assert (L.sign.abs() - 1).abs().mid() < 1e-5
     if L.selfdual:
         L.sign = RIF(L.sign.real()).unique_integer()

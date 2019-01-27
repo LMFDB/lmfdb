@@ -1,13 +1,9 @@
 CRITICAL (BUGS):
 * There some data errors in the lfunctions with id in [19435656, 22735454]
-  - For rational L-functions the Lhash string is not sorted and sign_arg is not rounded to 0 or 0.5
-  - For cc L-functions, if the root_number isn't 1 or -1, then sign_arg wasn't divided by 2 Pi
-
+  - For rational L-functions the Lhash string is not sorted
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
-* Compute L-functions for weight-1 and forms of trivial character past Nk^2 > 4000 (Edgar)
- - Forms of weight >= 16, trivial character, with Nk^2 in [4001,10000], [10001,20000], [20001,40000]
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
