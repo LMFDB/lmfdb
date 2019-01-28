@@ -16,6 +16,7 @@ IMPORTANT:
 * Split Self-twist select into two selects, update stats (David)
 * Add backslashes to split bigints (David)
 * Add polynomial knowl for Hecke cutters when dim>20 (David)
+* Add relative dimension to stats and dynamic stats (David)
 * Fix "n/a"s for dimension tables  http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Dimensions&level=1-4&weight=1-100&search_type=Dimensions (David)
 
 FINAL CHECKS:
