@@ -167,7 +167,7 @@ function knowl_click_handler($el) {
       // at least 600px (for small tables)
       // and deduce margins and borders
       var margins_and_borders = 2*table_border_knowl_width + parseInt(td_tag.css('padding-left')) + parseInt(td_tag.css('padding-right'))
-      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - margins_and_borders;
+      var max_width = Math.max(700, Math.min(row_width, desired_main_width)) - margins_and_borders;
 
       log("max_width: " + max_width);
       var style_wrapwidth = "style='max-width: " + max_width + "px; white-space: normal;'";
