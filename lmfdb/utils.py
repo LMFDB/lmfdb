@@ -683,8 +683,9 @@ def bigint_knowl(n, cutoff=16, max_width=100, sides=2):
             width = 1 + (len(lng)-1) // lines
             lng = [lng[i:i+width] for i in range(0,len(lng),width)]
             for i in range(len(lng)-1):
-                lng[i] += r'\\\\ '
-            lng = "<table>" + "".join(r"<tr><td>\(%s\)</td></tr>"%piece for piece in lng) + "</table>"
+                lng[i] = r"<tr><td>\(%s\)\</td></tr>" % lng[i]
+            lng[-1] = r"<tr><td>\(%s\)</td></tr>" % lng[-1]
+            lng = "<table>" + "".join(lng) + "</table>"
         else:
             lng = r"\(%s\)" % lng
         return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
@@ -721,6 +722,25 @@ def make_bigint(s, cutoff=12, max_width=100):
     def knowl_replacer(M):
         return r'\)' + bigint_knowl(int(M.group(1)), cutoff, max_width=max_width) + r'\('
     return Zmatcher.sub(knowl_replacer, s)
+
+
+def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
+    lng = web_latex_split_on_pm(coeff_to_poly(f, var))
+    if bigint_cutoff:
+        lng = make_bigint(lng, bigint_cutoff, max_width=80).replace('"',"'")
+    if len([c for c in f if c != 0]) > nterms_cutoff:
+        short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
+        i = len(f) - 2
+        while i >= 0 and f[i] == 0:
+            i -= 1
+        if i >= 0: # nonzero terms
+            if f[i] > 0:
+                short += r" + \cdots"
+            else:
+                short += r" - \cdots"
+        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+    else:
+        return lng
 
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]

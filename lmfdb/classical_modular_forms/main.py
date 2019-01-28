@@ -82,8 +82,8 @@ def set_info_funcs(info):
     info["self_twist_link"] = lambda mf: quad_links(mf, 'is_self_twist', 'self_twist_discs', bound = 1)
     info["cm_link"] = lambda mf: quad_links(mf, 'is_cm', 'cm_discs')
     info["rm_link"] = lambda mf: quad_links(mf, 'is_rm', 'rm_discs')
-    info["cm_col"] = info.get('cm_discs') is not None or 'cm' in  info.get('has_self_twist', '')
-    info["rm_col"] = info.get('rm_discs') is not None or 'rm' in  info.get('has_self_twist', '')
+    info["cm_col"] = bool(info.get('self_twist_discs')) or info.get('cm', '') == 'yes'
+    info["rm_col"] = bool(info.get('self_twist_discs')) or info.get('rm', '') == 'yes'
     info["self_twist_col"] = not (info["cm_col"] or info["rm_col"])
 
 
@@ -519,12 +519,12 @@ def parse_character(inp, query, qfield, prim=False):
 
 newform_only_fields = {
     'nf_label': 'Coefficient field',
-    'is_self_twist': 'Has self twist',
+    'cm': 'Self-twists',
+    'rm': 'Self-twists',
     'cm_discs': 'CM discriminant',
     'rm_discs': 'RM discriminant',
     'inner_twist_count': 'Inner twist count',
     'analytic_rank': 'Analytic rank',
-    'has_self_twist': 'Has self-twist',
     'is_self_dual': 'Is self dual',
 }
 def common_parse(info, query):
@@ -549,21 +549,6 @@ def common_parse(info, query):
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
-
-def parse_self_twist(info, query):
-    # self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ]
-    inp = info.get('has_self_twist')
-    if inp:
-        if inp in ['no', 'yes']:
-            info['is_self_twist'] = inp
-            parse_bool(info, query, 'is_self_twist', name='Has self-twist')
-        else:
-            if 'cm' in inp:
-                info['is_cm'] = 'yes'
-            if 'rm' in inp:
-                info['is_rm'] = 'yes'
-            parse_bool(info, query, 'is_cm', name='Has self-twist')
-            parse_bool(info, query, 'is_rm', name='Has self-twist')
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -600,7 +585,8 @@ def newform_parse(info, query):
     else:
         parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
-    parse_self_twist(info, query)
+    parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
+    parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
     parse_subset(info, query, 'self_twist_discs', name="CM/RM discriminant", parse_singleton=lambda d: parse_discriminant(d))
     parse_bool(info, query, 'is_twist_minimal')
     parse_ints(info, query, 'inner_twist_count')
@@ -1017,13 +1003,13 @@ def self_twist_type_formatter(x):
 
 def self_twist_type_query_formatter(x):
     if x in [0, 'neither']:
-        return 'has_self_twist=no'
+        return 'cm=no&rm=no'
     elif x in [1, 'CM only']:
-        return 'has_self_twist=cm'
+        return 'cm=yes&rm=no'
     elif x in [2, 'RM only']:
-        return 'has_self_twist=rm'
+        return 'cm=no&rm=yes'
     elif x in [3, 'both']:
-        return 'has_self_twist=cm_and_rm'
+        return 'cm=yes&rm=yes'
 
 def level_primes_formatter(x):
     subset = x.get('$containedin')

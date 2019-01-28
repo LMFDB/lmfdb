@@ -92,12 +92,20 @@ function set_buckets(col_selecter, bucket_id) {
 
   <tr>
     <td>
-      <select name='has_self_twist' style="width: 150px;">
-        {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has CM/RM'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no CM/RM')] %}
-        {% for val, text in self_twist_values %}
-        <option value="{{ val }}"{% if info.has_self_twist == val %} selected='yes'{% endif %}>{{ text }}</option>
-        {% endfor %}
-      </select>
+      <div class="float-left">
+        <select name='cm' style="min-width: 70px; width: 70px;">
+          {% for val, text in [('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')] %}
+          <option value="{{ val }}"{% if info.cm == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="float-right">
+        <select name='rm' style="min-width: 70px; width: 70px;">
+          {% for val, text in [('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')] %}
+          <option value="{{ val }}"{% if info.rm == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </td>
     <td><input type='text' style="width: 140px;" name='self_twist_discs' placeholder='-3' value='{{info.self_twist_discs}}'></td>
     <td>

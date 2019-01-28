@@ -12,11 +12,10 @@ IMPORTANT:
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * abelian variety test in test_av.py (/Variety/Abelian/Fq/2/4/ad_g plots) still failing (Edgar)
-* Tentatively plan on changing default count to 50 (David)
-* Split Self-twist select into two selects, update stats (David)
-* Add backslashes to split bigints (David)
-* Add polynomial knowl for Hecke cutters when dim>20 (David)
-* Fix "n/a"s for dimension tables  http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Dimensions&level=1-4&weight=1-100&search_type=Dimensions (David)
+* Dimension tables n/a seem to be working:  http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Dimensions&level=1-4&weight=1-100&search_type=Dimensions
+* What display columns do we want for RM and CM?
+* Copying from bigint knowls is broken (doubles lines after the first)
+* Statically setting the bigint width cutoff for polyquo_knowl doesn't work, since the outer knowl width adjusts.
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)

@@ -7,7 +7,7 @@ from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from flask import url_for
 from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
-    web_latex_split_on_pm, web_latex_poly, bigint_knowl, too_big, make_bigint,\
+    web_latex_split_on_pm, web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,\
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
     display_knowl, factor_base_factorization_latex
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
@@ -473,7 +473,8 @@ class WebNewform(object):
     def display_hecke_cutters(self):
         polynomials = []
         truncated = False
-        use_knowl = too_big(self.hecke_cutters, 10**24)
+        use_bigint_knowl = too_big(self.hecke_cutters, 10**24)
+        cutoff = 12 if use_bigint_knowl else None
         for p,F in self.hecke_cutters:
             #cut = len(F) - 1
             #count = 0
@@ -481,7 +482,7 @@ class WebNewform(object):
             #    if F[cut]:
             #        count += 1
             #    cut -= 1
-            F = latex(coeff_to_poly(F, 'T%s'%p))
+            #F = latex(coeff_to_poly(F, 'T%s'%p))
             #if count < 8 or cut == 0 and abs(F[0]) < 100:
             #    F = latex(coeff_to_poly(F, 'T%s'%p))
             #else:
@@ -489,9 +490,7 @@ class WebNewform(object):
             #    F = [0]*(cut+1) + F[cut+1:]
             #    F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
             #    truncated = True
-            pol = web_latex_split_on_pm(F)
-            if use_knowl:
-                pol = make_bigint(pol)
+            pol = bigpoly_knowl(F, var='T%s'%p)
             polynomials.append(pol)
         title = 'linear operator'
         if len(polynomials) > 1:
