@@ -39,16 +39,16 @@
 {% endif %}
          </select>
 </td>
-<td>         <select name='include_base_change'>
-{% if info.include_base_change == "off" %}
-           <option value="off" selected="yes">exclude</option>
-           <option value="">include</option>
-{% else %}
-           <option value="off">exclude</option>
-           <option value="" selected="yes">include</option>
-{% endif %}
-         </select>
+
+<td>
+  <select name='include_base_change'>
+    {% set base_change_values = [('', 'include'), ('off', 'exclude'),  ('only', 'only')] %}
+    {% for val, text in base_change_values %}
+    <option value="{{ val }}"{% if info.include_base_change == val %} selected='yes'{% endif %}>{{ text }}</option>
+    {% endfor %}
+  </select>
 </td>
+
 <td>         <select name='include_Q_curves'>
 {% if info.include_Q_curves == "only" %}
            <option value="">include</option>
