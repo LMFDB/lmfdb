@@ -239,7 +239,7 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
-        if  self.Nk2 <= 4000 or
+        if  self.Nk2 <= 4000 or\
             (self.Nk2 <= 40000 and self.char_orbit_label == 'a'):
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
