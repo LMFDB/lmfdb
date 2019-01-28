@@ -171,12 +171,20 @@ Info was: {{info}}
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twists') }}</td>
       <td>
-        <select name='has_self_twist' style="width: 140px;">
-          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has CM/RM'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no CM/RM')] %}
-          {% for val, text in self_twist_values %}
-          <option value="{{ val }}">{{ text }}</option>
-          {% endfor %}
-        </select>
+        <div class="float-left">
+          <select name='cm' style="min-width: 67px; width: 67px;">
+            {% for val, text in [('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="float-right">
+          <select name='rm' style="min-width: 67px; width: 67px;">
+            {% for val, text in [('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </td>
       <td></td>
       <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM/RM discriminant')}}</td>
