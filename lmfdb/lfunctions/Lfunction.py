@@ -24,7 +24,7 @@ from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF, primes_first_n, next_prime
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, latex, CBF, RIF, primes_first_n, next_prime
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -100,11 +100,11 @@ def makeLfromdata(L):
     L.primitive = data.get('primitive', None)
     L.selfdual = data.get('self_dual', None)
     if data.get('root_number', None) is not None:
-        # we first need to convert from unicode to a regular strin
+        # we first need to convert from unicode to a regular string
         L.sign = str_to_CBF(data['root_number'])
     else:
         # this is a numeric converted to LMFDB_RealLiteral
-        L.sign = 2*RBF(str(data.get('sign_arg'))).exppii()
+        L.sign = (2*CBF(str(data.get('sign_arg')))).exppii()
     assert (L.sign.abs() - 1).abs().mid() < 1e-5
     if L.selfdual:
         L.sign = RIF(L.sign.real()).unique_integer()
@@ -141,11 +141,11 @@ def makeLfromdata(L):
         central_value = 0
     elif L.leading_term is not None:
         #  convert to string in case it is in unicode string
-        central_value =  CDF(str(L.leading_term))
+        central_value =  CC(str(L.leading_term))
     else:
         # we use the plot_values
         if L.selfdual:
-            central_value = CDF(data['plot_values'][0])
+            central_value = CC(data['plot_values'][0])
         else:
             central_value = data['plot_values'][0]/sqrt(L.sign)
         # we should avoid displaying 10 digits as usual, as this is just a hack
@@ -155,7 +155,7 @@ def makeLfromdata(L):
         L.values = [ central_value ]
     else:
         #  convert to string in case it is in unicode string
-        L.values = [ [float(x), CDF(str(xval))] for x, xval in data['values']] + [ central_value ]
+        L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']] + [ central_value ]
 
 
     # Optional properties
@@ -179,10 +179,9 @@ def makeLfromdata(L):
 
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
-        pairtoCDF = lambda x: CDF(tuple(x))
-        pairtoCDF = lambda x: CDF(*tuple(x))
-        L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
-        L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
+        pairtoCC = lambda x: CC(*tuple(x))
+        L.localfactors = map(lambda x: map(pairtoCC, x), L.localfactors)
+        L.bad_lfactors = [ [p, map(pairtoCC, elt)] for p, elt in L.bad_lfactors]
 
     # add missing bad factors
     known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
