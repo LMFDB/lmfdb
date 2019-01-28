@@ -7,7 +7,7 @@ import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n, is_prime
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
-from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
+from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, key_for_numerically_sort
 
 
 ###############################################################
@@ -983,6 +983,8 @@ def names_and_urls(instances):
         if name not in names:
             res.append((name, url))
             names.append(name)
+    # sort based on name + label
+    res.sort(key= lambda x: key_for_numerically_sort(x[0]))
     return res
 
 def get_bread(degree, breads=[]):

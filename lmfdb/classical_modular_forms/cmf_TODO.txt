@@ -1,12 +1,15 @@
 CRITICAL (BUGS):
-* There some data errors in the lfunctions with id in [19435656, 22735454]
-  - For rational L-functions the Lhash string is not sorted
+* There some data errors in the lfunctions:
+  - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
+  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]
+
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
 * add ECQD and genus 2 curves to friends (Edgar)
+  - what to do regarding Bianchi modular forms?
 * Add related objects to L-functions, move duals (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
@@ -148,6 +151,7 @@ ISSUES already addressed:
 - Request for documentation on modular form web pages #2630
 
 Some progress on:
+- Dual L-function #617
 - L-functions and modularity #2032
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262
 - Display the L-function factors #2269
