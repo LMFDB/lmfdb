@@ -977,6 +977,8 @@ def names_and_urls(instances):
         if obj_exists:
             url = "/"+instance
         else:
+            # do not display unknown objects
+            continue
             name = '(%s)' % (name)
             url = ""
         # avoid duplicates
