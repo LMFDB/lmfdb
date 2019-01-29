@@ -29,7 +29,7 @@
       <th class="sticky-col border-right" style="left:25px;">{{k}}</th>
       {% for N in info.level_list %}
       <td class="center">
-        {% if info.has_data(N, k) %}
+        {% if (N,k) in info.results %}
         {% if X=='S' and typ=='new' %}
         <a href="{{ info.url_generator(N, k) }}">{{ info.pick_table(info.results[N,k],X,typ) }}</a>
         {% else %}
@@ -52,6 +52,6 @@
 </div>
 {% if has_na %}
 <p>
-  {{ info.na_msg }}
+  "n/a" means that not all modular forms matching the search criteria are available.
 </p>
 {% endif %}

@@ -8,6 +8,9 @@
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="hst" value="{{info.search_type}}"/>
+{% if info.search_type == 'SpaceDimensions' %}
+<input type="hidden" name="all_spaces" value="{{info.all_spaces}}"/>
+{% endif %}
 
 <table>
   <tr>
@@ -97,14 +100,7 @@
     <td><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
     {% endif %}
     {% endfor %}
-    {% if info.search_type == 'SpaceDimensions' %}
-    <td>{{ KNOWL('mf.elliptic.include_all_spaces', title='Scope') }}
-      <select name='all_spaces'>
-        <option value=""{{ "selected" if info.all_spaces == ''}}>split spaces</option>
-        <option value="yes"{{ "selected" if info.all_spaces == 'yes'}}>all spaces</option>
-      </select>
-    </td>
-    {% else %}
+    {% if info.search_type != 'SpaceDimensions' %}
     <td>
       <select name='sort_order' style="width: 150px;">
         <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>

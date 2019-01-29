@@ -679,7 +679,7 @@ def bigint_knowl(n, cutoff=16, max_width=100, sides=2):
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
         lng = str(n)
         if len(lng) > max_width:
-            lines = 1 + (len(lng)-1) // max_width
+            lines = 1 + (len(lng)-1) // (max_width-1)
             width = 1 + (len(lng)-1) // lines
             lng = [lng[i:i+width] for i in range(0,len(lng),width)]
             for i in range(len(lng)-1):

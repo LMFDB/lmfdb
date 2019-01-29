@@ -2218,4 +2218,5 @@ input::-webkit-input-placeholder {
   /* Standard */
   transform: rotate(180deg);
   writing-mode: vertical-lr;
+  white-space: nowrap;
 }

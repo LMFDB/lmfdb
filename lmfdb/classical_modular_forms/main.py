@@ -71,21 +71,13 @@ def set_info_funcs(info):
 
     info["nf_link"] = nf_link
 
-    def quad_links(mf, is_field, disc_field, bound = None):
+    def quad_links(mf, is_field, disc_field):
         if mf[is_field]:
-            discs = mf[disc_field]
-            if bound:
-                discs = discs[:bound]
-            return ', '.join( map(quad_field_knowl, discs) )
+            return ', '.join( map(quad_field_knowl, mf[disc_field]) )
         else:
-            return "No"
-    info["self_twist_link"] = lambda mf: quad_links(mf, 'is_self_twist', 'self_twist_discs', bound = 1)
+            return "None"
     info["cm_link"] = lambda mf: quad_links(mf, 'is_cm', 'cm_discs')
     info["rm_link"] = lambda mf: quad_links(mf, 'is_rm', 'rm_discs')
-    info["cm_col"] = bool(info.get('self_twist_discs')) or info.get('cm', '') == 'yes'
-    info["rm_col"] = bool(info.get('self_twist_discs')) or info.get('rm', '') == 'yes'
-    info["self_twist_col"] = not (info["cm_col"] or info["rm_col"])
-
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
@@ -109,11 +101,9 @@ def set_info_funcs(info):
     def all_weight1(results):
         return all(mf.get('weight') == 1 for mf in results)
     info["all_weight1"] = all_weight1
-
-    def all_D2(results):
-        return all(mf.get('projective_image') == 'D2' for mf in results)
-    info["all_D2"] = all_D2
-
+    def any_weight1(results):
+        return any(mf.get('weight') == 1 for mf in results)
+    info["any_weight1"] = any_weight1
 
     # assumes the format Dn A4 S4 S5
     info["display_projective_image"] = lambda mf: ('%s_{%s}' % (mf['projective_image'][:1], mf['projective_image'][1:])) if 'projective_image' in mf else ''
@@ -613,16 +603,16 @@ def newspace_parse(info, query):
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
-    if info['search_type'] != 'SpaceDimensions':
-        parse_ints(info, query, 'dim', name='Dimension')
-        parse_ints(info, query, 'num_forms', name='Number of newforms')
     if info.get('all_spaces') == 'yes' and 'num_forms' in query:
         msg = "Cannot specify number of newforms while requesting all spaces"
         flash_error(msg)
         raise ValueError(msg)
-    if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-        # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-        query['num_forms'] = {'$exists':True}
+    if info['search_type'] != 'SpaceDimensions':
+        parse_ints(info, query, 'dim', name='Dimension')
+        parse_ints(info, query, 'num_forms', name='Number of newforms')
+        if 'num_forms' not in query and info.get('all_spaces') != 'yes':
+            # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
+            query['num_forms'] = {'$exists':True}
     parse_sort(info, query, spaces=True)
 
 
@@ -786,36 +776,6 @@ na_msg_triv = '"n/a" means that no modular forms of this weight and level are av
 def dimension_common_postprocess(info, query, cusp_types, newness_types, url_generator, pick_table, switch_text=None):
     set_rows_cols(info, query)
     set_info_funcs(info)
-    # We don't need to sort, since the dimensions are just getting added up
-    query['__sort__'] = []
-    def restrict(D):
-        newD = {}
-        if '$or' in D:
-            or_clause = [restrict(x) for x in D['$or']]
-            or_clause = [x for x in or_clause if x]
-            if or_clause:
-                newD['$or'] = or_clause
-        for key in ['level', 'weight', 'num_forms']:
-            if key in D:
-                newD[key] = D[key]
-        return newD
-    na_query = restrict(query)
-    na_set = set()
-    if query.get('char_order') == 1 or query.get('char_conductor') == 1:
-        na_query['char_order'] = 1
-        table = db.mf_newspaces
-        info['na_msg'] = na_msg_triv
-    else:
-        table = db.mf_gamma1
-        if all(k % 2 for k in info['weight_list']):
-            info['na_msg'] = na_msg_triv
-        else:
-            info['na_msg'] = na_msg_nontriv
-    if info.get('all_spaces') != 'yes':
-        na_query['num_forms'] = {'$exists':True}
-    for rec in table.search(na_query, ['level', 'weight']):
-        na_set.add((rec['level'], rec['weight']))
-    info['has_data'] = lambda N, k: (N,k) in na_set
     info['pick_table'] = pick_table
     info['cusp_types'] = cusp_types
     info['newness_types'] = newness_types
@@ -824,6 +784,10 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
 
+def delete_false(D):
+    for key, val in list(D.items()): # for py3 compat: can't iterate over items while deleting
+        if val is False:
+            del D[key]
 def dimension_space_postprocess(res, info, query):
     if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1)
             or
@@ -861,14 +825,21 @@ def dimension_space_postprocess(res, info, query):
         return typ.capitalize() + space_type[X]
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
                                  url_generator, pick_table, switch_text)
-    hasdata = info['has_data']
-    dim_dict = {(N,k):DimGrid() for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
+    dim_dict = {}
     for space in res:
-        dims = DimGrid.from_db(space)
         N = space['level']
         k = space['weight']
-        if hasdata(N, k):
+        dims = DimGrid.from_db(space)
+        if space.get('num_forms') is None:
+            print "Falsifying", (N, k)
+            dim_dict[N,k] = False
+        elif (N,k) not in dim_dict:
+            dim_dict[N,k] = dims
+        elif dim_dict[N,k] is not False:
             dim_dict[N,k] += dims
+    print "Len pre-delete", len(dim_dict)
+    delete_false(dim_dict)
+    print "Len post-delete", len(dim_dict)
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
@@ -886,12 +857,22 @@ def dimension_form_postprocess(res, info, query):
         # Only support one table
         return entry
     dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
-    hasdata = info['has_data']
-    dim_dict = {(N,k):0 for N in info['level_list'] for k in info['weight_list'] if hasdata(N,k)}
+    # Determine which entries should have an "n/a"
+    na_query = {}
+    common_parse(info, na_query)
+    dim_dict = {}
+    for rec in db.mf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
+        N = rec['level']
+        k = rec['weight']
+        if (N,k) not in dim_dict:
+            dim_dict[N,k] = 0
+        if rec.get('num_forms') is None:
+            dim_dict[N,k] = False
+    delete_false(dim_dict)
     for form in res:
         N = form['level']
         k = form['weight']
-        if hasdata(N,k):
+        if dim_dict.get((N,k)):
             dim_dict[N,k] += form['dim']
     return dim_dict
 
@@ -912,13 +893,15 @@ def dimension_form_search(info, query):
     if 'level' not in info:
         info['level'] = '1-24'
     newform_parse(info, query)
+    # We don't need to sort, since the dimensions are just getting added up
+    query['__sort__'] = []
 
 @search_wrap(template="cmf_dimension_space_search_results.html",
              table=db.mf_newspaces,
              title='Dimension Search Results',
              err_title='Dimension Search Input Error',
              per_page=None,
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim'],
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list,
@@ -930,6 +913,8 @@ def dimension_space_search(info, query):
     if 'level' not in info:
         info['level'] = '1-24'
     newspace_parse(info, query)
+    # We don't need to sort, since the dimensions are just getting added up
+    query['__sort__'] = []
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
@@ -1064,6 +1049,7 @@ class CMF_stats(StatsDisplay):
               'dim': 'mf.elliptic.dimension',
               'relative_dim': 'mf.elliptic.dimension',
               'char_order': 'character.dirichlet.order',
+              'char_degree': 'character.dirichlet.degree',
               'analytic_rank': 'mf.elliptic.analytic_rank',
               'projective_image': 'mf.elliptic.projective_image',
               'num_forms': 'mf.elliptic.galois-orbits',
@@ -1077,6 +1063,7 @@ class CMF_stats(StatsDisplay):
                   'cm_discs': 'complex multiplication',
                   'rm_discs': 'real multiplication'}
     short_display = {'char_order': 'character order',
+                     'char_degree': 'character degree',
                      'num_forms': 'newforms',
                      'inner_twist_count': 'inner twists',
                      'cm_discs': 'CM disc',
@@ -1102,10 +1089,10 @@ class CMF_stats(StatsDisplay):
         {'cols': ['level', 'dim'],
          'proportioner': per_row_total,
          'totaler': sum_totaler()},
-        {'cols':'char_order'},
+        {'cols': ['char_order', 'relative_dim'],
+         'proportioner': per_row_total,
+         'totaler': sum_totaler()},
         {'cols':'analytic_rank',
-         'top_title':[('analytic ranks', 'mf.elliptic.analytic_rank'),
-                      ('for forms of weight greater than 1', None)],
          'totaler':{'avg':True}},
         {'cols':'projective_image',
          'top_title':[('projective images', 'mf.elliptic.projective_image'),
