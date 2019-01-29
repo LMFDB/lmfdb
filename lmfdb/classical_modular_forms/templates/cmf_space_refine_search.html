@@ -30,11 +30,11 @@
   </tr>
 
   <tr>
-    <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
-    <td><input type='text' style="width: 140px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
-    <td><input type='text' style="width: 140px;" name='analytic_conductor' placeholder='1' value='{{info.analytic_conductor}}'></td>
-    <td><input type='text' style="width: 140px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
-    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 140px;" name='dim' placeholder='1-4' value='{{info.dim}}'></td>
+    <td><input type='text' style="width: 160px;" name='level' placeholder='4' value='{{info.level}}'></td>
+    <td><input type='text' style="width: 160px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
+    <td><input type='text' style="width: 160px;" name='analytic_conductor' placeholder='1' value='{{info.analytic_conductor}}'></td>
+    <td><input type='text' style="width: 160px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
+    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 160px;" name='dim' placeholder='1-4' value='{{info.dim}}'></td>
   </tr>
 
   <tr>
@@ -64,11 +64,11 @@
   </tr>
 
   <tr>
-    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
-    <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
-    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 140px;" name='num_forms' placeholder='3' value='{{info.num_forms}}'></td>
+    <td><input type='text' name='level_primes' example='2,3' style="width: 160px" value="{{info.level_primes}}"></td>
+    <td><input type='text' style="width: 160px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
+    <td><input type='{{"hidden" if info.search_type == 'SpaceDimensions' else "text"}}' style="width: 160px;" name='num_forms' placeholder='3' value='{{info.num_forms}}'></td>
   </tr>
 
   {% set search_types = [('Spaces', 'List'), ('SpaceDimensions', 'Dimension Table'), ('SpaceTraces', 'Traces Table'), ('RandomSpace', 'Random')] %}
@@ -94,15 +94,15 @@
   <tr style="height: 22px;"></tr>
   {% endif %}
   <tr>
-    <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 150px;" onclick='resetStart()'>Search again</button></td>
+    <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 170px;" onclick='resetStart()'>Search again</button></td>
     {% for type, desc in search_types %}
     {% if info.search_type != type %}
-    <td><button type='submit' name='search_type' value='{{ type }}' style="width: 150px;">{{ desc }}</button></td>
+    <td><button type='submit' name='search_type' value='{{ type }}' style="width: 170px;">{{ desc }}</button></td>
     {% endif %}
     {% endfor %}
     {% if info.search_type != 'SpaceDimensions' %}
     <td>
-      <select name='sort_order' style="width: 150px;">
+      <select name='sort_order' style="width: 170px;">
         <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>
         <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
         <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
