@@ -1001,6 +1001,9 @@ def self_twist_type_formatter(x):
         return 'both'
     return x # c = 'neither', 'CM only', 'RM only' or 'both'
 
+def rel_dim_formatter(x):
+    return 'dim=%s&dim_type=rel' % x
+
 def self_twist_type_query_formatter(x):
     if x in [0, 'neither']:
         return 'cm=no&rm=no'
@@ -1050,13 +1053,16 @@ class CMF_stats(StatsDisplay):
     baseurl_func = ".index"
     buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
-               'dim':['1','2','3','4','5-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
-               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
+               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
+               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
     knowls = {'level': 'mf.elliptic.level',
               'weight': 'mf.elliptic.weight',
               'dim': 'mf.elliptic.dimension',
+              'relative_dim': 'mf.elliptic.dimension',
               'char_order': 'character.dirichlet.order',
               'analytic_rank': 'mf.elliptic.analytic_rank',
               'projective_image': 'mf.elliptic.projective_image',
@@ -1065,7 +1071,8 @@ class CMF_stats(StatsDisplay):
               'self_twist_type': 'mf.elliptic.self_twist',
               'cm_discs': 'mf.elliptic.cm_form',
               'rm_discs': 'mf.elliptic.rm_form'}
-    top_titles = {'dim': 'dimension',
+    top_titles = {'dim': 'absolute dimension',
+                  'relative_dim': 'relative dimension',
                   'inner_twist_count': 'inner twists',
                   'cm_discs': 'complex multiplication',
                   'rm_discs': 'real multiplication'}
@@ -1074,7 +1081,8 @@ class CMF_stats(StatsDisplay):
                      'inner_twist_count': 'inner twists',
                      'cm_discs': 'CM disc',
                      'rm_discs': 'RM disc',
-                     'dim': 'dimension'}
+                     'dim': 'abs. dimension',
+                     'relative_dim': 'rel. dimension'}
     formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
                   'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
@@ -1082,6 +1090,7 @@ class CMF_stats(StatsDisplay):
     query_formatters = {'projective_image': (lambda t: r'projective_image=%s' % (t,)),
                         'self_twist_type': self_twist_type_query_formatter,
                         'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1')),
+                        'relative_dim': rel_dim_formatter,
                         'level_primes': level_primes_formatter,
                         'level_radical': level_radical_formatter}
     split_lists = {'cm_discs': True,
@@ -1118,7 +1127,7 @@ class CMF_stats(StatsDisplay):
     # Used for dynamic stats
     dynamic_parse = staticmethod(newform_parse)
     dynamic_parent_page = "cmf_refine_search.html"
-    dynamic_cols = ['level', 'weight', 'dim', 'analytic_conductor', 'char_order', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
+    dynamic_cols = ['level', 'weight', 'dim', 'relative_dim', 'analytic_conductor', 'char_order', 'char_degree', 'self_twist_type', 'inner_twist_count', 'analytic_rank', 'char_parity', 'projective_image', 'projective_image_type', 'artin_degree']
 
 @cmf.route("/stats")
 def statistics():
