@@ -5,9 +5,13 @@
 <table class="ntdata table_hidable table_{{X}}{{typ}}{% if X!='S' or typ!='new' %} nodisplay{% endif %}">
   <thead>
     <tr>
-      <th class="level sticky-head" colspan={{(info.level_list | length) + 2}}>
+      <th class="level sticky-head" colspan={{info.level_width}}>
         Level
       </th>
+      {# Have to separate the following since otherwise the sticky doesn't work correctly #}
+      {% if info.level_extra %}
+      <th colspan={{info.level_extra}}></th>
+      {% endif %}
     </tr>
     <tr class="space">
       <th colspan=2 class="sticky-head"></th>

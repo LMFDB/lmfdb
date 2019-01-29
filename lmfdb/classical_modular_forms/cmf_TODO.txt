@@ -13,14 +13,14 @@ IMPORTANT:
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Fix top row in dimension table: Level not sticky (David)
-* Change widths of select boxes (David)
 * Don't display Bianchi modular forms in related objects if they're not in the LMFDB, change order to Newspaces - Related objects - L-functions (Edgar)
 * Give Drew analytic ranks and related objects (Edgar)
 * Make old L-function labels work (Edgar)
 * Relative dimension knowl?
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
+* Add related objects from Artin representations back to weight 1 forms
+* Edit Future Plans page to update section on CMFs
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
@@ -122,6 +122,7 @@ NOT CMF STUFF:
 * In debug_info.html, queries with dollar signs aren't escaped, and katex tries to parse them.
 * No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
 * Move data from US Central to US East Coast
+* It would be good to have an explanation of the connections in the "related objects" links when possible
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)

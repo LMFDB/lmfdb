@@ -776,6 +776,8 @@ na_msg_triv = '"n/a" means that no modular forms of this weight and level are av
 def dimension_common_postprocess(info, query, cusp_types, newness_types, url_generator, pick_table, switch_text=None):
     set_rows_cols(info, query)
     set_info_funcs(info)
+    info['level_width'] = min(2 + len(info['level_list']), 5)
+    info['level_extra'] = 2 + len(info['level_list']) - info['level_width']
     info['pick_table'] = pick_table
     info['cusp_types'] = cusp_types
     info['newness_types'] = newness_types
