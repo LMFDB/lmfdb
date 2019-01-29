@@ -1,25 +1,31 @@
 CRITICAL (BUGS):
-* There some data errors in the lfunctions:
+* There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
-  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]
-
+  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226])
+  - hide or fix before PR
 
 IMPORTANT:
+* Generate Euler factors for dim<=20, p<100 (Drew)
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
-* add ECQD and genus 2 curves to friends (Edgar)
-  - what to do regarding Bianchi modular forms?
 * Add related objects to L-functions, move duals (Edgar)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* abelian variety test in test_av.py (/Variety/Abelian/Fq/2/4/ad_g plots) still failing (Edgar)
-* Dimension tables n/a seem to be working:  http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Dimensions&level=1-4&weight=1-100&search_type=Dimensions
-* What display columns do we want for RM and CM?
-* Copying from bigint knowls is broken (doubles lines after the first)
-* Statically setting the bigint width cutoff for polyquo_knowl doesn't work, since the outer knowl width adjusts.
+* Make first column, row of dimension table sticky, add dark blue bottom border to col headers (David)
+* Modify dim table code to use num_forms from mf_newspaces, change n/a text "not all modular forms matching the search criteria are available, but some may be. (David)
+* Change widths of select boxes (David)
+* Change No to None in self-twist results (David)
+* CM column always, RM column if any weight 1 (David)
+* Wrap to 79 characters (with backslash) (David)
+* Don't display Bianchi modular forms in related objects if they're not in the LMFDB, change order to Newspaces - Related objects - L-functions (Edgar)
 * Add relative dimension to stats and dynamic stats (David)
+* Give Drew analytic ranks and related objects (Edgar)
+* Make old L-function labels work (Edgar)
+* Relative dimension knowl?
+* Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
+* Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
@@ -119,6 +125,8 @@ NOT CMF STUFF:
 * Add validate_header function for copy_from, reload, etc (David)
 * Add replace_from, copy_to+copy_from (with sort order) function to db_backend (David)
 * In debug_info.html, queries with dollar signs aren't escaped, and katex tries to parse them.
+* No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
+* Move data from US Central to US East Coast
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
