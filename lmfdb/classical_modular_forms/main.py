@@ -831,15 +831,12 @@ def dimension_space_postprocess(res, info, query):
         k = space['weight']
         dims = DimGrid.from_db(space)
         if space.get('num_forms') is None:
-            print "Falsifying", (N, k)
             dim_dict[N,k] = False
         elif (N,k) not in dim_dict:
             dim_dict[N,k] = dims
         elif dim_dict[N,k] is not False:
             dim_dict[N,k] += dims
-    print "Len pre-delete", len(dim_dict)
     delete_false(dim_dict)
-    print "Len post-delete", len(dim_dict)
     return dim_dict
 
 def dimension_form_postprocess(res, info, query):
@@ -872,7 +869,7 @@ def dimension_form_postprocess(res, info, query):
     for form in res:
         N = form['level']
         k = form['weight']
-        if dim_dict.get((N,k)):
+        if (N,k) in dim_dict:
             dim_dict[N,k] += form['dim']
     return dim_dict
 
