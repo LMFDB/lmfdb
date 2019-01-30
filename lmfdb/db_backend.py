@@ -1876,7 +1876,8 @@ class PostgresTable(PostgresBase):
             search_data = [{col: D[col] for col in search_cols} for D in data]
             extra_data = [{col: D[col] for col in extra_cols} for D in data]
         else:
-            search_data = data
+            # we don't want to alter the input
+            search_data = data[:]
         with DelayCommit(self, commit):
             if reindex:
                 self.drop_pkeys()
