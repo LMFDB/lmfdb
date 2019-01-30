@@ -1832,10 +1832,10 @@ class PostgresTable(PostgresBase):
                 # but it will raise an error rather than leading to invalid database state,
                 # so it should be okay.
                 #FIXME use max_id
-                search_data["id"] = self.stats.total + 1
+                search_data["id"] = self.max_id() + 1
                 if self.extra_table is not None:
                     #FIXME use max_id
-                    extras_data["id"] = self.stats.total + 1
+                    extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
                     inserter.format(Identifier(table),
@@ -1882,13 +1882,11 @@ class PostgresTable(PostgresBase):
                 self.drop_pkeys()
                 self.drop_indexes()
             for i, SD in enumerate(search_data):
-                #FIXME use max_id
-                SD["id"] = self.stats.total + i + 1
+                SD["id"] = self.max_id() + i + 1
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
-                    #FIXME use max_id
-                    ED["id"] = self.stats.total + i + 1
+                    ED["id"] = self.max_id() + i + 1
                 cases.append((self.extra_table, extra_data))
             now = time.time()
             for table, L in cases:
