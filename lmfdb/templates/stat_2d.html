@@ -1,5 +1,5 @@
 <table class="statgrid">
-  <tr><th></th><th></th><th colspan="{{ d.col_headers | length}}"> {{d.attribute.cols[1]}}</td></tr>
+  <tr><th></th><th></th><th colspan="{{ d.col_headers | length}}"> {{info.stats._short_display[d.attribute.cols[1]]}}</td></tr>
   <tr>
     <th></th>
     <th></th>
@@ -12,7 +12,7 @@
     {% if loop.index == 1 %}
     <th rowspan="{{ (d.grid | length) * 2 }}">
       <div class="table_rotate">
-        {{d.attribute.cols[0]}}
+        {{info.stats._short_display[d.attribute.cols[0]]}}
       </div>
     </th>
     {% endif %}

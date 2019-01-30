@@ -472,38 +472,14 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = []
-        truncated = False
-        use_bigint_knowl = too_big(self.hecke_cutters, 10**24)
-        cutoff = 12 if use_bigint_knowl else None
-        for p,F in self.hecke_cutters:
-            #cut = len(F) - 1
-            #count = 0
-            #while cut >= 0 and count < 8:
-            #    if F[cut]:
-            #        count += 1
-            #    cut -= 1
-            #F = latex(coeff_to_poly(F, 'T%s'%p))
-            #if count < 8 or cut == 0 and abs(F[0]) < 100:
-            #    F = latex(coeff_to_poly(F, 'T%s'%p))
-            #else:
-            #    # truncate to the first 8 nonzero coefficients
-            #    F = [0]*(cut+1) + F[cut+1:]
-            #    F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
-            #    truncated = True
-            pol = bigpoly_knowl(F, var='T%s'%p)
-            polynomials.append(pol)
+        polynomials = [bigpoly_knowl(F, var='T%s'%p) for p,F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
         knowl = display_knowl('mf.elliptic.hecke_cutter', title=title)
         desc = "<p>This newform can be constructed as the "
-        if truncated or len(polynomials) > 1:
-            if len(polynomials) > 1:
-                desc += "intersection of the kernels "
-            else:
-                desc += "kernel "
-            desc += "of the following %s acting on %s:</p>\n<table>"
+        if len(polynomials) > 1:
+            desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
             desc = desc % (knowl, self.display_newspace())
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
         elif len(polynomials) == 1:

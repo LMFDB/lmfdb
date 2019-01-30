@@ -55,7 +55,7 @@ class HomePageTest(LmfdbTest):
         t = "?conductor=100-999"
         assert t in homepage
         self.check_args("/EllipticCurve/Q/%s" % t,
-                        '[1, 0, 1, 2, 0]')
+                        '[1, 0, 0, 1, 1]')
         t = "?rank=4"
         assert t in homepage
         self.check_args("/EllipticCurve/Q/%s" % t,

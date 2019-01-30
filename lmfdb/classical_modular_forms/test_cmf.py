@@ -648,7 +648,7 @@ class CmfTest(LmfdbTest):
         assert 'Results (displaying all 7 matches)' in page.data
         assert '\Q(\sqrt{2}, \sqrt{-3})' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&has_self_twist=no&search_type=List')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&cm=no&rm=no&search_type=List')
         assert "Results (displaying all 17 matches)" in page.data
         assert r"Q(\zeta_{20})" in page.data
 

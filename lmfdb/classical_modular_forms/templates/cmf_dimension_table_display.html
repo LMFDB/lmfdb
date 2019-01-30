@@ -1,16 +1,20 @@
 {% set has_na = [] %}
+<div class="table-scroll-wrapper cmf-dim-table">
 {% for X in info.cusp_types %}
 {% for typ in info.newness_types %}
 <table class="ntdata table_hidable table_{{X}}{{typ}}{% if X!='S' or typ!='new' %} nodisplay{% endif %}">
   <thead>
-    <tr class="space">
-      <th class="spaceleft">Weight</th>
-      <th class="level" colspan="{{info.level_list|length}}">
-        <span style="display:block;float:left;margin-right:3px;">Level \(N\)</span>
+    <tr>
+      <th class="level sticky-head" colspan={{info.level_width}}>
+        Level
       </th>
+      {# Have to separate the following since otherwise the sticky doesn't work correctly #}
+      {% if info.level_extra %}
+      <th colspan={{info.level_extra}}></th>
+      {% endif %}
     </tr>
     <tr class="space">
-      <th class="spaceleft"></th>
+      <th colspan=2 class="sticky-head"></th>
       {% for N in info.level_list %}
       <th class="center">{{N}}</th>
       {% endfor %}
@@ -19,10 +23,17 @@
   <tbody>
     {% for k in info.weight_list %}
     <tr>
-      <th class="left">{{k}}</th>
+      {% if loop.index == 1 %}
+      <th rowspan="{{ info.weight_list | length }}" class="sticky-col weight-label">
+        <div class="table_rotate">
+          Weight
+        </div>
+      </th>
+      {% endif %}
+      <th class="sticky-col border-right" style="left:25px;">{{k}}</th>
       {% for N in info.level_list %}
       <td class="center">
-        {% if info.has_data(N, k) %}
+        {% if (N,k) in info.results %}
         {% if X=='S' and typ=='new' %}
         <a href="{{ info.url_generator(N, k) }}">{{ info.pick_table(info.results[N,k],X,typ) }}</a>
         {% else %}
@@ -42,8 +53,9 @@
 </table>
 {% endfor %}
 {% endfor %}
+</div>
 {% if has_na %}
 <p>
-  {{ info.na_msg }}
+  "n/a" means that not all modular forms matching the search criteria are available.
 </p>
 {% endif %}

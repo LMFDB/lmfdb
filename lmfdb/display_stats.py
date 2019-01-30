@@ -423,6 +423,11 @@ class StatsDisplay(UniqueRepresentation):
         A.update(getattr(self, 'split_lists', {}))
         return A
 
+    # It's useful to have info.stats access this object for both dynamic and static stats
+    @property
+    def stats(self):
+        return self
+
     def display_data(self, cols, table=None, constraint=None, avg=None, buckets = None, totaler=None, proportioner=None, base_url=None, url_extras=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
