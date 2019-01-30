@@ -5,18 +5,19 @@ CRITICAL (BUGS):
 
 IMPORTANT:
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
-* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
+* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Add related objects to L-functions, move duals (Edgar)
-* Make old L-function labels work (Edgar)
-* q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
-* Relative dimension knowl?
+* Make old L-function labels work (Edgar/David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
-* Add related objects from Artin representations back to weight 1 forms
-* Edit Future Plans page to update section on CMFs
+* Add relative dimension selector on newspace page (David)
+* Prove all analytic ranks
+* Update mf.elliptic.hecke-operator knowl and delete group.gammann
+* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
+* Compute embedding roots (Edgar)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
@@ -24,7 +25,6 @@ FINAL CHECKS:
 
 -------------------------- Pull Request Line -------------------------------------------------
 * need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
-* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
@@ -35,6 +35,9 @@ FINAL CHECKS:
 * Add completeness table and metadata in order to make claims about provability
 * Reduce clutter in the url: count, start, hidden_search_type (David)
 * Prevent all=1 in cleanSubmit when no arguments from browse page.
+* q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
+* Add related objects from Artin representations back to weight 1 forms
+* Remove Future Plans page and port everything to github
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -125,10 +128,8 @@ NOT CMF STUFF:
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
 
-
-LMFDB issues maybe addressed:
-- Fix errors in classical modular form data and verify its correctness #1248
-
+ISSUES todo:
+Ask David Farmer if he wants to reopen #59
 
 ISSUES already addressed:
 - Weight 1 cusp forms #437
@@ -138,8 +139,10 @@ ISSUES already addressed:
 - Make user adjust Fourier coefficient embeddings #653
 - Make pretty coefficients #654
 - Create separate page for each embedding of a newform #659
+- Table options for old/new/CM #674
 - Determine planned extent of classical modular forms #873
 - Source and extent of data for classical modular forms #1224
+- Fix errors in classical modular form data and verify its correctness #1248
 - Tests for lcalc files #1257
 - Modular form history #1282 (we decided not to link it)
 - Search by analytic rank #1362
@@ -152,9 +155,11 @@ ISSUES already addressed:
 - Add Bober's modular form data #2196
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
+- Hecke operators, cosets in subset not subgroup #2631
 
 Some progress on:
 - L-functions and modularity #2032
+- Search on a_pp #2134
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262
 - Display the L-function factors #2269
 
