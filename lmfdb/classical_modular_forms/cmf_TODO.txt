@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
+* 1260.2.cg.b has no hecke_ring_character_values
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
@@ -12,6 +13,7 @@ IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Add related objects to L-functions, move duals (Edgar)
 * Make old L-function labels work (Edgar)
+* q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
 * Relative dimension knowl?
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
