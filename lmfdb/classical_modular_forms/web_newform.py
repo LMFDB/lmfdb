@@ -227,7 +227,8 @@ class WebNewform(object):
         return res
     @property
     def friends(self):
-        res = names_and_urls(self.related_objects)
+        # first newspaces
+        res = []
         base_label = map(str, [self.level, self.weight])
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         ns1_label = '.'.join(base_label)
@@ -239,6 +240,10 @@ class WebNewform(object):
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
 
+        # then related objects
+        res += names_and_urls(self.related_objects)
+
+        # finally L-functions
         if  self.Nk2 <= 4000 or\
             (self.Nk2 <= 40000 and self.char_orbit_label == 'a'):
             #FIXME this avoid displaying links to L-functions with missing key euler coefficients
