@@ -1,7 +1,7 @@
 # See templates/newform.html for how functions are called
 
 from sage.all import prime_range, latex, QQ, PolynomialRing,\
-    CDF, ZZ, CBF, cached_method, vector, lcm
+    CDF, ZZ, CBF, cached_method, vector, lcm, ceil, RR
 from lmfdb.db_backend import db
 from lmfdb.WebNumberField import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
@@ -241,8 +241,20 @@ class WebNewform(object):
 
         if  self.Nk2 <= 4000 or\
             (self.Nk2 <= 40000 and self.char_orbit_label == 'a'):
-            if db.lfunc_instances.exists({'url': nf_url[1:]}):
-                res.append(('L-function ' + self.label, '/L' + nf_url))
+            #FIXME this avoid displaying links to L-functions with missing key euler coefficients
+            #Old code:
+            #if db.lfunc_instances.exists({'url': nf_url[1:]}):
+            #    res.append(('L-function ' + self.label, '/L' + nf_url))
+            #hack:
+            Lhash = db.lfunc_instances.lucky({'url': nf_url[1:]}, 'Lhash')
+            if Lhash is not None:
+                euler_factors = db.lfunc_lfunctions.lucky({'Lhash':Lhash}, 'euler_factors')
+                for i,p in enumerate(prime_range(100)):
+                    if None in euler_factors[i][:ceil(RR(100).log(p))]:
+                        break
+                else:
+                    res.append(('L-function ' + self.label, '/L' + nf_url))
+            #end of hack
             if len(self.conrey_indexes)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)

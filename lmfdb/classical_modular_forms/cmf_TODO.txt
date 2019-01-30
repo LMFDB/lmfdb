@@ -1,8 +1,7 @@
 CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
-  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226])
-  - hide or fix before PR
+  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
 
 IMPORTANT:
 * mf_hecke_cc for  Nk^2 > 4000 and N < 100 and 2 <= k < 12 (Edgar) (ongoing)
