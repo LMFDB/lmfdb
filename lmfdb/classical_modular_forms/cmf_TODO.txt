@@ -23,6 +23,7 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)

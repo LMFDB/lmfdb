@@ -89,7 +89,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/')
         assert '/SatoTateGroup/1.2.' in L.data
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
-        assert "(Bianchi modular form 2.0.1879.1-1.0.1-a)" in L.data, L.data
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
         assert '/SatoTateGroup/1.2.' in L.data
