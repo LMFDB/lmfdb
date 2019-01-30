@@ -29,7 +29,6 @@ FINAL CHECKS:
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
-* add L-functions instances for unique cc embeddings (Edgar)
 * add L-functions instances for Artin rep (Edgar)
 * Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
 * Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
