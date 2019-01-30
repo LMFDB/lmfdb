@@ -2,7 +2,6 @@ CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
-* 1260.2.cg.b has no hecke_ring_character_values
 
 IMPORTANT:
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
@@ -128,19 +127,20 @@ TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
 
 
-LMFDB issues to be addressed:
-- Weight 1 cusp forms #437
-- Data quality for classical modular forms #460
-- Determine planned extent of classical modular forms #873
-- Source and extent of data for classical modular forms #1224
+LMFDB issues maybe addressed:
 - Fix errors in classical modular form data and verify its correctness #1248
 
 
 ISSUES already addressed:
+- Weight 1 cusp forms #437
 - L-functions for modular forms should be in database #439
+- Data quality for classical modular forms #460
+- Dual L-function #617
 - Make user adjust Fourier coefficient embeddings #653
 - Make pretty coefficients #654
 - Create separate page for each embedding of a newform #659
+- Determine planned extent of classical modular forms #873
+- Source and extent of data for classical modular forms #1224
 - Tests for lcalc files #1257
 - Modular form history #1282 (we decided not to link it)
 - Search by analytic rank #1362
@@ -155,7 +155,6 @@ ISSUES already addressed:
 - Request for documentation on modular form web pages #2630
 
 Some progress on:
-- Dual L-function #617
 - L-functions and modularity #2032
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262
 - Display the L-function factors #2269
