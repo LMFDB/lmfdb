@@ -5,7 +5,7 @@ CRITICAL (BUGS):
   - hide or fix before PR
 
 IMPORTANT:
-* mf_hecke_cc for  Nk^2 > 4000 and N <= 100 and 2 <= k <= 12 (Edgar)
+* mf_hecke_cc for  Nk^2 > 4000 and N < 100 and 2 <= k < 12 (Edgar) (ongoing)
 * Add data for N <= 10 and Nk^2 <= 100000 and other boxes. (Drew, N <= 10 and Nk^2 <= 100000 done except embedding data)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (Drew)
@@ -13,8 +13,7 @@ IMPORTANT:
 * Use character values to generate the an from ap in Magma code (Edgar)
 * just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Don't display Bianchi modular forms in related objects if they're not in the LMFDB, change order to Newspaces - Related objects - L-functions (Edgar)
-* Give Drew analytic ranks and related objects (Edgar)
+* change order to Newspaces - Related objects - L-functions (Edgar)
 * Make old L-function labels work (Edgar)
 * Relative dimension knowl?
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
@@ -27,6 +26,7 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
