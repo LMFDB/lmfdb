@@ -6,7 +6,6 @@ from lmfdb.downloader import Downloader
 from lmfdb.utils import flash_error
 from lmfdb.classical_modular_forms.web_newform import WebNewform, encode_hecke_orbit
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
-from sage.all import ZZ, Gamma0, nth_prime
 
 class CMF_download(Downloader):
     table = db.mf_newforms
