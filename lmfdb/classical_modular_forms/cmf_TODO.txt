@@ -140,6 +140,7 @@ ISSUES already addressed:
 - Table options for old/new/CM #674
 - Determine planned extent of classical modular forms #873
 - Source and extent of data for classical modular forms #1224
+- For imprimitive genus 2 L-functions, give links to factors #1227
 - Fix errors in classical modular form data and verify its correctness #1248
 - Tests for lcalc files #1257
 - Modular form history #1282 (we decided not to link it)
@@ -156,6 +157,7 @@ ISSUES already addressed:
 - Hecke operators, cosets in subset not subgroup #2631
 
 Some progress on:
+- David Platt's L-function zeros #557 (this issue is a bit too vague to understand when is going to be closed)
 - L-functions and modularity #2032
 - Search on a_pp #2134
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262
