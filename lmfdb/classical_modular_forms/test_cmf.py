@@ -475,7 +475,6 @@ class CmfTest(LmfdbTest):
         assert "[7, 31, 35, 43, 51, 55, 59, 63, 67, 71, 79, 87, 91, 115, 139, 227]" in page.data
         assert "244.4.w" in page.data
 
-    @unittest2.skip("this is broken at the moment")
     def test_download_magma(self):
         from sage.all import magma_free
         # test MakeNewformModFrm
@@ -485,15 +484,15 @@ class CmfTest(LmfdbTest):
                 ['21.2.g.a',
                     'q + (-nu - 1)*q^3 + (2*nu - 2)*q^4 + (-3*nu + 2)*q^7 + 3*nu*q^9 + O(q^12)'],
                 ['59.2.a.a',
-                    'q + (-nu^4 + 7*nu^2 + 3*nu - 5)*q^2 + (nu^4 - nu^3 - 6*nu^2 + 2*nu + 3)*q^3 + (nu^4 - 6*nu^2 - 4*nu + 3)*q^5 + (-3*nu^4 + 6*nu^3 + 13*nu^2 - 19*nu + 5)*q^6 + (nu^3 - 2*nu^2 - 4*nu + 6)*q^7 + (3*nu^4 - 6*nu^3 - 13*nu^2 + 19*nu - 7)*q^8 + (2*nu^4 - 3*nu^3 - 10*nu^2 + 8*nu - 1)*q^9 + (3*nu^4 - 4*nu^3 - 15*nu^2 + 9*nu - 1)*q^10 + (-4*nu^4 + 4*nu^3 + 22*nu^2 - 6*nu - 6)*q^11 + O(q^12)'],
+                    'q + (-nu^4 + 7*nu^2 + 3*nu - 5)*q^2 + (nu^4 - nu^3 - 6*nu^2 + 2*nu + 3)*q^3 + (nu^3 - nu^2 - 4*nu + 3)*q^4 + (nu^4 - 6*nu^2 - 4*nu + 3)*q^5 + (-3*nu^4 + 2*nu^3 + 17*nu^2 - 3*nu - 7)*q^6 + (-nu^2 + 3)*q^7 + (3*nu^4 - 2*nu^3 - 17*nu^2 + 3*nu + 5)*q^8 + (2*nu^4 - 13*nu^2 - 4*nu + 8)*q^9 + (3*nu^4 - 2*nu^3 - 17*nu^2 + nu + 5)*q^10 + (-4*nu^4 + 2*nu^3 + 24*nu^2 + 2*nu - 12)*q^11 + O(q^12)'],
                 ['13.2.e.a',
                     'q + (-nu - 1)*q^2 + (2*nu - 2)*q^3 + nu*q^4 + (-2*nu + 1)*q^5 + (-2*nu + 4)*q^6 + (2*nu - 1)*q^8 - nu*q^9 + (3*nu - 3)*q^10 + O(q^12)'],
                 ['340.1.ba.b',
-                    'q + nu*q^2 - nu^3*q^5 + nu^3*q^8 + O(q^12)'],
+                    'q + zeta_8*q^2 + zeta_8^2*q^4 - zeta_8^3*q^5 + zeta_8^3*q^8 - zeta_8*q^9 + q^10 + O(q^12)'],
                 ['24.3.h.a',
-                    'q - 2*q^2 + 3*q^3 + 2*q^5 - 12*q^8 - 3*q^9 - 8*q^10 - 12*q^11 + O(q^12)'],
+                    'q - 2*q^2 + 3*q^3 + 4*q^4 + 2*q^5 - 6*q^6 - 10*q^7 - 8*q^8 + 9*q^9 - 4*q^10 - 10*q^11 + O(q^12)'],
                 ['24.3.h.c',
-                    'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + (nu^3 + 2*nu)*q^5 + (nu^3 + 3*nu)*q^7 + (-nu^3 + 4*nu^2 - 6*nu + 8)*q^8 + 1/2*(-5*nu^3 + 4*nu^2 - 22*nu + 6)*q^9 + (-2*nu^3 - 6*nu - 8)*q^10 + 1/2*(-5*nu^3 + 4*nu^2 - 12*nu + 8)*q^11 + O(q^12)'],
+                    'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + nu^2*q^4 + (nu^3 + 2*nu)*q^5 + (-nu^3 + nu^2 - 3*nu + 4)*q^6 + 4*q^7 + nu^3*q^8 + 1/2*(-nu^3 - 10*nu - 10)*q^9 + (-4*nu^2 - 16)*q^10 + 1/2*(-3*nu^3 - 6*nu)*q^11 + O(q^12)'],
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))

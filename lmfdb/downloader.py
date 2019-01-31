@@ -42,12 +42,37 @@ class Downloader(object):
     # defaults, edit as desired in inherited class
     lang_key = 'Submit' # name of the HTML button/link starting the download
     languages = ['magma', 'sage', 'gp', 'text']
-    comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
-    assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
-    line_end = {'magma':';','sage':'','gp':'','text':''}
-    delim_start = {'magma':'[*','sage':'[','gp':'[','text':' ['}
-    delim_end = {'magma':'*]','sage':']','gp':']','text':' ]'}
-    start_and_end = {'magma':['[*','*];'],'sage':['[',']'],'gp':['{[',']}'],'text':['[',']']}
+    comment_prefix = {
+            'magma':'//',
+            'sage':'#',
+            'gp':'\\\\',
+            'text':'#'
+            }
+    assignment_defn = {
+            'magma':':=',
+            'sage':' = ',
+            'gp':' = ',
+            'text':'='
+            }
+    line_end = {'magma':';',
+            'sage':'',
+            'gp':'',
+            'text':''
+            }
+    delim_start = {'magma':'[*',
+            'sage':'[',
+            'gp':'[',
+            'text':' ['
+            }
+    delim_end = {'magma':'*]',
+            'sage':']',
+            'gp':']',
+            'text':' ]'}
+    start_and_end = {
+            'magma':['[*','*]'],
+            'sage':['[',']'],
+            'gp':['{[',']}'],
+            'text':['[',']']}
     file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp','text':'.txt'}
     function_start = {'magma':['function make_data()'],
                       'sage':['def make_data():'],
@@ -61,7 +86,7 @@ class Downloader(object):
         'gp':'To create a list of {short_name}, type "{var_name} = make_data()"',
     }
 
-    def to_lang(self, lang, inp, level = 0):
+    def to_lang(self, lang, inp, level = 0, prepend = ''):
         if inp is None:
             return self.none[lang]
         if isinstance(inp, str) or isinstance(inp, unicode):
@@ -70,22 +95,23 @@ class Downloader(object):
             return str(inp)
         if level == 0:
             start, end = self.start_and_end[lang]
-            sep = ',\n'
+            sep = ',\n' + prepend
         else:
             start = self.delim_start[lang]
             end = self.delim_end[lang]
             sep = ','
         try:
             if level == 0:
-                return start + '\\\n' +  sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+                begin = start + '\\\n'
             else:
-                return start + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
+                begin = start
+            return begin + sep.join(self.to_lang(lang, c, level = level + 1) for c in inp) + end
         except TypeError:
             # not an iterable object
             return str(inp)
 
-    def assign(self, lang, name, elt, level = 0):
-        return name + ' ' + self.assignment_defn[lang] + self.to_lang(lang, elt, level) + self.line_end[lang] + '\n'
+    def assign(self, lang, name, elt, level = 0, prepend = ''):
+        return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
 
     def display(self, column_values):
         return ', '.join(str(val) for val in column_values)
