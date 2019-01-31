@@ -4,7 +4,7 @@
 {% set d = info.d %}
 {% if (d.attribute.cols | length) == 1 %}
 {% include 'stat_1d.html' %}
-{% else %}
+{% elif (d.attribute.cols | length) == 2 %}
 {% include 'stat_2d.html' %}
 {% endif %}
 

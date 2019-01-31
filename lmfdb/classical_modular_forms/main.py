@@ -673,7 +673,7 @@ def process_an_constraints(info, query):
             flash_error(msg)
             raise ValueError(msg)
 def set_Trn(info, query):
-    ns = info['n'] = info.get('n', '1-40')
+    ns = info.get('n', '1-40')
     n_primality = info['n_primality'] = info.get('n_primality', 'primes')
     Trn = integer_options(ns, 1000)
     if n_primality == 'primes':
