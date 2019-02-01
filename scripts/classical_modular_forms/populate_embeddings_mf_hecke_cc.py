@@ -3,6 +3,7 @@ import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
 ZZx = PolynomialRing(ZZ, "x")
+
 def convert_eigenvals_to_qexp(basis, eigenvals):
     qexp = []
     for i, ev in enumerate(eigenvals):
@@ -16,7 +17,7 @@ def convert_eigenvals_to_qexp(basis, eigenvals):
     return qexp
 
 
-def upsert_embedding(id_number, skip = False):
+def upsert_embedding(id_number, skip = True):
     rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
@@ -45,7 +46,10 @@ def upsert_embedding(id_number, skip = False):
         betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
 
         embeddings = HF.complex_embeddings(prec=2000)
-        an_nf = list(db.mf_hecke_nf.search({'hecke_orbit_code':hecke_orbit_code}, ['n','an'], sort=['n']))
+        hecke_nf = list(db.mf_hecke_nf.search({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an']))
+        assert hecke_nf is not None
+        assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
+        an_nf = hecke_nf['an']
         betas_embedded = [map(elt, betas) for elt in embeddings]
         CCC = betas_embedded[0][0].parent()
         qexp = [convert_eigenvals_to_qexp(elt, an_nf) for elt in betas_embedded]
