@@ -3,7 +3,6 @@ from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.db_backend import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
@@ -77,9 +76,11 @@ class ECisog_class(object):
 
 
         self.newform =  web_latex(PowerSeriesRing(QQ, 'q')(self.anlist, 20, check=True))
-        self.newform_label = newform_label(N,2,1,iso)
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=N, weight=2, character=1, label=iso)
-        self.newform_exists_in_db = is_newform_in_db(self.newform_label)
+        self.newform_label = db.mf_newforms.lucky({'level':N, 'weight':2, 'related_objects':{'$contains':'EllipticCurve/Q/%s/%s' % (N, iso)}},'label')
+        self.newform_exists_in_db = self.newform_label is not None
+        if self.newform_label is not None:
+            char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
+            self.newform_link = url_for("cmf.by_url_newform_label", level=N, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
         self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso)
 
@@ -102,7 +103,7 @@ class ECisog_class(object):
                            ]
 
 
-        self.downloads = [('Download coefficients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
+        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:

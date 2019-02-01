@@ -142,6 +142,10 @@
    {% if entries %}
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
+    {% if entries is string %}
+      {# For very large lists of friends, we use javascript #}
+      {{ entries | safe }}
+    {% else %}
     <ul>
         {% for text,url in entries %}
         {% if url %}
@@ -151,6 +155,7 @@
         {% endif %}
         {% endfor %}
     </ul>
+    {% endif %}
   </div>
    {% endif %}
  {%- endmacro %}
@@ -179,7 +184,7 @@
          {% if label %}
            <tr><td class="label">{{label|safe}}</td><td>
          {% else %}
-           <tr><td colspan="2">
+           <tr><td colspan="2" align="center">
          {% endif %}
          {% if content is string  -%}
              {{ content|safe }}</td></tr>
@@ -246,22 +251,6 @@
             {% endfor %}
         </div>
     {% endif %}
-    {% block content_js %}
-        <script type="text/javascript">
-        // strips empty input/select fields from query URLs.  To enable, put onsubmit="cleanSubmit(this.id)" in form tag (and give it an id).
-        function cleanSubmit(id)
-        {
-            var myForm = document.getElementById(id);
-            var allInputs = myForm.getElementsByTagName('input');
-            var allSelects = myForm.getElementsByTagName('select');
-            var item, i, n = 0;
-
-            for(i = 0; item = allInputs[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-            for(i = 0; item = allSelects[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-            if (!n) { var all = document.createElement('input'); all.type='hidden'; all.name='all'; all.value='1'; myForm.appendChild(all); }
-        }
-        </script>
-    {% endblock content_js %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}

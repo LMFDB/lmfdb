@@ -1,18 +1,31 @@
 from sage.all import gcd, Mod, Integer
 from sage.misc.cachefunc import cached_method
 
+
 def symbol_numerator(cond, parity):
-    #Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007). Multiplicative number theory. I. Classical theory. Cambridge Studies in Advanced Mathematics 97 
-    # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real Dirichlet character \chi(n) can be represented as a Kronecker symbol (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }  and m is the discriminant of F. The conductor of \chi is |m|. 
-    # symbol_numerator returns the appropriate Kronecker symbol depending on the conductor of \chi. 
+    # Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007).
+    # Multiplicative number theory. I. Classical theory. Cambridge Studies in
+    # Advanced Mathematics 97
+    #
+    # Let F = Q(\sqrt(d)) with d a non zero squarefree integer then a real
+    # Dirichlet character \chi(n) can be represented as a Kronecker symbol
+    # (m / n) where { m  = d if # d = 1 mod 4 else m = 4d if d = 2,3 (mod) 4 }
+    # and m is the discriminant of F. The conductor of \chi is |m|.
+    #
+    # symbol_numerator returns the appropriate Kronecker symbol depending on
+    # the conductor of \chi.
     m = cond
     if cond % 2 == 1:
         if cond % 4 == 3:
             m = -cond
     elif cond % 8 == 4:
-        # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the previous version of the code. 
-        # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we set m = cond. 
-        # On the other hand if d = 1 (mod) 4 and cond = 4d = 4 (4n +1) = 16n + 4 then we set m = -cond. 
+        # Fixed cond % 16 == 4 and cond % 16 == 12 were switched in the
+        # previous version of the code.
+        #
+        # Let d be a non zero squarefree integer. If d  = 2,3 (mod) 4 and if
+        # cond = 4d = 4 ( 4n + 2) or 4 (4n + 3) = 16 n + 8 or 16n + 12 then we
+        # set m = cond.  On the other hand if d = 1 (mod) 4 and cond = 4d = 4
+        # (4n +1) = 16n + 4 then we set m = -cond.
         if cond % 16 == 4:
             m = -cond
     elif cond % 16 == 8:
@@ -21,6 +34,7 @@ def symbol_numerator(cond, parity):
     else:
         return None
     return m
+
 
 def kronecker_symbol(m):
     if m:

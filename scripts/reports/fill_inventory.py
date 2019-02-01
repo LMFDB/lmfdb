@@ -3,7 +3,6 @@ import sys
 import os
 import argparse
 import importlib
-import json
 
 debug = False
 selected_dbs = None
@@ -97,24 +96,24 @@ def show_collections():
     if file_output: fh.close()
 
 def generate_inventory():
-    global action
-    action = True
-
-    start_lmfdb_connection()
-    connection = jdbs.getDBConnection()
-    result = jdbs.parse_lmfdb_to_json(collections = selected_collections,
-        databases = selected_dbs, connection = connection)
-
-    if file_output:
-        fh = open(file_output, 'w')
-        fh.write(json.dumps(result, indent=4, sort_keys = True))
-        fh.close()
-    else:
-        invdb = connection['inventory']
-        for db in result:
-          for coll in result[db]:
-              iud.upload_collection_structure(invdb, db, coll, result)
-              iud.upload_collection_indices(invdb, db, coll, result)
+    raise NotImplementedError
+#    global action
+#    action = True
+#
+#    start_lmfdb_connection()
+#    result = jdbs.parse_lmfdb_to_json(collections = selected_collections,
+#        databases = selected_dbs)
+#
+#    if file_output:
+#        fh = open(file_output, 'w')
+#        fh.write(json.dumps(result, indent=4, sort_keys = True))
+#        fh.close()
+#    else:
+#        invdb = connection['inventory']
+#        for db in result:
+#          for coll in result[db]:
+#              iud.upload_table_structure(invdb, db, coll, result)
+#              iud.upload_collection_indices(invdb, db, coll, result)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

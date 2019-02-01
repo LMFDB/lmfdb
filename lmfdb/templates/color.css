@@ -5,9 +5,6 @@
 {% set white = 'white' %}
 {% set black = 'black'%}
 
-{% set color_template = 0 %}
-/*0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19*/
-
 {% if color_template == 0 %}
     /*Original LMFDB colors*/
     {% set col_main_d  = '#040' %} /* Header and footer */
@@ -164,7 +161,9 @@
 
   {% set col_main_ld = '#64B5F6' %} /*P1-300*/ /*Header and Footer*/
   {% set col_main_dl = 'black' %} /*Header and Footer Text*/
+  {% set col_a_knowl = '#27C' %}*/ /* Links */
   {% set col_main    = '#1565C0' %} /*P1-800*/ /*Links*/
+  {% set col_link    = '#28E' %}*/ /* Links */
   {% set col_visited = '#0091EA' %} /*A1-700*/ /* visited links in body */
   {% set col_body_text = '#1565C0' %} /*P1-800*//* links in body*/
   {% set col_sidebar_text = 'black' %} /* Sidebar text in body and header, under Dat, gets over-written for the rest.*/
@@ -1104,12 +1103,12 @@
 
 /* Elliptic Modular Form */
 {% set exp_background = col_main_2 %} 
-{% set emf_background = col_main_ll %}
-{% set emf_table_background = col_main_ll %}
-{% set emf_table_background_off = white %}
-{% set emf_border = col_main_lg %}
-{% set emf_fundom_background = 'lightblue' %}
-{% set emf_fundom_text = white %}
+{% set cmf_background = col_main_ll %}
+{% set cmf_table_background = col_main_ll %}
+{% set cmf_table_background_off = white %}
+{% set cmf_border = col_main_lg %}
+{% set cmf_fundom_background = 'lightblue' %}
+{% set cmf_fundom_text = white %}
 
 /*Siegel modular forms*/
 {% set smf_background = col_main_ll%}

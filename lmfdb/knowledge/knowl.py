@@ -2,9 +2,10 @@
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
 from datetime import datetime
+import time
 
 from lmfdb.db_backend import db, PostgresBase, DelayCommit
-from lmfdb.db_encoding import Array
+from lmfdb.db_encoding import Json
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -49,6 +50,19 @@ class KnowlBackend(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
+        #FIXME this should be moved to the config file
+        self.caching_time = 10
+        self.cached_titles_timestamp = 0;
+        self.cached_titles = {}
+
+    @property
+    def titles(self):
+        now = time.time()
+        if now - self.cached_titles_timestamp > self.caching_time:
+            self.cached_titles_timestamp = now
+            self.cached_titles = dict([(elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'])])
+        return self.cached_titles
+
 
     def can_read_write_knowls(self):
         return self._rw_knowldb
@@ -62,6 +76,13 @@ class KnowlBackend(PostgresBase):
             res = cur.fetchone()
             return {k:v for k,v in zip(fields, res)}
 
+    def get_all_knowls(self, fields=None):
+        if fields is None:
+            fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM kwl_knowls").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter)
+        return [{k:v for k,v in zip(fields, res)} for res in cur]
+
     def search(self, category="", filters=[], keywords="", author=None, sort=None):
         restrictions = []
         values = []
@@ -70,15 +91,15 @@ class KnowlBackend(PostgresBase):
             values.append(category)
         if len(filters) > 0:
             restrictions.append(SQL("quality = ANY(%s)"))
-            values.append(Array([q for q in filters if q in knowl_qualities]))
+            values.append([q for q in filters if q in knowl_qualities])
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
                 restrictions.append(SQL("_keywords @> %s"))
-                values.append(keywords)
+                values.append(Json(keywords))
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
-            values.append([author])
+            values.append(Json(author))
         selecter = SQL("SELECT id, title FROM kwl_knowls")
         if restrictions:
             selecter = SQL("{0} WHERE {1}").format(selecter, SQL(" AND ").join(restrictions))
@@ -118,15 +139,18 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
+        values = (Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, Json(history), Json(search_keywords))
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(insterer, (knowl.id,) + values + values)
             self.save_history(knowl, who)
+        self.cached_titles[knowl.id] = knowl.title
 
     def update(self, kid, key, value):
-        if key not in self._default_fields + ['history', '_keywords']:
+        if key in ['authors', 'history', '_keywords']:
+            value = Json(value)
+        elif key not in self._default_fields:
             raise ValueError("Bad key")
         updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
@@ -162,6 +186,8 @@ class KnowlBackend(PostgresBase):
             self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
             deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
             self._execute(deletor, (knowl.id,))
+        if knowl.id in self.cached_titles:
+            self.cached_titles.pop(knowl.id)
 
     def is_locked(self, knowlid, delta_min=10):
         """
@@ -192,13 +218,13 @@ class KnowlBackend(PostgresBase):
         just the title, used in the knowls in the templates for the pages.
         returns None, if knowl does not exist.
         """
-        k = self.get_knowl(kid, ['title'])
-        return k['title'] if k else None
+        return self.titles.get(kid, None)
+
     def knowl_exists(self, kid):
         """
         checks if the given knowl with ID=@kid exists
         """
-        return self.get_knowl(kid) is not None
+        return self.knowl_title(kid) is not None
 
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
@@ -218,7 +244,7 @@ class KnowlBackend(PostgresBase):
             for kid, content, title in cur:
                 cat = extract_cat(kid)
                 search_keywords = make_keywords(content, kid, title)
-                self._execute(updater, (cat, search_keywords, kid))
+                self._execute(updater, (cat, Json(search_keywords), kid))
             hcount = 0
             selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(selecter)
@@ -226,7 +252,7 @@ class KnowlBackend(PostgresBase):
             for kid, history in cur:
                 if len(history) > max_h:
                     hcount += 1
-                    self._execute(updater, (history[-max_h:], kid))
+                    self._execute(updater, (Json(history[-max_h:]), kid))
             counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(counter)
             reindex_count = int(cur.fetchone()[0])
@@ -253,7 +279,11 @@ class Knowl(object):
         self.template_kwargs = template_kwargs or {}
 
         self._id = ID
-        data = knowldb.get_knowl(ID)
+        #given that we cache it's existence it is quicker to check for existence
+        if self.exists():
+            data = knowldb.get_knowl(ID)
+        else:
+            data = None
         if data:
             self._title = data.get('title', '')
             self._content = data.get('content', '')

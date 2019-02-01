@@ -1,8 +1,7 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from base import LmfdbTest
 from flask import url_for
 import unittest2
-
 
 class PermalinkTest(LmfdbTest):
 
@@ -31,22 +30,13 @@ class RootTest(LmfdbTest):
     def test_javscript(self):
         js = self.tc.get("/static/lmfdb.js").data
         # click handler def for knowls
-        assert '''$("body").on("click", "*[knowl]", function(evt)''' in js
+        assert r"""$("body").on("click", "*[knowl]", debounce(knowl_handle,500, true));""" in js
 
     def test_css(self):
         css = self.tc.get("/style.css").data
         # def for knowls:
         assert '*[knowl]' in css
         assert 'border-bottom: 1px dotted grey;' in css
-
-    def test_db(self):
-        assert self.C is not None
-        known_dbnames = self.C.database_names()
-        expected_dbnames = ['Lfunctions', 'elliptic_curves', 'numberfields', 'localfields', 'artin',
-                            'knowledge', 'hmfs', 'hgm', 'userdb', 'Lattices', 'MaassWaveForms', 'transitivegroups',
-                            'modularforms2', 'genus2_curves', 'siegel_modular_forms', 'sato_tate_groups']
-        for dbn in expected_dbnames:
-            assert dbn in known_dbnames, 'db "%s" missing' % dbn
 
     @unittest2.skip("Tests all url_maps, but fails at the moment because of other errors")
     def test_url_map(self):

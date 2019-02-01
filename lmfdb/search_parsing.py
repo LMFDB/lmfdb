@@ -4,7 +4,9 @@
 
 import re
 SPACES_RE = re.compile(r'\d\s+\d')
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
+FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
+LIST_FLOAT_RE = re.compile(r'^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$'.format(FLOAT_STR))
 BRACKETED_POSINT_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -16,7 +18,7 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 #LIST_SIMPLE_RE = re.compile(r'^(-?\d+)(,-?\d+)*$'
 #PAIR_RE = re.compile(r'^\[\d+,\d+\]$')
 #IF_RE = re.compile(r'^\[\]|(\[\d+(,\d+)*\])$')  # invariant factors
-FLOAT_RE = re.compile(r'((\b\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
 from flask import flash
@@ -94,8 +96,8 @@ def split_list(s):
 
 # This function can be used by modules to get a list of ints
 # or an iterator (xrange) that matches the results of parse_ints below
-# useful when a module wants to iterator over key values being
-# passed into a mongo query.  Input should be a string
+# useful when a module wants to iterate over key values being
+# passed into dictionary for postgres.  Input should be a string
 def parse_ints_to_list(arg):
     if arg == None:
         return []
@@ -162,13 +164,15 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
 
 # version above does not produce legal results when there is a comma
 # to deal with $or, we return [key, value]
-def parse_range2(arg, key, parse_singleton=int):
+def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None):
+    if parse_endpoint is None:
+        parse_endpoint = parse_singleton
     if type(arg) == str:
         arg = arg.replace(' ', '')
     if type(arg) == parse_singleton:
         return [key, arg]
     if ',' in arg:
-        tmp = [parse_range2(a, key, parse_singleton) for a in arg.split(',')]
+        tmp = [parse_range2(a, key, parse_singleton, parse_endpoint) for a in arg.split(',')]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ['$or', tmp]
     elif '-' in arg[1:]:
@@ -176,9 +180,9 @@ def parse_range2(arg, key, parse_singleton=int):
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
-            q['$gte'] = parse_singleton(start)
+            q['$gte'] = parse_endpoint(start)
         if end:
-            q['$lte'] = parse_singleton(end)
+            q['$lte'] = parse_endpoint(end)
         return [key, q]
     else:
         return [key, parse_singleton(arg)]
@@ -279,7 +283,28 @@ def parse_ints(inp, query, qfield, parse_singleton=int):
     if LIST_RE.match(inp):
         collapse_ors(parse_range2(inp, qfield, parse_singleton), query)
     else:
-        raise ValueError("It needs to be a positive integer (such as 25), a range of positive integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+
+@search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
+def parse_floats(inp, query, qfield, allow_singletons=False):
+    parse_endpoint = float
+    if allow_singletons:
+        msg = "It needs to be an float (such as 25 or 25.0), a range of floats (such as 2.1-8.7), or a comma-separated list of these (such as 4,9.2,16 or 4-25.1, 81-121)."
+        def parse_singleton(a):
+            if isinstance(a, basestring) and '.' in a:
+                prec = len(a) - a.find('.') - 1
+            else:
+                prec = 0
+            a = float(a)
+            return {'$gte': a - 0.5 * 10**(-prec), '$lte': a + 0.5 * 10**(-prec)}
+    else:
+        msg = "It must be a range of floats (such as 2.1-8.7) or a comma-separated list of these (such as 4-25.1, 81-121)."
+        def parse_singleton(a):
+            raise ValueError(msg)
+    if LIST_FLOAT_RE.match(inp):
+        collapse_ors(parse_range2(inp, qfield, parse_singleton, parse_endpoint), query)
+    else:
+        raise ValueError(msg)
 
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=int):
@@ -292,6 +317,7 @@ def parse_element_of(inp, query, qfield, split_interval=False, parse_singleton=i
     else:
         query[qfield] = {'$contains': [parse_singleton(inp)]}
 
+# Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 @search_parser(clean_info=True, prep_ranges=True) # see SearchParser.__call__ for actual arguments when calling
 def parse_signed_ints(inp, query, qfield, parse_one=None):
     if parse_one is None: parse_one = lambda x: (int(x.sign()), int(x.abs()))
@@ -365,7 +391,7 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
         add_condition('$containedin')
     elif mode == 'append':
         add_condition('$contains')
-    elif mode == 'exact':
+    elif mode == 'exact' or mode == '': # empty mode since exact is often default
         if radical is not None:
             query[radical] = product(inp)
             return
@@ -491,45 +517,37 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
     parse_bracketed_posints(info,query,field, split=False, exactlength=2, keepbrackets=True, name=name, qfield=qfield)
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
-def parse_galgrp(inp, query, qfield, use_bson=True):
+def parse_galgrp(inp, query, qfield):
     from lmfdb.transitive_group import complete_group_codes
-    from lmfdb.transitive_group import make_galois_pair as _make_galois_pair
     try:
         gcs = complete_group_codes(inp)
-        if isinstance(qfield, tuple): # temporary until everything is switched over to new Galois formatting.
-            nfield, tfield = qfield
-            if nfield in query:
-                gcs = [t for n,t in gcs if n == query[nfield]]
-                if len(gcs) == 0:
-                    raise ValueError("Degree inconsistent with Galois group.")
-                elif len(gcs) == 1:
-                    query[tfield] = gcs[0]
-                else:
-                    query[tfield] = {'$in': gcs}
+        nfield, tfield = qfield
+        if nfield in query:
+            gcs = [t for n,t in gcs if n == query[nfield]]
+            if len(gcs) == 0:
+                raise ValueError("Degree inconsistent with Galois group.")
+            elif len(gcs) == 1:
+                query[tfield] = gcs[0]
             else:
-                gcsdict = defaultdict(list)
-                for n,t in gcs:
-                    gcsdict[n].append(t)
-                if len(gcsdict) == 1:
-                    query[nfield] = n # left over from the loop
-                    if len(gcs) == 1:
-                        query[tfield] = t # left over from the loop
-                    else:
-                        query[tfield] = {'$in': gcsdict[n]}
-                else:
-                    options = []
-                    for n, T in gcsdict.iteritems():
-                        if len(T) == 1:
-                            options.append({nfield: n, tfield: T[0]})
-                        else:
-                            options.append({nfield: n, tfield: {'$in': T}})
-                    collapse_ors(['$or', options], query)
+                query[tfield] = {'$in': gcs}
         else:
-            make_galois_pair = _make_galois_pair if use_bson else lambda x,y: [x,y]
-            if len(gcs) == 1:
-                query[qfield] = make_galois_pair(gcs[0][0], gcs[0][1])
-            elif len(gcs) > 1:
-                query[qfield] = {'$in': [make_galois_pair(x[0], x[1]) for x in gcs]}
+            gcsdict = defaultdict(list)
+            for n,t in gcs:
+                gcsdict[n].append(t)
+            if len(gcsdict) == 1:
+                query[nfield] = n # left over from the loop
+                if len(gcs) == 1:
+                    query[tfield] = t # left over from the loop
+                else:
+                    query[tfield] = {'$in': gcsdict[n]}
+            else:
+                options = []
+                for n, T in gcsdict.iteritems():
+                    if len(T) == 1:
+                        options.append({nfield: n, tfield: T[0]})
+                    else:
+                        options.append({nfield: n, tfield: {'$in': T}})
+                collapse_ors(['$or', options], query)
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
@@ -656,9 +674,9 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     if inp in blank:
         return
     if process is None: process = lambda x: x
-    if inp in ["True", "1"]:
+    if inp in ["True", "yes", "1"]:
         query[qfield] = process(True)
-    elif inp in ["False", "-1", "0"]:
+    elif inp in ["False", "no", "-1", "0"]:
         query[qfield] = process(False)
     elif inp == "Any":
         # On the Galois groups page, these indicate "All"
@@ -666,6 +684,19 @@ def parse_bool(inp, query, qfield, process=None, blank=[]):
     else:
         raise ValueError("It must be True or False.")
 
+@search_parser # see SearchParser.__call__ for actual arguments when calling
+def parse_bool_unknown(inp, query, qfield):
+    # yes, no, not_no, not_yes, unknown
+    if inp == 'yes':
+        query[qfield] = 1
+    elif inp == 'not_no':
+        query[qfield] = {'$gt' : -1}
+    elif inp == 'not_yes':
+        query[qfield] = {'$lt' : 1}
+    elif inp == 'no':
+        query[qfield] = -1
+    elif inp == 'unknown':
+        query[qfield] = 0
 
 @search_parser
 def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
@@ -686,8 +717,24 @@ def parse_restricted(inp, query, qfield, allowed, process=None, blank=[]):
     query[qfield] = process(inp)
 
 @search_parser
-def parse_noop(inp, query, qfield):
+def parse_noop(inp, query, qfield, func=None):
+    if func is not None:
+        inp = func(inp)
     query[qfield] = inp
+
+@search_parser
+def parse_equality_constraints(inp, query, qfield, prefix='a', parse_singleton=int, shift=0): # Note that postgres -> index is one-based
+    for piece in inp.split(','):
+        piece = piece.strip().split('=')
+        if len(piece) != 2:
+            raise ValueError("It must be a comma separated list of expressions of the form %sN=T"%(prefix))
+        n,t = piece
+        n = n.strip()
+        if not n.startswith(prefix):
+            raise ValueError("%s does not start with %s"%(n, prefix))
+        n = int(n[len(prefix):]) + shift
+        t = parse_singleton(t.strip())
+        query[qfield + '.%s'%n] = t
 
 def parse_paired_fields(info, query, field1=None, name1=None, qfield1=None, parse1=None, kwds1={},
                                      field2=None, name2=None, qfield2=None, parse2=None, kwds2={}):

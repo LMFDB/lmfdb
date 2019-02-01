@@ -1,0 +1,28 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+{{ info.summary | safe }}
+</div>
+
+{% for d in info.distributions %}
+
+{% if d.attribute.top_title %}
+<h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{ d.attribute.top_title | safe }}</h2>
+{% endif %}
+{% for paragraph in d.attribute.intro %}
+<p>{{paragraph}}</p>
+{% endfor %}
+
+{% if (d.attribute.cols | length) == 1 %}
+{% include 'stat_1d.html' %}
+{% else %}
+{% include 'stat_2d.html' %}
+{% endif %}
+
+{% endfor %} {# info.distributions #}
+
+<p>
+</p>
+
+{% endblock %}

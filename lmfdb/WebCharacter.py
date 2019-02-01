@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
+from sage.databases.cremona import cremona_letter_code
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
@@ -22,11 +24,17 @@ Any character object is obtained as a double inheritance of
 
 2. an object type (list of groups, character group, character)
 
+For Dirichlet characters of modulus up to 10000, the database holds data for
+the character and several of its values. For these objects, there are the
+"DB" classes that replace on-the-fly computation with database lookups.
+
 The code thus defines, from the generic top class WebCharObject
 
 1. the mathematical family classes
 
    - WebDirichlet
+
+   - WebDBDirichlet
 
    - WebHecke
 
@@ -44,7 +52,9 @@ and one obtains:
 
 - WebDirichletGroup
 
-- WebDirichletCharacter
+- WebDBDirichletGroup
+
+- WebDBDirichletCharacter
 
 - WebHeckeFamily
 
@@ -156,7 +166,11 @@ class WebDirichlet(WebCharObject):
             num = c
             if prim == None:
                 prim = self.charisprimitive(mod,num)
-        return ( mod, num, self.char2tex(mod,num), prim)
+        else:
+            num = c
+            if prim == None:
+                prim = self.charisprimitive(mod, num)
+        return (mod, num, self.char2tex(mod,num), prim)
 
     def charisprimitive(self,mod,num):
         if isinstance(self.H, DirichletGroup_conrey) and self.H.modulus()==mod:
@@ -288,6 +302,99 @@ class WebDirichlet(WebCharObject):
             if chi.is_primitive():
                 return m, n
 
+# The parts responsible for allowing computation of Gauss sums, etc. on page
+
+    @property
+    def charsums(self):
+        if self.modulus < 1000:
+            return { 'gauss': self.gauss_sum(2),
+                     'jacobi': self.jacobi_sum(1),
+                     'kloosterman': self.kloosterman_sum('1,2') }
+        else:
+            return None
+
+    def gauss_sum(self, val):
+        val = int(val)
+        mod, num = self.modulus, self.number
+        chi = self.chi.sage_character()
+        g = chi.gauss_sum_numerical(100, val)
+        g = complex2str(g)
+        from sage.rings.rational import Rational
+        x = Rational('%s/%s' % (val, mod))
+        n = x.numerator()
+        n = str(n) + "r" if not n == 1 else "r"
+        d = x.denominator()
+        Gtex = '\Z/%s\Z' % mod
+        chitex = self.char2tex(mod, num, tag=False)
+        chitexr = self.char2tex(mod, num, 'r', tag=False)
+        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
+        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
+
+    @property
+    def codegauss(self):
+        return { 'sage': 'chi.sage_character().gauss_sum(a)',
+                 'pari': 'znchargauss(g,chi,a)' }
+
+    def jacobi_sum(self, val):
+        mod, num = self.modulus, self.number
+        val = int(val)
+        if gcd(mod, val) > 1:
+            raise Warning ("n must be coprime to the modulus : %s"%mod)
+        psi = self.H[val]
+        chi = self.chi.sage_character()
+        psi = psi.sage_character()
+        jacobi_sum = chi.jacobi_sum(psi)
+        chitex = self.char2tex(mod, num, tag=False)
+        psitex = self.char2tex(mod, val, tag=False)
+        Gtex = '\Z/%s\Z' % mod
+        chitexr = self.char2tex(mod, num, 'r', tag=False)
+        psitex1r = self.char2tex(mod, val, '1-r', tag=False)
+        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
+        from sage.all import latex
+        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
+
+    @property
+    def codejacobi(self):
+        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
+
+    def kloosterman_sum(self, arg):
+        a, b = map(int, arg.split(','))
+        modulus, number = self.modulus, self.number
+        if modulus == 1:
+            # there is a bug in sage for modulus = 1
+            return r"""
+            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
+            = \sum_{r \in \Z/\Z}
+                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
+            = 1 \)
+            """ % (a, b, a, b)
+        chi = self.chi.sage_character()
+        k = chi.kloosterman_sum_numerical(100, a, b)
+        k = complex2str(k, 10)
+        return r"""
+        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
+        = \sum_{r \in \Z/%s\Z}
+             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
+        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+
+    @property
+    def codekloosterman(self):
+        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
+
+    def value(self, val):
+        val = int(val)
+        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
+        # FIXME: bug in dirichlet_conrey logvalue
+        if gcd(val, self.modulus) == 1:
+            val = self.texlogvalue(self.chi.logvalue(val))
+        else:
+            val = 0
+        return '\(%s=%s\)'%(chartex,val)
+
+    @property
+    def codevalue(self):
+        return { 'sage': 'chi(x) # x integer',
+                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
 #############################################################################
 ###  Hecke type
@@ -657,6 +764,12 @@ class WebChar(WebCharObject):
                 ("Primitive", [self.isprimitive])]
         if self.parity:
             f.append(("Parity", [self.parity]))
+        try:
+            if self.orbit_label:
+                formatted_orbit_label = "{}.{}".format(self.modulus, self.orbit_label)
+                f.append(("Orbit Label", [formatted_orbit_label]))
+        except KeyError:
+            pass
         return f
 
     @property
@@ -669,7 +782,7 @@ class WebChar(WebCharObject):
         if self.nflabel:
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
-            url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+            url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
         if self.type == 'Dirichlet':
@@ -743,6 +856,361 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def order(self):
         return self.H.order()
 
+
+class WebDBDirichlet(WebDirichlet):
+    """
+    A base class using data stored in the database. Currently this is all
+    Dirichlet characters with modulus up to 10000.
+    """
+    def __init__(self, **kwargs):
+        self.type = "Dirichlet"
+        self.modulus = kwargs.get('modulus', None)
+        if self.modulus:
+            self.modulus = int(self.modulus)
+        self.modlabel = self.modulus
+        self.number = kwargs.get('number', None)
+        if self.number:
+            self.number = int(self.number)
+        self.numlabel = self.number
+        if self.modulus and self.number and self.modulus < 1000:
+            # Needed for Gauss sums, etc
+            self.H = DirichletGroup_conrey(self.modulus)
+            self.chi = self.H[self.number]
+        self.maxcols = 30
+        self.credit = ''
+        self.codelangs = ('pari', 'sage')
+        self._compute()
+
+    @property
+    def texname(self):
+        return self.char2tex(self.modulus, self.number)
+
+    def _compute(self):
+        self._populate_from_db()
+
+    def _populate_from_db(self):
+        values_data = db.char_dir_values.lookup(
+            "{}.{}".format(self.modulus, self.number)
+        )
+
+        self.orbit_index = int(values_data['orbit_label'].partition('.')[-1])
+        # The -1 in the line below is because labels index at 1, while
+        # the Cremona letter code indexes at 0
+        self.orbit_label = cremona_letter_code(self.orbit_index - 1)
+        self.order = int(values_data['order'])
+        self.indlabel = int(values_data['prim_label'].partition('.')[-1])
+        self._set_values_and_groupelts(values_data)
+        self._set_generators_and_genvalues(values_data)
+
+        orbit_data = db.char_dir_orbits.lucky(
+            {'modulus': self.modulus, 'orbit_index': self.orbit_index}
+        )
+
+        self.conductor = int(orbit_data['conductor'])
+        self._set_isprimitive(orbit_data)
+        self._set_parity(orbit_data)
+        self._set_galoisorbit(orbit_data)
+
+    def _set_generators_and_genvalues(self, values_data):
+        """
+        The char_dir_values db collection contains `values_gens`, which
+        contains the generators for the unit group U(modulus) and the values
+        of the character on those generators.
+        """
+        valuepairs = values_data['values_gens']
+        if self.modulus == 1:
+            self.generators = r"\(1\)"
+            self.genvalues = r"\(1\)"
+        else:
+            gens = [int(g) for g, v in valuepairs]
+            vals = [int(v) for g, v in valuepairs]
+            self.generators = self.textuple( map(str, gens) )
+            self.genvalues = self.textuple( map(self._tex_value, vals) )
+
+    def _set_values_and_groupelts(self, values_data):
+        """
+        The char_dir_values db collection contains `values`, which contains
+        several group elements and the corresponding values.
+        """
+        valuepairs = values_data['values']
+        if self.modulus == 1:
+            self.groupelts = [1]
+            self.values = [r"\(1\)"]
+        else:
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+            raw_values = [int(v) for g, v in valuepairs]
+            self.values = [
+                self._tex_value(v, self.order, texify=True) for v in raw_values
+            ]
+
+    def _tex_value(self, numer, denom=None, texify=False):
+        """
+        Formats the number e**(2 pi i * numer / denom), detecting if this
+        simplifies to +- 1 or +- i.
+
+        Surround the output i MathJax `\(..\)` tags if `texify` is True.
+        `denom` defaults to self.order.
+        """
+        if not denom:
+            denom = self.order
+
+        g = gcd(numer, denom)
+        if g > 1:
+            numer = numer // g
+            denom = denom // g
+
+        # Reduce mod the denominator
+        numer = (numer % denom)
+
+        if denom == 1:
+            ret = '1'
+        elif (numer % denom) == 0:
+            ret = '1'
+        elif numer == 1 and denom == 2:
+            ret = '-1'
+        elif numer == 1 and denom == 4:
+            ret = 'i'
+        elif numer == 3 and denom == 4:
+            ret = '-i'
+        else:
+            ret = r"e\left(\frac{%s}{%s}\right)" % (numer, denom)
+        if texify:
+            return "\({}\)".format(ret)
+        else:
+            return ret
+
+    def _set_isprimitive(self, orbit_data):
+        if str(orbit_data['is_primitive']) == "True":
+            self.isprimitive = "Yes"
+        else:
+            self.isprimitive = "No"
+
+    def _set_parity(self, orbit_data):
+        _parity = int(orbit_data['parity'])
+        if _parity == -1:
+            self.parity = 'Odd'
+        else:
+            self.parity = 'Even'
+
+    def _set_galoisorbit(self, orbit_data):
+        if self.modulus == 1:
+            self.galoisorbit = [self._char_desc(1, mod=1,prim=True)]
+            return
+        upper_limit = min(200, self.order + 1)
+        orbit = orbit_data['galois_orbit'][:upper_limit]
+        self.galoisorbit = list(
+            self._char_desc(num, prim=self.isprimitive) for num in orbit
+        )
+
+
+class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    headers = ['orbit label', 'order', 'primitive']
+
+    def __init__(self, **kwargs):
+        self._contents = None
+        self.maxrows = 30
+        self.maxcols = 30
+        self.rowtruncate = False
+        self.coltruncate = False
+        WebDBDirichlet.__init__(self, **kwargs)
+        self._set_groupelts()
+
+    def add_row(self, chi):
+        """
+        Add a row to _contents for display on the webpage.
+
+        Each row of content takes the form
+
+            character_name, (header..data), (several..values)
+
+        where `header..data` is expected to be a tuple of length the same
+        size as `len(headers)`, and given in the same order as in `headers`,
+        and where `several..values` are the values of the character
+        on self.groupelts, in order.
+        """
+        mod = chi.modulus()
+        num = chi.number()
+        prim, order, orbit_label, valuepairs = self.char_dbdata(mod, num)
+        formatted_orbit_label = "{}.{}".format(
+            mod, cremona_letter_code(int(orbit_label.partition(".")[-1]) - 1)
+        )
+        self._contents.append((
+            self._char_desc(num, mod=mod, prim=prim),
+            (formatted_orbit_label, order, self.texbool(prim)),
+            self._determine_values(valuepairs, order)
+        ))
+
+    def char_dbdata(self, mod, num):
+        """
+        Determine if the character is primitive by checking if its primitive
+        inducing character is itself, according to the database. Also return
+        the order of chi, the orbit_label of chi,  and the values within the
+        database.
+
+        Using only char_dir_values saves one database lookup, and combining
+        these steps saves more database lookups.
+        """
+        db_data = db.char_dir_values.lookup(
+            "{}.{}".format(mod, num)
+        )
+        is_prim = (db_data['label'] == db_data['prim_label'])
+        order = db_data['order']
+        valuepairs = db_data['values']
+        orbit_label = db_data['orbit_label']
+        return is_prim, order, orbit_label, valuepairs
+
+    def _compute(self):
+        WebDirichlet._compute(self)
+        logger.debug("WebDBDirichletGroup Computed")
+
+    def _set_groupelts(self):
+        if self.modulus == 1:
+            self.groupelts = [1]
+        else:
+            db_data = db.char_dir_values.lookup(
+                "{}.{}".format(self.modulus, 1)
+            )
+            valuepairs = db_data['values']
+            self.groupelts = [int(g) for g, v in valuepairs]
+            self.groupelts[0] = -1
+
+    def _char_desc(self, num, mod=None, prim=None):
+        return (mod, num, self.char2tex(mod, num), prim)
+
+    def _determine_values(self, valuepairs, order):
+        """
+        Translate the db's values into the actual values.
+        """
+        raw_values = [int(v) for g, v in valuepairs]
+        values = [
+            self._tex_value(v, order, texify=True) for v in raw_values
+        ]
+        return values
+
+
+class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
+    """
+    A class using data stored in the database. Currently, this is all Dirichlet
+    characters with modulus up to 10000.
+    """
+    _keys = [ 'title', 'credit', 'codelangs', 'type',
+              'nf', 'nflabel', 'nfpol', 'modulus', 'modlabel',
+              'number', 'numlabel', 'texname', 'codeinit',
+              'symbol', 'codesymbol',
+              'previous', 'next', 'conductor',
+              'condlabel', 'codecond',
+              'isprimitive', 'codeisprimitive',
+              'inducing', 'codeinducing',
+              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
+              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
+              'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label', 'orbit_index']
+
+    def __init__(self, **kwargs):
+        self.maxcols = 30
+        self.coltruncate = False
+        WebDBDirichlet.__init__(self, **kwargs)
+
+    @property
+    def texname(self):
+        return self.char2tex(self.modulus, self.number)
+
+    @property
+    def title(self):
+        return r"Dirichlet Character {}".format(self.texname)
+
+    @property
+    def symbol(self):
+        return kronecker_symbol(self.symbol_numerator())
+
+    @property
+    def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
+        friendlist = []
+        cglink = url_character(type=self.type, modulus=self.modulus)
+        friendlist.append( ("Character Group", cglink) )
+        if self.type == "Dirichlet" and self.isprimitive == "Yes":
+            url = url_character(
+                type=self.type,
+                number_field=None,
+                modulus=self.modulus,
+                number=self.number
+            )
+            if get_lfunction_by_url(url[1:]):
+                friendlist.append( ('L-function', '/L'+ url) )
+            friendlist.append(
+                ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
+            )
+        if len(self.vflabel) > 0:
+            friendlist.append( ("Value Field", '/NumberField/' + self.vflabel) )
+        return friendlist
+
+    def symbol_numerator(self):
+        """
+        chi is equal to a kronecker symbol if and only if it is real
+        """
+        if self.order != 2:
+            return None
+        if self.parity == "Odd":
+            return symbol_numerator(self.conductor, True)
+        return symbol_numerator(self.conductor, False)
+
+    @property
+    def previous(self):
+        return None
+
+    @property
+    def next(self):
+        return None
+
+    @property
+    def codeinit(self):
+        return {
+          'sage': [ 'from dirichlet_conrey import DirichletGroup_conrey # requires nonstandard Sage package to be installed',
+                 'H = DirichletGroup_conrey(%i)'%(self.modulus),
+                 'chi = H[%i]'%(self.number) ],
+          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
+          }
+
+    @property
+    def codeisprimitive(self):
+        return { 'sage': 'chi.is_primitive()',
+                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
+
+    @property
+    def codecond(self):
+        return { 'sage': 'chi.conductor()',
+                 'pari': 'znconreyconductor(g,chi)' }
+
+    @property
+    def codeparity(self):
+        return { 'sage': 'chi.is_odd()',
+                 'pari': 'zncharisodd(g,chi)' }
+
+    @property
+    def codesymbol(self):
+        m = self.symbol_numerator()
+        if m:
+            return { 'sage': 'kronecker_character(%i)'%m }
+        return None
+
+    @property
+    def codegaloisorbit(self):
+        return { 'sage': 'chi.sage_character().galois_orbit()',
+                 'pari': [ 'order = charorder(g,chi)',
+                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
+                 }
+
+
 class WebSmallDirichletGroup(WebDirichletGroup):
 
     def _compute(self):
@@ -763,6 +1231,7 @@ class WebSmallDirichletGroup(WebDirichletGroup):
     @property
     def generators(self):
         return self.textuple(map(str, self.H.gens_values()))
+
 
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """
@@ -789,15 +1258,15 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def genvalues(self):  return None
     @property
     def indlabel(self):  return None
-    def value(self, *args): return None
-
-    @property
-    def charsums(self, *args):
-        return False
-
-    def gauss_sum(self, *args): return None
-    def jacobi_sum(self, *args): return None
-    def kloosterman_sum(self, *args): return None
+#    def value(self, *args): return None
+#
+#    @property
+#    def charsums(self, *args):
+#        return False
+#
+#    def gauss_sum(self, *args): return None
+#    def jacobi_sum(self, *args): return None
+#    def kloosterman_sum(self, *args): return None
 
 
     @property
@@ -827,7 +1296,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         return { 'sage': 'chi.conductor()',
                  'pari': 'znconreyconductor(g,chi)' }
 
-
     @property
     def parity(self):
         return ('Odd', 'Even')[self.chi.is_even()]
@@ -843,9 +1311,28 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = (power_mod(num, k, mod) for k in xsrange(1, order + 1)
-                 if gcd(k, order) == 1)
-        return (self._char_desc(num, prim=prim) for num in orbit)
+        upper_limit = min(200, order + 1)
+        orbit = ( power_mod(num, k, mod) for k in xsrange(1, upper_limit)
+                  if gcd(k, order) == 1) # use xsrange not xrange
+        ret = list(self._char_desc(num, prim=prim) for num in orbit)
+        return ret
+
+    @property
+    def orbit_label(self):
+        if self.modulus > 10000:
+            return
+        logger.warning("Orbit label code was called. This shouldn't happen.")
+        # Shortcut the trivial character, which behaves differently
+        if self.conductor == 1:
+            return 'a'
+        orbit_dict = {}
+        ordered_orbits = self.H._galois_orbits()
+        for n, orbit in enumerate(ordered_orbits, 1):  # index at 1
+            for character_number in orbit:
+                orbit_dict[character_number] = n
+        # The -1 in the line below is because labels index at 1, while the
+        # cremona_letter_code indexes at 0
+        return cremona_letter_code(orbit_dict[self.number] - 1)
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
@@ -890,7 +1377,8 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
+              'orbit_label', 'orbit_index']
 
     def _compute(self):
         WebDirichlet._compute(self)
@@ -933,99 +1421,6 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
     def codegenvalues(self):
         return { 'sage': 'chi(k) for k in H.gens()',
                  'pari': '[ chareval(g,chi,x) | x <- g.gen ] \\\\ value in Q/Z' }
-
-    def value(self, val):
-        val = int(val)
-        chartex = self.char2tex(self.modulus,self.number,val=val,tag=False)
-        # FIXME: bug in dirichlet_conrey logvalue
-        if gcd(val, self.modulus) == 1:
-            val = self.texlogvalue(self.chi.logvalue(val))
-        else:
-            val = 0
-        return '\(%s=%s\)'%(chartex,val)
-
-    @property
-    def codevalue(self):
-        return { 'sage': 'chi(x) # x integer',
-                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
-
-    @property
-    def charsums(self):
-        if self.modulus < 1000:
-            return { 'gauss': self.gauss_sum(2),
-                     'jacobi': self.jacobi_sum(1),
-                     'kloosterman': self.kloosterman_sum('1,2') }
-        else:
-            return None
-
-    def gauss_sum(self, val):
-        val = int(val)
-        mod, num = self.modulus, self.number
-        chi = self.chi.sage_character()
-        g = chi.gauss_sum_numerical(100, val)
-        g = complex2str(g)
-        from sage.rings.rational import Rational
-        x = Rational('%s/%s' % (val, mod))
-        n = x.numerator()
-        n = str(n) + "r" if not n == 1 else "r"
-        d = x.denominator()
-        Gtex = '\Z/%s\Z' % mod
-        chitex = self.char2tex(mod, num, tag=False)
-        chitexr = self.char2tex(mod, num, 'r', tag=False)
-        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
-        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
-
-    @property
-    def codegauss(self):
-        return { 'sage': 'chi.sage_character().gauss_sum(a)',
-                 'pari': 'znchargauss(g,chi,a)' }
-
-    def jacobi_sum(self, val):
-        mod, num = self.modulus, self.number
-        val = int(val)
-        if gcd(mod, val) > 1:
-            raise Warning ("n must be coprime to the modulus : %s"%mod)
-        psi = self.H[val]
-        chi = self.chi.sage_character()
-        psi = psi.sage_character()
-        jacobi_sum = chi.jacobi_sum(psi)
-        chitex = self.char2tex(mod, num, tag=False)
-        psitex = self.char2tex(mod, val, tag=False)
-        Gtex = '\Z/%s\Z' % mod
-        chitexr = self.char2tex(mod, num, 'r', tag=False)
-        psitex1r = self.char2tex(mod, val, '1-r', tag=False)
-        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
-        from sage.all import latex
-        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
-
-    @property
-    def codejacobi(self):
-        return { 'sage': 'chi.sage_character().jacobi_sum(n)' }
-
-    def kloosterman_sum(self, arg):
-        a, b = map(int, arg.split(','))
-        modulus, number = self.modulus, self.number
-        if modulus == 1:
-            # there is a bug in sage for modulus = 1
-            return r"""
-            \( \displaystyle K(%s,%s,\chi_{1}(1,&middot;))
-            = \sum_{r \in \Z/\Z}
-                 \chi_{1}(1,r) 1^{%s r + %s r^{-1}}
-            = 1 \)
-            """ % (a, b, a, b)
-        chi = self.chi.sage_character()
-        k = chi.kloosterman_sum_numerical(100, a, b)
-        k = complex2str(k, 10)
-        return r"""
-        \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
-        = \sum_{r \in \Z/%s\Z}
-             \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
-        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
-
-    @property
-    def codekloosterman(self):
-        return { 'sage': 'chi.sage_character().kloosterman_sum(a,b)' }
-
 
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
@@ -1255,4 +1650,3 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
                 'sage': 'G.gen_ideals()',
                 'pari': 'g.gen'
                 }
-

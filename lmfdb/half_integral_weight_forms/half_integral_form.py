@@ -32,7 +32,7 @@ def half_integral_weight_form_render_webpage():
              table=db.halfmf_forms,
              title='Half Integral Weight Cusp Forms Search Results',
              err_title='Half Integral Weight Cusp Forms Search Input Error',
-             per_page=100,
+             per_page=50,
              shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
              projection=['level','label','weight','character','dim'],
              cleaners={'char': lambda v:"\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)",

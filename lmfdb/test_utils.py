@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2017 by the LMFDB authors
 #
@@ -19,7 +19,6 @@ from lmfdb.utils import (
     round_to_half_int,
     splitcoeff,
     to_dict,
-    truncate_number,
     comma,
     format_percentage,
     signtocolour,
@@ -91,15 +90,6 @@ class UtilsTest(unittest2.TestCase):
         """
         self.assertEqual(to_dict({"not_list": 1, "is_list":[2,3,4]}),
                          {'is_list': 4, 'not_list': 1})
-
-    def test_truncate_number(self):
-        r"""
-        Checking utility: truncate_number
-        """
-        self.assertEqual(truncate_number(1.000001, 5), "1")
-        self.assertEqual(truncate_number(1.123456, 5), "1.123")
-        self.assertEqual(truncate_number(-1.123456, 5), "-1.123")
-        self.assertEqual(truncate_number(0.000002, 5), "0")
 
     def test_splitcoeff(self):
         r"""

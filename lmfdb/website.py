@@ -187,7 +187,9 @@ def robots_txt():
 
 @app.route("/style.css")
 def css():
-    response = make_response(render_template("style.css"))
+    from lmfdb.config import Configuration
+    color = Configuration().get_color()
+    response = make_response(render_template("style.css", color_template=color))
     response.headers['Content-type'] = 'text/css'
     # don't cache css file, if in debug mode.
     if current_app.debug:

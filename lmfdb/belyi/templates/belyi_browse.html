@@ -2,9 +2,7 @@
 {% block content %}
 
 <p>
-The database currently contains {{info["counts"]["ngalmaps_c"]}} <a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>
-of <a title="degree [belyi.degree]" knowl="belyi.degree" kwargs="">degree</a> up to {{info["counts"]["max_deg"]}}.
-Here are some <a href={{info["stats_url"]}}>further statistics</a>.
+{{ info.stats.short_summary | safe}}
 </p>
 
 <h2> Browse {{ KNOWL('belyi.galmap', title='Belyi maps') }} </h2>

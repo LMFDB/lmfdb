@@ -38,6 +38,13 @@ class Configuration(object):
             action = "store_true",
             dest = 'core_debug',
             help = 'enable debug mode')
+        parser.add_argument(
+            '--color',
+            dest = 'core_color',
+            metavar = "COLOR",
+            help = 'color template (see templates/color.css)',
+            default = 0,
+            type = int)
 
         parser.add_argument('-p','--port',
                 dest = 'web_port',
@@ -60,25 +67,6 @@ class Configuration(object):
 
         logginggroup.add_argument('--logfocus',
                 help = 'name of a logger to focus on',
-                default = argparse.SUPPRESS)
-
-        # MongoDB options
-        mongodbgroup = parser.add_argument_group('MongoDB options')
-        mongodbgroup.add_argument('--mongodb-host',
-                dest = 'mongodb_host',
-                metavar = 'HOST',
-                help = 'MongoDB server host [default: %(default)s]',
-                default = 'm0.lmfdb.xyz')
-        mongodbgroup.add_argument('--mongodb-port',
-                dest = 'mongodb_port',
-                metavar = 'PORT',
-                type = int,
-                help = 'MongoDB server port [default: %(default)d]',
-                default = 27017)
-        mongodbgroup.add_argument('--dbmon',
-                dest = 'mongodb_dbmon',
-                metavar = 'NAME',
-                help = 'monitor MongoDB commands to the specified database (use NAME=* to monitor everything, NAME=~DB to monitor all but DB)',
                 default = argparse.SUPPRESS)
 
         # PostgresSQL options
@@ -159,7 +147,6 @@ class Configuration(object):
 
 
 
-
         from ConfigParser import ConfigParser
 
         # reading the config file, creating it if necessary
@@ -174,7 +161,6 @@ class Configuration(object):
             # create sections
             _cfgp.add_section('core')
             _cfgp.add_section('web')
-            _cfgp.add_section('mongodb')
             _cfgp.add_section('postgresql')
             _cfgp.add_section('logging')
 
@@ -190,12 +176,24 @@ class Configuration(object):
         _cfgp  =  ConfigParser()
         _cfgp.read(args.config_file)
 
+
         # 3: override specific settings
+        def all(sep = '_'):
+            ret  =  {}
+            for s in _cfgp.sections():
+                for k, v in _cfgp.items(s):
+                    ret['%s%s%s' % (s, sep, k)]  =  v
+            return ret
+
+        all_set = all()
+
         for key, val in default_arguments_dict.iteritems():
             # if a nondefault value was passed through command line arguments set it
-            if args_dict[key] != val:
+            # or if a default value was not set in the config file
+            if args_dict[key] != val or key not in all_set:
                 sec, opt = key.split('_')
                 _cfgp.set(sec, opt, str(args_dict[key]))
+
 
         # some generic functions
         def get(section, key):
@@ -207,12 +205,6 @@ class Configuration(object):
         def getboolean(section, key):
             return _cfgp.getboolean(section, key)
 
-        def all(sep = '_'):
-            ret  =  {}
-            for s in _cfgp.sections():
-                for k, v in _cfgp.items(s):
-                    ret['%s%s%s' % (s, sep, k)]  =  v
-            return ret
 
 
         self.flask_options = {
@@ -224,12 +216,7 @@ class Configuration(object):
             if opt in args_dict:
                 self.flask_options[opt] = args_dict[opt]
 
-        self.mongodb_options = {
-                "port" : getint("mongodb", "port"),
-                "host" : get("mongodb", "host"),
-                "replicaset" : None}
-        if "mongodb_dbmon" in args_dict:
-            self.mongodb_options["mongodb_dbmon"] = args_dict["mongodb_dbmon"]
+        self.color = getint('core', 'color')
 
         self.postgresql_options = {
                 "port": getint("postgresql", "port"),
@@ -248,13 +235,13 @@ class Configuration(object):
             self.logging_options["editor"] = get("logging", "editor")
 
     def get_all(self):
-        return { 'flask_options' : self.flask_options, 'mongodb_options' : self.mongodb_options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
+        return { 'flask_options' : self.flask_options, 'postgresql_options' : self.postgresql_options, 'logging_options' : self.logging_options}
 
     def get_flask(self):
         return self.flask_options
 
-    def get_mongodb(self):
-        return self.mongodb_options
+    def get_color(self):
+        return self.color
 
     def get_postgresql(self):
         return self.postgresql_options

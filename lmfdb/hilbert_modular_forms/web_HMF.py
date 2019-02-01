@@ -23,8 +23,6 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight) + '-'
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
-def is_hmf_in_db(label):
-    return db.hmf_forms.exists({"label": label})
 
 class WebHMF(object):
     """

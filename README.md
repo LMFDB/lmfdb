@@ -21,3 +21,4 @@ Screenshot
 ![LMFDB Screenshot](https://raw.github.com/wiki/LMFDB/lmfdb/lmfdb-screenshot-20120410.png)
 
 [logo]: https://github.com/LMFDB/lmfdb/raw/master/lmfdb/static/images/lmfdb-logo.png "LMFDB"
+

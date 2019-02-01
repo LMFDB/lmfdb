@@ -289,7 +289,7 @@ def number_field_render_webpage():
             'degree_list': range(1, max_deg + 1),
             'signature_list': sig_list,
             'class_number_list': range(1, 6) + ['6..10'],
-            'count': '20',
+            'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,
             'discriminant_list': discriminant_list
@@ -683,7 +683,7 @@ def number_field_jump(info):
              table=db.nf_fields,
              title='Global Number Field Search Results',
              err_title='Global Number Field Search Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
@@ -738,7 +738,7 @@ def sage_residue_field_degrees_function(nf):
 
 def main_work(k1, D, typ):
     # Difference for sage vs pari array indexing
-    ind = 3 if typ is 'sage' else 4
+    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
             dec = k1.idealprimedec(p)

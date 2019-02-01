@@ -10,7 +10,7 @@ from ast import literal_eval
 from lmfdb.db_backend import db
 
 def random_sample_name():
-    data = db.smf_samples.random(['collection', 'name'])
+    data = db.smf_samples.random(projection=['collection', 'name'])
     return (data['collection'][0], data['name'])
 
 class Sample_class (SageObject):
