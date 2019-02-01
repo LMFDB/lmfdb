@@ -48,7 +48,7 @@ def upsert_embedding(id_number, skip = True):
         assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
         if hecke_nf['hecke_ring_power_basis']:
             v = HF.gens()[0]
-            betas = [ v**i for i in range(len(newform['field_poly']) ]
+            betas = [ v**i for i in range(len(newform['field_poly'])) ]
         else:
             numerators =  hecke_nf.get('hecke_ring_numerators')
             denominators = hecke_nf.get('hecke_ring_denominators')
