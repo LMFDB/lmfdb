@@ -8,13 +8,8 @@ ZZx = PolynomialRing(ZZ, "x")
 def convert_eigenvals_to_qexp(basis, eigenvals):
     qexp = []
     for i, ev in enumerate(eigenvals):
-        if ev['n'] != i+1:
-            raise ValueError("Missing eigenvalue")
-        if 'an' in ev:
-            an = sum(elt * basis[i] for i, elt in enumerate(ev['an']))
-            qexp.append(an)
-        else:
-            raise ValueError("Missing eigenvalue")
+        an = sum(elt * basis[i] for i, elt in enumerate(ev))
+        qexp.append(an)
     return qexp
 
 
