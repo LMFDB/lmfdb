@@ -124,4 +124,25 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 {% endif %}
 </p>
 
+<h2>Endomorphism ring</h2>
+
+<p>
+{% for i in range(cl.decomp_length()) %}
+
+<table class = "ntdata">
+    <tr><td>$v$</td>
+        {% for prime in cl.places[i] %}
+        <td class="center"> $({{cl.p}},{{cl.primeideal_display(prime)}})$ </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$inv_v$</td>
+        {% for prime in cl.places[i] %}
+        <td class="center">$0$</td>
+        {% endfor %}
+    </tr>
+</table>
+
+{% endfor %}
+</p>
+
 {% endblock %}

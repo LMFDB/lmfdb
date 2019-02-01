@@ -256,6 +256,31 @@ class AbvarFq_isoclass(object):
             else:
                 ans += av_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
         return ans
+    
+    def decomp_length(self):
+        return len(self.decomp)
+    
+    def primeideal_display(self,prime_ideal):
+        for i in range(len(prime_ideal)):
+            coeff = prime_ideal[i]
+            if coeff != '0':
+                
+        
+        if prime_ideal[0] == '0':
+            if prime_ideal[1] == '0':
+                ans = ''
+            else: ans = prime_ideal[1] + '\pi'
+        else:
+            ans = prime_ideal[0] + ' + ' + prime_ideal[1] + '\pi'
+        if len(prime_ideal) == 2:
+            return ans
+        else:
+            for i in range(2,len(prime_ideal)):
+                if not(prime_ideal[i] == '0'):
+                    if ans != '':
+                        ans += ' + '
+                ans += prime_ideal[i] + '\pi^{0}'.format(i)
+        return ans
 
     def basechange_display(self):
         models = self.prim_models
