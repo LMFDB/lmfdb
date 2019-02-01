@@ -1,3 +1,4 @@
+# parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
 from sage.all import  vector, PolynomialRing, ZZ, NumberField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
@@ -41,14 +42,19 @@ def upsert_embedding(id_number, skip = True):
     else:
         # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
-        numerators =  newform['hecke_ring_numerators']
-        denominators = newform['hecke_ring_denominators']
-        betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
+        hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
+        assert hecke_nf is not None
+        assert newform['field_poly'] == hecke_nf['field_poly']
+        assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
+        if hecke_nf['hecke_ring_power_basis']:
+            v = HF.gens()[0]
+            betas = [ v**i for i in range(len(newform['field_poly']) ]
+        else:
+            numerators =  hecke_nf.get('hecke_ring_numerators')
+            denominators = hecke_nf.get('hecke_ring_denominators')
+            betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
 
         embeddings = HF.complex_embeddings(prec=2000)
-        hecke_nf = list(db.mf_hecke_nf.search({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an']))
-        assert hecke_nf is not None
-        assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
         an_nf = hecke_nf['an']
         betas_embedded = [map(elt, betas) for elt in embeddings]
         CCC = betas_embedded[0][0].parent()
@@ -83,7 +89,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
+    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}, {'id': {'$gte':22927095, '$lte':23268393}}, projection='id')))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)

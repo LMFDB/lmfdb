@@ -98,6 +98,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* slow note doesn't put quotes around projection arguments
 * have the call method on a table to do just a search
 * max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript

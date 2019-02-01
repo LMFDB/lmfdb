@@ -992,7 +992,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "analyze", query, projection, limit, offset))
+        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
         if limit is None:
             if info is not None:
                 # caller is requesting count data
