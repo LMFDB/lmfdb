@@ -739,9 +739,8 @@ def set_navi(L):
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
 def l_function_ec_plot(label):
-    query = "label = '{0}'".format(label)
     try:
-        return render_plotLfunction_from_db("ecplots", "ecplots", query)
+        return render_plotLfunction_from_db("ecplots", "ecplots", label)
     except KeyError:
         return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
@@ -783,7 +782,7 @@ def download(args):
 ################################################################################
 #   Render functions, plotting L-function and displaying zeros
 ################################################################################
-def render_plotLfunction_from_db(db, dbTable, condition):
+def render_plotLfunction_from_db(db, dbTable, label):
     data_location = os.path.expanduser(
         "~/data/lfunction_plots/{0}.db".format(db))
 
@@ -798,9 +797,9 @@ def render_plotLfunction_from_db(db, dbTable, condition):
         db = sqlite3.connect(data_location)
         with db:
             cur = db.cursor()
-            query = "SELECT start,end,points FROM {0} WHERE {1} LIMIT 1".format(dbTable,
+            query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable,
                                                                                 condition)
-            cur.execute(query)
+            cur.execute(SQL(query), label)
             row = cur.fetchone()
 
         db.close()

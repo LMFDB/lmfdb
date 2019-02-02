@@ -4,6 +4,7 @@ CRITICAL (BUGS):
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
 
 IMPORTANT:
+* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
@@ -14,15 +15,12 @@ IMPORTANT:
 * Add relative dimension selector on newspace page (David)
 * Prove all analytic ranks
 * Update mf.elliptic.hecke-operator knowl and delete group.gammann
-* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
-* Compute embedding roots (Edgar)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
@@ -98,6 +96,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
 * max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript
