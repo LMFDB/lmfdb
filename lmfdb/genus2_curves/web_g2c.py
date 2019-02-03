@@ -392,7 +392,7 @@ def end_statement(factorsQQ, factorsRR, field='', ring=None):
 
 def end_field_statement(field_label, poly):
     if field_label == '1.1.1.1':
-        return """All endomorphisms of the Jacobian are defined over \(\Q\)"""
+        return """All \(\overline{\Q}\)-endomorphisms of the Jacobian are defined over \(\Q\)."""
     elif field_label != '':
         pretty = field_pretty(field_label)
         url = url_for("number_fields.by_label", label=field_label)
