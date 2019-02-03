@@ -18,6 +18,7 @@ IMPORTANT:
 * Update mf.elliptic.hecke-operator knowl and delete group.gammann
 * mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
 * Compute embedding roots (Edgar)
+* In create_table, make label unique and add index; port to existing tables (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
@@ -124,6 +125,7 @@ NOT CMF STUFF:
 * No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
 * Move data from US Central to US East Coast
 * It would be good to have an explanation of the connections in the "related objects" links when possible
+* Complex and rational extension types for postgres
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
