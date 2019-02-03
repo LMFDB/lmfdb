@@ -297,7 +297,7 @@ class AbvarFq_isoclass(object):
             if self.is_commutative():
                 ans = 'the number field ' + self.display_number_field() + '.'
             else:
-                ans = 'the division algebra over ' + self.display_number_field() + ' with the following ramification data at finite primes above {0}, and unramified at all archimedean primes:'.format(self.p)
+                ans = 'the division algebra over ' + self.display_number_field() + ' with the following ramification data at primes above {0}, and unramified at all archimedean primes:'.format(self.p)
         return ans
 
     def endo_info(self,factor):
