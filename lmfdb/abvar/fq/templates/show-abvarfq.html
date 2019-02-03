@@ -100,16 +100,49 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 </table>
 
 </p>
-
-<h2>{{ KNOWL('av.decomposition',title="Decomposition") }}</h2>
+{% if cl.is_simple() %}
+<h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
 <p>
-{% if cl.is_simple() %}
-This is a {{ KNOWL('av.simple',title="simple") }} isogeny class.
+This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its endomorphism algebra over ${{cl.ext_field(1)}}$ is {{cl.simple_endo_info()|safe}}
+
+{% if cl.needs_endo_table == True %}
+{% for places, invariants in cl.invariants_display() %}
+<table class = "ntdata">
+    <tr><td>$v$</td>
+        {% for prime in places %}
+        <td class="center"> {{cl.primeideal_display(prime)}} </td>
+        {% endfor %}
+    </tr>
+    <tr><td>$\operatorname{inv}_v$</td>
+        {% for inv in invariants %}
+        <td class="center">${{inv}}$</td>
+        {% endfor %}
+    </tr>
+</table>
+{% endfor %}
+
+Here $\pi$ is a root of the characteristic polynomial of the Frobenius endomorphism.
+{% endif %}
+</p>
+
 {% else %}
-<blockquote>
-    {{cl.decompositioninfo|safe}}
-</blockquote>
+<h2>{{ KNOWL('av.decomposition',title="Decomposition") }}</h2>
+<p>
+This isogeny class decomposes as {{cl.decompositioninfo|safe}}. <!--Its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor, which are:
+
+{% for factor in cl.decomp %}
+{% if factor[1] == 1 %}
+<h4>{{cl.factor_display(factor[0])|safe}}</h4>
+
+#{{cl.endo_info(factor)|safe}}
+
+
+{% else %}
+<h4>{{cl.factor_display(factor[0])|safe}}<sup>{{factor[1]}}</sup></h4>
+
+{% endif %}
+{% endfor %}-->
 {% endif %}
 </p>
 
@@ -124,25 +157,14 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 {% endif %}
 </p>
 
-<h2>Endomorphism ring</h2>
+<!--<h2>Endomorphism algebra</h2>
 
-<p>
-{% for i in range(cl.decomp_length()) %}
 
-<table class = "ntdata">
-    <tr><td>$v$</td>
-        {% for prime in cl.places[i] %}
-        <td class="center"> $({{cl.p}},{{cl.primeideal_display(prime)}})$ </td>
-        {% endfor %}
-    </tr>
-    <tr><td>$inv_v$</td>
-        {% for prime in cl.places[i] %}
-        <td class="center">$0$</td>
-        {% endfor %}
-    </tr>
-</table>
 
-{% endfor %}
-</p>
+
+
+
+
+-->
 
 {% endblock %}

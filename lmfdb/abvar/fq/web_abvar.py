@@ -28,3 +28,5 @@ def av_data(label):
     inf += '<a href="%s">%s home page</a>' % (url, label)
     inf += '</div>'
     return inf
+
+

@@ -10,8 +10,9 @@ from lmfdb.base import app
 
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics
+from sage.misc import latex
 
-from lmfdb.utils import list_to_factored_poly_otherorder
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
@@ -250,37 +251,77 @@ class AbvarFq_isoclass(object):
         ans = ''
         for factor in factors:
             if ans != '':
-                ans += '$\\times$ '
+                ans += ' $\\times$ '
             if factor[1] == 1:
-                ans += av_display_knowl(factor[0]) + ' '
+                ans += av_display_knowl(factor[0])
             else:
-                ans += av_display_knowl(factor[0]) + '<sup> {0} </sup> '.format(factor[1])
+                ans += av_display_knowl(factor[0]) + '<sup> {0} </sup>'.format(factor[1])
         return ans
+    
+    def alg_clo_field(self):
+        return '\\overline{\F}_{' + '{0}'.format(self.q) + '}'
+            
+    def ext_field(self,s):
+        if s == 1:
+            return '\F_{' + '{0}'.format(self.q) + '}'
+        else:
+            return '\F_{' + '{0}^{1}'.format(self.q,s) + '}'
+            
+    def has_real_place(self):
+        my_field = self.nf.split('.')
+        real_places = int(my_field[1]) 
+        return real_places > 0
+    
+    def is_commutative(self):
+        my_invs = self.brauer_invs.split(' ')
+        for inv in my_invs:
+            if inv == '0':
+                continue
+            else:
+                return False
+        return True
+    
+    @property
+    def needs_endo_table(self):
+        if self.has_real_place() or self.is_commutative():
+            return False
+        else:
+            return True
+    
+    def simple_endo_info(self):
+        if self.nf == '1.1.1.1':
+            ans = 'the quaternion division algebra over ' +  self.display_number_field() + ' ramified at {0} and $\infty$. All ${1}$-endomorphisms are already defined over ${2}$.'.format(self.p,self.alg_clo_field(),self.ext_field(1))
+        elif self.has_real_place():
+            ans = 'the division algebra over ' + self.display_number_field() + ' ramified at both real infinite places. <br>The geometric endomorphism algebra is $M_2(E)$ where $E$ is the quaternion division algebra over $\\Q$ ramified at {2} and $\infty$. All ${0}$-endomorphisms are defined over ${1}$. '.format(self.alg_clo_field(),self.ext_field(2),self.p)
+        else:
+            if self.is_commutative():
+                ans = 'the number field ' + self.display_number_field() + '.'
+            else:
+                ans = 'the division algebra over ' + self.display_number_field() + ' with the following ramification data at finite primes above {0}, and unramified at all archimedean primes:'.format(self.p)
+        return ans
+
+    def endo_info(self,factor):
+        pass
     
     def decomp_length(self):
         return len(self.decomp)
     
     def primeideal_display(self,prime_ideal):
-        for i in range(len(prime_ideal)):
-            coeff = prime_ideal[i]
-            if coeff != '0':
-                
-        
-        if prime_ideal[0] == '0':
-            if prime_ideal[1] == '0':
-                ans = ''
-            else: ans = prime_ideal[1] + '\pi'
-        else:
-            ans = prime_ideal[0] + ' + ' + prime_ideal[1] + '\pi'
-        if len(prime_ideal) == 2:
+        ans = '($ {0} $'.format(self.p)
+        if prime_ideal == ['0']:
+            ans += ')'
             return ans
         else:
-            for i in range(2,len(prime_ideal)):
-                if not(prime_ideal[i] == '0'):
-                    if ans != '':
-                        ans += ' + '
-                ans += prime_ideal[i] + '\pi^{0}'.format(i)
-        return ans
+            ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
+            return ans
+
+    def factor_display(self,factor):
+        return av_display_knowl(factor)
+    
+    def invariants_display(self):
+        invariants = self.brauer_invs.split(' ')
+        num_primes = len(invariants) // self.decomp_length()
+        return [(self.places[i], invariants[num_primes*i:num_primes*(i+1)]) for i in range(self.decomp_length())]
 
     def basechange_display(self):
         models = self.prim_models
@@ -294,7 +335,6 @@ class AbvarFq_isoclass(object):
             ans += '</td></tr>\n'
         ans += '</table>\n'
         return ans
-
 
 @app.context_processor
 def ctx_decomposition():
