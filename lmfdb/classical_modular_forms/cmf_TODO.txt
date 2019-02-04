@@ -4,6 +4,7 @@ CRITICAL (BUGS):
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
 
 IMPORTANT:
+* Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
 * need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
