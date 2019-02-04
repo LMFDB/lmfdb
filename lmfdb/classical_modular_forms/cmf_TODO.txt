@@ -17,6 +17,10 @@ IMPORTANT:
 * Add relative dimension selector on newspace page (David)
 * Prove all analytic ranks
 * Update mf.elliptic.hecke-operator knowl and delete group.gammann
+* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
+* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
+* Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
