@@ -1,4 +1,4 @@
-# parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
+# parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_euler_factors.py 40 ::: {0..39}
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
