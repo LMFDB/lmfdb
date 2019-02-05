@@ -618,11 +618,13 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} != %s")
             elif key == '$in':
                 if force_json:
+                    #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("{0} <@ %s")
                 else:
                     cmd = SQL("{0} = ANY(%s)")
             elif key == '$nin':
                 if force_json:
+                    #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("NOT ({0} <@ %s)")
                 else:
                     cmd = SQL("NOT ({0} = ANY(%s)")
@@ -631,6 +633,7 @@ class PostgresTable(PostgresBase):
                 if not force_json:
                     value = [value]
             elif key == '$containedin':
+                #jsonb_path_ops modifiers for the GIN index doesn't support this query
                 cmd = SQL("{0} <@ %s")
             elif key == '$startswith':
                 cmd = SQL("{0} LIKE %s")
@@ -1313,7 +1316,14 @@ class PostgresTable(PostgresBase):
             raise ValueError("Unrecognized index type")
         if modifiers is None:
             if type == "gin":
-                modifiers = [["jsonb_path_ops"] if self.col_type[col] == 'jsonb' else [] for col in columns]
+                def mod(col):
+                    if self.col_type[col] == 'jsonb':
+                        return ["jsonb_path_ops"]
+                    elif self.col_type[col].endswith('[]'):
+                        return ["array_ops"]
+                    else:
+                        return []
+                modifiers = [mod(col) for col in columns]
             else:
                 modifiers = [[]] * len(columns)
         else:

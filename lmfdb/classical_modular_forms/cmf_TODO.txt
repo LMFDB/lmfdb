@@ -97,6 +97,8 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* on lucky on unique id, drop the sort
+* convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
 * copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
 * max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
@@ -155,6 +157,7 @@ ISSUES already addressed:
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
 - Hecke operators, cosets in subset not subgroup #2631
+- Debounce knowl clicking #2687 (this is a PR, that we closed)
 
 Some progress on:
 - David Platt's L-function zeros #557 (this issue is a bit too vague to understand when is going to be closed)
