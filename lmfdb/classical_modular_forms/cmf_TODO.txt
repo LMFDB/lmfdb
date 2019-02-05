@@ -6,7 +6,6 @@ CRITICAL (BUGS):
 IMPORTANT:
 * db_backend.update is not handling updating jsonb
 * Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
-* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
@@ -21,6 +20,19 @@ IMPORTANT:
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
 * Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
+* Compute mf_hecke_cc normalized:
+  - Nk^2 <= 4000 (Edgar)
+  - Nk^2 <= 40000 - trivial (Drew)
+  - N <= 10 Nk^2 <= 100,000 (Drew)
+  - N <= 24 Nk^2 < 40000 (Drew)
+  - N <= 100, k <= 12 and Nk^2 > 4000 (Edgar)
+  - 50 < space dim <= 100, k > 1 (Drew)
+  - space dim <= 50, k > 1 (Drew)
+* Compute L-functions:
+  - N <= 24 Nk^2 < 40000, k > 1 (Edgar) waiting for data
+  - 50 < space dim <= 100, k > 1 (Edgar) waiting for data
+  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
+
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
