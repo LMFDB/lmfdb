@@ -244,8 +244,7 @@ class WebNewform(object):
         res += names_and_urls(self.related_objects)
 
         # finally L-functions
-        if  self.Nk2 <= 4000 or\
-            (self.Nk2 <= 40000 and self.char_orbit_label == 'a'):
+        if self.weight <= 200:
             #FIXME this avoid displaying links to L-functions with missing key euler coefficients
             #Old code:
             #if db.lfunc_instances.exists({'url': nf_url[1:]}):

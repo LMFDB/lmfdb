@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback, datetime
 from collections import defaultdict, Counter
-from psycopg2 import connect, DatabaseError, InterfaceError
+from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Json, copy_dumps, numeric_converter
@@ -285,8 +285,12 @@ class PostgresBase(object):
                     template = template.as_string(self.conn)
                 execute_values(cur, query.as_string(self.conn), values, template)
             else:
-                #print query.as_string(self.conn)
-                cur.execute(query, values)
+                try:
+                    cur.execute(query, values)
+                except ProgrammingError:
+                    print query.as_string(self.conn)
+                    print values
+                    raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
@@ -618,11 +622,13 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} != %s")
             elif key == '$in':
                 if force_json:
+                    #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("{0} <@ %s")
                 else:
                     cmd = SQL("{0} = ANY(%s)")
             elif key == '$nin':
                 if force_json:
+                    #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("NOT ({0} <@ %s)")
                 else:
                     cmd = SQL("NOT ({0} = ANY(%s)")
@@ -631,12 +637,13 @@ class PostgresTable(PostgresBase):
                 if not force_json:
                     value = [value]
             elif key == '$containedin':
+                #jsonb_path_ops modifiers for the GIN index doesn't support this query
                 cmd = SQL("{0} <@ %s")
             elif key == '$startswith':
                 cmd = SQL("{0} LIKE %s")
                 value = value.replace('_',r'\_').replace('%',r'\%') + '%'
             elif key == '$like':
-                cmd = SQL("{0} LIKE '%s'")
+                cmd = SQL("{0} LIKE %s")
             elif key == '$regex':
                 cmd = SQL("{0} ~ '%s'")
             else:
@@ -646,6 +653,30 @@ class PostgresTable(PostgresBase):
             cmd = cmd.format(col)
             value = [value]
         return cmd, value
+
+    def _parse_values(self, D):
+        """
+        Returns the values of dictionary parse accordingly to be used as values in ``_execute``
+
+        INPUT:
+        - ``D`` -- a dictionary, or a scalar if outer is set
+
+        OUTPUT:
+
+        - A list of values to fill in for the %s in the string.  See ``_execute`` for more details
+
+        EXAMPLES::
+
+            sage: from lmfdb.db_backend import db
+            sage: sage: db.nf_fields._parse_dict({})
+            []
+            sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
+            '[1, 2]'
+            sage: db.char_dir_values._parse_values({'values':[1,2]})
+            [1, 2]
+        """
+
+        return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
 
     def _parse_dict(self, D, outer=None, outer_json=None):
         """
@@ -992,7 +1023,7 @@ class PostgresTable(PostgresBase):
             else:
                 qstr, values = self._build_query(query, limit, offset, sort)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, Identifier(self.search_table), qstr)
-        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "analyze", query, projection, limit, offset))
+        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
         if limit is None:
             if info is not None:
                 # caller is requesting count data
@@ -1313,7 +1344,14 @@ class PostgresTable(PostgresBase):
             raise ValueError("Unrecognized index type")
         if modifiers is None:
             if type == "gin":
-                modifiers = [["jsonb_path_ops"]] * len(columns)
+                def mod(col):
+                    if self.col_type[col] == 'jsonb':
+                        return ["jsonb_path_ops"]
+                    elif self.col_type[col].endswith('[]'):
+                        return ["array_ops"]
+                    else:
+                        return []
+                modifiers = [mod(col) for col in columns]
             else:
                 modifiers = [[]] * len(columns)
         else:
@@ -1745,7 +1783,8 @@ class PostgresTable(PostgresBase):
                                      SQL(", ").join(map(Identifier, changes.keys())),
                                      SQL(", ").join(Placeholder() * len(changes)),
                                      qstr)
-            self._execute(updater, changes.values() + values)
+            change_values = self._parse_values(changes)
+            self._execute(updater, change_values + values)
             self._break_order()
             self._break_stats()
             if resort:
@@ -1816,7 +1855,7 @@ class PostgresTable(PostgresBase):
                                              SQL(", ").join(map(Identifier, dat.keys())),
                                              SQL(", ").join(Placeholder() * len(dat)),
                                              SQL("id = %s"))
-                    dvalues = dat.values()
+                    dvalues = self._parse_values(dat)
                     dvalues.append(row_id)
                     self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
@@ -1831,17 +1870,15 @@ class PostgresTable(PostgresBase):
                 # has inserted data this will be a problem,
                 # but it will raise an error rather than leading to invalid database state,
                 # so it should be okay.
-                #FIXME use max_id
                 search_data["id"] = self.max_id() + 1
                 if self.extra_table is not None:
-                    #FIXME use max_id
                     extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
                     inserter.format(Identifier(table),
                                     SQL(", ").join(map(Identifier, dat.keys())),
                                     SQL(", ").join(Placeholder() * len(dat)))
-                    self._execute(inserter, dat.values())
+                    self._execute(inserter, self._parse_values(dat))
                 self._break_order()
                 self.stats.total += 1
             self._break_stats()
@@ -1882,12 +1919,19 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_pkeys()
                 self.drop_indexes()
+            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsob']
             for i, SD in enumerate(search_data):
                 SD["id"] = self.max_id() + i + 1
+                for col in jsonb_cols:
+                    if col in SD:
+                        SD[col] = Json(SD[col])
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
                     ED["id"] = self.max_id() + i + 1
+                    for col in jsonb_cols:
+                        if col in ED:
+                            ED[col] = Json(ED[col])
                 cases.append((self.extra_table, extra_data))
             now = time.time()
             for table, L in cases:

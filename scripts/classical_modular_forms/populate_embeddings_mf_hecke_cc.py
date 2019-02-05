@@ -1,22 +1,19 @@
+# parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
 from sage.all import  vector, PolynomialRing, ZZ, NumberField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
 ZZx = PolynomialRing(ZZ, "x")
+
 def convert_eigenvals_to_qexp(basis, eigenvals):
     qexp = []
     for i, ev in enumerate(eigenvals):
-        if ev['n'] != i+1:
-            raise ValueError("Missing eigenvalue")
-        if 'an' in ev:
-            an = sum(elt * basis[i] for i, elt in enumerate(ev['an']))
-            qexp.append(an)
-        else:
-            raise ValueError("Missing eigenvalue")
+        an = sum(elt * basis[i] for i, elt in enumerate(ev))
+        qexp.append(an)
     return qexp
 
 
-def upsert_embedding(id_number, skip = False):
+def upsert_embedding(id_number, skip = True):
     rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
@@ -40,12 +37,20 @@ def upsert_embedding(id_number, skip = False):
     else:
         # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
-        numerators =  newform['hecke_ring_numerators']
-        denominators = newform['hecke_ring_denominators']
-        betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
+        hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
+        assert hecke_nf is not None
+        assert newform['field_poly'] == hecke_nf['field_poly']
+        assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
+        if hecke_nf['hecke_ring_power_basis']:
+            v = HF.gens()[0]
+            betas = [ v**i for i in range(len(newform['field_poly'])) ]
+        else:
+            numerators =  hecke_nf.get('hecke_ring_numerators')
+            denominators = hecke_nf.get('hecke_ring_denominators')
+            betas = [HF(elt)/denominators[i] for i, elt in enumerate(numerators)]
 
         embeddings = HF.complex_embeddings(prec=2000)
-        an_nf = list(db.mf_hecke_nf.search({'hecke_orbit_code':hecke_orbit_code}, ['n','an'], sort=['n']))
+        an_nf = hecke_nf['an']
         betas_embedded = [map(elt, betas) for elt in embeddings]
         CCC = betas_embedded[0][0].parent()
         qexp = [convert_eigenvals_to_qexp(elt, an_nf) for elt in betas_embedded]

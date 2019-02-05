@@ -4,28 +4,51 @@ CRITICAL (BUGS):
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
 
 IMPORTANT:
+* db_backend.update is not handling updating jsonb
+* Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
+ - see scripts/verify_data.py
+ - check dimensions add up, see above (Edgar)
+ - check that we have all the L-functions that we expect (Edgar)
+ - check self duality -> through the number field data
+ - check inner_twists through ap data
+ - write all the things that we think should be able to check (Drew)
+ - parallelize (Edgar)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
-* Use character values to generate the an from ap in Magma code (Edgar)
-* just creating a q-exp as a power series in Magma without using ModForms just like in Sage (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Add related objects to L-functions, move duals (Edgar)
 * Make old L-function labels work (Edgar/David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
 * Add relative dimension selector on newspace page (David)
-* Prove all analytic ranks
-* Update mf.elliptic.hecke-operator knowl and delete group.gammann
-* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
-* Compute embedding roots (Edgar)
+* Update mf.elliptic.hecke-operator knowl and delete group.gammann (Drew)
+* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
+* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
+* Make tests pass (Edgar)
+* Compute mf_hecke_cc normalized:
+  - Nk^2 <= 4000 (Edgar)
+  - Nk^2 <= 40000 - trivial (Drew)
+  - N <= 10 Nk^2 <= 100,000 (Drew)
+  - N <= 100, k <= 12 and Nk^2 > 4000 (Edgar)
+  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 and not in the above (Drew)
+  - 50 < space dim <= 100, k > 1 (Drew)
+  - space dim <= 50, k > 1 (Drew)
+  - recompute embeddings roots (Edgar)
+* Compute L-functions:
+  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) waiting for data
+  - 50 < space dim <= 100, k > 1 (Edgar) waiting for data
+  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * In create_table, make label unique and add index; port to existing tables (David)
 
 FINAL CHECKS:
-* Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
+* Make sure indexes are appropriate, especially for new sort orders (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
+* Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
+* Rename mf.elliptic.hecke-operator knowl and delete group.gammann
+* Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
@@ -101,6 +124,9 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* on lucky on unique id, drop the sort
+* convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
+* copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
 * max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript
@@ -144,6 +170,7 @@ ISSUES already addressed:
 - Table options for old/new/CM #674
 - Determine planned extent of classical modular forms #873
 - Source and extent of data for classical modular forms #1224
+- For imprimitive genus 2 L-functions, give links to factors #1227
 - Fix errors in classical modular form data and verify its correctness #1248
 - Tests for lcalc files #1257
 - Modular form history #1282 (we decided not to link it)
@@ -158,8 +185,10 @@ ISSUES already addressed:
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
 - Hecke operators, cosets in subset not subgroup #2631
+- Debounce knowl clicking #2687 (this is a PR, that we closed)
 
 Some progress on:
+- David Platt's L-function zeros #557 (this issue is a bit too vague to understand when is going to be closed)
 - L-functions and modularity #2032
 - Search on a_pp #2134
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262
