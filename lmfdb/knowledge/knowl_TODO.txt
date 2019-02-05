@@ -1,0 +1,18 @@
+KNOWL FEATURES: (March)
+* Revision history and reversion (all versions stored in kwl_knowls table)
+* Multiple versions for beta and prod (needs a review status column)
+* Status column (smallint): reviewed, beta, deleted
+* Renaming: change the id on every knowl (no history)
+* jsonb row with links to other knowls
+* search with wildcards
+* View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
+* Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
+* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
+* Link back to object from annotations (another field which is a link back to object)
+* Viewable diffs (on the fly)
+* Do we care about porting data from kwl_history table? No.
+* Add column to user table giving power to review knowls
+* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
+* Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
+* Use KNOWL_INC more....
+* Preserve author history
