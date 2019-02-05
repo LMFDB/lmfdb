@@ -66,7 +66,7 @@ class NumberFieldTest(LmfdbTest):
         assert 'Twin sextic algebra' in L.data
 
     def test_how_computed(self):
-        L = self.tc.get('/NumberField/HowComputed')
+        L = self.tc.get('/NumberField/Source')
         assert 'Hunter searches' in L.data
 
     def test_galois_group_page(self):
@@ -78,8 +78,8 @@ class NumberFieldTest(LmfdbTest):
         assert 'Mosunov' in L.data
 
     def test_discriminants_page(self):
-        L = self.tc.get('/NumberField/Discriminants')
-        assert 'Jones-Roberts' in L.data
+        L = self.tc.get('/NumberField/Source')
+        assert 'Jones-David Roberts' in L.data
 
     def test_field_labels_page(self):
         L = self.tc.get('/NumberField/FieldLabels')
