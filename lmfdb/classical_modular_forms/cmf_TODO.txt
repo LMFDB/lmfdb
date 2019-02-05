@@ -2,9 +2,9 @@ CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
-  - Add missing L-functions for newform 540.6.i.b (currently http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/540/6/i/b/181/1/ is broken).
 
 IMPORTANT:
+* db_backend.update is not handling updating jsonb
 * Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
 * need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
