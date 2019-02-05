@@ -1313,7 +1313,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("Unrecognized index type")
         if modifiers is None:
             if type == "gin":
-                modifiers = [["jsonb_path_ops"]] * len(columns)
+                modifiers = [["jsonb_path_ops"] if self.col_type[col] == 'jsonb' else [] for col in columns]
             else:
                 modifiers = [[]] * len(columns)
         else:
