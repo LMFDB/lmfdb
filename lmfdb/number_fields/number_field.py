@@ -738,7 +738,7 @@ def sage_residue_field_degrees_function(nf):
 
 def main_work(k1, D, typ):
     # Difference for sage vs pari array indexing
-    ind = 3 if typ is 'sage' else 4
+    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
             dec = k1.idealprimedec(p)
