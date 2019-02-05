@@ -2,6 +2,7 @@ CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
   - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
+  - Add missing L-functions for newform 540.6.i.b (currently http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/540/6/i/b/181/1/ is broken).
 
 IMPORTANT:
 * Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
@@ -16,6 +17,10 @@ IMPORTANT:
 * Add relative dimension selector on newspace page (David)
 * Prove all analytic ranks
 * Update mf.elliptic.hecke-operator knowl and delete group.gammann
+* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
+* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
+* Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
