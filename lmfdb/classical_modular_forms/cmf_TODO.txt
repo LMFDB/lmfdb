@@ -39,7 +39,7 @@ IMPORTANT:
   - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) waiting for data
   - 50 < space dim <= 100, k > 1 (Edgar) waiting for data
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
-
+* In create_table, make label unique and add index; port to existing tables (David)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -151,6 +151,7 @@ NOT CMF STUFF:
 * No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
 * Move data from US Central to US East Coast
 * It would be good to have an explanation of the connections in the "related objects" links when possible
+* Complex and rational extension types for postgres
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
