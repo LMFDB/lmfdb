@@ -1,18 +1,53 @@
-KNOWL FEATURES: (March)
-* Revision history and reversion (all versions stored in kwl_knowls table)
-* Multiple versions for beta and prod (needs a review status column)
-* Status column (smallint): reviewed, beta, deleted
-* Renaming: change the id on every knowl (no history)
-* jsonb row with links to other knowls
-* search with wildcards
-* View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
-* Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
-* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
-* Link back to object from annotations (another field which is a link back to object)
-* Viewable diffs (on the fly)
-* Do we care about porting data from kwl_history table? No.
-* Add column to user table giving power to review knowls
-* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
-* Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
-* Use KNOWL_INC more....
-* Preserve author history
+TASKS:
+* Modify schema as described below
+* Modify knowl code to create new entry when saving rather than updating and adding to history
+* Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
+* Implement renaming: change the id for all instances in the table
+* Make links column update when saving knowl
+* Search with wildcards (use tilde operator and a checkbox on the search; think about details)
+* Update quality restrictions on search to use status rather than quality
+* Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
+* Add autosaves by updating an inprogress knowl record
+* Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
+* Automatically fill in type if ends in .top or .bottom
+* Add filter for showing top/bottom knowls when searching (off by default).  Never show comments knowls in main list.
+* For annotations, add link back to object from display page (not when displayed as part of homepage)
+* For knowls that have quality 'reviewed', check to see which should have status 1
+* Add ability to view history and revert to old version
+* Add ability to view diffs against old versions when editing knowl
+* Delete kwl_history and kwl_deleted tables
+* Update scripts that copy knowls to production
+* Add column to userdb.users for knowl reviewing privledges, add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
+* Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
+* Add ability to search for knowls with comments
+
+SCHEMA MODIFICATIONS:
+* Delete history column
+* Rename to kwl_knowls2 and port existing data
+* Fill in links for existing knowls
+* Fill in source column for existing annotation knowls
+
+New and modified columns in `kwl_knowls`
+Column           | Type                        | Notes
+-----------------|-----------------------------|------
+status           | smallint                    | 1=reviewed, 0=beta, -1=in progress, -2=deleted, default 0
+type             | smallint                    | 1=top, 0=normal, -1=bottom, -2=comments, default 0
+links            | text[]                      | List of knowls that this knowl refers to
+source           | text                        | url for object that this knowl is an annotation for; NULL if not an annotation
+reviewer         | text                        | username of reviewer
+review_timestamp | timestamp without time zone | time when this knowl was marked as reviewed
+
+Add `kwl_locks`
+Column    | Type                        | Notes
+----------|-----------------------------|------
+id        | text                        | Id for the knowl being locked
+timestamp | timestamp without time zone | Timestamp when lock was created
+username  | text                        | Username of the lock requestor
+
+Modify `userdb.user`
+Column         | Type     | Notes
+---------------|----------|------
+knowl_reviewer | boolean  | Whether this user can review knowls
+
+NOTES FOR WORKSHOP
+* Remind people that they can use KNOWL_INC
