@@ -5,6 +5,7 @@ from lmfdb.utils import web_latex, encode_plot
 from lmfdb.logger import make_logger
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
+from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 from sage.all import latex, Matrix, ZZ, Infinity
 
 logger = make_logger("ecnf")
@@ -127,8 +128,13 @@ class ECNF_isoclass(object):
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
-            #self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
-            self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+            if "CM" in self.label:
+                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
+            else:
+                if is_bmf_in_db(self.bmf_label):
+                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                else:
+                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
 
         if 'Lfunction' in self.urls:
             self.friends += [('L-function', self.urls['Lfunction'])]
