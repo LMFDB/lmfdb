@@ -28,7 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import logging, tempfile, re, os, time, random, traceback, datetime
 from collections import defaultdict, Counter
-from psycopg2 import connect, DatabaseError, InterfaceError
+from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from lmfdb.db_encoding import setup_connection, Json, copy_dumps, numeric_converter
@@ -285,8 +285,11 @@ class PostgresBase(object):
                     template = template.as_string(self.conn)
                 execute_values(cur, query.as_string(self.conn), values, template)
             else:
-                #print query.as_string(self.conn)
-                cur.execute(query, values)
+                try:
+                    cur.execute(query, values)
+                except ProgrammingError:
+                    print query.as_string(self.conn)
+                    raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > SLOW_CUTOFF:
