@@ -636,7 +636,7 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} LIKE %s")
                 value = value.replace('_',r'\_').replace('%',r'\%') + '%'
             elif key == '$like':
-                cmd = SQL("{0} LIKE '%s'")
+                cmd = SQL("{0} LIKE %s")
             elif key == '$regex':
                 cmd = SQL("{0} ~ '%s'")
             else:
