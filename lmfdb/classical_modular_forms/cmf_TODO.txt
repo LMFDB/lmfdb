@@ -25,6 +25,7 @@ IMPORTANT:
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
+* Make tests pass (Edgar)
 * Compute mf_hecke_cc normalized:
   - Nk^2 <= 4000 (Edgar)
   - Nk^2 <= 40000 - trivial (Drew)
@@ -46,7 +47,7 @@ FINAL CHECKS:
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
-* Rename mf.elliptic.hecke-operator knowl and delete group.gammann 
+* Rename mf.elliptic.hecke-operator knowl and delete group.gammann
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * Add trace tables for newspaces (David)

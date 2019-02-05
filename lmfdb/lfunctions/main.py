@@ -797,9 +797,8 @@ def render_plotLfunction_from_db(db, dbTable, label):
         db = sqlite3.connect(data_location)
         with db:
             cur = db.cursor()
-            query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable,
-                                                                                condition)
-            cur.execute(SQL(query), label)
+            query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable)
+            cur.execute(query, label)
             row = cur.fetchone()
 
         db.close()

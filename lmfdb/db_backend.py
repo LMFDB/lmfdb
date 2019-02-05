@@ -289,6 +289,7 @@ class PostgresBase(object):
                     cur.execute(query, values)
                 except ProgrammingError:
                     print query.as_string(self.conn)
+                    print values
                     raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
@@ -652,6 +653,30 @@ class PostgresTable(PostgresBase):
             cmd = cmd.format(col)
             value = [value]
         return cmd, value
+
+    def _parse_values(self, D):
+        """
+        Returns the values of dictionary parse accordingly to be used as values in ``_execute``
+
+        INPUT:
+        - ``D`` -- a dictionary, or a scalar if outer is set
+
+        OUTPUT:
+
+        - A list of values to fill in for the %s in the string.  See ``_execute`` for more details
+
+        EXAMPLES::
+
+            sage: from lmfdb.db_backend import db
+            sage: sage: db.nf_fields._parse_dict({})
+            []
+            sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
+            '[1, 2]'
+            sage: db.char_dir_values._parse_values({'values':[1,2]})
+            [1, 2]
+        """
+
+        return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
 
     def _parse_dict(self, D, outer=None, outer_json=None):
         """
@@ -1758,7 +1783,8 @@ class PostgresTable(PostgresBase):
                                      SQL(", ").join(map(Identifier, changes.keys())),
                                      SQL(", ").join(Placeholder() * len(changes)),
                                      qstr)
-            self._execute(updater, changes.values() + values)
+            change_values = self._parse_values(changes)
+            self._execute(updater, change_values + values)
             self._break_order()
             self._break_stats()
             if resort:
@@ -1829,7 +1855,7 @@ class PostgresTable(PostgresBase):
                                              SQL(", ").join(map(Identifier, dat.keys())),
                                              SQL(", ").join(Placeholder() * len(dat)),
                                              SQL("id = %s"))
-                    dvalues = dat.values()
+                    dvalues = self._parse_values(dat)
                     dvalues.append(row_id)
                     self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
@@ -1844,17 +1870,15 @@ class PostgresTable(PostgresBase):
                 # has inserted data this will be a problem,
                 # but it will raise an error rather than leading to invalid database state,
                 # so it should be okay.
-                #FIXME use max_id
                 search_data["id"] = self.max_id() + 1
                 if self.extra_table is not None:
-                    #FIXME use max_id
                     extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
                     inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
                     inserter.format(Identifier(table),
                                     SQL(", ").join(map(Identifier, dat.keys())),
                                     SQL(", ").join(Placeholder() * len(dat)))
-                    self._execute(inserter, dat.values())
+                    self._execute(inserter, self._parse_values(dat))
                 self._break_order()
                 self.stats.total += 1
             self._break_stats()
@@ -1895,12 +1919,19 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_pkeys()
                 self.drop_indexes()
+            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsob']
             for i, SD in enumerate(search_data):
                 SD["id"] = self.max_id() + i + 1
+                for col in jsonb_cols:
+                    if col in SD:
+                        SD[col] = Json(SD[col])
             cases = [(self.search_table, search_data)]
             if self.extra_table is not None:
                 for i, ED in enumerate(extra_data):
                     ED["id"] = self.max_id() + i + 1
+                    for col in jsonb_cols:
+                        if col in ED:
+                            ED[col] = Json(ED[col])
                 cases.append((self.extra_table, extra_data))
             now = time.time()
             for table, L in cases:
