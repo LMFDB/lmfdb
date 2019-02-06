@@ -88,6 +88,8 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
             outstr += '( %s )^{%d}' % (glatex, e)
         elif len(sfacts_fc_list) > 1:
             outstr += '( %s )' % (glatex,)
+        else:
+            outstr += glatex
 
     if galois:
         # 2 factors of degree 2
