@@ -368,6 +368,8 @@ def display_complex(x, y, digits, method = "truncate", parenthesis = False, extr
     y = display_float(y, digits, method = method, extra_truncation_digits = extra_truncation_digits)
     if y == "1":
         y = ""
+    if y[-1] == '.':
+        y += ' '
     res = x + sign + y + r"i"
     if parenthesis and x != "":
         res = "(" + res + ")"
