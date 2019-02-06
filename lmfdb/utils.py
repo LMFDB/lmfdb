@@ -33,7 +33,8 @@ from collections import defaultdict
 
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
-    """ Either return the polynomial in a nice factored form,
+    """ 
+        Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
         of the factors.
@@ -77,7 +78,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
             for i, elt in enumerate(vcf):
                 val = elt.valuation(p)
                 ftoprint[(val, i)] = elt/p**val
-        outstr += make_bigint(latex(ZZpT(ftoprint)))
+        outstr +=  latex(ZZpT(ftoprint))
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:

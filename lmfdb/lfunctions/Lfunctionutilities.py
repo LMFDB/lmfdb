@@ -7,7 +7,7 @@ import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n, is_prime
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
-from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, key_for_numerically_sort
+from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, key_for_numerically_sort, make_bigint
 
 
 ###############################################################
@@ -463,7 +463,7 @@ def lfuncEPhtml(L,fmt):
                     out += "$\\times$"
                     out += group_display_knowl(n, k)
                 out += "</td>"
-            out += "<td>" +"$" + factors + "$" + "</td>"
+            out += "<td> %s </td>" % make_bigint('\( %s \)' % factors)
             out += "</tr>\n"
 
         except IndexError:
