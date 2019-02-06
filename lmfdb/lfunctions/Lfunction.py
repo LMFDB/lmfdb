@@ -178,9 +178,9 @@ def makeLfromdata(L):
     L.bad_lfactors = data.get('bad_lfactors', None)
 
     # the first euler factors factored
-    L.localfactors_factored = data.get('euler_factors_factorization', None)
-    if L.localfactors_factored is not None:
-        L.localfactors_factored_dict = dict(zip(primes_first_n(len(L.localfactors_factored)), L.localfactors_factored))
+    localfactors_factored = data.get('euler_factors_factorization', None)
+    if localfactors_factored is not None:
+        L.localfactors_factored_dict = dict(zip(primes_first_n(len(localfactors_factored)), localfactors_factored))
     else:
         L.localfactors_factored_dict = {}
 
