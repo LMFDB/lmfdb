@@ -106,7 +106,7 @@ if len(sys.argv) == 3:
     k = int(sys.argv[1])
     start = int(sys.argv[2])
     assert k > start
-    ids = sorted(list(db.lfunc_lfunctions.search({'coefficient_field':'1.1.1.1', 'load_key':'CMFs-workshop'}, 'id', sort = [])))
+    ids = sorted(list(db.lfunc_lfunctions.search({'coefficient_field':'1.1.1.1', 'load_key':'CMFs-workshop', 'euler_factors_factorization': None}, 'id', sort = [])))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         fix_euler(i)
