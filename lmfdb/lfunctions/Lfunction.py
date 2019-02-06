@@ -175,11 +175,6 @@ def makeLfromdata(L):
 
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
-    if L.localfactors is not None:
-        L.localfactors_dict = dict(zip(primes_first_n(len(L.localfactors)), L.localfactors))
-    else:
-        L.localfactors_dict = {}
-
     L.bad_lfactors = data.get('bad_lfactors', None)
 
     # the first euler factors factored
