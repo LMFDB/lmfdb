@@ -29,9 +29,6 @@ from markupsafe import Markup
 from lmfdb.base import app
 from collections import defaultdict
 
-
-
-
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """
         Either return the polynomial in a nice factored form,
@@ -40,53 +37,63 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
-    gal_list=[]
     if len(s) == 1:
         if galois:
             return [str(s[0]), [[0,0]]]
         return str(s[0])
     ZZT = PolynomialRing(ZZ, vari)
-    ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
     sfacts = ZZT(s).factor()
-    sfacts_fc = [[v[0],v[1]] for v in sfacts]
+    sfacts_fc = [[g, e] for g, e in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
+    # if the factor is -1+T^2, replace it by 1-T^2
+    # this should happen an even number of times, mod powers
+    sfacts_fc_list = [[(-g).list() if g[0] == -1 else g.list(), e] for g, e in sfacts_fc]
+    return list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois, vari, p)
+
+def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari = 'T', p = None):
+    """
+        Either return the polynomial in a nice factored form,
+        or return a pair, with first entry the factored polynomial
+        and the second entry a list describing the Galois groups
+        of the factors.
+        vari allows to choose the variable of the polynomial to be returned.
+    """
+    gal_list=[]
+    ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
+    ZZT = PolynomialRing(ZZ, vari)
     outstr = ''
-    for v in sfacts_fc:
-        this_poly = v[0]
-        # if the factor is -1+T^2, replace it by 1-T^2
-        # this should happen an even number of times, mod powers
-        if this_poly[0] == -1:
-            this_poly = -1*this_poly
-            v[0] = this_poly
+    for g, e in sfacts_fc_list:
         if galois:
-            this_degree = this_poly.degree()
             # hack because currently sage only handles monic polynomials:
-            this_poly = this_poly.reverse()
+            this_poly = ZZT(reversed(g))
+            this_degree = this_poly.degree()
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
             this_t_number = this_gal.group().__pari__()[2].sage()
             gal_list.append([this_degree, this_t_number])
-        vcf = v[0].list()
-        if len(sfacts) > 1 or v[1] > 1:
+
+        if len(sfacts_fc_list) > 1 or e > 1:
             outstr += '('
         # casting from ZZT -> ZZpT
         if p is None:
-            ftoprint = dict( zip( zip( [0]*len(vcf), range(len(vcf))), vcf) )
+            gtoprint = dict( zip( zip( [0]*len(g), range(len(g))), g) )
         else:
-            ftoprint = {}
-            for i, elt in enumerate(vcf):
+            gtoprint = {}
+            for i, elt in enumerate(g):
                 val = elt.valuation(p)
-                ftoprint[(val, i)] = elt/p**val
-        outstr +=  latex(ZZpT(ftoprint))
-        if len(sfacts) > 1 or v[1] > 1:
-            outstr += ')'
-        if v[1] > 1:
-            outstr += '^{' + str(v[1]) + '}'
+                gtoprint[(val, i)] = elt/p**val
+        glatex = latex(ZZpT(gtoprint))
+        if  e > 1:
+            outstr += '( %s )^{%d}' % (glatex, e)
+        elif len(sfacts_fc_list) > 1:
+            outstr += '( %s )' % (glatex,)
+
     if galois:
-        if galois and len(sfacts_fc)==2:
-            if sfacts[0][0].degree()==2 and sfacts[1][0].degree()==2:
-                troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
+        # 2 factors of degree 2
+        if len(sfacts_fc_list)==2:
+            if len(sfacts_fc_list[0][0]) == 3 and len(sfacts_fc_list[1][0]) == 3:
+                troubletest = ZZT(sfacts_fc_list[0][0]).disc()*ZZT(sfacts_fc_list[1][0]).disc()
                 if troubletest.is_square():
                     gal_list=[[2,1]]
         return outstr, gal_list

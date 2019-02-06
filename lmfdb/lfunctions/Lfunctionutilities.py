@@ -360,6 +360,7 @@ def lfuncEPhtml(L,fmt):
     """
         Euler product as a formula and a table of local factors.
     """
+    # TODO make use of L.localfactors_factored, to avoid factoring
 
 
     # Formula

@@ -42,6 +42,7 @@ IMPORTANT:
 * In create_table, make label unique and add index; port to existing tables (David)
 
 Style:
+* For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
 * For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
 
 FINAL CHECKS:
@@ -68,24 +69,6 @@ FINAL CHECKS:
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
 
-KNOWL FEATURES: (March)
-* Revision history and reversion (all versions stored in kwl_knowls table)
-* Multiple versions for beta and prod (needs a review status column)
-* Status column (smallint): reviewed, beta, deleted
-* Renaming: change the id on every knowl (no history)
-* jsonb row with links to other knowls
-* search with wildcards
-* View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
-* Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
-* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
-* Link back to object from annotations (another field which is a link back to object)
-* Viewable diffs (on the fly)
-* Do we care about porting data from kwl_history table? No.
-* Add column to user table giving power to review knowls
-* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
-* Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
-* Use KNOWL_INC more....
-* Preserve author history
 
 COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
@@ -126,7 +109,9 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
-* on lucky on unique id, drop the sort
+* store the factorization of the Euler factors on the database, and then write code to take advantage of this. 
+* rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
+* on lucky, sort should be [] by default?
 * convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
 * copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
