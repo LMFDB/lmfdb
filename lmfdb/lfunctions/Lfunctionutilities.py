@@ -404,9 +404,9 @@ def lfuncEPhtml(L,fmt):
     bad_primes = []
     for lf in L.bad_lfactors:
         bad_primes.append(lf[0])
-    eulerlim = 25
+
     good_primes = []
-    for p in primes_first_n(eulerlim):
+    for p in prine_range(100):
         if p not in bad_primes:
             good_primes.append(p)
 

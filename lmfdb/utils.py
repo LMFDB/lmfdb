@@ -66,7 +66,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
     for g, e in sfacts_fc_list:
         if galois:
             # hack because currently sage only handles monic polynomials:
-            this_poly = ZZT(reversed(g))
+            this_poly = ZZT(list(reversed(g)))
             this_degree = this_poly.degree()
             this_number_field = NumberField(this_poly, "a")
             this_gal = this_number_field.galois_group(type='pari')
