@@ -79,7 +79,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
         else:
             gtoprint = {}
             for i, elt in enumerate(g):
-                val = ZZ(elt).valuation(p)
+                val = max(0, ZZ(elt).valuation(p))
                 gtoprint[(val, i)] = elt/p**val
         glatex = latex(ZZpT(gtoprint))
         if  e > 1:
