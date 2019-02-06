@@ -17,7 +17,7 @@ from types import GeneratorType
 from urllib import urlencode
 
 from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, RealField, RIF, ZZ
-from sage.all import factor, latex, valuation
+from sage.all import latex, valuation
 from sage.structure.element import Element
 from copy import copy
 from functools import wraps
@@ -74,11 +74,10 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
             ftoprint = dict( zip( zip( [0]*len(vcf), range(len(vcf))), vcf) )
         else:
             ftoprint = {}
-            for i, elt in enumerate(f):
-                v = elt.valuation(p)
-                fdict[(v, i)] = elt/p^v
+            for i, elt in enumerate(vcf):
+                val = elt.valuation(p)
+                ftoprint[(val, i)] = elt/p^val
         outstr += latex(ZZpT(ftoprint))
-        terms += 1
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:
