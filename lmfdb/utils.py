@@ -76,7 +76,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
             ftoprint = {}
             for i, elt in enumerate(vcf):
                 val = elt.valuation(p)
-                ftoprint[(val, i)] = elt/p^val
+                ftoprint[(val, i)] = elt/p**val
         outstr += latex(ZZpT(ftoprint))
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
