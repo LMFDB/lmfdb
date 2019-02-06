@@ -440,6 +440,11 @@ def lfuncEPhtml(L,fmt):
     eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
+    def group_display_knowl_C1_as_trivial(n,k):
+        if [n,k] == [1,1]:
+            return group_display_knowl(n, k, '$C_1$')
+        else:
+            return group_display_knowl(n, k)
     def row(trclass, goodorbad, p, poly):
         out = ""
         try:
@@ -457,14 +462,9 @@ def lfuncEPhtml(L,fmt):
                 out += "<td class='galois'>"
                 print p, gal_groups
                 if gal_groups[0]==[0,0]:
-                    pass   # do nothing, because the local faco is 1
-                elif gal_groups[0]==[1,1]:
-                    out += group_display_knowl(gal_groups[0][0], gal_groups[0][1],'$C_1$')
+                    pass   # do nothing, because the local factor is 1
                 else:
-                    out += group_display_knowl(gal_groups[0][0], gal_groups[0][1])
-                for n, k in gal_groups[1:]:
-                    out += "$\\times$"
-                    out += group_display_knowl(n, k)
+                    "$\\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
                 out += "</td>"
             out += "<td> %s </td>" % factors
             out += "</tr>\n"
