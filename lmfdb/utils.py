@@ -289,8 +289,6 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
     # if small, try to display it as an exact or half integer
     if abs(x) < 10.**digits:
         if is_exact(x):
-            if type(x) in [int, long]:
-                return bigint_knowl(x)
             s = str(x)
             if len(s) < digits + 2: # 2 = '/' + '-'
                 return str(x)
