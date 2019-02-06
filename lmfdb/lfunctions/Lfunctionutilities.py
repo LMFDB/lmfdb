@@ -290,7 +290,8 @@ def lfuncDShtml(L, fmt):
 
 
 def lfuncEPtex(L, fmt):
-    """ Returns the LaTex for displaying the Euler product of the L-function L.
+    """
+        Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
     from Lfunction import Lfunction_from_db
@@ -355,7 +356,7 @@ def lfuncEPtex(L, fmt):
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt, prec = None):
+def lfuncEPhtml(L,fmt):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -443,10 +444,10 @@ def lfuncEPhtml(L,fmt, prec = None):
         out = ""
         try:
             if L.coefficient_field == "CDF" or None in poly:
-                factors = str(pretty_poly(poly, prec = prec))
+                factors = str(pretty_poly(poly))
                 gal_groups = [[0,0]]
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
+                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"

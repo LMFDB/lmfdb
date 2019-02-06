@@ -32,7 +32,7 @@ from collections import defaultdict
 
 
 
-def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p = None):
+def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """ Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
@@ -44,7 +44,9 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
         if galois:
             return [str(s[0]), [[0,0]]]
         return str(s[0])
-    sfacts = factor(PolynomialRing(ZZ, 'T')(s))
+    ZZT = PolynomialRing(ZZ, vari)
+    ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
+    sfacts = ZZT(s).factor()
     sfacts_fc = [[v[0],v[1]] for v in sfacts]
     if sfacts.unit() == -1:
         sfacts_fc[0][0] *= -1
@@ -53,7 +55,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
         this_poly = v[0]
         # if the factor is -1+T^2, replace it by 1-T^2
         # this should happen an even number of times, mod powers
-        if this_poly.substitute(T=0) == -1:
+        if this_poly[0] == -1:
             this_poly = -1*this_poly
             v[0] = this_poly
         if galois:
@@ -65,51 +67,18 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
             this_t_number = this_gal.group().__pari__()[2].sage()
             gal_list.append([this_degree, this_t_number])
         vcf = v[0].list()
-        terms = 0
         if len(sfacts) > 1 or v[1] > 1:
             outstr += '('
-        for i in range(len(vcf)):
-            if vcf[i] != 0:
-                if terms > 0 and vcf[i] > 0:
-                    outstr += '+'
-                if i == 0:
-                    outstr += str(vcf[i])
-                else:
-                    if i == 1:
-                        variableterm = vari
-                    elif i > 1:
-                        variableterm = vari + '^{' + str(i) + '}'
-
-                    if terms == prec and i != len(vcf) - 1:
-                        if vcf[i] < 0:
-                            outstr += '+' # we haven't added the +
-                        outstr += 'O(%s)' % variableterm
-                        break
-                    if vcf[i] == 1:
-                        outstr += variableterm
-                    elif abs(vcf[i]) != 1:
-                        if p is None or vcf[i] % p != 0:
-                            outstr += str(vcf[i]) + variableterm
-                        else:
-                            # we try to factor p
-                            res = vcf[i]
-                            e = 0
-                            while res % p == 0:
-                                res /= p
-                                e += 1
-                            assert e != 0
-                            pfactor = 'p^{%d}' % e if e > 1 else 'p'
-                            if res == 1:
-                                res = ''
-                            elif res == -1:
-                                res = '-'
-                            else:
-                                res = str(res)
-                            outstr += '%s %s %s' % (res, pfactor, variableterm)
-                    elif vcf[i] == -1:
-                        outstr += '-' + variableterm
-                terms += 1
-
+        # casting from ZZT -> ZZpT
+        if p is None:
+            ftoprint = dict( zip( zip( [0]*len(vcf), range(len(vcf))), vcf) )
+        else:
+            ftoprint = {}
+            for i, elt in enumerate(f):
+                v = elt.valuation(p)
+                fdict[(v, i)] = elt/p^v
+        outstr += latex(ZZpT(ftoprint))
+        terms += 1
         if len(sfacts) > 1 or v[1] > 1:
             outstr += ')'
         if v[1] > 1:
@@ -120,7 +89,7 @@ def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', prec = None, p
                 troubletest = sfacts[0][0].disc()*sfacts[1][0].disc()
                 if troubletest.is_square():
                     gal_list=[[2,1]]
-        return [outstr, gal_list]
+        return outstr, gal_list
     return outstr
 
 ################################################################################
