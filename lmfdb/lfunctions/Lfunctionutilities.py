@@ -444,14 +444,14 @@ def lfuncEPhtml(L,fmt):
         out = ""
         try:
             if L.coefficient_field == "CDF" or None in poly:
-                factors = str(pretty_poly(poly))
+                factors = '\( %s \)' % pretty_poly(poly)
                 gal_groups = [[0,0]]
             elif not display_galois:
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-                factors =  make_bigint('\( %s \)' % factors
+                factors =  make_bigint('\( %s \)' % factors)
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-                factors =  make_bigint('\( %s \)' % factors
+                factors =  make_bigint('\( %s \)' % factors)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
