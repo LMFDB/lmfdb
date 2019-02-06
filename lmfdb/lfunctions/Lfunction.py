@@ -118,7 +118,7 @@ def makeLfromdata(L):
         L.motivic_weight = ZZ(L.motivic_weight)
         L.analytic_normalization = QQ(L.motivic_weight)/2
     else:
-        # this is a numeric convered to RealLiteral
+        # this is a numeric converted to RealLiteral
         L.analytic_normalization = round_to_half_int(data.get('analytic_normalization'))
         L.motivic_weight = '' # ZZ(2*L.analytic_normalization)
 

@@ -33,7 +33,7 @@ from collections import defaultdict
 
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
-    """ 
+    """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
         and the second entry a list describing the Galois groups
@@ -286,8 +286,8 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
-    if is_exact(x):
-        return '%s' % x
+    if is_exact(x) and abs(x) < 10.**digits:
+        return str(x)
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     k = round_to_half_int(x)
