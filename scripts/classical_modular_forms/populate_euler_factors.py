@@ -2,7 +2,7 @@
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
-from sage.all import PowerSeriesRing, ZZ, prime_range, prime_powers, gcd, RR
+from sage.all import PowerSeriesRing, ZZ, prime_range, prime_powers, gcd, RR, PolynomialRing, prod
 
 
 
