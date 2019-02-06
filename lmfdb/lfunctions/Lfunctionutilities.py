@@ -483,9 +483,9 @@ def lfuncEPhtml(L,fmt):
     for j, good_primes in enumerate([good_primes[:9], good_primes[9:]]):
         for p in good_primes:
             if p in L.localfactors_factored_dict:
-                lf = L.localfactors_factored_dict[p_index[p]]
+                lf = L.localfactors_factored_dict[p]
             else:
-                lf = L.localfactors[p]
+                lf = L.localfactors[p_index[p]]
             eptable += row(trclass, goodorbad, p, lf)
             goodorbad = ""
             if j == 0:
