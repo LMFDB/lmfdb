@@ -455,7 +455,7 @@ def lfuncEPhtml(L,fmt):
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
-                print gal_groups
+                print p, gal_groups
                 if gal_groups[0]==[0,0]:
                     pass   # do nothing, because the local faco is 1
                 elif gal_groups[0]==[1,1]:
