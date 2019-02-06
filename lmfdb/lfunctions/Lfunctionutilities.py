@@ -360,7 +360,6 @@ def lfuncEPhtml(L,fmt):
     """
         Euler product as a formula and a table of local factors.
     """
-    # TODO make use of L.localfactors_factored, to avoid factoring
 
 
     # Formula
@@ -449,8 +448,10 @@ def lfuncEPhtml(L,fmt):
                 gal_groups = [[0,0]]
             elif not display_galois:
                 factors = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
+                factors =  make_bigint('\( %s \)' % factors
             else:
                 factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
+                factors =  make_bigint('\( %s \)' % factors
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
@@ -464,7 +465,7 @@ def lfuncEPhtml(L,fmt):
                     out += "$\\times$"
                     out += group_display_knowl(n, k)
                 out += "</td>"
-            out += "<td> %s </td>" % make_bigint('\( %s \)' % factors)
+            out += "<td> %s </td>" % factors
             out += "</tr>\n"
 
         except IndexError:
