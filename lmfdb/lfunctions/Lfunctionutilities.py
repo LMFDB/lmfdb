@@ -460,10 +460,11 @@ def lfuncEPhtml(L,fmt):
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
+                print p, gal_groups
                 if gal_groups[0]==[0,0]:
                     pass   # do nothing, because the local factor is 1
                 else:
-                    "$\\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
+                    out += "$\\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
                 out += "</td>"
             out += "<td> %s </td>" % factors
             out += "</tr>\n"
