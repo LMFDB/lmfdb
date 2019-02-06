@@ -175,9 +175,19 @@ def makeLfromdata(L):
 
     # Dirichlet coefficients
     L.localfactors = data.get('euler_factors', None)
+    if L.localfactors is not None:
+        L.localfactors_dict = dict(zip(primes_first_n(len(L.localfactors)), L.localfactors))
+    else:
+        L.localfactors_dict = {}
+
     L.bad_lfactors = data.get('bad_lfactors', None)
+
     # the first euler factors factored
     L.localfactors_factored = data.get('euler_factors_factorization', None)
+    if L.localfactors_factored is not None:
+        L.localfactors_factored_dict = dict(zip(primes_first_n(len(L.localfactors_factored)), L.localfactors_factored))
+    else:
+        L.localfactors_factored_dict = {}
 
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF

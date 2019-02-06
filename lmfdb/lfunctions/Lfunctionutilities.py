@@ -4,10 +4,10 @@ import re
 from lmfdb.lfunctions import logger
 from flask import url_for
 import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, is_prime, prime_range
+from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, exp, pi, prod, floor, is_prime, prime_range
 from lmfdb.transitive_group import group_display_knowl
 from lmfdb.db_backend import db
-from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, key_for_numerically_sort, make_bigint
+from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, list_factored_to_factored_poly_otherorder, key_for_numerically_sort, make_bigint
 
 
 ###############################################################
@@ -446,16 +446,20 @@ def lfuncEPhtml(L,fmt):
         else:
             return group_display_knowl(n, k)
     def row(trclass, goodorbad, p, poly):
+        if isinstance(poly[0], list):
+            galois_pretty_factors = list_factored_to_factored_poly_otherorder
+        else:
+            galois_pretty_factors = list_to_factored_poly_otherorder
         out = ""
         try:
             if L.coefficient_field == "CDF" or None in poly:
                 factors = '\( %s \)' % pretty_poly(poly)
                 gal_groups = [[0,0]]
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
+                factors = galois_pretty_factors(poly, galois=display_galois, p = p)
                 factors =  make_bigint('\( %s \)' % factors)
             else:
-                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
+                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p = p)
                 factors =  make_bigint('\( %s \)' % factors)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
@@ -473,24 +477,29 @@ def lfuncEPhtml(L,fmt):
         return out
     goodorbad = "bad"
     trclass = ""
-    for lf in L.bad_lfactors:
-        eptable += row(trclass, goodorbad, lf[0], lf[1])
+    for p, lf in L.bad_lfactors:
+        if p in L.localfactors_factored_dict:
+            lf = L.localfactors_factored_dict[p]
+        eptable += row(trclass, goodorbad, p, lf)
         goodorbad = ""
         trclass = ""
     goodorbad = "good"
     trclass = " class='first'"
-    good_primes1 = good_primes[:9]
-    good_primes2 = good_primes[9:]
-    for j in good_primes1:
-        this_prime_index = prime_pi(j) - 1
-        eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
-        goodorbad = ""
-        trclass = ""
-    trclass = " id='moreep'  class='more nodisplay'"
-    for j in good_primes2:
-        this_prime_index = prime_pi(j) - 1
-        eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
-        trclass = " class='more nodisplay'"
+    for j, good_primes in enumerate([good_primes[:9], good_primes[9:]]):
+        for p in good_primes:
+            if p in L.localfactors_factored_dict:
+                lf = L.localfactors_factored_dict[p]
+            else:
+                lf = L.localfactors[p]
+            eptable += row(trclass, goodorbad, p, lf)
+            goodorbad = ""
+            if j == 0:
+                trclass = ""
+            elif j == 1:
+                trclass = " class='more nodisplay'"
+        else:
+            if j == 0:
+                trclass = " id='moreep'  class='more nodisplay'"
 
     eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td>"""
 
