@@ -401,15 +401,9 @@ def lfuncEPhtml(L,fmt):
         ans += str(L.degree - 1) + ". "
 
     # Figuring out good and bad primes
-    bad_primes = []
-    for lf in L.bad_lfactors:
-        bad_primes.append(lf[0])
-
-    good_primes = []
-    for p in prime_range(100):
-        if p not in bad_primes:
-            good_primes.append(p)
-    p_index = dict(prime_range(100), range(len(prime_range(100))))
+    bad_primes = [p for p, _ in L.bad_lfactors]
+    good_primes = [p for p in prime_range(100) if p not in bad_primes]
+    p_index = dict(zip(prime_range(100), range(len(prime_range(100)))))
 
 
     #decide if we display galois
