@@ -41,12 +41,14 @@ IMPORTANT:
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * In create_table, make label unique and add index; port to existing tables (David)
 
+Style:
+* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
+
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* Remove decimal point if no number follows in series expansions etc., e.g. find 300.i in http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
 * Rename mf.elliptic.hecke-operator knowl and delete group.gammann
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
