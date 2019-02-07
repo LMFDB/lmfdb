@@ -115,7 +115,7 @@ NOT CMF STUFF:
 * remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
 * convert 1.1 projection to 1 in _parse_projection?
 * cache queries on gps_transitive?
-* store the factorization of the Euler factors on the database, and then write code to take advantage of this. 
+* store the factorization of the Euler factors on the database, and then write code to take advantage of this.
 * rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
 * on lucky, sort should be [] by default?
 * convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
