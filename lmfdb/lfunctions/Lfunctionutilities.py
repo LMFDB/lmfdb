@@ -974,15 +974,21 @@ def name_and_object_from_url(url):
 
 def names_and_urls(instances):
     res = []
-    names = []
+    names = set()
+    urls = set()
+
+    # remove duplicate urls
     for instance in instances:
         if not isinstance(instance, basestring):
             instance = instance['url']
-        name, obj_exists = name_and_object_from_url(instance)
+        urls.add(instance)
+
+    for url in urls:
+        name, obj_exists = name_and_object_from_url(url)
         if not name:
             name = ''
         if obj_exists:
-            url = "/"+instance
+            url = "/"+url
         else:
             # do not display unknown objects
             continue
@@ -991,7 +997,7 @@ def names_and_urls(instances):
         # avoid duplicates
         if name not in names:
             res.append((name, url))
-            names.append(name)
+            names.add(name)
     # sort based on name + label
     res.sort(key= lambda x: key_for_numerically_sort(x[0]))
     return res

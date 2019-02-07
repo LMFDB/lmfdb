@@ -1,11 +1,9 @@
 CRITICAL (BUGS):
 * There some data errors in the lfunctions: (Edgar)
-  - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
   - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (ongoing)
 
 IMPORTANT:
 * enable autovacuum on postgres config
-* Add L-functions for 10 < N <= 24, 4000 < Nk^2 <= 40000 once apdata is available (Drew, Edgar).
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
  - see scripts/verify_data.py
  - check dimensions add up, see above (Edgar)
@@ -16,7 +14,6 @@ IMPORTANT:
  - parallelize (Edgar)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Add related objects to L-functions, move duals (Edgar)
 * Make old L-function labels work (Edgar/David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
@@ -27,18 +24,24 @@ IMPORTANT:
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
 * Make tests pass (Edgar)
 * Compute mf_hecke_cc normalized:
-  - Nk^2 <= 4000 (Edgar)
-  - Nk^2 <= 40000 - trivial (Drew)
-  - N <= 10 Nk^2 <= 100,000 (Drew)
-  - N <= 100, k <= 12 and Nk^2 > 4000 (Edgar)
-  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 and not in the above (Drew)
-  - 50 < space dim <= 100, k > 1 (Drew)
-  - space dim <= 50, k > 1 (Drew)
-  - recompute embeddings roots (Edgar)
+  - tail -n +4 | sort -u -k1,1n -k5,5n
+  Ready:
+  - mf_hecke_cc_k1_4000.txt: k = 1, N <= 4000 -- 152268 + 3 = 152271 -- tab
+  - mf_hecke_cc_N100_k12_4001.txt: N <= 100, k <= 12,  Nk^2 > 4000, non-trivial -- 341298 + 3 -- tab
+  - mf_hecke_cc_triv_4001_40000.txt: Nk^2 <= 40000, trivial -- 3061489 + 3 -- colon
+  - mf_hecke_cc_N10_triv_40001_10000_nontriv_4001_100000.txt: N <= 10, (40001 <= Nk^2 <= 100,000, trivial) + (4001 <= Nk^2 <= 100,000, non-trivial)  --  7074 + 45372 + 3 = 52449  -- colon
+  - mf_hecke_cc_N11_N24_nontriv_4001_40000_missing2orbits.txt: 11 <= N <= 24, 4001 <= Nk^2 <= 40000,  non-trivial -- 92385 + 3 = 92388  -- colon
+  - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
+  Missing data:
+  - Nk^2 <= 4000, k > 1: (Edgar) -- 9814230 -- tab
+  - 23:39:4 and 23:41:4  750 + 790 (Drew)
+
+* recompute embeddings roots (Edgar)
 * Compute L-functions:
-  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) waiting for data
-  - 50 < space dim <= 100, k > 1 (Edgar) waiting for data
+  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) (ongoing)
+  - 50 < space dim <= 100, k > 1 (Edgar) (on queue)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
+  - if dim == 1, add the unique complex embedding
 * In create_table, make label unique and add index; port to existing tables (David)
 
 Style:
@@ -109,6 +112,9 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
+* convert 1.1 projection to 1 in _parse_projection?
+* cache queries on gps_transitive?
 * store the factorization of the Euler factors on the database, and then write code to take advantage of this. 
 * rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
 * on lucky, sort should be [] by default?

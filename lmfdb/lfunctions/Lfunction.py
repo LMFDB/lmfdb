@@ -12,19 +12,26 @@ import re
 from flask import url_for, request
 from lmfdb.db_encoding import Json
 
-from Lfunctionutilities import (string2number, get_bread,
-                                compute_local_roots_SMF2_scalar_valued,
-                                names_and_urls)
+from Lfunctionutilities import string2number, get_bread,\
+                                compute_local_roots_SMF2_scalar_valued,\
+                                names_and_urls
 from LfunctionComp import isogeny_class_cm
 
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_instances_by_trace_hash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash,\
+                              get_instances_by_trace_hash, get_lfunction_by_url,\
+                              get_instance_by_url, getHmfData, getHgmData,\
+                              getEllipticCurveData, get_multiples_by_Lhash
 from Lfunction_base import Lfunction
 
 from lmfdb.db_backend import db
 from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
+from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int,\
+                        display_complex, str_to_CBF
 
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, latex, CBF, RIF, primes_first_n, next_prime
+from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,\
+                     is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,\
+                     EllipticCurve, NumberField, RealNumber, PowerSeriesRing,\
+                     latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -562,38 +569,38 @@ class Lfunction_from_db(Lfunction):
         self.credit = ''
         self.label = ''
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "general"
 
-    @property
+    @lazy_attribute
     def langlands(self):
         # this controls data on the Euler product, but is not stored
         # systematically in the database. Default to True until this
         # is retrievable from the database.
         return True
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(self.degree)
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return self.Lhash
 
-    @property
+    @lazy_attribute
     def factors_origins(self):
-        lfactors = []
+        instances = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                instances = []
                 elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
                 trace_hash = elt.get('trace_hash',None)
                 if trace_hash is not None:
-                    instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
-                else:
-                    instances = get_instances_by_Lhash(factor_Lhash)
-                lfactors.extend(names_and_urls(instances))
-        return lfactors
+                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+                # names_and_urls will remove duplicates
+                instances.extend(get_instances_by_Lhash(factor_Lhash))
+        return names_and_urls(instances)
 
     def get_Lhash_by_url(self, url):
         instance = get_instance_by_url(url)
@@ -602,19 +609,40 @@ class Lfunction_from_db(Lfunction):
         return instance['Lhash']
 
 
-    @property
+    @lazy_attribute
     def origins(self):
         lorigins = []
         instances = get_instances_by_Lhash(self.Lhash)
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         if self.trace_hash is not None:
             instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
-        lorigins = names_and_urls(instances)
+        return names_and_urls(instances)
         if not self.selfdual and hasattr(self, 'dual_link'):
             lorigins.append(("Dual L-function", self.dual_link))
         return lorigins
 
     @property
+    def friends(self):
+        related_objects = []
+        if not self.selfdual and hasattr(self, 'dual_link'):
+            related_objects.append(("Dual L-function", self.dual_link))
+
+        instances = [elt for elt in get_multiples_by_Lhash(self.Lhash) if elt['Lhash'] != self.Lhash]
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        # the only thing that we might be missing are genus 2 L-functions
+        # hence, self.degree = 2, self.type = CMF
+        if self.degree == 2:
+            # our only hope is to find the missing genus 2 curve with a CMF
+            for Lhash in  set(elt['Lhash'] for elt in instances if elt['type'] == 'CMF'):
+                elt = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = elt.get('trace_hash',None)
+                if trace_hash is not None and elt['degree'] == 4:
+                    # names_and_urls will remove duplicates
+                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+        return related_objects + names_and_urls(instances)
+
+
+    @lazy_attribute
     def instances(self):
         # we got here by tracehash or Lhash
         if self._Ltype == "general":
@@ -627,28 +655,24 @@ class Lfunction_from_db(Lfunction):
         else:
             return []
 
-    @property
-    def friends(self):
-        return []
-
-    @property
+    @lazy_attribute
     def downloads(self):
         return [['Download Euler factors', self.download_euler_factor_url],
                 ['Download zeros', self.download_zeros_url],
                 ['Download Dirichlet coefficients', self.download_dirichlet_coeff_url]]
 
-    @property
+    @lazy_attribute
     def download_euler_factor_url(self):
         return request.path.replace('/L/', '/L/download_euler/')
 
-    @property
+    @lazy_attribute
     def download_zeros_url(self):
         return request.path.replace('/L/', '/L/download_zeros/')
-    @property
+    @lazy_attribute
     def download_dirichlet_coeff_url(self):
         return request.path.replace('/L/', '/L/download_dirichlet_coeff/')
 
-    @property
+    @lazy_attribute
     def download_url(self):
         return request.path.replace('/L/', '/L/download/')
 
@@ -707,7 +731,7 @@ class Lfunction_from_db(Lfunction):
 
 
 
-    @property
+    @lazy_attribute
     def chilatex(self):
         try:
             if int(self.characternumber) != 1:
@@ -745,39 +769,39 @@ class Lfunction_from_db(Lfunction):
         self.info['title_analytic'] = ("L-function" + title_end)
         return
 
-    @property
+    @lazy_attribute
     def htmlname(self):
         return "<em>L</em>(<em>s</em>)"
 
-    @property
+    @lazy_attribute
     def htmlname_arithmetic(self):
         return self.htmlname
 
-    @property
+    @lazy_attribute
     def texname(self):
         return "L(s)"
 
-    @property
+    @lazy_attribute
     def texname_arithmetic(self):
         return self.texname
 
-    @property
+    @lazy_attribute
     def texnamecompleted1ms(self):
         if self.selfdual:
             return "\\Lambda(1-s)"
         else:
             return "\\overline{\\Lambda}(1-s)"
-    @property
+    @lazy_attribute
     def texnamecompleted1ms_arithmetic(self):
         if self.selfdual:
             return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
         else:
             return "\\overline{\\Lambda}(%d-s)" % (self.motivic_weight + 1)
 
-    @property
+    @lazy_attribute
     def texnamecompleteds(self):
         return  "\\Lambda(s)"
-    @property
+    @lazy_attribute
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds
 
@@ -787,7 +811,7 @@ class Lfunction_from_db(Lfunction):
     #        raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
     #    return
 
-    @property
+    @lazy_attribute
     def knowltype(self):
         return None
 
@@ -830,15 +854,15 @@ class Lfunction_CMF(Lfunction_from_db):
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return  "classical modular form"
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return ".".join(map(str, self.label_args))
 
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
 
@@ -880,15 +904,15 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return  "classical modular form orbit"
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return ".".join(map(str, self.label_args))
 
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
 
@@ -930,11 +954,11 @@ class Lfunction_EC(Lfunction_from_db):
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "ellipticcurve"
 
-    @property
+    @lazy_attribute
     def base_field(self):
         """base_field of the EC"""
         return self.field_label
@@ -955,7 +979,7 @@ class Lfunction_EC(Lfunction_from_db):
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
         return
 
-    @property
+    @lazy_attribute
     def bread(self):
         """breadcrumbs for webpage"""
         if self.base_field == '1.1.1.1': #i.e. QQ
@@ -968,14 +992,16 @@ class Lfunction_EC(Lfunction_from_db):
         return lbread
 
 
-    @property
+    @lazy_attribute
     def field(self):
         return "Q" if self.field_degree == 1 else self.field_label
 
     @property
     def friends(self):
         """The 'friends' to show on webpage."""
-        lfriends = []
+        #lfriends = super(Lfunction_from_db, self).friends
+        print "friends Lfunction_EC"
+        lfriends = Lfunction_from_db.friends.fget(self)
         if self.base_field == '1.1.1.1': #i.e. QQ
             # only show symmetric powers for non-CM curves
             if not isogeny_class_cm(self.origin_label):
@@ -988,14 +1014,14 @@ class Lfunction_EC(Lfunction_from_db):
         return lfriends
 
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         if self.field_degree == 1:
             llabel = self.long_isogeny_class_label
         else:
             llabel = self.field_label + "-" + self.long_isogeny_class_label
         return llabel
-    @property
+    @lazy_attribute
     def knowltype(self):
         if self.field_degree == 1:
             return "ec.q"
@@ -1025,19 +1051,19 @@ class Lfunction_genus2_Q(Lfunction_from_db):
         Lfunction_from_db.__init__(self, url = self.url)
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return  self.isogeny_class_label
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "genus2curveQ"
 
-    @property
+    @lazy_attribute
     def knowltype(self):
         return "g2c.q"
 
-    @property
+    @lazy_attribute
     def factors_origins(self):
         # this is just a hack, and the data should be replaced
         instances = []
