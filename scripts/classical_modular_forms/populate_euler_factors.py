@@ -31,7 +31,7 @@ def factorization(original_poly):
         try:
             facts = PolynomialRing(ZZ, 'T', implementation='NTL')(original_poly).factor()
         except NotImplementedError:
-            print poly.list()
+            print original_poly
             raise
     # if the factor is -1+T^2, replace it by 1-T^2
     # this should happen an even number of times, mod powers
