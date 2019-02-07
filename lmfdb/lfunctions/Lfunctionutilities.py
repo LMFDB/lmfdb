@@ -904,14 +904,16 @@ def name_and_object_from_url(url):
     obj_exists = False
 
     if url_split[0] == "EllipticCurve":
+        # every EC instance was added from EC
+        obj_exists = True
         if url_split[1] == 'Q':
             # EllipticCurve/Q/341641/a
             label_isogeny_class = ".".join(url_split[-2:])
-            obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
+            #obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
         else:
             # EllipticCurve/2.2.140.1/14.1/a
             label_isogeny_class =  "-".join(url_split[-3:])
-            obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
+            #obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class
 
     elif url_split[0] == "Character":
@@ -919,7 +921,8 @@ def name_and_object_from_url(url):
         assert url_split[1] == "Dirichlet"
         name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
         label = ".".join(url_split[-2:])
-        obj_exists = db.char_dir_values.exists({"label" : label})
+        obj_exists = True
+        #obj_exists = db.char_dir_values.exists({"label" : label})
 
     elif url_split[0] == "Genus2Curve":
         # Genus2Curve/Q/310329/a
