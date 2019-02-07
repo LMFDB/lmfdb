@@ -25,7 +25,10 @@ def factorization(poly):
     assert poly[0] == 1
     if poly == 1:
         return [1]
-    facts = poly.factor()
+    try:
+        facts = poly.factor()
+    except NotImplementedError:
+        facts = PolynomialRing(ZZ, 'T', implementation='NTL')(poly.list()).factor()
     # if the factor is -1+T^2, replace it by 1-T^2
     # this should happen an even number of times, mod powers
     out = [[-g if g[0] == -1 else g, e] for g, e in facts]
