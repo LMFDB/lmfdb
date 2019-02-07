@@ -23,6 +23,8 @@ def strip_zeros(L):
     L[i+1:] = []
 
 def factorization(original_poly):
+    print original_poly
+    print PolynomialRing(ZZ, 'T', implementation='NTL')(ola).factor()
     poly = ZZT(original_poly)
     assert poly[0] == 1
     if poly == 1:
