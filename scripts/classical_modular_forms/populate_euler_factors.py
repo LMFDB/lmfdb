@@ -4,8 +4,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."
 from  lmfdb.db_backend import db
 from sage.all import PowerSeriesRing, ZZ, prime_range, prime_powers, gcd, RR, PolynomialRing, prod
 
-ola = [1, 0, 304, 0, 43320, 0, 3841040, 0, 237184220, 0, 10815600432, 0, 376743415048, 0, 10225892694160, 0, 218578456337670, 0, 3691547262591760, 0, 49097578592470408, 0, 508829450867420592, 0, 4028233152700413020, 0, 23549670738863953040L, 0, 95880802293946094520L, 0, 242898032477996772784L, 0, 288441413567621167681L  ]
-fact_ola = PolynomialRing(ZZ, 'T', implementation='NTL')(ola).factor()
 
 ZZT = PolynomialRing(ZZ, "T")
 ps = prime_range(100)
@@ -23,8 +21,6 @@ def strip_zeros(L):
     L[i+1:] = []
 
 def factorization(original_poly):
-    print original_poly
-    print PolynomialRing(ZZ, 'T', implementation='NTL')(ola).factor()
     poly = ZZT(original_poly)
     assert poly[0] == 1
     if poly == 1:
@@ -35,9 +31,10 @@ def factorization(original_poly):
         facts = poly.factor()
     except NotImplementedError:
         try:
+            # try to sort out the memory leak
+            foo = PolynomialRing(ZZ, 'T', implementation='NTL')([1] + [0]*(len(original_poly) - 2) + [1])._pari_with_name().factor()
             facts = PolynomialRing(ZZ, 'T', implementation='NTL')(original_poly).factor()
         except NotImplementedError:
-            print original_poly
             raise
     # if the factor is -1+T^2, replace it by 1-T^2
     # this should happen an even number of times, mod powers
