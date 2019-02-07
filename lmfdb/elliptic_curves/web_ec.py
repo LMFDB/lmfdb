@@ -143,10 +143,12 @@ class WebEC(object):
         try:
             N, iso, number = split_lmfdb_label(label)
             data = db.ec_curves.lucky({"lmfdb_label" : label})
+            data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 data = db.ec_curves.lucky({"label" : label})
+                data['label_type'] = 'Cremona'
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -330,7 +332,10 @@ class WebEC(object):
                            ('Torsion Structure', '\(%s\)' % self.mw['tor_struct'])
                            ]
 
-        self.title = "Elliptic Curve %s (Cremona label %s)" % (self.lmfdb_label, self.label)
+        if self.label_type == 'Cremona':
+            self.title = "Elliptic Curve with Cremona label {} (LMFDB label {})".format(self.label, self.lmfdb_label)
+        else:
+            self.title = "Elliptic Curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
                            ('$\Q$', url_for(".rational_elliptic_curves")),
