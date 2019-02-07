@@ -20,8 +20,8 @@ def strip_zeros(L):
         i = -1
     L[i+1:] = []
 
-def factorization(poly):
-    poly = ZZT(poly)
+def factorization(original_poly):
+    poly = ZZT(original_poly)
     assert poly[0] == 1
     if poly == 1:
         return [1]
@@ -29,7 +29,7 @@ def factorization(poly):
         facts = poly.factor()
     except NotImplementedError:
         try:
-            facts = PolynomialRing(ZZ, 'T', implementation='NTL')(poly.list()).factor()
+            facts = PolynomialRing(ZZ, 'T', implementation='NTL')(original_poly).factor()
         except NotImplementedError:
             print poly.list()
             raise
@@ -108,6 +108,8 @@ def fix_euler(idnumber, an_list_bound = 11):
     db.lfunc_lfunctions.update({'id':idnumber}, row, restat = False, resort = False)
     return True
 
+if len(sys.argv) == 2:
+    fix_euler(int(sys.argv[1]))
 
 if len(sys.argv) == 3:
     k = int(sys.argv[1])
