@@ -30,7 +30,7 @@ def factorization(poly):
     except NotImplementedError:
         try:
             facts = PolynomialRing(ZZ, 'T', implementation='NTL')(poly.list()).factor()
-        except NotImplementedError;
+        except NotImplementedError:
             print poly.list()
             raise
     # if the factor is -1+T^2, replace it by 1-T^2
