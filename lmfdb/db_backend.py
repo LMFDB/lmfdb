@@ -436,7 +436,7 @@ class PostgresTable(PostgresBase):
 
         - ``projection`` -- either 0, 1, 2, a dictionary or list of column names.
 
-          - If 0, projects just to the ``label``.  If the search table does not have a lable column, raises a RuntimeError.
+          - If 0, projects just to the ``label``.  If the search table does not have a label column, raises a RuntimeError.
           - If 1, projects to all columns in the search table.
           - If 1.1, as 1 but with id included
           - If 2, projects to all columns in either the search or extras tables.
@@ -1102,7 +1102,7 @@ class PostgresTable(PostgresBase):
             sage: nf.exists({'class_number':int(7)})
             True
         """
-        return self.lucky(query, projection=1) is not None
+        return self.lucky(query, projection='id') is not None
 
     def label_exists(self, label, label_col=None):
         if label_col is None:
