@@ -862,7 +862,7 @@ class PostgresTable(PostgresBase):
     # Methods for querying                                           #
     ##################################################################
 
-    def lucky(self, query={}, projection=2, offset=0, sort=None):
+    def lucky(self, query={}, projection=2, offset=0, sort=[]):
         #FIXME Nulls aka Nones are being erased, we should perhaps just leave them there
         """
         One of the two main public interfaces for performing SELECT queries,
@@ -886,7 +886,12 @@ class PostgresTable(PostgresBase):
                                2 means all columns (default)).
         - ``offset`` -- integer. allows retrieval of a later record rather than just first.
         - ``sort`` -- The sort order, from which the first result is returned.
-          If only one result is expected, setting this to `[]` can result in speedups.
+            - None, Using the default sort order for the table
+                the query then the choice of the result is arbitrary.
+            - a list of strings (which are interpreted as column names in the
+                ascending direction) or of pairs (column name, 1 or -1).
+                If not specified, will use the default sort order on the table.
+            - [] (default), unsorted, thus if there is more than one match to
 
         OUTPUT:
 
