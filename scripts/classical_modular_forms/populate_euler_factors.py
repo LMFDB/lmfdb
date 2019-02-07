@@ -25,8 +25,6 @@ def factorization(original_poly):
     assert poly[0] == 1
     if poly == 1:
         return [1]
-    if original_poly == ola:
-        print "equal ola"
     try:
         facts = poly.factor()
     except NotImplementedError:
