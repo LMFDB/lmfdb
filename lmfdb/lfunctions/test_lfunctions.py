@@ -172,7 +172,7 @@ class LfunctionTest(LmfdbTest):
         assert '7.21458918128718444354242474222' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
-        assert '1341682069728' in L.data # a26
+        assert '1.34e12' in L.data # a26
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
         assert '18.17341115038590061946085869072' in L.data
 
