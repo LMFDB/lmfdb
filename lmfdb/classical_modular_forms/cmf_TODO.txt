@@ -1,9 +1,6 @@
 CRITICAL (BUGS):
-* There some data errors in the lfunctions: (Edgar)
-  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (ongoing)
 
 IMPORTANT:
-* enable autovacuum on postgres config
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
  - see scripts/verify_data.py
  - check dimensions add up, see above (Edgar)
@@ -14,7 +11,6 @@ IMPORTANT:
  - parallelize (Edgar)
 * Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Make old L-function labels work (Edgar/David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
 * Add relative dimension selector on newspace page (David)
@@ -53,6 +49,7 @@ FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* enable autovacuum on postgres config
 * Rename mf.elliptic.hecke-operator knowl and delete group.gammann
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
@@ -115,13 +112,10 @@ NOT CMF STUFF:
 * remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
 * convert 1.1 projection to 1 in _parse_projection?
 * cache queries on gps_transitive?
-* store the factorization of the Euler factors on the database, and then write code to take advantage of this.
 * rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
-* on lucky, sort should be [] by default?
 * convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
 * copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
-* max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript
 * generalize search_types
 * hidden != search clean hidden

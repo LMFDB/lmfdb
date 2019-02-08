@@ -138,6 +138,10 @@ class LfunctionTest(LmfdbTest):
 
 
     def test_Lcmf(self):
+        # test old links
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/', follow_redirects = True)
+        assert "Modular form 11.2.a.a.1.1" in L.data
+
         # check the zeros agree across 3 instances
         L = self.tc.get('/L/Zeros/EllipticCurve/2.0.11.1/11.1/a/')
         assert '6.36261389471308870138602900888' in L.data

@@ -591,9 +591,8 @@ class Lfunction_from_db(Lfunction):
     def factors_origins(self):
         instances = []
         if "," in self.Lhash:
-            for factor_Lhash in  self.Lhash.split(","):
+            for factor_Lhash in  set(self.Lhash.split(",")):
                 # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                instances = []
                 elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
                 trace_hash = elt.get('trace_hash',None)
                 if trace_hash is not None:
