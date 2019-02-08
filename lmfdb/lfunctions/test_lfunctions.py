@@ -163,7 +163,7 @@ class LfunctionTest(LmfdbTest):
         for i in range(1,6):
             assert 'Modular form 13.12.a.a.1.%d' % i  in L.data
         assert '371293' in L.data # L_3 root
-        assert '1856465' in L.data # a_13
+        assert '2.54e3' in L.data # a_13
 
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
