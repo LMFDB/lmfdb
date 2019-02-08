@@ -1,6 +1,8 @@
-CRITICAL (BUGS):
+CRITICAL (BUGS): 
 
 IMPORTANT:
+* When inner twists have not been computed (inner_twist_count=-1 or inner_twists=None), the "Inner Twists" section needs to either be hidden, or amended to display information about self twists.  See http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/64/2/i/a/
+http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with and without CM.
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
  - see scripts/verify_data.py
  - check dimensions add up, see above (Edgar)
