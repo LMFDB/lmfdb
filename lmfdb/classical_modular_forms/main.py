@@ -1020,6 +1020,7 @@ class CMF_stats(StatsDisplay):
         self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
         self.level_knowl = display_knowl('mf.elliptic.level', title='level')
         self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
+        self.completeness_knowl = display_knowl('dq.mf.elliptic.extent', title='representative')
         #stats_url = url_for(".statistics")
 
     @property
@@ -1028,7 +1029,7 @@ class CMF_stats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>.  Note that the newforms in the database may not be %s." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"), self.completeness_knowl)
 
     table = db.mf_newforms
     baseurl_func = ".index"

@@ -290,14 +290,13 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
         return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
 
-@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>")
+@l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
-    print "HERE"
     char_orbit_label = db.mf_newspaces.lucky({'conrey_indexes': {'$contains': character}, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return flask.abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
-    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, character=character), code=301)
+    return flask.redirect(url_for('.l_function_cmf_page', level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, character=character, number=number), code=301)
 
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/")
 def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
