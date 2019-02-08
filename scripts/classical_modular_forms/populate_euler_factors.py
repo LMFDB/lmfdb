@@ -30,7 +30,7 @@ def factorization(original_poly):
     except NotImplementedError:
         try:
             # try to sort out the memory leak
-            foo = PolynomialRing(ZZ, 'T', implementation='NTL')([1] + [0]*(len(original_poly) - 2) + [1])._pari_with_name().factor()
+            PolynomialRing(ZZ, 'T', implementation='NTL')([1] + [0]*(len(original_poly) - 2) + [1])._pari_with_name().factor()
             facts = PolynomialRing(ZZ, 'T', implementation='NTL')(original_poly).factor()
         except NotImplementedError:
             raise
