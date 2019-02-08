@@ -539,6 +539,12 @@ def common_parse(info, query):
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
+    if info['search_type'] != 'SpaceDimensions':
+        if info.get('dim_type') == 'rel':
+            parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
+        else:
+            parse_ints(info, query, 'dim', name="Dimension")
+
 
 def parse_discriminant(d, sign = 0):
     d = int(d)
@@ -570,10 +576,6 @@ def parse_sort(info, query, spaces=False):
 
 def newform_parse(info, query):
     common_parse(info, query)
-    if info.get('dim_type') == 'rel':
-        parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
-    else:
-        parse_ints(info, query, 'dim', name="Dimension")
     parse_nf_string(info, query,'nf_label', name="Coefficient field")
     parse_bool(info, query, 'cm', qfield='is_cm', name='Self-twists')
     parse_bool(info, query, 'rm', qfield='is_rm', name='Self-twists')
@@ -595,11 +597,6 @@ def newspace_parse(info, query):
             msg = "%s not valid when searching for spaces" % display
             flash_error(msg)
             raise ValueError(msg)
-    if info.get('dim_type') == 'rel':
-        msg = "Relative dimension not valid when searching for spaces"
-        flash_error(msg)
-        raise ValueError(msg)
-    common_parse(info, query)
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
@@ -607,8 +604,8 @@ def newspace_parse(info, query):
         msg = "Cannot specify number of newforms while requesting all spaces"
         flash_error(msg)
         raise ValueError(msg)
+    common_parse(info, query)
     if info['search_type'] != 'SpaceDimensions':
-        parse_ints(info, query, 'dim', name='Dimension')
         parse_ints(info, query, 'num_forms', name='Number of newforms')
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
             # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
