@@ -19,22 +19,25 @@ IMPORTANT:
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
 * Make tests pass (Edgar)
 * Compute mf_hecke_cc normalized:
-  - tail -n +4 | sort -u -k1,1n -k5,5n
-  Ready:
+  On queue:
+  - mf_hecke_cc_2400_3099.txt: k > 1, 2400 <= Nk^2 <= 3099 -- 2443128 + 3 = 2443131 -- tab
+  - mf_hecke_cc_3100_4000.txt:  k > 1, 3100 <= Nk^2 <= 4000 -- 5283975 + 3 = 5283978 -- tab
+  Uploaded:
   - mf_hecke_cc_k1_4000.txt: k = 1, N <= 4000 -- 152268 + 3 = 152271 -- tab
+  - mf_hecke_cc_2399.txt: k > 1, Nk^2 <= 2399 -- 2087127 + 3 = 2087130 -- tab
   - mf_hecke_cc_N100_k12_4001.txt: N <= 100, k <= 12,  Nk^2 > 4000, non-trivial -- 341298 + 3 -- tab
   - mf_hecke_cc_triv_4001_40000.txt: Nk^2 <= 40000, trivial -- 3061489 + 3 -- colon
   - mf_hecke_cc_N10_triv_40001_10000_nontriv_4001_100000.txt: N <= 10, (40001 <= Nk^2 <= 100,000, trivial) + (4001 <= Nk^2 <= 100,000, non-trivial)  --  7074 + 45372 + 3 = 52449  -- colon
   - mf_hecke_cc_N11_N24_nontriv_4001_40000_missing2orbits.txt: 11 <= N <= 24, 4001 <= Nk^2 <= 40000,  non-trivial -- 92385 + 3 = 92388  -- colon
   - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
+
   Missing data:
-  - Nk^2 <= 4000, k > 1: (Edgar) -- 9814230 -- tab
   - 23:39:4 and 23:41:4  750 + 790 (Drew)
 
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
-  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) (ongoing)
-  - 50 < space dim <= 100, k > 1 (Edgar) (on queue)
+  - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : wrong data? 24.37.h.c and 24.39.h.c
+  - 50 < space dim <= 100, k > 1 (Edgar) (ongoing)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
   - if dim == 1, add the unique complex embedding
 * In create_table, make label unique and add index; port to existing tables (David)
