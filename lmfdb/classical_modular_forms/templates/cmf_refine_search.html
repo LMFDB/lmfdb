@@ -189,6 +189,9 @@ function set_buckets(col_selecter, bucket_id) {
   {% endif %}
 </table>
 </form>
+{% if info.search_type == 'DynStats' %}
+<p>Note that the newforms in the database may not be {{ KNOWL('dq.mf.elliptic.extent', title='representative') }}.</p>
+{% endif %}
 
 {% block show_results %}{% endblock %}
 {% include 'debug_info.html' %}

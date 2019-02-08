@@ -25,7 +25,13 @@
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
     <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
     {% if info.search_type != 'SpaceDimensions' %}
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Newspace dim.') }}</td>
+    <td>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}
+      <div class="float-right"><select name="dim_type" style="min-width: 105px;">
+          <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
+          <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
+        </select>
+      </div>
+    </td>
     {% endif %}
   </tr>
 

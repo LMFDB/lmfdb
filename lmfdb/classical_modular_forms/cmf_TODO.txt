@@ -9,11 +9,10 @@ IMPORTANT:
  - check inner_twists through ap data
  - write all the things that we think should be able to check (Drew)
  - parallelize (Edgar)
-* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
+* Check the adjusted wording about completeness on the stats and dynamic stats pages. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
-* Add relative dimension selector on newspace page (David)
 * Update mf.elliptic.hecke-operator knowl and delete group.gammann (Drew)
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
