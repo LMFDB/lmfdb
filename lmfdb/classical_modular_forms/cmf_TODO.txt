@@ -1,4 +1,4 @@
-CRITICAL (BUGS): 
+CRITICAL (BUGS): http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working.
 
 IMPORTANT:
 * When inner twists have not been computed (inner_twist_count=-1 or inner_twists=None), the "Inner Twists" section needs to either be hidden, or amended to display information about self twists.  See http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/64/2/i/a/
