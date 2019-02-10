@@ -1289,11 +1289,46 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
     print("{} curves in the database are incorrectly labelled as NOT being Q-curves".format(len(bad1)))
     return bad1, bad2
 
-def local_data_string(ec):
-    ld = C['local_data']
-    
+"""
+    local_data = [{'p': ideal_to_string(ld.prime()),
+                   'normp': str(ld.prime().norm()),
+                   'ord_cond': int(ld.conductor_valuation()),
+                   'ord_disc': int(ld.discriminant_valuation()),
+                   'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
+                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'rootno': local_root_number(ld),
+                   'kod': web_latex(ld.kodaira_symbol()).replace('$',''),
+                   'cp': int(ld.tamagawa_number())}
+"""
 
-def download_local_data(field_label, base_path, min_norm=0, max_norm=None):
+def ld1p(ldp):
+    # we do not just join ldp.values() since we want to fix the order
+    ld1str = ":".join([str(ldp[k]) for k in ['p', 'normp', 'ord_cond', 'ord_disc', 'ord_den_j', 'red']])
+    ld2str = str(ldp.get('rootno', '?'))
+    ld3str = ":".join([str(ldp[k]) for k in ['kod', 'cp']])
+    # remove embedded blanks in kodaira symbols
+    ld3str = ld3str.replace(" ","")
+    return ":".join([ld1str,ld2str,ld3str])
+
+def local_data_to_string(ld):
+    return ";".join([ld1p(ldp) for ldp in ld])
+
+def ld1s(s):
+    dat = s.split(":")
+    return {'p': dat[0], # string
+            'normp': int(dat[1]),
+            'ord_cond': int(dat[2]),
+            'ord_disc': int(dat[3]),
+            'ord_den_j': int(dat[4]),
+            'red': None if dat[5]=='None' else int(dat[5]),
+            'rootno': '?' if dat[6]=='?' else int(dat[6]),
+            'kod': dat[7], # string
+            'cp': int(dat[8])}
+            
+def local_data_from_string(s):
+    return [ld1s(si) for si in s.split(";")]
+
+def download_local_data(field_label, base_path=".", min_norm=0, max_norm=None):
     r""" Extract local data for the given field for curves with conductor
     norm in the given range, and write to an output file local_data.<field>.
     """
@@ -1313,7 +1348,9 @@ def download_local_data(field_label, base_path, min_norm=0, max_norm=None):
     for ec in res:
         # make local data output line: same as curves output line with extra fields
         curve_line = make_curves_line(ec)
-        
+        local_data = local_data_to_string(ec['local_data'])
+        assert not " " in local_data
+        outfile.write(" ".join([curve_line,local_data]) + "\n")
     outfile.close()
 
 
