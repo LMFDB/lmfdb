@@ -1,4 +1,6 @@
-CRITICAL (BUGS): http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working.
+CRITICAL (BUGS): 
+* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working.
+* Level bread crumbs lead to server errors, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/8/
 
 IMPORTANT:
 * If you change the sort order you cannot get search result totals when there are more than 1000 (try http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Spaces&level=100-200&dim=1-200&search_type=Spaces&sort_order=Nk2 and click on "at least 1000")
