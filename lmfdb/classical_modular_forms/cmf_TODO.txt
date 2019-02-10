@@ -7,13 +7,12 @@ IMPORTANT:
 * When inner twists have not been computed (inner_twist_count=-1 or inner_twists=None), the "Inner Twists" section needs to either be hidden, or amended to display information about self twists.  See http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/64/2/i/a/
 http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with and without CM.
 * Add newspace portraits for newspaces of level N > 4000 and non-trivial character of dimension <= 100.
-* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
+* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
+ - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
- - check dimensions add up, see above (Edgar)
  - check that we have all the L-functions that we expect (Edgar)
- - check self duality -> through the number field data
- - check inner_twists through ap data
- - write all the things that we think should be able to check (Drew)
+ - check self duality -> through the number field data, embedding data, lfunction self_dual
+ - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
 * Check the adjusted wording about completeness on the stats and dynamic stats pages. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
