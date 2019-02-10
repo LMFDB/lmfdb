@@ -1,16 +1,20 @@
-CRITICAL (BUGS):
+CRITICAL (BUGS): 
+* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working.
+* Level bread crumbs lead to server errors, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/8/
 
 IMPORTANT:
 * Add level dropdown (unrestricted, prime, prime power, square, squarefee)
-* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
+* If you change the sort order you cannot get search result totals when there are more than 1000 (try http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/?hst=Spaces&level=100-200&dim=1-200&search_type=Spaces&sort_order=Nk2 and click on "at least 1000")
+* When inner twists have not been computed (inner_twist_count=-1 or inner_twists=None), the "Inner Twists" section needs to either be hidden, or amended to display information about self twists.  See http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/64/2/i/a/
+http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with and without CM.
+* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
+ - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
- - check dimensions add up, see above (Edgar)
  - check that we have all the L-functions that we expect (Edgar)
- - check self duality -> through the number field data
- - check inner_twists through ap data
- - write all the things that we think should be able to check (Drew)
+ - check self duality -> through the number field data, embedding data, lfunction self_dual
+ - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
-* Check the adjusted wording about completeness on the stats and dynamic stats pages. (David)
+* Revise mf.elliptic.statistics_extent (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Move announcement e-mail to CMFs repo (David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
@@ -20,23 +24,27 @@ IMPORTANT:
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes. (Alex)
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now. (Alex)
 * Make tests pass (Edgar)
+* Set analytic_ranks and reload mf_newforms onces lfunctions have all been computed (Drew)
 * Compute mf_hecke_cc normalized:
-  - tail -n +4 | sort -u -k1,1n -k5,5n
-  Ready:
+  On queue:
+  - mf_hecke_cc_2400_3099.txt: k > 1, 2400 <= Nk^2 <= 3099 -- 2443128 + 3 = 2443131 -- tab
+  - mf_hecke_cc_3100_4000.txt:  k > 1, 3100 <= Nk^2 <= 4000 -- 5283975 + 3 = 5283978 -- tab
+  Uploaded:
   - mf_hecke_cc_k1_4000.txt: k = 1, N <= 4000 -- 152268 + 3 = 152271 -- tab
+  - mf_hecke_cc_2399.txt: k > 1, Nk^2 <= 2399 -- 2087127 + 3 = 2087130 -- tab
   - mf_hecke_cc_N100_k12_4001.txt: N <= 100, k <= 12,  Nk^2 > 4000, non-trivial -- 341298 + 3 -- tab
   - mf_hecke_cc_triv_4001_40000.txt: Nk^2 <= 40000, trivial -- 3061489 + 3 -- colon
   - mf_hecke_cc_N10_triv_40001_10000_nontriv_4001_100000.txt: N <= 10, (40001 <= Nk^2 <= 100,000, trivial) + (4001 <= Nk^2 <= 100,000, non-trivial)  --  7074 + 45372 + 3 = 52449  -- colon
   - mf_hecke_cc_N11_N24_nontriv_4001_40000_missing2orbits.txt: 11 <= N <= 24, 4001 <= Nk^2 <= 40000,  non-trivial -- 92385 + 3 = 92388  -- colon
   - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
+
   Missing data:
-  - Nk^2 <= 4000, k > 1: (Edgar) -- 9814230 -- tab
-  - 23:39:4 and 23:41:4  750 + 790 (Drew)
+  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew)
 
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
-  - 10 < N <= 24, 4000 < Nk^2 <= 40000, k > 1 (Edgar) (ongoing)
-  - 50 < space dim <= 100, k > 1 (Edgar) (on queue)
+  - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : wrong data? 24.37.h.c and 24.39.h.c
+  - 50 < space dim <= 100, k > 1 (Edgar) (ongoing)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
   - if dim == 1, add the unique complex embedding
 * In create_table, make label unique and add index; port to existing tables (David)

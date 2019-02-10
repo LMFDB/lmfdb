@@ -539,7 +539,7 @@ def common_parse(info, query):
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
-    if info['search_type'] != 'SpaceDimensions':
+    if info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
         else:
