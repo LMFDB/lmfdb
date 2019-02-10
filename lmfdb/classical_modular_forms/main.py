@@ -534,6 +534,8 @@ def common_parse(info, query):
             query['char_parity'] = 1
         elif parity == 'odd':
             query['char_parity'] = -1
+    if info.get('level_type'):
+        query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")

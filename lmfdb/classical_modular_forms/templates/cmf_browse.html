@@ -89,11 +89,20 @@ Info was: {{info}}
   <table>
     <tr>
 
-      <td colspan=2>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td>
+        <select name='level_type' style="width: 105px;">
+          <option value="">unrestricted</option>
+          <option value="prime">prime</option>
+          <option value="prime_power">prime power</option>
+          <option value="square">square</option>
+          <option value="squarefree">squrefree</option>
+        </select>
+      </td>
       <td><input type='text' style="width: 160px;" name='level' placeholder='4'></td>
       <td><span class="formexample"> e.g. 4, 1-20</td>
-      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
 
+      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
       <td>
         <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
           <option value="">any parity</option>

@@ -1,6 +1,5 @@
 CRITICAL (BUGS): 
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working.
-* Level bread crumbs lead to server errors, e.g. http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/8/
 
 IMPORTANT:
 * Add level dropdown (unrestricted, prime, prime power, square, squarefee)
