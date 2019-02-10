@@ -1017,19 +1017,21 @@ class CMF_stats(StatsDisplay):
         self.nforms = comma(db.mf_newforms.count())
         self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
         self.ndim = comma(db.mf_hecke_cc.count())
-        self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
-        self.level_knowl = display_knowl('mf.elliptic.level', title='level')
+        #self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
+        #self.level_knowl = display_knowl('mf.elliptic.level', title='level')
         self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        self.completeness_knowl = display_knowl('dq.mf.elliptic.extent', title='representative')
+        #self.completeness_knowl = display_knowl('dq.mf.elliptic.extent', title='representative')
         #stats_url = url_for(".statistics")
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s (Galois orbits of) %s of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.' % (self.nforms, self.newform_knowl, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim)
+        return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.' % (self.nforms, self.newform_knowl, self.ndim)
 
     @property
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces of %s \(k\) and %s \(N\) satisfying \(Nk^2 \le %s\), corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>.  Note that the newforms in the database may not be %s." % (self.nforms, self.newform_knowl, self.nspaces, self.weight_knowl, self.level_knowl, Nk2_bound(), self.ndim, url_for(".dynamic_statistics"), self.completeness_knowl)
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.ndim, url_for(".dynamic_statistics"))
+
+    extent_knowl = 'mf.elliptic.statistics_extent'
 
     table = db.mf_newforms
     baseurl_func = ".index"

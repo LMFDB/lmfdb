@@ -1,9 +1,14 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<div>
+<p>
 {{ info.summary | safe }}
-</div>
+</p>
+{% if info.extent_knowl %}
+<p>
+{{ KNOWL_INC(info.extent_knowl) }}
+</p>
+{% endif %}
 
 {% for d in info.distributions %}
 

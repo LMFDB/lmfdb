@@ -1,6 +1,7 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
+* Add level dropdown (unrestricted, prime, prime power, square, squarefee)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
  - see scripts/verify_data.py
  - check dimensions add up, see above (Edgar)
@@ -11,12 +12,13 @@ IMPORTANT:
  - parallelize (Edgar)
 * Check the adjusted wording about completeness on the stats and dynamic stats pages. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
+* Move announcement e-mail to CMFs repo (David)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
+* Change to knowl mf.elliptic.statistics_extent (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
-* Update mf.elliptic.hecke-operator knowl and delete group.gammann (Drew)
-* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
-* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
-* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
+* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?! (Alex)
+* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes. (Alex)
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now. (Alex)
 * Make tests pass (Edgar)
 * Compute mf_hecke_cc normalized:
   - tail -n +4 | sort -u -k1,1n -k5,5n
@@ -52,7 +54,6 @@ FINAL CHECKS:
 * Rename mf.elliptic.hecke-operator knowl and delete group.gammann
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
-* Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * add L-functions instances for Artin rep (Edgar)
