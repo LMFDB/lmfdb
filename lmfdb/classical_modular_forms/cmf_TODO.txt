@@ -18,11 +18,11 @@ http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
-* Update mf.elliptic.hecke-operator knowl and delete group.gammann (Drew)
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?!
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes.
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now.
 * Make tests pass (Edgar)
+* Set analytic_ranks and reload mf_newforms onces lfunctions have all been computed (Drew)
 * Compute mf_hecke_cc normalized:
   On queue:
   - mf_hecke_cc_2400_3099.txt: k > 1, 2400 <= Nk^2 <= 3099 -- 2443128 + 3 = 2443131 -- tab
@@ -37,7 +37,7 @@ http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with
   - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
 
   Missing data:
-  - 23:39:4 and 23:41:4  750 + 790 (Drew)
+  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew)
 
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
