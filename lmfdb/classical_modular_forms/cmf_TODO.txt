@@ -9,7 +9,6 @@ IMPORTANT:
  - check self duality -> through the number field data, embedding data, lfunction self_dual
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
-* Revise mf.elliptic.statistics_extent (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?! (Alex)
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes. (Alex)
