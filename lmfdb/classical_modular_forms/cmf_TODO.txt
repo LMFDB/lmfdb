@@ -15,22 +15,10 @@ IMPORTANT:
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now. (Alex)
 * Make tests pass (Edgar)
 * Set analytic_ranks and reload mf_newforms onces lfunctions have all been computed (Drew)
-* Compute mf_hecke_cc normalized:
-  On queue:
-  - mf_hecke_cc_2400_3099.txt: k > 1, 2400 <= Nk^2 <= 3099 -- 2443128 + 3 = 2443131 -- tab
-  - mf_hecke_cc_3100_4000.txt:  k > 1, 3100 <= Nk^2 <= 4000 -- 5283975 + 3 = 5283978 -- tab
-  Uploaded:
-  - mf_hecke_cc_k1_4000.txt: k = 1, N <= 4000 -- 152268 + 3 = 152271 -- tab
-  - mf_hecke_cc_2399.txt: k > 1, Nk^2 <= 2399 -- 2087127 + 3 = 2087130 -- tab
-  - mf_hecke_cc_N100_k12_4001.txt: N <= 100, k <= 12,  Nk^2 > 4000, non-trivial -- 341298 + 3 -- tab
-  - mf_hecke_cc_triv_4001_40000.txt: Nk^2 <= 40000, trivial -- 3061489 + 3 -- colon
-  - mf_hecke_cc_N10_triv_40001_10000_nontriv_4001_100000.txt: N <= 10, (40001 <= Nk^2 <= 100,000, trivial) + (4001 <= Nk^2 <= 100,000, non-trivial)  --  7074 + 45372 + 3 = 52449  -- colon
-  - mf_hecke_cc_N11_N24_nontriv_4001_40000_missing2orbits.txt: 11 <= N <= 24, 4001 <= Nk^2 <= 40000,  non-trivial -- 92385 + 3 = 92388  -- colon
-  - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
-
-  Missing data:
-  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew)
-
+* Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
+* Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
+* Missing data:
+  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew -- this is unlikely to finish before PR)
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
   - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : wrong data? 24.37.h.c and 24.39.h.c
@@ -81,6 +69,8 @@ GOOD:
 
 IT WOULD BE NICE IF:
 * add inner twist data for all newforms (compute using embedding data)
+* add inner twist group structures
+* use linear hecke kernels (potentially much faster than our current hecke cutters)
 * search on character degree?
 * if hecke field is cyclotomic don't use \zeta_3 (why not?)
 * show AL dimensions for old forms as well as new
@@ -91,7 +81,6 @@ IT WOULD BE NICE IF:
 * What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)? (hasn't this been done?)
 * form pages: provide downloads for pari
 * Saved queries for demos (cf checklist)
-* add inner twist group structures
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
