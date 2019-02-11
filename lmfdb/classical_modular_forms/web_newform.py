@@ -245,20 +245,9 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
-            #FIXME this avoid displaying links to L-functions with missing key euler coefficients
-            #Old code:
+            # FIXME
             #if db.lfunc_instances.exists({'url': nf_url[1:]}):
-            #    res.append(('L-function ' + self.label, '/L' + nf_url))
-            #hack:
-            Lhash = db.lfunc_instances.lucky({'url': nf_url[1:]}, 'Lhash')
-            if Lhash is not None:
-                euler_factors = db.lfunc_lfunctions.lucky({'Lhash':Lhash}, 'euler_factors')
-                for i,p in enumerate(prime_range(100)):
-                    if None in euler_factors[i][:ceil(RR(100).log(p))]:
-                        break
-                else:
-                    res.append(('L-function ' + self.label, '/L' + nf_url))
-            #end of hack
+            res.append(('L-function ' + self.label, '/L' + nf_url))
             if len(self.conrey_indexes)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
@@ -881,15 +870,15 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
-    def _display_re(self, x, prec):
+    def _display_re(self, x, prec, method='round'):
         if abs(x) < 10**(-prec):
             return ""
-        return r"%s"%(display_float(x, prec, method='round').replace('-','&minus;'))
+        return r"%s"%(display_float(x, prec, method=method).replace('-','&minus;'))
 
-    def _display_im(self, y, prec):
+    def _display_im(self, y, prec, method='round'):
         if abs(y) < 10**(-prec):
             return ""
-        res = display_float(y, prec, method='round')
+        res = display_float(y, prec, method=method)
         if res == '1':
             res = ''
         return r"%s<em>i</em>"%(res)
@@ -920,6 +909,7 @@ function switch_basis(btype) {
 
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:
+            method = 'truncate'
             x = self.cc_data[m].get('embedding_root_real', None)
             if x is None:
                 return '' # we should never see this if we have an exact qexp
@@ -927,10 +917,14 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 x *= self.analytic_shift[n]
-        return self._display_re(x, prec)
+                method = 'round'
+            else:
+                method = 'truncate'
+        return self._display_re(x, prec, method=method)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
         if n is None:
+            method = 'truncate'
             y = self.cc_data[m].get('embedding_root_imag', None)
             if y is None:
                 return '' # we should never see this if we have an exact qexp
@@ -938,7 +932,10 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 y *= self.analytic_shift[n]
-        return self._display_im(abs(y), prec) # sign is handled in embedding_op
+                method = 'round'
+            else:
+                method = 'truncate'
+        return self._display_im(abs(y), prec, method=method) # sign is handled in embedding_op
 
     def embedding_op(self, m, n=None, prec=6):
         if n is None:

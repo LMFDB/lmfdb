@@ -17,7 +17,7 @@ class CMF_download(Downloader):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
         data = db.mf_hecke_nf.lucky({'label':label}, proj)
         if not data:
-            return abort(404, "No q-expansion found for %s"%label)
+            return None
         # Make up for db_backend currently deleting Nones
         for elt in proj:
             if elt not in data:
@@ -145,9 +145,8 @@ class CMF_download(Downloader):
 
     def download_qexp(self, label, lang='sage'):
         hecke_nf = self._get_hecke_nf(label)
-        # to return errors
-        if not isinstance(hecke_nf, dict):
-            return hecke_nf
+        if hecke_nf is None:
+            return abort(404, "No q-expansion found for %s" % label)
 
         dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
@@ -593,7 +592,7 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         newform = WebNewform(data)
-        hecke_nf = self._get_hecke_nf(label);
+        hecke_nf = self._get_hecke_nf(label)
 
         out = []
         newlines = ['']*2;

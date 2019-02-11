@@ -1,5 +1,4 @@
-CRITICAL (BUGS): 
-* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working (dimension = 24, so _get_hecke_nf returns a 404) (Edgar)
+CRITICAL (BUGS):
 
 IMPORTANT:
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
@@ -15,32 +14,20 @@ IMPORTANT:
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now. (Alex)
 * Make tests pass (Edgar)
 * Set analytic_ranks and reload mf_newforms onces lfunctions have all been computed (Drew)
-* Compute mf_hecke_cc normalized:
-  On queue:
-  - mf_hecke_cc_2400_3099.txt: k > 1, 2400 <= Nk^2 <= 3099 -- 2443128 + 3 = 2443131 -- tab
-  - mf_hecke_cc_3100_4000.txt:  k > 1, 3100 <= Nk^2 <= 4000 -- 5283975 + 3 = 5283978 -- tab
-  Uploaded:
-  - mf_hecke_cc_k1_4000.txt: k = 1, N <= 4000 -- 152268 + 3 = 152271 -- tab
-  - mf_hecke_cc_2399.txt: k > 1, Nk^2 <= 2399 -- 2087127 + 3 = 2087130 -- tab
-  - mf_hecke_cc_N100_k12_4001.txt: N <= 100, k <= 12,  Nk^2 > 4000, non-trivial -- 341298 + 3 -- tab
-  - mf_hecke_cc_triv_4001_40000.txt: Nk^2 <= 40000, trivial -- 3061489 + 3 -- colon
-  - mf_hecke_cc_N10_triv_40001_10000_nontriv_4001_100000.txt: N <= 10, (40001 <= Nk^2 <= 100,000, trivial) + (4001 <= Nk^2 <= 100,000, non-trivial)  --  7074 + 45372 + 3 = 52449  -- colon
-  - mf_hecke_cc_N11_N24_nontriv_4001_40000_missing2orbits.txt: 11 <= N <= 24, 4001 <= Nk^2 <= 40000,  non-trivial -- 92385 + 3 = 92388  -- colon
-  - mf_hecke_cc_D100_other_40000.txt: space dim <= 100 other -- 882703 + 3 = 882706  -- colon
-
-  Missing data:
-  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew)
-
+* Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
+* Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
+* Missing data:
+  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew -- this is unlikely to finish before PR)
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
-  - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : wrong data? 24.37.h.c and 24.39.h.c
-  - 50 < space dim <= 100, k > 1 (Edgar) (ongoing)
+  - 24.37.h.c and 24.39.h.c (Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
-  - if dim == 1, add the unique complex embedding
+  - if dim == 1, add the unique complex embedding instance
+  - populate lhash_array and euler_factor_factorizations if Null
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
-* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/
+* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/ . This is not a CMF issue
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -49,7 +36,7 @@ FINAL CHECKS:
 
 -------------------------- Pull Request Line -------------------------------------------------
 * enable autovacuum on postgres config
-* Rename mf.elliptic.hecke-operator knowl and delete group.gammann
+* Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
@@ -72,29 +59,27 @@ COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
 
 GOOD:
-* Create links to dynamics stats from each entry in the currated stats
+* Create links to dynamics stats from each entry in the curated stats
 * figure out the sort order for lfunc_lfunctions
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
-* knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
 
 IT WOULD BE NICE IF:
+* add inner twist data for all newforms (compute using embedding data)
+* add inner twist group structures
+* use linear hecke kernels (potentially much faster than our current hecke cutters)
 * search on character degree?
-* it would be nice if, if hecke field is cyclotomic don't use \zeta_3
+* if hecke field is cyclotomic don't use \zeta_3 (why not?)
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
-* knowls: more
-* form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
 * identify (if possible?) a more precise description of the twisting characters
-* data: download data from old version and compare to see matches (at least with traces) and identify other problems
-* form pages: download to Sage/Magma/pari (using cutters)
-* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
-* form pages: provide downloads of q-expansions for Magma/pari
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)? (hasn't this been done?)
+* form pages: provide downloads for pari
 * Saved queries for demos (cf checklist)
-* Inner twist group structures
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials

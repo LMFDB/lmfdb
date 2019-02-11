@@ -1021,7 +1021,7 @@ class CMF_stats(StatsDisplay):
         #self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
         #self.level_knowl = display_knowl('mf.elliptic.level', title='level')
         self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        #self.completeness_knowl = display_knowl('dq.mf.elliptic.extent', title='representative')
+        self.newspace_knowl = display_knowl('mf.elliptic.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
     @property
@@ -1030,7 +1030,7 @@ class CMF_stats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero spaces, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
     extent_knowl = 'mf.elliptic.statistics_extent'
 
