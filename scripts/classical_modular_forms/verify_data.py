@@ -57,8 +57,11 @@ class TableChecker(object):
 
     def run_overall_checks(self):
         checks = self._get_checks(overall)
-        for check in checks:
-            check()
+        logfile = self.logfile
+        with open(logfile, 'a') as log:
+            for check in checks:
+                if not check():
+                    log.write('%s: OVERALL\n'%(check.__name__))
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
