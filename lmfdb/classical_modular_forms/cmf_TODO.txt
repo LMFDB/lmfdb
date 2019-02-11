@@ -23,7 +23,7 @@ IMPORTANT:
   - 24.37.h.c and 24.39.h.c (Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
   - if dim == 1, add the unique complex embedding instance
-  - populate lhash_array and euler_factor_factorizations if Null
+  - populate lhash_array and euler_factor_factorizations if Null --> UPDATE lfunc_instances SET "Lhash_array" = string_to_array("Lhash",",");
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
