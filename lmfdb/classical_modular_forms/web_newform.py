@@ -760,6 +760,13 @@ function switch_basis(btype) {
         return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
 
     def display_inner_twists(self):
+        if self.inner_twist_count == -1:
+            # Only CM data available
+            if self.is_cm:
+                discriminant = self.cm_discs[0]
+                return '<p>Only self twists have been computed for this newform, which has CM by %s.</p>' % (quad_field_knowl(discriminant))
+            else:
+                return '<p>This newform does not have CM; other inner twists have not been computed.</p>'
         def th_wrap(kwl, title):
             return '    <th>%s</th>' % display_knowl(kwl, title=title)
         def td_wrap(val):

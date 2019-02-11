@@ -14,7 +14,7 @@ http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/212/2/k/a/ for examples with
 * Revise mf.elliptic.statistics_extent (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Move announcement e-mail to CMFs repo (David)
-* Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
+* Draft a new features e-mail (analytic and arithmetic), identify new features propogating to the rest of the LMFDB (David)
 * Change to knowl mf.elliptic.statistics_extent (David)
 * Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?! (Alex)

@@ -437,7 +437,7 @@ function get_all_embeddings(num_embeddings) {
 
 {% if newform.inner_twist_count == 1 %}
 <p>This newform does not admit any ({{KNOWL('mf.elliptic.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('mf.elliptic.inner_twist',title='inner twists') }}.</p>
-{% elif newform.inner_twist_count > 1 %}
+{% else %}
 {{ newform.display_inner_twists() | safe }}
 {% endif %}
 
