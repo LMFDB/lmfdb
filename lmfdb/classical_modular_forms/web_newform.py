@@ -881,15 +881,15 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
-    def _display_re(self, x, prec):
+    def _display_re(self, x, prec, method='round'):
         if abs(x) < 10**(-prec):
             return ""
-        return r"%s"%(display_float(x, prec, method='round').replace('-','&minus;'))
+        return r"%s"%(display_float(x, prec, method=method).replace('-','&minus;'))
 
-    def _display_im(self, y, prec):
+    def _display_im(self, y, prec, method='round'):
         if abs(y) < 10**(-prec):
             return ""
-        res = display_float(y, prec, method='round')
+        res = display_float(y, prec, method=method)
         if res == '1':
             res = ''
         return r"%s<em>i</em>"%(res)
@@ -927,7 +927,11 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 x *= self.analytic_shift[n]
-        return self._display_re(x, prec)
+                method = 'round'
+            else:
+                method = 'truncate'
+
+        return self._display_re(x, prec, method=method)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
         if n is None:
@@ -938,7 +942,10 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 y *= self.analytic_shift[n]
-        return self._display_im(abs(y), prec) # sign is handled in embedding_op
+                method = 'round'
+            else:
+                method = 'truncate'
+        return self._display_im(abs(y), prec, method=method) # sign is handled in embedding_op
 
     def embedding_op(self, m, n=None, prec=6):
         if n is None:

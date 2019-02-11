@@ -1,4 +1,4 @@
-CRITICAL (BUGS): 
+CRITICAL (BUGS):
 * http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working (dimension = 24, so _get_hecke_nf returns a 404) (Edgar)
 
 IMPORTANT:
@@ -21,10 +21,10 @@ IMPORTANT:
   - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew -- this is unlikely to finish before PR)
 * recompute embeddings roots (Edgar)
 * Compute L-functions:
-  - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : wrong data? 24.37.h.c and 24.39.h.c
+  - 11 <= N <= 24, 4001 < Nk^2 <= 40000, k > 1 : (ongoing) wrong data? 24.37.h.c and 24.39.h.c
   - 50 < space dim <= 100, k > 1 (Edgar) (ongoing)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
-  - if dim == 1, add the unique complex embedding
+  - if dim == 1, add the unique complex embedding instance
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
