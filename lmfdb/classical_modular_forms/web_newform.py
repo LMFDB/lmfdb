@@ -245,6 +245,7 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
+            # FIXME
             #if db.lfunc_instances.exists({'url': nf_url[1:]}):
             res.append(('L-function ' + self.label, '/L' + nf_url))
             if len(self.conrey_indexes)*self.rel_dim > 50:
@@ -908,6 +909,7 @@ function switch_basis(btype) {
 
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:
+            method = 'truncate'
             x = self.cc_data[m].get('embedding_root_real', None)
             if x is None:
                 return '' # we should never see this if we have an exact qexp
@@ -918,11 +920,11 @@ function switch_basis(btype) {
                 method = 'round'
             else:
                 method = 'truncate'
-
         return self._display_re(x, prec, method=method)
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
         if n is None:
+            method = 'truncate'
             y = self.cc_data[m].get('embedding_root_imag', None)
             if y is None:
                 return '' # we should never see this if we have an exact qexp
