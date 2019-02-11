@@ -509,6 +509,9 @@ class CmfTest(LmfdbTest):
                 ['54.2.e.b',
                     'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
                     ]
+                ['212.2.k.a',
+                    ''
+                    ]
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))

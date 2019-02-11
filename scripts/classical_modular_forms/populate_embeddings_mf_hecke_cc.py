@@ -5,16 +5,16 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."
 from  lmfdb.db_backend import db
 ZZx = PolynomialRing(ZZ, "x")
 
-def convert_eigenvals_to_qexp(basis, eigenvals):
+def convert_eigenvals_to_qexp(basis, eigenvals, normalization):
     qexp = []
-    for i, ev in enumerate(eigenvals):
-        an = sum(elt * basis[i] for i, elt in enumerate(ev))
+    for j, ev in enumerate(eigenvals, 1):
+        an = sum(elt * basis[i] * j**normalization for i, elt in enumerate(ev))
         qexp.append(an)
     return qexp
 
 
 def upsert_embedding(id_number, skip = True):
-    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
+    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an_normalized', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
     if skip:
@@ -23,7 +23,7 @@ def upsert_embedding(id_number, skip = True):
                 return
     row_embeddings =  {}
     hecke_orbit_code = rowcc['hecke_orbit_code']
-    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code})
+    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code},['weight','field_poly','dim'])
     if newform is None:
         # No newform in db
         return
@@ -53,7 +53,8 @@ def upsert_embedding(id_number, skip = True):
         an_nf = hecke_nf['an']
         betas_embedded = [map(elt, betas) for elt in embeddings]
         CCC = betas_embedded[0][0].parent()
-        qexp = [convert_eigenvals_to_qexp(elt, an_nf) for elt in betas_embedded]
+        normalization = CCC(newform['weight'] - 1).real()/2
+        qexp = [convert_eigenvals_to_qexp(elt, an_nf, normalization) for elt in betas_embedded]
         min_len = min(len(rowcc['an']), len(qexp[0]))
         an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an'][:min_len]))
         #qexp_diff = [ (vector(CCC, elt[:min_len]) - an_cc).norm() for elt in qexp ]
