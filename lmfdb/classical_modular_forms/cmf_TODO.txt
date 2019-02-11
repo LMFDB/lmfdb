@@ -9,7 +9,6 @@ IMPORTANT:
  - check self duality -> through the number field data, embedding data, lfunction self_dual
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
-* Revise mf.elliptic.statistics_extent (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?! (Alex)
 * Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes. (Alex)
@@ -50,7 +49,7 @@ FINAL CHECKS:
 
 -------------------------- Pull Request Line -------------------------------------------------
 * enable autovacuum on postgres config
-* Rename mf.elliptic.hecke-operator knowl and delete group.gammann
+* Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
@@ -73,29 +72,26 @@ COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
 
 GOOD:
-* Create links to dynamics stats from each entry in the currated stats
+* Create links to dynamics stats from each entry in the curated stats
 * figure out the sort order for lfunc_lfunctions
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
-* knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
 
 IT WOULD BE NICE IF:
+* add inner twist data for all newforms (compute using embedding data)
 * search on character degree?
-* it would be nice if, if hecke field is cyclotomic don't use \zeta_3
+* if hecke field is cyclotomic don't use \zeta_3 (why not?)
 * show AL dimensions for old forms as well as new
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
-* knowls: more
-* form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
 * identify (if possible?) a more precise description of the twisting characters
-* data: download data from old version and compare to see matches (at least with traces) and identify other problems
-* form pages: download to Sage/Magma/pari (using cutters)
-* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
-* form pages: provide downloads of q-expansions for Magma/pari
+* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)? (hasn't this been done?)
+* form pages: provide downloads for pari
 * Saved queries for demos (cf checklist)
-* Inner twist group structures
+* add inner twist group structures
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
