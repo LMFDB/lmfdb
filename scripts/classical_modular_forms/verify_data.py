@@ -122,7 +122,8 @@ class TableChecker(object):
     def check_crosstable(self, table1, table2, col1, col2, join1, join2):
         query = SQL("SELECT 1 FROM ")
 
-    def check_array_union(self, a_columns, b_columns)
+    def check_array_union(self, a_columns, b_columns):
+        pass
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
