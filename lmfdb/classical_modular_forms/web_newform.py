@@ -311,7 +311,7 @@ class WebNewform(object):
         angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
         format = info.get('format')
         cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        an_projection = 'an[%d:%d]' % an_keys
+        an_projection = 'an_normalized[%d:%d]' % an_keys
         angles_projection = 'angles[%d:%d]' % angles_keys
         if format in an_formats:
             cc_proj.append(an_projection)
@@ -334,15 +334,14 @@ class WebNewform(object):
             self.cqexp_prec = an_keys[1] + 1
             self.cc_data = {}
             for embedded_mf in cc_data:
-                #as they are stored as a jsonb, large enough elements might be recognized as an integer
                 if format in an_formats:
                     # we don't store a_0, thus the +1
-                    embedded_mf['an'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
+                    embedded_mf['an_normalized'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
-            if format in ['analytic_embed',None]:
-                self.analytic_shift = {i : float(i)**((1-ZZ(self.weight))/2) for i in self.cc_data.values()[0]['an'].keys()}
+            if format in ['embed',None]:
+                self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
@@ -878,12 +877,12 @@ function switch_basis(btype) {
     def _display_re(self, x, prec):
         if abs(x) < 10**(-prec):
             return ""
-        return r"%s"%(display_float(x, prec).replace('-','&minus;'))
+        return r"%s"%(display_float(x, prec, method='round').replace('-','&minus;'))
 
     def _display_im(self, y, prec):
         if abs(y) < 10**(-prec):
             return ""
-        res = display_float(y, prec)
+        res = display_float(y, prec, method='round')
         if res == '1':
             res = ''
         return r"%s<em>i</em>"%(res)
@@ -918,8 +917,8 @@ function switch_basis(btype) {
             if x is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
+            x, y = self.cc_data[m]['an_normalized'][n]
+            if format == 'embed':
                 x *= self.analytic_shift[n]
         return self._display_re(x, prec)
 
@@ -929,8 +928,8 @@ function switch_basis(btype) {
             if y is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
+            x, y = self.cc_data[m]['an_normalized'][n]
+            if format == 'embed':
                 y *= self.analytic_shift[n]
         return self._display_im(abs(y), prec) # sign is handled in embedding_op
 
@@ -941,7 +940,7 @@ function switch_basis(btype) {
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            x, y = self.cc_data[m]['an_normalized'][n]
         return self._display_op(x, y, prec)
 
     def satake(self, m, p, i, prec=6, format='satake'):
@@ -965,7 +964,7 @@ function switch_basis(btype) {
     @cached_method
     def satake_angle(self, m, p, i, prec=6):
         theta = self._get_theta(m, p, i)
-        s = display_float(2*theta, prec)
+        s = display_float(2*theta, prec, method='round')
         if s == "1":
             s =  r'\pi'
         elif s== "-1":

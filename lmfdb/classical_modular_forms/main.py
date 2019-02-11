@@ -768,7 +768,6 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: at most 1000 options for level")
     if len(info['weight_list']) * len(info['level_list']) > 10000:
         raise ValueError("Table too large: must have at most 10000 entries")
-
 na_msg_nontriv = '"n/a" means that not all modular forms of this weight and level are available, but those of trivial character may be; set character order to 1 to restrict to newforms of trivial character.'
 na_msg_triv = '"n/a" means that no modular forms of this weight and level are available.'
 

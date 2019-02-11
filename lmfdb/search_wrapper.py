@@ -43,9 +43,6 @@ class SearchWrapper(object):
             err_title = query.pop('__err_title__', self.err_title)
         if errpage is not None:
             return errpage
-        if 'result_count' in info:
-            nres = self.table.count(query)
-            return jsonify({"nres":str(nres)})
         sort = query.pop('__sort__', None)
         table = query.pop('__table__', self.table)
         # We want to pop __title__ even if overridden by info.
@@ -55,6 +52,9 @@ class SearchWrapper(object):
         if random:
             query.pop('__projection__', None)
         proj = query.pop('__projection__', self.projection)
+        if 'result_count' in info:
+            nres = table.count(query)
+            return jsonify({"nres":str(nres)})
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
