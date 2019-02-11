@@ -444,8 +444,9 @@ class CmfTest(LmfdbTest):
             exec(sage_code, globals())
             global out
             assert str(out) == exp
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/887.2.a.b', follow_redirects=True)
-        assert 'No q-expansion found for 887.2.a.b' in page.data
+        for label in ['212.2.k.a', '887.2.a.b']:
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
+            assert 'No q-expansion found for {}'.format(label) in page.data
 
     def test_download(self):
         r"""
@@ -510,7 +511,7 @@ class CmfTest(LmfdbTest):
                     'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
                     ]
                 ['212.2.k.a',
-                    ''
+                    'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
                     ]
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)

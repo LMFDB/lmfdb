@@ -1,5 +1,4 @@
 CRITICAL (BUGS):
-* http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/212.2.k.a is not working (dimension = 24, so _get_hecke_nf returns a 404) (Edgar)
 
 IMPORTANT:
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
