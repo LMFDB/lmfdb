@@ -1,4 +1,4 @@
-from lmfdb.db_backend import db, SQL
+from lmfdb.db_backend import db, SQL, IdentifierWrapper
 from types import MethodType
 
 class speed_decorator(object):
@@ -14,17 +14,23 @@ class speed_decorator(object):
 class slow(speed_decorator):
     """
     Decorate a check as being slow to run
+
+    This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
     pass
 
 class fast(speed_decorator):
     """
     Decorate a check as being fast to run
+
+    This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
 
 class overall(speed_decorator):
     """
     Decorate a check as being one that's run once overall for the table, rather than once for each row
+
+    This should take no input and return a bad label if there is a failure, or None otherwise.
     """
     pass
 
@@ -57,8 +63,66 @@ class TableChecker(object):
 
     def run_overall_checks(self):
         checks = self._get_checks(overall)
-        for check in checks:
-            check()
+        logfile = self.logfile
+        with open(logfile, 'a') as log:
+            for check in checks:
+                bad_label = check()
+                if bad_label:
+                    log.write('%s: OVERALL\n'%(check.__name__))
+
+    # Add uniqueness constraints
+
+    #####################
+    # Utility functions #
+    #####################
+
+    def _check_arith(self, a_columns, b_columns, constraint, op):
+        cstr, values = self.table._parse_dict(constraint)
+        # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
+        query = SQL("SELECT label FROM {0} WHERE {1} = {2}").format(
+            self.table.search_table,
+            SQL(" %s "%op).join(map(IdentifierWrapper, a_columns)),
+            SQL(" %s "%op).join(map(IdentifierWrapper, b_columns)))
+        if cstr is None:
+            values = []
+        else:
+            query = SQL("{0} AND {1}").format(query, cstr)
+        query = SQL("{0} LIMIT 1").format(query)
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    def check_sum(self, a_columns, b_columns, constraint={}):
+        return self._check_arith(a_columns, b_columns, constraint, '+')
+
+    def check_product(self, a_columns, b_columns, constraint):
+        return self._check_arith(a_columns, b_columns, constraint, '*')
+
+    def check_divisible(self, numerator, denominator, constraint):
+        pass
+
+    def check_non_null(self, column):
+        pass
+
+    def check_array_len(self, limit):
+        """
+        Length of array greater than or equal to limit
+        """
+        pass
+
+    def check_string_concatentation(self, label_col, other_columns, sep='.'):
+        """
+        Check that the label_column is the concatenation of the other columns with the given separator
+        """
+        pass
+
+    def check_box(self, box_column):
+        pass
+
+    def check_crosstable(self, table1, table2, col1, col2, join1, join2):
+        query = SQL("SELECT 1 FROM ")
+
+    def check_array_union(self, a_columns, b_columns)
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
