@@ -85,7 +85,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
+    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}, 'embedding_root_real':{'$exists':False}}, projection='id', sort = [])))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)
