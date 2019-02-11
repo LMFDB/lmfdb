@@ -1,121 +1,111 @@
-import sys, os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db, SQL
-from sage.all import CDF, dimension_new_cusp_forms, Gamma1
-from dirichlet_conrey import DirichletGroup_conrey
+from types import MethodType
+
+class speed_decorator(object):
+    """
+    Transparently wraps a function, so that functions can be classified by "isinstance"
+    """
+    def __init__(self, f):
+        self.f = f
+        self.__name__ = f.__name__
+    def __call__(self, *args, **kwds):
+        return self.f(*args, **kwds)
+
+class slow(speed_decorator):
+    """
+    Decorate a check as being slow to run
+    """
+    pass
+
+class fast(speed_decorator):
+    """
+    Decorate a check as being fast to run
+    """
+
+class overall(speed_decorator):
+    """
+    Decorate a check as being one that's run once overall for the table, rather than once for each row
+    """
+    pass
+
+class TableChecker(object):
+    def __init__(self, logfile, id_limits=None):
+        self.logfile = logfile
+        self.id_limits = id_limits
+
+    def _get_checks(self, typ):
+        return [MethodType(f, self, self.__class__) for f in self.__class__.__dict__.values() if isinstance(f, typ)]
+
+    def _run_checks(self, typ):
+        table = self.table
+        checks = self._get_checks(typ)
+        logfile = self.logfile
+        query = {}
+        if self.id_limits:
+            query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
+        with open(logfile, 'a') as log:
+            for rec in table.search(query, sort=[]):
+                for check in checks:
+                    if not check(rec):
+                        log.write('%s: %s\n'%(check.__name__, rec['label']))
+
+    def run_slow_checks(self):
+        self._run_checks(slow)
+
+    def run_fast_checks(self):
+        self._run_checks(fast)
+
+    def run_overall_checks(self):
+        checks = self._get_checks(overall)
+        for check in checks:
+            check()
+
+class mf_newspaces(TableChecker):
+    table = db.mf_newspaces
+
+    @slow
+    def check_hecke_orbit_dims_sorted(self, rec):
+        return rec['hecke_orbit_dims'] == sorted(rec['hecke_orbit_dims'])
+
+class mf_gamma1(TableChecker):
+    table = db.mf_gamma1
+
+class mf_newspace_portraits(TableChecker):
+    table = db.mf_newspace_portraits
+
+class mf_gamma1_portraits(TableChecker):
+    table = db.mf_gamma1_portraits
+
+class mf_subspaces(TableChecker):
+    table = db.mf_subspaces
+
+class mf_gamma1_subspaces(TableChecker):
+    table = db.mf_gamma1_subspaces
 
 
-def verify_dimensions(n,k):
-    totaldim = 0
-    for ns in db.mf_newspaces.search({'level':n, 'weight':k}, projection = ['hecke_orbit_dims', 'char_orbit_index','char_labels','label']):
-        label = ns['label']
-        number = ns['char_labels'][0]
-        hecke_orbit_dims = ns['hecke_orbit_dims']
-        hecke_orbit_dims.sort()
-        dim = sum(hecke_orbit_dims)
-        totaldim += dim
-        char_labels = ns['char_labels']
-        # FIX label for trivial character
-        if (n, number) == (1, 0):
-            number = 1
-            assert char_labels == [0]
-            # and fix them
-            char_labels = [1]
-        # end FIX
-        sage_dim, sage_orbit = dim_and_orbit(n,k,number)
-        assert dim == sage_dim, label
-        assert sorted(sage_orbit) == sorted(char_labels), label
-        hecke_orbit_dims_nf = sorted(list(db.mf_newforms.search({'space_label': ns['label']}, projection = 'dim')))
-        assert hecke_orbit_dims == hecke_orbit_dims_nf, label
+class mf_newforms(TableChecker):
+    table = db.mf_newforms
 
-    assert totaldim == dimension_new_cusp_forms(Gamma1(n), k), "n = %d k = %d --> %s != %s" % (n, k, totaldim, dimension_new_cusp_forms(Gamma1(n), k))
+class mf_newform_portraits(TableChecker):
+    table = db.mf_newform_portraits
 
+class mf_hecke_nf(TableChecker):
+    table = db.mf_hecke_nf
 
+class mf_hecke_traces(TableChecker):
+    table = db.mf_hecke_traces
 
+class mf_hecke_lpolys(TableChecker):
+    table = db.mf_hecke_lpolys
 
-def dim_and_orbit(n,k,number):
-    G = DirichletGroup_conrey(n)
-    char = G[number]
-    go = char.galois_orbit()
-    indexes = [elt.number() for elt in go]
-    dim = sum([dimension_new_cusp_forms(char.sage_character(),k) for elt in go])
-    return dim, indexes
+class mf_hecke_newspace_traces(TableChecker):
+    table = db.mf_hecke_newspace_traces
 
+class mf_hecke_cc(TableChecker):
+    table = db.mf_hecke_cc
 
-# compute newform dimensions in Sage and compare with dims in mf_newspaces
-# compare with sum of dims in mf_newforms
+class char_dir_orbits(TableChecker):
+    table = db.char_dir_orbits
 
-
-def get_urls(newform):
-    char_labels = newform['char_labels']
-    res = [ "ModularForm/GL2/Q/holomorphic/" + "/".join(newform['label'].split(".")) ]
-    if newform['dim'] == 1:
-        return res
-    elif newform['dim'] > 80:
-        res = []
-    base_label  = newform['label'].split(".")
-    for character in char_labels:
-        for j in range(newform['dim']/newform['char_degree']):
-            label = base_label + [str(character), str(j + 1)]
-            origin_url = 'ModularForm/GL2/Q/holomorphic/'  + '/'.join(label)
-            res.append(origin_url)
-    return res
-
-
-# check that we have the embedding roots and they are all different
-def verify_embeddings(nf):
-    if nf['dim'] <= 20 and  nf['dim'] > 1:
-        hoc = nf['hecke_orbit_code']
-        embeddings = list(db.mf_hecke_cc.search({'hecke_orbit_code':hoc}, projection = ['embedding_root_imag','embedding_root_real']))
-        # we have the right number of embeddings
-        assert len(embeddings) == nf['dim'], str(hoc)
-        # they are all distinct
-        assert len(set([ CDF(elt['embedding_root_real'], elt['embedding_root_imag']) for elt in embeddings ])) == nf['dim'], str(hoc)
-
-# certifies that we have all the L-functions
-# and that the ranks and trace_hash match
-# TODO
-# check that the first root matches the other root to the right precision
-def verify_Lfunctions(nf):
-    if nf['weight'] == 1:
-        return
-    urls = get_urls(nf)
-    for url in urls:
-        assert db.lfunc_instances.exists({'url':url}), url
-        assert db.lfunc_lfunctions.exists({'origin':url}), url
-
-    if nf['dim'] <= 80:
-        assert db.lfunc_lfunctions.exists({'origin':urls[0], 'trace_hash' : nf['trace_hash'] }), urls[0]
-
-    assert db.lfunc_lfunctions.exists({'origin':urls[-1], 'order_of_vanishing' : nf['analytic_rank'] }), urls[-1]
-
-
-
-
-import sys
-if len(sys.argv) == 3:
-    bound = db.mf_newforms.max_id()
-    k = int(sys.argv[1])
-    if k == 0:
-        # no duplicates in Lfun table
-        assert len(list(db._execute(SQL('SELECT "Lhash", COUNT(*) FROM lfunc_lfunctions WHERE load_key=\'CMFs-workshop\' GROUP BY "Lhash" HAVING  COUNT(*) > 1')))) == 0, "duplicate L-functions!" 
-    start = int(sys.argv[2])
-    assert k > start, "the modulos must be bigger than the representative"
-    ids = list(range(start, bound + 1, k))
-    for i in ids:
-        nf = db.mf_newforms.lucky({'id':i}, projection=['label','char_labels','dim','char_degree','analytic_rank', 'trace_hash', 'dim', 'hecke_orbit_code', 'weight'])
-        if nf is not None:
-            #print "%d ->\t %.2f\t %s" % (start, 100*float(i)/bound, nf['label'])
-            verify_Lfunctions(nf)
-            verify_embeddings(nf)
-    bound = db.mf_newforms.max('Nk2')
-    for level in range(1, db.mf_newforms.max('level') + 1):
-        #print "%d ->\t %d" % (start, level)
-        for weight in range(2, db.mf_newforms.max('weight') + 1):
-            if level*weight*weight <= bound and (level + weight)%k == start:
-                verify_dimensions(level, weight)
-
-else:
-    print r"""Usage:
-        You should run this on legendre as: (this will use 40 cores):
-        # parallel -u -j 40 --halt 2 --progress sage -python %s 40 ::: {0..39}""" % sys.argv[0]
+class char_dir_values(TableChecker):
+    table = db.char_dir_values
