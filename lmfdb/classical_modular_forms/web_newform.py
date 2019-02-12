@@ -245,9 +245,8 @@ class WebNewform(object):
 
         # finally L-functions
         if self.weight <= 200:
-            # FIXME
-            #if db.lfunc_instances.exists({'url': nf_url[1:]}):
-            res.append(('L-function ' + self.label, '/L' + nf_url))
+            if db.lfunc_instances.exists({'url': nf_url[1:]}):
+                res.append(('L-function ' + self.label, '/L' + nf_url))
             if len(self.conrey_indexes)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
