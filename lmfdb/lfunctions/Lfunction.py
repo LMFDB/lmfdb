@@ -871,8 +871,8 @@ class Lfunction_CMF(Lfunction_from_db):
         """The 'related objects' to show on webpage."""
         lfriends = Lfunction_from_db.friends.fget(self)
         root_orbit_url = '/' + self.orbit_url
-        #if not any(root_orbit_url == elt[1] for elt in lfriends):
-        #    lfriends += names_and_urls([self.orbit_url])
+        if not any(root_orbit_url == elt[1] for elt in lfriends):
+            lfriends += names_and_urls([self.orbit_url])
         return lfriends
 
 #    def _set_title(self):
