@@ -306,6 +306,58 @@ def paintSvgFileAll(glslist):  # list of group and level
     ans += svgEnd()
     return(ans)
 
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range(1, xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i * xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(5, xMax + 1, 5):
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
+                             "' y2='" + str(height) + "' x2='" +
+                             str(i * xfactor) +
+                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range(1, yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i * yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(5, yMax + 1, 5):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i * yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * yfactor) + "' x2='" + str(width) +
+                             "' y2='" + str(height - i * yfactor) +
+                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
 
 ## ============================================
 ## Returns the svg-code for a simple coordinate system.
@@ -317,7 +369,7 @@ def paintSvgFileAll(glslist):  # list of group and level
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
+def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
@@ -486,7 +538,7 @@ def paintSvgHoloNew(condmax):
         ans += "</circle></a>\n"
 
     # axes on top of dots
-    ans += paintCS(x_max - x_offset*x_scale,
+    ans += paintCSNew(x_max - x_offset*x_scale,
             y_max + y_scale/2,
             x_max/x_scale,
             y_max/y_scale,
