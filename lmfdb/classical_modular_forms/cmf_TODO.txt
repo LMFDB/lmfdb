@@ -1,6 +1,7 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
+* display self-dual on the form page
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
@@ -16,7 +17,6 @@ IMPORTANT:
 * Set analytic_ranks and reload mf_newforms onces lfunctions have all been computed (Drew)
 * Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
 * Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
-* recompute embeddings roots (Edgar) ongoing
 * Compute L-functions:
   - 23:39:4 and 23:41:4 (Drew)
   - 24.37.h.c and 24.39.h.c (Drew)
