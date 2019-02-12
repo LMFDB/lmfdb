@@ -849,6 +849,7 @@ class Lfunction_CMF(Lfunction_from_db):
         self.__dict__.update(kwargs)
         self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit, self.character, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/%d/%d" % self.label_args
+        self.orbit_url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args[:4]
         Lfunction_from_db.__init__(self, url = self.url)
 
         self.numcoeff = 30
@@ -864,6 +865,15 @@ class Lfunction_CMF(Lfunction_from_db):
     @lazy_attribute
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+
+    @property
+    def friends(self):
+        """The 'related objects' to show on webpage."""
+        lfriends = Lfunction_from_db.friends.fget(self)
+        root_orbit_url = '/' + self.orbit_url
+        if not any(root_orbit_url == elt[1] for elt in lfriends):
+            lfriends += names_and_urls([self.orbit_url])
+        return lfriends
 
 #    def _set_title(self):
 #        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
@@ -914,6 +924,8 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
     @lazy_attribute
     def bread(self):
         return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
+
+
 
 #    def _set_title(self):
 #        conductor_str = "$ %s $" % latex(self.modform_level)
@@ -998,8 +1010,6 @@ class Lfunction_EC(Lfunction_from_db):
     @property
     def friends(self):
         """The 'friends' to show on webpage."""
-        #lfriends = super(Lfunction_from_db, self).friends
-        print "friends Lfunction_EC"
         lfriends = Lfunction_from_db.friends.fget(self)
         if self.base_field == '1.1.1.1': #i.e. QQ
             # only show symmetric powers for non-CM curves
