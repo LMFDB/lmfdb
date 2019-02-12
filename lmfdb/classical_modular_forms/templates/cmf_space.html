@@ -21,7 +21,7 @@
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td><a href="{{ space.char_conrey_link | safe }}">{{ space.level }}.{{ space.char_orbit_label }}</a> ({% if space.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ space.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ space.char_degree }}\){% endif %})</td>
+    <td> {{ space.display_character() | safe }} </td>
   </tr>
   {% if space.char_orbit_index != 1 %}
   <tr>

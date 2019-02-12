@@ -293,6 +293,15 @@ class WebNewformSpace(object):
             raise ValueError("Space %s not found" % label)
         return WebNewformSpace(data)
 
+    def display_character(self):
+        if self.char_order == 1:
+            ord_deg = " (trivial)"
+        else:
+            ord_knowl = display_knowl('character.dirichlet.order', title='order')
+            deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
+            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
+        return self.char_conrey_link + ord_deg
+
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]
 

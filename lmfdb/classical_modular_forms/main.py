@@ -12,7 +12,7 @@ from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newfor
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
-from sage.databases.cremona import class_to_int
+from sage.databases.cremona import class_to_int, cremona_letter_code
 from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range
 from sage.misc.misc_c import prod
 import re
@@ -419,6 +419,14 @@ def jump_box(info):
             errmsg = "There are no newforms specified by the query %s"
             jump = query
     if errmsg is None:
+        # Add feature for Drew
+        if ':' in jump:
+            jump = jump.split(':')
+            if len(jump) > 2 and jump[2].isdigit():
+                jump[2] = str(cremona_letter_code(int(jump[2])-1))
+            if len(jump) > 3 and jump[3].isdigit():
+                jump[3] = str(cremona_letter_code(int(jump[3])-1))
+            jump = '.'.join(jump)
         try:
             return redirect(url_for_label(jump), 301)
         except ValueError:
