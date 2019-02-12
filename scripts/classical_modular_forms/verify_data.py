@@ -1,5 +1,6 @@
-from lmfdb.db_backend import db, SQL, IdentifierWrapper
+from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier
 from types import MethodType
+from sage.rings.integer import Integer
 
 class speed_decorator(object):
     """
@@ -75,75 +76,104 @@ class TableChecker(object):
     #####################
     # Utility functions #
     #####################
+    def _run_query(self, condition, constraint, values=[]):
+        """
+        INPUT:
 
-
-    def _check_arith(self, a_columns, b_columns, constraint, op):
-        cstr, values = self.table._parse_dict(constraint)
+        - ``condition`` -- an SQL object giving a condition on the search table
+        - ``constraint`` -- a dictionary, as passed to the search method
+        """
+        cstr, cvalues = self.table._parse_dict(constraint)
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
-        query = SQL("SELECT label FROM {0} WHERE {1} = {2}").format(
-            self.table.search_table,
-            SQL(" %s "%op).join(map(IdentifierWrapper, a_columns)),
-            SQL(" %s "%op).join(map(IdentifierWrapper, b_columns)))
+        query = SQL("SELECT label FROM {0} WHERE {1}").format(
+            Identifier(self.table.search_table), condition)
         if cstr is None:
-            values = []
+            cvalues = []
         else:
             query = SQL("{0} AND {1}").format(query, cstr)
+        values = values + cvalues
         query = SQL("{0} LIMIT 1").format(query)
-        cur = db._execute(query)
+        cur = db._execute(query, values)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
+
+    def _check_arith(self, a_columns, b_columns, constraint, op):
+        return self._run_query(SQL(" != ").join([
+            SQL(" %s "%op).join(map(Identifier, a_columns)),
+            SQL(" %s "%op).join(map(Identifier, b_columns))]), constraint)
 
     def check_sum(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '+')
 
-    def check_product(self, a_columns, b_columns, constraint):
+    def check_product(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '*')
 
-    def check_array_sum(self, array_column, value_colum, constraints={})
-        # checks that sum(array_column) == value_column
-        pass
+    def check_array_sum(self, array_column, value_colum, constraint={})
+        """
+        Checks that sum(array_column) == value_column
+        """
+        return self._run_query(SQL("(SELECT SUM(s) FROM UNNEST({0}) s) != {1}").format(
+            Identifier(array_column), Identifier(value_column)), constraint)
 
-    # also against constants
-    def check_divisible(self, numerator, denominator, constraint):
-        pass
-    def check_non_divisible(self, numerator, denominator, constraint):
-        pass
+    def check_divisible(self, numerator, denominator, constraint={}):
+        if isinstance(denominator, (Integer, int)):
+            return self._run_query(SQL("{0} % %s != 0").format(Identifier(numerator)),
+                                   constraint, [denominator])
+        else:
+            return self._run_query(SQL("{0} % {1} != 0").format(
+                Identifier(numerator), Identifier(denominator)))
 
+    def check_non_divisible(self, numerator, denominator, constraint={}):
+        if isinstance(denominator, (Integer, int)):
+            return self._run_query(SQL("{0} % %s = 0").format(Identifier(numerator)),
+                                   constraint, [denominator])
+        return self._run_query(SQL("{0} % {1} = 0").format(
+            Identifier(numerator), Identifier(denominator)))
 
-    def check_values(self, values, constraints):
-        pass
+    def check_values(self, values, constraint={}):
+        vstr, vvalues = self.table._parse_dict(values)
+        if vstr is not None:
+            # Otherwise no values, so nothing to check
+            return self._run_query(SQL("NOT ({0})").format(vstr), constraint, values=vvalues)
 
-    def check_non_null(self, columns, constraint):
-        return self.check_values(dict([ (col, {'$exists':True}) for col in columns]), constraints)
+    def check_non_null(self, columns, constraint={}):
+        return self.check_values({col: {'$exists':True} for col in columns}, constraint)
 
-    def check_conversion(self, numeric_column, letter_column):
-        pass
-
-
-    def check_array_len_gte_constant(self, column, limit, constraint):
+    def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
         Length of array greater than or equal to limit
         """
-        pass
+        return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
+                               constraint, [limit])
 
-    def check_array_len_col(self, array_column, len_column, constraint):
+    def check_array_len_col(self, array_column, len_column, constraint={}):
         """
         Length of array_column matches len_column
         """
-        pass
+        return self._run_query(SQL("array_length({0}, 1) != {1}").format(
+            Identifier(array_column), Identifier(len_column)), constraint)
 
-    def check_string_concatentation(self, label_col, other_columns, sep='.'):
+    def check_string_concatentation(self, label_col, other_columns, constraint={}, sep='.'):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
         """
-        pass
+        oc = [Identifier(other_columns[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(other_columns)-1)]
+        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
     def check_box(self, box_column):
         # David, see check_box_* below
         pass
 
     def check_crosstable(self, table1, table2, col1, col2, join1, join2):
-        query = SQL("SELECT 1 FROM ")
+        """
+        Check that col1 and col2 are the same where col1 is a column in table1, col2 is a column in table2,
+        and the tables are joined by the constraint that table1.join1 = table2.join2
+        """
+        query = SQL("SELECT t1.label {0} t1, {1} t2 WHERE t1.{2} = t2.{3} AND t1.{4} != t2.{5} LIMIT 1").format(
+            *map(Identifier, [table1, table2, join1, join2, col1, col2]))
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
     def check_array_union(self, a_columns, b_columns):
         pass
@@ -189,7 +219,9 @@ class mf_newspaces(TableChecker):
     @overall
     def check_char_orbit(self):
         # check that char_orbit matches char_orbit_label
-        return self.check_conversion('char_orbit', 'char_orbit_label')
+        # TODO: I don't think this can be done in Postgres
+        #return self.check_conversion('char_orbit', 'char_orbit_label')
+        pass
 
     @overall
     def check_traces_display(self):
