@@ -23,7 +23,7 @@ def upsert_embedding(id_number, skip = True):
                 return
     row_embeddings =  {}
     hecke_orbit_code = rowcc['hecke_orbit_code']
-    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code},['weight','field_poly','dim'])
+    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code},['label','weight','field_poly','dim'])
     if newform is None:
         # No newform in db
         return
@@ -65,7 +65,7 @@ def upsert_embedding(id_number, skip = True):
         min_diff = qexp_diff_sorted[0]
 
         #assuring that is something close to zero, and that no other value is close to it
-        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
+        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "label = %s min_diff = %.2e \t min_diff/2nd = %.2e" % (rowcc['lfunction_label'], min_diff, min_diff/qexp_diff_sorted[1])
 
         for i, elt in enumerate(qexp_diff):
             if elt == min_diff:
