@@ -65,7 +65,7 @@ def upsert_embedding(id_number, skip = True):
         min_diff = qexp_diff_sorted[0]
 
         #assuring that is something close to zero, and that no other value is close to it
-        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "label = %s\nmin_diff = %.2e \t min_diff/2nd = %.2e\nan_cc = $s\nqexp = %s" % (rowcc['lfunction_label'], min_diff, min_diff/qexp_diff_sorted[1], vector(ComplexField(20), an_cc[:5]), matrix(ComplexField(20), [elt[:5] for elt in qexp]))
+        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "label = %s\nmin_diff = %.2e \t min_diff/2nd = %.2e\nan_cc = %s\nqexp = %s" % (rowcc['lfunction_label'], min_diff, min_diff/qexp_diff_sorted[1], vector(ComplexField(20), an_cc[:5]), matrix(ComplexField(20), [elt[:5] for elt in qexp]))
 
         for i, elt in enumerate(qexp_diff):
             if elt == min_diff:
