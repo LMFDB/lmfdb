@@ -284,7 +284,6 @@ def l_function_ecnf_page(field_label, conductor_label, isogeny_class_label):
 def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character, number):
     args = {'level': level, 'weight': weight, 'char_orbit_label': char_orbit_label, 'hecke_orbit': hecke_orbit,
             'character': character, 'number': number}
-    print "HERE2"
     try:
         return render_single_Lfunction(Lfunction_CMF, args, request)
     except KeyError:
