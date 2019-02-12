@@ -587,19 +587,7 @@ class Lfunction_from_db(Lfunction):
     def origin_label(self):
         return self.Lhash
 
-    @lazy_attribute
-    def factors_origins(self):
-        instances = []
-        if "," in self.Lhash:
-            for factor_Lhash in  set(self.Lhash.split(",")):
-                # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = elt.get('trace_hash',None)
-                if trace_hash is not None:
-                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
-                # names_and_urls will remove duplicates
-                instances.extend(get_instances_by_Lhash(factor_Lhash))
-        return names_and_urls(instances)
+
 
     def get_Lhash_by_url(self, url):
         instance = get_instance_by_url(url)
@@ -610,6 +598,7 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def origins(self):
+        # objects that arise the same identical L-function
         lorigins = []
         instances = get_instances_by_Lhash(self.Lhash)
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
@@ -622,6 +611,7 @@ class Lfunction_from_db(Lfunction):
 
     @property
     def friends(self):
+        # dual L-function and objects such that the L-functions contain this L-function as a factor
         related_objects = []
         if not self.selfdual and hasattr(self, 'dual_link'):
             related_objects.append(("Dual L-function", self.dual_link))
@@ -640,6 +630,20 @@ class Lfunction_from_db(Lfunction):
                     instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
         return related_objects + names_and_urls(instances)
 
+    @lazy_attribute
+    def factors_origins(self):
+        # objects for the factors
+        instances = []
+        if "," in self.Lhash:
+            for factor_Lhash in  set(self.Lhash.split(",")):
+                # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = elt.get('trace_hash',None)
+                if trace_hash is not None:
+                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+                # names_and_urls will remove duplicates
+                instances.extend(get_instances_by_Lhash(factor_Lhash))
+        return names_and_urls(instances)
 
     @lazy_attribute
     def instances(self):

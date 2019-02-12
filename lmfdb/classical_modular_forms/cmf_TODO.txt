@@ -91,6 +91,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* list the analytic conductor on the L-function pages
 * remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
 * convert 1.1 projection to 1 in _parse_projection?
 * cache queries on gps_transitive?
