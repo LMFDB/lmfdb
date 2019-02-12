@@ -63,11 +63,9 @@ def upsert_embedding(id_number, skip = True):
 
         qexp_diff_sorted = sorted(qexp_diff)
         min_diff = qexp_diff_sorted[0]
-        #print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
 
         #assuring that is something close to zero, and that no other value is close to it
-        assert min_diff < 1e-6
-        assert min_diff/qexp_diff_sorted[1] < 1e-15
+        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
 
         for i, elt in enumerate(qexp_diff):
             if elt == min_diff:
