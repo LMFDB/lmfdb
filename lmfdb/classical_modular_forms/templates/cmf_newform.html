@@ -35,12 +35,12 @@
 <h2> Invariants </h2>
 
 <table>
-  {% if newform.is_self_dual %}
+  {% if newform.is_self_dual is not none %}
   <tr>
     <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
     <td> </td>
     <td> </td>
-    <td>{% if newform.is_self_dual == 1 %}Yes{% else %}No{% endif %}</td>
+    <td>{% if newform.is_self_dual %}Yes{% else %}No{% endif %}</td>
   </tr>
   {% endif %}
   <tr>

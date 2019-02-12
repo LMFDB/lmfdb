@@ -24,18 +24,12 @@ IMPORTANT:
 * Missing data:
   - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew -- this is unlikely to finish before PR)
 
-Style:
-* For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
-* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/ . This is not a CMF issue
-
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
 * Update RCS knowls to match final data set (Drew)
 * Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* enable autovacuum on postgres config
-* Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens
 * Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
@@ -72,13 +66,8 @@ IT WOULD BE NICE IF:
 * search on character degree?
 * if hecke field is cyclotomic don't use \zeta_3 (why not?)
 * show AL dimensions for old forms as well as new
-* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
-* LMFDB-wide: equal signs consistent in terms of math-mode or not
-* LMFDB-wide: change sort order in search results
 * identify (if possible?) a more precise description of the twisting characters
-* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)? (hasn't this been done?)
 * form pages: provide downloads for pari
-* Saved queries for demos (cf checklist)
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
@@ -123,6 +112,16 @@ NOT CMF STUFF:
 * It would be good to have an explanation of the connections in the "related objects" links when possible
 * Complex and rational extension types for postgres
 * In create_table, make label unique and add index; port to existing tables (David)
+* enable autovacuum on postgres config
+* Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
+* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* LMFDB-wide: equal signs consistent in terms of math-mode or not
+* LMFDB-wide: change sort order in search results
+* Saved queries for demos (cf checklist)
+
+Style:
+* For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
+* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/ . This is not a CMF issue
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
