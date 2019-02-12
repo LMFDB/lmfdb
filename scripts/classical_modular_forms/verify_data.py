@@ -583,6 +583,7 @@ class mf_newspace_portraits(TableChecker):
 
 class mf_gamma1_portraits(TableChecker):
     table = db.mf_gamma1_portraits
+    projection = []
 
     @overall
     def check_constraints_label(self):
@@ -597,8 +598,40 @@ class mf_gamma1_portraits(TableChecker):
         # check that label matches level, weight, char_orbit_label
         return self.check_string_concatentation('label', ['level', 'weight'])
 
+    @overall
+    def check_portrait_is_set(self):
+        # TODO
+        # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
+
+
+
 class mf_subspaces(TableChecker):
     table = db.mf_subspaces
+
+    @overall
+    def check_constraints_label_sub_label(self):
+        return self.check_uniqueness_constraint(['label','sub_label'])
+
+    @overall
+    def check_sub_mul_positive(self):
+        # sub_mult is positive
+        return self._run_query(SQL("{0} <= 0").format(Identifier('sub_mul')))
+
+
+        # check that label matches level, weight char_orbit_index
+        # check that char_orbit_label matches level, char_orbit_index
+        # check that sub_label matches sub_level, weight, sub_char_orbit_index
+        # check that sub_level divides level
+        # check that sub_char_orbit_label matches sub_level, sub_char_orbit_index
+        # Per row
+        # char_dir_orbits
+        # check that conrey_index matches galois_orbit for char_orbit_label in char_dir_orbits
+        # check that sub_conrey_index matches galois_orbit for sub_char_orbit_label in char_dir_orbits
+        # mf_newspaces
+# check that summing sub_dim * sub_mult over rows with a given label gives S_k(N,chi) (old+new), for k=1 use cusp_dim in mf_newspaces to do this check
+
+
+
 
 class mf_gamma1_subspaces(TableChecker):
     table = db.mf_gamma1_subspaces
