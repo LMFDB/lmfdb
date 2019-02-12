@@ -55,8 +55,8 @@ def upsert_embedding(id_number, skip = True):
         CCC = betas_embedded[0][0].parent()
         normalization = CCC(newform['weight'] - 1).real()/2
         qexp = [convert_eigenvals_to_qexp(elt, an_nf, normalization) for elt in betas_embedded]
-        min_len = min(len(rowcc['an']), len(qexp[0]))
-        an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an'][:min_len]))
+        min_len = min(len(rowcc['an_normalized']), len(qexp[0]))
+        an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an_normalized'][:min_len]))
         #qexp_diff = [ (vector(CCC, elt[:min_len]) - an_cc).norm() for elt in qexp ]
         # normalized, to avoid the unstability comming from large weight
         qexp_diff = [ vector([(elt- an_cc[i])/elt.abs() for i, elt in enumerate(q) if elt != 0]).norm() for j,q in enumerate(qexp)]
