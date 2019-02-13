@@ -161,13 +161,15 @@ END;
 $$ LANGUAGE plpgsql;
 
 """
-    def _run_query(self, condition, constraint, values=[]):
+    def _run_query(self, condition, constraint={}, values=[], table=None):
         """
         INPUT:
 
         - ``condition`` -- an SQL object giving a condition on the search table
         - ``constraint`` -- a dictionary, as passed to the search method
         """
+        if table is None:
+            table = Identifier(self.table.search_table)
         cstr, cvalues = self.table._parse_dict(constraint)
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
         query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
@@ -183,6 +185,39 @@ $$ LANGUAGE plpgsql;
         cur = db._execute(query, values)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
+
+    def _make_join(self, join1, join2):
+        if not isinstance(join1, list):
+            join1 = [join1]
+        if join2 is None:
+            join2 = join1
+        elif not isinstance(join2, list):
+            join2 = [join2]
+        if len(join1) != len(join2):
+            raise ValueError("join1 and join2 must have the same length")
+        def identify(J, table):
+            return [Literal(j) if isinstance(j, (int, Integer)) else SQL(table + '.') + Identifier(j) for j in J]
+        join1 = identify(join1, "t1")
+        join2 = identify(join2, "t2")
+        return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
+
+    def _run_crosstable(self, quantity2, other_table, col, join1, join2=None, constraint={}, values=[], subselect_wrapper="", sort=None):
+        # WARNING: since it uses _run_query, this whole function is not safe against SQL injection,
+        # so should only be run locally in data validation
+        join = self._make_join(join1, join2)
+        if isinstance(col, (int, Integer)):
+            col = Literal(col)
+        elif isinstance(col, basestring):
+            col = SQL("t1.{0}").format(Identifier(col))
+        if isinstance(quantity2, basestring):
+            quantity2 = SQL("t2.{0}").format(Identifier(quantity2))
+        # This is unsafe
+        subselect_wrapper = SQL(subselect_wrapper)
+        if sort is None:
+            sort = SQL("")
+        condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4}{5})").format(
+            col, subselect_wrapper, quantity2, Identifier(other_table), join, sort)
+        return self._run_query(condition, constraint, values)
 
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
@@ -266,38 +301,17 @@ $$ LANGUAGE plpgsql;
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
 
-    def _make_join(self, join1, join2):
-        if not isinstance(join1, list):
-            join1 = [join1]
-        if join2 is None:
-            join2 = join1
-        elif not isinstance(join2, list):
-            join2 = [join2]
-        if len(join1) != len(join2):
-            raise ValueError("join1 and join2 must have the same length")
-        return SQL(" AND ").join([SQL("t1.{0} = t2.{1}").format(Identifier(j1), Identifier(j2)) for j1, j2 in zip(join1, join2)])
-
-
-    def check_crosstable(self, other_table, col1, join1, col2=None, join2=None):
+    def check_crosstable(self, other_table, col1, join1, col2=None, join2=None, constraint={}):
         """
         Check that col1 and col2 are the same where col1 is a column in self.table, col2 is a column in other_table,
         and the tables are joined by the constraint that self.table.join1 = other_table.join2.
 
         Here col2 and join2 default to col1 and join1, and join1 and join2 are allowed to be lists of columns
         """
-        join = self._make_join(join1, join2)
         if col2 is None:
             col2 = col1
-        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t1.{4} != t2.{5} LIMIT 1").format(
-                Identifier(self.table._label_col),
-                Identifier(self.table.search_table),
-                Identifier(other_table),
-                join,
-                Identifier(col1),
-                Identifier(col2))
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+
+        return self._run_crosstable(col2, other_table, col1, join1, join2, constraint=constraint)
 
 
 
@@ -307,49 +321,21 @@ $$ LANGUAGE plpgsql;
 
         col is allowed to be an integer, in which case a constant count is checked.
         """
-        cstr, cvalues = self.table._parse_dict(constraint)
-        if cstr is None:
-            cstr = SQL("")
-            cvalues = []
-        else:
-            cstr = SQL("{0} AND ").format(cstr)
-        join = self._make_join(join1, join2)
-        if isinstance(col, (int, Integer)):
-            col = Literal(col)
-        else:
-            col = SQL("t1.{0}").format(Identifier(col))
-        query = SQL("SELECT t1.{0} FROM {1} t1 WHERE {6}{2} != (SELECT COUNT(*) FROM {4} t2 WHERE {5}) LIMIT 1").format(
-                Identifier(self.table._label_col),
-                Identifier(self.table.search_table),
-                col,
-                Identifier(other_table),
-                join,
-                cstr)
-        cur = db._execute(query, cvalues)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
 
-    def check_crosstable_sum(self, other_table, col1, join1, col2=None, join2=None):
+        return self._run_crosstable(SQL("COUNT(*)"), other_table, col, join1, join2, constraint)
+
+    def check_crosstable_sum(self, other_table, col1, join1, col2=None, join2=None, constraint={}):
         """
         Check that col1 is the sum of the values in col2 where join1 = join2
 
         Here col2 and join2 default to col1 and join1, and join1 and join2 are allowed to be lists of columns
         """
-        join = self._make_join(join1, join2)
         if col2 is None:
             col2 = col1
-        query = SQL("SELECT t1.{0} FROM {1} t1 WHERE t1.{2} != (SELECT SUM(t2.{3}) FROM {4} t2 WHERE {5}) LIMIT 1").format(
-                Identifier(self.table._label_col),
-                Identifier(self.table.search_table),
-                Identifier(col1),
-                Identifier(col2),
-                Identifier(other_table),
-                join)
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        sum2 = SQL("SUM(t2.{0})").format(Identifier(col2))
+        return self._run_crosstable(sum2, other_table, col1, join1, join2, constraint)
 
-    def check_crosstable_dotprod(self, other_table, col1, join1, col2, join2=None):
+    def check_crosstable_dotprod(self, other_table, col1, join1, col2, join2=None, constraint={}):
         """
         Check that col1 is the sum of the product of the values in the columns of col2 over rows of other_table with self.table.join1 = other_table.join2.
 
@@ -358,18 +344,12 @@ $$ LANGUAGE plpgsql;
 
         col2 does not take value col1 as a default, since they are playing different roles.
         """
-        join = self._make_join(join1, join2)
         if isinstance(col1, list):
             if len(col1) != 2:
                 raise ValueError("col1 must have length 2")
             col1 = SQL("t1.{0} - t1.{1}").format(Identifier(col1[0]), Identifier(col1[1]))
-        else:
-            col1 = SQL("t1.{0}").format(Identifier(col1))
-        col2 = SQL(" * ").join(SQL("t2.{0}").format(Identifier(col)) for col in col2)
-        query = SQL("SELECT t1.label FROM {0} t1 WHERE {1} != (SELECT SUM({2}) FROM {3} t2 WHERE {4}) LIMIT 1").format(Identifier(self.table.search_table), col1, col2, Identifier(other_table), join)
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        dotprod = SQL("SUM({0})").format(SQL(" * ").join(SQL("t2.{0}").format(Identifier(col)) for col in col2))
+        return self._run_crosstable(dotprod, other_table, col1, join1, join2, constraint)
 
     def check_crosstable_aggregate(self, other_table, col1, join1, col2=None, join2=None, sort=None, truncate=None, constraint={}):
         """
@@ -379,35 +359,15 @@ $$ LANGUAGE plpgsql;
 
         sort defaults to col2, but can be a list of columns in other_table
         """
-        cstr, cvalues = self.table._parse_dict(constraint)
-        if cstr is None:
-            cstr = SQL("")
-            cvalues = []
-        else:
-            cstr = SQL("{0} AND ").format(cstr)
-        join = self._make_join(join1, join2)
         if col2 is None:
             col2 = col1
-        if truncate is None:
-            col1 = SQL("t1.{0}").format(Identifier(col1))
-        else:
+        if truncate is not None:
             col1 = SQL("t1.{0}[:%s]"%(int(truncate))).format(Identifier(col1))
         if sort is None:
-            sort = SQL("t2.{0}").format(Identifier(col2))
+            sort = SQL(" ORDER BY t2.{0}").format(Identifier(col2))
         else:
-            sort = SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort)
-        query = SQL("SELECT t1.{0} FROM {1} t1 WHERE {7}{2} != ARRAY(SELECT t2.{3} FROM {4} t2 WHERE {5} ORDER BY {6}) LIMIT 1").format(
-                Identifier(self.table._label_col),
-                Identifier(self.table.search_table),
-                col1,
-                Identifier(col2),
-                Identifier(other_table),
-                join,
-                sort,
-                cstr)
-        cur = db._execute(query, cvalues)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+            sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
+        return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", sort=sort)
 
     def check_array_union(self, a_columns, b_columns):
         # TODO
@@ -759,7 +719,7 @@ class mf_gamma1(TableChecker):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         pass
 
-class portraits(TableChecker):
+class PortraitsChecker(TableChecker):
     @overall
     def check_constraints_label(self):
         return self.check_uniqueness_constraint(['label'])
@@ -774,7 +734,7 @@ class portraits(TableChecker):
         # FIXME: need to use cremona_label at the appropriate places
         return self.check_string_concatentation('label', self.label)
 
-class mf_newspace_portraits(portraits):
+class mf_newspace_portraits(PortraitsChecker):
     table = db.mf_newspace_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index']
@@ -786,7 +746,7 @@ class mf_newspace_portraits(portraits):
                    for box in db.mf_boxes.search({'straces':True}))
 
 
-class mf_gamma1_portraits(portraits):
+class mf_gamma1_portraits(PortraitsChecker):
     table = db.mf_gamma1_portraits
     projection = []
     label = ['level', 'weight']
@@ -797,7 +757,7 @@ class mf_gamma1_portraits(portraits):
         # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
         pass
 
-class mf_newform_portraits(portraits):
+class mf_newform_portraits(PortraitsChecker):
     table = db.mf_newform_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
@@ -1043,9 +1003,7 @@ class mf_hecke_nf(TableChecker):
                 return False
         return total_order == euler_phi(N)
 
-class mf_hecke_traces(TableChecker):
-    table = db.mf_hecke_traces
-
+class traces(TableChecker):
     @overall
     def check_constraints_hecke_orbit_code_n(self):
         return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
@@ -1053,7 +1011,17 @@ class mf_hecke_traces(TableChecker):
     @overall
     def check_total_count(self):
         # check that hecke_orbit_code is present in mf_newforms
-        return self.check_count(1000 * db.mf_newforms.count())
+        return self.check_count(1000 * self.base_table.count(self.base_constraint))
+
+class mf_hecke_traces(TracesChecker):
+    table = db.mf_hecke_traces
+    base_table = db.mf_newforms
+    base_constraint = {}
+
+class mf_hecke_newspace_traces(TracesChecker):
+    table = db.mf_hecke_newspace_traces
+    base_table = db.mf_newspaces
+    base_constraint = {'traces':{'$exists':True}}
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
@@ -1074,30 +1042,73 @@ class mf_hecke_lpolys(TableChecker):
         return any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
 
     @overall
-    def check_lpoly_degree(self):
-        # TODO
-        # check that degree of lpoly is twice the dimension in mf_newforms
-        pass
-
-    @overall
-    def check_lpoly_trace_det(self):
-        # TODO - should be possible with a three way join
+    def check_lpoly(self):
+        # check that degree of lpoly is twice the dimension in mf_newforms for good primes
         # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
-
-class mf_hecke_newspace_traces(TableChecker):
-    table = db.mf_hecke_newspace_traces
-
-    @overall
-    def check_constraints_hecke_orbit_code_n(self):
-        return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
-
-    @overall
-    def check_total_count(self):
-        # check that hecke_orbit_code is present in mf_newspaces
-        return self.check_count(1000 * db.mf_newspaces.count({'traces':{'$exists':True}}))
+        query = SQL("SELECT t1.label FROM (mf_newforms t1 INNER JOIN mf_hecke_lpolys t2 ON t1.hecke_orbit_code = t2.hecke_orbit_code) INNER JOIN mf_hecke_traces t3 ON t1.hecke_orbit_code = t3.hecke_orbit_code AND t2.p = t3.n WHERE ((t1.level % t2.p != 0 AND array_length(t2.lpoly, 1) != 2*t1.dim+1) OR t2.lpoly[1] != 1 OR t2.lpoly[2] != -t3.trace_an) LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
+
+    @overall
+    def check_constraints_label(self):
+        return self.check_uniqueness_constraint(['label'])
+
+    @overall
+    def check_count(self):
+        # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
+        return any(self.check_count(box['embedding_count'], self._box_query(box))
+                   for box in db.mf_boxes.search({'embeddings': True}))
+
+    @overall
+    def check_hecke_orbit_code(self):
+        # check that hecke_orbit_code is present in mf_newforms
+        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
+
+    @overall
+    def check_lfunction_label(self):
+        # TODO
+        # check that lfunction_label is consistent with hecke_orbit_code, conrey_lebel, embedding_index
+        pass
+
+    @overall
+    def check_embedding_m(self):
+        # check that embedding_m is consistent with conrey_label and embedding_index (use conrey_indexes list in mf_newformes record to do this)
+        check_conrey_label = SQL("t2.conrey_indexes[t1.embedding_index]")
+        return self._run_crosstable(check_conrey_label, "mf_newforms", "conrey_label", "hecke_orbit_code")
+
+    @overall
+    def check_an_length(self):
+        # check that an_normalized is a list of pairs of doubles of length at least 1000
+        return self._run_query(SQL("array_length({0}, 1) < 1000 OR array_length({0}, 2) != 2").format(
+            Identifier("an_normalized")))
+
+    @overall
+    def check_analytic_rank(self):
+        # TODO - four way join on mf_hecke_cc, mf_hecke_newforms, lfunc_lfunctions, lfunc_instances?
+        # check that the analytic ranks (from lfunc_lfunction.order_of_vanishing) are constant across hecke_orbit_code and match the analytic rank in mf_newform
+        pass
+
+    @overall
+    def check_angles(self):
+        # TODO
+        # check that angles lie in (-0.5,0.5] and are null for p dividing the level
+        pass
+
+    @slow
+    def check_roots(self, rec):
+        # TODO - probably need to build infrastructure to zip mf_hecke_cc and mf_newforms
+        # check that embedding_root_real, and embedding_root_image are present whenever field_poly is present in mf_newforms record and that they approximate a root
+        pass
+
+    @slow
+    def check_trace(self, rec):
+        # TODO - as above, need to zip in another table rather than doing a lookup for each row
+        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        pass
 
     @overall
     def check_uniqueness_lfunction_label(self):
