@@ -1,6 +1,7 @@
 from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier
 from types import MethodType
-from sage.rings.integer import Integer, prod, factor, floor, abs, cached_method
+from collections import defaultdict
+from sage.all import Integer, prod, factor, floor, abs, cached_method, mod, euler_phi, prime_pi
 
 @cached_method
 def analytic_conductor(level, weight):
@@ -76,7 +77,7 @@ class TableChecker(object):
         if self.id_limits:
             query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
         with open(logfile, 'a') as log:
-            for rec in table.search(query, sort=[]):
+            for rec in table.search(query, projection=self.projection, sort=[]):
                 for check in checks:
                     if not check(rec):
                         log.write('%s: %s\n'%(check.__name__, rec['label']))
@@ -162,6 +163,10 @@ $$ LANGUAGE plpgsql;
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
+    def check_count(self, cnt, constraint={}):
+        real_cnt = self.table.count(constraint)
+        if real_cnt != cnt:
+            return '%s != %s (%s)' % (real_cnt, cnt, constraint)
 
     def _check_arith(self, a_columns, b_columns, constraint, op):
         return self._run_query(SQL(" != ").join([
@@ -205,6 +210,9 @@ $$ LANGUAGE plpgsql;
     def check_non_null(self, columns, constraint={}):
         return self.check_values({col: {'$exists':True} for col in columns}, constraint)
 
+    def check_null(self, columns, constraint={}):
+        return self.check_values({col: None for col in columns}, constraint)
+
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
         Length of array greater than or equal to limit
@@ -212,12 +220,12 @@ $$ LANGUAGE plpgsql;
         return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
                                constraint, [limit])
 
-    def check_array_len_col(self, array_column, len_column, constraint={}):
+    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0):
         """
         Length of array_column matches len_column
         """
-        return self._run_query(SQL("array_length({0}, 1) != {1}").format(
-            Identifier(array_column), Identifier(len_column)), constraint)
+        return self._run_query(SQL("array_length({0}, 1) != {1} + {2}").format(
+            Identifier(array_column), Identifier(len_column), Literal(int(shift))), constraint)
 
     def check_string_concatentation(self, label_col, other_columns, constraint={}, sep='.'):
         """
@@ -227,28 +235,133 @@ $$ LANGUAGE plpgsql;
         oc = [Identifier(other_columns[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(other_columns)-1)]
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
-    def check_box(self, box_column):
-        # David, see check_box_* below
-        pass
+    def check_sorted(self, column):
+        return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
 
-    def check_crosstable(self, table1, table2, col1, col2, join1, join2):
+    def _make_join(self, join1, join2):
+        if not isinstance(join1, list):
+            join1 = [join1]
+        if join2 is None:
+            join2 = join1
+        elif not isinstance(join2, list):
+            join2 = [join2]
+        if len(join1) != len(join2):
+            raise ValueError("join1 and join2 must have the same length")
+        return SQL(" AND ").join([SQL("t1.{0} = t2.{1}").format(Identifier(j1), Identifier(j2)) for j1, j2 in zip(join1, join2)])
+
+
+    def check_crosstable(self, other_table, col1, join1, col2=None, join2=None):
         """
-        Check that col1 and col2 are the same where col1 is a column in table1, col2 is a column in table2,
-        and the tables are joined by the constraint that table1.join1 = table2.join2
+        Check that col1 and col2 are the same where col1 is a column in self.table, col2 is a column in other_table,
+        and the tables are joined by the constraint that self.table.join1 = other_table.join2.
+
+        Here col2 and join2 default to col1 and join1, and join1 and join2 are allowed to be lists of columns
         """
-        query = SQL("SELECT t1.label {0} t1, {1} t2 WHERE t1.{2} = t2.{3} AND t1.{4} != t2.{5} LIMIT 1").format(
-            *map(Identifier, [table1, table2, join1, join2, col1, col2]))
+        join = self._make_join(join1, join2)
+        if col2 is None:
+            col2 = col1
+        query = SQL("SELECT t1.label FROM {0} t1, {1} t2 WHERE {2} AND t1.{3} != t2.{4} LIMIT 1").format(
+            Identifier(self.table.search_table), Identifier(other_table), join, Identifier(col1), Identifier(col2))
         cur = db._execute(query)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
+    def check_crosstable_count(self, other_table, col, join1, join2=None, constraint={}):
+        """
+        Check that col stores the count of the rows in the other table joining with this one.
+
+        col is allowed to be an integer, in which case a constant count is checked.
+        """
+        cstr, cvalues = self.table._parse_dict(constraint)
+        if cstr is None:
+            cstr = SQL("")
+            cvalues = []
+        else:
+            cstr = SQL("{0} AND ").format(cstr)
+        join = self._make_join(join1, join2)
+        if isinstance(col, (int, Integer)):
+            col = Literal(col)
+        else:
+            col = SQL("t1.{0}").format(Identifier(col))
+        query = SQL("SELECT t1.label FROM {0} t1 WHERE {5}{1} != (SELECT COUNT(*) FROM {3} t2 WHERE {4}) LIMIT 1").format(Identifier(self.table.search_table), col, Identifier(other_table), join, cstr)
+        cur = db._execute(query, cvalues)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    def check_crosstable_sum(self, other_table, col1, join1, col2=None, join2=None):
+        """
+        Check that col1 is the sum of the values in col2 where join1 = join2
+
+        Here col2 and join2 default to col1 and join1, and join1 and join2 are allowed to be lists of columns
+        """
+        join = self._make_join(join1, join2)
+        if col2 is None:
+            col2 = col1
+        query = SQL("SELECT t1.label FROM {0} t1 WHERE t1.{1} != (SELECT SUM(t2.{2}) FROM {3} t2 WHERE {4}) LIMIT 1").format(Identifier(self.table.search_table), Identifier(col1), Identifier(col2), Identifier(other_table), join)
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    def check_crosstable_dotprod(self, other_table, col1, join1, col2, join2=None):
+        """
+        Check that col1 is the sum of the product of the values in the columns of col2 over rows of other_table with self.table.join1 = other_table.join2.
+
+        There are some peculiarities of this method, resulting from its application to mf_subspaces.
+        col1 is allowed to be a pair, in which case the difference col1[0] - col1[1] will be compared.
+
+        col2 does not take value col1 as a default, since they are playing different roles.
+        """
+        join = self._make_join(join1, join2)
+        if isinstance(col1, list):
+            if len(col1) != 2:
+                raise ValueError("col1 must have length 2")
+            col1 = SQL("t1.{0} - t1.{1}").format(Identifier(col1[0]), Identifier(col1[1]))
+        else:
+            col1 = SQL("t1.{0}").format(Identifier(col1))
+        col2 = SQL(" * ").join(SQL("t2.{0}").format(Identifier(col)) for col in col2)
+        query = SQL("SELECT t1.label FROM {0} t1 WHERE {1} != (SELECT SUM({2}) FROM {3} t2 WHERE {4}) LIMIT 1").format(Identifier(self.table.search_table), col1, col2, Identifier(other_table), join)
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    def check_crosstable_aggregate(self, other_table, col1, join1, col2=None, join2=None, sort=None, truncate=None, constraint={}):
+        """
+        Check that col1 is the sorted array of values in col2 where join1 = join2
+
+        Here col2 and join2 default to col1 and join1, and join1 and join2 are allowed to be lists of columns
+
+        sort defaults to col2, but can be a list of columns in other_table
+        """
+        cstr, cvalues = self.table._parse_dict(constraint)
+        if cstr is None:
+            cstr = SQL("")
+            cvalues = []
+        else:
+            cstr = SQL("{0} AND ").format(cstr)
+        join = self._make_join(join1, join2)
+        if col2 is None:
+            col2 = col1
+        if truncate is None:
+            col1 = SQL("t1.{0}").format(Identifier(col1))
+        else:
+            col1 = SQL("t1.{0}[:%s]"%(int(truncate))).format(Identifier(col1))
+        if sort is None:
+            sort = SQL("t2.{0}").format(Identifier(col2))
+        else:
+            sort = SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort)
+        query = SQL("SELECT t1.label FROM {0} t1 WHERE {6}{1} != ARRAY(SELECT t2.{2} FROM {3} t2 WHERE {4} ORDER BY {5}) LIMIT 1").format(Identifier(self.table.search_table), col1, Identifier(col2), Identifier(other_table), join, sort, cstr)
+        cur = db._execute(query, cvalues)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
     def check_array_union(self, a_columns, b_columns):
+        # TODO
         pass
 
     def check_letter_code(self, index_column, letter_code_column, constraint = {}):
         return self._run_query(SQL("{0} != cremona_letter_code({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
-    def check_hecke_orbit_code(self, hoc_column, N_column, k_column, i_column, x_column = None, constraint = {}):
+    def _check_hecke_orbit_code(self, hoc_column, N_column, k_column, i_column, x_column = None, constraint = {}):
         # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
         if x_column is None:
             return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(hoc_column, N_column, k_column, i_column, x_column), constraint)
@@ -256,6 +369,7 @@ $$ LANGUAGE plpgsql;
             return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(hoc_column, N_column, k_column, i_column), constraint)
 
     def check_uniqueness_constraint(self, columns):
+        # TODO
         # check there is a uniqueness constraint on the columns
         pass
 
@@ -263,6 +377,28 @@ $$ LANGUAGE plpgsql;
         # check level_* attributes (radical,primes,is_prime,...)
         # 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'
         return [rec[elt] for elt in ['level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square']] == level_attributes(rec['level'])
+
+    def _box_query(self, box, extras={}, drop=[]):
+        """
+        INPUT:
+
+        - ``box`` -- a dictionary, a row in mf_boxes
+        - ``extras`` -- extra conditions to set on the returned query
+            (e.g. dim <= 20, which would be {'dim':{'$lte':20}})
+        """
+        query = defaultdict(dict)
+        for bcol, col in [('N','level'), ('k', 'weight'), ('o', 'char_order'), ('Nk2', 'Nk2'), ('D', 'dim')]:
+            for mod, code in [('min', '$gte'), ('max', '$lte')]:
+                constraint = box.get(bcol + mod)
+                if constraint is not None:
+                    query[col][code] = constraint
+        for col, D in extras.items():
+            for code, val in D.items():
+                query[col][code] = val
+        for col in drop:
+            del query[col]
+        return query
+
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
@@ -283,26 +419,21 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_box_count(self):
-        # TODO
         # there should be exactly one row for every newspace in mf_boxes; for each box performing mf_newspaces.count(box query) should match newspace_count for box, and mf_newspaces.count() should be the sum of these
-        pass
+        return any(self.check_count(box['newspace_count'], self._box_query(box))
+                   for box in db.mf_boxes.search())
 
     @overall
     def check_box_hecke_cutter_primes(self):
-        # TODO
         # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set and `min(dims) <= 20`
-        #return self.check_box('trace_bound','eigenvalues', extra_constraint)
-        pass
+        return any(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
+                   for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
     def check_box_traces(self):
         # check that traces is set if space is in a box with straces set
-        return self.check_box('traces','straces')
-
-    @overall
-    def check_box_trace_bound(self):
-        return self.check_box('trace_bound','straces')
-
+        return any(self.check_non_null(['traces', 'trace_bound'], self._box_query(box))
+                   for box in db.mf_boxes.search({'straces':True}))
 
     @overall
     def check_label(self):
@@ -395,7 +526,27 @@ class mf_newspaces(TableChecker):
     def check_hecke_orbit_code(self):
         # check  hecke_orbit_code matches level, weight, char_orbit_index
         # this can be done at postgres level
-        return self.check_hecke_orbit_code('hecke_orbit_code', 'level', 'weight', 'char_orbit_index')
+        return self._check_hecke_orbit_code('hecke_orbit_code', 'level', 'weight', 'char_orbit_index')
+
+    @overall
+    def check_hecke_orbit_dims_sorted(self):
+        # check that hecke_orbit_dims is sorted in increasing order
+        return self.check_sorted('hecke_orbit_dims')
+
+    @overall
+    def check_oldspace_decomposition_totaldim(self):
+        # check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
+        return self.check_crosstable_dotprod('mf_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
+
+    @overall
+    def check_traces_count(self):
+        # there should be exactly 1000 records in mf_hecke_traces for each record in mf_newspaces with traces set
+        return self.check_crosstable_count('mf_hecke_newspace_traces', 1000, 'hecke_orbit_code', constraint={'traces':{'$exists':True}})
+
+    @overall
+    def check_traces_match(self):
+        # check that traces[n] matches trace_an in mf_hecke_newspace_traces
+        return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000, constraint={'traces':{'$exists':True}})
 
     @fast
     def check_analytic_conductor(self, rec):
@@ -412,16 +563,11 @@ class mf_newspaces(TableChecker):
         return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
 
     @slow
-    def check_hecke_orbit_dims_sorted(self, rec):
-        # check that hecke_orbit_dims is sorted in increasing order
-        return rec['hecke_orbit_dims'] == sorted(rec['hecke_orbit_dims'])
-
-    @slow
     def check_trace_bound1(self, rec):
         # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
         if 'hecke_orbit_dims' in rec:
-            if len(set(rec['hecke_orbit_dims'])) == len(rec['hecke_orbit_dims'):
-                    return rec['trace_bound'] == 1
+            if len(set(rec['hecke_orbit_dims'])) == len(rec['hecke_orbit_dims']):
+                return rec['trace_bound'] == 1
         return True
 
     @slow
@@ -433,10 +579,9 @@ class mf_newspaces(TableChecker):
 
     @slow
     def check_dims(self, rec):
+        # TODO
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
         pass
-
-
 
 
 class mf_gamma1(TableChecker):
@@ -453,14 +598,15 @@ class mf_gamma1(TableChecker):
 
     @overall
     def check_box_count(self):
-        # TODO
         # there should be a row present for every pair (N,k) satisfying a box constraint on N,k,Nk2
-        pass
+        return any(self.check_count(box['Nk_count'], self._box_query(box, drop=['char_order', 'dim']))
+                   for box in db.mf_boxes.search())
+
     @overall
     def check_box_traces(self):
-        # TODO
         # check that traces is set if space is in a box with traces set and no dimension constraint
-        pass
+        return any(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
+                   for box in db.mf_boxes.search({'Dmin':None, 'Dmax':None, 'straces':True}))
 
     @overall
     def check_label(self):
@@ -509,32 +655,35 @@ class mf_gamma1(TableChecker):
 
     @overall
     def check_newspaces_numforms(self):
-        # TODO
         # if num_forms is set verify that it is equal to the sum of num_forms over newspaces with matching level and weight
-        pass
+        return self.check_crosstable_sum('mf_newspaces', 'num_forms', ['level', 'weight'])
+
     @overall
     def check_newspaces_hecke_orbit_dims(self):
-        # TODO
-        # if hecke_orbit_dims is set, verify that it is equal to the (sorted) concatenation of hecke_orbit_dims over newspaces with matching level and weight
-        pass
+        # if hecke_orbit_dims is set, verify that it is equal to the (sorted) concatenation of dim over newspaces with matching level and weight
+        return self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index', 'hecke_orbit'])
 
     @overall
     def check_newspaces_newspace_dims(self):
-        # TODO
         # check that newspace_dims is equal to the (sorted) concatenation of dim over newspaces with this level and weight
-        pass
+        return self.check_crosstable_aggregate('mf_newspaces', 'newspace_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index'])
+
     @overall
     def check_newspaces_num_spaces(self):
-        # TODO
         # check that num_spaces matches number of char_orbits of level N and number of records in mf_newspaces with this level and weight
-        pass
+        return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
+                self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
 
+    @overall
+    def check_oldspace_decomposition_totaldim(self):
+        # check that summing sub_dim * sub_mult over rows with a given label gives dim S_k^old(Gamma1(N))
+        return self.check_crosstable_dotprod('mf_gamma1_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
 
     @slow
     def check_level(self, rec):
         return self._check_level(rec)
 
-    @sloe
+    @slow
     def check_analytic_conductor(self, rec):
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
@@ -555,59 +704,56 @@ class mf_gamma1(TableChecker):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         pass
 
-
-class mf_newspace_portraits(TableChecker):
-    table = db.mf_newspace_portraits
-
-
+class portraits(TableChecker):
     @overall
     def check_constraints_label(self):
         return self.check_uniqueness_constraint(['label'])
 
     @overall
-    def check_constraints_level_weight_char_orbit_index(self):
-        return self.check_uniqueness_constraint(['level', 'weight', 'char_orbit_index'])
+    def check_constraints_expanded_label(self):
+        return self.check_uniqueness_constraint(self.label)
 
     @overall
     def check_label(self):
-        # check that label matches level, weight, char_orbit_label
-        # FIXME: no char_orbit_label column
-        return self.check_string_concatentation('label', ['level', 'weight', 'char_orbit_label'])
+        # check that label matches self.label
+        # FIXME: need to use cremona_label at the appropriate places
+        return self.check_string_concatentation('label', self.label)
+
+class mf_newspace_portraits(portraits):
+    table = db.mf_newspace_portraits
+    projection = []
+    label = ['level', 'weight', 'char_orbit_index']
 
     @overall
-    def check_box(self):
-        # TODO
+    def check_present(self):
         # check that there is a portrait present for every nonempty newspace in box where straces is set
-        pass
+        return any(self.check_count(box['newspace_count'], self._box_query(box))
+                   for box in db.mf_boxes.search({'straces':True}))
 
 
-class mf_gamma1_portraits(TableChecker):
+class mf_gamma1_portraits(portraits):
     table = db.mf_gamma1_portraits
     projection = []
+    label = ['level', 'weight']
 
     @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
-
-    @overall
-    def check_constraints_level_weight(self):
-        return self.check_uniqueness_constraint(['level', 'weight'])
-
-    @overall
-    def check_label(self):
-        # check that label matches level, weight, char_orbit_label
-        return self.check_string_concatentation('label', ['level', 'weight'])
-
-    @overall
-    def check_portrait_is_set(self):
+    def check_present(self):
         # TODO
         # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
+        pass
 
+class mf_newform_portraits(portraits):
+    table = db.mf_newform_portraits
+    projection = []
+    label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
 
+    @overall
+    def check_present(self):
+        # TODO
+        # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
+        pass
 
-class mf_subspaces(TableChecker):
-    table = db.mf_subspaces
-
+class subspaces(TableChecker):
     @overall
     def check_constraints_label_sub_label(self):
         return self.check_uniqueness_constraint(['label','sub_label'])
@@ -615,45 +761,242 @@ class mf_subspaces(TableChecker):
     @overall
     def check_sub_mul_positive(self):
         # sub_mult is positive
-        return self._run_query(SQL("{0} <= 0").format(Identifier('sub_mul')))
+        return self._run_query(SQL("{0} <= 0").format(Identifier('sub_mult')))
 
+    @overall
+    def check_sub_dim_positive(self):
+        # sub_mult is positive
+        return self._run_query(SQL("{0} <= 0").format(Identifier('sub_dim')))
 
-        # check that label matches level, weight char_orbit_index
-        # check that char_orbit_label matches level, char_orbit_index
-        # check that sub_label matches sub_level, weight, sub_char_orbit_index
+    @overall
+    def check_level_divides(self):
         # check that sub_level divides level
-        # check that sub_char_orbit_label matches sub_level, sub_char_orbit_index
-        # Per row
-        # char_dir_orbits
-        # check that conrey_index matches galois_orbit for char_orbit_label in char_dir_orbits
-        # check that sub_conrey_index matches galois_orbit for sub_char_orbit_label in char_dir_orbits
-        # mf_newspaces
-# check that summing sub_dim * sub_mult over rows with a given label gives S_k(N,chi) (old+new), for k=1 use cusp_dim in mf_newspaces to do this check
+        return self.check_divisible('level', 'sub_level')
 
+    @overall
+    def check_decomposition_dimension(self):
+        # TODO
+        # check that summing sub_dim * sub_mult over rows with a given label gives S_k(N,chi) or S_k(Gamma1(N)) (old+new), for k=1 use cusp_dim in mf_newspaces/mf_gamma1 to do this check
+        pass
 
+class mf_subspaces(subspaces):
+    table = db.mf_subspaces
 
+    @overall
+    def check_label(self):
+        # check that label matches level, weight, char_orbit_index
+        return self.check_string_concatenation('label', ['level', 'weight', 'char_orbit_label'])
 
-class mf_gamma1_subspaces(TableChecker):
+    @overall
+    def check_char_orbit_label(self):
+        # check that char_orbit_label matches char_orbit_index
+        return self.check_letter_code('char_orbit_index', 'char_orbit_label')
+
+    @overall
+    def check_sub_label(self):
+        # check that sub_label matches sub_level, weight, sub_char_orbit_index
+        return self.check_string_concatenation('sub_label', ['sub_level', 'weight', 'sub_char_orbit_label'])
+
+    @overall
+    def check_sub_char_orbit_label(self):
+        # check that sub_char_orbit_label matches sub_char_orbit_index
+        return self.check_letter_code('sub_char_orbit_index', 'sub_char_orbit_label')
+
+    @overall
+    def check_conrey_indexes(self):
+        # check that conrey_indexes matches galois_orbit for char_orbit_label in char_dir_orbits
+        return self.check_crosstable('char_dir_orbits', 'conrey_indexes', ['level', 'char_orbit_index'], 'galois_orbit', ['modulus', 'orbit_index'])
+
+    @overall
+    def check_sub_conrey_indexes(self):
+        # check that sub_conrey_indexes matches galois_orbit for sub_char_orbit_label in char_dir_orbits
+        return self.check_crosstable('char_dir_orbits', 'sub_conrey_indexes', ['sub_level', 'sub_char_orbit_index'], 'galois_orbit', ['modulus', 'orbit_index'])
+
+    @overall
+    def check_sub_dim(self):
+        # check that sub_dim = dim S_k^new(sub_level, sub_chi)
+        return self.check_crosstable('mf_subspaces', 'sub_dim', 'sub_label', 'dim', 'label')
+
+class mf_gamma1_subspaces(subspaces):
     table = db.mf_gamma1_subspaces
 
+    @overall
+    def check_label(self):
+        # check that label matches level, weight
+        return self.check_string_concatenation('label', ['level', 'weight'])
+
+    @overall
+    def check_sub_label(self):
+        # check that sub_label matches sub_level, weight
+        return self.check_string_concatenation('sub_label', ['sub_level', 'weight'])
+
+    @overall
+    def check_sub_dim(self):
+        # check that sub_dim = dim S_k^new(Gamma1(sub_level))
+        return self.check_crosstable('mf_gamma1', 'sub_dim', ['sub_level', 'weight'], 'dim', ['level', 'weight'])
 
 class mf_newforms(TableChecker):
     table = db.mf_newforms
 
-class mf_newform_portraits(TableChecker):
-    table = db.mf_newform_portraits
+    @overall
+    def check_traces_count(self):
+        # there should be exactly 1000 records in mf_hecke_traces for each record in mf_newforms
+        return self.check_crosstable_count('mf_hecke_traces', 1000, 'hecke_orbit_code')
+
+    @overall
+    def check_traces_match(self):
+        # check that traces[n] matches trace_an in mf_hecke_traces
+        return self.check_crosstable_aggregate('mf_hecke_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000)
+
+    @overall
+    def check_lpoly_count(self):
+        # there should be exactly 25 records in mf_hecke_lpolys for each record in mf_newforms with field_poly
+        return self.check_crosstable_count('mf_hecke_lpolys', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
 
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
 
+    @overall
+    def check_bijection(self):
+        # there should be a record present for every record in mf_newforms that has field_poly set (and no others, check count)
+        return (self.check_crosstable_count('mf_newforms', 1, 'label') or
+                self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
+
+    @overall
+    def check_hecke_orbit_code(self):
+        # check that label matches hecke_orbit_code and is present in mf_newforms
+        return self.check_crosstable('mf_newforms', 'hecke_orbit_code', 'label')
+
+    @overall
+    def check_field_poly(self):
+        # check that field_poly matches field_poly in mf_newforms
+        return self.check_crosstable('mf_newforms', 'field_poly', 'label')
+
+    @overall
+    def check_hecke_ring_rank(self):
+        # check that hecke_ring_rank = deg(field_poly)
+        return self.check_array_len_col('field_poly', 'hecke_ring_rank', shift=1)
+
+    @overall
+    def check_hecke_ring_power_basis_set(self):
+        # if hecke_ring_power_basis is set, check that hecke_ring_cyclotomic_generator is 0 and hecke_ring_numerators, ... are null
+        return self.check_value({'hecke_ring_cyclotomic_generator':0,
+                                 'hecke_ring_numerators':None,
+                                 'hecke_ring_denominators':None,
+                                 'hecke_ring_inverse_numerators':None,
+                                 'hecke_ring_inverse_denominators':None},
+                                {'hecke_ring_power_basis':True})
+
+    @overall
+    def check_hecke_ring_cyclotomic_generator(self):
+        # TODO check field_poly_is_cyclotomic
+        # if hecke_ring_cyclotomic_generator is greater than 0 check that hecke_ring_power_basis is false and hecke_ring_numerators, ... are null, and that field_poly_is_cyclotomic is set in mf_newforms record.
+        return (self.check_value({'hecke_ring_power_basis':False,
+                                  'hecke_ring_numerators':None,
+                                  'hecke_ring_denominators':None,
+                                  'hecke_ring_inverse_numerators':None,
+                                  'hecke_ring_inverse_denominators':None},
+                                 {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
+                None)
+
+    @slow
+    def check_hecke_ring_character_values_and_an(self, rec):
+        # check that hecke_ring_character_values has the correct format, depending on whether hecke_ring_cyclotomic_generator is set or not
+        # check that an has length 100 and that each entry is either a list of integers of length hecke_ring_rank (if hecke_ring_cyclotomic_generator=0) or a list of pairs
+        # check that ap has length pi(maxp) and that each entry is formatted correctly (as for an)
+        an = rec['an']
+        if len(an) != 100:
+            return False
+        ap = rec['ap']
+        maxp = rec['maxp']
+        if len(ap) != prime_pi(maxp):
+            return False
+        if maxp < 997:
+            return False
+        m = rec['hecke_ring_cyclotomic_generator']
+        d = rec['hecke_ring_rank']
+        def check_val(val):
+            if not isinstance(val, list):
+                return False
+            if m == 0:
+                if len(val) != d or not all(isinstance(c, (int, Integer)) for c in val):
+                    return False
+            else:
+                for pair in val:
+                    if len(pair) != 2:
+                        return False
+                    if not isinstance(pair[0], (int, Integer)):
+                        return False
+                    e = pair[1]
+                    if not (isinstance(e, (int, Integer)) and 0 <= 2*e < m):
+                        return False
+        if not all(check_val(a) for a in an):
+            return False
+        if not all(check_val(a) for a in ap):
+            return False
+        for p, a in zip(prime_range(100), ap):
+            if a != an[p-1]:
+                return False
+        N = Integer(rec['label'].split('.')[0])
+        total_order = 1
+        for g, val in rec['hecke_ring_character_values']:
+            total_order *= mod(g, N).multiplicative_order()
+            if not check_val(val):
+                return False
+        return total_order == euler_phi(N)
+
 class mf_hecke_traces(TableChecker):
     table = db.mf_hecke_traces
+
+    @overall
+    def check_constraints_hecke_orbit_code_n(self):
+        return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
+
+    @overall
+    def check_total_count(self):
+        # check that hecke_orbit_code is present in mf_newforms
+        return self.check_count(1000 * db.mf_newforms.count())
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
 
+    @overall
+    def check_constraint_hecke_orbit_code_p(self):
+        return self.check_uniqueness_constraint(['hecke_orbit_code', 'p'])
+
+    @overall
+    def check_total_count(self):
+        # check that hecke_orbit_code is present in mf_newforms
+        return self.check_count(25 * db.mf_newforms.count({'field_poly':{'$exists':True}}))
+
+    @overall
+    def check_prime_count(self):
+        # check that every prime p < 100 occurs exactly once for each hecke_orbit_code
+        cnt = db.mf_newforms.count({'field_poly':{'$exists':True}})
+        return any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
+
+    @overall
+    def check_lpoly_degree(self):
+        # TODO
+        # check that degree of lpoly is twice the dimension in mf_newforms
+        pass
+
+    @overall
+    def check_lpoly_trace_det(self):
+        # TODO - should be possible with a three way join
+        # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
+
 class mf_hecke_newspace_traces(TableChecker):
     table = db.mf_hecke_newspace_traces
+
+    @overall
+    def check_constraints_hecke_orbit_code_n(self):
+        return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
+
+    @overall
+    def check_total_count(self):
+        # check that hecke_orbit_code is present in mf_newspaces
+        return self.check_count(1000 * db.mf_newspaces.count({'traces':{'$exists':True}}))
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
