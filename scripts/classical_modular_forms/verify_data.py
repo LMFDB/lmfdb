@@ -704,7 +704,7 @@ class mf_gamma1(TableChecker):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         pass
 
-class portraits(TableChecker):
+class PortraitsChecker(TableChecker):
     @overall
     def check_constraints_label(self):
         return self.check_uniqueness_constraint(['label'])
@@ -719,7 +719,7 @@ class portraits(TableChecker):
         # FIXME: need to use cremona_label at the appropriate places
         return self.check_string_concatentation('label', self.label)
 
-class mf_newspace_portraits(portraits):
+class mf_newspace_portraits(PortraitsChecker):
     table = db.mf_newspace_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index']
@@ -731,7 +731,7 @@ class mf_newspace_portraits(portraits):
                    for box in db.mf_boxes.search({'straces':True}))
 
 
-class mf_gamma1_portraits(portraits):
+class mf_gamma1_portraits(PortraitsChecker):
     table = db.mf_gamma1_portraits
     projection = []
     label = ['level', 'weight']
@@ -742,7 +742,7 @@ class mf_gamma1_portraits(portraits):
         # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
         pass
 
-class mf_newform_portraits(portraits):
+class mf_newform_portraits(PortraitsChecker):
     table = db.mf_newform_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
@@ -945,9 +945,7 @@ class mf_hecke_nf(TableChecker):
                 return False
         return total_order == euler_phi(N)
 
-class mf_hecke_traces(TableChecker):
-    table = db.mf_hecke_traces
-
+class traces(TableChecker):
     @overall
     def check_constraints_hecke_orbit_code_n(self):
         return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
@@ -955,7 +953,17 @@ class mf_hecke_traces(TableChecker):
     @overall
     def check_total_count(self):
         # check that hecke_orbit_code is present in mf_newforms
-        return self.check_count(1000 * db.mf_newforms.count())
+        return self.check_count(1000 * self.base_table.count(self.base_constraint))
+
+class mf_hecke_traces(TracesChecker):
+    table = db.mf_hecke_traces
+    base_table = db.mf_newforms
+    base_constraint = {}
+
+class mf_hecke_newspace_traces(TracesChecker):
+    table = db.mf_hecke_newspace_traces
+    base_table = db.mf_newspaces
+    base_constraint = {'traces':{'$exists':True}}
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
@@ -985,18 +993,6 @@ class mf_hecke_lpolys(TableChecker):
     def check_lpoly_trace_det(self):
         # TODO - should be possible with a three way join
         # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
-
-class mf_hecke_newspace_traces(TableChecker):
-    table = db.mf_hecke_newspace_traces
-
-    @overall
-    def check_constraints_hecke_orbit_code_n(self):
-        return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
-
-    @overall
-    def check_total_count(self):
-        # check that hecke_orbit_code is present in mf_newspaces
-        return self.check_count(1000 * db.mf_newspaces.count({'traces':{'$exists':True}}))
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
