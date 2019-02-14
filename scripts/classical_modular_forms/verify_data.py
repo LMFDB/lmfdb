@@ -1,17 +1,17 @@
 from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier
 from types import MethodType
 from collections import defaultdict
-from sage.all import Integer, prod, factor, floor, abs, cached_method, mod, euler_phi, prime_pi
+from sage.all import Integer, prod, factor, floor, abs, mod, euler_phi, prime_pi, cached_function
 
-@cached_method
+@cached_function
 def analytic_conductor(level, weight):
     # TODO
     pass
 
-def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-15):
+def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-13):
     return (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
 
-@cached_method
+@cached_function
 def level_attributes(level):
     # returns level_radical, level_primes, level_is_prime, level_is_prime_power, level_is_squarefree, level_is_square
     fact = Integer(level).factor()
@@ -23,7 +23,7 @@ def level_attributes(level):
     level_is_squarefree = all( elt[1] == 1 for elt in fact)
     return [level_radical, level_primes, level_is_prime, level_is_prime_power, level_is_squarefree, level_is_square]
 
-@cached_method
+@cached_function
 def sturm_bound(level, weight):
     return floor(weight * Gamma1(level).index()/12)
 
@@ -104,11 +104,11 @@ class TableChecker(object):
     #####################
     def _cremona_letter_code(self):
     """
-CREATE OR REPLACE FUNCTION cremona_letter_code(IN n integer) RETURNS varchar AS $$
+CREATE OR REPLACE FUNCTION to_base26(IN n integer) RETURNS varchar AS $$
 DECLARE
     s varchar;
     m integer;
-BEGIN
+BEGIN:
     m := n;
     IF m < 0 THEN
         s := 'NULL';
@@ -126,7 +126,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION class_to_int(IN s varchar) RETURNS integer AS $$
+CREATE OR REPLACE FUNCTION from_base26(IN s varchar) RETURNS integer AS $$
 DECLARE
     k integer[];
     m integer := 0;
@@ -138,6 +138,25 @@ BEGIN
         p := p*26;
     END LOOP;
     return m;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION from_newform_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
+DECLARE
+    v text[];
+BEGIN
+    v := regexp_split_to_array(s, '.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + ((from_base26(v[3])::bit(64)<<36)::bigint + ((from_base26(v[4])::bit(64)<<52)::bigint;
+END;
+$$ LANGUAGE plpgsql;
+
+//we could have only one function, but then we would play heavily for the if statement
+CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
+DECLARE
+    v text[];
+BEGIN
+    v := regexp_split_to_array(s, '.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + ((from_base26(v[3])::bit(64)<<36)::bigint;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -153,8 +172,10 @@ $$ LANGUAGE plpgsql;
             table = Identifier(self.table.search_table)
         cstr, cvalues = self.table._parse_dict(constraint)
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
-        query = SQL("SELECT label FROM {0} WHERE {1}").format(
-            table, condition)
+        query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
+                Identifier(self.table._label_col),
+                Identifier(self.table.search_table),
+                condition)
         if cstr is None:
             cvalues = []
         else:
@@ -259,6 +280,13 @@ $$ LANGUAGE plpgsql;
         return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
                                constraint, [limit])
 
+    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim = 1):
+        """
+        Length of array greater than or equal to limit
+        """
+        return self._run_query(SQL("array_length({0}, %s) != %s").format(Identifier(column)),
+                               constraint, [array_dim, limit])
+
     def check_array_len_col(self, array_column, len_column, constraint={}, shift=0):
         """
         Length of array_column matches len_column
@@ -286,7 +314,10 @@ $$ LANGUAGE plpgsql;
         """
         if col2 is None:
             col2 = col1
+
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint=constraint)
+
+
 
     def check_crosstable_count(self, other_table, col, join1, join2=None, constraint={}):
         """
@@ -294,6 +325,7 @@ $$ LANGUAGE plpgsql;
 
         col is allowed to be an integer, in which case a constant count is checked.
         """
+
         return self._run_crosstable(SQL("COUNT(*)"), other_table, col, join1, join2, constraint)
 
     def check_crosstable_sum(self, other_table, col1, join1, col2=None, join2=None, constraint={}):
@@ -840,6 +872,49 @@ class mf_newforms(TableChecker):
         # there should be exactly 25 records in mf_hecke_lpolys for each record in mf_newforms with field_poly
         return self.check_crosstable_count('mf_hecke_lpolys', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
 
+    @overall
+    def check_embeddings_count(self):
+        # check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
+        return any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box) for box in db.mf_boxes.search({'embeddings':True})))
+
+    @overall
+    def check_embeddings_count(self):
+        # check that for such box with embeddings set, that summing over `dim` matches embeddings_count
+        return all(sum(self.table.search(self._box_query(box), 'dim')) == box['embeddings_count'] for box in db.mf_boxes.search({'embeddings':True}))
+
+    @overall
+    def check_roots(self):
+        # check that embedding_root_real, and embedding_root_image present in mf_hecke_cc whenever field_poly is present
+        # I didn't manage to write a generic one for this one
+        join = self._make_join('hecke_orbit_code', None)
+        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} is not NULL LIMIT 1").format(
+                Identifier(self.table._label_col),
+                Identifier(self.table.search_table),
+                Identifier('mf_hecke_cc'),
+                join,
+                Identifier("embedding_root_real"),
+                Identifier("embedding_root_imag"),
+                Identifier("field_poly")
+                )
+        cur = db._execute(query, cvalues)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    @slow
+    def check_roots_are_roots(self, rec):
+        # check that  embedding_root_real, and embedding_root_image  approximate a root of field_poly
+        if rec['field_poly'] is not None:
+            poly = PolynomialRing(CC, "x")(rec['field_poly'])
+            for root in db.mf_hecke_cc.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"]):
+                r = CC(*[root[elt] for elt in ["embedding_root_real", "embedding_root_imag"]])
+                if poly.evaluate(r) > 1e-13:
+                    return False
+        return True
+
+
+
+
+
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
 
@@ -1038,6 +1113,50 @@ class mf_hecke_cc(TableChecker):
         # TODO - as above, need to zip in another table rather than doing a lookup for each row
         # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         pass
+
+    @overall
+    def check_uniqueness_lfunction_label(self):
+        return self.check_uniqueness_constraint(['lfunction_label'])
+
+    @overall
+    def check_hecke_orbit_code_lfunction_label(self):
+        # check that lfunction_label is consistent with hecke_orbit_code
+        return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('lfunction_label')))
+
+    @overall
+    def check_hecke_orbit_code_lfunction_label(self):
+        # check that lfunction_label is consistent with conrey_lebel, embedding_index
+        return self._run_query(SQL("regexp_split_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
+
+    @overall
+    def check_an_pairs(self):
+        # check that an_normalized is a list of pairs
+        return self.check_array_len_eq_constant('an_normalized', 2, array_dim = 2)
+
+    @overall
+    def check_an_length(self):
+        # check that an_normalized is of length at least 1000
+        return self.check_array_len_eq_constant('an_normalized', 1000)
+
+
+
+    @slow
+    def check_angles(self, rec):
+        # check that angles lie in (-0.5,0.5] and are null for p dividing the level
+        level = int(rec['lfunction_label'].split('.')[0])
+        for p, angle in zip(prime_range(1000), rec['angles']):
+            if level % p == 0:
+                if angle is not None:
+                    return False
+            elif not( angle <= 0.5 and angle > -0.5 ):
+                return False
+        else:
+            return True
+
+# Per row
+# check that embedding_m is consistent with conrey_label and embedding_index (use conrey_indexes list in mf_newformes record to do this)
+# (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits

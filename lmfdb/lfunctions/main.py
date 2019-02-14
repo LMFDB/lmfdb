@@ -104,7 +104,7 @@ def l_function_cuspform_browse_page(degree):
     if deg < 0:
         return flask.abort(404)
     info = {"bread": get_bread(deg, [("Cusp Form", url_for('.l_function_cuspform_browse_page', degree=degree))])}
-    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(201)]
+    info["contents"] = [LfunctionPlot.getOneGraphHtmlHolo(0.501),LfunctionPlot.getOneGraphHtmlHolo(1)]
     return render_template("cuspformGL2.html", title='L-functions of Cusp Forms on \(\Gamma_0(N)\) with Trivial Character', **info)
 
 
