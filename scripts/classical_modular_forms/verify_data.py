@@ -280,15 +280,24 @@ $$ LANGUAGE plpgsql;
         """
         Length of array greater than or equal to limit
         """
-        return self._run_query(SQL("array_length({0}, %s) != %s").format(Identifier(column)),
-                               constraint, [array_dim, limit])
+        return self._run_query(SQL("array_length({0}, {1}) != {2}").format(
+            Identifier(column),
+            Literal(int(array_dim)),
+            Literal(int(limit))
+            ),
+            constraint)
 
-    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0):
+    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim = 1):
         """
         Length of array_column matches len_column
         """
-        return self._run_query(SQL("array_length({0}, 1) != {1} + {2}").format(
-            Identifier(array_column), Identifier(len_column), Literal(int(shift))), constraint)
+        return self._run_query(SQL("array_length({0}, {3}) != {1} + {2}").format(
+            Identifier(array_column),
+            Identifier(len_column),
+            Literal(int(shift)),
+            Literal(array_dim),
+            ),
+            constraint)
 
     def check_string_concatentation(self, label_col, other_columns, constraint={}, sep='.'):
         """
@@ -540,7 +549,6 @@ class mf_newspaces(TableChecker):
     @overall
     def check_hecke_orbit_code(self):
         # check  hecke_orbit_code matches level, weight, char_orbit_index
-        # this can be done at postgres level
         return self._check_hecke_orbit_code('hecke_orbit_code', 'level', 'weight', 'char_orbit_index')
 
     @overall
@@ -907,6 +915,18 @@ class mf_newforms(TableChecker):
                     return False
         return True
 
+    @slow
+    def check_analytic_rank(self, rec):
+        # TODO -
+        # check that the analytic ranks (from lfunc_lfunction.order_of_vanishing) are constant across hecke_orbit_code and match the analytic rank in mf_newform
+        pass
+
+    @slow
+    def check_trace(self, rec):
+        # TODO
+        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        pass
+
 
 
 
@@ -1059,6 +1079,7 @@ class mf_hecke_cc(TableChecker):
 
     @overall
     def check_count(self):
+        # FIXME, this should be done from mf_newforms
         # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
         return any(self.check_count(box['embedding_count'], self._box_query(box))
                    for box in db.mf_boxes.search({'embeddings': True}))
@@ -1077,6 +1098,7 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_embedding_m(self):
         # check that embedding_m is consistent with conrey_label and embedding_index (use conrey_indexes list in mf_newformes record to do this)
+        # FIXME, this query doesn't make sense
         check_conrey_label = SQL("t2.conrey_indexes[t1.embedding_index]")
         return self._run_crosstable(check_conrey_label, "mf_newforms", "conrey_label", "hecke_orbit_code")
 
@@ -1086,29 +1108,7 @@ class mf_hecke_cc(TableChecker):
         return self._run_query(SQL("array_length({0}, 1) < 1000 OR array_length({0}, 2) != 2").format(
             Identifier("an_normalized")))
 
-    @overall
-    def check_analytic_rank(self):
-        # TODO - four way join on mf_hecke_cc, mf_hecke_newforms, lfunc_lfunctions, lfunc_instances?
-        # check that the analytic ranks (from lfunc_lfunction.order_of_vanishing) are constant across hecke_orbit_code and match the analytic rank in mf_newform
-        pass
 
-    @overall
-    def check_angles(self):
-        # TODO
-        # check that angles lie in (-0.5,0.5] and are null for p dividing the level
-        pass
-
-    @slow
-    def check_roots(self, rec):
-        # TODO - probably need to build infrastructure to zip mf_hecke_cc and mf_newforms
-        # check that embedding_root_real, and embedding_root_image are present whenever field_poly is present in mf_newforms record and that they approximate a root
-        pass
-
-    @slow
-    def check_trace(self, rec):
-        # TODO - as above, need to zip in another table rather than doing a lookup for each row
-        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
-        pass
 
     @overall
     def check_uniqueness_lfunction_label(self):
@@ -1124,17 +1124,6 @@ class mf_hecke_cc(TableChecker):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("regexp_split_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
-    @overall
-    def check_an_pairs(self):
-        # check that an_normalized is a list of pairs
-        return self.check_array_len_eq_constant('an_normalized', 2, array_dim = 2)
-
-    @overall
-    def check_an_length(self):
-        # check that an_normalized is of length at least 1000
-        return self.check_array_len_eq_constant('an_normalized', 1000)
-
-
 
     @slow
     def check_angles(self, rec):
@@ -1149,9 +1138,6 @@ class mf_hecke_cc(TableChecker):
         else:
             return True
 
-# Per row
-# check that embedding_m is consistent with conrey_label and embedding_index (use conrey_indexes list in mf_newformes record to do this)
-# (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
 
 
 class char_dir_orbits(TableChecker):
