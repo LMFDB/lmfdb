@@ -426,10 +426,15 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5,
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 def getOneGraphHtmlHolo(condmax):
-    #image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
-    image_url = url_for('static', filename='images/browseGraphHoloNew_0.501.svg')
-    logger.debug(image_url)
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1017, 550) +
+    if condmax == 1:
+        pic = (url_for('static', filename='images/browseGraphHoloNew_1.svg'), 2023, 610)
+    elif condmax == 0.501:
+        pic = (url_for('static', filename='images/browseGraphHoloNew_0.501.svg'), 1020, 550)
+    else:
+        logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
+        pic = (url_for('.browseGraphHoloNew', **{'condmax':condmax}), 1010, 600)
+    logger.debug(pic[0])
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 

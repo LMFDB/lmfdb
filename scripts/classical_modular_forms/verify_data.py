@@ -1,7 +1,15 @@
+##################################
+# WARNING ## WARNING ## WARNING ##
+##################################
+#  Nothing in this file is safe  #
+#       from SQL injection       #
+##################################
+
 from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier
 from types import MethodType
 from collections import defaultdict
 from sage.all import Integer, prod, factor, floor, abs, mod, euler_phi, prime_pi, cached_function
+import traceback
 
 @cached_function
 def analytic_conductor(level, weight):
@@ -61,8 +69,10 @@ class overall(speed_decorator):
     pass
 
 class TableChecker(object):
+    label = 'label' # default
     def __init__(self, logfile, id_limits=None):
         self.logfile = logfile
+        self.errfile = logfile + '.errors'
         self.id_limits = id_limits
 
 
@@ -79,8 +89,15 @@ class TableChecker(object):
         with open(logfile, 'a') as log:
             for rec in table.search(query, projection=self.projection, sort=[]):
                 for check in checks:
-                    if not check(rec):
-                        log.write('%s: %s\n'%(check.__name__, rec['label']))
+                    try:
+                        if not check(rec):
+                            log.write('%s: %s\n'%(check.__name__, rec[self.label]))
+                    except Exception:
+                        with open(self.errfile, 'a') as err:
+                            msg = 'Exception in %s (%s):\n'%(check.__name__, rec[self.label])
+                            err.write(msg)
+                            log.write(msg)
+                            err.write(traceback.format_exc() + '\n')
 
     def run_slow_checks(self):
         self._run_checks(slow)
@@ -93,9 +110,17 @@ class TableChecker(object):
         logfile = self.logfile
         with open(logfile, 'a') as log:
             for check in checks:
-                bad_label = check()
-                if bad_label:
-                    log.write('%s: OVERALL\n'%(check.__name__))
+                try:
+                    bad_label = check()
+                except Exception:
+                    with open(self.errfile, 'a') as err:
+                        msg = 'Exception in %s:\n'%(check.__name__)
+                        err.write(msg)
+                        log.write(msg)
+                        err.write(traceback.format_exc() + '\n')
+                else:
+                    if bad_label:
+                        log.write('%s: %s\n'%(check.__name__, bad_label))
 
     # Add uniqueness constraints
 
@@ -224,7 +249,14 @@ $$ LANGUAGE plpgsql;
         if real_cnt != cnt:
             return '%s != %s (%s)' % (real_cnt, cnt, constraint)
 
+    def check_eq(self, col1, col2, constraint={}):
+        return self._run_query(SQL("{0} != {1}").format(Identifier(col1), Identifier(col2)), constraint)
+
     def _check_arith(self, a_columns, b_columns, constraint, op):
+        if isinstance(a_columns, basestring):
+            a_columns = [a_columns]
+        if isinstance(b_columns, basestring):
+            b_columns = [b_columns]
         return self._run_query(SQL(" != ").join([
             SQL(" %s "%op).join(map(Identifier, a_columns)),
             SQL(" %s "%op).join(map(Identifier, b_columns))]), constraint)
@@ -240,6 +272,14 @@ $$ LANGUAGE plpgsql;
         Checks that sum(array_column) == value_column
         """
         return self._run_query(SQL("(SELECT SUM(s) FROM UNNEST({0}) s) != {1}").format(
+            Identifier(array_column), Identifier(value_column)), constraint)
+
+    def check_array_product(self, array_column, value_column, constraint={}):
+        """
+        Checks that prod(array_column) == value_column
+        """
+        # TODO - need product aggregator (cf https://www.postgresql.org/message-id/20090504084201.GD5414%40a-kretschmer.de)
+        return self._run_query(SQL("(SELECT PROD(s) FROM UNNEST({0}) s) != {1}").format(
             Identifier(array_column), Identifier(value_column)), constraint)
 
     def check_divisible(self, numerator, denominator, constraint={}):
@@ -264,10 +304,18 @@ $$ LANGUAGE plpgsql;
             return self._run_query(SQL("NOT ({0})").format(vstr), constraint, values=vvalues)
 
     def check_non_null(self, columns, constraint={}):
+        if isinstance(columns, basestring):
+            columns = [columns]
         return self.check_values({col: {'$exists':True} for col in columns}, constraint)
 
     def check_null(self, columns, constraint={}):
+        if isinstance(columns, basestring):
+            columns = [columns]
         return self.check_values({col: None for col in columns}, constraint)
+
+    def check_iff(self, condition1, condition2):
+        return (self.check_values(condition1, condition2) or
+                self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
@@ -278,7 +326,7 @@ $$ LANGUAGE plpgsql;
 
     def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim = 1):
         """
-        Length of array greater than or equal to limit
+        Length of array equal to constant
         """
         return self._run_query(SQL("array_length({0}, {1}) != {2}").format(
             Identifier(column),
@@ -299,6 +347,22 @@ $$ LANGUAGE plpgsql;
             ),
             constraint)
 
+    def check_array_bound(self, array_column, bound, constraint={}, upper=True):
+        """
+        Check that all entries in the array are <= bound (or >= if upper is False)
+        """
+        op = '>=' if upper else '<='
+        return self._run_query(SQL("NOT ({0} %s ALL({1}))" % op).format(Literal(bound), Identifier(array_column)), constraint=constraint)
+
+    def check_array_concatenation(self, a_columns, b_columns, constraint={}):
+        if isinstance(a_columns, basestring):
+            a_columns = [a_columns]
+        if isinstance(b_columns, basestring):
+            b_columns = [b_columns]
+        return self._run_query(SQL("{0} != {1}").format(
+            " || ".join(map(Identifier, a_columns)),
+            " || ".join(map(Identifier, b_columns))), constraint=constraint)
+
     def check_string_concatentation(self, label_col, other_columns, constraint={}, sep='.'):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
@@ -306,6 +370,9 @@ $$ LANGUAGE plpgsql;
         # FIXME: we need to handle modifiers
         oc = [Identifier(other_columns[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(other_columns)-1)]
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
+
+    def check_string_startswith(self, col, head, constraint=constraint):
+        return self._run_query(SQL("NOT ({0} LIKE {1})").format(Identifier(col), Literal(head + '%')), constraint)
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -377,10 +444,6 @@ $$ LANGUAGE plpgsql;
         else:
             sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", sort=sort)
-
-    def check_array_union(self, a_columns, b_columns):
-        # TODO
-        pass
 
     def check_letter_code(self, index_column, letter_code_column, constraint = {}):
         return self._run_query(SQL("{0} != cremona_letter_code({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
@@ -862,6 +925,315 @@ class mf_newforms(TableChecker):
     table = db.mf_newforms
 
     @overall
+    def check_constraints_label(self):
+        return self.check_uniqueness_constraint(['label'])
+
+    @overall
+    def check_constraints_level_weight_char_hecke(self):
+        return self.check_uniqueness_constraint(['level', 'weight', 'char_orbit_index', 'hecke_orbit'])
+
+    @overall
+    def check_hecke_ring_generator_nbound(self):
+        # hecke_ring_generator_nbound > 0
+        return self.check_values({'hecke_ring_generator_nbound': {'$gt': 0}})
+
+    @overall
+    def check_box_count(self):
+        # there should be exactly one row for every newform in a box listed in mf_boxes with newform_count set; for each such box performing mf_newforms.count(box query) should match newform_count for box, and mf_newforms.count() should be the sum of these
+        total_count = 0
+        for box in db.mf_boxes.search():
+            bad_label = self.check_count(box['newform_count'], self._box_query(box))
+            if bad_label:
+                return bad_label
+            total_count += box['newform_count']
+        return self.check_count(total_count)
+
+    @overall
+    def check_label(self):
+        # TODO - apply cremona_letter_code
+        # check that label matches level, weight, char_orbit_index, hecke_orbit
+        return self.check_string_concatenation('label', ['level', 'weight', 'char_orbit_label', 'hecke_orbit'])
+
+    @overall
+    def check_space_label(self):
+        # check that space_label matches level, weight, char_orbit_index
+        return self.check_string_concatenation('space_label', ['level', 'weight', 'char_orbit_label'])
+
+    @overall
+    def check_relative_dim(self):
+        # check that char_degree * relative_dim = dim
+        return self.check_product('dim', ['char_degree', 'relative_dim'])
+
+    @overall
+    def check_newspaces_overlap(self):
+        # check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
+        bad_label = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
+        if bad_label:
+            return bad_label
+        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'dim', 'hecke_orbit_code', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'relative_dim', 'trace_display', 'traces', 'weight', 'weight_parity']:
+            bad_label = self.check_crosstable('mf_newspaces', col, 'space_label', col, 'label')
+            if bad_label:
+                return bad_label + " (%s)"%col
+
+    @overall
+    def check_polredabs_set(self):
+        # check that if nf_label is set, then is_polredabs is true
+        return self.check_values({'is_polredabs':True}, {'nf_label':{'$exists':True}})
+
+    @overall
+    def check_field_poly_consequences(self):
+        # check that is_polredabs is present whenever field_poly is
+        # check that hecke_ring_generator_nbound is set whenever field_poly is set
+        # check that qexp_display is present whenever field_poly is present
+        return self.check_non_null(['is_polredabs', 'hecke_ring_generator_nbound', 'qexp_display'],
+                                   {'field_poly': {'$exists':True}})
+
+    @overall
+    def check_traces_length(self):
+        # check that traces is present and has length at least 10000
+        return (self.check_non_null(['traces']) or
+                self.check_array_len_gte_constant('traces', 1000))
+
+    @overall
+    def check_trace_display(self):
+        # check that trace_display is present and has length at least 4
+        return (self.check_non_null(['trace_display']) or
+                self.check_array_len_gte_constant('traces', 4))
+
+    @overall
+    def check_number_field(self):
+        # if nf_label is present, check that there is a record in nf_fields and that mf_newforms field_poly matches nf_fields coeffs, and check that is_self_dual agrees with signature, and field_poly_disc agrees with disc_sign * disc_abs in nf_fields
+        nfyes = {'nf_label':{'exists':True}}
+        selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
+        return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) or
+                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
+                self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) or
+                self.check_crosstable_dotprod('nf_fields', 'field_poly_disc', 'nf_label', ['disc_sign', 'disc_abs'], constraint=nfyes))
+
+    @overall
+    def check_field_poly_disc(self):
+        # if hecke_ring_index_proved is set, verify that field_poly_disc is set
+        return self.check_non_null(['field_poly_disc'], {'hecke_ring_index_proved':{'$exists':True}})
+
+    @overall
+    def check_analytic_rank_proved(self):
+        # TODO: Check with Drew, since this currently has 52343 failures
+        # check that analytic_rank_proved is set (log warning if not)
+        pass
+
+    @overall
+    def check_self_twist_type(self):
+        # check that self_twist_type is in {0,1,2,3} and matches is_cm and is_rm
+        return (self.check_non_null(['is_cm', 'is_rm']) or
+                self.check_iff({'self_twist_type':0}, {'is_cm':False, 'is_rm':False}) or
+                self.check_iff({'self_twist_type':1}, {'is_cm':True, 'is_rm':False}) or
+                self.check_iff({'self_twist_type':2}, {'is_cm':False, 'is_rm':True}) or
+                self.check_iff({'self_twist_type':3}, {'is_cm':True, 'is_rm':True}))
+
+    @overall
+    def check_cmrm_discs(self):
+        # check that self_twist_discs is consistent with self_twist_type (e.g. if self_twist_type is 3, there should be 3 self_twist_discs, one pos, two neg)
+        return (self.check_array_len_eq_constant('rm_discs', 0, {'is_rm': False}) or
+                self.check_array_len_eq_constant('rm_discs', 1, {'is_rm': True}) or
+                self.check_array_len_eq_constant('cm_discs', 0, {'is_cm': False}) or
+                self.check_array_len_eq_constant('cm_discs', 1, {'self_twist_type': 1}) or
+                self.check_array_len_eq_constant('cm_discs', 2, {'self_twist_type': 3}))
+
+    @overall
+    def check_self_twist_discs(self):
+        # check that cm_discs and rm_discs have correct signs and that their union is self_twist_discs
+        return (self.check_array_bound('cm_discs', -1) or
+                self.check_array_bound('rm_discs', 1, upper=False) or
+                self.check_array_concatenation('self_twist_discs', ['cm_discs', 'rm_discs']))
+
+    @overall
+    def check_self_twist_proved(self):
+        # check that self_twist_proved is set (log warning if not, currently there are 10-20 where it is not set)
+        return self.check_values({'self_twist_proved':True})
+
+    @overall
+    def check_sato_tate_set(self):
+        # for k>1 check that sato_tate_group is set
+        return self.check_non_null(['sato_tate_group'], {'weight':{'$gt':1}})
+
+    @overall
+    def check_sato_tate_value(self):
+        # for k>1 check that sato_tate_group is consistent with is_cm and char_order (it should be 1.2.3.cn where n=char_order if is_cm is false, and 1.2.1.dn if is_cm is true)
+        return (self._run_query(SQL("sato_tate_group != {0} || char_order").format(Literal("1.2.3.c")), constraint={'is_cm':False, 'weight':{'$gt':1}}) or
+                self._run_query(SQL("sato_tate_group != {0} || char_order").format(Literal("1.2.1.d")), constraint={'is_cm':True, 'weight':{'$gt':1}}))
+
+    @overall
+    def check_projective_image_type(self):
+        # for k=1 check that projective_image_type is present,
+        return self.check_non_null('projective_image_type', {'weight':1})
+
+    @overall
+    def check_projective_image(self):
+        # if present, check that projective_image is consistent with projective_image_type
+        return (self.check_eq('projective_image_type', 'projective_image', {'projective_image_type':{'$ne':'Dn'}}) or
+                self.check_string_startswith('projective_image', 'D', {'projective_image_type':'Dn'}))
+
+    @overall
+    def check_projective_field(self):
+        # if present, check that projective_field_label identifies a number field in nf_fields with coeffs = projective_field
+        return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) or
+                self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
+
+    @overall
+    def check_artin_field(self):
+        # if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
+        return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) or
+                self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
+
+    @overall
+    def check_artin_degree(self):
+        # if present, check that artin_field has degree equal to artin_degree
+        return self.check_array_len_col('artin_field', 'artin_degree', constraint={'artin_field':{'$exists':True}}, shift=1)
+
+    @overall
+    def check_trivial_character_cols(self):
+        # check that atkin_lehner_eigenvalues, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
+        yes = {'$exists':True}
+        return self.check_iff({'atkin_lehner_eigenvalues':yes, 'atkin_lehner_string':yes, 'fricke_eigenval':yes}, {'char_orbit_index':1})
+
+    @overall
+    def check_inner_twists(self):
+        # check that inner_twists is consistent with inner_twist_count and that both are present if field_poly is set
+        return (self.check_array_len_col('inner_twists', 'inner_twist_count', constraint={'inner_twist_count':{'$gt':0}}) or
+                self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt'0}}, {'field_poly':{'$exists':True}}))
+
+    @overall
+    def check_has_non_self_twist(self):
+        # TODO - is there a better way to do this?
+        # check that has_non_self_twist is consistent with inner_twist_count and self_twist_type
+        return (self.check_iff({'inner_twist_count':-1}, {'has_non_self_twist':-1}) or
+                self.check_values({'inner_twist_count':1}, {'has_non_self_twist':0, 'self_twist_type':0}) or
+                self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':1}) or
+                self.check_values({'inner_twist_count':2}, {'has_non_self_twist':0, 'self_twist_type':2}) or
+                self.check_values({'inner_twist_count':4}, {'has_non_self_twist':0, 'self_twist_type':3}) or
+                self.check_values({'inner_twist_count':{'$gt':1}}, {'has_non_self_twist':1, 'self_twist_type':0}) or
+                self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':1}) or
+                self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':2}) or
+                self.check_values({'inner_twist_count':{'$gt':4}}, {'has_non_self_twist':1, 'self_twist_type':3}))
+
+    @fast
+    def check_fricke_eigenval(self, rec):
+        # check that fricke_eigenval is product of atkin_lehner_eigenvals
+        return rec['fricke_eigenval'] == prod(ev for p, ev in rec['atkin_lehner_eigenvals'])
+
+    @fast
+    def check_factorizations(self, rec):
+        # if present, check that field_disc_factorization matches field_disc
+        # if present, verify that hecke_ring_index_factorization matches hecke_ring_index
+        if 'field_disc_factorization' in rec:
+            if rec['field_disc'] != prod(p**e for p, e in rec['field_disc_factorization']):
+                return False
+        if 'hecke_ring_index_factorization' in rec:
+            if rec['hecke_ring_index'] != prod(p**e for p, e in rec['hecke_ring_index_factorization']):
+                return False
+        return True
+
+    @fast
+    def check_projective_field_degree(self, rec):
+        # if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 2n for Dn)
+        coeffs = rec.get('projective_field')
+        if coeffs is None: return True
+        deg = Integer(rec['projective_image'][1:])
+        if rec['projective_image_type'] == 'Dn':
+            deg *= 2
+        return deg == len(coeffs) - 1
+
+    #### lfunc_lfunctions ####
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if newform is in a box with lfunctions set, check that analytic_rank is set and matches order_of_vanishing in lfunctions record
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # check that disc is present in tuple in inner_twists if and only if it is a self_twist and when this is the case, that precisely the discs in self_twist_disc appear
+        pass
+
+    #### slow ####
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if present, check that field_poly is monic, irreducible, and of degree dim
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if field_poly_is_cyclotomic or field_poly_is_real_cycolotomic are set, verify this
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # check that URLS in related_objects are valid and identify objects present in the LMFDB
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
+        pass
+
+    #### extra slow ####
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
+        pass
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
+        pass
+
+    #### newspace ####
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
+        pass
+
+    #### char_dir_orbits ####
+
+    @slow
+    def check_(self, rec):
+        # TODO
+        # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
+        pass
+
+    #### mf_hecke_traces ####
+
+    @overall
     def check_traces_count(self):
         # there should be exactly 1000 records in mf_hecke_traces for each record in mf_newforms
         return self.check_crosstable_count('mf_hecke_traces', 1000, 'hecke_orbit_code')
@@ -870,6 +1242,8 @@ class mf_newforms(TableChecker):
     def check_traces_match(self):
         # check that traces[n] matches trace_an in mf_hecke_traces
         return self.check_crosstable_aggregate('mf_hecke_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000)
+
+    #### mf_hecke_lpolys ####
 
     @overall
     def check_lpoly_count(self):
@@ -882,7 +1256,7 @@ class mf_newforms(TableChecker):
         return any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box) for box in db.mf_boxes.search({'embeddings':True})))
 
     @overall
-    def check_embeddings_count(self):
+    def check_embeddings_count_boxcheck(self):
         # check that for such box with embeddings set, that summing over `dim` matches embeddings_count
         return all(sum(self.table.search(self._box_query(box), 'dim')) == box['embeddings_count'] for box in db.mf_boxes.search({'embeddings':True}))
 
@@ -928,9 +1302,6 @@ class mf_newforms(TableChecker):
         pass
 
 
-
-
-
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
 
@@ -958,23 +1329,23 @@ class mf_hecke_nf(TableChecker):
     @overall
     def check_hecke_ring_power_basis_set(self):
         # if hecke_ring_power_basis is set, check that hecke_ring_cyclotomic_generator is 0 and hecke_ring_numerators, ... are null
-        return self.check_value({'hecke_ring_cyclotomic_generator':0,
-                                 'hecke_ring_numerators':None,
-                                 'hecke_ring_denominators':None,
-                                 'hecke_ring_inverse_numerators':None,
-                                 'hecke_ring_inverse_denominators':None},
-                                {'hecke_ring_power_basis':True})
+        return self.check_values({'hecke_ring_cyclotomic_generator':0,
+                                  'hecke_ring_numerators':None,
+                                  'hecke_ring_denominators':None,
+                                  'hecke_ring_inverse_numerators':None,
+                                  'hecke_ring_inverse_denominators':None},
+                                 {'hecke_ring_power_basis':True})
 
     @overall
     def check_hecke_ring_cyclotomic_generator(self):
         # TODO check field_poly_is_cyclotomic
         # if hecke_ring_cyclotomic_generator is greater than 0 check that hecke_ring_power_basis is false and hecke_ring_numerators, ... are null, and that field_poly_is_cyclotomic is set in mf_newforms record.
-        return (self.check_value({'hecke_ring_power_basis':False,
-                                  'hecke_ring_numerators':None,
-                                  'hecke_ring_denominators':None,
-                                  'hecke_ring_inverse_numerators':None,
-                                  'hecke_ring_inverse_denominators':None},
-                                 {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
+        return (self.check_values({'hecke_ring_power_basis':False,
+                                   'hecke_ring_numerators':None,
+                                   'hecke_ring_denominators':None,
+                                   'hecke_ring_inverse_numerators':None,
+                                   'hecke_ring_inverse_denominators':None},
+                                  {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
                 None)
 
     @slow
@@ -1024,6 +1395,8 @@ class mf_hecke_nf(TableChecker):
         return total_order == euler_phi(N)
 
 class traces(TableChecker):
+    label = 'hecke_orbit_code' # used for printing if error occurs
+
     @overall
     def check_constraints_hecke_orbit_code_n(self):
         return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
@@ -1045,6 +1418,7 @@ class mf_hecke_newspace_traces(TracesChecker):
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
+    label = 'hecke_orbit_code' # used for printing if error occurs
 
     @overall
     def check_constraint_hecke_orbit_code_p(self):
@@ -1072,13 +1446,14 @@ class mf_hecke_lpolys(TableChecker):
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
+    label = 'lfunction_label'
 
     @overall
     def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
+        return self.check_uniqueness_constraint(['lfunction_label'])
 
     @overall
-    def check_count(self):
+    def check_total_count(self):
         # FIXME, this should be done from mf_newforms
         # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
         return any(self.check_count(box['embedding_count'], self._box_query(box))
@@ -1142,6 +1517,117 @@ class mf_hecke_cc(TableChecker):
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
+    label = 'orbit_label'
+
+    @overall
+    def check_constraints_orbit_label(self):
+        return self.check_uniqueness_constraint(['orbit_label'])
+
+    @overall
+    def check_total_count(self):
+        # there should be a record present for every character orbit of modulus up to 10,000 (there are 768,512)
+        return self.check_count(768512)
+
+    @overall
+    def check_orbit_label(self):
+        # check that orbit_label is consistent with modulus and orbit_index
+        return self.check_string_concatenation('orbit_label', ['modulus', 'orbit_index'])
+
+    @overall
+    def check_trivial(self):
+        # check that orbit_index=1 if and only if order=1
+        return self.check_iff({'orbit_index':1}, {'order':1})
+
+    @overall
+    def check_conductor_divides(self):
+        # check that conductor divides modulus
+        return self.check_divisible(self, 'modulus', 'conductor')
+
+    @overall
+    def check_primitive(self):
+        # check that orbit specified by conductor,prim_orbit_index is present
+        return self.check_crosstable_count('char_dir_orbits', 1, ['conductor', 'prim_orbit_index'], ['modulus', 'orbit_index'])
+
+    @overall
+    def check_is_real(self):
+        # check that is_real is true if and only if order <= 2
+        return self.check_iff({'is_real':True}, {'order':{'$lte':2}})
+
+    @overall
+    def check_galois_orbit_len(self):
+        # check that char_degee = len(Galois_orbit)
+        return self.check_array_len_col('galois_orbit', 'char_degree')
+
+    @overall
+    def check_char_dir_values_agg(self):
+        # The number of entries in char_dir_values matching a given orbit_label should be char_degree
+        return self.check_crosstable_count('char_dir_values', 'char_degree', 'orbit_label')
+
+    @overall
+    def check_is_primitive(self):
+        # TODO - can't use condition with LHS and RHS columns
+        # check that is_primitive is true if and only if modulus=conductor
+        return self.check_iff({'is_primitive': True}, {'modulus': 'conductor'})
+
+    @fast
+    def check_char_degree(self, rec):
+        # check that char_degree = euler_phi(order)
+        return rec['char_degree'] == euler_phi(rec['order'])
+
+    @slow
+    def check_order_parity(self, rec):
+        # TODO
+        # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
+        pass
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
+
+    @overall
+    def check_constraints_orbit_label(self):
+        return self.check_uniqueness_constraint(['label'])
+
+    @overall
+    def check_total_count(self):
+        # Total number of records should be sum of len(galois_orbit) over records in char_dir_orbits,
+        # Should be sum(euler_phi(n) for n in range(1,1001)) = 30397486
+        return self.check_count(30397486)
+
+    @overall
+    def check_order_match(self):
+        # order should match order in char_dir_orbits for this orbit_label
+        return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
+
+    @fast
+    def check_label_in_galois_orbit(self):
+        # TODO - need zipped records from two tables
+        # Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
+        pass
+
+    @fast
+    def check_character_values(self, rec):
+        # TODO - need zipped records from two tables
+        # The x's listed in values and values_gens should be coprime to the modulus N in the label
+        # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits (TODO)
+        # for x's that appear in both values and values_gens, the value should be the same.
+        N, index = map(Integer, rec['label'].split('.'))
+        v2, u2 = N.val_unit(2)
+        if v2 == 1:
+            # Z/2 doesn't contribute generators, but 2 divides N
+            adjust2 = -1
+        elif v2 >= 3:
+            # Z/8 and above requires two generators
+            adjust2 = 1
+        ngens = len(N.factor()) + adjust2
+        vals = rec['values']
+        val_gens = rec['values_gens']
+        val_gens_dict = dict(val_gens)
+        if len(vals) != 12 or len(val_gens) != ngens:
+            return False
+        if vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]:
+            return False
+        if any(N.gcd(g) > 1 for g, gval in val_gens+vals):
+            return False
+        for g, val in vals:
+            if g in val_gens_dict and val != val_gens_dict[g]:
+                return False
