@@ -170,8 +170,8 @@ CREATE OR REPLACE FUNCTION from_newform_label_to_hecke_orbit_code(IN s varchar) 
 DECLARE
     v text[];
 BEGIN
-    v := regexp_split_to_array(s, '.');
-    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + ((from_base26(v[3])::bit(64)<<36)::bigint + ((from_base26(v[4])::bit(64)<<52)::bigint;
+    v := regexp_split_to_array(s, '\.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint + (from_base26(v[4])::bit(64)<<52)::bigint;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -180,8 +180,8 @@ CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar)
 DECLARE
     v text[];
 BEGIN
-    v := regexp_split_to_array(s, '.');
-    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + ((from_base26(v[3])::bit(64)<<36)::bigint;
+    v := regexp_split_to_array(s, '\.');
+    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint;
 END;
 $$ LANGUAGE plpgsql;
 
