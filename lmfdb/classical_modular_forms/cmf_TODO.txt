@@ -19,11 +19,11 @@ IMPORTANT:
 * Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
 * Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
 * Compute L-functions:
-  - 23:39:4 and 23:41:4 (Drew)
-  - 24.37.h.c and 24.39.h.c (Drew)
+  - 23.39.d.a and 23.41.d.a (CC ap data ready for 23.39.d.a, Edgar, still waiting on 23.41.d.a, Drew)
+  - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * Missing data:
-  - embedding data for 23:39:4 and 23:41:4  750 + 790 (Drew -- this is unlikely to finish before PR)
+  - embedding data for 23:41:4 dimension 790 (Drew -- this may not finish before PR)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
