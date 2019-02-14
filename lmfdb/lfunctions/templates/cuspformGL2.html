@@ -44,8 +44,25 @@ These are organized:
 </div>
 
 
+
+<script>
+function show_pic(pic) {
+    $('.smalloutput').hide();
+    $('.bigoutput').hide();
+    $('.'+pic).show();
+  }
+</script>
 <p>
+<div class="smalloutput">
 {{contents[0]|safe}}
+</div>
+<div class="bigoutput nodisplay">
+{{contents[1]|safe}}
+</div>
+      <div class="toggle">Show
+        <span class='smalloutput'><a onclick="show_pic('bigoutput'); return false;">larger plot</a></span>
+        <span class='bigoutput nodisplay'><a onclick="return show_pic('smalloutput'); return false;">smaller plot</a></span>
+      </div>
 </p>
 
 
