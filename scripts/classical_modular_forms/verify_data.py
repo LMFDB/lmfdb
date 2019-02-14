@@ -186,7 +186,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 """
-    def _run_query(self, condition, constraint={}, values=[], table=None):
+    def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
         """
         INPUT:
 
@@ -195,11 +195,18 @@ $$ LANGUAGE plpgsql;
         """
         if table is None:
             table = Identifier(self.table.search_table)
+        else:
+            table = Identifier(table)
+        if label is None:
+            label_col = Identifier(self.table._label_col),
+        else:
+            label_col = Identifier(label_col)
+
         cstr, cvalues = self.table._parse_dict(constraint)
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
         query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
-                Identifier(self.table._label_col),
-                Identifier(self.table.search_table),
+                label_col,
+                table,
                 condition)
         if cstr is None:
             cvalues = []
@@ -226,7 +233,21 @@ $$ LANGUAGE plpgsql;
         join2 = identify(join2, "t2")
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_crosstable(self, quantity2, other_table, col, join1, join2=None, constraint={}, values=[], subselect_wrapper="", sort=None):
+    def _run_crosstable(self, quantity, other_table, col, join1, join2=None, constraint={}, values=[], subselect_wrapper="", sort=None):
+        """
+        Checks that `quantity` matches col
+
+        INPUT:
+
+        - ``quantity`` -- a column name or an SQL object giving some quantity from the ``other_table``
+        - ``other_table`` -- the name of the other table
+        - ``col`` -- an integer or the name of column to check against ``quantity``
+        - ``join1`` -- a column or list of columns on self on which we will join the two tables
+        - ``join2`` -- a column or list of columns (default: `None`) on ``other_table`` on which we will join the two tables. If `None`, we take ``join2`` = ``join1``, see `_make_join`
+        - ``constraint`` -- a dictionary, as passed to the search method
+        - ``subselect_wrapper`` -- a string, e.g., "ARRAY" to convert the inner select query
+        - ``sort`` -- SQL object setting the sorting order for the inner select query
+        """
         # WARNING: since it uses _run_query, this whole function is not safe against SQL injection,
         # so should only be run locally in data validation
         join = self._make_join(join1, join2)
@@ -240,8 +261,13 @@ $$ LANGUAGE plpgsql;
         subselect_wrapper = SQL(subselect_wrapper)
         if sort is None:
             sort = SQL("")
-        condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4}{5})").format(
-            col, subselect_wrapper, quantity2, Identifier(other_table), join, sort)
+        condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4} {5})").format(
+            col,
+            subselect_wrapper,
+            quantity,
+            Identifier(other_table),
+            join,
+            sort)
         return self._run_query(condition, constraint, values)
 
     def check_count(self, cnt, constraint={}):
@@ -363,13 +389,30 @@ $$ LANGUAGE plpgsql;
             " || ".join(map(Identifier, a_columns)),
             " || ".join(map(Identifier, b_columns))), constraint=constraint)
 
-    def check_string_concatentation(self, label_col, other_columns, constraint={}, sep='.'):
+    def check_string_concatentation(self,
+            label_col,
+            other_columns,
+            constraint={},
+            sep='.',
+            convert_to_base26 = {})
         """
         Check that the label_column is the concatenation of the other columns with the given separator
+
+        Input:
+
+        - ``label_col`` -- the label_column
+        - ``other_columns`` --  the other columns from which we can deduce the label
+        - ``constraint`` -- a dictionary, as passed to the search method
+        - ``sep`` -- the separator for the join
+        - ``convert_to_base26`` -- a dictionary where the keys are columns that we need to convert to base_26, and the values is that the shift that we need to apply
         """
-        # FIXME: we need to handle modifiers
-        oc = [Identifier(other_columns[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(other_columns)-1)]
-        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
+        oc_converted = [SQL('to_base_26({0} + {1})').format(Identifier(col), Literal(int(convert_to_base26[col])))
+                if col in convert_to_base26
+                else Identifier(col) for col in other_columns]
+        #intertwine the separator
+        oc = [Identifier(oc[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+
+        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc_converted), Identifier(label_col)]), constraint)
 
     def check_string_startswith(self, col, head, constraint=constraint):
         return self._run_query(SQL("NOT ({0} LIKE {1})").format(Identifier(col), Literal(head + '%')), constraint)
@@ -446,14 +489,11 @@ $$ LANGUAGE plpgsql;
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", sort=sort)
 
     def check_letter_code(self, index_column, letter_code_column, constraint = {}):
-        return self._run_query(SQL("{0} != cremona_letter_code({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
+        return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
-    def _check_hecke_orbit_code(self, hoc_column, N_column, k_column, i_column, x_column = None, constraint = {}):
-        # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
-        if x_column is None:
-            return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(hoc_column, N_column, k_column, i_column, x_column), constraint)
-        else:
-            return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(hoc_column, N_column, k_column, i_column), constraint)
+    
+
+    
 
     def check_uniqueness_constraint(self, columns):
         # TODO
@@ -487,22 +527,59 @@ $$ LANGUAGE plpgsql;
         return query
 
 
+    self.label = None
+    self.label_conversion = {}
+    @overall
+    def check_label(self):
+        # check that label matches self.label
+        if self.label is not None:
+            return self.check_string_concatentation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
+        return True
+
+    self.uniqueness_constraints = []
+
+    @overall
+    def check_uniqueness_constraints(self):
+        # check that the uniqueness constraints are satisfied
+        return any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
+
+    self.hecke_orbit_code = []
+
+    @overall
+    def check_hecke_orbit_code(self):
+        if self.hecke_orbit_code == []:
+            # test not enabled
+            return True
+        else:
+            assert len(self.hecke_orbit_code) == 2
+            hoc_column = self.hecke_orbit_code[0]
+            if len(self.hecke_orbit_code[1]) == 4:
+                hoc_column, N_column, k_column, i_column, x_column = self.hecke_orbit_code[1]
+            else:
+                assert len(self.hecke_orbit_code) == 3
+                x_column = None
+                hoc_column, N_column, k_column, i_column = self.hecke_orbit_code[1]
+            # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
+            if x_column is None:
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(hoc_column, N_column, k_column, i_column, x_column))
+            else:
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(hoc_column, N_column, k_column, i_column))
+
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
 
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'hecke_orbit_dims', 'trace_bound', 'dim', 'num_forms', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
-    @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
 
-    @overall
-    def check_constraints_level_weight_char_orbit_index(self):
-        return self.check_uniqueness_constraint(['level', 'weight', 'char_orbit_index'])
+    uniqueness_constraints = [
+       ['label'],
+       ['level', 'weight', 'char_orbit_index'],
+       ['level', 'weight', 'char_orbit_label']]
 
-    @overall
-    def check_constraints_level_weight_char_orbit_label(self):
-        return self.check_uniqueness_constraint(['level', 'weight', 'char_orbit_label'])
+
+    label = ['level', 'weight', 'char_orbit_label']
+
+    hecke_orbit_code = ['hecke_orbit_code', ['level', 'weight', 'char_orbit_index']]
 
     @overall
     def check_box_count(self):
@@ -517,15 +594,15 @@ class mf_newspaces(TableChecker):
                    for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
-    def check_box_traces(self):
-        # check that traces is set if space is in a box with straces set
-        return any(self.check_non_null(['traces', 'trace_bound'], self._box_query(box))
+    def check_box_straces(self):
+        # check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
+        return any(
+                self.check_non_null([
+                        'traces',
+                        'trace_bound',
+                        'num_forms',
+                        'hecke_orbit_dims'], self._box_query(box))
                    for box in db.mf_boxes.search({'straces':True}))
-
-    @overall
-    def check_label(self):
-        # check that label matches level, weight, char_orbit_label
-        return self.check_string_concatentation('label', ['level', 'weight', 'char_orbit_label'])
 
     @overall
     def check_char_orbit(self):
@@ -568,7 +645,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_dim_wt1(self):
         # for k = 1 check that dim = dihedral_dim + a4_dim + a5_dim + s4_dim
-        return self.check_sum(['dim'], ['dihedral_dim', 'a4_dim', 'a5_dim', 's4_dim'])
+        return self.check_sum(['dim'], ['dihedral_dim', 'a4_dim', 'a5_dim', 's4_dim'],{'weight':1})
 
     @overall
     def check_relative_dim(self):
@@ -596,10 +673,12 @@ class mf_newspaces(TableChecker):
 
     @overall
     def weight_parity_even(self):
+        # check weight_parity
         return self.check_divisible('weight', 2, {'weight_parity':1})
 
     @overall
     def weight_parity_odd(self):
+        # check weight_parity
         return self.check_non_divisible('weight', 2, {'weight_parity':-1})
 
     @overall
@@ -610,19 +689,9 @@ class mf_newspaces(TableChecker):
         pass
 
     @overall
-    def check_hecke_orbit_code(self):
-        # check  hecke_orbit_code matches level, weight, char_orbit_index
-        return self._check_hecke_orbit_code('hecke_orbit_code', 'level', 'weight', 'char_orbit_index')
-
-    @overall
     def check_hecke_orbit_dims_sorted(self):
         # check that hecke_orbit_dims is sorted in increasing order
         return self.check_sorted('hecke_orbit_dims')
-
-    @overall
-    def check_oldspace_decomposition_totaldim(self):
-        # check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
-        return self.check_crosstable_dotprod('mf_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
 
     @overall
     def check_traces_count(self):
@@ -633,6 +702,21 @@ class mf_newspaces(TableChecker):
     def check_traces_match(self):
         # check that traces[n] matches trace_an in mf_hecke_newspace_traces
         return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000, constraint={'traces':{'$exists':True}})
+
+    @overall
+    def check_oldspace_decomposition_totaldim(self):
+        # from mf_subspaces
+        # check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
+        return self.check_crosstable_dotprod('mf_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
+
+    @overall
+    def check_portraits(self):
+        # from mf_newspace_portraits
+        # check that there is a portrait present for every nonempty newspace in box where straces is set
+        return any(
+                self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
+                    constraint=self._box_query(box, extras = {'dim'{'$gt':1}}))
+                for box in db.mf_boxes.search({'straces':True})))
 
     @fast
     def check_analytic_conductor(self, rec):
@@ -648,13 +732,6 @@ class mf_newspaces(TableChecker):
         # check that sturm_bound is exactly floor(k*Index(Gamma0(N))/12)
         return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
 
-    @slow
-    def check_trace_bound1(self, rec):
-        # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
-        if 'hecke_orbit_dims' in rec:
-            if len(set(rec['hecke_orbit_dims'])) == len(rec['hecke_orbit_dims']):
-                return rec['trace_bound'] == 1
-        return True
 
     @slow
     def check_Skchi_dim_formula(self, rec):
@@ -669,18 +746,23 @@ class mf_newspaces(TableChecker):
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
         pass
 
+    @slow
+    def check_trace_bound1(self, rec):
+        # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
+        if 'hecke_orbit_dims' in rec:
+            if len(set(rec['hecke_orbit_dims'])) == len(rec['hecke_orbit_dims']):
+                return rec['trace_bound'] == 1
+        return True
+
 
 class mf_gamma1(TableChecker):
     table = db.mf_gamma1
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
-    @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
+    label = ['level', 'weight']
+    uniqueness_constraints = [[table._label_col],label]
 
-    @overall
-    def check_constraints_level_weight(self):
-        return self.check_uniqueness_constraint(['level', 'weight'])
+
 
     @overall
     def check_box_count(self):
@@ -695,14 +777,9 @@ class mf_gamma1(TableChecker):
                    for box in db.mf_boxes.search({'Dmin':None, 'Dmax':None, 'straces':True}))
 
     @overall
-    def check_label(self):
-        # check that label matches level and weight
-        return self.check_string_concatentation('label', ['level', 'weight'])
-
-    @overall
     def check_dim_wt1(self):
         # for k = 1 check that dim = dihedral_dim + a4_dim + a5_dim + s4_dim
-        return self.check_sum(['dim'], ['dihedral_dim', 'a4_dim', 'a5_dim', 's4_dim'])
+        return self.check_sum(['dim'], ['dihedral_dim', 'a4_dim', 'a5_dim', 's4_dim'], {'weight': 1})
 
     @overall
     def check_traces_display(self):
@@ -712,7 +789,7 @@ class mf_gamma1(TableChecker):
     @overall
     def check_traces_len(self):
         # if present, check that traces has length at least 1000
-        return self.check_array_len_gte_constant('traces_display', 1000, {'traces':{'$exists': True}})
+        return self.check_array_len_gte_constant('traces', 1000, {'traces':{'$exists': True}})
 
     @overall
     def check_mf_dim(self):
@@ -762,15 +839,25 @@ class mf_gamma1(TableChecker):
 
     @overall
     def check_oldspace_decomposition_totaldim(self):
+        # from mf_gamma1_subspaces
         # check that summing sub_dim * sub_mult over rows with a given label gives dim S_k^old(Gamma1(N))
         return self.check_crosstable_dotprod('mf_gamma1_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
 
+
+    @overall
+    def check_hecke_orbit_code(self):
+        # from mf_gamma1_portraits
+        # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
+        return self.check_crosstable_count('mf_gamma1_portraits', 1, 'label', {'dim':{'$gt':0}, 'level':{'$lte':4000}})
+
     @slow
     def check_level(self, rec):
+        # check level_* attributes
         return self._check_level(rec)
 
     @slow
     def check_analytic_conductor(self, rec):
+        # check analytic_conductor
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
     @slow
@@ -790,60 +877,29 @@ class mf_gamma1(TableChecker):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         pass
 
-class PortraitsChecker(TableChecker):
-    @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
 
-    @overall
-    def check_constraints_expanded_label(self):
-        return self.check_uniqueness_constraint(self.label)
-
-    @overall
-    def check_label(self):
-        # check that label matches self.label
-        # FIXME: need to use cremona_label at the appropriate places
-        return self.check_string_concatentation('label', self.label)
-
-class mf_newspace_portraits(PortraitsChecker):
+class mf_newspace_portraits(TableChecker):
     table = db.mf_newspace_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index']
+    uniqueness_constraints = [[table._label_col],label]
+    label_conversion = {'char_orbit_index': -1}
 
-    @overall
-    def check_present(self):
-        # check that there is a portrait present for every nonempty newspace in box where straces is set
-        return any(self.check_count(box['newspace_count'], self._box_query(box))
-                   for box in db.mf_boxes.search({'straces':True}))
+    # attached to mf_newspaces:
+    # check that there is a portrait present for every nonempty newspace in box where straces is set
 
-
-class mf_gamma1_portraits(PortraitsChecker):
+class mf_gamma1_portraits(TableChecker):
     table = db.mf_gamma1_portraits
     projection = []
     label = ['level', 'weight']
+    uniqueness_constraints = [[table._label_col],label]
 
-    @overall
-    def check_present(self):
-        # TODO
-        # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
-        pass
+    # attached to mf_gamma1:
+    # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
 
-class mf_newform_portraits(PortraitsChecker):
-    table = db.mf_newform_portraits
-    projection = []
-    label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
 
-    @overall
-    def check_present(self):
-        # TODO
-        # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
-        pass
 
 class subspaces(TableChecker):
-    @overall
-    def check_constraints_label_sub_label(self):
-        return self.check_uniqueness_constraint(['label','sub_label'])
-
     @overall
     def check_sub_mul_positive(self):
         # sub_mult is positive
@@ -867,21 +923,18 @@ class subspaces(TableChecker):
 
 class mf_subspaces(subspaces):
     table = db.mf_subspaces
+    label = ['level', 'weight', 'char_orbit_label']
+    uniqueness_constraints = [['label', 'sub_label']]
 
     @overall
-    def check_label(self):
-        # check that label matches level, weight, char_orbit_index
-        return self.check_string_concatenation('label', ['level', 'weight', 'char_orbit_label'])
+    def check_sub_label(self):
+        # check that sub_label matches matches sub_level, weight, sub_char_orbit_index
+        return self.check_string_concatenation('sub_label', ['sub_level', 'weight', 'sub_char_orbit_label'])
 
     @overall
     def check_char_orbit_label(self):
         # check that char_orbit_label matches char_orbit_index
         return self.check_letter_code('char_orbit_index', 'char_orbit_label')
-
-    @overall
-    def check_sub_label(self):
-        # check that sub_label matches sub_level, weight, sub_char_orbit_index
-        return self.check_string_concatenation('sub_label', ['sub_level', 'weight', 'sub_char_orbit_label'])
 
     @overall
     def check_sub_char_orbit_label(self):
@@ -905,16 +958,8 @@ class mf_subspaces(subspaces):
 
 class mf_gamma1_subspaces(subspaces):
     table = db.mf_gamma1_subspaces
-
-    @overall
-    def check_label(self):
-        # check that label matches level, weight
-        return self.check_string_concatenation('label', ['level', 'weight'])
-
-    @overall
-    def check_sub_label(self):
-        # check that sub_label matches sub_level, weight
-        return self.check_string_concatenation('sub_label', ['sub_level', 'weight'])
+    label = ['level', 'weight']
+    uniqueness_constraints = [['label', 'sub_level']]
 
     @overall
     def check_sub_dim(self):
@@ -923,14 +968,10 @@ class mf_gamma1_subspaces(subspaces):
 
 class mf_newforms(TableChecker):
     table = db.mf_newforms
-
-    @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['label'])
-
-    @overall
-    def check_constraints_level_weight_char_hecke(self):
-        return self.check_uniqueness_constraint(['level', 'weight', 'char_orbit_index', 'hecke_orbit'])
+    label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
+    label_conversion = {'hecke_orbit': -1}
+    hecke_orbit_code = ['hecke_orbit_code', label]
+    uniqueness_constraints = [[table._label_col], label, ['hecke_orbit_code']]
 
     @overall
     def check_hecke_ring_generator_nbound(self):
@@ -947,12 +988,6 @@ class mf_newforms(TableChecker):
                 return bad_label
             total_count += box['newform_count']
         return self.check_count(total_count)
-
-    @overall
-    def check_label(self):
-        # TODO - apply cremona_letter_code
-        # check that label matches level, weight, char_orbit_index, hecke_orbit
-        return self.check_string_concatenation('label', ['level', 'weight', 'char_orbit_label', 'hecke_orbit'])
 
     @overall
     def check_space_label(self):
@@ -1116,6 +1151,12 @@ class mf_newforms(TableChecker):
                 self.check_values({'inner_twist_count':{'$gt':2}}, {'has_non_self_twist':1, 'self_twist_type':2}) or
                 self.check_values({'inner_twist_count':{'$gt':4}}, {'has_non_self_twist':1, 'self_twist_type':3}))
 
+    @overall
+    def check_portraits(self):
+        # from mf_newform_portraits
+        # check that there is a portrait present for every nonempty newspace in box where straces is set
+        return self.check_crosstable_count('mf_newform_portraits', 1, 'label')
+
     @fast
     def check_fricke_eigenval(self, rec):
         # check that fricke_eigenval is product of atkin_lehner_eigenvals
@@ -1250,6 +1291,9 @@ class mf_newforms(TableChecker):
         # there should be exactly 25 records in mf_hecke_lpolys for each record in mf_newforms with field_poly
         return self.check_crosstable_count('mf_hecke_lpolys', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
 
+
+    #### mf_hecke_cc ####
+
     @overall
     def check_embeddings_count(self):
         # check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
@@ -1301,6 +1345,15 @@ class mf_newforms(TableChecker):
         # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         pass
 
+class mf_newform_portraits(TableChecker):
+    table = db.mf_newform_portraits
+    projection = []
+    label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
+    label_conversion = {'hecke_orbit':-1}
+    uniqueness_constraints = [[table._label_col],label]
+
+    # attached to mf_newforms
+    # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
 
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
