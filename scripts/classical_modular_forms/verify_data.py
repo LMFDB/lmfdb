@@ -248,6 +248,10 @@ $$ LANGUAGE plpgsql;
     def check_null(self, columns, constraint={}):
         return self.check_values({col: None for col in columns}, constraint)
 
+    def check_iff(self, condition1, condition2):
+        return (self.check_values(condition1, condition2) or
+                self.check_values(condition2, condition1))
+
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
         Length of array greater than or equal to limit
@@ -863,23 +867,23 @@ class mf_hecke_nf(TableChecker):
     @overall
     def check_hecke_ring_power_basis_set(self):
         # if hecke_ring_power_basis is set, check that hecke_ring_cyclotomic_generator is 0 and hecke_ring_numerators, ... are null
-        return self.check_value({'hecke_ring_cyclotomic_generator':0,
-                                 'hecke_ring_numerators':None,
-                                 'hecke_ring_denominators':None,
-                                 'hecke_ring_inverse_numerators':None,
-                                 'hecke_ring_inverse_denominators':None},
-                                {'hecke_ring_power_basis':True})
+        return self.check_values({'hecke_ring_cyclotomic_generator':0,
+                                  'hecke_ring_numerators':None,
+                                  'hecke_ring_denominators':None,
+                                  'hecke_ring_inverse_numerators':None,
+                                  'hecke_ring_inverse_denominators':None},
+                                 {'hecke_ring_power_basis':True})
 
     @overall
     def check_hecke_ring_cyclotomic_generator(self):
         # TODO check field_poly_is_cyclotomic
         # if hecke_ring_cyclotomic_generator is greater than 0 check that hecke_ring_power_basis is false and hecke_ring_numerators, ... are null, and that field_poly_is_cyclotomic is set in mf_newforms record.
-        return (self.check_value({'hecke_ring_power_basis':False,
-                                  'hecke_ring_numerators':None,
-                                  'hecke_ring_denominators':None,
-                                  'hecke_ring_inverse_numerators':None,
-                                  'hecke_ring_inverse_denominators':None},
-                                 {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
+        return (self.check_values({'hecke_ring_power_basis':False,
+                                   'hecke_ring_numerators':None,
+                                   'hecke_ring_denominators':None,
+                                   'hecke_ring_inverse_numerators':None,
+                                   'hecke_ring_inverse_denominators':None},
+                                  {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
                 None)
 
     @slow
@@ -983,7 +987,7 @@ class mf_hecke_cc(TableChecker):
         return self.check_uniqueness_constraint(['label'])
 
     @overall
-    def check_count(self):
+    def check_total_count(self):
         # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
         return any(self.check_count(box['embedding_count'], self._box_query(box))
                    for box in db.mf_boxes.search({'embeddings': True}))
@@ -1037,6 +1041,60 @@ class mf_hecke_cc(TableChecker):
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
+
+    @overall
+    def check_constraints_orbit_label(self):
+        return self.check_uniqueness_constraint(['label'])
+
+    @overall
+    def check_total_count(self):
+        # there should be a record present for every character orbit of modulus up to 10,000 (there are 768,512)
+        return self.check_count(768512)
+
+    @overall
+    def check_orbit_label(self):
+        # check that orbit_label is consistent with modulus and orbit_index
+        return self.check_string_concatenation('orbit_label', ['modulus', 'orbit_index'])
+
+    @overall
+    def check_trivial(self):
+        # check that orbit_index=1 if and only if order=1
+        return self.check_iff({'orbit_index':1}, {'order':1})
+
+    @overall
+    def check_conductor_divides(self):
+        # check that conductor divides modulus
+        
+
+    @overall
+    def check_primitive(self):
+        # check that orbit specified by conductor,prim_orbit_index is present
+        
+
+    @overall
+    def check_is_real(self):
+        # check that is_real is true if and only if order <= 2
+        return self.check_iff({'is_real':True}, {'order':{'$lte':2}})
+
+    @overall
+    def check_galois_orbit_len(self):
+        # check that char_degee = len(Galois_orbit)
+        
+
+    @overall
+    def check_char_degree(self):
+        # check that char_degree = euler_phi(order)
+        
+
+    @overall
+    def check_is_primitive(self):
+        # TODO - can't use condition with LHS and RHS columns
+        # check that is_primitive is true if and only if modulus=conductor
+        return self.check_iff({'is_primitive': True}, {'modulus': 'conductor'})
+
+    @slow
+    def check_order_parity(self, rec):
+        # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
