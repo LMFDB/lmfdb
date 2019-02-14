@@ -527,8 +527,8 @@ $$ LANGUAGE plpgsql;
         return query
 
 
-    self.label = None
-    self.label_conversion = {}
+    label = None
+    label_conversion = {}
     @overall
     def check_label(self):
         # check that label matches self.label
