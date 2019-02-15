@@ -134,7 +134,7 @@ class TableChecker(object):
     #####################
     # Utility functions #
     #####################
-    def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
+    def _run_query(self, condition, constraint={}, values=[], table=None):
         """
         INPUT:
 
@@ -200,8 +200,8 @@ class TableChecker(object):
             col = Literal(col)
         elif isinstance(col, basestring):
             col = SQL("t1.{0}").format(Identifier(col))
-        if isinstance(quantity2, basestring):
-            quantity2 = SQL("t2.{0}").format(Identifier(quantity))
+        if isinstance(quantity, basestring):
+            quantity = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
         if sort is None:
@@ -1650,6 +1650,12 @@ class char_dir_orbits(TableChecker):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
 
+    @overall
+    def check_parity_value(self):
+        # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits
+        return (self._run_crosstable(SQL("2*t2.values[1][2]"), 'char_dir_values', 'order', 'orbit_label', constraint={'parity':-1}, subselect_wrapper="ALL") or
+                self._run_crosstable(SQL("t2.values[1][2]"), 'char_dir_values', 0, 'orbit_label', constraint={'parity':1}, subselect_wrapper="ALL"))
+
     @fast
     def check_char_degree(self, rec):
         # check that char_degree = euler_phi(order)
@@ -1657,9 +1663,10 @@ class char_dir_orbits(TableChecker):
 
     @slow
     def check_order_parity(self, rec):
-        # TODO
         # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
-        return True
+        char = DirichletCharacter_conrey(rec['modulus'], rec['galois_orbit'][0])
+        parity = 1 if char.is_even() else -1
+        return parity == rec['parity'] and char.conductor() == rec['conductor'] and char.multiplicative_order() == rec['order']
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
@@ -1676,11 +1683,9 @@ class char_dir_values(TableChecker):
         # order should match order in char_dir_orbits for this orbit_label
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
 
-    @fast
+    @slow
     def check_character_values(self, rec):
-        # FIXME  - need zipped records from two tables
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
-        # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits (TODO)
         # for x's that appear in both values and values_gens, the value should be the same.
         N, index = map(Integer, rec['label'].split('.'))
         v2, u2 = N.val_unit(2)
