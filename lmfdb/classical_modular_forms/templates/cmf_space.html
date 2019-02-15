@@ -73,11 +73,11 @@
 
 {% if space.weight_parity == -1 and space.char_parity == 1 %}
 
-<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+<p> There are no modular forms of weight {{ space.weight }} and character {{ space.char_conrey_link | safe }} since the weight is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
 
 {% elif space.weight_parity == 1 and space.char_parity == -1 %}
 
-<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+<p> There are no modular forms of weight {{ space.weight }} and character {{ space.char_conrey_link | safe }} since the weight is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
 
 {% else %}
 
