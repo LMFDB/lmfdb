@@ -1272,22 +1272,38 @@ class mf_newforms(TableChecker):
         pass
 
     ZZx = PolynomialRing(ZZ, 'x')
-    @slow
-    def check_field_poly_irreducible(self, rec):
-        # if present, check that field_poly is monic, irreducible, and of degree dim
-        return 'field_poly' not in rec or ZZx(rec['field_poly']).is_irreducible()
 
     @slow
-    def check_(self, rec):
-        # TODO
-        # if field_poly_is_cyclotomic or field_poly_is_real_cycolotomic are set, verify this
-        pass
+    def check_field_poly_properties(self, rec):
+        # if present, check that field_poly is irreducible, 
+        if 'field_poly' not in rec:
+            return True
+        else:
+            f = ZZx(rec['field_poly'])
+            if not f.is_irreducible():
+                return False
+            # if field_poly_is_cyclotomic, verify this
+            if rec['field_poly_is_cyclotomic']:
+                if not f.is_cyclotomic():
+                    return False
+            return True
 
     @slow
-    def check_(self, rec):
-        # TODO
+    def check_related_objects(self, rec):
         # check that URLS in related_objects are valid and identify objects present in the LMFDB
-        pass
+        names = names_and_urls(rec['related_objects'])
+        if len(names) != len(rec['related_objects']):
+            return False
+        # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
+        for name, _ in names:
+            if name.startswith('Artin representation '):
+                artin_label = name.split()[-1]
+                conductor_string = artin_label.split('.')[1]
+                conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
+                if conductor != level:
+                    return False:
+
+
 
     @slow
     def check_(self, rec):
@@ -1558,11 +1574,7 @@ class mf_hecke_lpolys(TableChecker):
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
-    label = 'lfunction_label'
-
-    @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['lfunction_label'])
+    uniqueness_constraints = [['lfunction_label']]
 
     @overall
     def check_total_count(self):
@@ -1572,14 +1584,15 @@ class mf_hecke_cc(TableChecker):
                    for box in db.mf_boxes.search({'embeddings': True}))
 
     @overall
-    def check_hecke_orbit_code(self):
+    def check_hecke_orbit_code_newforms(self):
         # check that hecke_orbit_code is present in mf_newforms
         return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
 
     @overall
     def check_lfunction_label(self):
         # TODO
-        # check that lfunction_label is consistent with hecke_orbit_code, conrey_lebel, embedding_index
+        # There is generic code for this
+        # check that lfunction_label is consistent with hecke_orbit_code
         pass
 
     @overall
@@ -1629,21 +1642,13 @@ class mf_hecke_cc(TableChecker):
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
-    label = 'orbit_label'
-
-    @overall
-    def check_constraints_orbit_label(self):
-        return self.check_uniqueness_constraint(['orbit_label'])
+    label = ['modulus', 'orbit_index']
+    uniqueness_constraints = [[table._label_col], label]
 
     @overall
     def check_total_count(self):
         # there should be a record present for every character orbit of modulus up to 10,000 (there are 768,512)
         return self.check_count(768512)
-
-    @overall
-    def check_orbit_label(self):
-        # check that orbit_label is consistent with modulus and orbit_index
-        return self.check_string_concatenation('orbit_label', ['modulus', 'orbit_index'])
 
     @overall
     def check_trivial(self):
@@ -1677,7 +1682,7 @@ class char_dir_orbits(TableChecker):
 
     @overall
     def check_is_primitive(self):
-        # TODO - can't use condition with LHS and RHS columns
+        # FIXME - can't use condition with LHS and RHS columns
         # check that is_primitive is true if and only if modulus=conductor
         return self.check_iff({'is_primitive': True}, {'modulus': 'conductor'})
 
@@ -1694,10 +1699,7 @@ class char_dir_orbits(TableChecker):
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
-
-    @overall
-    def check_constraints_orbit_label(self):
-        return self.check_uniqueness_constraint(['label'])
+    uniqueness_constraints = [['label']]
 
     @overall
     def check_total_count(self):
@@ -1712,13 +1714,13 @@ class char_dir_values(TableChecker):
 
     @fast
     def check_label_in_galois_orbit(self):
-        # TODO - need zipped records from two tables
+        # FIXME - need zipped records from two tables
         # Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         pass
 
     @fast
     def check_character_values(self, rec):
-        # TODO - need zipped records from two tables
+        # FIXME  - need zipped records from two tables
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
         # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits (TODO)
         # for x's that appear in both values and values_gens, the value should be the same.
