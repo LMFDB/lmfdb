@@ -960,14 +960,14 @@ function switch_basis(btype) {
         """
         if format == 'satake':
             alpha = self._get_alpha(m, p, i)
-            return display_complex(alpha.real(), alpha.imag(), prec)
+            return display_complex(alpha.real(), alpha.imag(), prec, method = 'round')
         else:
             return self.satake_angle(m, p, i, prec)
 
     @cached_method
     def satake_angle(self, m, p, i, prec=6):
         theta = self._get_theta(m, p, i)
-        s = display_float(2*theta, prec, method='round')
+        s = display_float(2*theta, prec, method='truncate')
         if s == "1":
             s =  r'\pi'
         elif s== "-1":
