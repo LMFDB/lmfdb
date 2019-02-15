@@ -311,7 +311,7 @@ class CmfTest(LmfdbTest):
 
     def test_satake(self):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
-        assert r'0.707106' in page.data
+        assert r'0.707107' in page.data
         assert r'0.957427' in page.data
         assert r'0.223606' in page.data
         assert r'0.974679' in page.data
