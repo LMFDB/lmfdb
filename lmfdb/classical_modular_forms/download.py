@@ -279,7 +279,7 @@ class CMF_download(Downloader):
                                     title=title)
 
     def download_cc_data(self, label, lang='text'):
-        return self._download_cc(label, lang, 'an', '.cplx', 'Complex embeddings')
+        return self._download_cc(label, lang, 'an_normalized', '.cplx', 'Complex embeddings')
 
     def download_satake_angles(self, label, lang='text'):
         return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
