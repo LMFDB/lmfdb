@@ -3579,8 +3579,22 @@ class JoinedTable(PostgresBase):
         if join_type not in ['inner', 'outer', 'left', 'right']:
             raise ValueError("Invalid join type %s" % join_type)
         PostgresBase.__init__(tables[0].search_table, tables[0]._db)
+        self.distinguished_table = dt = distinguished_table.search_table
         self.tables = tables
-        self.join_type = 
+        self.join_type = join_type
+        self.tablenames = [T.search_table for T in tables]
+        self.joins = {}
+        def fill_dt(s):
+            cnt = s.count('.')
+            if cnt > 1:
+                raise ValueError("Too many periods in %s" % s)
+            
+        for a, b in joins:
+            pass
+        for E in extras:
+            if E.extra_table is None:
+                raise ValueError("%s has no extra table" % E.search_table)
+            self.tablenames.append(E.extra_table)
 
 class PostgresDatabase(PostgresBase):
     """
