@@ -238,7 +238,7 @@ class TableChecker(object):
     def check_product(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '*')
 
-    def check_array_sum(self, array_column, value_colum, constraint={}):
+    def check_array_sum(self, array_column, value_column, constraint={}):
         """
         Checks that sum(array_column) == value_column
         """
@@ -354,11 +354,11 @@ class TableChecker(object):
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
-        oc = [Identifier(oc[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+        oc = [Identifier(oc_converted[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
 
-        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc_converted), Identifier(label_col)]), constraint)
+        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
-    def check_string_startswith(self, col, head, constraint=constraint):
+    def check_string_startswith(self, col, head, constraint={}):
         return self._run_query(SQL("NOT ({0} LIKE {1})").format(Identifier(col), Literal(head + '%')), constraint)
 
     def check_sorted(self, column):
@@ -479,14 +479,14 @@ class TableChecker(object):
         if self.label is not None:
             return self.check_string_concatentation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
 
-    self.uniqueness_constraints = []
+    uniqueness_constraints = []
 
     @overall
     def check_uniqueness_constraints(self):
         # check that the uniqueness constraints are satisfied
         return _any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
 
-    self.hecke_orbit_code = []
+    hecke_orbit_code = []
 
     @overall
     def check_hecke_orbit_code(self):
@@ -1203,12 +1203,20 @@ class mf_newforms(TableChecker):
         if len(names) != len(rec['related_objects']):
             return False
         # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
-        for name, _ in names:
+        for name, url in names:
             if name.startswith('Artin representation '):
+                if rec['weight'] != 1:
+                    return False
                 artin_label = name.split()[-1]
                 conductor_string = artin_label.split('.')[1]
                 conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
-                if conductor != level:
+                if conductor != rec['level']:
+                    return False
+
+            if url.startswith('/EllipticCurve/Q/'):
+                if rec['weight'] != 2:
+                    return False
+                if rec['level'] != int(name.split()[-1].split('.')[0]):
                     return False
 
         return True
@@ -1219,12 +1227,6 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
-        return True
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
         return True
 
     #### extra slow ####
@@ -1310,7 +1312,7 @@ class mf_newforms(TableChecker):
                 Identifier("embedding_root_imag"),
                 Identifier("field_poly")
                 )
-        cur = db._execute(query, cvalues)
+        cur = db._execute(query)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
@@ -1532,7 +1534,7 @@ class mf_hecke_cc(TableChecker):
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
-    @overal
+    @overall
     def check_conrey_indexes(self):
         # when grouped by hecke_orbit_code, check that conrey_labels match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_label), and embedding_m ranges from 1 to dim
         # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
@@ -1550,12 +1552,12 @@ class mf_hecke_cc(TableChecker):
 
 
     @overall
-    def check_hecke_orbit_code_lfunction_label(self):
+    def check_lfunction_label_hoc(self):
         # check that lfunction_label is consistent with hecke_orbit_code
         return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('lfunction_label')))
 
     @overall
-    def check_hecke_orbit_code_lfunction_label(self):
+    def check_lfunction_label_conrey(self):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
@@ -1645,7 +1647,7 @@ class char_dir_orbits(TableChecker):
         # Since we can't use constraint on modulus=conductor, we construct the constraint directly
         return self.check_iff({'is_primitive': True}, SQL("modulus = constraint"))
 
-    @oveall
+    @overall
     def check_galois_orbit(self):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
