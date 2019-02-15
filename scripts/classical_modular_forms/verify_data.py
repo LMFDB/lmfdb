@@ -133,7 +133,7 @@ class TableChecker(object):
     # Utility functions #
     #####################
     def _cremona_letter_code(self):
-    """
+        return """
 CREATE OR REPLACE FUNCTION to_base26(IN n integer) RETURNS varchar AS $$
 DECLARE
     s varchar;
@@ -191,9 +191,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION prod_factorization(IN fact numeric[]) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION prod_factorization(IN fact anyarray) RETURNS anyelement AS $$
 DECLARE
-    prod numeric := 1;
+    prod anyelement := 1;
 BEGIN
     IF array_length(fact, 1) != 0 THEN
         FOR l in 1 .. array_length(fact, 1) LOOP
@@ -204,13 +204,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION prod2(IN list smallint[]) RETURNS smallint AS $$
+CREATE OR REPLACE FUNCTION prod(IN list anyarray) RETURNS anyelement AS $$
 DECLARE
-    prod smallint := 1;
+    prod anyelement := 1;
 BEGIN
     IF array_length(list, 1) != 0 THEN
         FOR i in 1 .. array_length(list, 1) LOOP
-            prod := prod * list[i][2]);
+            prod := prod * list[i];
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION prod2(IN list anyarray) RETURNS anyelement AS $$
+DECLARE
+    prod anyelement := 1;
+BEGIN
+    IF array_length(list, 1) != 0 THEN
+        FOR i in 1 .. array_length(list, 1) LOOP
+            prod := prod * list[i][2];
         END LOOP;
     END IF;
     return prod;
@@ -223,10 +236,8 @@ BEGIN
     return 'ModularForm/GL2/Q/holomorphic/' || REPLACE(s,'.','/');
 END;
 $$ LANGUAGE plpgsql;
-
-
-
 """
+
     def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
         """
         INPUT:
@@ -310,7 +321,7 @@ $$ LANGUAGE plpgsql;
             Identifier(other_table),
             join,
             sort)
-        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table))
+        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table)))
 
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
@@ -335,7 +346,7 @@ $$ LANGUAGE plpgsql;
     def check_product(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '*')
 
-    def check_array_sum(self, array_column, value_colum, constraint={})
+    def check_array_sum(self, array_column, value_colum, constraint={}):
         """
         Checks that sum(array_column) == value_column
         """
@@ -436,7 +447,7 @@ $$ LANGUAGE plpgsql;
             other_columns,
             constraint={},
             sep='.',
-            convert_to_base26 = {})
+            convert_to_base26 = {}):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
 
@@ -674,7 +685,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_trace_bound1_from_dims(self):
         # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
-        return self._run_query(SQL("hecke_orbit_dims IS NOT NULL AND hecke_orbit_dims = ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1) AND num_forms > 1 AND trace_bound != 1")
+        return self._run_query(SQL("hecke_orbit_dims IS NOT NULL AND hecke_orbit_dims = ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1) AND num_forms > 1 AND trace_bound != 1"))
 
     @overall
     def check_AL_dims_plus_dim(self):
@@ -771,8 +782,8 @@ class mf_newspaces(TableChecker):
         # check that there is a portrait present for every nonempty newspace in box where straces is set
         return _any(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
-                    constraint=self._box_query(box, extras = {'dim'{'$gt':1}}))
-                for box in db.mf_boxes.search({'straces':True})))
+                    constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
+                for box in db.mf_boxes.search({'straces':True}))
 
     @fast
     def check_analytic_conductor(self, rec):
@@ -1078,7 +1089,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_field_poly(self):
         # if field_poly is set, check that is monic and of degree dim
-        return self._run_query(SQL('array_length(field_poly, 1) = 1 AND field_poly[dim + 1]  = 1'), {'field_poly': {'$exists':True})
+        return self._run_query(SQL('array_length(field_poly, 1) = 1 AND field_poly[dim + 1]  = 1'), {'field_poly': {'$exists':True}})
 
     @overall
     def check_traces_length(self):
@@ -1197,7 +1208,7 @@ class mf_newforms(TableChecker):
     def check_inner_twists(self):
         # check that inner_twists is consistent with inner_twist_count and that both are present if field_poly is set
         return (self.check_array_len_col('inner_twists', 'inner_twist_count', constraint={'inner_twist_count':{'$gt':0}}) or
-                self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt'0}}, {'field_poly':{'$exists':True}}))
+                self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt':0}}, {'field_poly':{'$exists':True}}))
 
     @overall
     def check_has_non_self_twist(self):
@@ -1271,7 +1282,7 @@ class mf_newforms(TableChecker):
     @slow
     def check_self_twist_disc(self, rec):
         # check that self_twist_dics = [elt[6] for elt in inner_twists if elt[6] is not None]
-        return rec['self_twist_disc'] = [elt[6] for elt in rec['inner_twists'] if elt[6] is not None]
+        return rec['self_twist_disc'] == [elt[6] for elt in rec['inner_twists'] if elt[6] is not None]
 
 
     @slow
@@ -1310,7 +1321,9 @@ class mf_newforms(TableChecker):
                 conductor_string = artin_label.split('.')[1]
                 conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
                 if conductor != level:
-                    return False:
+                    return False
+
+        return True
 
 
 
@@ -1387,7 +1400,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_embeddings_count(self):
         # check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
-        return _any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box) for box in db.mf_boxes.search({'embeddings':True})))
+        return _any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
 
     @overall
     def check_embeddings_count_boxcheck(self):
@@ -1607,7 +1620,7 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
-        query = SQL('SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1')
+        query = SQL("""SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1""")
         cur = db._execute(query)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
