@@ -154,7 +154,7 @@ class TableChecker(object):
                 condition)
         if not isinstance(constraint, Composable):
             constraint, cvalues = self.table._parse_dict(constraint)
-            if cstr is not None:
+            if constraint is not None:
                 values = values + cvalues
         if constraint is not None:
             query = SQL("{0} AND {1}").format(query, constraint)
