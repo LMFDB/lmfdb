@@ -1064,8 +1064,8 @@ class mf_newforms(TableChecker):
     @overall
     def check_field_poly(self):
         # if field_poly is set, check that is monic and of degree dim
-        return self._run_query(SQL('field_poly[dim + 1]  = 
-        
+        return self._run_query(SQL('array_length(field_poly, 1) = 1 AND field_poly[dim + 1]  = 1'), {'field_poly': {'$exists':True})
+
     @overall
     def check_traces_length(self):
         # check that traces is present and has length at least 10000
@@ -1266,11 +1266,11 @@ class mf_newforms(TableChecker):
         # for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
         pass
 
+    ZZx = PolynomialRing(ZZ, 'x')
     @slow
-    def check_(self, rec):
-        # TODO
+    def check_field_poly_irreducible(self, rec):
         # if present, check that field_poly is monic, irreducible, and of degree dim
-        pass
+        return 'field_poly' not in rec or ZZx(rec['field_poly']).is_irreducible()
 
     @slow
     def check_(self, rec):
