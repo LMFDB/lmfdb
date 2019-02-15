@@ -231,11 +231,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION origin(IN s varchar) RETURNS varchar AS $$
+CREATE OR REPLACE FUNCTION origin(IN am double[], IN an double[], IN amn []) RETURNS bool AS $$
 BEGIN
-    return 'ModularForm/GL2/Q/holomorphic/' || REPLACE(s,'.','/');
+    return (amn[1] - (am[1]*an[1]
 END;
 $$ LANGUAGE plpgsql;
+
+
 """
 
     def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
@@ -805,13 +807,13 @@ class mf_newspaces(TableChecker):
         # TODO
         # for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
         # sample: dimension_new_cusp_forms(DirichletGroup(100).1^2,4)
-        pass
+        return True
 
     @slow
     def check_dims(self, rec):
         # TODO
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
-        pass
+        return True
 
 
 
@@ -937,7 +939,7 @@ class mf_gamma1(TableChecker):
     def check_dims(self, rec):
         # TODO
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
-        pass
+        return True
 
 
 class mf_newspace_portraits(TableChecker):
@@ -1289,7 +1291,7 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
-        pass
+        return True
 
     ZZx = PolynomialRing(ZZ, 'x')
 
@@ -1331,13 +1333,13 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
-        pass
+        return True
 
     @slow
     def check_(self, rec):
         # TODO
         # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
-        pass
+        return True
 
     #### extra slow ####
 
@@ -1345,19 +1347,19 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
-        pass
+        return True
 
     @slow
     def check_(self, rec):
         # TODO
         # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
-        pass
+        return True
 
     @slow
     def check_(self, rec):
         # TODO
         # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
-        pass
+        return True
 
     #### newspace ####
 
@@ -1365,7 +1367,7 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
-        pass
+        return True
 
     #### char_dir_orbits ####
 
@@ -1373,7 +1375,7 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
-        pass
+        return True
 
     #### mf_hecke_traces ####
 
@@ -1440,7 +1442,7 @@ class mf_newforms(TableChecker):
     def check_trace(self, rec):
         # TODO
         # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
-        pass
+        return True
 
 class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
@@ -1739,7 +1741,7 @@ class char_dir_orbits(TableChecker):
     def check_order_parity(self, rec):
         # TODO
         # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
-        pass
+        return True
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
@@ -1757,10 +1759,10 @@ class char_dir_values(TableChecker):
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
 
     @fast
-    def check_label_in_galois_orbit(self):
+    def check_label_in_galois_orbit(self, rec):
         # FIXME - need zipped records from two tables
         # Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
-        pass
+        return True
 
     @fast
     def check_character_values(self, rec):
