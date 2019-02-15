@@ -132,117 +132,7 @@ class TableChecker(object):
     #####################
     # Utility functions #
     #####################
-<<<<<<< HEAD
-    def _cremona_letter_code(self):
-        return """
-CREATE OR REPLACE FUNCTION to_base26(IN n integer) RETURNS varchar AS $$
-DECLARE
-    s varchar;
-    m integer;
-BEGIN:
-    m := n;
-    IF m < 0 THEN
-        s := 'NULL';
-    ELSIF m = 0 THEN
-        s := 'a';
-    ELSE
-        s := '';
-        WHILE m != 0 LOOP
-            s := chr(m%26+97) || s;
-            m := m/26;
-        END LOOP;
-    END IF;
-
-    RETURN s;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION from_base26(IN s varchar) RETURNS integer AS $$
-DECLARE
-    k integer[];
-    m integer := 0;
-    p integer := 1;
-BEGIN
-    k := array(SELECT ascii(unnest(regexp_split_to_array(reverse(s),''))) - 97);
-    FOR l in 1 .. array_length(k,1) LOOP
-        m := m + p*k[l];
-        p := p*26;
-    END LOOP;
-    return m;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION from_newform_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
-DECLARE
-    v text[];
-BEGIN
-    v := string_to_array(s, '.');
-    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint + (from_base26(v[4])::bit(64)<<52)::bigint;
-END;
-$$ LANGUAGE plpgsql;
-
-//we could have only one function, but then we would play heavily for the if statement
-CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
-DECLARE
-    v text[];
-BEGIN
-    v := string_to_array(s, '.');
-    return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION prod_factorization(IN fact anyarray) RETURNS anyelement AS $$
-DECLARE
-    prod anyelement := 1;
-BEGIN
-    IF array_length(fact, 1) != 0 THEN
-        FOR l in 1 .. array_length(fact, 1) LOOP
-            prod := prod * (fact[l][1]^fact[l][2]);
-        END LOOP;
-    END IF;
-    return prod;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION prod(IN list anyarray) RETURNS anyelement AS $$
-DECLARE
-    prod anyelement := 1;
-BEGIN
-    IF array_length(list, 1) != 0 THEN
-        FOR i in 1 .. array_length(list, 1) LOOP
-            prod := prod * list[i];
-        END LOOP;
-    END IF;
-    return prod;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION prod2(IN list anyarray) RETURNS anyelement AS $$
-DECLARE
-    prod anyelement := 1;
-BEGIN
-    IF array_length(list, 1) != 0 THEN
-        FOR i in 1 .. array_length(list, 1) LOOP
-            prod := prod * list[i][2];
-        END LOOP;
-    END IF;
-    return prod;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION origin(IN s varchar) RETURNS varchar AS $$
-BEGIN
-    return 'ModularForm/GL2/Q/holomorphic/' || REPLACE(s,'.','/');
-END;
-$$ LANGUAGE plpgsql;
-"""
-
     def _run_query(self, condition, constraint={}, values=[], table=None):
-=======
-    def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
->>>>>>> 05b2e8de3254bc5128cd7ac1f60ed7ad14ca5891
         """
         INPUT:
 
@@ -308,8 +198,8 @@ $$ LANGUAGE plpgsql;
             col = Literal(col)
         elif isinstance(col, basestring):
             col = SQL("t1.{0}").format(Identifier(col))
-        if isinstance(quantity2, basestring):
-            quantity2 = SQL("t2.{0}").format(Identifier(quantity))
+        if isinstance(quantity, basestring):
+            quantity = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
         if sort is None:
@@ -1751,6 +1641,12 @@ class char_dir_orbits(TableChecker):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
 
+    @overall
+    def check_parity_value(self):
+        # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits
+        return (self._run_crosstable(SQL("2*t2.values[1][2]"), 'char_dir_values', 'order', 'orbit_label', constraint={'parity':-1}, subselect_wrapper="ALL") or
+                self._run_crosstable(SQL("t2.values[1][2]"), 'char_dir_values', 0, 'orbit_label', constraint={'parity':1}, subselect_wrapper="ALL"))
+
     @fast
     def check_char_degree(self, rec):
         # check that char_degree = euler_phi(order)
@@ -1758,9 +1654,10 @@ class char_dir_orbits(TableChecker):
 
     @slow
     def check_order_parity(self, rec):
-        # TODO
         # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
-        return True
+        char = DirichletCharacter_conrey(rec['modulus'], rec['galois_orbit'][0])
+        parity = 1 if char.is_even() else -1
+        return parity == rec['parity'] and char.conductor() == rec['conductor'] and char.multiplicative_order() == rec['order']
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
@@ -1777,11 +1674,9 @@ class char_dir_values(TableChecker):
         # order should match order in char_dir_orbits for this orbit_label
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
 
-    @fast
+    @slow
     def check_character_values(self, rec):
-        # FIXME  - need zipped records from two tables
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
-        # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits (TODO)
         # for x's that appear in both values and values_gens, the value should be the same.
         N, index = map(Integer, rec['label'].split('.'))
         v2, u2 = N.val_unit(2)
