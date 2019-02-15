@@ -11,9 +11,7 @@ IMPORTANT:
  - parallelize (Edgar)
 * Add Nk_count to mf_boxes, recording the number of pairs (N, k) touched by that box
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Fix the axes on the plot to refer to analytic conductor http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ which is now vastly smaller than Nk^2?! (Alex)
-* Add weight 1 L-functions to the plot http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ ? This probably requires adjusting the axes. (Alex)
-* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now. (Alex)
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now so f.e. needs fixing (how?). (Alex/Whoever knows best)
 * Make tests pass (Edgar)
 * Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
 * Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
