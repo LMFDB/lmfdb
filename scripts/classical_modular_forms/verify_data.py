@@ -648,6 +648,7 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_char_orbit(self):
+        # check that char_orbit matches char_orbit_label
         return self.check_letter_code('char_orbit_index', 'char_orbit_label')
 
     @overall
@@ -657,12 +658,23 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_traces_len(self):
+        # if present, check that traces has length at least 1000
         return self.check_array_len_gte_constant('traces_display', 1000, {'traces':{'$exists': True}})
 
     @overall
     def check_trace_bound0(self):
         # check that trace_bound=0 if num_forms=1
         return self.check_values({'trace_bound': 0}, {'num_forms':1})
+
+    @overall
+    def check_trace_bound1(self):
+        # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
+        return self._run_query(SQL("hecke_orbit_dims!= ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1)"), {'trace_bound':1})
+
+    @overall
+    def check_trace_bound1_from_dims(self):
+        # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
+        return self._run_query(SQL("hecke_orbit_dims IS NOT NULL AND hecke_orbit_dims = ARRAY(SELECT DISTINCT UNNEST(hecke_orbit_dims) ORDER BY 1) AND num_forms > 1 AND trace_bound != 1")
 
     @overall
     def check_AL_dims_plus_dim(self):
@@ -735,6 +747,7 @@ class mf_newspaces(TableChecker):
         # check that hecke_orbit_dims is sorted in increasing order
         return self.check_sorted('hecke_orbit_dims')
 
+    ### mf_hecke_newspace_traces ###
     @overall
     def check_traces_count(self):
         # there should be exactly 1000 records in mf_hecke_traces for each record in mf_newspaces with traces set
@@ -745,15 +758,16 @@ class mf_newspaces(TableChecker):
         # check that traces[n] matches trace_an in mf_hecke_newspace_traces
         return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000, constraint={'traces':{'$exists':True}})
 
+    ### mf_subspaces ###
     @overall
     def check_oldspace_decomposition_totaldim(self):
         # from mf_subspaces
         # check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
         return self.check_crosstable_dotprod('mf_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
 
+    ### mf_newspace_portraits ###
     @overall
-    def check_portraits(self):
-        # from mf_newspace_portraits
+    def check_portraits_count(self):
         # check that there is a portrait present for every nonempty newspace in box where straces is set
         return _any(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
@@ -788,13 +802,7 @@ class mf_newspaces(TableChecker):
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
         pass
 
-    @slow
-    def check_trace_bound1(self, rec):
-        # check that trace_bound = 1 if hecke_orbit_dims set and all dims distinct
-        if 'hecke_orbit_dims' in rec:
-            if len(set(rec['hecke_orbit_dims'])) == len(rec['hecke_orbit_dims']):
-                return rec['trace_bound'] == 1
-        return True
+
 
 
 class mf_gamma1(TableChecker):
@@ -879,19 +887,20 @@ class mf_gamma1(TableChecker):
         return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
                 self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
 
+    ### mf_gamma1_subspaces ### 
     @overall
     def check_oldspace_decomposition_totaldim(self):
-        # from mf_gamma1_subspaces
         # check that summing sub_dim * sub_mult over rows with a given label gives dim S_k^old(Gamma1(N))
         return self.check_crosstable_dotprod('mf_gamma1_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
 
 
+    ### mf_gamma1_portraits ###
     @overall
-    def check_hecke_orbit_code(self):
-        # from mf_gamma1_portraits
+    def check_portraits_count(self):
         # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
         return self.check_crosstable_count('mf_gamma1_portraits', 1, 'label', {'dim':{'$gt':0}, 'level':{'$lte':4000}})
 
+    ### slow ###
     @slow
     def check_level(self, rec):
         # check level_* attributes
@@ -1272,22 +1281,38 @@ class mf_newforms(TableChecker):
         pass
 
     ZZx = PolynomialRing(ZZ, 'x')
-    @slow
-    def check_field_poly_irreducible(self, rec):
-        # if present, check that field_poly is monic, irreducible, and of degree dim
-        return 'field_poly' not in rec or ZZx(rec['field_poly']).is_irreducible()
 
     @slow
-    def check_(self, rec):
-        # TODO
-        # if field_poly_is_cyclotomic or field_poly_is_real_cycolotomic are set, verify this
-        pass
+    def check_field_poly_properties(self, rec):
+        # if present, check that field_poly is irreducible, 
+        if 'field_poly' not in rec:
+            return True
+        else:
+            f = ZZx(rec['field_poly'])
+            if not f.is_irreducible():
+                return False
+            # if field_poly_is_cyclotomic, verify this
+            if rec['field_poly_is_cyclotomic']:
+                if not f.is_cyclotomic():
+                    return False
+            return True
 
     @slow
-    def check_(self, rec):
-        # TODO
+    def check_related_objects(self, rec):
         # check that URLS in related_objects are valid and identify objects present in the LMFDB
-        pass
+        names = names_and_urls(rec['related_objects'])
+        if len(names) != len(rec['related_objects']):
+            return False
+        # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
+        for name, _ in names:
+            if name.startswith('Artin representation '):
+                artin_label = name.split()[-1]
+                conductor_string = artin_label.split('.')[1]
+                conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
+                if conductor != level:
+                    return False:
+
+
 
     @slow
     def check_(self, rec):
@@ -1450,7 +1475,6 @@ class mf_hecke_nf(TableChecker):
 
     @overall
     def check_hecke_ring_cyclotomic_generator(self):
-        # TODO check field_poly_is_cyclotomic
         # if hecke_ring_cyclotomic_generator is greater than 0 check that hecke_ring_power_basis is false and hecke_ring_numerators, ... are null, and that field_poly_is_cyclotomic is set in mf_newforms record.
         return (self.check_values({'hecke_ring_power_basis':False,
                                    'hecke_ring_numerators':None,
@@ -1459,6 +1483,18 @@ class mf_hecke_nf(TableChecker):
                                    'hecke_ring_inverse_denominators':None},
                                   {'hecke_ring_cyclotomic_generator':{'$gt':0}}) or
                 None)
+
+    @overall
+    def check_field_poly_is_cyclotomic(self):
+        # if hecke_ring_cyclotomic_generator > 0, check that field_poly_is_cyclotomic is set in mf_newforms record.
+        # could be done with _run_crosstable from mf_newforms
+        cur = db._execute(SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label LIMIT 1"))
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+    @overall
+    def check_maxp(self):
+        # check that maxp is at least 997
+        return self._run_query(SQL('maxp >= 997'))
 
     @slow
     def check_hecke_ring_character_values_and_an(self, rec):
@@ -1507,11 +1543,7 @@ class mf_hecke_nf(TableChecker):
         return total_order == euler_phi(N)
 
 class traces(TableChecker):
-    label = 'hecke_orbit_code' # used for printing if error occurs
-
-    @overall
-    def check_constraints_hecke_orbit_code_n(self):
-        return self.check_uniqueness_constraint(['hecke_orbit_code', 'n'])
+    uniqueness_constraints = [['hecke_orbit_code', 'n']]
 
     @overall
     def check_total_count(self):
@@ -1523,6 +1555,11 @@ class mf_hecke_traces(TracesChecker):
     base_table = db.mf_newforms
     base_constraint = {}
 
+    @overall
+    def check_hecke_orbit_code_newforms(self):
+        # check that hecke_orbit_code is present in mf_newforms
+        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
+
 class mf_hecke_newspace_traces(TracesChecker):
     table = db.mf_hecke_newspace_traces
     base_table = db.mf_newspaces
@@ -1530,11 +1567,8 @@ class mf_hecke_newspace_traces(TracesChecker):
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
-    label = 'hecke_orbit_code' # used for printing if error occurs
-
-    @overall
-    def check_constraint_hecke_orbit_code_p(self):
-        return self.check_uniqueness_constraint(['hecke_orbit_code', 'p'])
+    # FIXME set label_col
+    uniqueness_constraints = [['hecke_orbit_code', 'p']]
 
     @overall
     def check_total_count(self):
@@ -1548,6 +1582,11 @@ class mf_hecke_lpolys(TableChecker):
         return _any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
 
     @overall
+    def check_hecke_orbit_code_newforms(self):
+        # check that hecke_orbit_code is present in mf_newforms
+        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
+
+    @overall
     def check_lpoly(self):
         # check that degree of lpoly is twice the dimension in mf_newforms for good primes
         # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
@@ -1558,36 +1597,45 @@ class mf_hecke_lpolys(TableChecker):
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
-    label = 'lfunction_label'
+    uniqueness_constraints = [['lfunction_label']]
 
     @overall
-    def check_constraints_label(self):
-        return self.check_uniqueness_constraint(['lfunction_label'])
-
-    @overall
-    def check_total_count(self):
-        # FIXME, this should be done from mf_newforms
-        # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
-        return _any(self.check_count(box['embedding_count'], self._box_query(box))
-                   for box in db.mf_boxes.search({'embeddings': True}))
-
-    @overall
-    def check_hecke_orbit_code(self):
+    def check_hecke_orbit_code_newforms(self):
         # check that hecke_orbit_code is present in mf_newforms
         return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
 
     @overall
     def check_lfunction_label(self):
-        # TODO
-        # check that lfunction_label is consistent with hecke_orbit_code, conrey_lebel, embedding_index
-        pass
+        # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
+        query = SQL('SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1')
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    @overall
+    def check_embedding_index(self):
+        # check that embedding_index is consistent with conrey_label and embedding_m
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_label  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
     @overall
     def check_embedding_m(self):
-        # check that embedding_m is consistent with conrey_label and embedding_index (use conrey_indexes list in mf_newformes record to do this)
-        # FIXME, this query doesn't make sense
-        check_conrey_label = SQL("t2.conrey_indexes[t1.embedding_index]")
-        return self._run_crosstable(check_conrey_label, "mf_newforms", "conrey_label", "hecke_orbit_code")
+        # check that embedding_m is consistent with conrey_label and embedding_index
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_label, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+    @overal
+    def check_conrey_indexes(self):
+        # when grouped by hecke_orbit_code, check that conrey_labels match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_label), and embedding_m ranges from 1 to dim
+        # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
+        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_label)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
     @overall
     def check_an_length(self):
@@ -1598,10 +1646,6 @@ class mf_hecke_cc(TableChecker):
 
 
     @overall
-    def check_uniqueness_lfunction_label(self):
-        return self.check_uniqueness_constraint(['lfunction_label'])
-
-    @overall
     def check_hecke_orbit_code_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code
         return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('lfunction_label')))
@@ -1609,7 +1653,7 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_hecke_orbit_code_lfunction_label(self):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
-        return self._run_query(SQL("regexp_split_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
+        return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
 
     @slow
@@ -1629,21 +1673,13 @@ class mf_hecke_cc(TableChecker):
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
-    label = 'orbit_label'
-
-    @overall
-    def check_constraints_orbit_label(self):
-        return self.check_uniqueness_constraint(['orbit_label'])
+    label = ['modulus', 'orbit_index']
+    uniqueness_constraints = [[table._label_col], label]
 
     @overall
     def check_total_count(self):
         # there should be a record present for every character orbit of modulus up to 10,000 (there are 768,512)
         return self.check_count(768512)
-
-    @overall
-    def check_orbit_label(self):
-        # check that orbit_label is consistent with modulus and orbit_index
-        return self.check_string_concatenation('orbit_label', ['modulus', 'orbit_index'])
 
     @overall
     def check_trivial(self):
@@ -1677,7 +1713,7 @@ class char_dir_orbits(TableChecker):
 
     @overall
     def check_is_primitive(self):
-        # TODO - can't use condition with LHS and RHS columns
+        # FIXME - can't use condition with LHS and RHS columns
         # check that is_primitive is true if and only if modulus=conductor
         return self.check_iff({'is_primitive': True}, {'modulus': 'conductor'})
 
@@ -1694,10 +1730,7 @@ class char_dir_orbits(TableChecker):
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
-
-    @overall
-    def check_constraints_orbit_label(self):
-        return self.check_uniqueness_constraint(['label'])
+    uniqueness_constraints = [['label']]
 
     @overall
     def check_total_count(self):
@@ -1712,13 +1745,13 @@ class char_dir_values(TableChecker):
 
     @fast
     def check_label_in_galois_orbit(self):
-        # TODO - need zipped records from two tables
+        # FIXME - need zipped records from two tables
         # Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         pass
 
     @fast
     def check_character_values(self, rec):
-        # TODO - need zipped records from two tables
+        # FIXME  - need zipped records from two tables
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
         # the value on -1 should agree with the parity for this char_orbit_index in char_dir_orbits (TODO)
         # for x's that appear in both values and values_gens, the value should be the same.
