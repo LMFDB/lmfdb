@@ -100,3 +100,29 @@ BEGIN
     return @((am[1][1]*an[1][1] - am[1][2]*an[1][2]) - amn[1][1]) < 1e-13 AND @((am[1][1]*an[1][2] + am[1][2]*an[1][1]) - amn[1][2]) < 1e-13;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION traces(IN ans double precision[]) returns double precision[] AS $$
+DECLARE
+  res double precision[];
+  x double precision[];
+BEGIN
+  res := array_fill(0, ARRAY[array_length(ans, 2)]);
+  FOREACH x SLICE 2 IN ARRAY ans LOOP
+    FOR i in 1 .. array_length(x, 1) LOOP
+      res[i] := res[i] + x[i][1];
+    END LOOP;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION scan_rows(double precision[]) RETURNS void AS $$
+DECLARE
+  x double precision[];
+BEGIN
+  FOREACH x SLICE 2 IN ARRAY $1
+  LOOP
+    RAISE NOTICE 'row = %', x;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;

@@ -75,6 +75,14 @@ class overall(speed_decorator):
     """
     pass
 
+class overall_long(speed_decorator):
+    """
+    Decorate a check as being one that's run once overall for the table, rather than once for each row
+
+    This should take no input and return a bad label if there is a failure, or None otherwise.
+    """
+    pass
+
 class TableChecker(object):
     label_col = 'label' # default
     def __init__(self, logfile, id_limits=None):
@@ -1328,10 +1336,19 @@ class mf_newforms(TableChecker):
         return True
 
     @slow
-    def check_trace(self, rec):
+    def check_an_embedding(self, rec):
         # TODO
-        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
-        return True
+        # When we have exact an, check that the inexact values are correct
+        pass
+
+    @overall_long
+    def check_traces(self):
+        # check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        howmany = 200
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:{0}])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:{0}], foo.traces, -0.5*(t1.weight - 1)) LIMIT 1").format(Literal(int(howmany)))
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
 class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
@@ -1561,15 +1578,12 @@ class mf_hecke_cc(TableChecker):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
-    @overall
+    @overall_long
     def check_amn(self):
         # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
-        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12), (7, 9), (5, 13), (6, 11), (4, 17), (5, 14), (7, 10), (8, 9), (4, 19), (7, 11), (6, 13), (5, 16), (7, 12), (5, 17), (8, 11), (5, 18), (9, 10), (7, 13), (5, 19), (9, 11), (6, 17), (8, 13), (7, 15), (10, 11), (7, 16), (6, 19), (9, 13), (7, 17), (8, 15), (7, 18), (9, 14), (10, 13), (11, 12), (7, 19), (8, 17), (7, 20), (11, 13), (9, 16), (8, 19), (9, 17), (11, 14), (12, 13), (11, 15), (10, 17), (9, 19), (11, 16), (9, 20), (13, 14), (11, 17), (10, 19), (13, 15), (11, 18), (12, 17), (13, 16), (11, 19), (14, 15), (11, 20), (13, 17), (12, 19), (13, 18), (14, 17), (15, 16), (13, 19), (15, 17), (13, 20), (14, 19), (16, 17), (15, 19), (16, 19), (17, 18), (17, 19), (17, 20), (18, 19), (19, 20)][:5]
-        SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])" % (m, n, m*n) for m,n in pairs))
-        
-        # each check should take about 40 min
-        # SELECT lfunction_label FROM mf_hecke_cc WHERE NOT check_cc_prod(an_normalized[2:2], an_normalized[3:3], an_normalized[6:6]) AND id < 1000000 LIMIT 1;
-        pass
+        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
+        query = SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs)
+        return self._run_query(query)
 
     @slow
     def check_angles(self, rec):
@@ -1592,11 +1606,6 @@ class mf_hecke_cc(TableChecker):
 
 
 
-    @slow
-    def check_an_embedding(self):
-        # TODO
-        # When we have exact an, check that the inexact values are correct
-        pass
 
 
 
