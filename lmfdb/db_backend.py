@@ -424,6 +424,20 @@ class PostgresTable(PostgresBase):
     def __repr__(self):
         return "Interface to Postgres table %s"%(self.search_table)
 
+    def join(self, *args):
+        """
+        db.mf_newforms.joint_search(query={'is_cm':True},
+                            projection=['self_twist_discs', 'mf_newspaces.label'],
+                            other_tables=[('mf_newspaces', {'num_forms':{'$gte':4}}),
+                                          ('lfunc_lfunctions', ...)],
+                            join=[('space_label', 'mf_newspaces.label'), ('label', 'lfunc_lfunctions.origin')],
+                            limit=10,
+                            offset=0,
+                            sort=['Nk2', 'mf_newspaces.num_forms'],
+                            silent=False)
+        """
+        pass
+
     ##################################################################
     # Helper functions for querying                                  #
     ##################################################################
@@ -3546,6 +3560,41 @@ class ExtendedTable(PostgresTable):
         result = self.lucky(*args, **kwds)
         if result:
             return self._type_conversion(result)
+
+class JoinedTable(PostgresBase):
+    """
+    A Python class representing the join of multiple PostgresTables (or their extras).
+
+    INPUT:
+
+    - ``tables`` -- a list of PostgresTables whose search tables will be joined
+    - ``joins`` -- a list of pairs of strings of the form 'tablename.colname' giving the join conditions
+    - ``extras`` -- a list of PostgresTables whose extra tables will be joined in addition to their search tables
+    - ``join_type`` -- 'inner', 'outer', 'left', 'right' (we do not support cross joins)
+    - ``distinguished_table`` -- (optional) one of the tables to be distinguished: columns with no table specified will default to this table, and result keys from this table will not include tablename.
+    """
+    def __init__(self, tables, joins, extras=None, join_type='inner', distinguished_table=None):
+        if len(tables) < 2:
+            raise ValueError("Joins should only be used for multiple tables")
+        if join_type not in ['inner', 'outer', 'left', 'right']:
+            raise ValueError("Invalid join type %s" % join_type)
+        PostgresBase.__init__(tables[0].search_table, tables[0]._db)
+        self.distinguished_table = dt = distinguished_table.search_table
+        self.tables = tables
+        self.join_type = join_type
+        self.tablenames = [T.search_table for T in tables]
+        self.joins = {}
+        def fill_dt(s):
+            cnt = s.count('.')
+            if cnt > 1:
+                raise ValueError("Too many periods in %s" % s)
+            
+        for a, b in joins:
+            pass
+        for E in extras:
+            if E.extra_table is None:
+                raise ValueError("%s has no extra table" % E.search_table)
+            self.tablenames.append(E.extra_table)
 
 class PostgresDatabase(PostgresBase):
     """

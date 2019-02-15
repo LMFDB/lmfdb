@@ -11,6 +11,11 @@ from collections import defaultdict
 from sage.all import Integer, prod, factor, floor, abs, mod, euler_phi, prime_pi, cached_function
 import traceback
 
+def _any(L):
+    # a version of any that returns the first entry x with bool(x) = True, rather than returning True.  If no x, returns None
+    for x in L:
+        if x: return x
+
 @cached_function
 def analytic_conductor(level, weight):
     # TODO
@@ -231,7 +236,7 @@ $$ LANGUAGE plpgsql;
         """
         if table is None:
             table = Identifier(self.table.search_table)
-        else:
+        elif isinstance(table, basestring):
             table = Identifier(table)
         if label is None:
             label_col = Identifier(self.table._label_col),
@@ -305,7 +310,7 @@ $$ LANGUAGE plpgsql;
             Identifier(other_table),
             join,
             sort)
-        return self._run_query(condition, constraint, values)
+        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table))
 
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
@@ -578,7 +583,7 @@ $$ LANGUAGE plpgsql;
     @overall
     def check_uniqueness_constraints(self):
         # check that the uniqueness constraints are satisfied
-        return any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
+        return _any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
 
     self.hecke_orbit_code = []
 
@@ -621,19 +626,19 @@ class mf_newspaces(TableChecker):
     @overall
     def check_box_count(self):
         # there should be exactly one row for every newspace in mf_boxes; for each box performing mf_newspaces.count(box query) should match newspace_count for box, and mf_newspaces.count() should be the sum of these
-        return any(self.check_count(box['newspace_count'], self._box_query(box))
+        return _any(self.check_count(box['newspace_count'], self._box_query(box))
                    for box in db.mf_boxes.search())
 
     @overall
     def check_box_hecke_cutter_primes(self):
         # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set and `min(dims) <= 20`
-        return any(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
+        return _any(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
                    for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
     def check_box_straces(self):
         # check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
-        return any(
+        return _any(
                 self.check_non_null([
                         'traces',
                         'trace_bound',
@@ -750,7 +755,7 @@ class mf_newspaces(TableChecker):
     def check_portraits(self):
         # from mf_newspace_portraits
         # check that there is a portrait present for every nonempty newspace in box where straces is set
-        return any(
+        return _any(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
                     constraint=self._box_query(box, extras = {'dim'{'$gt':1}}))
                 for box in db.mf_boxes.search({'straces':True})))
@@ -804,13 +809,13 @@ class mf_gamma1(TableChecker):
     @overall
     def check_box_count(self):
         # there should be a row present for every pair (N,k) satisfying a box constraint on N,k,Nk2
-        return any(self.check_count(box['Nk_count'], self._box_query(box, drop=['char_order', 'dim']))
+        return _any(self.check_count(box['Nk_count'], self._box_query(box, drop=['char_order', 'dim']))
                    for box in db.mf_boxes.search())
 
     @overall
     def check_box_traces(self):
         # check that traces is set if space is in a box with traces set and no dimension constraint
-        return any(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
+        return _any(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
                    for box in db.mf_boxes.search({'Dmin':None, 'Dmax':None, 'straces':True}))
 
     @overall
@@ -1220,7 +1225,7 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_set(self):
-        return any(self.check_non_null(['analytic_rank'], self._box_query(box))
+        return _any(self.check_non_null(['analytic_rank'], self._box_query(box))
                 for box in db.mf_boxes.search({'lfunctions':True}))
 
 
@@ -1357,7 +1362,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_embeddings_count(self):
         # check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
-        return any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box) for box in db.mf_boxes.search({'embeddings':True})))
+        return _any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box) for box in db.mf_boxes.search({'embeddings':True})))
 
     @overall
     def check_embeddings_count_boxcheck(self):
@@ -1540,7 +1545,7 @@ class mf_hecke_lpolys(TableChecker):
     def check_prime_count(self):
         # check that every prime p < 100 occurs exactly once for each hecke_orbit_code
         cnt = db.mf_newforms.count({'field_poly':{'$exists':True}})
-        return any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
+        return _any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
 
     @overall
     def check_lpoly(self):
@@ -1563,7 +1568,7 @@ class mf_hecke_cc(TableChecker):
     def check_total_count(self):
         # FIXME, this should be done from mf_newforms
         # there should be a record present for every record in mf_newforms that lies in a box weight embeddings set (currently this is all of them)
-        return any(self.check_count(box['embedding_count'], self._box_query(box))
+        return _any(self.check_count(box['embedding_count'], self._box_query(box))
                    for box in db.mf_boxes.search({'embeddings': True}))
 
     @overall
@@ -1733,7 +1738,7 @@ class char_dir_values(TableChecker):
             return False
         if vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]:
             return False
-        if any(N.gcd(g) > 1 for g, gval in val_gens+vals):
+        if _any(N.gcd(g) > 1 for g, gval in val_gens+vals):
             return False
         for g, val in vals:
             if g in val_gens_dict and val != val_gens_dict[g]:
