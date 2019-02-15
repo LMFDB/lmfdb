@@ -381,8 +381,7 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
     assert conrey_label > 0
     assert embedding > 0
     label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
-    return redirect(url_for_label(label), code=301)
-
+    return redirect(url_for(".by_url_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, m=".".join(map(str, [conrey_label,embedding]))),  code=301)
 
 
 

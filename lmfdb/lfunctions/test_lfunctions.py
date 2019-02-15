@@ -252,8 +252,8 @@ class LfunctionTest(LmfdbTest):
         assert '4.04397' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
-        assert '(1+T+ p T^{2})(1+7T+ p T^{2})' in L.data
-        assert '(1-2T+ p T^{2})^{2}' in L.data
+        assert '( 1 + T + p T^{2} )( 1 + 7 T + p T^{2} )' in L.data
+        assert '( 1 - 2 T + p T^{2} )^{2}' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/129/2/a/d/')
         assert 'Modular form 129.2.a.d' in L.data
@@ -261,7 +261,7 @@ class LfunctionTest(LmfdbTest):
             assert 'Modular form 129.2.a.d.1.%d' % i in L.data
 
         assert '1.04395' in L.data
-        assert '(1+T)^{3}' in L.data
+        assert '( 1 + T )^{3}' in L.data
         assert '1.55341889806322957326786121161' in L.data
         assert r'S_4\times C_2' in L.data
 
@@ -272,7 +272,7 @@ class LfunctionTest(LmfdbTest):
                 assert 'Modular form 60.2.i.a.%d.%d' % (c,i) in L.data, 'Modular form 60.2.%d.a.%d' % (c,i)
         assert '0.676894' in L.data
         assert '2.15777231959226116393597609132' in L.data
-        assert '$1-2T+2T^{2}-2 p T^{3}+ p^{2} T^{4}$' in L.data
+        assert '1 - 2 T + 2 T^{2} - 2 p T^{3} + p^{2} T^{4}' in L.data
         assert '(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/')
@@ -280,7 +280,7 @@ class LfunctionTest(LmfdbTest):
             assert 'Modular form 207.2.i.b.%d.1' % c in L.data, 'Modular form 207.2.%d.d.1' % c
         assert '0.233961' in L.data
         assert '0.096070203083029088532433951629' in L.data
-        assert '$1-T+T^{2}+21T^{3}-219T^{4}-1365T^{5}-219 p T^{6}+21 p^{2} T^{7}+ p^{3} T^{8}- p^{4} T^{9}+ p^{5} T^{10}$' in L.data
+        assert '1 -  T + T^{2} + 21 T^{3} - 219 T^{4} - 1365 T^{5} - 219 p T^{6} + 21 p^{2} T^{7} + p^{3} T^{8} -  p^{4} T^{9} + p^{5} T^{10}' in L.data
         assert 'Plot not available' in L.data
 
 
