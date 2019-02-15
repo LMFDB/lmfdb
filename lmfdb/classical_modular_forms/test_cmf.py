@@ -161,9 +161,9 @@ class CmfTest(LmfdbTest):
         assert '2q^{2}' in page.data
         assert '2q^{4}' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
-        assert r'0.707106' in page.data
+        assert r'0.707107' in page.data
         assert r'0.957427' in page.data
-        assert r'0.223606' in page.data
+        assert r'0.223607' in page.data
         assert r'0.974679' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')
@@ -457,7 +457,7 @@ class CmfTest(LmfdbTest):
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
         assert '0.5, -2.2282699087' in page.data
-        assert '-12.531852282' in page.data
+        assert '-0.498394' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_satake_angles/27.2.e.a', follow_redirects=True)
         assert '0.5, -2.2282699087' in page.data
         assert '0.406839418685' in page.data
@@ -465,7 +465,7 @@ class CmfTest(LmfdbTest):
         assert '[-1, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0]' in page.data # a_2
         assert '-2.2282699087' in page.data
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
-        assert '-12.531852282' in page.data
+        assert '-0.498394' in page.data
         assert '0.406839418685' in page.data
 
 
