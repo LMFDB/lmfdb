@@ -195,7 +195,7 @@ $$ LANGUAGE plpgsql;
         """
         if table is None:
             table = Identifier(self.table.search_table)
-        else:
+        elif isinstance(table, basestring):
             table = Identifier(table)
         if label is None:
             label_col = Identifier(self.table._label_col),
@@ -268,7 +268,7 @@ $$ LANGUAGE plpgsql;
             Identifier(other_table),
             join,
             sort)
-        return self._run_query(condition, constraint, values)
+        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table))
 
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
