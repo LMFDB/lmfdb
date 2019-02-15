@@ -5,10 +5,12 @@
 #       from SQL injection       #
 ##################################
 
-from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier
+from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
-from sage.all import Integer, prod, factor, floor, abs, mod, euler_phi, prime_pi, cached_function
+from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
+from sage.all import Integer, prod, floor, abs, mod, euler_phi, prime_pi, cached_function, CC, Gamma1, PolynomialRing, ZZ, ZZx, dimension_new_cusp_forms, prime_range
+from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import traceback
 
 def _any(L):
@@ -461,8 +463,8 @@ class TableChecker(object):
         """
         query = defaultdict(dict)
         for bcol, col in [('N','level'), ('k', 'weight'), ('o', 'char_order'), ('Nk2', 'Nk2'), ('D', 'dim')]:
-            for mod, code in [('min', '$gte'), ('max', '$lte')]:
-                constraint = box.get(bcol + mod)
+            for mm, code in [('min', '$gte'), ('max', '$lte')]:
+                constraint = box.get(bcol + mm)
                 if constraint is not None:
                     query[col][code] = constraint
         for col, D in extras.items():
@@ -1449,7 +1451,7 @@ class mf_hecke_nf(TableChecker):
                 return False
         return total_order == euler_phi(N)
 
-class traces(TableChecker):
+class TableChecker(TableChecker):
     uniqueness_constraints = [['hecke_orbit_code', 'n']]
 
     @overall
@@ -1562,6 +1564,15 @@ class mf_hecke_cc(TableChecker):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
+    @overall
+    def check_amn(self):
+        # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
+        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12), (7, 9), (5, 13), (6, 11), (4, 17), (5, 14), (7, 10), (8, 9), (4, 19), (7, 11), (6, 13), (5, 16), (7, 12), (5, 17), (8, 11), (5, 18), (9, 10), (7, 13), (5, 19), (9, 11), (6, 17), (8, 13), (7, 15), (10, 11), (7, 16), (6, 19), (9, 13), (7, 17), (8, 15), (7, 18), (9, 14), (10, 13), (11, 12), (7, 19), (8, 17), (7, 20), (11, 13), (9, 16), (8, 19), (9, 17), (11, 14), (12, 13), (11, 15), (10, 17), (9, 19), (11, 16), (9, 20), (13, 14), (11, 17), (10, 19), (13, 15), (11, 18), (12, 17), (13, 16), (11, 19), (14, 15), (11, 20), (13, 17), (12, 19), (13, 18), (14, 17), (15, 16), (13, 19), (15, 17), (13, 20), (14, 19), (16, 17), (15, 19), (16, 19), (17, 18), (17, 19), (17, 20), (18, 19), (19, 20)][:5]
+        SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])" % (m, n, m*n) for m,n in pairs))
+        
+        # each check should take about 40 min
+        # SELECT lfunction_label FROM mf_hecke_cc WHERE NOT check_cc_prod(an_normalized[2:2], an_normalized[3:3], an_normalized[6:6]) AND id < 1000000 LIMIT 1;
+        pass
 
     @slow
     def check_angles(self, rec):
@@ -1582,17 +1593,15 @@ class mf_hecke_cc(TableChecker):
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
-    @overall
-    def check_amn(self):
-        # TODO
-        # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
-        pass
+
 
     @slow
     def check_an_embedding(self):
         # TODO
         # When we have exact an, check that the inexact values are correct
         pass
+
+
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
