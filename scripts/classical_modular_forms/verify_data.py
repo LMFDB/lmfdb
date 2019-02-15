@@ -170,7 +170,7 @@ CREATE OR REPLACE FUNCTION from_newform_label_to_hecke_orbit_code(IN s varchar) 
 DECLARE
     v text[];
 BEGIN
-    v := regexp_split_to_array(s, '\.');
+    v := string_to_array(s, '.');
     return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint + (from_base26(v[4])::bit(64)<<52)::bigint;
 END;
 $$ LANGUAGE plpgsql;
@@ -180,10 +180,46 @@ CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar)
 DECLARE
     v text[];
 BEGIN
-    v := regexp_split_to_array(s, '\.');
+    v := string_to_array(s, '.');
     return v[1]::bigint + (v[2]::bigint::bit(64)<<24)::bigint + (from_base26(v[3])::bit(64)<<36)::bigint;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION prod_factorization(IN fact numeric[]) RETURNS numeric AS $$
+DECLARE
+    prod numeric := 1;
+BEGIN
+    IF array_length(fact, 1) != 0 THEN
+        FOR l in 1 .. array_length(fact, 1) LOOP
+            prod := prod * (fact[l][1]^fact[l][2]);
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION prod2(IN list smallint[]) RETURNS smallint AS $$
+DECLARE
+    prod smallint := 1;
+BEGIN
+    IF array_length(list, 1) != 0 THEN
+        FOR i in 1 .. array_length(list, 1) LOOP
+            prod := prod * list[i][2]);
+        END LOOP;
+    END IF;
+    return prod;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION origin(IN s varchar) RETURNS varchar AS $$
+BEGIN
+    return 'ModularForm/GL2/Q/holomorphic/' || REPLACE(s,'.','/');
+END;
+$$ LANGUAGE plpgsql;
+
+
 
 """
     def _run_query(self, condition, constraint={}, values=[], table=None, label_col=None):
@@ -256,11 +292,12 @@ $$ LANGUAGE plpgsql;
         elif isinstance(col, basestring):
             col = SQL("t1.{0}").format(Identifier(col))
         if isinstance(quantity2, basestring):
-            quantity2 = SQL("t2.{0}").format(Identifier(quantity2))
+            quantity2 = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
         if sort is None:
             sort = SQL("")
+        # FIXME: we don't specify t1
         condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4} {5})").format(
             col,
             subselect_wrapper,
@@ -973,10 +1010,6 @@ class mf_newforms(TableChecker):
     hecke_orbit_code = ['hecke_orbit_code', label]
     uniqueness_constraints = [[table._label_col], label, ['hecke_orbit_code']]
 
-    @overall
-    def check_hecke_ring_generator_nbound(self):
-        # hecke_ring_generator_nbound > 0
-        return self.check_values({'hecke_ring_generator_nbound': {'$gt': 0}})
 
     @overall
     def check_box_count(self):
@@ -988,6 +1021,11 @@ class mf_newforms(TableChecker):
                 return bad_label
             total_count += box['newform_count']
         return self.check_count(total_count)
+
+    @overall
+    def check_hecke_ring_generator_nbound(self):
+        # hecke_ring_generator_nbound > 0
+        return self.check_values({'hecke_ring_generator_nbound': {'$gt': 0}})
 
     @overall
     def check_space_label(self):
@@ -1023,6 +1061,11 @@ class mf_newforms(TableChecker):
         return self.check_non_null(['is_polredabs', 'hecke_ring_generator_nbound', 'qexp_display'],
                                    {'field_poly': {'$exists':True}})
 
+    @overall
+    def check_field_poly(self):
+        # if field_poly is set, check that is monic and of degree dim
+        return self._run_query(SQL('field_poly[dim + 1]  = 
+        
     @overall
     def check_traces_length(self):
         # check that traces is present and has length at least 10000
@@ -1085,6 +1128,11 @@ class mf_newforms(TableChecker):
     def check_self_twist_proved(self):
         # check that self_twist_proved is set (log warning if not, currently there are 10-20 where it is not set)
         return self.check_values({'self_twist_proved':True})
+
+    @overall
+    def check_fricke_eigenval(self):
+        # if present, check that fricke_eigenval is product of atkin_lehner_eigenvals
+        return self._run_query(SQL('fricke_eigenval != prod2(atkin_lehner_eigenvals)'), {'fricke_eigenval':{'$exists':True}})
 
     @overall
     def check_sato_tate_set(self):
@@ -1157,22 +1205,41 @@ class mf_newforms(TableChecker):
         # check that there is a portrait present for every nonempty newspace in box where straces is set
         return self.check_crosstable_count('mf_newform_portraits', 1, 'label')
 
-    @fast
-    def check_fricke_eigenval(self, rec):
-        # check that fricke_eigenval is product of atkin_lehner_eigenvals
-        return rec['fricke_eigenval'] == prod(ev for p, ev in rec['atkin_lehner_eigenvals'])
 
-    @fast
-    def check_factorizations(self, rec):
+
+    @overall
+    def check_field_disc_factorization(self):
         # if present, check that field_disc_factorization matches field_disc
+        return self._run_query(SQL('field_disc != prod_factorization(field_disc_factorization)'), {'field_disc':{'$exists':True}});
+
+    @overall
+    def check_hecke_ring_index_factorization(self):
         # if present, verify that hecke_ring_index_factorization matches hecke_ring_index
-        if 'field_disc_factorization' in rec:
-            if rec['field_disc'] != prod(p**e for p, e in rec['field_disc_factorization']):
-                return False
-        if 'hecke_ring_index_factorization' in rec:
-            if rec['hecke_ring_index'] != prod(p**e for p, e in rec['hecke_ring_index_factorization']):
-                return False
-        return True
+        return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}});
+
+
+    @overall
+    def check_analytic_rank_set(self):
+        return any(self.check_non_null(['analytic_rank'], self._box_query(box))
+                for box in db.mf_boxes.search({'lfunctions':True}))
+
+
+    @overall
+    def check_analytic_rank(self):
+        # if analytic_rank is present, check that matches order_of_vanishing in lfunctions record, and is are constant across the orbit
+        db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), analytic_rank, dim FROM mf_newforms WHERE analytic_rank is NOT NULL"))
+        db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT order_of_vanishing,(string_to_array(origin,'/'))[5:8],degree FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2"))
+        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using btree string_to_array"))
+        cursor = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array  )  LIMIT 1"))
+        if cursor.rowcount > 0:
+            res =  cursor.fetchone()[0]
+        else:
+            res = None
+        db._execute(SQL("DROP TABLE tem_mftbl"))
+        db._execute(SQL("DROP TABLE temp_ltbl"))
+        return res
+
+
 
     @fast
     def check_projective_field_degree(self, rec):
@@ -1184,21 +1251,14 @@ class mf_newforms(TableChecker):
             deg *= 2
         return deg == len(coeffs) - 1
 
-    #### lfunc_lfunctions ####
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # if newform is in a box with lfunctions set, check that analytic_rank is set and matches order_of_vanishing in lfunctions record
-        pass
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # check that disc is present in tuple in inner_twists if and only if it is a self_twist and when this is the case, that precisely the discs in self_twist_disc appear
-        pass
 
     #### slow ####
+
+    @slow
+    def check_self_twist_disc(self, rec):
+        # check that self_twist_dics = [elt[6] for elt in inner_twists if elt[6] is not None]
+        return rec['self_twist_disc'] = [elt[6] for elt in rec['inner_twists'] if elt[6] is not None]
+
 
     @slow
     def check_(self, rec):
@@ -1332,12 +1392,6 @@ class mf_newforms(TableChecker):
                 if poly.evaluate(r) > 1e-13:
                     return False
         return True
-
-    @slow
-    def check_analytic_rank(self, rec):
-        # TODO -
-        # check that the analytic ranks (from lfunc_lfunction.order_of_vanishing) are constant across hecke_orbit_code and match the analytic rank in mf_newform
-        pass
 
     @slow
     def check_trace(self, rec):
