@@ -1,7 +1,7 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
-* display self-dual on the form page
+* Change title when single m specified, jump and make sure m box is present (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
@@ -9,18 +9,19 @@ IMPORTANT:
  - check self duality -> through the number field data, embedding data, lfunction self_dual
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
-* Add Nk_count to mf_boxes, recording the number of pairs (N, k) touched by that box
+* Add Nk_count to mf_boxes, recording the number of pairs (N, k) touched by that box (Drew)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/, not only trivial character now so f.e. needs fixing (how?). (Alex/Whoever knows best)
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ to be a knowl, not only trivial character now so f.e. needs fixing (how?). (David/Alex/Whoever knows best)
 * Make tests pass (Edgar)
-* Prove self-twists for 10-20 newforms where they are currently not proved (Drew)
-* Add Hecke cutters for 3 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
+* Prove self-twists for 9 newforms where they are currently not proved (Drew)
+* Add Hecke cutters for 2 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
 * Compute L-functions:
   - 23.39.d.a and 23.41.d.a (CC ap data ready for 23.39.d.a, Edgar, still waiting on 23.41.d.a, Drew)
   - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * Missing data:
   - embedding data for 23:41:4 dimension 790 (Drew -- this may not finish before PR)
+* Prove all analytic ranks (Drew, Maarten)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -28,7 +29,6 @@ FINAL CHECKS:
 * Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* Prove all analytic ranks (Drew, Maarten)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
@@ -66,6 +66,7 @@ IT WOULD BE NICE IF:
 * show AL dimensions for old forms as well as new
 * identify (if possible?) a more precise description of the twisting characters
 * form pages: provide downloads for pari
+* In the link back from an L-function to a modular form, preserve the L-function URL
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials

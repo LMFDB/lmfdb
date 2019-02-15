@@ -310,7 +310,7 @@ $$ LANGUAGE plpgsql;
             Identifier(other_table),
             join,
             sort)
-        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table))
+        return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table)))
 
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
@@ -346,7 +346,6 @@ $$ LANGUAGE plpgsql;
         """
         Checks that prod(array_column) == value_column
         """
-        # TODO - need product aggregator (cf https://www.postgresql.org/message-id/20090504084201.GD5414%40a-kretschmer.de)
         return self._run_query(SQL("(SELECT PROD(s) FROM UNNEST({0}) s) != {1}").format(
             Identifier(array_column), Identifier(value_column)), constraint)
 
@@ -1078,7 +1077,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_field_poly(self):
         # if field_poly is set, check that is monic and of degree dim
-        return self._run_query(SQL('array_length(field_poly, 1) = 1 AND field_poly[dim + 1]  = 1'), {'field_poly': {'$exists':True})
+        return self._run_query(SQL('array_length(field_poly, 1) = 1 AND field_poly[dim + 1]  = 1'), {'field_poly': {'$exists':True}})
 
     @overall
     def check_traces_length(self):
@@ -1109,8 +1108,8 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_proved(self):
-        # TODO: Check with Drew, since this currently has 52343 failures
-        # check that analytic_rank_proved is set (log warning if not)
+        # TODO
+        # check that analytic_rank_proved is true when analytic rank set (log warning if not)
         pass
 
     @overall
@@ -1343,7 +1342,7 @@ class mf_newforms(TableChecker):
     @slow
     def check_(self, rec):
         # TODO
-        # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
+        # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image) small group id
         pass
 
     #### newspace ####
@@ -1426,7 +1425,7 @@ class mf_newforms(TableChecker):
     @slow
     def check_trace(self, rec):
         # TODO
-        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        # (optional) check that summing (normalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n)/n^((k-1)/) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         pass
 
 class mf_newform_portraits(TableChecker):
@@ -1669,7 +1668,23 @@ class mf_hecke_cc(TableChecker):
         else:
             return True
 
+    @slow
+    def check_ap2(self, rec):
+        # TODO
+        # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
+        pass
 
+    @overall
+    def check_amn(self):
+        # TODO
+        # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
+        pass
+
+    @slow
+    def check_an_embedding(self):
+        # TODO
+        # When we have exact an, check that the inexact values are correct
+        pass
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
