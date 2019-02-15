@@ -5,7 +5,7 @@
 #       from SQL injection       #
 ##################################
 
-from lmfdb.db_backend import db, SQL, IdentifierWrapper as Identifier, Literal
+from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
@@ -76,7 +76,7 @@ class overall(speed_decorator):
     pass
 
 class TableChecker(object):
-    label = 'label' # default
+    label_col = 'label' # default
     def __init__(self, logfile, id_limits=None):
         self.logfile = logfile
         self.errfile = logfile + '.errors'
@@ -98,10 +98,10 @@ class TableChecker(object):
                 for check in checks:
                     try:
                         if not check(rec):
-                            log.write('%s: %s\n'%(check.__name__, rec[self.label]))
+                            log.write('%s: %s\n'%(check.__name__, rec[self.label_col]))
                     except Exception:
                         with open(self.errfile, 'a') as err:
-                            msg = 'Exception in %s (%s):\n'%(check.__name__, rec[self.label])
+                            msg = 'Exception in %s (%s):\n'%(check.__name__, rec[self.label_col])
                             err.write(msg)
                             log.write(msg)
                             err.write(traceback.format_exc() + '\n')
@@ -139,28 +139,25 @@ class TableChecker(object):
         INPUT:
 
         - ``condition`` -- an SQL object giving a condition on the search table
-        - ``constraint`` -- a dictionary, as passed to the search method
+        - ``constraint`` -- a dictionary, as passed to the search method, or an SQL object
         """
         if table is None:
             table = Identifier(self.table.search_table)
         elif isinstance(table, basestring):
             table = Identifier(table)
-        if label is None:
-            label_col = Identifier(self.table._label_col),
-        else:
-            label_col = Identifier(label_col)
+        label_col = Identifier(self.label_col)
 
-        cstr, cvalues = self.table._parse_dict(constraint)
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
         query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
                 label_col,
                 table,
                 condition)
-        if cstr is None:
-            cvalues = []
-        else:
-            query = SQL("{0} AND {1}").format(query, cstr)
-        values = values + cvalues
+        if not isinstance(constraint, Composable):
+            constraint, cvalues = self.table._parse_dict(constraint)
+            if cstr is not None:
+                values = values + cvalues
+        if constraint is not None:
+            query = SQL("{0} AND {1}").format(query, constraint)
         query = SQL("{0} LIMIT 1").format(query)
         cur = db._execute(query, values)
         if cur.rowcount > 0:
@@ -209,7 +206,6 @@ class TableChecker(object):
         subselect_wrapper = SQL(subselect_wrapper)
         if sort is None:
             sort = SQL("")
-        # FIXME: we don't specify t1
         condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4} {5})").format(
             col,
             subselect_wrapper,
@@ -482,7 +478,6 @@ class TableChecker(object):
         # check that label matches self.label
         if self.label is not None:
             return self.check_string_concatentation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
-        return True
 
     self.uniqueness_constraints = []
 
@@ -518,12 +513,10 @@ class mf_newspaces(TableChecker):
 
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'hecke_orbit_dims', 'trace_bound', 'dim', 'num_forms', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
-
     uniqueness_constraints = [
        ['label'],
        ['level', 'weight', 'char_orbit_index'],
        ['level', 'weight', 'char_orbit_label']]
-
 
     label = ['level', 'weight', 'char_orbit_label']
 
@@ -716,7 +709,7 @@ class mf_gamma1(TableChecker):
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
     label = ['level', 'weight']
-    uniqueness_constraints = [[table._label_col],label]
+    uniqueness_constraints = [[table._label_col], label]
 
 
 
@@ -839,7 +832,7 @@ class mf_newspace_portraits(TableChecker):
     table = db.mf_newspace_portraits
     projection = []
     label = ['level', 'weight', 'char_orbit_index']
-    uniqueness_constraints = [[table._label_col],label]
+    uniqueness_constraints = [[table._label_col], label]
     label_conversion = {'char_orbit_index': -1}
 
     # attached to mf_newspaces:
@@ -856,7 +849,7 @@ class mf_gamma1_portraits(TableChecker):
 
 
 
-class subspaces(TableChecker):
+class SubspacesChecker(TableChecker):
     @overall
     def check_sub_mul_positive(self):
         # sub_mult is positive
@@ -878,7 +871,7 @@ class subspaces(TableChecker):
         # check that summing sub_dim * sub_mult over rows with a given label gives S_k(N,chi) or S_k(Gamma1(N)) (old+new), for k=1 use cusp_dim in mf_newspaces/mf_gamma1 to do this check
         pass
 
-class mf_subspaces(subspaces):
+class mf_subspaces(SubspacesChecker):
     table = db.mf_subspaces
     label = ['level', 'weight', 'char_orbit_label']
     uniqueness_constraints = [['label', 'sub_label']]
@@ -913,7 +906,7 @@ class mf_subspaces(subspaces):
         # check that sub_dim = dim S_k^new(sub_level, sub_chi)
         return self.check_crosstable('mf_subspaces', 'sub_dim', 'sub_label', 'dim', 'label')
 
-class mf_gamma1_subspaces(subspaces):
+class mf_gamma1_subspaces(SubspacesChecker):
     table = db.mf_gamma1_subspaces
     label = ['level', 'weight']
     uniqueness_constraints = [['label', 'sub_level']]
@@ -1343,7 +1336,7 @@ class mf_newform_portraits(TableChecker):
     projection = []
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
     label_conversion = {'hecke_orbit':-1}
-    uniqueness_constraints = [[table._label_col],label]
+    uniqueness_constraints = [[table._label_col], label]
 
     # attached to mf_newforms
     # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
@@ -1451,8 +1444,9 @@ class mf_hecke_nf(TableChecker):
                 return False
         return total_order == euler_phi(N)
 
-class TableChecker(TableChecker):
+class TracesChecker(TableChecker):
     uniqueness_constraints = [['hecke_orbit_code', 'n']]
+    label_col = 'hecke_orbit_code'
 
     @overall
     def check_total_count(self):
@@ -1476,7 +1470,7 @@ class mf_hecke_newspace_traces(TracesChecker):
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
-    # FIXME set label_col
+    label_col = 'hecke_orbit_code'
     uniqueness_constraints = [['hecke_orbit_code', 'p']]
 
     @overall
@@ -1506,6 +1500,7 @@ class mf_hecke_lpolys(TableChecker):
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
+    label_col = 'lfunction_label'
     uniqueness_constraints = [['lfunction_label']]
 
     @overall
@@ -1605,6 +1600,7 @@ class mf_hecke_cc(TableChecker):
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
+    label_col = 'orbit_label'
     label = ['modulus', 'orbit_index']
     uniqueness_constraints = [[table._label_col], label]
 
@@ -1645,9 +1641,14 @@ class char_dir_orbits(TableChecker):
 
     @overall
     def check_is_primitive(self):
-        # FIXME - can't use condition with LHS and RHS columns
         # check that is_primitive is true if and only if modulus=conductor
-        return self.check_iff({'is_primitive': True}, {'modulus': 'conductor'})
+        # Since we can't use constraint on modulus=conductor, we construct the constraint directly
+        return self.check_iff({'is_primitive': True}, SQL("modulus = constraint"))
+
+    @oveall
+    def check_galois_orbit(self):
+        # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
+        return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
 
     @fast
     def check_char_degree(self, rec):
@@ -1674,12 +1675,6 @@ class char_dir_values(TableChecker):
     def check_order_match(self):
         # order should match order in char_dir_orbits for this orbit_label
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
-
-    @fast
-    def check_label_in_galois_orbit(self, rec):
-        # FIXME - need zipped records from two tables
-        # Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
-        return True
 
     @fast
     def check_character_values(self, rec):
