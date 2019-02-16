@@ -20,7 +20,7 @@ IMPORTANT:
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * Missing data:
   - embedding data for 23:41:4 dimension 790 (Drew -- this may not finish before PR)
-* Prove all analytic ranks (Drew, Maarten)
+* Prove all analytic ranks (Drew)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
