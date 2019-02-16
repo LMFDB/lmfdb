@@ -1576,7 +1576,7 @@ class PostgresTable(PostgresBase):
         if type == "NON NULL":
             return SQL("ALTER TABLE {0} ALTER COLUMN {1} SET NOT NULL").format(Identifier(table), cols)
         elif type == "UNIQUE":
-            return SQL("ALTER TABLE {0} ADD CONSTRAINT {1} UNIQUE ({2}) WITH (fillfactor=100)" % type).format(Identifier(table), Identifier(name), cols)
+            return SQL("ALTER TABLE {0} ADD CONSTRAINT {1} UNIQUE ({2}) WITH (fillfactor=100)").format(Identifier(table), Identifier(name), cols)
         elif type == "CHECK":
             return SQL("ALTER TABLE {0} ADD CONSTRAINT {1} CHECK (%s({2}))"%check_func).format(Identifier(table), Identifier(name), cols)
 
