@@ -5,10 +5,12 @@
 #       from SQL injection       #
 ##################################
 
-from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier
+from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
-from sage.all import Integer, prod, factor, floor, abs, mod, euler_phi, prime_pi, cached_function
+from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
+from sage.all import Integer, prod, floor, abs, mod, euler_phi, prime_pi, cached_function, CC, Gamma1, PolynomialRing, ZZ, ZZx, dimension_new_cusp_forms, prime_range
+from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import traceback
 
 def _any(L):
@@ -66,6 +68,14 @@ class fast(speed_decorator):
     """
 
 class overall(speed_decorator):
+    """
+    Decorate a check as being one that's run once overall for the table, rather than once for each row
+
+    This should take no input and return a bad label if there is a failure, or None otherwise.
+    """
+    pass
+
+class overall_long(speed_decorator):
     """
     Decorate a check as being one that's run once overall for the table, rather than once for each row
 
@@ -152,7 +162,7 @@ class TableChecker(object):
                 condition)
         if not isinstance(constraint, Composable):
             constraint, cvalues = self.table._parse_dict(constraint)
-            if cstr is not None:
+            if constraint is not None:
                 values = values + cvalues
         if constraint is not None:
             query = SQL("{0} AND {1}").format(query, constraint)
@@ -236,7 +246,7 @@ class TableChecker(object):
     def check_product(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '*')
 
-    def check_array_sum(self, array_column, value_colum, constraint={}):
+    def check_array_sum(self, array_column, value_column, constraint={}):
         """
         Checks that sum(array_column) == value_column
         """
@@ -352,11 +362,11 @@ class TableChecker(object):
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
-        oc = [Identifier(oc[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+        oc = [Identifier(oc_converted[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
 
-        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc_converted), Identifier(label_col)]), constraint)
+        return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
-    def check_string_startswith(self, col, head, constraint=constraint):
+    def check_string_startswith(self, col, head, constraint={}):
         return self._run_query(SQL("NOT ({0} LIKE {1})").format(Identifier(col), Literal(head + '%')), constraint)
 
     def check_sorted(self, column):
@@ -457,8 +467,8 @@ class TableChecker(object):
         """
         query = defaultdict(dict)
         for bcol, col in [('N','level'), ('k', 'weight'), ('o', 'char_order'), ('Nk2', 'Nk2'), ('D', 'dim')]:
-            for mod, code in [('min', '$gte'), ('max', '$lte')]:
-                constraint = box.get(bcol + mod)
+            for mm, code in [('min', '$gte'), ('max', '$lte')]:
+                constraint = box.get(bcol + mm)
                 if constraint is not None:
                     query[col][code] = constraint
         for col, D in extras.items():
@@ -477,14 +487,14 @@ class TableChecker(object):
         if self.label is not None:
             return self.check_string_concatentation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
 
-    self.uniqueness_constraints = []
+    uniqueness_constraints = []
 
     @overall
     def check_uniqueness_constraints(self):
         # check that the uniqueness constraints are satisfied
         return _any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
 
-    self.hecke_orbit_code = []
+    hecke_orbit_code = []
 
     @overall
     def check_hecke_orbit_code(self):
@@ -671,6 +681,10 @@ class mf_newspaces(TableChecker):
                     constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
                 for box in db.mf_boxes.search({'straces':True}))
 
+    ### mf_newforms ###
+    def check_hecke_orbit_dims_newforms(self):
+        # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
+        return self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', sort=['hecke_orbit'])
     @fast
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
@@ -783,6 +797,13 @@ class mf_gamma1(TableChecker):
         # check that num_spaces matches number of char_orbits of level N and number of records in mf_newspaces with this level and weight
         return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
                 self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
+
+    @overall
+    def check_self_dual(self):
+        query = SQL("SELECT t1.label FROM mf_newforms t1, mf_hecke_cc t2 WHERE t1.hecke_orbit_code = t2.hecke_orbit_code AND t1.is_self_dual AND 0 != all( t2.an_normalized[:][2:2] ) LIMIT 1")
+        cur = db._excute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
     ### mf_gamma1_subspaces ### 
     @overall
@@ -1006,9 +1027,8 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_proved(self):
-        # TODO
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-        pass
+        return table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True})
 
     @overall
     def check_self_twist_type(self):
@@ -1201,12 +1221,20 @@ class mf_newforms(TableChecker):
         if len(names) != len(rec['related_objects']):
             return False
         # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
-        for name, _ in names:
+        for name, url in names:
             if name.startswith('Artin representation '):
+                if rec['weight'] != 1:
+                    return False
                 artin_label = name.split()[-1]
                 conductor_string = artin_label.split('.')[1]
                 conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
-                if conductor != level:
+                if conductor != rec['level']:
+                    return False
+
+            if url.startswith('/EllipticCurve/Q/'):
+                if rec['weight'] != 2:
+                    return False
+                if rec['level'] != int(name.split()[-1].split('.')[0]):
                     return False
 
         return True
@@ -1217,12 +1245,6 @@ class mf_newforms(TableChecker):
     def check_(self, rec):
         # TODO
         # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
-        return True
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # if related_objects contains an Artin rep, check that k=1 and that conductor of artin rep matches level N
         return True
 
     #### extra slow ####
@@ -1308,7 +1330,7 @@ class mf_newforms(TableChecker):
                 Identifier("embedding_root_imag"),
                 Identifier("field_poly")
                 )
-        cur = db._execute(query, cvalues)
+        cur = db._execute(query)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
@@ -1324,10 +1346,19 @@ class mf_newforms(TableChecker):
         return True
 
     @slow
-    def check_trace(self, rec):
+    def check_an_embedding(self, rec):
         # TODO
-        # (optional) check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
-        return True
+        # When we have exact an, check that the inexact values are correct
+        pass
+
+    @overall_long
+    def check_traces(self):
+        # check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        howmany = 200
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:{0}])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:{0}], foo.traces, -0.5*(t1.weight - 1)) LIMIT 1").format(Literal(int(howmany)))
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
 class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
@@ -1530,7 +1561,7 @@ class mf_hecke_cc(TableChecker):
         if cur.rowcount > 0:
             return cur.fetchone()[0]
 
-    @overal
+    @overall
     def check_conrey_indexes(self):
         # when grouped by hecke_orbit_code, check that conrey_labels match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_label), and embedding_m ranges from 1 to dim
         # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
@@ -1548,15 +1579,21 @@ class mf_hecke_cc(TableChecker):
 
 
     @overall
-    def check_hecke_orbit_code_lfunction_label(self):
+    def check_lfunction_label_hoc(self):
         # check that lfunction_label is consistent with hecke_orbit_code
         return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('lfunction_label')))
 
     @overall
-    def check_hecke_orbit_code_lfunction_label(self):
+    def check_lfunction_label_conrey(self):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
+    @overall_long
+    def check_amn(self):
+        # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
+        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
+        query = SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs)
+        return self._run_query(query)
 
     @slow
     def check_angles(self, rec):
@@ -1577,17 +1614,10 @@ class mf_hecke_cc(TableChecker):
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
-    @overall
-    def check_amn(self):
-        # TODO
-        # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
-        pass
 
-    @slow
-    def check_an_embedding(self):
-        # TODO
-        # When we have exact an, check that the inexact values are correct
-        pass
+
+
+
 
 class char_dir_orbits(TableChecker):
     table = db.char_dir_orbits
@@ -1636,7 +1666,7 @@ class char_dir_orbits(TableChecker):
         # Since we can't use constraint on modulus=conductor, we construct the constraint directly
         return self.check_iff({'is_primitive': True}, SQL("modulus = constraint"))
 
-    @oveall
+    @overall
     def check_galois_orbit(self):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
         return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
