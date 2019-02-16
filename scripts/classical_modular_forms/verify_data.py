@@ -9,7 +9,7 @@ from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifie
 from types import MethodType
 from collections import defaultdict
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from sage.all import Integer, prod, floor, abs, mod, euler_phi, prime_pi, cached_function, CC, Gamma1, PolynomialRing, ZZ, ZZx, dimension_new_cusp_forms, prime_range
+from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, CC, Gamma1, PolynomialRing, ZZ, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 import traceback
 
@@ -443,15 +443,6 @@ class TableChecker(object):
     def check_letter_code(self, index_column, letter_code_column, constraint = {}):
         return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
-    
-
-    
-
-    def check_uniqueness_constraint(self, columns):
-        # TODO
-        # check there is a uniqueness constraint on the columns
-        pass
-
     def _check_level(self, rec):
         # check level_* attributes (radical,primes,is_prime,...)
         # 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'
@@ -492,7 +483,10 @@ class TableChecker(object):
     @overall
     def check_uniqueness_constraints(self):
         # check that the uniqueness constraints are satisfied
-        return _any(self.check_uniqueness_constraint(constraint) for constraint in self.uniqueness_constraints)
+        constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
+        for constraint in self.uniqueness_constraints:
+            if tuple(sorted(constraint)) not in constraints:
+                return ",".join(constraint)
 
     hecke_orbit_code = []
 
@@ -644,10 +638,8 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_against_char_dir_orbits(self):
-        # TODO
         # check that char_* atrributes and prim_orbit_index match data in char_dir_orbits table (conrey_indexes should match galois_orbit)
-        # mostlikely with check_crosstable
-        pass
+        return _any(self.check_crosstable('char_dir_orbits', col, ['level', 'char_orbit_label'], charcol, ['modulus', 'orbit_label']) for col, charcol in [('char_orbit_index', 'orbit_index'), ('conrey_indexes', 'galois_orbit'), ('char_order', 'order'), ('char_conductor', 'conductor'), ('char_degree', 'char_degree'), ('prim_orbit_index', 'prim_orbit_index'), ('char_parity', 'parity'), ('char_is_real', 'is_real')])
 
     @overall
     def check_hecke_orbit_dims_sorted(self):
@@ -682,9 +674,12 @@ class mf_newspaces(TableChecker):
                 for box in db.mf_boxes.search({'straces':True}))
 
     ### mf_newforms ###
+    @overall
     def check_hecke_orbit_dims_newforms(self):
         # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
-        return self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', sort=['hecke_orbit'])
+        return (self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', constraint={'num_forms':{'$exists':True}}) or
+                self.check_crosstable_sum('mf_newforms', 'dim', 'label', 'dim', 'space_label', constraint={'num_forms':{'$exists':True}})
+
     @fast
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
@@ -702,17 +697,28 @@ class mf_newspaces(TableChecker):
 
     @slow
     def check_Skchi_dim_formula(self, rec):
-        # TODO
         # for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
         # sample: dimension_new_cusp_forms(DirichletGroup(100).1^2,4)
-        return True
+        if rec['weight'] > 1:
+            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+            return dimension_new_cusp_forms(dirchar, rec['weight']) == rec['relative_dim']
+        else:
+            # no test
+            return True
 
     @slow
     def check_dims(self, rec):
-        # TODO
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
-        return True
-
+        if rec['weight'] > 1:
+            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+            k = rec['weight']
+            m = rec['char_degree']
+            return (dimension_eis(dirchar, k)*m == rec['eis_dim'] and
+                    dimension_cusp_forms(dirchar, k)*m == rec['cusp_dim'] and
+                    dimension_modular_forms(dirchar, k)*m == rec['mf_dim'])
+        else:
+            # no test
+            return True
 
 
 
@@ -839,13 +845,20 @@ class mf_gamma1(TableChecker):
         # check that dim = dim S_k^new(Gamma1(N))
         if rec['weight'] > 1:
             return rec['dim'] == dimension_new_cusp_forms(Gamma1(rec['level']), rec['weight'])
-        return True
+        else:
+            # no test
+            return True
     @slow
     def check_dims(self, rec):
-        # TODO
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
-        return True
-
+        if rec['weight'] > 1:
+            G = Gamma1(rec['level'])
+            return(dimension_eis(G, k) == rec['eis_dim'] and
+                   dimension_cusp_forms(G, k) == rec['cusp_dim'] and
+                   dimension_modular_forms(G, k) == rec['mf_dim'])
+        else:
+            # no test
+            return True
 
 class mf_newspace_portraits(TableChecker):
     table = db.mf_newspace_portraits
@@ -883,12 +896,6 @@ class SubspacesChecker(TableChecker):
     def check_level_divides(self):
         # check that sub_level divides level
         return self.check_divisible('level', 'sub_level')
-
-    @overall
-    def check_decomposition_dimension(self):
-        # TODO
-        # check that summing sub_dim * sub_mult over rows with a given label gives S_k(N,chi) or S_k(Gamma1(N)) (old+new), for k=1 use cusp_dim in mf_newspaces/mf_gamma1 to do this check
-        pass
 
 class mf_subspaces(SubspacesChecker):
     table = db.mf_subspaces
@@ -1193,9 +1200,15 @@ class mf_newforms(TableChecker):
 
 
     @slow
-    def check_(self, rec):
-        # TODO
+    def check_inert_primes(self, rec):
         # for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
+        N = rec['level']
+        traces = [0] + rec['traces'] # shift so indexing correct
+        primes = [p for p in prime_range(len(traces)) if N % p != 0]
+        for D in rec['self_twist_discs']:
+            for p in primes:
+                if kronecker_symbol(D, p) == -1 and traces[p] != 0:
+                    return False
         return True
 
     ZZx = PolynomialRing(ZZ, 'x')
@@ -1232,49 +1245,55 @@ class mf_newforms(TableChecker):
                 if conductor != rec['level']:
                     return False
 
+        # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
             if url.startswith('/EllipticCurve/Q/'):
                 if rec['weight'] != 2:
                     return False
                 if rec['level'] != int(name.split()[-1].split('.')[0]):
                     return False
-
-        return True
-
-
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # if k=2, char_orbit_index=1 and dim=1 check that elliptic curve isogeny class of conductor N is present in related_objects
+        if (rec['weight'] == 2 and rec['char_orbit_index'] == 1 and rec['dim'] == 1 and
+            not any(url.startswith('/EllipticCurve/Q/') for name, url in names)):
+            return False
         return True
 
     #### extra slow ####
 
     @slow
-    def check_(self, rec):
-        # TODO
+    def check_self_dual(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
+        f = rec.get('field_poly')
+        if rec.get('nf_label') is None and f is not None:
+            f = ZZx(f)
+            K = NumberField(f, 'a')
+            return (rec.get('is_self_dual') == K.is_totally_real())
         return True
 
     @slow
-    def check_(self, rec):
+    def check_self_dual_by_embeddings(self, rec):
         # TODO
         # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
         return True
 
     @slow
-    def check_(self, rec):
-        # TODO
-        # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image) small group id
-        pass
-        return True
-
-    #### newspace ####
-
-    @slow
-    def check_(self, rec):
-        # TODO
-        # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
+    def check_artin_image(self, rec):
+        # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
+        aimage = rec.get('artin_image')
+        pimage = rec.get('projective_image')
+        if aimage is not None:
+            aid = map(ZZ, aimage.split('.'))
+            if aid[0] != rec['artin_degree']:
+                return False
+            if pimage == 'A4':
+                pid = [12,3]
+            elif pimage == 'S4':
+                pid = [24,12]
+            elif pimage == 'A5':
+                pid = [60,5]
+            else:
+                pid = gap.DihedralGroup(2*ZZ(pimage[1:])).IdGroup().sage()
+            qid = gap.SmallGroup(*aid).CommutatorFactorGroup().IdGroup().sage()
+            if pid != qid:
+                return False
         return True
 
     #### char_dir_orbits ####
@@ -1692,7 +1711,8 @@ class char_dir_orbits(TableChecker):
 
 class char_dir_values(TableChecker):
     table = db.char_dir_values
-    uniqueness_constraints = [['label']]
+    label = ['modulus', 'conrey_index']
+    uniqueness_constraints = [['label'], label]
 
     @overall
     def check_total_count(self):
