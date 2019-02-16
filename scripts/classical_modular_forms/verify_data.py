@@ -1027,8 +1027,9 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_proved(self):
+        # FIXME
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-        return table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True})
+        return self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}})
 
     @overall
     def check_self_twist_type(self):
