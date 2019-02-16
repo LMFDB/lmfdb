@@ -148,9 +148,11 @@ def IdentifierWrapper(name, convert = True):
         # assert that the knife is of the shape [*]
         if knife[0] != '[' or knife[-1] != ']':
             raise ValueError("%s is not in the proper format" % knife)
-
+        chunks = knife[1:-1].split('][')
+        # Prevent SQL injection
+        if not all(all(x.isdigit() for x in chunk.split(':')) for chunk in chunks):
+            raise ValueError("% is must be numeric, brackets and colons"%knife)
         if convert:
-            chunks = knife[1:-1].split('][')
             for i, s in enumerate(chunks):
                 # each cut is of the format a:b:c
                 # where a, b, c are either integers or empty strings
@@ -495,9 +497,9 @@ class PostgresTable(PostgresBase):
         search_cols = []
         extra_cols = []
         if projection == 0:
-            if "label" not in self._search_cols:
-                raise RuntimeError("label not column of %s"%(self.search_table))
-            return (u"label",), (), 0
+            if self._label_col is None:
+                raise RuntimeError("No label column for %s"%(self.search_table))
+            return (self._label_col,), (), 0
         elif not projection:
             raise ValueError("You must specify at least one key.")
         if projection == 1:
@@ -1303,7 +1305,7 @@ class PostgresTable(PostgresBase):
         for line in cur:
             print line[0]
 
-    def list_indexes(self, verbose = False):
+    def list_indexes(self, verbose=False):
         """
         Lists the indexes on the search table.
         """
@@ -1311,11 +1313,12 @@ class PostgresTable(PostgresBase):
         cur = self._execute(selecter, [self.search_table], silent=True)
         output = {}
         for name, typ, columns, modifiers in cur:
-            output[name] = {"type" : typ, "columns": columns, "modifiers" : modifiers}
+            output[name] = {"type": typ, "columns": columns, "modifiers": modifiers}
             if verbose:
                 colspec = [" ".join([col] + mods) for col, mods in zip(columns, modifiers)]
                 print "{0} ({1}): {2}".format(name, typ, ", ".join(colspec))
-        return output
+        if not verbose:
+            return output
 
     @staticmethod
     def _create_index_statement(name, table, type, columns, modifiers, storage_params):
@@ -1465,31 +1468,44 @@ class PostgresTable(PostgresBase):
 
     def drop_indexes(self, columns=[], suffix="", commit=True):
         """
-        Drop all indexes, or indexes that refer to any of a list of columns.
+        Drop all indexes and constraints.
+
+        If ``columns`` provided, will instead only drop indexes and constraints
+        that refer to any of those columns.
 
         INPUT:
 
         - ``columns`` -- a list of column names.  If any are included,
             then only indexes referencing those columns will be included.
-        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the DROP INDEX statement.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended
+            to the names in the drop statements.
         """
         with DelayCommit(self, commit):
             for res in self._indexes_touching(columns):
                 self.drop_index(res[0], suffix)
+            for res in self._constraints_touching(columns):
+                self.drop_index(res[0], suffix)
 
     def restore_indexes(self, columns=[], suffix=""):
         """
-        Restore all indexes using the meta_indexes table, or indexes that refer to any of a list of columns.
+        Restore all indexes and constraints using the meta_indexes
+        and meta_constraints tables.
+
+        If ``columns`` provided, will instead only restore indexes and constraints
+        that refer to any of those columns.
 
         INPUT:
 
         - ``columns`` -- a list of column names.  If any are included,
-            then only indexes referencing those columns will be included.
-        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the CREATE INDEX statement.
+            then only indexes/constraints referencing those columns will be included.
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended
+            to the names in the creation statements.
         """
         with DelayCommit(self):
             for res in self._indexes_touching(columns):
                 self.restore_index(res[0], suffix)
+            for res in self._constraints_touching(columns):
+                self.restore_constraint(res[0], suffix)
 
     def _pkey_common(self, command, suffix, action, commit):
         """
@@ -1534,8 +1550,175 @@ class PostgresTable(PostgresBase):
         command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
         self._pkey_common(command, suffix, "Built", True)
 
+    def list_constraints(self, verbose=False):
+        """
+        Lists the constraints on the search table.
+        """
+        selecter = SQL("SELECT constraint_name, type, columns, check_func FROM meta_constraints WHERE table_name = %s")
+        cur = self._execute(selecter, [self.search_table], silent=True)
+        output = {}
+        for name, typ, columns, check_func in cur:
+            output[name] = {"type": typ, "columns": columns, "check_func": check_func}
+            if verbose:
+                show = name if check_func is None else "{0} {1}".format(name, check_func)
+                print "{0} ({1}): {2}".format(show, typ, ", ".join(columns))
+        if not verbose:
+            return output
+
+    @staticmethod
+    def _create_constraint_statement(name, table, type, columns, check_func):
+        """
+        Utility function for making the create constraint SQL statement.
+        """
+        # We whitelisted the type and check function so the following is safe
+        cols = SQL(", ").join(Identifier(col) for col in columns)
+        # from SQL injection
+        if type == "NON NULL":
+            return SQL("ALTER TABLE {0} ALTER COLUMN {1} SET NOT NULL").format(Identifier(table), cols)
+        elif type == "UNIQUE":
+            return SQL("ALTER TABLE {0} ADD CONSTRAINT {1} UNIQUE ({2}) WITH (fillfactor=100)" % type).format(Identifier(table), Identifier(name), cols)
+        elif type == "CHECK":
+            return SQL("ALTER TABLE {0} ADD CONSTRAINT {1} CHECK (%s({2}))"%check_func).format(Identifier(table), Identifier(name), cols)
+
+    @staticmethod
+    def _drop_constraint_statement(name, table, type, columns):
+        """
+        Utility function for making the drop constraint SQL statement.
+        """
+        if type == "NON NULL":
+            return SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP NOT NULL").format(Identifier(table), Identifier(columns[0]))
+        else:
+            return SQL("ALTER TABLE {0} DROP CONSTRAINT {1}").format(Identifier(table), Identifier(name))
+
+    _valid_constraint_types = ["UNIQUE", "CHECK", "NOT NULL"]
+    _valid_check_functions = [] # defined in utils.psql
+    def create_constraint(self, columns, type, name=None, check_func=None):
+        """
+        Create a constraint.
+
+        This function will also add the constraint data to the meta_constraints table
+        so that constraints can be dropped and recreated when uploading data.
+
+        INPUT:
+
+        - ``columns`` -- a list of column names
+        - ``type`` -- we currently support "unique", "check", "not null"
+        - ``name`` -- the name of the constraint; generated if not provided
+        - ``check_func``-- a string, giving the name of a function
+            that can take the columns as input and return a boolean output.
+            It must be in the _valid_check_functions list above, in order
+            to prevent SQL injection attacks
+        """
+        now = time.time()
+        type = type.upper()
+        if isinstance(columns, basestring):
+            columns = [columns]
+        if type not in self._valid_constraint_types:
+            raise ValueError("Unrecognized constraint type")
+        if check_func is not None and check_func not in self._valid_check_functions:
+            # If the following line fails, add the desired function to the list defined above
+            raise ValueError("%s not in list of approved check functions (edit db_backend to add)")
+        if (check_func is None) == (type == 'CHECK'):
+            raise ValueError("check_func should specified just for CHECK constraints")
+        if type == 'NON NULL' and len(columns) != 1:
+            raise ValueError("NON NULL only supports one column")
+        search = None
+        for col in columns:
+            if col == "id":
+                continue
+            if col in self._search_cols:
+                if search is False:
+                    raise ValueError("Cannot mix search and extra columns")
+                search = True
+            elif col in self._extra_cols:
+                if search is True:
+                    raise ValueError("Cannot mix search and extra columns")
+                search = False
+            else:
+                raise ValueError("%s not a column"%(col))
+        if search is None:
+            raise ValueError("Must specify non-id columns")
+        if name is None:
+            # Postgres has a maximum name length of 64 bytes
+            # It will truncate if longer, but that causes suffixes of _tmp to be indistinguishable.
+            if len(columns) <= 2:
+                name = "_".join([self.search_table] + ["c"] + columns)
+            elif len(columns) <= 8:
+                name = "_".join([self.search_table] + ["c"] + [col[:2] for col in columns])
+            else:
+                name = "_".join([self.search_table] + ["c"] + ["".join(col[0] for col in columns)])
+        with DelayCommit(self, silence=True):
+            selecter = SQL("SELECT 1 FROM meta_constraints WHERE constraint_name = %s AND table_name = %s")
+            cur = self._execute(selecter, [name, self.search_table])
+            if cur.rowcount > 0:
+                raise ValueError("Constraint with that name already exists; try specifying a different name")
+            table = self.search_table if search else self.extra_table
+            creator = self._create_constraint_statement(name, table, type, columns, check_func)
+            self._execute(creator)
+            inserter = SQL("INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s)")
+            self._execute(inserter, [name, self.search_table, type, Json(columns), check_func])
+        print "Constraint %s created in %.3f secs"%(name, time.time() - now)
+
+    def _get_constraint_data(self, name, suffix):
+        selecter = SQL("SELECT type, columns, check_func FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")
+        cur = self._execute(selecter, [self.search_table, name])
+        if cur.rowcount > 1:
+            raise RuntimeError("Duplicated rows in meta_constraints")
+        elif cur.rowcount == 0:
+            raise ValueError("Constraint %s does not exist in meta_constraints"%(name,))
+        type, columns, check_func = cur.fetchone()
+        search = (columns[0] in self._search_cols)
+        table = self.search_table + suffix if search else self.extra_table + suffix
+        return type, columns, check_func, table
+
+    def drop_constraint(self, name, suffix="", permanent=False, commit=True):
+        """
+        Drop a specified constraint.
+
+        INPUT:
+
+        - ``name`` -- the name of the constraint
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the statement.
+        - ``permanent`` -- whether to remove the index from the meta_constraint table
+        """
+        now = time.time()
+        with DelayCommit(self, commit, silence=True):
+            type, column, check_func, table = self._get_constraint_data(name, suffix)
+            dropper = self._drop_constraint_statement(name + suffix, table, type, columns)
+            if permanent:
+                deleter = SQL("DELETE FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")
+                self._execute(deleter, [self.search_table, name])
+            self._execute(dropper)
+        print "Dropped constraint %s in %.3f secs"%(name, time.time() - now)
+
+    def restore_constraint(self, name, suffix=""):
+        """
+        Restore a specified constraint using the meta_constraints table.
+
+        INPUT:
+
+        - ``name`` -- the name of the constraint
+        - ``suffix`` -- a string such as "_tmp" or "_old1" to be appended to the names in the ALTER TABLE statement.
+        """
+        now = time.time()
+        with DelayCommit(self, silence=True):
+            type, column, check_func, table = self._get_constraint_data(name, suffix)
+            creator = self._create_constraint_statement(name, table, type, columns, check_func)
+            self._execute(creator)
+        print "Created constraint %s in %.3f secs"%(name, time.time() - now)
+
+    def _constraints_touching(self, columns):
+        """
+        Utility function for determining which constraints reference any of the given columns.
+        """
+        selecter = SQL("SELECT constraint_name FROM meta_constraints WHERE table_name = %s")
+        if columns:
+            selecter = SQL("{0} AND ({1})").format(selecter, SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
+            columns = [Json(col) for col in columns]
+        return self._execute(selecter, [self.search_table] + columns, silent=True)
+
     ##################################################################
-    # Exporting, reloading and reverting indexes                     #
+    # Exporting, reloading and reverting indexes and constraints     #
     ##################################################################
 
     def copy_to_indexes(self, filename):
@@ -1546,6 +1729,14 @@ class PostgresTable(PostgresBase):
             self._copy_to_select(select, filename)
         print "Exported meta_indexes for %s in %.3f secs" % (self.search_table, time.time() - now)
 
+    def copy_to_constraints(self, filename):
+        cols = "(constraint_name, table_name, type, columns, check_func)"
+        select = "SELECT %s FROM meta_constraints WHERE table_name = '%s'" % (cols, self.search_table,)
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported meta_constraints for %s in %.3f secs" % (self.search_table, time.time() - now)
+
     def _get_current_index_version(self):
         cur = self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = %s"), [self.search_table])
         if cur.rowcount == 0:
@@ -1553,6 +1744,12 @@ class PostgresTable(PostgresBase):
         else:
             return cur.fetchone()[0]
 
+    def _get_current_constraint_version(self):
+        cur = self._execute(SQL("SELECT max(version) FROM meta_constraints_hist WHERE table_name = %s"), [self.search_table])
+        if cur.rowcount == 0:
+            return -1
+        else:
+            return cur.fetchone()[0]
 
     def reload_indexes(self, filename):
         # check that the rows have the right table name
@@ -1585,6 +1782,37 @@ class PostgresTable(PostgresBase):
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
+    def reload_constraints(self, filename):
+        # check that the rows have the right table name
+        with open(filename, "r") as F:
+            import csv
+            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            if len(lines) == 0:
+                return
+            for line in lines:
+                if line[1] != self.search_table:
+                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
+
+        with DelayCommit(self, silence=True):
+            # delete the current columns
+            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
+
+            # insert new columns
+            with open(filename, "r") as F:
+                try:
+                    cur = self.conn.cursor()
+                    cur.copy_from(F, "meta_constraints", columns = ["constraint_name", "table_name", "type", "columns", "check_func"])
+                except Exception:
+                    self.conn.rollback()
+                    raise
+
+            version = self._get_current_constraint_version() + 1
+
+            # copy the new rows to history
+            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints WHERE table_name = '%s'"), [self.search_table])
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
+
     def revert_indexes(self, version = None):
         with DelayCommit(self, silence=True):
             # by the default goes back one step
@@ -1602,6 +1830,24 @@ class PostgresTable(PostgresBase):
             for row in rows:
                 self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
+
+    def revert_constraints(self, version = None):
+        with DelayCommit(self, silence=True):
+            # by the default goes back one step
+            currentversion = self._get_current_constraint_version()
+            if currentversion == -1:
+                raise RuntimeError("No history to revert")
+            if version is None:
+                version = max(0, currentversion - 1)
+
+            # delete current rows
+            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
+
+            # copy data from history
+            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s, %s)"), row)
+                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s)"), row + (currentversion + 1,))
 
     ##################################################################
     # Exporting, reloading and reverting meta_table                  #
@@ -2229,11 +2475,12 @@ class PostgresTable(PostgresBase):
         - ``tables`` -- a list of table names to reload (including suffixes like
             ``_extra`` or ``_counts`` but not ``_tmp``).
         - ``indexes`` -- a list of index names to reload, without suffixes.
+        - ``constraints`` -- a list of constraint names to reload, without suffixes.
         - ``source`` -- the source suffix for the swap.
         - ``target`` -- the target suffix for the swap.
         """
         rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
-        rename_pkey = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+        rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
         rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
         with DelayCommit(self, silence=True):
             for table in tables:
@@ -2243,14 +2490,22 @@ class PostgresTable(PostgresBase):
                 pkey_old = table + source + "_pkey"
                 pkey_new = table + target + "_pkey"
                 if self._constraint_exists(tablename_new, pkey_old):
-                    self._execute(rename_pkey.format(Identifier(tablename_new),
-                                                     Identifier(pkey_old),
-                                                     Identifier(pkey_new)))
+                    self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                           Identifier(pkey_old),
+                                                           Identifier(pkey_new)))
             for index in indexes:
                 if self._table_exists(index + source):
-                    self._execute(rename_index.format(Identifier(index + source), Identifier(index + target)))
+                    self._execute(rename_index.format(Identifier(index + source),
+                                                      Identifier(index + target)))
                 else:
                     print "Warning: index %s does not exist"%(index + source)
+            for constraint in constraints:
+                if self._table_exists(constraint + source):
+                    self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                           Identifier(constraint + source),
+                                                           Identifier(constraint + target)))
+                else:
+                    print "Warning: constraint %s does not exist"%(constraint + source)
 
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
@@ -2260,16 +2515,16 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``tables`` -- a list of tables to rename (e.g. self.search_table, self.extra_table, self.stats.counts, self.stats.stats)
-        - ``indexed`` -- boolean, whether the temporary table has indexes on it.
+        - ``indexed`` -- boolean, whether the temporary table has indexes and constraints on it.
         """
         now = time.time()
         backup_number = self._next_backup_number()
         with DelayCommit(self, commit, silence=True):
-            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
-            cur = self._execute(selecter, [self.search_table])
-            indexes = [res[0] for res in cur]
-            self._swap(tables, indexes, '', '_old' + str(backup_number))
-            self._swap(tables, indexes if indexed else [], '_tmp', '')
+            indexes = self.list_indexes().keys()
+            constraints = self.list_constraints().keys()
+            self._swap(tables, indexes, constraints, '', '_old' + str(backup_number))
+            self._swap(tables, indexes if indexed else [],
+                       constraints if indexed else [],'_tmp', '')
             for table in tables:
                 self._db.grant_select(table)
                 if table.endswith("_counts") or table.endswith("_stats"):
@@ -2289,7 +2544,7 @@ class PostgresTable(PostgresBase):
         if "columns" in kwds:
             raise ValueError("Cannot specify column order using the columns parameter")
 
-    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile = None, metafile = None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, log_change=True, **kwds):
+    def reload(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, resort=None, reindex=True, restat=None, final_swap=True, silence_meta=False, adjust_schema=False, commit=True, log_change=True, **kwds):
         """
         Safely and efficiently replaces this table with the contents of one or more files.
 
@@ -2303,6 +2558,8 @@ class PostgresTable(PostgresBase):
         - ``statsfile`` -- a string (optional), giving a file containing stats
             information for the table.
         - ``indexesfile`` -- a string (optional), giving a file containing index
+            information for the table.
+        - ``constraintsfile`` -- a string (optional), giving a file containing constraint
             information for the table.
         - ``metafile`` -- a string (optional), giving a file containing the meta
             information for the table.
@@ -2377,7 +2634,10 @@ class PostgresTable(PostgresBase):
             if indexesfile is not None:
                 # we do the swap at the end
                 self.reload_indexes(indexesfile)
+            if constraintsfile is not None:
+                self.reload_constraints(constraintsfile)
             if reindex:
+                # Also restores constraints
                 self.restore_indexes(suffix=suffix)
             if restat:
                 # create tables before restating
@@ -2408,7 +2668,7 @@ class PostgresTable(PostgresBase):
 
         - ``tables`` -- list of strings (optional), of the tables to renamed. If None is provided, renames all the tables ending in `_tmp`
         - ``metafile`` -- a string (optional), giving a file containing the meta information for the table.
-        - ``reindex`` -- whether to drop the indexes before importing data and rebuild them afterward.
+        - ``reindex`` -- whether to drop the indexes and constraints before importing data and rebuild them afterward.
             If the number of rows is a substantial fraction of the size of the table, this will be faster.
         """
         with DelayCommit(self, commit, silence=True):
@@ -2437,7 +2697,7 @@ class PostgresTable(PostgresBase):
                     self._execute(SQL("DROP TABLE {0}").format(Identifier(tablename)))
                     print "Dropped {0}".format(tablename)
 
-    def reload_revert(self, backup_number = None, commit = True):
+    def reload_revert(self, backup_number=None, commit=True):
         """
         Use this method to revert to an older version of a table.
 
@@ -2460,18 +2720,17 @@ class PostgresTable(PostgresBase):
         elif not self._table_exists("%s_old%s"%(self.search_table, backup_number)):
             raise ValueError("Backup %s does not exist"%backup_number)
         with DelayCommit(self, commit, silence=True):
-            selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s")
-            cur = self._execute(selecter, [self.search_table])
-            indexes = [res[0] for res in cur]
+            indexes = self.list_indexes().keys()
+            constraints = self.list_constraints().keys()
             old = '_old' + str(backup_number)
             tables = []
             for suffix in ['', '_extras', '_stats', '_counts']:
                 tablename = "{0}{1}".format(self.search_table, suffix)
                 if self._table_exists(tablename + old):
                     tables.append(tablename)
-            self._swap(tables, indexes, '', '_tmp')
-            self._swap(tables, indexes, old, '')
-            self._swap(tables, indexes, '_tmp', old)
+            self._swap(tables, indexes, constraints, '', '_tmp')
+            self._swap(tables, indexes, constraints, old, '')
+            self._swap(tables, indexes, constraints, '_tmp', old)
             self.log_db_change("reload_revert")
         print "Swapped backup %s with %s"%(self.search_table, "{0}_old{1}".format(self.search_table, backup_number))
 
@@ -2575,7 +2834,7 @@ class PostgresTable(PostgresBase):
                 self.stats.refresh_stats(total=False)
             self.log_db_change("copy_from", nrows=search_count)
 
-    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, metafile=None, commit=True, **kwds):
+    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -2590,6 +2849,7 @@ class PostgresTable(PostgresBase):
         - ``countsfile`` -- a string (optional), the filename to write the data into for the counts table.
         - ``statsfile`` -- a string (optional), the filename to write the data into for the stats table.
         - ``indexesfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_indexes table.
+        - ``constraintsfile`` -- a string (optional), the filename to write the data into for the corresponding rows of the meta_constraints table.
         - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
@@ -2602,6 +2862,7 @@ class PostgresTable(PostgresBase):
                      (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
                                          "constraint_values", "threshold"], False, statsfile)]
         metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
+                    ("meta_constraints", "table_name", "constraint_name, table_name, type, columns, check_func", constraintsfile),
                     ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col, total", metafile)
                     ]
         with DelayCommit(self, commit):
@@ -2693,8 +2954,9 @@ class PostgresTable(PostgresBase):
                 counts_table = table + "_counts"
                 stats_table = table + "_stats"
                 jname = Json(name)
-                deleter = SQL("DELETE FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                self._execute(deleter, [table, jname])
+                deleter = SQL("DELETE FROM {0} WHERE table_name = %s AND columns @> %s")
+                self._execute(deleter.format(Identifier("meta_indexes")), [table, jname])
+                self._execute(deleter.format(Identifier("meta_constraints")), [table, jname])
                 deleter = SQL("DELETE FROM {0} WHERE cols @> %s").format(Identifier(counts_table))
                 self._execute(deleter, [jname])
                 deleter = SQL("DELETE FROM {0} WHERE cols @> %s OR constraint_cols @> %s").format(Identifier(stats_table))
@@ -2736,15 +2998,20 @@ class PostgresTable(PostgresBase):
                 self._execute(updater, [True])
             self.extra_table = self.search_table + "_extras"
             vars = [('id', 'bigint')]
+            cur = self._indexes_touching(columns)
+            if cur.rowcount > 0:
+                raise ValueError("Indexes (%s) depend on extra columns"%(", ".join(rec[0] for rec in cur)))
+            if columns:
+                selecter = SQL("SELECT columns, constraint_name FROM meta_constraints WHERE table_name = %s AND ({0})").format(SQL(" OR ").join(SQL("columns @> %s") * len(columns)))
+                cur = self._execute(selecter, [self.search_table] + [Json(col) for col in columns], silent=True)
+                for rec in cur:
+                    if not all(col in columns for col in rec[0]):
+                        raise ValueError("Constraint %s (columns %s) split between search and extra table"%(rec[1], ", ".join(rec[0])))
             for col in columns:
                 if col not in self.col_type:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
                 if col in self._sort_keys:
                     raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
-                selecter = SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s AND columns @> %s")
-                cur = self._execute(selecter, [self.search_table, Json(col)])
-                if cur.rowcount > 0:
-                    raise ValueError("Indexes (%s) depend on %s"%(", ".join(rec[0] for rec in cur), col))
                 typ = self.col_type[col]
                 if typ not in types_whitelist:
                     if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
@@ -2755,6 +3022,7 @@ class PostgresTable(PostgresBase):
             creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(self.extra_table), vars)
             self._execute(creator)
             if columns:
+                self.drop_constraints(columns)
                 try:
                     try:
                         transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
@@ -2768,6 +3036,7 @@ class PostgresTable(PostgresBase):
                 except Exception:
                     self.conn.rollback()
                     raise
+                self.restore_constraints(columns)
                 for col in columns:
                     modifier = SQL("ALTER TABLE {0} DROP COLUMN {1}").format(Identifier(self.search_table), Identifier(col))
                     self._execute(modifier)
@@ -3571,27 +3840,35 @@ class JoinedTable(PostgresBase):
     - ``joins`` -- a list of pairs of strings of the form 'tablename.colname' giving the join conditions
     - ``extras`` -- a list of PostgresTables whose extra tables will be joined in addition to their search tables
     - ``join_type`` -- 'inner', 'outer', 'left', 'right' (we do not support cross joins)
-    - ``distinguished_table`` -- (optional) one of the tables to be distinguished: columns with no table specified will default to this table, and result keys from this table will not include tablename.
+    - ``distinguished`` -- whether the first table is distinguished: columns with no table specified will default to this table, and result keys from this table will not include tablename.  Otherwise, all table names must be specified.
     """
-    def __init__(self, tables, joins, extras=None, join_type='inner', distinguished_table=None):
+    def __init__(self, tables, joins, extras=None, join_type='inner', distinguished=False):
         if len(tables) < 2:
             raise ValueError("Joins should only be used for multiple tables")
         if join_type not in ['inner', 'outer', 'left', 'right']:
             raise ValueError("Invalid join type %s" % join_type)
         db = tables[0]._db
-        PostgresBase.__init__(tables[0].search_table, db)
-        self.distinguished_table = dt = distinguished_table.search_table
-        self.tables = tables
+        ft = tables[0].search_table
+        PostgresBase.__init__(ft, db)
+        # Handle dt = None
+        self.distinguished = distinguished
+        self.tables = {T.search_table: T for T in tables}
+        self.extras = {E.search_table: E for E in extras} # search_table for use in _qualify
         self.join_type = join_type
         self.tablenames = [T.search_table for T in tables]
+        if tables[0]._label_col is None:
+            self._label_col = None
+        else:
+            self._label_col = ft + '.' + tables[0]._label_col
+        self._search_cols = tuple(sum(([T.search_table + '.' + cname for cname in T._search_cols] for T in tables), []))
         self.joins = {}
         def fill_dt(s):
             # Need to fix to use _extra when appropriate
             cnt = s.count('.')
             if cnt == 0:
-                if s not in distinguished_table.col_type:
-                    raise ValueError("%s not a column of %s"%(s, dt))
-                return dt + '.' + s
+                if s not in tables[0].col_type:
+                    raise ValueError("%s not a column of %s"%(s, ft))
+                return ft + '.' + s
             if cnt == 1:
                 tname, cname = s.split('.')
                 tbl = db[tname]
@@ -3603,7 +3880,154 @@ class JoinedTable(PostgresBase):
         for E in extras:
             if E.extra_table is None:
                 raise ValueError("%s has no extra table" % E.search_table)
+            if E not in tables:
+                raise ValueError("extra tables should also be included in tables")
             self.tablenames.append(E.extra_table)
+        self._all_cols = self._search_cols + tuple(sum(([E.extra_table + '.' + cname for cname in E._extra_cols] for E in extras), []))
+        self._user_cols = [self._user_show(col) for col in self._all_cols]
+
+    def _user_show(self, col):
+        """
+        INPUT:
+
+        - ``col`` -- a string, qualified with a table name
+
+        OUTPUT:
+
+        The string with _extra removed, and the name of the first table as well
+        if self.distinguished is set.
+        """
+        col = col.replace("_extra.", ".")
+        if self.distinguished:
+            col = col.replace(self.tablenames[0] + ".", "")
+        return col
+
+    def _qualify(self, col):
+        """
+        INPUT:
+
+        - ``col`` -- a string, as input by the user (without _extra)
+
+        OUTPUT:
+
+        The column, qualified by the appropriate table name
+        """
+        if '.' in col:
+            tname, cname = col.split('.', 1)
+            if tname not in self.tables:
+                # Could be a qualified column in the first table
+                first_table = self.tables[self.tablenames[0]]
+                if distinguished:
+                    cname = col
+                    tname = self.tablenames[0]
+                else:
+                    raise ValueError("%s not a valid table name"%tname)
+        elif self.distinguished:
+            cname = col
+            tname = self.tablenames[0]
+        else:
+            raise ValueError("Table name not specified")
+        if '.' in cname:
+            i = cname.index('.')
+        elif '[' in cname:
+            i = cname.index('[')
+        else:
+            i = len(cname)
+        cname, path = cname[:i], cname[i:]
+        if cname in self.tables[tname]._search_cols:
+            return tname + "." + cname + path
+        elif tname in self.extras and cname in self.extras[tname]._extra_cols:
+            return tname + "_extra." + cname + path
+        else:
+            raise ValueError("%s not a column of %s"%(cname, tname))
+
+    def _identifier(self, col):
+        """
+        INPUT:
+
+        - ``col`` -- a qualified column name
+
+        OUTPUT:
+
+        An SQL Composable object for use in db._execute
+        """
+        tname, cname = col.split('.')
+        return SQL("{0}.{1}").format(Identifier(tname), IdentifierWrapper(cname))
+
+    def _parse_projection(self, projection):
+        """
+        INPUT:
+
+        - ``projection`` -- either 0, 1, 2, a dictionary or list of column names,
+            as for _parse_projection on PostgresTable
+
+        OUTPUT:
+
+        - a tuple of columns to be selected for the user, qualified with their tablename
+        """
+        cols = []
+        if projection == 0:
+            if self._label_col is None:
+                raise RuntimeError("No label column for %s"%self.tablenames[0])
+            return (self._label_col,)
+        elif not projection:
+            raise ValueError("You must specify at least one key.")
+        if projection == 1:
+            return self._search_cols
+        elif projection == 2:
+            return self._all_cols
+        elif isinstance(projection, dict):
+            projvals = set(bool(val) for val in projection.values())
+            if len(projvals) > 1:
+                raise ValueError("You cannot both include and exclude.")
+            including = projvals.pop()
+            for col in self._all_cols:
+                user_col = self._user_show(col)
+                if (user_col in projection) == including:
+                    cols.append(col)
+                projection.pop(user_col, None)
+            if projection: # there were extra columns requested
+                raise ValueError("%s not column of joined table"%(", ".join(projection)))
+        else: # iterable or basestring
+            if isinstance(projection, basestring):
+                projection = [projection]
+            for col in projection:
+                colname = col.split('[',1)[0]
+                array_part = col[len(colname):]
+                if colname in self._user_cols:
+                    qualified_name = self._qualify(colname)
+                    cols.append(qualified_name + array_part)
+                else:
+                    raise ValueError("%s not column of joined table"%col)
+        return tuple(cols)
+
+    def _build_query(self, query, limit=None, offset=0, sort=None):
+        pass
+
+    def _search_iterator(self, cur, cols, projection):
+        """
+        Returns an iterator over the results in a cursor.
+
+        INPUT:
+
+        - ``cur`` -- a psycopg2 cursor
+        - ``cols`` -- a tuple of column names (qualified with their corresponding table names)
+        - ``projection`` -- the projection requested.
+
+        OUTPUT:
+
+        If projection is 0 or a string, an iterator that yields the label/column values of the query results
+        """
+        for rec in cur:
+            if projection == 0 or isinstance(projection, basestring):
+                yield rec[0]
+            else:
+                yield {k:v for k,v in zip(cols, rec)}
+
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, silent=False):
+        cols = self._parse_projection(projection)
+        vars = SQL(", ").join(self._identifier(col) for col in cols)
+        
 
 class PostgresDatabase(PostgresBase):
     """
@@ -3896,12 +4320,27 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_indexes_hist created")
 
+    def _create_meta_constraints_hist(self):
+        with DelayCommit(self, silence=True):
+            self._execute(SQL("CREATE TABLE meta_constraints_hist (index_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"))
+            version = 0
+
+            # copy data from meta_constraints
+            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, check_func FROM meta_constraints"))
+
+            for row in rows:
+                self._execute(SQL("INSERT INTO meta_constraints_hist (index_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
+
+            self.grant_select('meta_constraints_hist')
+
+        print("Table meta_constraints_hist created")
+
     def _create_meta_tables_hist(self):
         with DelayCommit(self, silence=True):
             self._execute(SQL("CREATE TABLE meta_tables_hist (name text, sort jsonb, count_cutoff smallint DEFAULT 1000, id_ordered boolean, out_of_order boolean, has_extras boolean, stats_valid boolean DEFAULT true, label_col text, total bigint, version integer)"))
             version = 0
 
-            # copy data from meta_indexes
+            # copy data from meta_tables
             rows = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables "))
 
             for row in rows:
@@ -4056,6 +4495,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if indexes:
                 self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
                 print "Deleted indexes {0}".format(", ".join(index[0] for index in indexes))
+            constraints = list(self._execute(SQL("SELECT constraint_name FROM meta_constraints WHERE table_name = %s"), [name]))
+            if constraints:
+                self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = %s"), [name])
+                print "Deleted constraints {0}".format(", ".join(constraint[0] for constraint in constraints))
             self._execute(SQL("DELETE FROM meta_tables WHERE name = %s"), [name])
             if table.extra_table is not None:
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(table.extra_table)))
@@ -4070,11 +4513,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         assert new_name not in self.tablenames
         with DelayCommit(self, commit, silence=True):
             table = self[old_name]
-            # first rename indexes
-            cols = map(Identifier, ['index_name', 'table_name'])
+            # first rename indexes and constraints
+            icols = map(Identifier, ['index_name', 'table_name'])
+            ccols = map(Identifier, ['constraint_name', 'table_name'])
             rename_index = SQL("ALTER INDEX IF EXISTS {0} RENAME TO {1}")
-            for meta in ['meta_indexes','meta_indexes_hist']:
-                indexes = list(self._execute(SQL("SELECT index_name FROM {0} WHERE table_name = %s").format(Identifier(meta), ), [old_name]))
+            rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+            for meta, mname, cols in [
+                    ('meta_indexes', 'index_name', icols),
+                    ('meta_indexes_hist', 'index_name', icols),
+                    ('meta_constraints', 'constraint_name', ccols),
+                    ('meta_constraints_hist', 'constraint_name', ccols)]:
+                indexes = list(self._execute(SQL("SELECT {0} FROM {1} WHERE table_name = %s").format(Identifier(mname), Identifier(meta)), [old_name]))
                 if indexes:
                     rename_index_in_meta = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3} = {4}")
                     rename_index_in_meta = rename_index_in_meta.format( Identifier(meta),
@@ -4088,8 +4537,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                         self._execute(rename_index_in_meta, [new_index_name, new_name, old_index_name])
                         if meta == 'meta_indexes':
                             self._execute(rename_index.format(Identifier(old_index_name), Identifier(new_index_name)))
+                        elif meta == 'meta_constraints':
+                            self._execute(rename_constraint.format(Identifier(old_name), Identifier(old_index_name), Identifier(new_index_name)))
             else:
-                print "Renamed all indexes and the corresponding entries in meta_indexes(_hist)"
+                print "Renamed all indexes, constraints and the corresponding metadata"
 
             # rename meta_tables and meta_tables_hist
             rename_table_in_meta = SQL("UPDATE {0} SET name = %s WHERE name = %s")
@@ -4147,8 +4598,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 if table.extra_table is  None:
                     extrafile = None
                 indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
+                constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
                 metafile = os.path.join(data_folder, tablename + '_meta.txt')
-                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, metafile=metafile, **kwds)
+                table.copy_to(searchfile=searchfile, extrafile=extrafile, countsfile=countsfile, statsfile=statsfile, indexesfile=indexesfile, constraintsfile=constraintsfile, metafile=metafile, **kwds)
             else:
                 print "%s is not in tablenames " % (tablename,)
                 failures.append(tablename)
@@ -4213,11 +4665,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if not os.path.exists(indexesfile):
                 indexesfile = None
 
+            constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
+            if not os.path.exists(constraintsfile):
+                constraintsfile = None
+
             metafile = os.path.join(data_folder, tablename + '_meta.txt')
             if not os.path.exists(metafile):
                 metafile = None
 
-            file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, metafile), included))
+            file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
             tablenames.append(tablename)
         print "Reloading %s"%(", ".join(tablenames))
         with DelayCommit(self, commit, silence=True):
