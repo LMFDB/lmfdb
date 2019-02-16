@@ -9,7 +9,6 @@ IMPORTANT:
  - check self duality -> through the number field data, embedding data, lfunction self_dual
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
-* Add Nk_count to mf_boxes, recording the number of pairs (N, k) touched by that box (Drew)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ to be a knowl, not only trivial character now so f.e. needs fixing (how?). (David/Alex/Whoever knows best)
 * Make tests pass (Edgar)
