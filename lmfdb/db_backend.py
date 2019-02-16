@@ -4322,14 +4322,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def _create_meta_constraints_hist(self):
         with DelayCommit(self, silence=True):
-            self._execute(SQL("CREATE TABLE meta_constraints_hist (index_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"))
+            self._execute(SQL("CREATE TABLE meta_constraints_hist (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"))
             version = 0
 
             # copy data from meta_constraints
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, check_func FROM meta_constraints"))
+            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints"))
 
             for row in rows:
-                self._execute(SQL("INSERT INTO meta_constraints_hist (index_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
+                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
 
             self.grant_select('meta_constraints_hist')
 
@@ -4348,7 +4348,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
             self.grant_select('meta_tables_hist')
 
-        print("Table meta_indexes_hist created")
+        print("Table meta_tables_hist created")
 
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
         """
