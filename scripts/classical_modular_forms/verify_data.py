@@ -681,6 +681,10 @@ class mf_newspaces(TableChecker):
                     constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
                 for box in db.mf_boxes.search({'straces':True}))
 
+    ### mf_newforms ###
+    def check_hecke_orbit_dims_newforms(self):
+        # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
+        return self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', sort=['hecke_orbit'])
     @fast
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
@@ -793,6 +797,13 @@ class mf_gamma1(TableChecker):
         # check that num_spaces matches number of char_orbits of level N and number of records in mf_newspaces with this level and weight
         return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
                 self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
+
+    @overall
+    def check_self_dual(self):
+        query = SQL("SELECT t1.label FROM mf_newforms t1, mf_hecke_cc t2 WHERE t1.hecke_orbit_code = t2.hecke_orbit_code AND t1.is_self_dual AND 0 != all( t2.an_normalized[:][2:2] ) LIMIT 1")
+        cur = db._excute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
     ### mf_gamma1_subspaces ### 
     @overall
@@ -1016,9 +1027,8 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_proved(self):
-        # TODO
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-        pass
+        return table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True})
 
     @overall
     def check_self_twist_type(self):
