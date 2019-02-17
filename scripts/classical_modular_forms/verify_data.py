@@ -12,7 +12,7 @@ from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, CC, Gamma1, PolynomialRing, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap, psi
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from datetime import datetime
-import traceback, time, sys
+import traceback, time, sys, os
 
 def _any(L):
     # a version of any that returns the first entry x with bool(x) = True, rather than returning True.  If no x, returns None
@@ -1807,7 +1807,7 @@ class char_dir_values(TableChecker):
 
 validated_tables = [mf_newspaces, mf_gamma1, mf_newspace_portraits, mf_gamma1_portraits, mf_subspaces, mf_gamma1_subspaces, mf_newforms, mf_newform_portraits, mf_hecke_nf, mf_hecke_traces, mf_hecke_newspace_traces, mf_hecke_lpolys, mf_hecke_cc, char_dir_orbits, char_dir_values]
 typs = [(overall, 'over'), (overall_long, 'long'), (fast, 'fast'), (slow, 'slow')]
-def run_tests(m):
+def run_tests(basedir, m):
     cls_num = m // len(typs)
     if cls_num >= len(validated_tables) or cls_num < 0:
         print "No such table (requested %sth table of %s)"%(cls_num+1, len(validated_tables))
@@ -1816,12 +1816,12 @@ def run_tests(m):
         cls = validated_tables[cls_num]
         typ, suffix = typs[typ_num]
         if any(isinstance(f, typ) for f in cls.__dict__.values()):
-            logfile = '%s.%s'%(cls.__name__, suffix)
+            logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
             runner = cls(logfile, default_typ)
             runner.run()
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 or not sys.argv[1].isdigit():
-        print "Give one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
+    if len(sys.argv) != 3 or not os.path.isdir(sys.argv[1]) or not sys.argv[2].isdigit():
+        print "Give an output directory and one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
     else:
-        run_tests(int(sys.argv))
+        run_tests(sys.argv[1], int(sys.argv[2]))
