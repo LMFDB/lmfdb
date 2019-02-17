@@ -9,9 +9,10 @@ from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifie
 from types import MethodType
 from collections import defaultdict
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, CC, Gamma1, PolynomialRing, ZZ, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap
+from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, CC, Gamma1, PolynomialRing, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap, psi
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-import traceback
+from datetime import datetime
+import traceback, time, sys
 
 def _any(L):
     # a version of any that returns the first entry x with bool(x) = True, rather than returning True.  If no x, returns None
@@ -19,11 +20,14 @@ def _any(L):
         if x: return x
 
 @cached_function
-def analytic_conductor(level, weight):
-    # TODO
-    pass
+def kbarbar(weight):
+    # The weight part of the analytic conductor
+    return psi(RR(weight/2)).exp() / (2*RR.pi())
 
-def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-13):
+def analytic_conductor(level, weight):
+    return level * kbarbar(weight)^2
+
+def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-12):
     return (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
 
 @cached_function
@@ -44,12 +48,19 @@ def sturm_bound(level, weight):
 
 class speed_decorator(object):
     """
-    Transparently wraps a function, so that functions can be classified by "isinstance"
+    Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
-    def __init__(self, f):
+    def __init__(self, f=None, **kwds):
         self.f = f
-        self.__name__ = f.__name__
+        self._kwds = kwds
+        if f is not None:
+            self.__name__ = f.__name__
+            for key, val in kwds.items():
+                setattr(self, key, val)
     def __call__(self, *args, **kwds):
+        if self.f is None:
+            assert len(args) == 1 and len(kwds) == 0
+            return self.__class__(args[0], self._kwds)
         return self.f(*args, **kwds)
 
 class slow(speed_decorator):
@@ -58,7 +69,7 @@ class slow(speed_decorator):
 
     This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
-    pass
+    progress_interval = 1000
 
 class fast(speed_decorator):
     """
@@ -66,6 +77,7 @@ class fast(speed_decorator):
 
     This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
+    progress_interval = 10000
 
 class overall(speed_decorator):
     """
@@ -85,57 +97,83 @@ class overall_long(speed_decorator):
 
 class TableChecker(object):
     label_col = 'label' # default
-    def __init__(self, logfile, id_limits=None):
-        self.logfile = logfile
+    def __init__(self, logfile=None, default_typ=None, id_limits=None):
+        if logfile is None:
+            logfile = "%s.%s" % (self.__class__.__name__, default_typ.__name__)
+        self.logfile = logfile + '.log'
         self.errfile = logfile + '.errors'
+        self.progfile = logfile + '.progress'
+        self.donefile = logfile + '.done'
+        self.default_typ = default_typ
         self.id_limits = id_limits
 
 
     def _get_checks(self, typ):
         return [MethodType(f, self, self.__class__) for f in self.__class__.__dict__.values() if isinstance(f, typ)]
 
-    def _run_checks(self, typ):
+    def _run_perrow(self, typ):
         table = self.table
         checks = self._get_checks(typ)
-        logfile = self.logfile
+        me = self.__class__.__name__
+        total = table.count()
+        failures = 0
         query = {}
         if self.id_limits:
             query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
-        with open(logfile, 'a') as log:
-            for rec in table.search(query, projection=self.projection, sort=[]):
-                for check in checks:
+        with open(self.logfile, 'a') as log:
+            with open(self.progfile, 'a') as prog:
+                start = time.time()
+                for rec_no, rec in enumerate(table.search(query, projection=self.projection, sort=[]), 1):
+                    if rec_no % typ.progress_interval == 0:
+                        prog.write('%s.%s (%s/%s) in %ss\n'%(me, typ.__name__, rec_no, total, time.time() - start))
+                    for check in checks:
+                        try:
+                            if not check(rec):
+                                log.write('%s.%s: %s\n'%(me, check.__name__, rec[self.label_col]))
+                                failures += 1
+                        except Exception:
+                            with open(self.errfile, 'a') as err:
+                                msg = 'Exception in %s.%s (%s):\n'%(me, check.__name__, rec[self.label_col])
+                                err.write(msg)
+                                log.write(msg)
+                                err.write(traceback.format_exc() + '\n')
+        with open(self.donefile, 'a') as done:
+            done.write("%s.%s: %s failures in %ss\n"%(me, typ.__name__, failures, time.time() - start))
+
+    def _run_overall(self, typ):
+        checks = self._get_checks(typ)
+        logfile = self.logfile
+        me = self.__class__.__name__
+        failures = 0
+        with open(self.logfile, 'a') as log:
+            with open(self.progfile, 'a') as prog:
+                start = time.time()
+                for check_num, check in enumerate(checks, 1):
+                    check_start = time.time()
+                    prog.write('%s.%s (%s/%s) started at %s\n'%(me, check.__name__, check_num, len(checks), datetime.now()))
                     try:
-                        if not check(rec):
-                            log.write('%s: %s\n'%(check.__name__, rec[self.label_col]))
+                        bad_label = check()
                     except Exception:
                         with open(self.errfile, 'a') as err:
-                            msg = 'Exception in %s (%s):\n'%(check.__name__, rec[self.label_col])
+                            msg = 'Exception in %s.%s:\n'%(me, check.__name__)
                             err.write(msg)
                             log.write(msg)
                             err.write(traceback.format_exc() + '\n')
+                    else:
+                        if bad_label:
+                            log.write('%s: %s\n'%(check.__name__, bad_label))
+                            failures += 1
+                        prog.write('%s finished after %ss\n'%(check.__name__, time.time() - check_start))
+        with open(self.donefile, 'a') as done:
+            done.write("%s.%s: %s failures in %ss\n"%(me, typ.__name__, failures, time.time() - start))
 
-    def run_slow_checks(self):
-        self._run_checks(slow)
-
-    def run_fast_checks(self):
-        self._run_checks(fast)
-
-    def run_overall_checks(self):
-        checks = self._get_checks(overall)
-        logfile = self.logfile
-        with open(logfile, 'a') as log:
-            for check in checks:
-                try:
-                    bad_label = check()
-                except Exception:
-                    with open(self.errfile, 'a') as err:
-                        msg = 'Exception in %s:\n'%(check.__name__)
-                        err.write(msg)
-                        log.write(msg)
-                        err.write(traceback.format_exc() + '\n')
-                else:
-                    if bad_label:
-                        log.write('%s: %s\n'%(check.__name__, bad_label))
+    def run(self, typ=None):
+        if typ is None:
+            typ = self.default_typ
+        if typ in [slow, fast]:
+            self._run_perrow(typ)
+        else:
+            self._run_overall(typ)
 
     # Add uniqueness constraints
 
@@ -727,7 +765,7 @@ class mf_gamma1(TableChecker):
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
     label = ['level', 'weight']
-    uniqueness_constraints = [[table._label_col], label]
+    uniqueness_constraints = [[table._label_col], label]]
 
 
 
@@ -1032,11 +1070,10 @@ class mf_newforms(TableChecker):
         # if hecke_ring_index_proved is set, verify that field_poly_disc is set
         return self.check_non_null(['field_poly_disc'], {'hecke_ring_index_proved':{'$exists':True}})
 
-    @overall
+    @overall(expect_failure=True)
     def check_analytic_rank_proved(self):
-        # FIXME
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-        return self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}})
+        return list(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
 
     @overall
     def check_self_twist_type(self):
@@ -1259,7 +1296,7 @@ class mf_newforms(TableChecker):
     #### extra slow ####
 
     @slow
-    def check_self_dual(self, rec):
+    def check_self_dual_by_poly(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
         f = rec.get('field_poly')
         if rec.get('nf_label') is None and f is not None:
@@ -1270,8 +1307,25 @@ class mf_newforms(TableChecker):
 
     @slow
     def check_self_dual_by_embeddings(self, rec):
-        # TODO
+        # TODO - is there a way to write this without 73993 mf_hecke_cc/lfunc_lfunction searches
         # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
+        if 'is_self_dual' in rec and rec.get('field_poly') is None:
+            embeddings = mf_hecke_cc.search({'hecke_orbit_code':rec['hecke_orbit_code']}, ['embedding_root_imag', 'an_normalized'])
+            for emb in embeddings:
+                imag = emb.get('embedding_root_imag')
+                if rec['is_self_dual']:
+                    if imag is not None and imag != 0:
+                        return False
+                    if not all(y == 0 for x,y in emb['an_normalized']):
+                        return False
+                elif imag is not None:
+                    if imag != 0:
+                        return True
+                else:
+                    if any(y != 0 for x,y in emb['an_normalized']):
+                        return True
+            if not rec['is_self_dual']:
+                return False
         return True
 
     @slow
@@ -1300,7 +1354,7 @@ class mf_newforms(TableChecker):
 
     @slow
     def check_(self, rec):
-        # TODO
+        # TODO - use zipped table
         # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
         return True
 
@@ -1367,7 +1421,7 @@ class mf_newforms(TableChecker):
 
     @slow
     def check_an_embedding(self, rec):
-        # TODO
+        # TODO - zipped table
         # When we have exact an, check that the inexact values are correct
         pass
 
@@ -1630,7 +1684,7 @@ class mf_hecke_cc(TableChecker):
 
     @slow
     def check_ap2(self, rec):
-        # TODO
+        # TODO - zipped tables
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
@@ -1750,3 +1804,24 @@ class char_dir_values(TableChecker):
         for g, val in vals:
             if g in val_gens_dict and val != val_gens_dict[g]:
                 return False
+
+validated_tables = [mf_newspaces, mf_gamma1, mf_newspace_portraits, mf_gamma1_portraits, mf_subspaces, mf_gamma1_subspaces, mf_newforms, mf_newform_portraits, mf_hecke_nf, mf_hecke_traces, mf_hecke_newspace_traces, mf_hecke_lpolys, mf_hecke_cc, char_dir_orbits, char_dir_values]
+typs = [(overall, 'over'), (overall_long, 'long'), (fast, 'fast'), (slow, 'slow')]
+def run_tests(m):
+    cls_num = m // len(typs)
+    if cls_num >= len(validated_tables) or cls_num < 0:
+        print "No such table (requested %sth table of %s)"%(cls_num+1, len(validated_tables))
+    else:
+        typ_num = m % len(typs)
+        cls = validated_tables[cls_num]
+        typ, suffix = typs[typ_num]
+        if any(isinstance(f, typ) for f in cls.__dict__.values()):
+            logfile = '%s.%s'%(cls.__name__, suffix)
+            runner = cls(logfile, default_typ)
+            runner.run()
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2 or not sys.argv[1].isdigit():
+        print "Give one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
+    else:
+        run_tests(int(sys.argv))
