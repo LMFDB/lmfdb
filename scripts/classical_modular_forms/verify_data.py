@@ -117,6 +117,8 @@ class TableChecker(object):
         me = self.__class__.__name__
         total = table.count()
         failures = 0
+        disabled = 0
+        errors = 0
         query = {}
         if self.id_limits:
             query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
@@ -127,6 +129,9 @@ class TableChecker(object):
                     if rec_no % typ.progress_interval == 0:
                         prog.write('%s.%s (%s/%s) in %ss\n'%(me, typ.__name__, rec_no, total, time.time() - start))
                     for check in checks:
+                        if check.__dict__.get('disabled'):
+                            disabled += 1
+                            continue
                         try:
                             if not check(rec):
                                 log.write('%s.%s: %s\n'%(me, check.__name__, rec[self.label_col]))
@@ -137,8 +142,14 @@ class TableChecker(object):
                                 err.write(msg)
                                 log.write(msg)
                                 err.write(traceback.format_exc() + '\n')
+                            errors += 1
         with open(self.donefile, 'a') as done:
-            done.write("%s.%s: %s failures in %ss\n"%(me, typ.__name__, failures, time.time() - start))
+            status = "%s failures"%failures
+            if disabled:
+                status += ", %s disabled"%disabled
+            if errors:
+                status += ", %s errors"%errors
+            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
 
     def _run_overall(self, typ):
         checks = self._get_checks(typ)
@@ -300,17 +311,17 @@ class TableChecker(object):
 
     def check_divisible(self, numerator, denominator, constraint={}):
         if isinstance(denominator, (Integer, int)):
-            return self._run_query(SQL("{0} % %s != 0").format(Identifier(numerator)),
+            return self._run_query(SQL("MOD({0}, %s) != 0").format(Identifier(numerator)),
                                    constraint, [denominator])
         else:
-            return self._run_query(SQL("{0} % {1} != 0").format(
+            return self._run_query(SQL("MOD({0}, {1}) != 0").format(
                 Identifier(numerator), Identifier(denominator)))
 
     def check_non_divisible(self, numerator, denominator, constraint={}):
         if isinstance(denominator, (Integer, int)):
-            return self._run_query(SQL("{0} % %s = 0").format(Identifier(numerator)),
+            return self._run_query(SQL("MOD({0}, %s) = 0").format(Identifier(numerator)),
                                    constraint, [denominator])
-        return self._run_query(SQL("{0} % {1} = 0").format(
+        return self._run_query(SQL("MOD({0}, {1}) = 0").format(
             Identifier(numerator), Identifier(denominator)))
 
     def check_values(self, values, constraint={}):
@@ -400,7 +411,7 @@ class TableChecker(object):
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
-        oc = [Identifier(oc_converted[i//2]) if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+        oc = [oc_converted[i//2] if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
 
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
@@ -537,11 +548,11 @@ class TableChecker(object):
             assert len(self.hecke_orbit_code) == 2
             hoc_column = self.hecke_orbit_code[0]
             if len(self.hecke_orbit_code[1]) == 4:
-                hoc_column, N_column, k_column, i_column, x_column = self.hecke_orbit_code[1]
+                N_column, k_column, i_column, x_column = self.hecke_orbit_code[1]
             else:
-                assert len(self.hecke_orbit_code) == 3
+                assert len(self.hecke_orbit_code[1]) == 3
                 x_column = None
-                hoc_column, N_column, k_column, i_column = self.hecke_orbit_code[1]
+                N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
             if x_column is None:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(hoc_column, N_column, k_column, i_column, x_column))
@@ -591,14 +602,14 @@ class mf_newspaces(TableChecker):
         return self.check_letter_code('char_orbit_index', 'char_orbit_label')
 
     @overall
-    def check_traces_display(self):
+    def check_trace_display(self):
         # check that traces_display is set whenever traces is set
-        return self.check_non_null(['traces_display'], {'traces':{'$exists': True}})
+        return self.check_non_null(['trace_display'], {'traces':{'$exists': True}})
 
     @overall
     def check_traces_len(self):
         # if present, check that traces has length at least 1000
-        return self.check_array_len_gte_constant('traces_display', 1000, {'traces':{'$exists': True}})
+        return self.check_array_len_gte_constant('traces', 1000, {'traces':{'$exists': True}})
 
     @overall
     def check_trace_bound0(self):
@@ -618,7 +629,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_AL_dims_plus_dim(self):
         # check that AL_dims and plus_dim is set whenever char_orbit_index=1
-        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit':1})
+        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit_index':1})
 
     @overall
     def check_dim0_num_forms(self):
@@ -643,7 +654,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_relative_dim(self):
         # check that char_degree * relative_dim = dim
-        return self.check_prod(['dim'], ['char_degree', 'relative_degree'])
+        return self.check_product('dim', ['char_degree', 'relative_degree'])
 
     @overall
     def check_len_hecke_orbit_dims(self):
@@ -655,14 +666,14 @@ class mf_newspaces(TableChecker):
         # if present, check that sum(hecke_orbit_dims) = dim
         return self.check_array_sum('hecke_orbit_dims', 'dim', {'hecke_orbit_dims':{'$exists':True}})
 
-    @overall
+    @overall(disabled=True)
     def check_sum_AL_dims(self):
         # if AL_dims is set, check that AL_dims sum to dim
-        return self.check_array_sum('AL_dims', 'dim', {'AL_dims':{'$exists':True}})
+        return self._run_query(SQL("{0} != (SELECT SUM(s) FROM (SELECT (x->2)::integer FROM jsonb_array_elements({1})) s)").format(Identifier('dim'), Identifier('AL_dims')), constraint={'AL_dims':{'$exists':True}})
     @overall
     def check_Nk2(self):
         # check that Nk2 = N*k*k
-        return self.check_prod(['Nk2'], ['N', 'k', 'k'])
+        return self.check_product('Nk2', ['N', 'k', 'k'])
 
     @overall
     def weight_parity_even(self):
@@ -685,12 +696,12 @@ class mf_newspaces(TableChecker):
         return self.check_sorted('hecke_orbit_dims')
 
     ### mf_hecke_newspace_traces ###
-    @overall
+    @overall_long
     def check_traces_count(self):
         # there should be exactly 1000 records in mf_hecke_traces for each record in mf_newspaces with traces set
         return self.check_crosstable_count('mf_hecke_newspace_traces', 1000, 'hecke_orbit_code', constraint={'traces':{'$exists':True}})
 
-    @overall
+    @overall_long
     def check_traces_match(self):
         # check that traces[n] matches trace_an in mf_hecke_newspace_traces
         return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000, constraint={'traces':{'$exists':True}})
@@ -716,7 +727,7 @@ class mf_newspaces(TableChecker):
     def check_hecke_orbit_dims_newforms(self):
         # check that dim is present in hecke_orbit_dims array in newspace record and that summing dim over rows with the same space label gives newspace dim
         return (self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', constraint={'num_forms':{'$exists':True}}) or
-                self.check_crosstable_sum('mf_newforms', 'dim', 'label', 'dim', 'space_label', constraint={'num_forms':{'$exists':True}})
+                self.check_crosstable_sum('mf_newforms', 'dim', 'label', 'dim', 'space_label', constraint={'num_forms':{'$exists':True}}))
 
     @fast
     def check_analytic_conductor(self, rec):
@@ -809,7 +820,7 @@ class mf_gamma1(TableChecker):
     @overall
     def check_Nk2(self):
         # check that Nk2 = N*k*k
-        return self.check_prod(['Nk2'], ['N', 'k', 'k'])
+        return self.check_product('Nk2', ['N', 'k', 'k'])
 
     @overall
     def weight_parity_even(self):
@@ -1596,7 +1607,7 @@ class mf_hecke_lpolys(TableChecker):
     def check_lpoly(self):
         # check that degree of lpoly is twice the dimension in mf_newforms for good primes
         # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
-        query = SQL("SELECT t1.label FROM (mf_newforms t1 INNER JOIN mf_hecke_lpolys t2 ON t1.hecke_orbit_code = t2.hecke_orbit_code) INNER JOIN mf_hecke_traces t3 ON t1.hecke_orbit_code = t3.hecke_orbit_code AND t2.p = t3.n WHERE ((t1.level % t2.p != 0 AND array_length(t2.lpoly, 1) != 2*t1.dim+1) OR t2.lpoly[1] != 1 OR t2.lpoly[2] != -t3.trace_an) LIMIT 1")
+        query = SQL("SELECT t1.label FROM (mf_newforms t1 INNER JOIN mf_hecke_lpolys t2 ON t1.hecke_orbit_code = t2.hecke_orbit_code) INNER JOIN mf_hecke_traces t3 ON t1.hecke_orbit_code = t3.hecke_orbit_code AND t2.p = t3.n WHERE ((MOD(t1.level, t2.p) != 0 AND array_length(t2.lpoly, 1) != 2*t1.dim+1) OR t2.lpoly[1] != 1 OR t2.lpoly[2] != -t3.trace_an) LIMIT 1")
         cur = db._execute(query)
         if cur.rowcount > 0:
             return cur.fetchone()[0]
