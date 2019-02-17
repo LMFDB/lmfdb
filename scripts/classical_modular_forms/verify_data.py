@@ -5,6 +5,8 @@
 #       from SQL injection       #
 ##################################
 
+import traceback, time, sys, os, inspect
+# sys.path.insert(0, '/home/roe/lmfdb')
 from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
@@ -12,7 +14,6 @@ from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
 from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, CC, Gamma1, PolynomialRing, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap, psi
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from datetime import datetime
-import traceback, time, sys, os
 
 def _any(L):
     # a version of any that returns the first entry x with bool(x) = True, rather than returning True.  If no x, returns None
@@ -60,7 +61,7 @@ class speed_decorator(object):
     def __call__(self, *args, **kwds):
         if self.f is None:
             assert len(args) == 1 and len(kwds) == 0
-            return self.__class__(args[0], self._kwds)
+            return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
 
 class slow(speed_decorator):
@@ -107,9 +108,12 @@ class TableChecker(object):
         self.default_typ = default_typ
         self.id_limits = id_limits
 
+     @classmethod
+     def _get_checks_count(cls, typ):
+         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
     def _get_checks(self, typ):
-        return [MethodType(f, self, self.__class__) for f in self.__class__.__dict__.values() if isinstance(f, typ)]
+        return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
     def _run_perrow(self, typ):
         table = self.table
@@ -156,12 +160,19 @@ class TableChecker(object):
         logfile = self.logfile
         me = self.__class__.__name__
         failures = 0
+        errors = 0
+        disabled = 0
         with open(self.logfile, 'a') as log:
             with open(self.progfile, 'a') as prog:
                 start = time.time()
                 for check_num, check in enumerate(checks, 1):
+                    if check.__dict__.get('disabled'):
+                         prog.write('%s.%s (%s/%s) disabled\n'%(me, check.__name__, check_num, len(checks)))
+                         disabled += 1
+                         continue
                     check_start = time.time()
                     prog.write('%s.%s (%s/%s) started at %s\n'%(me, check.__name__, check_num, len(checks), datetime.now()))
+                    prog.flush()
                     try:
                         bad_label = check()
                     except Exception:
@@ -170,13 +181,19 @@ class TableChecker(object):
                             err.write(msg)
                             log.write(msg)
                             err.write(traceback.format_exc() + '\n')
+                        errors += 1
                     else:
                         if bad_label:
                             log.write('%s: %s\n'%(check.__name__, bad_label))
                             failures += 1
                         prog.write('%s finished after %ss\n'%(check.__name__, time.time() - check_start))
         with open(self.donefile, 'a') as done:
-            done.write("%s.%s: %s failures in %ss\n"%(me, typ.__name__, failures, time.time() - start))
+            status = "%s failures"%failures
+            if disabled:
+                status += ", %s disabled"%disabled
+            if errors:
+                status += ", %s errors"%errors
+            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
 
     def run(self, typ=None):
         if typ is None:
@@ -673,7 +690,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_Nk2(self):
         # check that Nk2 = N*k*k
-        return self.check_product('Nk2', ['N', 'k', 'k'])
+        return self.check_product('Nk2', ['level', 'weight', 'weight'])
 
     @overall
     def weight_parity_even(self):
@@ -776,7 +793,7 @@ class mf_gamma1(TableChecker):
     projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
     label = ['level', 'weight']
-    uniqueness_constraints = [[table._label_col], label]]
+    uniqueness_constraints = [[table._label_col], label]
 
 
 
@@ -1826,9 +1843,9 @@ def run_tests(basedir, m):
         typ_num = m % len(typs)
         cls = validated_tables[cls_num]
         typ, suffix = typs[typ_num]
-        if any(isinstance(f, typ) for f in cls.__dict__.values()):
+        if cls._get_checks_count(typ) > 0:
             logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
-            runner = cls(logfile, default_typ)
+            runner = cls(logfile, typ)
             runner.run()
 
 if __name__ == '__main__':
