@@ -1215,6 +1215,57 @@ class PostgresTable(PostgresBase):
         #    if cur.rowcount > 0:
         #        return {k:v for k,v in zip(search_cols, random.choice(list(cur)))}
 
+    def random_sample(self, ratio, query={}, projection=1, mode=None, repeatable=None):
+        """
+        Returns a random sample of rows from this table.  Note that ratio is not guaranteed, and different modes will have different levels of randomness.
+
+        INPUT:
+
+        - ``ratio`` -- a float between 0 and 1, the approximate fraction of rows satisfying the query to be returned.
+        - ``query`` -- a dictionary query, as for searching.  Note that the WHERE clause is applied after the random selection except when using 'choice' mode
+        - ``projection`` -- a description of which columns to include in the search results
+        - ``mode`` -- one of ``'system'``, ``'bernoulli'``, ``'choice'`` and ``None``:
+          - ``system`` -- the fastest option, but will introduce clustering since random pages are selected rather than random rows.
+          - ``bernoulli`` -- rows are selected independently with probability the given ratio, then the where clause is applied
+          - ``choice`` -- all results satisfying the query are fetched, then a random subset is chosen.  This will be slow if a large number of rows satisfy the query, but performs much better when only a few rows satisfy the query.  This option matches ratio mostly accurately.
+          - ``None`` -- Uses ``bernoulli`` if more than ``self._count_cutoff`` results satisfy the query, otherwise uses ``choice``.
+        - ``repeatable`` -- an integer, giving a random seed for a repeatable result.
+        """
+        if mode is None:
+            if self.count(query) > self._count_cutoff:
+                mode = 'bernoulli'
+            else:
+                mode = 'choice'
+        mode = mode.upper()
+        search_cols, extra_cols, id_offset = self._parse_projection(projection)
+        if ratio > 1 or ratio <= 0:
+            raise ValueError("Ratio must be a positive number between 0 and 1")
+        if ratio == 1:
+            return self.search(query, projection, sort=[]
+        elif mode == 'CHOICE':
+            results = list(self.search(query, projection, sort=[]))
+            count = int(len(results) * ratio)
+            if repeatable is not None:
+                random.seed(repeatable)
+            return self._search_iterator(random.sample(results, count), search_cols, extra_cols, id_offset, projection)
+        elif mode in ['SYSTEM', 'BERNOULLI']:
+            vars = SQL(", ").join(map(Identifier, search_cols))
+            if repeatable is None:
+                repeatable = SQL("")
+                values = [100*ratio]
+            else:
+                repeatable = SQL(" REPEATABLE %s")
+                values = [100*ratio, int(repeatable)]
+            qstr, qvalues = self._parse_dict(query)
+            if qstr is None:
+                qstr = SQL("")
+            else:
+                qstr = SQL(" WHERE {0}").format(qstr)
+                values.extend(qvalues)
+            selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}").format(vars, Identifier(self.search_table), repeatable, qstr)
+            cur = self._execute(selecter, values)
+            return self._search_iterator(cur, search_cols, extra_cols, id_offset, projection)
+
     ##################################################################
     # Convenience methods for accessing statistics                   #
     ##################################################################
