@@ -4,9 +4,8 @@
 #  Nothing in this file is safe  #
 #       from SQL injection       #
 ##################################
-
 import traceback, time, sys, os, inspect
-# sys.path.insert(0, '/home/roe/lmfdb')
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
@@ -407,7 +406,7 @@ class TableChecker(object):
             " || ".join(map(Identifier, a_columns)),
             " || ".join(map(Identifier, b_columns))), constraint=constraint)
 
-    def check_string_concatentation(self,
+    def check_string_concatenation(self,
             label_col,
             other_columns,
             constraint={},
@@ -542,7 +541,7 @@ class TableChecker(object):
     def check_label(self):
         # check that label matches self.label
         if self.label is not None:
-            return self.check_string_concatentation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
+            return self.check_string_concatenation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
 
     uniqueness_constraints = []
 
@@ -990,7 +989,7 @@ class mf_subspaces(SubspacesChecker):
     @overall
     def check_sub_dim(self):
         # check that sub_dim = dim S_k^new(sub_level, sub_chi)
-        return self.check_crosstable('mf_subspaces', 'sub_dim', 'sub_label', 'dim', 'label')
+        return self.check_crosstable('mf_spaces', 'sub_dim', 'sub_label', 'dim', 'label')
 
 class mf_gamma1_subspaces(SubspacesChecker):
     table = db.mf_gamma1_subspaces
