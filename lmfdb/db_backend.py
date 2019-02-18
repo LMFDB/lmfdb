@@ -37,8 +37,6 @@ from sage.functions.other import binomial
 from lmfdb.utils import make_logger, KeyedDefaultDict
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
-SLOW_QUERY_LOGFILE = "slow_queries.log"
-SLOW_CUTOFF = 0.1
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -224,12 +222,16 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
-        handler = logging.FileHandler(SLOW_QUERY_LOGFILE)
+        from lmfdb.config import Configuration
+        logging_options = Configuration().get_logging()
+        self.slow_cutoff = logging_options['slowcutoff']
+        handler = logging.FileHandler(logging_options['slowlogfile'])
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         filt = QueryLogFilter()
         handler.setFormatter(formatter)
         handler.addFilter(filt)
         self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
+
 
     def _execute(self, query, values=None, silent=None, values_list=False, template=None, commit=None, slow_note=None, reissued=False):
         """
@@ -295,7 +297,7 @@ class PostgresBase(object):
                     raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
-                if t > SLOW_CUTOFF:
+                if t > self.slow_cutoff:
                     query = query.as_string(self.conn)
                     if values_list:
                         query = query.replace('%s','VALUES_LIST')
