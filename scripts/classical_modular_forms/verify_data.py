@@ -1238,7 +1238,7 @@ class mf_newforms(TableChecker):
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
 
-    @overall_slow
+    @overall_long
     def check_self_dual_by_embeddings(self):
         # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual
         # I expect this to take about 3/4h
