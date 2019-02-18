@@ -1243,7 +1243,7 @@ class PostgresTable(PostgresBase):
         if ratio > 1 or ratio <= 0:
             raise ValueError("Ratio must be a positive number between 0 and 1")
         if ratio == 1:
-            return self.search(query, projection, sort=[]
+            return self.search(query, projection, sort=[])
         elif mode == 'CHOICE':
             results = list(self.search(query, projection, sort=[]))
             count = int(len(results) * ratio)
