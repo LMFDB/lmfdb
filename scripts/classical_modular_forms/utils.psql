@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION to_base26(IN n integer) RETURNS varchar AS $$
 DECLARE
     s varchar;
     m integer;
-BEGIN:
+BEGIN
     m := n;
     IF m < 0 THEN
         s := 'NULL';
