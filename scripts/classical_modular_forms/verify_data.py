@@ -870,12 +870,6 @@ class mf_gamma1(TableChecker):
         return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
                 self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
 
-    @overall
-    def check_self_dual(self):
-        query = SQL("SELECT t1.label FROM mf_newforms t1, mf_hecke_cc t2 WHERE t1.hecke_orbit_code = t2.hecke_orbit_code AND t1.is_self_dual AND 0 != all( t2.an_normalized[:][2:2] ) LIMIT 1")
-        cur = db._excute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
 
     ### mf_gamma1_subspaces ### 
     @overall
@@ -1233,7 +1227,7 @@ class mf_newforms(TableChecker):
         # if analytic_rank is present, check that matches order_of_vanishing in lfunctions record, and is are constant across the orbit
         db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), analytic_rank, dim FROM mf_newforms WHERE analytic_rank is NOT NULL"))
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT order_of_vanishing,(string_to_array(origin,'/'))[5:8],degree FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2"))
-        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using btree string_to_array"))
+        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using GIN(string_to_array)"))
         cursor = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array  )  LIMIT 1"))
         if cursor.rowcount > 0:
             res =  cursor.fetchone()[0]
@@ -1243,7 +1237,33 @@ class mf_newforms(TableChecker):
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
 
+    @overall_slow
+    def check_self_dual_by_embeddings(self):
+        # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual
+        # I expect this to take about 3/4h
+        # we a create a temp table as we can't use aggregates under WHERE
+        db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc t1, mf_newforms t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
+        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1")
+        # alternative query, but most likely equally slow
+        #query = SQL("WITH foo AS (SELECT t1.label, t1.hecke_orbit_code FROM mf_newforms t1 WHERE t1.field_poly is NULL AND t1.is_self_dual) SELECT foo.label FROM foo, mf_hecke_cc t2 WHERE 0 != all( t2.an_normalized[:][2:2] ) LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
 
+    @overall
+    def check_self_dual_lfunctions(self):
+        # check that the lfunction self_dual attribute is consistent with newforms
+        db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), is_self_dual, dim FROM mf_newforms"))
+        db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT (string_to_array(origin,'/'))[5:8], array_agg(self_dual) self_dual FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2 GROUP BY (string_to_array(origin,'/'))[5:8]"))
+        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using GIN(string_to_array)"))
+        cursor = db._execute(SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array LIMIT 1"))
+        if cursor.rowcount > 0:
+            res =  cursor.fetchone()[0]
+        else:
+            res = None
+        db._execute(SQL("DROP TABLE tem_mftbl"))
+        db._execute(SQL("DROP TABLE temp_ltbl"))
+        return res
 
     @fast
     def check_projective_field_degree(self, rec):
@@ -1333,28 +1353,29 @@ class mf_newforms(TableChecker):
             return (rec.get('is_self_dual') == K.is_totally_real())
         return True
 
-    @slow
-    def check_self_dual_by_embeddings(self, rec):
-        # TODO - is there a way to write this without 73993 mf_hecke_cc/lfunc_lfunction searches
-        # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
-        if 'is_self_dual' in rec and rec.get('field_poly') is None:
-            embeddings = mf_hecke_cc.search({'hecke_orbit_code':rec['hecke_orbit_code']}, ['embedding_root_imag', 'an_normalized'])
-            for emb in embeddings:
-                imag = emb.get('embedding_root_imag')
-                if rec['is_self_dual']:
-                    if imag is not None and imag != 0:
-                        return False
-                    if not all(y == 0 for x,y in emb['an_normalized']):
-                        return False
-                elif imag is not None:
-                    if imag != 0:
-                        return True
-                else:
-                    if any(y != 0 for x,y in emb['an_normalized']):
-                        return True
-            if not rec['is_self_dual']:
-                return False
-        return True
+    #@slow
+    #def check_self_dual_by_embeddings_old(self, rec):
+    #    # FIXME see check_self_dual_by_embeddings and  check_self_dual_lfunctions
+    #    # TODO - is there a way to write this without 73993 mf_hecke_cc/lfunc_lfunction searches
+    #    # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
+    #    if 'is_self_dual' in rec and rec.get('field_poly') is None:
+    #        embeddings = mf_hecke_cc.search({'hecke_orbit_code':rec['hecke_orbit_code']}, ['embedding_root_imag', 'an_normalized'])
+    #        for emb in embeddings:
+    #            imag = emb.get('embedding_root_imag')
+    #            if rec['is_self_dual']:
+    #                if imag is not None and imag != 0:
+    #                    return False
+    #                if not all(y == 0 for x,y in emb['an_normalized']):
+    #                    return False
+    #            elif imag is not None:
+    #                if imag != 0:
+    #                    return True
+    #            else:
+    #                if any(y != 0 for x,y in emb['an_normalized']):
+    #                    return True
+    #        if not rec['is_self_dual']:
+    #            return False
+    #    return True
 
     @slow
     def check_artin_image(self, rec):
@@ -1640,6 +1661,15 @@ class mf_hecke_cc(TableChecker):
         return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
 
     @overall
+    def check_dim(self):
+        # check that we have dim embeddings per hecke_orbit_code
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, count(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count LIMIT 1")
+        cur = db._execute(query)
+        if cur.rowcount > 0:
+            return cur.fetchone()[0]
+
+
+    @overall
     def check_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
         query = SQL("""SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1""")
@@ -1688,7 +1718,7 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_lfunction_label_conrey(self):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
-        return self._run_query(SQL("string_to_array({0},'.')[5:6] != array({1}::text,{2}::text)").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
+        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
 
     @overall_long
     def check_amn(self):
