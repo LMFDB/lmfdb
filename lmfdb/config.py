@@ -38,6 +38,7 @@ class Configuration(object):
             action = "store_true",
             dest = 'core_debug',
             help = 'enable debug mode')
+
         parser.add_argument(
             '--color',
             dest = 'core_color',
@@ -68,6 +69,22 @@ class Configuration(object):
         logginggroup.add_argument('--logfocus',
                 help = 'name of a logger to focus on',
                 default = argparse.SUPPRESS)
+
+
+        logginggroup.add_argument(
+            '--slowcutoff',
+            dest = 'logging_slowcutoff',
+            metavar = "SLOWCUTOFF",
+            help = 'threshold to log slow queries [default: %(default)s]',
+            default = 0.1,
+            type = float)
+
+        logginggroup.add_argument('--slowlogfile',
+                help = 'logfile for slow queries [default: %(default)s]',
+                dest = 'logging_slowlogfile',
+                metavar = 'FILE',
+                default = 'slow_queries.log')
+
 
         # PostgresSQL options
         postgresqlgroup = parser.add_argument_group('PostgreSQL options')
@@ -228,7 +245,7 @@ class Configuration(object):
             if _cfgp.has_option("postgresql", elt):
                 self.postgresql_options[elt] = get("postgresql", elt)
 
-        self.logging_options = {'logfile': get('logging', 'logfile')}
+        self.logging_options = {'logfile': get('logging', 'logfile'), 'slowcutoff':  float(get('logging', 'slowcutoff')), 'slowlogfile': get('logging', 'slowlogfile') }
         if "logfocus" in args_dict:
             self.logging_options["logfocus"] = args_dict["logfocus"]
         if _cfgp.has_option("logging", "editor"):

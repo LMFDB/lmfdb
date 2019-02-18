@@ -298,7 +298,7 @@ class WebNewform(object):
         # extra 5 primes in case we hit too many bad primes
         angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
         format = info.get('format')
-        cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
+        cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
         an_projection = 'an_normalized[%d:%d]' % an_keys
         angles_projection = 'angles[%d:%d]' % angles_keys
         if format in an_formats:
@@ -861,7 +861,7 @@ function switch_basis(btype) {
 
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
-        return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=((m-1)%self.rel_dim)+1)
+        return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_conrey(self, elabel):
         if not isinstance(elabel, basestring): # match object
