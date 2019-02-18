@@ -10,7 +10,7 @@ from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifie
 from types import MethodType
 from collections import defaultdict
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, CC, Gamma1, PolynomialRing, dimension_new_cusp_forms, prime_range, kronecker_symbol, NumberField, gap, psi
+from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, CC, Gamma1, Gamma0, PolynomialRing, dimension_new_cusp_forms, dimension_eis, prime_range, dimension_cusp_forms, dimension_modular_forms, kronecker_symbol, NumberField, gap, psi
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from datetime import datetime
 
@@ -44,7 +44,7 @@ def level_attributes(level):
 
 @cached_function
 def sturm_bound(level, weight):
-    return floor(weight * Gamma1(level).index()/12)
+    return floor(weight * Gamma0(level).index()/12)
 
 class speed_decorator(object):
     """
@@ -107,12 +107,17 @@ class TableChecker(object):
         self.default_typ = default_typ
         self.id_limits = id_limits
 
-     @classmethod
-     def _get_checks_count(cls, typ):
-         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
+    @classmethod
+    def _get_checks_count(cls, typ):
+        return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
     def _get_checks(self, typ):
         return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
+
+    def _report_error(self, msg):
+        with open(self.errfile, 'a') as err:
+            err.write(msg)
+            err.write(traceback.format_exc() + '\n')
 
     def _run_perrow(self, typ):
         table = self.table
@@ -128,24 +133,31 @@ class TableChecker(object):
         with open(self.logfile, 'a') as log:
             with open(self.progfile, 'a') as prog:
                 start = time.time()
-                for rec_no, rec in enumerate(table.search(query, projection=self.projection, sort=[]), 1):
-                    if rec_no % typ.progress_interval == 0:
-                        prog.write('%s.%s (%s/%s) in %ss\n'%(me, typ.__name__, rec_no, total, time.time() - start))
-                    for check in checks:
-                        if check.__dict__.get('disabled'):
-                            disabled += 1
-                            continue
-                        try:
-                            if not check(rec):
-                                log.write('%s.%s: %s\n'%(me, check.__name__, rec[self.label_col]))
-                                failures += 1
-                        except Exception:
-                            with open(self.errfile, 'a') as err:
+                try:
+                    search_iter = table.search(query, projection=self.projection, sort=[])
+                except Exception:
+                    msg = "Exception in %s generating search results\n"%(me)
+                    self._report_error(msg)
+                    log.write(msg)
+                    errors += 1
+                else:
+                    for rec_no, rec in enumerate(search_iter, 1):
+                        if rec_no % typ.progress_interval == 0:
+                            prog.write('%s.%s (%s/%s) in %ss\n'%(me, typ.__name__, rec_no, total, time.time() - start))
+                            prog.flush()
+                        for check in checks:
+                            if check.__dict__.get('disabled'):
+                                disabled += 1
+                                continue
+                            try:
+                                if not check(rec):
+                                    log.write('%s.%s: %s\n'%(me, check.__name__, rec[self.label_col]))
+                                    failures += 1
+                            except Exception:
                                 msg = 'Exception in %s.%s (%s):\n'%(me, check.__name__, rec[self.label_col])
-                                err.write(msg)
+                                self._report_error(msg)
                                 log.write(msg)
-                                err.write(traceback.format_exc() + '\n')
-                            errors += 1
+                                errors += 1
         with open(self.donefile, 'a') as done:
             status = "%s failures"%failures
             if disabled:
@@ -164,15 +176,17 @@ class TableChecker(object):
         with open(self.logfile, 'a') as log:
             with open(self.progfile, 'a') as prog:
                 start = time.time()
+                print "Running %s checks"%len(checks)
                 for check_num, check in enumerate(checks, 1):
                     if check.__dict__.get('disabled'):
-                         prog.write('%s.%s (%s/%s) disabled\n'%(me, check.__name__, check_num, len(checks)))
-                         disabled += 1
-                         continue
+                        prog.write('%s.%s (%s/%s) disabled\n'%(me, check.__name__, check_num, len(checks)))
+                        disabled += 1
+                        continue
                     check_start = time.time()
                     prog.write('%s.%s (%s/%s) started at %s\n'%(me, check.__name__, check_num, len(checks), datetime.now()))
                     prog.flush()
                     try:
+                        print "Starting %s"%(check.__name__)
                         bad_label = check()
                     except Exception:
                         with open(self.errfile, 'a') as err:
@@ -184,6 +198,7 @@ class TableChecker(object):
                     else:
                         if bad_label:
                             log.write('%s: %s\n'%(check.__name__, bad_label))
+                            log.flush()
                             failures += 1
                         prog.write('%s finished after %ss\n'%(check.__name__, time.time() - check_start))
         with open(self.donefile, 'a') as done:
@@ -246,12 +261,20 @@ class TableChecker(object):
         if len(join1) != len(join2):
             raise ValueError("join1 and join2 must have the same length")
         def identify(J, table):
-            return [Literal(j) if isinstance(j, (int, Integer)) else SQL(table + '.') + Identifier(j) for j in J]
+            res = []
+            for j in J:
+                if isinstance(j, (int, Integer)):
+                    res.append(Literal(j))
+                elif isinstance(j, Composable):
+                    res.append(j)
+                else:
+                    res.append(SQL(table + ".") + Identifier(j))
+            return res
         join1 = identify(join1, "t1")
         join2 = identify(join2, "t2")
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_crosstable(self, quantity, other_table, col, join1, join2=None, constraint={}, values=[], subselect_wrapper="", sort=None):
+    def _run_crosstable(self, quantity, other_table, col, join1, join2=None, constraint={}, values=[], subselect_wrapper="", extra=None):
         """
         Checks that `quantity` matches col
 
@@ -264,7 +287,7 @@ class TableChecker(object):
         - ``join2`` -- a column or list of columns (default: `None`) on ``other_table`` on which we will join the two tables. If `None`, we take ``join2`` = ``join1``, see `_make_join`
         - ``constraint`` -- a dictionary, as passed to the search method
         - ``subselect_wrapper`` -- a string, e.g., "ARRAY" to convert the inner select query
-        - ``sort`` -- SQL object setting the sorting order for the inner select query
+        - ``extra`` -- SQL object to append to the subquery.  This can hold additional constraints or set the sort order for the inner select query
         """
         # WARNING: since it uses _run_query, this whole function is not safe against SQL injection,
         # so should only be run locally in data validation
@@ -277,15 +300,15 @@ class TableChecker(object):
             quantity = SQL("t2.{0}").format(Identifier(quantity))
         # This is unsafe
         subselect_wrapper = SQL(subselect_wrapper)
-        if sort is None:
-            sort = SQL("")
-        condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4} {5})").format(
+        if extra is None:
+            extra = SQL("")
+        condition = SQL("{0} != {1}(SELECT {2} FROM {3} t2 WHERE {4}{5})").format(
             col,
             subselect_wrapper,
             quantity,
             Identifier(other_table),
             join,
-            sort)
+            extra)
         return self._run_query(condition, constraint, values, table=SQL("{0} t1").format(Identifier(self.table.search_table)))
 
     def check_count(self, cnt, constraint={}):
@@ -341,7 +364,11 @@ class TableChecker(object):
             Identifier(numerator), Identifier(denominator)))
 
     def check_values(self, values, constraint={}):
-        vstr, vvalues = self.table._parse_dict(values)
+        if isinstance(values, Composable):
+            vstr = values
+            vvalues = None
+        else:
+            vstr, vvalues = self.table._parse_dict(values)
         if vstr is not None:
             # Otherwise no values, so nothing to check
             return self._run_query(SQL("NOT ({0})").format(vstr), constraint, values=vvalues)
@@ -503,7 +530,7 @@ class TableChecker(object):
             sort = SQL(" ORDER BY t2.{0}").format(Identifier(col2))
         else:
             sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
-        return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", sort=sort)
+        return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", extra=sort)
 
     def check_letter_code(self, index_column, letter_code_column, constraint = {}):
         return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
@@ -531,7 +558,7 @@ class TableChecker(object):
             for code, val in D.items():
                 query[col][code] = val
         for col in drop:
-            del query[col]
+            query.pop(col, None)
         return query
 
 
@@ -541,7 +568,7 @@ class TableChecker(object):
     def check_label(self):
         # check that label matches self.label
         if self.label is not None:
-            return self.check_string_concatenation(self.table._label_col, self.label, convert_to_base26 = self.label_conversion)
+            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
 
     uniqueness_constraints = []
 
@@ -557,10 +584,8 @@ class TableChecker(object):
 
     @overall
     def check_hecke_orbit_code(self):
-        if self.hecke_orbit_code == []:
-            # test not enabled
-            return True
-        else:
+        if self.hecke_orbit_code != []:
+            # test enabled
             assert len(self.hecke_orbit_code) == 2
             hoc_column = self.hecke_orbit_code[0]
             if len(self.hecke_orbit_code[1]) == 4:
@@ -578,7 +603,7 @@ class TableChecker(object):
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
 
-    projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'hecke_orbit_dims', 'trace_bound', 'dim', 'num_forms', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
+    projection = ['label', 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'hecke_orbit_dims', 'trace_bound', 'dim', 'num_forms', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
     uniqueness_constraints = [
        ['label'],
@@ -619,8 +644,8 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_trace_display(self):
-        # check that traces_display is set whenever traces is set
-        return self.check_non_null(['trace_display'], {'traces':{'$exists': True}})
+        # check that trace_display is set whenever traces is set and dim > 0
+        return self.check_non_null(['trace_display'], {'traces':{'$exists': True}, 'dim':{'$gt': 0}})
 
     @overall
     def check_traces_len(self):
@@ -720,7 +745,7 @@ class mf_newspaces(TableChecker):
     @overall_long
     def check_traces_match(self):
         # check that traces[n] matches trace_an in mf_hecke_newspace_traces
-        return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000, constraint={'traces':{'$exists':True}})
+        return self.check_crosstable_aggregate('mf_hecke_newspace_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort=['n'], truncate=1000, constraint={'traces':{'$exists':True}})
 
     ### mf_subspaces ###
     @overall
@@ -789,7 +814,7 @@ class mf_newspaces(TableChecker):
 
 class mf_gamma1(TableChecker):
     table = db.mf_gamma1
-    projection = ['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
+    projection = ['label', 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
 
     label = ['level', 'weight']
     uniqueness_constraints = [[table._label_col], label]
@@ -799,14 +824,25 @@ class mf_gamma1(TableChecker):
     @overall
     def check_box_count(self):
         # there should be a row present for every pair (N,k) satisfying a box constraint on N,k,Nk2
-        return _any(self.check_count(box['Nk_count'], self._box_query(box, drop=['char_order', 'dim']))
+        def make_query(box):
+            query = self._box_query(box, drop=['char_order', 'dim'])
+            # Have to remove small N if there are restrictions on the character order
+            if 'omin' in box:
+                if box['omin'] == 2:
+                    if 'level' not in query:
+                        query['level'] = {}
+                    if '$gte' not in query['level'] or query['level']['gte'] < 3:
+                        query['level']['$gte'] = 3
+                else:
+                    raise NotImplementedError
+        return _any(self.check_count(box['Nk_count'], make_query(box))
                    for box in db.mf_boxes.search())
 
     @overall
     def check_box_traces(self):
-        # check that traces is set if space is in a box with traces set and no dimension constraint
+        # check that traces is set if space is in a box with traces set and no dimension/character constraint
         return _any(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
-                   for box in db.mf_boxes.search({'Dmin':None, 'Dmax':None, 'straces':True}))
+                   for box in db.mf_boxes.search({'omin':None, 'omax':None, 'Dmin':None, 'Dmax':None, 'straces':True}))
 
     @overall
     def check_dim_wt1(self):
@@ -814,9 +850,9 @@ class mf_gamma1(TableChecker):
         return self.check_sum(['dim'], ['dihedral_dim', 'a4_dim', 'a5_dim', 's4_dim'], {'weight': 1})
 
     @overall
-    def check_traces_display(self):
-        # check that traces_display is set whenever traces is set
-        return self.check_non_null(['traces_display'], {'traces':{'$exists': True}})
+    def check_trace_display(self):
+        # check that trace_display is set whenever traces is set and dim > 0
+        return self.check_non_null(['trace_display'], {'traces':{'$exists': True}, 'dim':{'$gt': 0}})
 
     @overall
     def check_traces_len(self):
@@ -830,13 +866,13 @@ class mf_gamma1(TableChecker):
 
     @overall
     def check_dim(self):
-        # check that eis_new_dim + mf_new_dim = dim
-        return self.check_sum(['eis_new_dim','mf_new_dim'], ['dim'])
+        # check that eis_new_dim + dim = mf_new_dim
+        return self.check_sum(['eis_new_dim','dim'], ['mf_new_dim'])
 
     @overall
     def check_Nk2(self):
         # check that Nk2 = N*k*k
-        return self.check_product('Nk2', ['N', 'k', 'k'])
+        return self.check_product('Nk2', ['level', 'weight', 'weight'])
 
     @overall
     def weight_parity_even(self):
@@ -865,23 +901,23 @@ class mf_gamma1(TableChecker):
 
     @overall
     def check_newspaces_num_spaces(self):
-        # check that num_spaces matches number of char_orbits of level N and number of records in mf_newspaces with this level and weight
-        return (self.check_crosstable_count('mf_newspaces', 'num_spaces', ['level', 'weight']) or
-                self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
-
+        # check that num_spaces matches the number of records in mf_newspaces with this level and weight and positive dimension
+        # TODO: check that the number of char_orbits of level N and weight k is the same as the number of rows in mf_newspaces with this weight and level.  The following doesn't work since num_spaces counts spaces with positive dimension
+        # self.check_crosstable_count('char_dir_orbits', 'num_spaces', ['level', 'weight_parity'], ['modulus', 'parity']))
+        return self._run_crosstable(SQL("COUNT(*)"), 'mf_newspaces', 'num_spaces', ['level', 'weight'], extra=SQL(" AND t2.dim > 0"))
 
     ### mf_gamma1_subspaces ### 
     @overall
     def check_oldspace_decomposition_totaldim(self):
-        # check that summing sub_dim * sub_mult over rows with a given label gives dim S_k^old(Gamma1(N))
-        return self.check_crosstable_dotprod('mf_gamma1_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
+        # check that summing sub_dim * sub_mult over rows with a given label gives dim S_k(Gamma1(N))
+        return self.check_crosstable_dotprod('mf_gamma1_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
 
 
     ### mf_gamma1_portraits ###
     @overall
     def check_portraits_count(self):
         # check that there is a portrait present for every record in mf_gamma1 with `dim > 0` and `level <= 4000`
-        return self.check_crosstable_count('mf_gamma1_portraits', 1, 'label', {'dim':{'$gt':0}, 'level':{'$lte':4000}})
+        return self.check_crosstable_count('mf_gamma1_portraits', 1, 'label', constraint={'dim':{'$gt':0}, 'level':{'$lte':4000}})
 
     ### slow ###
     @slow
@@ -921,7 +957,7 @@ class mf_gamma1(TableChecker):
 
 class mf_newspace_portraits(TableChecker):
     table = db.mf_newspace_portraits
-    projection = []
+    projection = ['label']
     label = ['level', 'weight', 'char_orbit_index']
     uniqueness_constraints = [[table._label_col], label]
     label_conversion = {'char_orbit_index': -1}
@@ -931,7 +967,7 @@ class mf_newspace_portraits(TableChecker):
 
 class mf_gamma1_portraits(TableChecker):
     table = db.mf_gamma1_portraits
-    projection = []
+    projection = ['label']
     label = ['level', 'weight']
     uniqueness_constraints = [[table._label_col],label]
 
@@ -1418,7 +1454,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_traces_match(self):
         # check that traces[n] matches trace_an in mf_hecke_traces
-        return self.check_crosstable_aggregate('mf_hecke_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort='n', truncate=1000)
+        return self.check_crosstable_aggregate('mf_hecke_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort=['n'], truncate=1000)
 
     #### mf_hecke_lpolys ####
 
@@ -1486,7 +1522,7 @@ class mf_newforms(TableChecker):
 
 class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
-    projection = []
+    projection = ['label']
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
     label_conversion = {'hecke_orbit':-1}
     uniqueness_constraints = [[table._label_col], label]
@@ -1504,7 +1540,7 @@ class mf_hecke_nf(TableChecker):
                 self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
 
     @overall
-    def check_hecke_orbit_code(self):
+    def check_hecke_orbit_code_newforms(self):
         # check that label matches hecke_orbit_code and is present in mf_newforms
         return self.check_crosstable('mf_newforms', 'hecke_orbit_code', 'label')
 
@@ -1549,7 +1585,7 @@ class mf_hecke_nf(TableChecker):
     @overall
     def check_maxp(self):
         # check that maxp is at least 997
-        return self._run_query(SQL('maxp >= 997'))
+        return self._run_query(SQL('maxp < 997'))
 
     @slow
     def check_hecke_ring_character_values_and_an(self, rec):
@@ -1757,6 +1793,7 @@ class char_dir_orbits(TableChecker):
     label_col = 'orbit_label'
     label = ['modulus', 'orbit_index']
     uniqueness_constraints = [[table._label_col], label]
+    projection = ['orbit_label', 'char_degree', 'order', 'modulus', 'conductor', 'parity', 'galois_orbit']
 
     @overall
     def check_total_count(self):
@@ -1797,12 +1834,12 @@ class char_dir_orbits(TableChecker):
     def check_is_primitive(self):
         # check that is_primitive is true if and only if modulus=conductor
         # Since we can't use constraint on modulus=conductor, we construct the constraint directly
-        return self.check_iff({'is_primitive': True}, SQL("modulus = constraint"))
+        return self.check_iff({'is_primitive': True}, SQL("modulus = conductor"))
 
     @overall
     def check_galois_orbit(self):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
-        return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
+        return self.check_crosstable_aggregate('char_dir_values', SQL('t1.galois_orbit::smallint[]'), 'orbit_label', 'conrey_index')
 
     @overall
     def check_parity_value(self):
@@ -1826,6 +1863,7 @@ class char_dir_values(TableChecker):
     table = db.char_dir_values
     label = ['modulus', 'conrey_index']
     uniqueness_constraints = [['label'], label]
+    projection = ['label', 'values', 'values_gens', 'order']
 
     @overall
     def check_total_count(self):
@@ -1850,6 +1888,8 @@ class char_dir_values(TableChecker):
         elif v2 >= 3:
             # Z/8 and above requires two generators
             adjust2 = 1
+        else:
+            adjust2 = 0
         ngens = len(N.factor()) + adjust2
         vals = rec['values']
         val_gens = rec['values_gens']
