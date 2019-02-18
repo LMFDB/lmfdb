@@ -1227,7 +1227,8 @@ class mf_newforms(TableChecker):
         # if analytic_rank is present, check that matches order_of_vanishing in lfunctions record, and is are constant across the orbit
         db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), analytic_rank, dim FROM mf_newforms WHERE analytic_rank is NOT NULL"))
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT order_of_vanishing,(string_to_array(origin,'/'))[5:8],degree FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2"))
-        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using GIN(string_to_array)"))
+        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
+        db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
         cursor = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array  )  LIMIT 1"))
         if cursor.rowcount > 0:
             res =  cursor.fetchone()[0]
@@ -1253,15 +1254,16 @@ class mf_newforms(TableChecker):
     @overall
     def check_self_dual_lfunctions(self):
         # check that the lfunction self_dual attribute is consistent with newforms
-        db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), is_self_dual, dim FROM mf_newforms"))
-        db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT (string_to_array(origin,'/'))[5:8], array_agg(self_dual) self_dual FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2 GROUP BY (string_to_array(origin,'/'))[5:8]"))
-        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using GIN(string_to_array)"))
+        db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), is_self_dual FROM mf_newforms"))
+        db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT (string_to_array(origin,'/'))[5:8], every(self_dual) self_dual FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2 GROUP BY (string_to_array(origin,'/'))[5:8]"))
+        db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
+        db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
         cursor = db._execute(SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array LIMIT 1"))
         if cursor.rowcount > 0:
             res =  cursor.fetchone()[0]
         else:
             res = None
-        db._execute(SQL("DROP TABLE tem_mftbl"))
+        db._execute(SQL("DROP TABLE temp_mftbl"))
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
 
