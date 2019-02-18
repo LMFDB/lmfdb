@@ -26,7 +26,7 @@ def kbarbar(weight):
     return psi(RR(weight/2)).exp() / (2*RR.pi())
 
 def analytic_conductor(level, weight):
-    return level * kbarbar(weight)^2
+    return level * kbarbar(weight)**2
 
 def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-12):
     return (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
@@ -332,7 +332,7 @@ class TableChecker(object):
                                    constraint, [denominator])
         else:
             return self._run_query(SQL("MOD({0}, {1}) != 0").format(
-                Identifier(numerator), Identifier(denominator)))
+                Identifier(numerator), Identifier(denominator)), constraint)
 
     def check_non_divisible(self, numerator, denominator, constraint={}):
         if isinstance(denominator, (Integer, int)):
@@ -1772,7 +1772,7 @@ class char_dir_orbits(TableChecker):
     @overall
     def check_conductor_divides(self):
         # check that conductor divides modulus
-        return self.check_divisible(self, 'modulus', 'conductor')
+        return self.check_divisible('modulus', 'conductor')
 
     @overall
     def check_primitive(self):
