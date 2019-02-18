@@ -51,6 +51,8 @@ class speed_decorator(object):
     """
     Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
+    expect_failure = False # if True, will show up to 1000 failures rather than just the first
+    progress_interval = None # set to override the default interval for printing to the progress file
     def __init__(self, f=None, **kwds):
         self.f = f
         self._kwds = kwds
@@ -70,7 +72,9 @@ class slow(speed_decorator):
 
     This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
-    progress_interval = 1000
+    constraint = {} # this test is only run on rows satisfying this constraint
+    projection = 1 # default projection; override in order to not fetch large columns
+    ratio = 0.1 # ratio of rows to run this test on
 
 class fast(speed_decorator):
     """
@@ -78,7 +82,9 @@ class fast(speed_decorator):
 
     This should take a row (dictionary) as input and return True if everything is okay, False otherwise
     """
-    progress_interval = 10000
+    constraint = {} # this test is only run on rows satisfying this constraint
+    projection = 1 # default projection; override in order to not fetch large columns
+    ratio = 1 # ratio of rows to run this test on
 
 class overall(speed_decorator):
     """
@@ -128,6 +134,7 @@ class TableChecker(object):
         failures = 0
         disabled = 0
         errors = 0
+        aborted = False
         query = {}
         if self.id_limits:
             query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
@@ -159,8 +166,12 @@ class TableChecker(object):
                                 self._report_error(msg)
                                 log.write(msg)
                                 errors += 1
+                        if errors > 10 or failures > 1000:
+                            aborted = True
+                            break
         with open(self.donefile, 'a') as done:
-            status = "%s failures"%failures
+            status = "ABORTED with " if aborted else ""
+            status += "%s failures"%failures
             if disabled:
                 status += ", %s disabled"%disabled
             if errors:
@@ -449,9 +460,9 @@ class TableChecker(object):
         - ``other_columns`` --  the other columns from which we can deduce the label
         - ``constraint`` -- a dictionary, as passed to the search method
         - ``sep`` -- the separator for the join
-        - ``convert_to_base26`` -- a dictionary where the keys are columns that we need to convert to base_26, and the values is that the shift that we need to apply
+        - ``convert_to_base26`` -- a dictionary where the keys are columns that we need to convert to base26, and the values is that the shift that we need to apply
         """
-        oc_converted = [SQL('to_base_26({0} + {1})').format(Identifier(col), Literal(int(convert_to_base26[col])))
+        oc_converted = [SQL('to_base26({0} + {1})').format(Identifier(col), Literal(int(convert_to_base26[col])))
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
@@ -1041,10 +1052,10 @@ class mf_gamma1_subspaces(SubspacesChecker):
 class mf_newforms(TableChecker):
     table = db.mf_newforms
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
-    label_conversion = {'hecke_orbit': -1}
+    label_conversion = {'char_orbit_index': -1, 'hecke_orbit': -1}
     hecke_orbit_code = ['hecke_orbit_code', label]
     uniqueness_constraints = [[table._label_col], label, ['hecke_orbit_code']]
-
+    projection = ['label', 'level', 'weight', 'char_orbit_index', 'dim', 'projective_field', 'projective_image', 'projective_image_type', 'self_twist_discs', 'inner_twists', 'traces', 'field_poly', 'field_poly_is_cyclotomic', 'nf_label', 'related_objects', 'is_self_dual', 'artin_image', 'artin_degree', 'hecke_orbit_code'
 
     @overall
     def check_box_count(self):
@@ -1131,7 +1142,7 @@ class mf_newforms(TableChecker):
     @overall(expect_failure=True)
     def check_analytic_rank_proved(self):
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-        return list(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
+                  return ', '.join(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
 
     @overall
     def check_self_twist_type(self):
@@ -1318,8 +1329,8 @@ class mf_newforms(TableChecker):
 
     @slow
     def check_self_twist_disc(self, rec):
-        # check that self_twist_dics = [elt[6] for elt in inner_twists if elt[6] is not None]
-        return rec['self_twist_disc'] == [elt[6] for elt in rec['inner_twists'] if elt[6] is not None]
+        # check that self_twist_discs = [elt[6] for elt in inner_twists if elt[6] is not None]
+        return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None])
 
 
     @slow
@@ -1525,7 +1536,7 @@ class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
     projection = ['label']
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
-    label_conversion = {'hecke_orbit':-1}
+    label_conversion = {'char_orbit_index':-1, 'hecke_orbit':-1}
     uniqueness_constraints = [[table._label_col], label]
 
     # attached to mf_newforms
@@ -1533,6 +1544,7 @@ class mf_newform_portraits(TableChecker):
 
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
+    projection = ['label', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values']
 
     @overall
     def check_bijection(self):
@@ -1692,6 +1704,7 @@ class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
     label_col = 'lfunction_label'
     uniqueness_constraints = [['lfunction_label']]
+    projection = ['lfunction_label', 'angles']
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -1780,7 +1793,7 @@ class mf_hecke_cc(TableChecker):
 
     @slow
     def check_ap2(self, rec):
-        # TODO - zipped tables
+        # TODO - zipped tables (update projection)
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
