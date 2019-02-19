@@ -756,7 +756,8 @@ class PostgresTable(PostgresBase):
                 if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 # Have to determine whether key is jsonb before wrapping it in Identifier
-                force_json = (self.col_type[key] == 'jsonb')
+                coltype = self.col_type[key]
+                force_json = (coltype == 'jsonb')
                 if path:
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 else:
@@ -772,7 +773,11 @@ class PostgresTable(PostgresBase):
                 else:
                     if force_json:
                         value = Json(value)
-                    strings.append(SQL("{0} = %s").format(key))
+                    cmd = "{0} = %s"
+                    # For arrays, have to add an explicit typecast
+                    if coltype.endswith('[]'):
+                        cmd += '::' + coltype
+                    strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
                 return SQL(" AND ").join(strings), values
