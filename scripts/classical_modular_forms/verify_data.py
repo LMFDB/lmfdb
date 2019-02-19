@@ -611,7 +611,7 @@ class TableChecker(object):
                 x_column = None
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
-            if x_column is None:
+            if x_column is not None:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
             else:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
