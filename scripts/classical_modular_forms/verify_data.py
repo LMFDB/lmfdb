@@ -425,14 +425,13 @@ class TableChecker(object):
         return self._run_query(SQL("NOT ({0} %s ALL({1}))" % op).format(Literal(bound), Identifier(array_column)), constraint=constraint)
 
     def check_array_concatenation(self, a_columns, b_columns, constraint={}):
-        #HERE FIXME
         if isinstance(a_columns, basestring):
             a_columns = [a_columns]
         if isinstance(b_columns, basestring):
             b_columns = [b_columns]
         return self._run_query(SQL("{0} != {1}").format(
-            " || ".join(map(Identifier, a_columns)),
-            " || ".join(map(Identifier, b_columns))), constraint=constraint)
+            SQL(" || ").join(map(Identifier, a_columns)),
+            SQL(" || ").join(map(Identifier, b_columns))), constraint=constraint)
 
     def check_string_concatenation(self,
             label_col,
@@ -1213,9 +1212,9 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_trivial_character_cols(self):
-        # check that atkin_lehner_eigenvalues, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
+        # check that atkin_lehner_eigenvals, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
         yes = {'$exists':True}
-        return self.check_iff({'atkin_lehner_eigenvalues':yes, 'atkin_lehner_string':yes, 'fricke_eigenval':yes}, {'char_orbit_index':1})
+        return self.check_iff({'atkin_lehner_eigenvals':yes, 'atkin_lehner_string':yes, 'fricke_eigenval':yes}, {'char_orbit_index':1})
 
     @overall
     def check_inner_twists(self):

@@ -163,7 +163,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake")
         assert r'0.707107' in page.data
         assert r'0.957427' in page.data
-        assert r'0.223607' in page.data
+        assert r'0.223606' in page.data
         assert r'0.974679' in page.data
         ## We also check that the L-function works
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/a/a/')

@@ -359,9 +359,9 @@ def by_url_space_label(level, weight, char_orbit_label):
     return render_space_webpage(label)
 
 # Backward compatibility from before 2018
-@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/")
-def by_url_space_conreylabel(level, weight, conrey_label):
-    label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label))
+@cmf.route("/<int:level>/<int:weight>/<int:conrey_index>/")
+def by_url_space_conreylabel(level, weight, conrey_index):
+    label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index))
     return redirect(url_for_label(label), code=301)
 
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
@@ -370,18 +370,18 @@ def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
-@cmf.route("/<int:level>/<int:weight>/<int:conrey_label>/<hecke_orbit>/")
-def by_url_newform_conreylabel(level, weight, conrey_label, hecke_orbit):
-    label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
+@cmf.route("/<int:level>/<int:weight>/<int:conrey_index>/<hecke_orbit>/")
+def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
+    label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
 # From L-functions
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_label>/<int:embedding>/")
-def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_label, embedding):
-    assert conrey_label > 0
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
+def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
+    assert conrey_index > 0
     assert embedding > 0
     label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
-    return redirect(url_for(".by_url_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, m=".".join(map(str, [conrey_label,embedding]))),  code=301)
+    return redirect(url_for(".by_url_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, m=".".join(map(str, [conrey_index,embedding]))),  code=301)
 
 
 
