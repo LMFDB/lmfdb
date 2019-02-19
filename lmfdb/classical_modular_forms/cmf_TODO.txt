@@ -1,6 +1,9 @@
 CRITICAL (BUGS):
 
 IMPORTANT:
+* Fix Satake angles in weight 1 (Drew)
+* Fix sturm bound in mf_gamma1 (Drew)
+* Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * Change title when single m specified, jump and make sure m box is present (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
@@ -10,9 +13,8 @@ IMPORTANT:
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ to be a knowl, not only trivial character now so f.e. needs fixing (how?). (David/Alex/Whoever knows best)
-* Prove self-twists for 9 newforms where they are currently not proved (Drew)
-* Add Hecke cutters for 2 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
+* Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ to be a knowl, not only trivial character now so f.e. needs fixing (how?). (David/David)
+* Prove self-twists for 1 newform where it is currently not proved (Drew)
 * Compute L-functions:
   - 23.39.d.a and 23.41.d.a (CC ap data ready for 23.39.d.a, Edgar, still waiting on 23.41.d.a, Drew)
   - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
