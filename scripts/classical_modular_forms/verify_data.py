@@ -5,7 +5,11 @@
 #       from SQL injection       #
 ##################################
 import traceback, time, sys, os, inspect
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
+try:
+    # Make lmfdb available
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
+except NameError:
+    pass
 from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
@@ -18,7 +22,11 @@ def accumulate_failures(L):
     """
     Accumulates a list of bad labels
     """
-    return sum(L, [])
+    ans = []
+    for a in L:
+        if a:
+            ans.extend(a)
+    return ans
 
 @cached_function
 def kbarbar(weight):
@@ -116,6 +124,7 @@ class TableChecker(object):
         self.logfile = logfile + '.log'
         self.errfile = logfile + '.errors'
         self.progfile = logfile + '.progress'
+        self.startfile = logfile + '.started'
         self.donefile = logfile + '.done'
         self.default_typ = default_typ
 
@@ -143,6 +152,8 @@ class TableChecker(object):
         disabled = 0
         errors = 0
         aborts = 0
+        with open(self.startfile, 'w') as startfile:
+            startfile.write("%s.%s started\n"%(self.__class__.__name__, typ.__name__))
         with open(self.logfile, 'a') as log:
             with open(self.progfile, 'a') as prog:
                 start = time.time()
@@ -176,23 +187,26 @@ class TableChecker(object):
                             continue
                     try:
                         if typ in [fast, slow]:
+                            check_failures = 0
                             for rec_no, rec in enumerate(search_iter, 1):
                                 if rec_no % progress_interval == 0:
                                     prog.write('%s/%s in %ss\n'%(rec_no, total, time.time() - check_start))
                                     prog.flush()
                                 if not check(rec):
                                     log.write('%s: %s\n'%(name, rec[self.label_col]))
-                                    failures += 1
-                                if failures >= check.max_failures:
+                                    check_failures += 1
+                                if check_failures >= check.max_failures:
                                     aborts += 1
                                     break
+                            else:
+                                failures += check_failures
                         else:
                             # self._cur_limit controls the max number of failures returned
                             self._cur_limit = check.max_failures
                             bad_labels = check()
                             if bad_labels:
                                 for label in bad_labels:
-                                    log.write('%s: %s\n'%(name, bad_label))
+                                    log.write('%s: %s\n'%(name, label))
                                 log.flush()
                                 failures += len(bad_labels)
                     except Exception:
@@ -204,14 +218,18 @@ class TableChecker(object):
                     else:
                         prog.write('%s finished after %ss\n'%(name, time.time() - check_start))
         with open(self.donefile, 'a') as done:
-            status = "%s failures"%failures
-            if disabled:
-                status += ", %s disabled"%disabled
+            reports = []
+            if failures:
+                reports.append("%s failures"%failures)
             if aborts:
-                status += ", %s ABORTS"%aborts
+                reports.append("%s aborts"%aborts)
+            if disabled:
+                reports.append("%s disabled"%disabled)
             if errors:
-                status += ", %s ERRORS"%errors
-            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
+                reports.append("%s errors"%errors)
+            status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
+            done.write("%s.%s %s in %ss\n"%(self.__class__.__name__, typ.__name__, status, time.time() - start))
+            os.remove(self.startfile)
 
 
     # Add uniqueness constraints
@@ -362,7 +380,7 @@ class TableChecker(object):
     def check_values(self, values, constraint={}):
         if isinstance(values, Composable):
             vstr = values
-            vvalues = None
+            vvalues = []
         else:
             vstr, vvalues = self.table._parse_dict(values)
         if vstr is not None:
@@ -1272,14 +1290,12 @@ class mf_newforms(TableChecker):
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
 
-    @fast(projection=['projective_field', 'projective_image', 'projective_image_type'])
+    @fast(constraint={'projective_field':{'$exists':True}}, projection=['projective_field', 'projective_image', 'projective_image_type'])
     def check_projective_field_degree(self, rec):
         # if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 2n for Dn)
         coeffs = rec.get('projective_field')
         if coeffs is None: return True
         deg = Integer(rec['projective_image'][1:])
-        if rec['projective_image_type'] == 'Dn':
-            deg *= 2
         return deg == len(coeffs) - 1
 
 
@@ -1546,7 +1562,7 @@ class mf_hecke_nf(TableChecker):
         # check that maxp is at least 997
         return self._run_query(SQL('maxp < 997'))
 
-    @slow(projection=['label', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values'])
+    @slow(projection=['label', 'level', 'char_orbit_index', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values'])
     def check_hecke_ring_character_values_and_an(self, rec):
         # check that hecke_ring_character_values has the correct format, depending on whether hecke_ring_cyclotomic_generator is set or not
         # check that an has length 100 and that each entry is either a list of integers of length hecke_ring_rank (if hecke_ring_cyclotomic_generator=0) or a list of pairs
@@ -1566,8 +1582,7 @@ class mf_hecke_nf(TableChecker):
             if not isinstance(val, list):
                 return False
             if m == 0:
-                if len(val) != d or not all(isinstance(c, (int, Integer)) for c in val):
-                    return False
+                return len(val) == d and all(isinstance(c, (int, Integer)) for c in val)
             else:
                 for pair in val:
                     if len(pair) != 2:
@@ -1577,6 +1592,7 @@ class mf_hecke_nf(TableChecker):
                     e = pair[1]
                     if not (isinstance(e, (int, Integer)) and 0 <= 2*e < m):
                         return False
+                return True
         if not all(check_val(a) for a in an):
             return False
         if not all(check_val(a) for a in ap):
@@ -1584,13 +1600,16 @@ class mf_hecke_nf(TableChecker):
         for p, a in zip(prime_range(100), ap):
             if a != an[p-1]:
                 return False
-        N = Integer(rec['label'].split('.')[0])
-        total_order = 1
-        for g, val in rec['hecke_ring_character_values']:
-            total_order *= mod(g, N).multiplicative_order()
-            if not check_val(val):
+        if rec['char_orbit_index'] != 1:
+            if rec.get('hecke_ring_character_values') is None:
                 return False
-        return total_order == euler_phi(N)
+            N = rec['level']
+            total_order = 1
+            for g, val in rec['hecke_ring_character_values']:
+                total_order *= mod(g, N).multiplicative_order()
+                if not check_val(val):
+                    return False
+            return total_order == euler_phi(N)
 
 class TracesChecker(TableChecker):
     uniqueness_constraints = [['hecke_orbit_code', 'n']]
@@ -1790,7 +1809,7 @@ class char_dir_orbits(TableChecker):
     @overall
     def check_galois_orbit(self):
         # galois_orbit should be the list of conrey_indexes from char_dir_values with this orbit_label Conrey index n in label should appear in galois_orbit for record in char_dir_orbits with this orbit_label
-        return self.check_crosstable_aggregate('char_dir_values', SQL('t1.galois_orbit::smallint[]'), 'orbit_label', 'conrey_index')
+        return self.check_crosstable_aggregate('char_dir_values', 'galois_orbit', 'orbit_label', 'conrey_index')
 
     @overall
     def check_parity_value(self):
@@ -1806,7 +1825,7 @@ class char_dir_orbits(TableChecker):
     @slow(projection=['modulus', 'conductor', 'order', 'parity', 'galois_orbit'])
     def check_order_parity(self, rec):
         # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
-        char = DirichletCharacter_conrey(rec['modulus'], rec['galois_orbit'][0])
+        char = DirichletCharacter_conrey(DirichletGroup_conrey(rec['modulus']), rec['galois_orbit'][0])
         parity = 1 if char.is_even() else -1
         return parity == rec['parity'] and char.conductor() == rec['conductor'] and char.multiplicative_order() == rec['order']
 
