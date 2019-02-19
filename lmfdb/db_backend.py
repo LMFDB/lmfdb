@@ -2511,6 +2511,8 @@ class PostgresTable(PostgresBase):
         """
         Utility function: creates a table with the same schema as the given one.
         """
+        if self._table_exists(tmp_table):
+            raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table)
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator)
 
