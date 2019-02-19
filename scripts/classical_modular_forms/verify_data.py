@@ -641,7 +641,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_box_hecke_cutter_primes(self):
         # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set and `min(dims) <= 20`
-        return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
+        return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20,'$gt':0}}))
                    for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
@@ -652,7 +652,7 @@ class mf_newspaces(TableChecker):
                         'traces',
                         'trace_bound',
                         'num_forms',
-                        'hecke_orbit_dims'], self._box_query(box))
+                        'hecke_orbit_dims'], self._box_query(box, {'dim':{'$gt':0}}))
                    for box in db.mf_boxes.search({'straces':True}))
 
     @overall
@@ -687,8 +687,8 @@ class mf_newspaces(TableChecker):
 
     @overall
     def check_AL_dims_plus_dim(self):
-        # check that AL_dims and plus_dim is set whenever char_orbit_index=1
-        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit_index':1})
+        # check that AL_dims and plus_dim is set whenever char_orbit_index=1 and dim > 0
+        return self.check_non_null(['AL_dims', 'plus_dim'], {'char_orbit_index':1, 'dim':{'$gt':0}})
 
     @overall
     def check_dim0_num_forms(self):
@@ -770,7 +770,7 @@ class mf_newspaces(TableChecker):
     def check_oldspace_decomposition_totaldim(self):
         # from mf_subspaces
         # check that summing sub_dim * sub_mult over rows with a given label gives dim of S_k^old(N,chi)
-        return self.check_crosstable_dotprod('mf_subspaces', ['cusp_dim', 'dim'], 'label', ['sub_mult', 'sub_dim'])
+        return self.check_crosstable_dotprod('mf_subspaces', 'cusp_dim', 'label', ['sub_mult', 'sub_dim'])
 
     ### mf_newspace_portraits ###
     @overall
@@ -932,12 +932,12 @@ class mf_gamma1(TableChecker):
         # check level_* attributes
         return self._check_level(rec)
 
-    @fast(max_failures=2000, projection=['level', 'weight', 'analytic_conductor'])
+    @fast(projection=['level', 'weight', 'analytic_conductor'])
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
-    @slow(projection=['level', 'weight', 'sturm_bound'])
+    @slow(max_failures=2000, projection=['level', 'weight', 'sturm_bound'])
     def check_sturm_bound(self, rec):
         # check that sturm_bound is exactly floor(k*Index(Gamma1(N))/12)
         return rec['sturm_bound'] == sturm_bound1(rec['level'], rec['weight'])
@@ -1125,10 +1125,10 @@ class mf_newforms(TableChecker):
         # if hecke_ring_index_proved is set, verify that field_disc is set
         return self.check_non_null(['field_disc'], {'hecke_ring_index_proved':{'$exists':True}})
 
-    @overall(max_failures=1000)
+    @overall(max_failures=2000)
     def check_analytic_rank_proved(self):
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
-                  return ', '.join(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
+        return list(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
 
     @overall
     def check_self_twist_type(self):
@@ -1250,10 +1250,10 @@ class mf_newforms(TableChecker):
         return self._run_query(SQL('hecke_ring_index != prod_factorization(hecke_ring_index_factorization)'), {'hecke_ring_index_factorization':{'$exists':True}});
 
 
-    @overall
+    @overall(max_failures=1000)
     def check_analytic_rank_set(self):
         return accumulate_failures(self.check_non_null(['analytic_rank'], self._box_query(box))
-                for box in db.mf_boxes.search({'lfunctions':True}))
+                                   for box in db.mf_boxes.search({'lfunctions':True}))
 
 
     @overall
@@ -1354,7 +1354,15 @@ class mf_newforms(TableChecker):
                     return False
                 artin_label = name.split()[-1]
                 conductor_string = artin_label.split('.')[1]
-                conductor = [a**b for a, b in [map(int, elt.split('e')) for elt in conductor_string.split('_')]]
+                conductor = 1
+                for elt in conductor_string.split('_'):
+                    pe = map(int, elt.split('e'))
+                    if len(pe) == 1:
+                        conductor *= pe
+                    elif len(pe) == 2:
+                        conductor *= pe[0]**pe[1]
+                    else:
+                        raise ValueError(str(pe))
                 if conductor != rec['level']:
                     return False
 
@@ -1483,7 +1491,7 @@ class mf_newforms(TableChecker):
         poly = PolynomialRing(CC, "x")(rec['field_poly'])
         for root in db.mf_hecke_cc.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"]):
             r = CC(*[root[elt] for elt in ["embedding_root_real", "embedding_root_imag"]])
-            if poly.evaluate(r) > 1e-13:
+            if poly(r) > 1e-13:
                 return False
         return True
 
@@ -1785,7 +1793,7 @@ class char_dir_orbits(TableChecker):
         # check that conductor divides modulus
         return self.check_divisible('modulus', 'conductor')
 
-    @overall
+    @overall_long
     def check_primitive(self):
         # check that orbit specified by conductor,prim_orbit_index is present
         return self.check_crosstable_count('char_dir_orbits', 1, ['conductor', 'prim_orbit_index'], ['modulus', 'orbit_index'])
