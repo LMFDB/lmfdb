@@ -14,10 +14,11 @@ from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_func
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from datetime import datetime
 
-def _any(L):
-    # a version of any that returns the first entry x with bool(x) = True, rather than returning True.  If no x, returns None
-    for x in L:
-        if x: return x
+def accumulate_failures(L):
+    """
+    Accumulates a list of bad labels
+    """
+    return sum(L, [])
 
 @cached_function
 def kbarbar(weight):
@@ -50,8 +51,8 @@ class speed_decorator(object):
     """
     Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
-    expect_failure = False # if True, will show up to 1000 failures rather than just the first
-    progress_interval = None # set to override the default interval for printing to the progress file
+    disabled = False # set to True to skip this check
+    max_failures = 1 # maximum number of failures to show
     def __init__(self, f=None, **kwds):
         self.f = f
         self._kwds = kwds
@@ -65,45 +66,51 @@ class speed_decorator(object):
             return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
 
-class slow(speed_decorator):
+class per_row(speed_decorator):
     """
-    Decorate a check as being slow to run
+    A check that is run by iterating through each row in a sample of the table.
 
-    This should take a row (dictionary) as input and return True if everything is okay, False otherwise
+    The wrapped function should take a row (dictionary) as input and return True if everything is okay, False otherwise.
     """
+    progress_interval = None # set to override the default interval for printing to the progress file
     constraint = {} # this test is only run on rows satisfying this constraint
-    projection = 1 # default projection; override in order to not fetch large columns
-    ratio = 0.1 # ratio of rows to run this test on
+    projection = 1 # default projection; override in order to not fetch large columns.  label_col is appended
 
-class fast(speed_decorator):
+class one_query(speed_decorator):
     """
-    Decorate a check as being fast to run
+    A check as being one that's run once overall for the table, rather than once for each row
 
-    This should take a row (dictionary) as input and return True if everything is okay, False otherwise
-    """
-    constraint = {} # this test is only run on rows satisfying this constraint
-    projection = 1 # default projection; override in order to not fetch large columns
-    ratio = 1 # ratio of rows to run this test on
-
-class overall(speed_decorator):
-    """
-    Decorate a check as being one that's run once overall for the table, rather than once for each row
-
-    This should take no input and return a bad label if there is a failure, or None otherwise.
+    The wrapped function should take no input and return a list of bad labels (at most max_failures)
     """
     pass
 
-class overall_long(speed_decorator):
+class slow(per_row):
     """
-    Decorate a check as being one that's run once overall for the table, rather than once for each row
+    A per-row check that is slow to run
+    """
+    ratio = 0.1 # ratio of rows to run this test on
 
-    This should take no input and return a bad label if there is a failure, or None otherwise.
+class fast(per_row):
+    """
+    A per-row check that is fast to run
+    """
+    ratio = 1 # ratio of rows to run this test on
+
+class overall(one_query):
+    """
+    An overall check that is fast to run
+    """
+    pass
+
+class overall_long(one_query):
+    """
+    An overall check that is slow to run
     """
     pass
 
 class TableChecker(object):
     label_col = 'label' # default
-    def __init__(self, logfile=None, default_typ=None, id_limits=None):
+    def __init__(self, logfile=None, default_typ=None):
         if logfile is None:
             logfile = "%s.%s" % (self.__class__.__name__, default_typ.__name__)
         self.logfile = logfile + '.log'
@@ -111,7 +118,6 @@ class TableChecker(object):
         self.progfile = logfile + '.progress'
         self.donefile = logfile + '.done'
         self.default_typ = default_typ
-        self.id_limits = id_limits
 
     @classmethod
     def _get_checks_count(cls, typ):
@@ -120,113 +126,93 @@ class TableChecker(object):
     def _get_checks(self, typ):
         return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
-    def _report_error(self, msg):
+    def _report_error(self, msg, log, prog):
         with open(self.errfile, 'a') as err:
             err.write(msg)
             err.write(traceback.format_exc() + '\n')
-
-    def _run_perrow(self, typ):
-        table = self.table
-        checks = self._get_checks(typ)
-        me = self.__class__.__name__
-        total = table.count()
-        failures = 0
-        disabled = 0
-        errors = 0
-        aborted = False
-        query = {}
-        if self.id_limits:
-            query = {'id': {'$gte': self.id_limits[0], '$lt': self.id_limits[1]}}
-        with open(self.logfile, 'a') as log:
-            with open(self.progfile, 'a') as prog:
-                start = time.time()
-                try:
-                    search_iter = table.search(query, projection=self.projection, sort=[])
-                except Exception:
-                    msg = "Exception in %s generating search results\n"%(me)
-                    self._report_error(msg)
-                    log.write(msg)
-                    errors += 1
-                else:
-                    for rec_no, rec in enumerate(search_iter, 1):
-                        if rec_no % typ.progress_interval == 0:
-                            prog.write('%s.%s (%s/%s) in %ss\n'%(me, typ.__name__, rec_no, total, time.time() - start))
-                            prog.flush()
-                        for check in checks:
-                            if check.__dict__.get('disabled'):
-                                disabled += 1
-                                continue
-                            try:
-                                if not check(rec):
-                                    log.write('%s.%s: %s\n'%(me, check.__name__, rec[self.label_col]))
-                                    failures += 1
-                            except Exception:
-                                msg = 'Exception in %s.%s (%s):\n'%(me, check.__name__, rec[self.label_col])
-                                self._report_error(msg)
-                                log.write(msg)
-                                errors += 1
-                        if errors > 10 or failures > 1000:
-                            aborted = True
-                            break
-        with open(self.donefile, 'a') as done:
-            status = "ABORTED with " if aborted else ""
-            status += "%s failures"%failures
-            if disabled:
-                status += ", %s disabled"%disabled
-            if errors:
-                status += ", %s errors"%errors
-            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
-
-    def _run_overall(self, typ):
-        checks = self._get_checks(typ)
-        logfile = self.logfile
-        me = self.__class__.__name__
-        failures = 0
-        errors = 0
-        disabled = 0
-        with open(self.logfile, 'a') as log:
-            with open(self.progfile, 'a') as prog:
-                start = time.time()
-                print "Running %s checks"%len(checks)
-                for check_num, check in enumerate(checks, 1):
-                    if check.__dict__.get('disabled'):
-                        prog.write('%s.%s (%s/%s) disabled\n'%(me, check.__name__, check_num, len(checks)))
-                        disabled += 1
-                        continue
-                    check_start = time.time()
-                    prog.write('%s.%s (%s/%s) started at %s\n'%(me, check.__name__, check_num, len(checks), datetime.now()))
-                    prog.flush()
-                    try:
-                        print "Starting %s"%(check.__name__)
-                        bad_label = check()
-                    except Exception:
-                        with open(self.errfile, 'a') as err:
-                            msg = 'Exception in %s.%s:\n'%(me, check.__name__)
-                            err.write(msg)
-                            log.write(msg)
-                            err.write(traceback.format_exc() + '\n')
-                        errors += 1
-                    else:
-                        if bad_label:
-                            log.write('%s: %s\n'%(check.__name__, bad_label))
-                            log.flush()
-                            failures += 1
-                        prog.write('%s finished after %ss\n'%(check.__name__, time.time() - check_start))
-        with open(self.donefile, 'a') as done:
-            status = "%s failures"%failures
-            if disabled:
-                status += ", %s disabled"%disabled
-            if errors:
-                status += ", %s errors"%errors
-            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
+        log.write(msg)
+        prog.write(msg)
+        return 1
 
     def run(self, typ=None):
         if typ is None:
             typ = self.default_typ
-        if typ in [slow, fast]:
-            self._run_perrow(typ)
-        else:
-            self._run_overall(typ)
+        table = self.table
+        checks = self._get_checks(typ)
+        failures = 0
+        disabled = 0
+        errors = 0
+        aborts = 0
+        with open(self.logfile, 'a') as log:
+            with open(self.progfile, 'a') as prog:
+                start = time.time()
+                for check_num, check in enumerate(checks, 1):
+                    name = "%s.%s"%(self.__class__.__name__, check.__name__)
+                    if check.disabled:
+                        prog.write('%s (check %s/%s) disabled\n'%(name, check_num, len(checks)))
+                        disabled += 1
+                        continue
+                    check_start = time.time()
+                    prog.write('%s (check %s/%s) started at %s\n'%(name, check_num, len(checks), datetime.now()))
+                    prog.flush()
+                    if typ in [fast, slow]:
+                        total = int(table.count(check.constraint) * check.ratio)
+                        progress_interval = check.progress_interval
+                        if progress_interval is None:
+                            # Report about 100 times during run
+                            if total < 10000:
+                                progress_interval = 100 * (1 + total//10000)
+                            else:
+                                progress_interval = 1000 * (1 + total//100000)
+                        projection = check.projection
+                        if self.label_col not in projection:
+                            projection = [self.label_col] + projection
+                        try:
+                            search_iter = table.random_sample(check.ratio, check.constraint, projection)
+                        except Exception:
+                            msg = "Exception in %s generating search results\n"%(me)
+                            self._report_error(msg)
+                            errors += 1
+                            continue
+                    try:
+                        if typ in [fast, slow]:
+                            for rec_no, rec in enumerate(search_iter, 1):
+                                if rec_no % progress_interval == 0:
+                                    prog.write('%s/%s in %ss\n'%(rec_no, total, time.time() - check_start))
+                                    prog.flush()
+                                if not check(rec):
+                                    log.write('%s: %s\n'%(name, rec[self.label_col]))
+                                    failures += 1
+                                if failures >= check.max_failures:
+                                    aborts += 1
+                                    break
+                        else:
+                            # self._cur_limit controls the max number of failures returned
+                            self._cur_limit = check.max_failures
+                            bad_labels = check()
+                            if bad_labels:
+                                for label in bad_labels:
+                                    log.write('%s: %s\n'%(name, bad_label))
+                                log.flush()
+                                failures += len(bad_labels)
+                    except Exception:
+                        if typ in [fast, slow]:
+                            msg = 'Exception in %s (%s):\n'%(name, rec.get(self.label_col, ''))
+                        else:
+                            msg = 'Exception in %s\n'%(name)
+                        errors += self._report_error(msg, log, prog)
+                    else:
+                        prog.write('%s finished after %ss\n'%(name, time.time() - check_start))
+        with open(self.donefile, 'a') as done:
+            status = "%s failures"%failures
+            if disabled:
+                status += ", %s disabled"%disabled
+            if aborts:
+                status += ", %s ABORTS"%aborts
+            if errors:
+                status += ", %s ERRORS"%errors
+            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
+
 
     # Add uniqueness constraints
 
@@ -257,10 +243,9 @@ class TableChecker(object):
                 values = values + cvalues
         if constraint is not None:
             query = SQL("{0} AND {1}").format(query, constraint)
-        query = SQL("{0} LIMIT 1").format(query)
-        cur = db._execute(query, values)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("{0} LIMIT %s").format(query)
+        cur = db._execute(query, values + [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     def _make_join(self, join1, join2):
         if not isinstance(join1, list):
@@ -614,8 +599,6 @@ class TableChecker(object):
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
 
-    projection = ['label', 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'hecke_orbit_dims', 'trace_bound', 'dim', 'num_forms', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
-
     uniqueness_constraints = [
        ['label'],
        ['level', 'weight', 'char_orbit_index'],
@@ -628,19 +611,19 @@ class mf_newspaces(TableChecker):
     @overall
     def check_box_count(self):
         # there should be exactly one row for every newspace in mf_boxes; for each box performing mf_newspaces.count(box query) should match newspace_count for box, and mf_newspaces.count() should be the sum of these
-        return _any(self.check_count(box['newspace_count'], self._box_query(box))
+        return accumulate_failures(self.check_count(box['newspace_count'], self._box_query(box))
                    for box in db.mf_boxes.search())
 
     @overall
     def check_box_hecke_cutter_primes(self):
         # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set and `min(dims) <= 20`
-        return _any(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
+        return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20}}))
                    for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
     def check_box_straces(self):
         # check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
-        return _any(
+        return accumulate_failures(
                 self.check_non_null([
                         'traces',
                         'trace_bound',
@@ -740,7 +723,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_against_char_dir_orbits(self):
         # check that char_* atrributes and prim_orbit_index match data in char_dir_orbits table (conrey_indexes should match galois_orbit)
-        return _any(self.check_crosstable('char_dir_orbits', col, ['level', 'char_orbit_label'], charcol, ['modulus', 'orbit_label']) for col, charcol in [('char_orbit_index', 'orbit_index'), ('conrey_indexes', 'galois_orbit'), ('char_order', 'order'), ('char_conductor', 'conductor'), ('char_degree', 'char_degree'), ('prim_orbit_index', 'prim_orbit_index'), ('char_parity', 'parity'), ('char_is_real', 'is_real')])
+        return accumulate_failures(self.check_crosstable('char_dir_orbits', col, ['level', 'char_orbit_label'], charcol, ['modulus', 'orbit_label']) for col, charcol in [('char_orbit_index', 'orbit_index'), ('conrey_indexes', 'galois_orbit'), ('char_order', 'order'), ('char_conductor', 'conductor'), ('char_degree', 'char_degree'), ('prim_orbit_index', 'prim_orbit_index'), ('char_parity', 'parity'), ('char_is_real', 'is_real')])
 
     @overall
     def check_hecke_orbit_dims_sorted(self):
@@ -769,7 +752,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_portraits_count(self):
         # check that there is a portrait present for every nonempty newspace in box where straces is set
-        return _any(
+        return accumulate_failures(
                 self.check_crosstable_count('mf_newspace_portraits', 1, 'label',
                     constraint=self._box_query(box, extras = {'dim':{'$gt':1}}))
                 for box in db.mf_boxes.search({'straces':True}))
@@ -781,52 +764,40 @@ class mf_newspaces(TableChecker):
         return (self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight','char_orbit_index'], 'dim', constraint={'num_forms':{'$exists':True}}) or
                 self.check_crosstable_sum('mf_newforms', 'dim', 'label', 'dim', 'space_label', constraint={'num_forms':{'$exists':True}}))
 
-    @fast
+    @fast(projection=['level', 'weight', 'analytic_conductor'])
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
-    @slow
+    @slow(projection=['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'])
     def check_level(self, rec):
         return self._check_level(rec)
 
-    @slow
+    @slow(projection=['sturm_bound', 'level', 'weight'])
     def check_sturm_bound(self, rec):
         # check that sturm_bound is exactly floor(k*Index(Gamma0(N))/12)
         return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
 
 
-    @slow
+    @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
     def check_Skchi_dim_formula(self, rec):
         # for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
         # sample: dimension_new_cusp_forms(DirichletGroup(100).1^2,4)
-        if rec['weight'] > 1:
-            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
-            return dimension_new_cusp_forms(dirchar, rec['weight']) == rec['relative_dim']
-        else:
-            # no test
-            return True
+        dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+        return dimension_new_cusp_forms(dirchar, rec['weight']) == rec['relative_dim']
 
-    @slow
+    @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
     def check_dims(self, rec):
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
-        if rec['weight'] > 1:
-            dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
-            k = rec['weight']
-            m = rec['char_degree']
-            return (dimension_eis(dirchar, k)*m == rec['eis_dim'] and
-                    dimension_cusp_forms(dirchar, k)*m == rec['cusp_dim'] and
-                    dimension_modular_forms(dirchar, k)*m == rec['mf_dim'])
-        else:
-            # no test
-            return True
-
-
+        dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
+        k = rec['weight']
+        m = rec['char_degree']
+        return (dimension_eis(dirchar, k)*m == rec['eis_dim'] and
+                dimension_cusp_forms(dirchar, k)*m == rec['cusp_dim'] and
+                dimension_modular_forms(dirchar, k)*m == rec['mf_dim'])
 
 class mf_gamma1(TableChecker):
     table = db.mf_gamma1
-    projection = ['label', 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square', 'weight', 'analytic_conductor', 'sturm_bound', 'dim', 'eis_dim', 'eis_new_dim', 'cusp_dim', 'mf_dim', 'mf_new_dim']
-
     label = ['level', 'weight']
     uniqueness_constraints = [[table._label_col], label]
 
@@ -846,13 +817,13 @@ class mf_gamma1(TableChecker):
                         query['level']['$gte'] = 3
                 else:
                     raise NotImplementedError
-        return _any(self.check_count(box['Nk_count'], make_query(box))
+        return accumulate_failures(self.check_count(box['Nk_count'], make_query(box))
                    for box in db.mf_boxes.search())
 
     @overall
     def check_box_traces(self):
         # check that traces is set if space is in a box with traces set and no dimension/character constraint
-        return _any(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
+        return accumulate_failures(self.check_non_null(['traces'], self._box_query(box, drop=['char_order', 'dim']))
                    for box in db.mf_boxes.search({'omin':None, 'omax':None, 'Dmin':None, 'Dmax':None, 'straces':True}))
 
     @overall
@@ -931,44 +902,37 @@ class mf_gamma1(TableChecker):
         return self.check_crosstable_count('mf_gamma1_portraits', 1, 'label', constraint={'dim':{'$gt':0}, 'level':{'$lte':4000}})
 
     ### slow ###
-    @slow
+    @slow(projection=['level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'])
     def check_level(self, rec):
         # check level_* attributes
         return self._check_level(rec)
 
-    @slow
+    @slow(projection=['level', 'weight', 'analytic_conductor'])
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
-    @slow
+    @slow(projection=['level', 'weight', 'sturm_bound'])
     def check_sturm_bound(self, rec):
         # check that sturm_bound is exactly floor(k*Index(Gamma0(N))/12)
         return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
 
-    @slow
+    @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'dim'])
     def check_Sk_dim_formula(self, rec):
         # check that dim = dim S_k^new(Gamma1(N))
-        if rec['weight'] > 1:
-            return rec['dim'] == dimension_new_cusp_forms(Gamma1(rec['level']), rec['weight'])
-        else:
-            # no test
-            return True
-    @slow
+        return rec['dim'] == dimension_new_cusp_forms(Gamma1(rec['level']), rec['weight'])
+
+    @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'eis_dim', 'cusp_dim', 'mf_dim'])
     def check_dims(self, rec):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
-        if rec['weight'] > 1:
-            G = Gamma1(rec['level'])
-            return(dimension_eis(G, k) == rec['eis_dim'] and
-                   dimension_cusp_forms(G, k) == rec['cusp_dim'] and
-                   dimension_modular_forms(G, k) == rec['mf_dim'])
-        else:
-            # no test
-            return True
+        G = Gamma1(rec['level'])
+        k = rec['weight'] 
+        return(dimension_eis(G, k) == rec['eis_dim'] and
+               dimension_cusp_forms(G, k) == rec['cusp_dim'] and
+               dimension_modular_forms(G, k) == rec['mf_dim'])
 
 class mf_newspace_portraits(TableChecker):
     table = db.mf_newspace_portraits
-    projection = ['label']
     label = ['level', 'weight', 'char_orbit_index']
     uniqueness_constraints = [[table._label_col], label]
     label_conversion = {'char_orbit_index': -1}
@@ -978,7 +942,6 @@ class mf_newspace_portraits(TableChecker):
 
 class mf_gamma1_portraits(TableChecker):
     table = db.mf_gamma1_portraits
-    projection = ['label']
     label = ['level', 'weight']
     uniqueness_constraints = [[table._label_col],label]
 
@@ -1054,7 +1017,6 @@ class mf_newforms(TableChecker):
     label_conversion = {'char_orbit_index': -1, 'hecke_orbit': -1}
     hecke_orbit_code = ['hecke_orbit_code', label]
     uniqueness_constraints = [[table._label_col], label, ['hecke_orbit_code']]
-    projection = ['label', 'level', 'weight', 'char_orbit_index', 'dim', 'projective_field', 'projective_image', 'projective_image_type', 'self_twist_discs', 'inner_twists', 'traces', 'field_poly', 'field_poly_is_cyclotomic', 'nf_label', 'related_objects', 'is_self_dual', 'artin_image', 'artin_degree', 'hecke_orbit_code'
 
     @overall
     def check_box_count(self):
@@ -1138,7 +1100,7 @@ class mf_newforms(TableChecker):
         # if hecke_ring_index_proved is set, verify that field_poly_disc is set
         return self.check_non_null(['field_poly_disc'], {'hecke_ring_index_proved':{'$exists':True}})
 
-    @overall(expect_failure=True)
+    @overall(max_failures=1000)
     def check_analytic_rank_proved(self):
         # check that analytic_rank_proved is true when analytic rank set (log warning if not)
                   return ', '.join(self.table.search({'analytic_rank_proved':False, 'analytic_rank': {'$exists':True}}, 'label'))
@@ -1264,7 +1226,7 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_analytic_rank_set(self):
-        return _any(self.check_non_null(['analytic_rank'], self._box_query(box))
+        return accumulate_failures(self.check_non_null(['analytic_rank'], self._box_query(box))
                 for box in db.mf_boxes.search({'lfunctions':True}))
 
 
@@ -1275,11 +1237,8 @@ class mf_newforms(TableChecker):
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT order_of_vanishing,(string_to_array(origin,'/'))[5:8],degree FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2"))
         db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
         db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
-        cursor = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array  )  LIMIT 1"))
-        if cursor.rowcount > 0:
-            res =  cursor.fetchone()[0]
-        else:
-            res = None
+        cur = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array )  LIMIT %s"), [self._cur_limit])
+        res = [rec[0] for rec in cur]
         db._execute(SQL("DROP TABLE tem_mftbl"))
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
@@ -1290,12 +1249,11 @@ class mf_newforms(TableChecker):
         # I expect this to take about 3/4h
         # we a create a temp table as we can't use aggregates under WHERE
         db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc t1, mf_newforms t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
-        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1")
+        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
         # alternative query, but most likely equally slow
-        #query = SQL("WITH foo AS (SELECT t1.label, t1.hecke_orbit_code FROM mf_newforms t1 WHERE t1.field_poly is NULL AND t1.is_self_dual) SELECT foo.label FROM foo, mf_hecke_cc t2 WHERE 0 != all( t2.an_normalized[:][2:2] ) LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        #query = SQL("WITH foo AS (SELECT t1.label, t1.hecke_orbit_code FROM mf_newforms t1 WHERE t1.field_poly is NULL AND t1.is_self_dual) SELECT foo.label FROM foo, mf_hecke_cc t2 WHERE 0 != all( t2.an_normalized[:][2:2] ) LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_self_dual_lfunctions(self):
@@ -1304,16 +1262,13 @@ class mf_newforms(TableChecker):
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT (string_to_array(origin,'/'))[5:8], every(self_dual) self_dual FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2 GROUP BY (string_to_array(origin,'/'))[5:8]"))
         db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
         db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
-        cursor = db._execute(SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array LIMIT 1"))
-        if cursor.rowcount > 0:
-            res =  cursor.fetchone()[0]
-        else:
-            res = None
+        cur = db._execute(SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array LIMIT %s"), [self._cur_limit])
+        res = [rec[0] for rec in cur]
         db._execute(SQL("DROP TABLE temp_mftbl"))
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
 
-    @fast
+    @fast(projection=['projective_field', 'projective_image', 'projective_image_type'])
     def check_projective_field_degree(self, rec):
         # if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 2n for Dn)
         coeffs = rec.get('projective_field')
@@ -1326,13 +1281,13 @@ class mf_newforms(TableChecker):
 
     #### slow ####
 
-    @slow
+    @slow(projection=['self_twist_discs', 'inner_twists'])
     def check_self_twist_disc(self, rec):
         # check that self_twist_discs = [elt[6] for elt in inner_twists if elt[6] is not None]
         return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None])
 
 
-    @slow
+    @slow(projection=['level', 'self_twist_discs', 'traces'])
     def check_inert_primes(self, rec):
         # for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
         N = rec['level']
@@ -1346,9 +1301,9 @@ class mf_newforms(TableChecker):
 
     ZZx = PolynomialRing(ZZ, 'x')
 
-    @slow
+    @slow(constraint={'field_poly':{'$exists':True}}, projection=['field_poly', 'field_poly_is_cyclotomic'])
     def check_field_poly_properties(self, rec):
-        # if present, check that field_poly is irreducible, 
+        # if present, check that field_poly is irreducible
         if 'field_poly' not in rec:
             return True
         else:
@@ -1361,7 +1316,7 @@ class mf_newforms(TableChecker):
                     return False
             return True
 
-    @slow
+    @slow(projection=['level', 'weight', 'char_orbit_index', 'dim', 'related_objects'])
     def check_related_objects(self, rec):
         # check that URLS in related_objects are valid and identify objects present in the LMFDB
         names = names_and_urls(rec['related_objects'])
@@ -1391,65 +1346,58 @@ class mf_newforms(TableChecker):
 
     #### extra slow ####
 
-    @slow
+    @slow(constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
     def check_self_dual_by_poly(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
-        f = rec.get('field_poly')
-        if rec.get('nf_label') is None and f is not None:
-            f = ZZx(f)
-            K = NumberField(f, 'a')
-            return (rec.get('is_self_dual') == K.is_totally_real())
-        return True
+        f = ZZx(rec['field_poly'])
+        K = NumberField(f, 'a')
+        return (rec.get('is_self_dual') == K.is_totally_real())
 
-    #@slow
+    #@slow(constraint={'is_self_dual':{'$exists':True}, 'field_poly':None}, projection=['hecke_orbit_code', 'is_self_dual'])
     #def check_self_dual_by_embeddings_old(self, rec):
     #    # FIXME see check_self_dual_by_embeddings and  check_self_dual_lfunctions
     #    # TODO - is there a way to write this without 73993 mf_hecke_cc/lfunc_lfunction searches
     #    # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual and/or check that the lfunction self_dual attribute is consistent
-    #    if 'is_self_dual' in rec and rec.get('field_poly') is None:
-    #        embeddings = mf_hecke_cc.search({'hecke_orbit_code':rec['hecke_orbit_code']}, ['embedding_root_imag', 'an_normalized'])
-    #        for emb in embeddings:
-    #            imag = emb.get('embedding_root_imag')
-    #            if rec['is_self_dual']:
-    #                if imag is not None and imag != 0:
-    #                    return False
-    #                if not all(y == 0 for x,y in emb['an_normalized']):
-    #                    return False
-    #            elif imag is not None:
-    #                if imag != 0:
-    #                    return True
-    #            else:
-    #                if any(y != 0 for x,y in emb['an_normalized']):
-    #                    return True
-    #        if not rec['is_self_dual']:
-    #            return False
-    #    return True
+    #    embeddings = mf_hecke_cc.search({'hecke_orbit_code':rec['hecke_orbit_code']}, ['embedding_root_imag', 'an_normalized'])
+    #    for emb in embeddings:
+    #        imag = emb.get('embedding_root_imag')
+    #        if rec['is_self_dual']:
+    #            if imag is not None and imag != 0:
+    #                return False
+    #            if not all(y == 0 for x,y in emb['an_normalized']):
+    #                return False
+    #        elif imag is not None:
+    #            if imag != 0:
+    #                return True
+    #        else:
+    #            if any(y != 0 for x,y in emb['an_normalized']):
+    #                return True
+    #    return rec['is_self_dual']
 
-    @slow
+    @slow(constraint={'artin_image':{'$exists':True}}, projection=['projective_image', 'artin_image', 'artin_degree'])
     def check_artin_image(self, rec):
         # if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
-        aimage = rec.get('artin_image')
+        aimage = rec['artin_image']
         pimage = rec.get('projective_image')
-        if aimage is not None:
-            aid = map(ZZ, aimage.split('.'))
-            if aid[0] != rec['artin_degree']:
-                return False
-            if pimage == 'A4':
-                pid = [12,3]
-            elif pimage == 'S4':
-                pid = [24,12]
-            elif pimage == 'A5':
-                pid = [60,5]
-            else:
-                pid = gap.DihedralGroup(2*ZZ(pimage[1:])).IdGroup().sage()
-            qid = gap.SmallGroup(*aid).CommutatorFactorGroup().IdGroup().sage()
-            if pid != qid:
-                return False
-        return True
+        if pimage is None:
+            return False
+        aid = map(ZZ, aimage.split('.'))
+        if aid[0] != rec['artin_degree']:
+            return False
+        if pimage == 'A4':
+            pid = [12,3]
+        elif pimage == 'S4':
+            pid = [24,12]
+        elif pimage == 'A5':
+            pid = [60,5]
+        else:
+            pid = gap.DihedralGroup(2*ZZ(pimage[1:])).IdGroup().sage()
+        qid = gap.SmallGroup(*aid).CommutatorFactorGroup().IdGroup().sage()
+        return pid == qid
 
     #### char_dir_orbits ####
 
-    @slow
+    @slow(disabled = True)
     def check_(self, rec):
         # TODO - use zipped table
         # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
@@ -1480,7 +1428,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_embeddings_count(self):
         # check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
-        return _any(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
+        return accumulate_failures(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
 
     @overall
     def check_embeddings_count_boxcheck(self):
@@ -1492,7 +1440,7 @@ class mf_newforms(TableChecker):
         # check that embedding_root_real, and embedding_root_image present in mf_hecke_cc whenever field_poly is present
         # I didn't manage to write a generic one for this one
         join = self._make_join('hecke_orbit_code', None)
-        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} is not NULL LIMIT 1").format(
+        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} is not NULL LIMIT %s").format(
                 Identifier(self.table._label_col),
                 Identifier(self.table.search_table),
                 Identifier('mf_hecke_cc'),
@@ -1501,22 +1449,20 @@ class mf_newforms(TableChecker):
                 Identifier("embedding_root_imag"),
                 Identifier("field_poly")
                 )
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
-    @slow
+    @slow(constraint={'field_poly':{'$exists':True}}, projection=['field_poly', 'hecke_orbit_code'])
     def check_roots_are_roots(self, rec):
         # check that  embedding_root_real, and embedding_root_image  approximate a root of field_poly
-        if rec['field_poly'] is not None:
-            poly = PolynomialRing(CC, "x")(rec['field_poly'])
-            for root in db.mf_hecke_cc.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"]):
-                r = CC(*[root[elt] for elt in ["embedding_root_real", "embedding_root_imag"]])
-                if poly.evaluate(r) > 1e-13:
-                    return False
+        poly = PolynomialRing(CC, "x")(rec['field_poly'])
+        for root in db.mf_hecke_cc.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"]):
+            r = CC(*[root[elt] for elt in ["embedding_root_real", "embedding_root_imag"]])
+            if poly.evaluate(r) > 1e-13:
+                return False
         return True
 
-    @slow
+    @slow(disabled=True)
     def check_an_embedding(self, rec):
         # TODO - zipped table
         # When we have exact an, check that the inexact values are correct
@@ -1526,14 +1472,12 @@ class mf_newforms(TableChecker):
     def check_traces(self):
         # check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         howmany = 200
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:{0}])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:{0}], foo.traces, -0.5*(t1.weight - 1)) LIMIT 1").format(Literal(int(howmany)))
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) LIMIT %s")
+        cur = db._execute(query, [howmany, howmany, self._cur_limit])
+        return [rec[0] for rec in cur]
 
 class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
-    projection = ['label']
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
     label_conversion = {'char_orbit_index':-1, 'hecke_orbit':-1}
     uniqueness_constraints = [[table._label_col], label]
@@ -1543,7 +1487,6 @@ class mf_newform_portraits(TableChecker):
 
 class mf_hecke_nf(TableChecker):
     table = db.mf_hecke_nf
-    projection = ['label', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values']
 
     @overall
     def check_bijection(self):
@@ -1591,15 +1534,15 @@ class mf_hecke_nf(TableChecker):
     def check_field_poly_is_cyclotomic(self):
         # if hecke_ring_cyclotomic_generator > 0, check that field_poly_is_cyclotomic is set in mf_newforms record.
         # could be done with _run_crosstable from mf_newforms
-        cur = db._execute(SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label LIMIT 1"))
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        cur = db._execute(SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label LIMIT %s"), [self._cur_limit])
+        return [rec[0] for rec in cur]
+
     @overall
     def check_maxp(self):
         # check that maxp is at least 997
         return self._run_query(SQL('maxp < 997'))
 
-    @slow
+    @slow(projection=['label', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values'])
     def check_hecke_ring_character_values_and_an(self, rec):
         # check that hecke_ring_character_values has the correct format, depending on whether hecke_ring_cyclotomic_generator is set or not
         # check that an has length 100 and that each entry is either a list of integers of length hecke_ring_rank (if hecke_ring_cyclotomic_generator=0) or a list of pairs
@@ -1683,7 +1626,7 @@ class mf_hecke_lpolys(TableChecker):
     def check_prime_count(self):
         # check that every prime p < 100 occurs exactly once for each hecke_orbit_code
         cnt = db.mf_newforms.count({'field_poly':{'$exists':True}})
-        return _any(self.check_count(cnt, {'p': p}) for p in prime_range(100))
+        return accumulate_failures(self.check_count(cnt, {'p': p}) for p in prime_range(100))
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -1694,16 +1637,14 @@ class mf_hecke_lpolys(TableChecker):
     def check_lpoly(self):
         # check that degree of lpoly is twice the dimension in mf_newforms for good primes
         # check that linear coefficient of lpoly is -trace(a_p) and constant coefficient is 1
-        query = SQL("SELECT t1.label FROM (mf_newforms t1 INNER JOIN mf_hecke_lpolys t2 ON t1.hecke_orbit_code = t2.hecke_orbit_code) INNER JOIN mf_hecke_traces t3 ON t1.hecke_orbit_code = t3.hecke_orbit_code AND t2.p = t3.n WHERE ((MOD(t1.level, t2.p) != 0 AND array_length(t2.lpoly, 1) != 2*t1.dim+1) OR t2.lpoly[1] != 1 OR t2.lpoly[2] != -t3.trace_an) LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("SELECT t1.label FROM (mf_newforms t1 INNER JOIN mf_hecke_lpolys t2 ON t1.hecke_orbit_code = t2.hecke_orbit_code) INNER JOIN mf_hecke_traces t3 ON t1.hecke_orbit_code = t3.hecke_orbit_code AND t2.p = t3.n WHERE ((MOD(t1.level, t2.p) != 0 AND array_length(t2.lpoly, 1) != 2*t1.dim+1) OR t2.lpoly[1] != 1 OR t2.lpoly[2] != -t3.trace_an) LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
 class mf_hecke_cc(TableChecker):
     table = db.mf_hecke_cc
     label_col = 'lfunction_label'
     uniqueness_constraints = [['lfunction_label']]
-    projection = ['lfunction_label', 'angles']
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -1713,44 +1654,38 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_dim(self):
         # check that we have dim embeddings per hecke_orbit_code
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, count(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
-
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, COUNT(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
-        query = SQL("""SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT 1""")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_embedding_index(self):
         # check that embedding_index is consistent with conrey_label and embedding_m
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_label  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_label  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_embedding_m(self):
         # check that embedding_m is consistent with conrey_label and embedding_index
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_label, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_label, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_conrey_indexes(self):
         # when grouped by hecke_orbit_code, check that conrey_labels match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_label), and embedding_m ranges from 1 to dim
         # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
-        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_label)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT 1")
-        cur = db._execute(query)
-        if cur.rowcount > 0:
-            return cur.fetchone()[0]
+        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_label)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT %s")
+        cur = db._execute(query, [self._cur_limit])
+        return [rec[0] for rec in cur]
 
     @overall
     def check_an_length(self):
@@ -1777,7 +1712,7 @@ class mf_hecke_cc(TableChecker):
         query = SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs)
         return self._run_query(query)
 
-    @slow
+    @slow(projection=['lfunction_label', 'angles'])
     def check_angles(self, rec):
         # check that angles lie in (-0.5,0.5] and are null for p dividing the level
         level = int(rec['lfunction_label'].split('.')[0])
@@ -1790,9 +1725,9 @@ class mf_hecke_cc(TableChecker):
         else:
             return True
 
-    @slow
+    @slow(disabled=True)
     def check_ap2(self, rec):
-        # TODO - zipped tables (update projection)
+        # TODO - zipped tables
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
@@ -1806,7 +1741,6 @@ class char_dir_orbits(TableChecker):
     label_col = 'orbit_label'
     label = ['modulus', 'orbit_index']
     uniqueness_constraints = [[table._label_col], label]
-    projection = ['orbit_label', 'char_degree', 'order', 'modulus', 'conductor', 'parity', 'galois_orbit']
 
     @overall
     def check_total_count(self):
@@ -1860,12 +1794,12 @@ class char_dir_orbits(TableChecker):
         return (self._run_crosstable(SQL("2*t2.values[1][2]"), 'char_dir_values', 'order', 'orbit_label', constraint={'parity':-1}, subselect_wrapper="ALL") or
                 self._run_crosstable(SQL("t2.values[1][2]"), 'char_dir_values', 0, 'orbit_label', constraint={'parity':1}, subselect_wrapper="ALL"))
 
-    @fast
+    @fast(projection=['char_degree', 'order'])
     def check_char_degree(self, rec):
         # check that char_degree = euler_phi(order)
         return rec['char_degree'] == euler_phi(rec['order'])
 
-    @slow
+    @slow(projection=['modulus', 'conductor', 'order', 'parity', 'galois_orbit'])
     def check_order_parity(self, rec):
         # check order and parity by constructing a Conrey character in Sage (use the first index in galois_orbit)
         char = DirichletCharacter_conrey(rec['modulus'], rec['galois_orbit'][0])
@@ -1876,7 +1810,6 @@ class char_dir_values(TableChecker):
     table = db.char_dir_values
     label = ['modulus', 'conrey_index']
     uniqueness_constraints = [['label'], label]
-    projection = ['label', 'values', 'values_gens', 'order']
 
     @overall
     def check_total_count(self):
@@ -1889,7 +1822,7 @@ class char_dir_values(TableChecker):
         # order should match order in char_dir_orbits for this orbit_label
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
 
-    @slow
+    @slow(projection=['label', 'order', 'values', 'values_gens'])
     def check_character_values(self, rec):
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
         # for x's that appear in both values and values_gens, the value should be the same.
@@ -1911,7 +1844,7 @@ class char_dir_values(TableChecker):
             return False
         if vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]:
             return False
-        if _any(N.gcd(g) > 1 for g, gval in val_gens+vals):
+        if any(N.gcd(g) > 1 for g, gval in val_gens+vals):
             return False
         for g, val in vals:
             if g in val_gens_dict and val != val_gens_dict[g]:
