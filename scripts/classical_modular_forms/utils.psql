@@ -161,3 +161,6 @@ CREATE OR REPLACE FUNCTION array_greatest(anyarray)
 RETURNS anyelement LANGUAGE SQL AS $$
 SELECT max(x) FROM unnest($1) as x;
 $$;
+
+CREATE OR REPLACE FUNCTION jsonb_arr2numeric_arr(_js jsonb) RETURNS numeric[] LANGUAGE SQL IMMUTABLE AS
+'SELECT ARRAY(SELECT jsonb_array_elements_text(_js))::numeric[]';
