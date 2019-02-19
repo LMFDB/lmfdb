@@ -180,9 +180,11 @@ class TableChecker(object):
                             projection = [self.label_col] + projection
                         try:
                             search_iter = table.random_sample(check.ratio, check.constraint, projection)
-                        except Exception:
-                            msg = "Exception in %s generating search results\n"%(me)
-                            self._report_error(msg)
+                        except Exception as err:
+
+                            template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
+                            message = template.format(name, type(err).__name__, '\n'.join(err.args))
+                            self._report_error(message)
                             errors += 1
                             continue
                     try:
@@ -230,7 +232,6 @@ class TableChecker(object):
             status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
             done.write("%s.%s %s in %ss\n"%(self.__class__.__name__, typ.__name__, status, time.time() - start))
             os.remove(self.startfile)
-
 
     # Add uniqueness constraints
 
@@ -1110,8 +1111,7 @@ class mf_newforms(TableChecker):
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
         return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) or
-                # FIXME: coeffs is jsonb instead of numeric[]
-                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
+                self.check_crosstable('nf_fields_new', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
                 self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) or
                 self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], constraint=nfyes))
 
@@ -1193,8 +1193,7 @@ class mf_newforms(TableChecker):
     def check_artin_field(self):
         # if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
         return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) or
-                # FIXME: coeffs is jsonb instead of numeric[]
-                self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
+                self.check_crosstable('nf_fields_new', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
 
     @overall
     def check_artin_degree(self):
@@ -1369,7 +1368,7 @@ class mf_newforms(TableChecker):
     @slow(constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
     def check_self_dual_by_poly(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
-        f = ZZx(rec['field_poly'])
+        f = self.ZZx(rec['field_poly'])
         K = NumberField(f, 'a')
         return (rec.get('is_self_dual') == K.is_totally_real())
 

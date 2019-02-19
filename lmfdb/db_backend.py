@@ -1761,7 +1761,7 @@ class PostgresTable(PostgresBase):
         now = time.time()
         with DelayCommit(self, silence=True):
             type, columns, check_func, table = self._get_constraint_data(name, suffix)
-            creator = self._create_constraint_statement(name, table, type, columns, check_func)
+            creator = self._create_constraint_statement(name + suffix, table, type, columns, check_func)
             self._execute(creator)
         print "Created constraint %s in %.3f secs"%(name, time.time() - now)
 

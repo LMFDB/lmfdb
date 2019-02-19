@@ -11,7 +11,6 @@ IMPORTANT:
  - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Update the text at the top of the plot page http://cmfs.lmfdb.xyz/L/degree2/CuspForm/ to be a knowl, not only trivial character now so f.e. needs fixing (how?). (David/Alex/Whoever knows best)
-* Make tests pass (Edgar)
 * Prove self-twists for 9 newforms where they are currently not proved (Drew)
 * Add Hecke cutters for 2 newspaces containing newforms of dim <= 20 where they are currently missing (Drew)
 * Compute L-functions:
