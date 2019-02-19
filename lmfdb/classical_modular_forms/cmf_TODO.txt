@@ -21,7 +21,6 @@ IMPORTANT:
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * Missing data:
   - embedding data for 23:41:4 dimension 790 (Drew -- this may not finish before PR)
-* Prove all analytic ranks (Drew)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -29,6 +28,7 @@ FINAL CHECKS:
 * Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Prove all analytic ranks (Drew)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
