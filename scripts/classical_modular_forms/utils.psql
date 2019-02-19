@@ -159,9 +159,14 @@ END
 $func$  LANGUAGE plpgsql IMMUTABLE;
 
 
-CREATE OR REPLACE FUNCTION array_greatest(anyarray)
-RETURNS anyelement LANGUAGE SQL AS $$
+CREATE OR REPLACE FUNCTION array_max(anyarray)
+RETURNS anyelement LANGUAGE SQL IMMUTABLE AS $$
 SELECT max(x) FROM unnest($1) as x;
+$$;
+
+CREATE OR REPLACE FUNCTION array_min(anyarray)
+RETURNS anyelement LANGUAGE SQL IMMUTABLE AS $$
+SELECT min(x) FROM unnest($1) as x;
 $$;
 
 CREATE OR REPLACE FUNCTION jsonb_arr2numeric_arr(_js jsonb) RETURNS numeric[] LANGUAGE SQL IMMUTABLE AS
