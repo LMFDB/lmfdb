@@ -25,13 +25,15 @@ def accumulate_failures(L):
     ans = []
     for a in L:
         if a:
+            if not isinstance(a, list):
+                a = [a]
             ans.extend(a)
     return ans
 
 @cached_function
 def kbarbar(weight):
     # The weight part of the analytic conductor
-    return psi(RR(weight/2)).exp() / (2*RR.pi())
+    return psi(RR(weight)/2).exp() / (2*RR.pi())
 
 def analytic_conductor(level, weight):
     return level * kbarbar(weight)**2
@@ -52,8 +54,12 @@ def level_attributes(level):
     return [level_radical, level_primes, level_is_prime, level_is_prime_power, level_is_squarefree, level_is_square]
 
 @cached_function
-def sturm_bound(level, weight):
+def sturm_bound0(level, weight):
     return floor(weight * Gamma0(level).index()/12)
+
+@cached_function
+def sturm_bound1(level, weight):
+    return floor(weight * Gamma1(level).index()/12)
 
 class speed_decorator(object):
     """
@@ -329,7 +335,7 @@ class TableChecker(object):
     def check_count(self, cnt, constraint={}):
         real_cnt = self.table.count(constraint)
         if real_cnt != cnt:
-            return '%s != %s (%s)' % (real_cnt, cnt, constraint)
+            return ['%s != %s (%s)' % (real_cnt, cnt, constraint)]
 
     def check_eq(self, col1, col2, constraint={}):
         return self._run_query(SQL("{0} != {1}").format(Identifier(col1), Identifier(col2)), constraint)
@@ -475,7 +481,7 @@ class TableChecker(object):
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE {1}||{2})").format(Identifier(col)), constraint, values = [value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -592,9 +598,7 @@ class TableChecker(object):
     def check_uniqueness_constraints(self):
         # check that the uniqueness constraints are satisfied
         constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
-        for constraint in self.uniqueness_constraints:
-            if tuple(sorted(constraint)) not in constraints:
-                return ",".join(constraint)
+        return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]
 
     hecke_orbit_code = []
 
@@ -611,7 +615,7 @@ class TableChecker(object):
                 x_column = None
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
-            if x_column is not None:
+            if x_column is None:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
             else:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
@@ -796,7 +800,7 @@ class mf_newspaces(TableChecker):
     @slow(projection=['sturm_bound', 'level', 'weight'])
     def check_sturm_bound(self, rec):
         # check that sturm_bound is exactly floor(k*Index(Gamma0(N))/12)
-        return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
+        return rec['sturm_bound'] == sturm_bound0(rec['level'], rec['weight'])
 
 
     @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
@@ -833,10 +837,11 @@ class mf_gamma1(TableChecker):
                 if box['omin'] == 2:
                     if 'level' not in query:
                         query['level'] = {}
-                    if '$gte' not in query['level'] or query['level']['gte'] < 3:
+                    if '$gte' not in query['level'] or query['level']['$gte'] < 3:
                         query['level']['$gte'] = 3
                 else:
                     raise NotImplementedError
+            return query
         return accumulate_failures(self.check_count(box['Nk_count'], make_query(box))
                    for box in db.mf_boxes.search())
 
@@ -927,15 +932,15 @@ class mf_gamma1(TableChecker):
         # check level_* attributes
         return self._check_level(rec)
 
-    @slow(projection=['level', 'weight', 'analytic_conductor'])
+    @fast(max_failures=2000, projection=['level', 'weight', 'analytic_conductor'])
     def check_analytic_conductor(self, rec):
         # check analytic_conductor
         return check_analytic_conductor(rec['level'], rec['weight'], rec['analytic_conductor'])
 
     @slow(projection=['level', 'weight', 'sturm_bound'])
     def check_sturm_bound(self, rec):
-        # check that sturm_bound is exactly floor(k*Index(Gamma0(N))/12)
-        return rec['sturm_bound'] == sturm_bound(rec['level'], rec['weight'])
+        # check that sturm_bound is exactly floor(k*Index(Gamma1(N))/12)
+        return rec['sturm_bound'] == sturm_bound1(rec['level'], rec['weight'])
 
     @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'dim'])
     def check_Sk_dim_formula(self, rec):
@@ -1291,10 +1296,11 @@ class mf_newforms(TableChecker):
 
     @fast(constraint={'projective_field':{'$exists':True}}, projection=['projective_field', 'projective_image', 'projective_image_type'])
     def check_projective_field_degree(self, rec):
-        # if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 2n for Dn)
+        # if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 4 for D2, n for other Dn)
         coeffs = rec.get('projective_field')
-        if coeffs is None: return True
         deg = Integer(rec['projective_image'][1:])
+        if rec['projective_image'] == 'D2':
+            deg *= 2
         return deg == len(coeffs) - 1
 
 
@@ -1499,7 +1505,7 @@ class mf_newform_portraits(TableChecker):
     table = db.mf_newform_portraits
     label = ['level', 'weight', 'char_orbit_index', 'hecke_orbit']
     label_conversion = {'char_orbit_index':-1, 'hecke_orbit':-1}
-    uniqueness_constraints = [[table._label_col], label]
+    uniqueness_constraints = [['label'], label]
 
     # attached to mf_newforms
     # check that there is exactly one record in mf_newform_portraits for each record in mf_newforms, uniquely identified by label
@@ -1844,11 +1850,11 @@ class char_dir_values(TableChecker):
         # order should match order in char_dir_orbits for this orbit_label
         return self.check_crosstable('char_dir_orbits', 'order', 'orbit_label')
 
-    @slow(projection=['label', 'order', 'values', 'values_gens'])
+    @slow(projection=['modulus', 'order', 'values', 'values_gens'])
     def check_character_values(self, rec):
         # The x's listed in values and values_gens should be coprime to the modulus N in the label
         # for x's that appear in both values and values_gens, the value should be the same.
-        N, index = map(Integer, rec['label'].split('.'))
+        N = Integer(rec['modulus'])
         v2, u2 = N.val_unit(2)
         if v2 == 1:
             # Z/2 doesn't contribute generators, but 2 divides N
@@ -1862,7 +1868,7 @@ class char_dir_values(TableChecker):
         vals = rec['values']
         val_gens = rec['values_gens']
         val_gens_dict = dict(val_gens)
-        if len(vals) != 12 or len(val_gens) != ngens:
+        if len(vals) != min(12, euler_phi(N)) or len(val_gens) != ngens:
             return False
         if vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]:
             return False
@@ -1871,9 +1877,13 @@ class char_dir_values(TableChecker):
         for g, val in vals:
             if g in val_gens_dict and val != val_gens_dict[g]:
                 return False
+        return True
 
 validated_tables = [mf_newspaces, mf_gamma1, mf_newspace_portraits, mf_gamma1_portraits, mf_subspaces, mf_gamma1_subspaces, mf_newforms, mf_newform_portraits, mf_hecke_nf, mf_hecke_traces, mf_hecke_newspace_traces, mf_hecke_lpolys, mf_hecke_cc, char_dir_orbits, char_dir_values]
-typs = [(overall, 'over'), (overall_long, 'long'), (fast, 'fast'), (slow, 'slow')]
+typs = [overall, overall_long, fast, slow]
+suffixes = ['over', 'long', 'fast', 'slow']
+def get_code(tbl, cls):
+    return len(typs)*validated_tables.index(tbl)+typs.index(cls)
 def run_tests(basedir, m):
     cls_num = m // len(typs)
     if cls_num >= len(validated_tables) or cls_num < 0:
@@ -1881,7 +1891,8 @@ def run_tests(basedir, m):
     else:
         typ_num = m % len(typs)
         cls = validated_tables[cls_num]
-        typ, suffix = typs[typ_num]
+        typ = typs[typ_num]
+        suffix = suffixes[typ_num]
         if cls._get_checks_count(typ) > 0:
             logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
             runner = cls(logfile, typ)
