@@ -1094,8 +1094,7 @@ class mf_newforms(TableChecker):
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
         return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) or
-                # FIXME: coeffs is jsonb instead of numeric[]
-                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
+                self.check_crosstable('nf_fields_new', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
                 self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) or
                 self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], constraint=nfyes))
 
@@ -1177,8 +1176,7 @@ class mf_newforms(TableChecker):
     def check_artin_field(self):
         # if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
         return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) or
-                # FIXME: coeffs is jsonb instead of numeric[]
-                self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
+                self.check_crosstable('nf_fields_new', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
 
     @overall
     def check_artin_degree(self):
