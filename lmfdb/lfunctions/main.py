@@ -287,8 +287,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
     try:
         return render_single_Lfunction(Lfunction_CMF, args, request)
     except KeyError:
-        conrey_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
-        newform_label = convert_newformlabel_from_conrey(conrey_label)
+        conrey_index = '.'.join(map(str, [level, weight, character, hecke_orbit]))
+        newform_label = convert_newformlabel_from_conrey(conrey_index)
         level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
         return flask.redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                                   char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)

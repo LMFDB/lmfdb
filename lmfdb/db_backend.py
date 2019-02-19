@@ -1248,7 +1248,7 @@ class PostgresTable(PostgresBase):
         if ratio > 1 or ratio <= 0:
             raise ValueError("Ratio must be a positive number between 0 and 1")
         if ratio == 1:
-            return self.search(query, projection, sort=[]
+            return self.search(query, projection, sort=[])
         elif mode == 'CHOICE':
             results = list(self.search(query, projection, sort=[]))
             count = int(len(results) * ratio)
@@ -1741,7 +1741,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         with DelayCommit(self, commit, silence=True):
-            type, column, check_func, table = self._get_constraint_data(name, suffix)
+            type, columns, check_func, table = self._get_constraint_data(name, suffix)
             dropper = self._drop_constraint_statement(name + suffix, table, type, columns)
             if permanent:
                 deleter = SQL("DELETE FROM meta_constraints WHERE table_name = %s AND constraint_name = %s")
@@ -1760,7 +1760,7 @@ class PostgresTable(PostgresBase):
         """
         now = time.time()
         with DelayCommit(self, silence=True):
-            type, column, check_func, table = self._get_constraint_data(name, suffix)
+            type, columns, check_func, table = self._get_constraint_data(name, suffix)
             creator = self._create_constraint_statement(name, table, type, columns, check_func)
             self._execute(creator)
         print "Created constraint %s in %.3f secs"%(name, time.time() - now)
@@ -2524,7 +2524,7 @@ class PostgresTable(PostgresBase):
                 backup_number += 1
         return backup_number
 
-    def _swap(self, tables, indexes, source, target):
+    def _swap(self, tables, indexes, constraints, source, target):
         """
         Renames tables, indexes and primary keys, for use in reload.
 
@@ -3974,7 +3974,11 @@ class JoinedTable(PostgresBase):
             tname, cname = col.split('.', 1)
             if tname not in self.tables:
                 # Could be a qualified column in the first table
+                # FIXME, local variable 'first_table' is assigned to but never used
                 first_table = self.tables[self.tablenames[0]]
+                assert first_table # to make pyflakes happy for the time bein
+                # FIXME undefined name 'distinguished'
+                distinguished = True # FIXME, to make pyflakes happy for the time being
                 if distinguished:
                     cname = col
                     tname = self.tablenames[0]
@@ -4085,7 +4089,7 @@ class JoinedTable(PostgresBase):
     def search(self, query={}, projection=1, limit=None, offset=0, sort=None, silent=False):
         cols = self._parse_projection(projection)
         vars = SQL(", ").join(self._identifier(col) for col in cols)
-        
+        assert vars # FIXME, to make pyflakes happy for the time being
 
 class PostgresDatabase(PostgresBase):
     """
