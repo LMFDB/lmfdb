@@ -263,7 +263,7 @@ class CMF_download(Downloader):
                      'embedding_root_real',
                      'embedding_root_imag',
                      col],
-                    sort=['conrey_label', 'embedding_index']):
+                    sort=['conrey_index', 'embedding_index']):
                 D = {'label':ev.get('lfunction_label'),
                      col:ev.get(col)}
                 root = (ev.get('embedding_root_real'),

@@ -148,7 +148,7 @@ class CmfTest(LmfdbTest):
         assert '24q^{2}' in page.data
         assert '84480q^{8}' in page.data
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/12/a/a/?format=satake")
-        assert '0.299366' in page.data
+        assert '0.299367' in page.data
         assert '0.954138' in page.data
         page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/')
         assert '0.792122' in page.data
@@ -313,13 +313,13 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
         assert r'0.707107' in page.data
         assert r'0.957427' in page.data
-        assert r'0.223606' in page.data
+        assert r'0.223607' in page.data
         assert r'0.974679' in page.data
         assert r'0.288675' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?format=satake')
         assert r'0.750000' in page.data
-        assert r'0.661437' in page.data
+        assert r'0.661438' in page.data
         assert r'0.272727' in page.data
         assert r'0.962091' in page.data
         assert r'1' in page.data
@@ -330,22 +330,23 @@ class CmfTest(LmfdbTest):
         assert '\(0.587925\pi\)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert r'0.965925' in page.data
+        assert r'0.965926' in page.data
         assert r'0.258819' in page.data
-        assert r'0.990337' in page.data
-        assert r'0.550989' in page.data
+        assert r'0.990338' in page.data
+        assert r'0.550990' in page.data
 
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/5/9/c/a/?n=2-10&m=1-6&prec=6&format=satake')
-        assert '0.972877' in page.data
-        assert '0.231319' in page.data
+        assert '0.972878' in page.data
+        assert '0.231320' in page.data
+        assert '0.00593626' in page.data
 
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake')
-        assert '0.998758' in page.data
+        assert '0.998759' in page.data
         assert '0.0498090' in page.data
         assert '0.542515' in page.data
-        assert '0.840045' in page.data
+        assert '0.840046' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake_angle')
         assert '0.984138\pi' in page.data
@@ -356,13 +357,13 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed')
         assert '213.765' in page.data
         assert '5.39613e49' in page.data
-        assert '7.61561e49' in page.data
+        assert '7.61562e49' in page.data
         assert '3412.76' in page.data
         assert '1.55372e49' in page.data
         assert '1.00032e49' in page.data
         assert '3626.53' in page.data
-        assert '1.17539e49' in page.data
-        assert '1.20000e50' in page.data
+        assert '1.17540e49' in page.data
+        assert '1.20001e50' in page.data
 
         # same numbers but normalized
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed')
@@ -384,18 +385,18 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/210/2/a/a/?format=satake&n=2-20')
         # alpha_11
-        assert '0.603022' in page.data
+        assert '0.603023' in page.data
         assert '0.797724' in page.data
         # alpha_13
         assert '0.277350' in page.data
-        assert '0.960768' in page.data
+        assert '0.960769' in page.data
         # alpha_17
-        assert '0.727606' in page.data
+        assert '0.727607' in page.data
         assert '0.685994' in page.data
 
         # specifying embeddings
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=2.1%2C+95.10&prec=6&format=embed')
-        for elt in ['2.1','95.10','1.05074','0.946093', '2.90567', '0.305398']:
+        for elt in ['2.1','95.10','1.05074','0.946093', '2.90568', '0.305399']:
             assert elt in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=2-10000&prec=6&format=embed')

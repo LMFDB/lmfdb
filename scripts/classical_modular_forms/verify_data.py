@@ -426,8 +426,8 @@ class TableChecker(object):
         if isinstance(b_columns, basestring):
             b_columns = [b_columns]
         return self._run_query(SQL("{0} != {1}").format(
-            " || ".join(map(Identifier, a_columns)),
-            " || ".join(map(Identifier, b_columns))), constraint=constraint)
+            SQL(" || ").join(map(Identifier, a_columns)),
+            SQL(" || ").join(map(Identifier, b_columns))), constraint=constraint)
 
     def check_string_concatenation(self,
             label_col,
@@ -455,7 +455,8 @@ class TableChecker(object):
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
     def check_string_startswith(self, col, head, constraint={}):
-        return self._run_query(SQL("NOT ({0} LIKE {1})").format(Identifier(col), Literal(head + '%')), constraint)
+        value = head.replace('_',r'\_').replace('%',r'\%') + '%'
+        return self._run_query(SQL("NOT ({0} LIKE {1}||{2})").format(Identifier(col)), constraint, values = [value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -592,9 +593,9 @@ class TableChecker(object):
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
             if x_column is None:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(hoc_column, N_column, k_column, i_column, x_column))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
             else:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(hoc_column, N_column, k_column, i_column))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
@@ -689,7 +690,7 @@ class mf_newspaces(TableChecker):
     @overall
     def check_relative_dim(self):
         # check that char_degree * relative_dim = dim
-        return self.check_product('dim', ['char_degree', 'relative_degree'])
+        return self.check_product('dim', ['char_degree', 'relative_dim'])
 
     @overall
     def check_len_hecke_orbit_dims(self):
@@ -926,7 +927,7 @@ class mf_gamma1(TableChecker):
     def check_dims(self, rec):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         G = Gamma1(rec['level'])
-        k = rec['weight'] 
+        k = rec['weight']
         return(dimension_eis(G, k) == rec['eis_dim'] and
                dimension_cusp_forms(G, k) == rec['cusp_dim'] and
                dimension_modular_forms(G, k) == rec['mf_dim'])
@@ -1022,7 +1023,7 @@ class mf_newforms(TableChecker):
     def check_box_count(self):
         # there should be exactly one row for every newform in a box listed in mf_boxes with newform_count set; for each such box performing mf_newforms.count(box query) should match newform_count for box, and mf_newforms.count() should be the sum of these
         total_count = 0
-        for box in db.mf_boxes.search():
+        for box in db.mf_boxes.search({'newform_count':{'$exists':True}}):
             bad_label = self.check_count(box['newform_count'], self._box_query(box))
             if bad_label:
                 return bad_label
@@ -1087,18 +1088,19 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_number_field(self):
-        # if nf_label is present, check that there is a record in nf_fields and that mf_newforms field_poly matches nf_fields coeffs, and check that is_self_dual agrees with signature, and field_poly_disc agrees with disc_sign * disc_abs in nf_fields
+        # if nf_label is present, check that there is a record in nf_fields and that mf_newforms field_poly matches nf_fields coeffs, and check that is_self_dual agrees with signature, and field_disc agrees with disc_sign * disc_abs in nf_fields
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
         return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) or
+                # FIXME: coeffs is jsonb instead of numeric[]
                 self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) or
                 self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) or
-                self.check_crosstable_dotprod('nf_fields', 'field_poly_disc', 'nf_label', ['disc_sign', 'disc_abs'], constraint=nfyes))
+                self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], constraint=nfyes))
 
     @overall
-    def check_field_poly_disc(self):
-        # if hecke_ring_index_proved is set, verify that field_poly_disc is set
-        return self.check_non_null(['field_poly_disc'], {'hecke_ring_index_proved':{'$exists':True}})
+    def check_field_disc(self):
+        # if hecke_ring_index_proved is set, verify that field_disc is set
+        return self.check_non_null(['field_disc'], {'hecke_ring_index_proved':{'$exists':True}})
 
     @overall(max_failures=1000)
     def check_analytic_rank_proved(self):
@@ -1166,12 +1168,14 @@ class mf_newforms(TableChecker):
     def check_projective_field(self):
         # if present, check that projective_field_label identifies a number field in nf_fields with coeffs = projective_field
         return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) or
+                # FIXME: coeffs is jsonb instead of numeric[]
                 self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
 
     @overall
     def check_artin_field(self):
         # if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
         return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) or
+                # FIXME: coeffs is jsonb instead of numeric[]
                 self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
 
     @overall
@@ -1181,9 +1185,9 @@ class mf_newforms(TableChecker):
 
     @overall
     def check_trivial_character_cols(self):
-        # check that atkin_lehner_eigenvalues, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
+        # check that atkin_lehner_eigenvals, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
         yes = {'$exists':True}
-        return self.check_iff({'atkin_lehner_eigenvalues':yes, 'atkin_lehner_string':yes, 'fricke_eigenval':yes}, {'char_orbit_index':1})
+        return self.check_iff({'atkin_lehner_eigenvals':yes, 'atkin_lehner_string':yes, 'fricke_eigenval':yes}, {'char_orbit_index':1})
 
     @overall
     def check_inner_twists(self):
@@ -1307,7 +1311,7 @@ class mf_newforms(TableChecker):
         if 'field_poly' not in rec:
             return True
         else:
-            f = ZZx(rec['field_poly'])
+            f = self.ZZx(rec['field_poly'])
             if not f.is_irreducible():
                 return False
             # if field_poly_is_cyclotomic, verify this
@@ -1433,7 +1437,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_embeddings_count_boxcheck(self):
         # check that for such box with embeddings set, that summing over `dim` matches embeddings_count
-        return all(sum(self.table.search(self._box_query(box), 'dim')) == box['embeddings_count'] for box in db.mf_boxes.search({'embeddings':True}))
+        return all(sum(self.table.search(self._box_query(box), 'dim')) == box['embedding_count'] for box in db.mf_boxes.search({'embeddings':True}))
 
     @overall
     def check_roots(self):
@@ -1661,29 +1665,29 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
-        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_label::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
+        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
         cur = db._execute(query, [self._cur_limit])
         return [rec[0] for rec in cur]
 
     @overall
     def check_embedding_index(self):
         # check that embedding_index is consistent with conrey_label and embedding_m
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_label  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT %s")
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT %s")
         cur = db._execute(query, [self._cur_limit])
         return [rec[0] for rec in cur]
 
     @overall
     def check_embedding_m(self):
         # check that embedding_m is consistent with conrey_label and embedding_index
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_label, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT %s")
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT %s")
         cur = db._execute(query, [self._cur_limit])
         return [rec[0] for rec in cur]
 
     @overall
     def check_conrey_indexes(self):
-        # when grouped by hecke_orbit_code, check that conrey_labels match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_label), and embedding_m ranges from 1 to dim
+        # when grouped by hecke_orbit_code, check that conrey_indexs match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_index), and embedding_m ranges from 1 to dim
         # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
-        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_label)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT %s")
+        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_index)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT %s")
         cur = db._execute(query, [self._cur_limit])
         return [rec[0] for rec in cur]
 
@@ -1703,7 +1707,7 @@ class mf_hecke_cc(TableChecker):
     @overall
     def check_lfunction_label_conrey(self):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
-        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('lfunction_label'), Identifier('conrey_label'), Identifier('embedding_index')))
+        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('lfunction_label'), Identifier('conrey_index'), Identifier('embedding_index')))
 
     @overall_long
     def check_amn(self):
