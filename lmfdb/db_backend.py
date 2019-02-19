@@ -2553,19 +2553,17 @@ class PostgresTable(PostgresBase):
                     self._execute(rename_constraint.format(Identifier(tablename_new),
                                                            Identifier(pkey_old),
                                                            Identifier(pkey_new)))
+                for constraint in constraints:
+                    if self._constraint_exists(tablename_new, constraint + source):
+                        self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                               Identifier(constraint + source),
+                                                               Identifier(constraint + target)))
             for index in indexes:
                 if self._table_exists(index + source):
                     self._execute(rename_index.format(Identifier(index + source),
                                                       Identifier(index + target)))
                 else:
                     print "Warning: index %s does not exist"%(index + source)
-            for constraint in constraints:
-                if self._table_exists(constraint + source):
-                    self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                           Identifier(constraint + source),
-                                                           Identifier(constraint + target)))
-                else:
-                    print "Warning: constraint %s does not exist"%(constraint + source)
 
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
