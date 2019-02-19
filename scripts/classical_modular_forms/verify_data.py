@@ -169,9 +169,11 @@ class TableChecker(object):
                             projection = [self.label_col] + projection
                         try:
                             search_iter = table.random_sample(check.ratio, check.constraint, projection)
-                        except Exception:
-                            msg = "Exception in %s generating search results\n"%(me)
-                            self._report_error(msg)
+                        except Exception as err:
+
+                            template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
+                            message = template.format(name, type(err).__name__, '\n'.join(err.args))
+                            self._report_error(message)
                             errors += 1
                             continue
                     try:
@@ -192,7 +194,7 @@ class TableChecker(object):
                             bad_labels = check()
                             if bad_labels:
                                 for label in bad_labels:
-                                    log.write('%s: %s\n'%(name, bad_label))
+                                    log.write('%s: %s\n'%(name, bad_labels))
                                 log.flush()
                                 failures += len(bad_labels)
                     except Exception:
@@ -211,7 +213,7 @@ class TableChecker(object):
                 status += ", %s ABORTS"%aborts
             if errors:
                 status += ", %s ERRORS"%errors
-            done.write("%s.%s: %s in %ss\n"%(me, typ.__name__, status, time.time() - start))
+            done.write("%s.%s: %s in %ss\n"%(name, typ.__name__, status, time.time() - start))
 
 
     # Add uniqueness constraints
@@ -1353,7 +1355,7 @@ class mf_newforms(TableChecker):
     @slow(constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
     def check_self_dual_by_poly(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
-        f = ZZx(rec['field_poly'])
+        f = self.ZZx(rec['field_poly'])
         K = NumberField(f, 'a')
         return (rec.get('is_self_dual') == K.is_totally_real())
 
