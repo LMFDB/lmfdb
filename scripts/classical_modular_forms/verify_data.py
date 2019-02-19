@@ -616,9 +616,9 @@ class TableChecker(object):
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
             if x_column is None:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint + (({4}-1)::integer::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
             else:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::integer::bit(64)<<24)::bigint + (({3}-1)::integer::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
 
 class mf_newspaces(TableChecker):
     table = db.mf_newspaces
@@ -1737,7 +1737,14 @@ class mf_hecke_cc(TableChecker):
     def check_amn(self):
         # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
         pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
-        query = SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs)
+        query = SQL("NOT ({0})").format(SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs))
+        return self._run_query(query)
+
+    @overall_long
+    def check_angles_interval(self):
+        # check that angles lie in (-0.5,0.5]
+        # about 20 min
+        query = SQL("array_min(angles) <= -0.5 OR array_max(angles) > 0.5")
         return self._run_query(query)
 
     @slow(projection=['lfunction_label', 'angles'])

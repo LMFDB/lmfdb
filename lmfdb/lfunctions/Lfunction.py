@@ -618,7 +618,7 @@ class Lfunction_from_db(Lfunction):
 
         instances = [elt for elt in get_multiples_by_Lhash(self.Lhash) if elt['Lhash'] != self.Lhash]
         if self.trace_hash is not None:
-            instances += [elt for elt in get_multiples_by_Lhash(self.trace_hash) if elt['Lhash'] != self.Lhash and elt['Lhash'] != self.trace_hash ]
+            instances += [elt for elt in get_multiples_by_Lhash(str(self.trace_hash)) if elt['Lhash'] != self.Lhash and elt['Lhash'] != str(self.trace_hash) ]
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         # the only thing that we might be missing are genus 2 L-functions
         # hence, self.degree = 2, self.type = CMF
