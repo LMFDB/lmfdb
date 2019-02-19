@@ -168,7 +168,6 @@ class TableChecker(object):
 
     def _run_overall(self, typ):
         checks = self._get_checks(typ)
-        logfile = self.logfile
         me = self.__class__.__name__
         failures = 0
         errors = 0
@@ -597,7 +596,7 @@ class TableChecker(object):
                 N_column, k_column, i_column = self.hecke_orbit_code[1]
             # N + (k<<24) + ((i-1)<<36) + ((x-1)<<52)
             if x_column is None:
-                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column]))
+                return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint + (({4}-1)::bit(64)<<52)::bigint").format(*map(Identifier, [hoc_column, N_column, k_column, i_column, x_column])))
             else:
                 return self._run_query(SQL("{0} != {1}::bigint + ({2}::bit(64)<<24)::bigint + (({3}-1)::bit(64)<<36)::bigint").format(*map(Identifier,[hoc_column, N_column, k_column, i_column])))
 
@@ -949,9 +948,9 @@ class mf_gamma1(TableChecker):
         # for k > 1 check eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas
         if rec['weight'] > 1:
             G = Gamma1(rec['level'])
-            return(dimension_eis(G, k) == rec['eis_dim'] and
-                   dimension_cusp_forms(G, k) == rec['cusp_dim'] and
-                   dimension_modular_forms(G, k) == rec['mf_dim'])
+            return(dimension_eis(G, rec['weight']) == rec['eis_dim'] and
+                   dimension_cusp_forms(G, rec['weight']) == rec['cusp_dim'] and
+                   dimension_modular_forms(G, rec['weight']) == rec['mf_dim'])
         else:
             # no test
             return True
@@ -1050,7 +1049,7 @@ class mf_newforms(TableChecker):
     def check_box_count(self):
         # there should be exactly one row for every newform in a box listed in mf_boxes with newform_count set; for each such box performing mf_newforms.count(box query) should match newform_count for box, and mf_newforms.count() should be the sum of these
         total_count = 0
-        for box in db.mf_boxes.search({'newform_count':{'$exists':True}):
+        for box in db.mf_boxes.search({'newform_count':{'$exists':True}}):
             bad_label = self.check_count(box['newform_count'], self._box_query(box))
             if bad_label:
                 return bad_label
@@ -1345,7 +1344,7 @@ class mf_newforms(TableChecker):
         if 'field_poly' not in rec:
             return True
         else:
-            f = ZZx(rec['field_poly'])
+            f = self.ZZx(rec['field_poly'])
             if not f.is_irreducible():
                 return False
             # if field_poly_is_cyclotomic, verify this
@@ -1389,7 +1388,7 @@ class mf_newforms(TableChecker):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
         f = rec.get('field_poly')
         if rec.get('nf_label') is None and f is not None:
-            f = ZZx(f)
+            f = self.ZZx(f)
             K = NumberField(f, 'a')
             return (rec.get('is_self_dual') == K.is_totally_real())
         return True
