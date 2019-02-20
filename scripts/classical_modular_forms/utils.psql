@@ -122,13 +122,13 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION compare_traces(IN an_int anyarray, IN an_cc double precision[], IN normalization double precision) returns bool AS $$
 BEGIN
   FOR i in 1 .. array_length(an_int, 1) LOOP
-    IF @((an_int[i] * i^normalization)::double precision - an_cc[i]) > 1e-11 THEN
+    IF @((an_int[i] * (i^normalization)::numeric)::double precision - an_cc[i]) > 1e-11 THEN
       raise notice 'i: %', i;
       raise notice 'i^normalization: %', i^normalization;
       raise notice 'normalization: %', normalization;
-      raise notice 'an_int[i] : %', (an_int[i] * i^normalization);
+      raise notice 'an_int[i] : %', (an_int[i] * (i^normalization)::numeric;
       raise notice 'a_cc[i] : %', an_cc[i];
-      raise notice 'diff : %',  @((an_int[i] * i^normalization)::double precision - an_cc[i]);
+      raise notice 'diff : %', @((an_int[i] * (i^normalization)::numeric)::double precision - an_cc[i]);
       return false;
     END IF;
   END LOOP;
