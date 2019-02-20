@@ -1770,17 +1770,13 @@ class mf_hecke_nf(TableChecker):
                     if not (isinstance(e, _integer_types) and 0 <= 2*e < m):
                         return False
                 return True
-        print "A"
         if not all(check_val(a) for a in an):
             return False
-        print "B"
         if not all(check_val(a) for a in ap):
             return False
-        print "C"
         for p, a in zip(prime_range(100), ap):
             if a != an[p-1]:
                 return False
-        print "D"
         if rec['char_orbit_index'] != 1:
             if rec.get('hecke_ring_character_values') is None:
                 return False
