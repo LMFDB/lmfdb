@@ -1,5 +1,10 @@
 CRITICAL (BUGS):
 
+OUTSTANDING:
+* Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
+  - 101.7.f, box = {u'nonzero_newspace_count': 270662, u'Nmax': 4000, u'newspace_count': 270662, u'embeddings': False, u'lfunctions': False, u'Nmin': 101, u'Nk_count': 13585, u'embedding_count': 2133008444L, u'Nk2max': 40000, u'Nk2min': 4001, u'kmax': 12, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 13585, u'traces': False, u'straces': True}
+  - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
+
 IMPORTANT:
 * Fix Satake angles in weight 1 (Drew)
 * Fix sturm bound in mf_gamma1 (Drew)

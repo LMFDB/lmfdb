@@ -692,8 +692,8 @@ class mf_newspaces(TableChecker):
     @overall
     def check_box_hecke_cutter_primes(self):
         # TIME about 2s
-        # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set and `min(dims) <= 20`
-        return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20,'$gt':0}}))
+        # check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set, `min(dims) <= 20`, and weight > 1
+        return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20,'$gt':0}, 'weight':{'$gt':1}}))
                    for box in db.mf_boxes.search({'eigenvalues':True}))
 
     @overall
@@ -2114,11 +2114,11 @@ typs = [overall, overall_long, fast, slow]
 #
 
 def run_tests(logdir, tablename, typename):
-    cls = validated_tables_dict(tablename)
-    typ = test_types_dict(typename)
-    suffix = test_types_suffixes(typ)
+    cls = validated_tables_dict[tablename]
+    typ = test_types_dict[typename]
+    suffix = test_types_suffixes[typ]
     if cls._get_checks_count(typ) > 0:
-        logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
+        logfile = os.path.join(logdir, '%s.%s'%(cls.__name__, suffix))
         runner = cls(logfile, typ)
         runner.run()
 
@@ -2164,6 +2164,6 @@ if __name__ == '__main__':
                     ' Allowed values are: '+', '.join(test_types_txt),
                     choices=test_types_txt)
 
-    run_tests(**parser.parse_args())
+    run_tests(**vars(parser.parse_args()))
 
 
