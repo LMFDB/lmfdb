@@ -779,7 +779,7 @@ class PostgresTable(PostgresBase):
                         if not path:
                             cmd += '::' + coltype
                         else:
-                            cmd += '::' + coltype[-2:]
+                            cmd += '::' + coltype[:-2]
 
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
