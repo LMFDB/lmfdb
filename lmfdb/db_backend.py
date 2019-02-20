@@ -303,7 +303,7 @@ class PostgresBase(object):
                         query = query.replace('%s','VALUES_LIST')
                     elif values:
                         query = query % (tuple(values))
-                    self.logger.info(query + " ran in %ss" % (t,))
+                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
         except (DatabaseError, InterfaceError):
