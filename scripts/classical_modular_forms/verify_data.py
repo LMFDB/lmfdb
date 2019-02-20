@@ -2157,14 +2157,13 @@ if __name__ == '__main__':
             help='the table name to run the verification tests.'+\
                     ' Allowed values are: '+', '.join(validated_tables_txt),
                     choices=validated_tables_txt)
-    parser.add_argument('type',
+    parser.add_argument('typename',
             metavar='TYPE',
             type=str,
             help='the type of test to run on the chosen table.'+\
                     ' Allowed values are: '+', '.join(test_types_txt),
                     choices=test_types_txt)
 
-    args = parser.parse_args()
-    print args
+    run_tests(**parser.parse_args())
 
 
