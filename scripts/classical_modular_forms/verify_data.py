@@ -1,3 +1,4 @@
+#!/usr/bin/env sage -python
 ##################################
 # WARNING ## WARNING ## WARNING ##
 ##################################
@@ -532,7 +533,7 @@ class TableChecker(object):
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=cosntraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values = [value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -1175,11 +1176,11 @@ class mf_newforms(TableChecker):
     @overall
     def check_newspaces_overlap(self):
         # TIME > 120s
-        # check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
+        # check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim, traces, trace_display match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
         bad_labels = []
         labels = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
         bad_labels.extend([label + " (count)" for label in labels])
-        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'dim', 'hecke_orbit_code', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'relative_dim', 'trace_display', 'traces', 'weight', 'weight_parity']:
+        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'weight_parity']:
             labels = self.check_crosstable('mf_newspaces', col, 'space_label', col, 'label')
             bad_labels.extend([label + " (%s)"%col for label in labels])
         return bad_labels
@@ -2155,15 +2156,36 @@ if __name__ == '__main__':
             metavar='TABLENAME',
             type=str,
             help='the table name to run the verification tests.'+\
-                    ' Allowed values are: '+', '.join(validated_tables_txt),
-                    choices=validated_tables_txt)
+                    ' Allowed values are: '+', '.join(['all'] + validated_tables_txt),
+                    choices=['all'] + validated_tables_txt)
     parser.add_argument('typename',
             metavar='TYPE',
             type=str,
             help='the type of test to run on the chosen table.'+\
-                    ' Allowed values are: '+', '.join(test_types_txt),
-                    choices=test_types_txt)
+                    ' Allowed values are: '+', '.join(['all'] + test_types_txt),
+                    choices=['all'] + test_types_txt)
 
-    run_tests(**vars(parser.parse_args()))
+    args, parallel_args = parser.parse_known_args()
+    options = vars(args)
+    if not (options['tablename'] == 'all' or options['typename'] == 'all'):
+        run_tests(**options)
+    else:
+        #use parallel to loop over all options
+        tables = validated_tables_txt if options['tablename'] == 'all' else [options['tablename']]
+        types = test_types_txt if options['typename'] == 'all' else [options['typename']]
+
+        import tempfile, subprocess
+        with tempfile.NamedTemporaryFile() as tables_file:
+            tables_file.write('\n'.join(tables) + '\n')
+            tables_file.flush()
+            with tempfile.NamedTemporaryFile() as types_file:
+                types_file.write('\n'.join(types) + '\n')
+                types_file.flush()
+                cmd = ['parallel'] + parallel_args
+                cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
+                cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
+                print "Running: {0}".format(subprocess.list2cmdline(cmd))
+                exitcode = subprocess.call(cmd)
 
 
+        exit(exitcode)
