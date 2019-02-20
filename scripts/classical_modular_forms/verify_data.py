@@ -4,7 +4,7 @@
 #  Nothing in this file is safe  #
 #       from SQL injection       #
 ##################################
-import traceback, time, sys, os, inspect
+import traceback, time, sys, os, inspect, argparse, textwrap
 from timeout_decorator import timeout, TimeoutError
 try:
     # Make lmfdb available
@@ -2081,26 +2081,90 @@ class char_dir_values(TableChecker):
         return True
 
 validated_tables = [mf_newspaces, mf_gamma1, mf_newspace_portraits, mf_gamma1_portraits, mf_subspaces, mf_gamma1_subspaces, mf_newforms, mf_newform_portraits, mf_hecke_nf, mf_hecke_traces, mf_hecke_newspace_traces, mf_hecke_lpolys, mf_hecke_cc, char_dir_orbits, char_dir_values]
-typs = [overall, overall_long, fast, slow]
+validated_tables_txt = [str(elt.table.search_table) for elt in validated_tables]
+validated_tables_dict = dict(zip(validated_tables_txt, validated_tables))
+test_types_txt=['overall', 'overall_long', 'fast', 'slow']
 suffixes = ['over', 'long', 'fast', 'slow']
-def get_code(tbl, cls):
-    return len(typs)*validated_tables.index(tbl)+typs.index(cls)
-def run_tests(basedir, m):
-    cls_num = m // len(typs)
-    if cls_num >= len(validated_tables) or cls_num < 0:
-        print "No such table (requested %sth table of %s)"%(cls_num+1, len(validated_tables))
+test_types = [overall, overall_long, fast, slow]
+test_types_dict = dict(zip(test_types_txt, test_types))
+test_types_suffixes = dict(zip(test_types, suffixes))
+
+typs = [overall, overall_long, fast, slow]
+#def get_code(tbl, cls):
+#    return len(typs)*validated_tables.index(tbl)+typs.index(cls)
+#def run_tests(basedir, m):
+#    cls_num = m // len(typs)
+#    if cls_num >= len(validated_tables) or cls_num < 0:
+#        print "No such table (requested %sth table of %s)"%(cls_num+1, len(validated_tables))
+#    else:
+#        typ_num = m % len(typs)
+#        cls = validated_tables[cls_num]
+#        typ = typs[typ_num]
+#        suffix = suffixes[typ_num]
+#        if cls._get_checks_count(typ) > 0:
+#            logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
+#            runner = cls(logfile, typ)
+#            runner.run()
+#
+#if __name__ == '__main__':
+#    if len(sys.argv) != 3 or not os.path.isdir(sys.argv[1]) or not sys.argv[2].isdigit():
+#        print "Give an output directory and one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
+#    else:
+#        run_tests(sys.argv[1], int(sys.argv[2]))
+#
+
+def run_tests(logdir, tablename, typename):
+    cls = validated_tables_dict(tablename)
+    typ = test_types_dict(typename)
+    suffix = test_types_suffixes(typ)
+    if cls._get_checks_count(typ) > 0:
+        logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
+        runner = cls(logfile, typ)
+        runner.run()
+
+
+def directory(path):
+    if not os.path.isdir(path):
+        raise TypeError('Not a directory')
     else:
-        typ_num = m % len(typs)
-        cls = validated_tables[cls_num]
-        typ = typs[typ_num]
-        suffix = suffixes[typ_num]
-        if cls._get_checks_count(typ) > 0:
-            logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
-            runner = cls(logfile, typ)
-            runner.run()
+        return path
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3 or not os.path.isdir(sys.argv[1]) or not sys.argv[2].isdigit():
-        print "Give an output directory and one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
-    else:
-        run_tests(sys.argv[1], int(sys.argv[2]))
+    parser  =  argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description=textwrap.dedent('''\
+                LMFDB - The L-functions and modular forms database
+                Verification scripts for classical modular forms
+                '''),
+            epilog=textwrap.dedent('''\
+                You may ran multiple tests in parallel by running:
+                 # parallel -j THREADS sage -python {0} LOGDIR ::: {{table names}} ::: {{types}}
+                For example:
+                 # parallel -j 8 sage -python {0} /scratch/logs ::: {{{1}}} ::: {{{2}}}
+                '''.format(sys.argv[0],
+                    ', '.join(validated_tables_txt[:2]),
+                    ', '.join(test_types_txt))
+            ))
+
+    parser.add_argument('logdir',
+            metavar='LOGDIR',
+            type=directory,
+            help='log directory')
+
+    parser.add_argument('tablename',
+            metavar='TABLENAME',
+            type=str,
+            help='the table name to run the verification tests.'+\
+                    ' Allowed values are: '+', '.join(validated_tables_txt),
+                    choices=validated_tables_txt)
+    parser.add_argument('type',
+            metavar='TYPE',
+            type=str,
+            help='the type of test to run on the chosen table.'+\
+                    ' Allowed values are: '+', '.join(test_types_txt),
+                    choices=test_types_txt)
+
+    args = parser.parse_args()
+    print args
+
+
