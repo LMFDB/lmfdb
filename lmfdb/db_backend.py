@@ -776,7 +776,11 @@ class PostgresTable(PostgresBase):
                     cmd = "{0} = %s"
                     # For arrays, have to add an explicit typecast
                     if coltype.endswith('[]'):
-                        cmd += '::' + coltype
+                        if not path:
+                            cmd += '::' + coltype
+                        else:
+                            cmd += '::' + coltype[-2:]
+
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
