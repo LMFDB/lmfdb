@@ -1,7 +1,7 @@
 import re
 import string
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 from sage.all import ZZ, gap
 

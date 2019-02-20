@@ -1,7 +1,7 @@
 # See genus2_curves/web_g2c.py
 # See templates/space.html for how functions are called
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup

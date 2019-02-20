@@ -1,6 +1,6 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 
 def get_lfunction_by_Lhash(Lhash):

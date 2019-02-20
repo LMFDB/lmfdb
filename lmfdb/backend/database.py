@@ -4,7 +4,7 @@ the kinds of queries needed by the LMFDB.
 
 EXAMPLES::
 
-    sage: from lmfdb.db_backend import db
+    sage: from lmfdb import db
     sage: db
     Interface to Postgres database
     sage: len(db.tablenames)
@@ -31,7 +31,7 @@ from collections import defaultdict, Counter
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
-from lmfdb.db_encoding import setup_connection, Json, copy_dumps, numeric_converter
+from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from sage.misc.mrange import cartesian_product_iterator
 from sage.functions.other import binomial
 from lmfdb.utils import make_logger, KeyedDefaultDict
@@ -470,7 +470,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES:
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: ec = db.ec_padic
             sage: nf = db.nf_fields
             sage: nf._parse_projection(0)
@@ -580,7 +580,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: statement, vals = db.nf_fields._parse_special("$lte", 5, "degree")
             ('"degree" <= %s', [5])
             sage: statement, vals = db.nf_fields._parse_special("$or", [{"degree":{"$lte":5}},{"class_number":{"$gte":3}}], None)
@@ -685,7 +685,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: sage: db.nf_fields._parse_dict({})
             []
             sage: db.lfunc_lfunctions._parse_values({'bad_lfactors':[1,2]})[1][0]
@@ -713,7 +713,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: statement, vals = db.nf_fields._parse_dict({"degree":2, "class_number":6})
             sage: statement.as_string(db.conn), vals
             ('"class_number" = %s AND "degree" = %s', [6, 2])
@@ -802,7 +802,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: statement, vals = db.nf_fields._build_query({"degree":2, "class_number":6})
             sage: statement.as_string(db.conn), vals
             (' WHERE "class_number" = %s AND "degree" = %s ORDER BY "degree", "disc_abs", "disc_sign", "label"', [6, 2])
@@ -923,7 +923,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: nf.lucky({'degree':int(2),'disc_sign':int(1),'disc_abs':int(5)},projection=0)
             u'2.2.5.1'
@@ -1015,7 +1015,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: info = {}
             sage: nf.search({'degree':int(2),'class_number':int(1),'disc_sign':int(-1)}, projection=0, limit=4, info=info)
@@ -1093,7 +1093,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: rec = nf.lookup('8.0.374187008.1')
             sage: rec['loc_algebras']['13']
@@ -1120,7 +1120,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: nf.exists({'class_number':int(7)})
             True
@@ -1159,7 +1159,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: nf.random()
             u'2.0.294787.1'
@@ -1283,7 +1283,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: db.nf_fields.max('class_number')
             1892503075117056
         """
@@ -1316,7 +1316,7 @@ class PostgresTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: nf.count({'degree':int(6),'galt':int(7)})
             244006
@@ -1331,7 +1331,7 @@ class PostgresTable(PostgresBase):
         """
         EXAMPLES::
 
-        sage: from lmfdb.db_backend import db
+        sage: from lmfdb import db
         sage: nf = db.nf_fields
         sage: nf.analyze({'degree':int(5)},limit=20)
         SELECT label, coeffs, degree, r2, cm, disc_abs, disc_sign, disc_rad, ramps, galt, class_number, class_group, used_grh, oldpolredabscoeffs FROM nf_fields WHERE degree = 5 ORDER BY degree, disc_abs, disc_sign, label LIMIT 20
@@ -2018,7 +2018,7 @@ class PostgresTable(PostgresBase):
         For example, to add a new column to artin_reps that tracks the
         signs of the galois conjugates, you would do the following::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: db.artin_reps.add_column('GalConjSigns','jsonb')
             sage: def add_signs(rec):
             ....:     rec['GalConjSigns'] = sorted(list(set([conj['Sign'] for conj in rec['GaloisConjugates']])))
@@ -3251,7 +3251,7 @@ class PostgresStatsTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: nf = db.nf_fields
             sage: nf.stats.count({'degree':int(6),'galt':int(7)})
             244006
@@ -3308,7 +3308,7 @@ class PostgresStatsTable(PostgresBase):
 
         EXAMPLES::
 
-            sage: from lmfdb.db_backend import db
+            sage: from lmfdb import db
             sage: db.nf_fields.stats.max('class_number')
             1892503075117056
         """
@@ -4106,7 +4106,7 @@ class PostgresDatabase(PostgresBase):
 
     EXAMPLES::
 
-        sage: from lmfdb.db_backend import db
+        sage: from lmfdb import db
         sage: db
         Interface to Postgres database
         sage: db.conn

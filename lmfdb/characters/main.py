@@ -19,7 +19,7 @@ from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, 
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
-from lmfdb.db_backend import db
+from lmfdb import db
 import ListCharacters
 
 #### make url_character available from templates

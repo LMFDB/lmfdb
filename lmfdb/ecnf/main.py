@@ -8,8 +8,8 @@ import ast
 import StringIO
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
+from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, flash, send_file, make_response
 from lmfdb.utils import to_dict

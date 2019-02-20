@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.WebNumberField import field_pretty, nf_display_knowl

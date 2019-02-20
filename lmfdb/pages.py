@@ -23,7 +23,7 @@ contribs = sorted(contribs, key = lambda x : x['name'].split()[-1])
 @app.route("/health")
 @app.route("/alive")
 def alive():
-    from lmfdb.db_backend import db
+    from lmfdb import db
     if db.is_alive():
         return "LMFDB!"
     else:
@@ -37,7 +37,7 @@ def info():
     output += "# GIT info\n";
     output += git_infos()[-1]
     output += "\n\n";
-    from lmfdb.db_backend import db
+    from lmfdb import db
     if not db.is_alive():
         output += "offline\n"
         return output

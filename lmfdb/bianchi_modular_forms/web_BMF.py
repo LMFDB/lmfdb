@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label

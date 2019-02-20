@@ -2,7 +2,7 @@
 
 import re
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from flask import render_template, url_for, request
 from lmfdb.half_integral_weight_forms import hiwf_page
 

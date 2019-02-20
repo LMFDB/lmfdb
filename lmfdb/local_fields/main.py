@@ -2,7 +2,7 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
 from lmfdb.utils import web_latex, coeff_to_poly, pol_to_html, display_multiset

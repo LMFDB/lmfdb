@@ -23,7 +23,7 @@ lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and N
 
 # Database connection
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # utilitary functions for displays 
 

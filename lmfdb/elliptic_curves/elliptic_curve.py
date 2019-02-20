@@ -2,8 +2,8 @@
 import re
 import time
 import ast
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
+from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.base import app
 from flask import render_template, url_for, request, redirect, make_response, send_file
 import tempfile

@@ -1,5 +1,5 @@
 from lmfdb.base import LmfdbTest
-from lmfdb.db_backend import db
+from lmfdb import db
 
 class Genus2Test(LmfdbTest):
 

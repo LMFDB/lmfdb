@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import comma, make_logger
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.misc.lazy_attribute import lazy_attribute

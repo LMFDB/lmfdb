@@ -10,7 +10,7 @@ import math
 import re
 
 from flask import url_for, request
-from lmfdb.db_encoding import Json
+from lmfdb.backend.encoding import Json
 
 from Lfunctionutilities import string2number, get_bread,\
                                 compute_local_roots_SMF2_scalar_valued,\
@@ -23,7 +23,7 @@ from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash,\
                               getEllipticCurveData, get_multiples_by_Lhash
 from Lfunction_base import Lfunction
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.lfunctions import logger
 from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int,\
                         display_complex, str_to_CBF

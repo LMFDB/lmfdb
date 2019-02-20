@@ -4,7 +4,7 @@
 
 import re
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from flask import render_template, request, url_for, redirect, abort
 from lmfdb.utils import image_callback, flash_error, list_to_factored_poly_otherorder
 from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted

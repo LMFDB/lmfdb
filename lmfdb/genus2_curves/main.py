@@ -6,7 +6,7 @@ from operator import mul
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import to_dict, comma, flash_error, display_knowl
 from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
 from lmfdb.search_wrapper import search_wrap

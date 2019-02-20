@@ -2,7 +2,7 @@
 import re
 from flask import url_for
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.WebNumberField import WebNumberField, nf_display_knowl
 from lmfdb.transitive_group import group_display_knowl
 

@@ -4,7 +4,7 @@ LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 

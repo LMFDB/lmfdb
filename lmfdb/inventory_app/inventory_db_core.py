@@ -1,5 +1,5 @@
 import lmfdb_inventory as inv
-from lmfdb.db_backend import db
+from lmfdb import db
 
 #Table creation routines -------------------------------------------------------------
 

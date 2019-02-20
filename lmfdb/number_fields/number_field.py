@@ -7,7 +7,7 @@ from flask import render_template, request, url_for, redirect, send_file, flash,
 import StringIO
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor, factor_base_factorization_latex
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.local_fields.main import show_slope_content
 import ast
 

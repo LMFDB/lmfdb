@@ -12,7 +12,7 @@ from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 from lmfdb.search_parsing import parse_ints
 from lmfdb.search_wrapper import search_wrap
-from lmfdb.db_backend import db
+from lmfdb import db
 
 from markupsafe import Markup
 

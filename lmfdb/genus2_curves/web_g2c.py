@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from ast import literal_eval
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import web_latex, encode_plot, list_to_factored_poly_otherorder
 from lmfdb.ecnf.main import split_full_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label

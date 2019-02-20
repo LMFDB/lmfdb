@@ -8,7 +8,7 @@ from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html,\
 from flask import url_for
 from collections import Counter
 from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
-from lmfdb.db_backend import db
+from lmfdb import db
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000

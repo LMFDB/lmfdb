@@ -23,7 +23,7 @@ def get_logfocus():
 
 def _init():
     # creates PostgresSQL connection
-    from lmfdb.db_backend import db
+    from lmfdb import db
     assert db
 
 app = Flask(__name__)
@@ -206,5 +206,5 @@ class LmfdbTest(unittest2.TestCase):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
-        from lmfdb.db_backend import db
+        from lmfdb import db
         self.db = db

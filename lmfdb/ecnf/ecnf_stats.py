@@ -2,7 +2,7 @@
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.db_backend import db
+from lmfdb import db
 
 def field_data(s):
     r"""

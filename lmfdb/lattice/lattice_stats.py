@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import app
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import make_logger, comma
 
 logger = make_logger("lattice")

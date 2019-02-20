@@ -2,7 +2,7 @@
 
 from flask import render_template, url_for, request, redirect, make_response, flash
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary

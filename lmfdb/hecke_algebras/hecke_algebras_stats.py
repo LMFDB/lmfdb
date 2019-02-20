@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import app
 from lmfdb.utils import make_logger, comma
-from lmfdb.db_backend import db
+from lmfdb import db
 
 logger = make_logger("hecke_algebras")
 

@@ -6,7 +6,7 @@ from flask import render_template, url_for, request, send_file, flash, redirect
 from markupsafe import Markup
 import StringIO
 import dimensions, sample
-from lmfdb.db_backend import db
+from lmfdb import db
 from family import get_smf_family, get_smf_families
 from sage.all import latex, Set
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty

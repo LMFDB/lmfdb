@@ -5,7 +5,7 @@ from collections import Counter
 
 from lmfdb.utils import make_logger, encode_plot
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.base import app
 
 from sage.rings.all import Integer, QQ, RR

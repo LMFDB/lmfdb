@@ -1,7 +1,7 @@
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
 from collections import defaultdict
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool,\
         parse_primes, parse_nf_string, parse_noop, parse_equality_constraints,\

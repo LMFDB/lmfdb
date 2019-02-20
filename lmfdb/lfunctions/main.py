@@ -29,7 +29,7 @@ from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paint
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
 from lmfdb.base import is_debug_mode
-from lmfdb.db_backend import db
+from lmfdb import db
 
 def get_degree(degree_string):
     if not re.match('degree[0-9]+',degree_string):

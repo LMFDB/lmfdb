@@ -22,7 +22,7 @@ except:
 from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
-from lmfdb.db_backend import db
+from lmfdb import db
 
 GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 

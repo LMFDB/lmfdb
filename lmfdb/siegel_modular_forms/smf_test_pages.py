@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
-from lmfdb.db_backend import db
+from lmfdb import db
 
 class SMFPageTest(LmfdbTest):
 

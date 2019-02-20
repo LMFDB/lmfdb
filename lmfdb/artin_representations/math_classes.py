@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime

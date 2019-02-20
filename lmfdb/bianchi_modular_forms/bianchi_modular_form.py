@@ -7,7 +7,7 @@ from markupsafe import Markup
 
 from sage.all import latex
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import to_dict, web_latex_ideal_fact
 from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string, parse_start, parse_count
 from lmfdb.search_wrapper import search_wrap

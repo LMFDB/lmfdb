@@ -3,7 +3,7 @@ import re
 import time
 import ast
 import StringIO
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.base import app
 from lmfdb.utils import to_dict, make_logger
 from lmfdb.abvar.fq import abvarfq_page

@@ -1,7 +1,7 @@
 # based on /lmfdb/elliptic_curves/ec_stats.py
 
 import re
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import UniqueRepresentation, cached_method
 from lmfdb.utils import make_logger
 

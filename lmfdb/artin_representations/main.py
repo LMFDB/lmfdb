@@ -2,7 +2,7 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
 

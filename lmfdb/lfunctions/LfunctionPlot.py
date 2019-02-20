@@ -2,7 +2,7 @@
 
 import math
 from flask import url_for
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebGamma1Space
 from lmfdb.characters.ListCharacters import get_character_modulus

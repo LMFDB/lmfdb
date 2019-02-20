@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.base import app
 from lmfdb.utils import make_logger, comma
 from sage.misc.cachefunc import cached_method
