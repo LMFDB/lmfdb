@@ -7,7 +7,6 @@ OUTSTANDING:
 
 IMPORTANT:
 * Fix Satake angles in weight 1 (Drew)
-* Fix sturm bound in mf_gamma1 (Drew)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * Change title when single m specified, jump and make sure m box is present (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
