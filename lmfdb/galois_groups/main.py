@@ -2,15 +2,12 @@
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
-import pymongo
-ASC = pymongo.ASCENDING
-from lmfdb import base
 from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
-from lmfdb.utils import to_dict, list_to_latex_matrix, random_object_from_collection
-from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_count, parse_start
+from lmfdb.utils import list_to_latex_matrix
+from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted
+from lmfdb.search_wrapper import search_wrap
 import re
-import bson
 from lmfdb.galois_groups import galois_groups_page, logger
 from sage.all import ZZ, latex, gap
 
@@ -22,9 +19,10 @@ try:
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
-from lmfdb.transitive_group import group_display_short, group_display_pretty, group_knowl_guts, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, aliastable, WebGaloisGroup
+from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
 
 from lmfdb.WebNumberField import modules2string
+from lmfdb.db_backend import db
 
 GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 
@@ -43,42 +41,22 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+
 def int_reps_are_complete(intreps):
     for r in intreps:
         if 'complete' in r:
             return r['complete']
     return -1
 
-def galois_group_data(n, t):
-    C = base.getDBConnection()
-    return group_knowl_guts(n, t, C)
-
-
-def group_alias_table():
-    C = base.getDBConnection()
-    return aliastable(C)
-
-
 def galois_module_data(n, t, index):
-    C = base.getDBConnection()
-    return galois_module_knowl_guts(n, t, index, C)
+    return galois_module_knowl_guts(n, t, index)
 
 
 @app.context_processor
 def ctx_galois_groups():
     return {'group_alias_table': group_alias_table,
-            'galois_module_data': galois_module_data}
+            'galois_module_data': galois_module_knowl_guts}
 
-
-def group_display_shortC(C):
-    def gds(nt):
-        return group_display_short(nt[0], nt[1], C)
-    return gds
-
-def group_display_prettyC(C):
-    def gds(nt):
-        return group_display_pretty(nt[0], nt[1], C)
-    return gds
 
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
@@ -95,7 +73,7 @@ def by_label(label):
 def index():
     bread = get_bread()
     if len(request.args) != 0:
-        return galois_group_search(**request.args)
+        return galois_group_search(request.args)
     info = {'count': 50}
     info['degree_list'] = range(16)[2:]
     learnmore = [#('Completeness of the data', url_for(".completeness_page")),
@@ -103,28 +81,19 @@ def index():
                 ('Galois group labels', url_for(".labels_page"))]
     return render_template("gg-index.html", title="Galois Groups", bread=bread, info=info, credit=GG_credit, learnmore=learnmore)
 
-# FIXME: delete or fix this code
-# Apparently obsolete code that causes a server error if executed
-# @galois_groups_page.route("/search", methods=["GET", "POST"])
-# def search():
-#    if request.method == "GET":
-#        val = request.args.get("val", "no value")
-#        bread = get_bread([("Search for '%s'" % val, url_for('.search'))])
-#        return render_template("gg-search.html", title="Galois Group Search", bread=bread, val=val)
-#    elif request.method == "POST":
-#        return "ERROR: we always do http get to explicitly display the search parameters"
-#    else:
-#        return flask.abort(404)
+# For the search order-parsing
+def make_order_key(order):
+    order1 = int(ZZ(order).log(10))
+    return '%03d%s'%(order1,str(order))
 
-
-def galois_group_search(**args):
-    info = to_dict(args)
-    if info.get('jump_to'):
-        return redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)
-    bread = get_bread([("Search results", ' ')])
-    C = base.getDBConnection()
-    query = {}
-
+@search_wrap(template="gg-search.html",
+             table=db.gps_transitive,
+             title='Galois Group Search Results',
+             err_title='Galois Group Search Input Error',
+             shortcuts={'jump_to': lambda info:redirect(url_for('.by_label', label=info['jump_to']).strip(), 301)},
+             bread=lambda: get_bread([("Search Results", ' ')]),
+             credit=lambda: GG_credit)
+def galois_group_search(info, query):
     def includes_composite(s):
         s = s.replace(' ','').replace('..','-')
         for interval in s.split(','):
@@ -140,46 +109,21 @@ def galois_group_search(**args):
                 a = ZZ(interval)
                 if a != 1 and not a.is_prime():
                     return True
-    try:
-        parse_ints(info,query,'n','degree')
-        parse_ints(info,query,'t')
-        for param in ('cyc', 'solv', 'prim', 'parity'):
-            parse_bool(info,query,param,minus_one_to_zero=(param != 'parity'))
-        degree_str = prep_ranges(info.get('n'))
-        info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info, bread)
+    parse_ints(info,query,'n','degree')
+    parse_ints(info,query,'t')
+    parse_ints(info,query,'order')
+    parse_bracketed_posints(info, query, qfield='gapidfull', split=False, exactlength=2, keepbrackets=True, name='GAP id', field='gapid')
+    for param in ('cyc', 'solv', 'prim'):
+        parse_bool(info, query, param, process=int, blank=['0','Any'])
+    parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
+    if 'order' in query and 'n' not in query:
+        query['__sort__'] = ['order', 'gapid', 'n', 't']
 
-    count = parse_count(info, 50)
-    start = parse_start(info)
-
-    res = C.transitivegroups.groups.find(query).sort([('n', pymongo.ASCENDING), ('t', pymongo.ASCENDING)])
-    nres = res.count()
-    res = res.skip(start).limit(count)
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['groups'] = res
-    info['group_display'] = group_display_prettyC(C)
-    info['report'] = "found %s groups" % nres
+    degree_str = prep_ranges(info.get('n'))
+    info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
+    info['group_display'] = group_display_pretty
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
-    info['start'] = start
-    info['number'] = nres
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres > count or start != 0:
-            info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-        else:
-            info['report'] = 'displaying all %s matches' % nres
-
-    return render_template("gg-search.html", info=info, title="Galois Group Search Result", bread=bread, credit=GG_credit)
-
 
 def yesno(val):
     if val:
@@ -193,10 +137,9 @@ def render_group_webpage(args):
     if 'label' in args:
         label = clean_input(args['label'])
         label = label.replace('t', 'T')
-        C = base.getDBConnection()
-        data = C.transitivegroups.groups.find_one({'label': label})
+        data = db.gps_transitive.lookup(label)
         if data is None:
-            bread = get_bread([("Search error", ' ')])
+            bread = get_bread([("Search Error", ' ')])
             info['err'] = "Group " + label + " was not found in the database."
             info['label'] = label
             return search_input_error(info, bread)
@@ -229,8 +172,14 @@ def render_group_webpage(args):
         data['chartable'] = ctable
         data['parity'] = "$%s$" % data['parity']
         data['cclasses'] = conjclasses(G, n)
-        data['subinfo'] = subfield_display(C, n, data['subs'])
-        data['resolve'] = resolve_display(C, data['resolve'])
+        data['subinfo'] = subfield_display(n, data['subs'])
+        data['resolve'] = resolve_display(data['resolve'])
+        if data['gapid'] == 0:
+            data['gapid'] = "Data not available"
+        else:
+            data['gapid'] = small_group_display_knowl(int(data['order']),
+                                                      int(data['gapid']),
+                                                      str([int(data['order']), int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
         ae = wgg.arith_equivalent()
         if ae>0:
@@ -242,11 +191,7 @@ def render_group_webpage(args):
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
-        query={'galois': bson.SON([('n', n), ('t', t)])}
-        C = base.getDBConnection()
-        intreps = C.transitivegroups.Gmodules.find({'n': n, 't': t}).sort('index', pymongo.ASCENDING)
-        # turn cursor into a list
-        intreps = [z for z in intreps]
+        intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
@@ -264,9 +209,8 @@ def render_group_webpage(args):
                 #print data['isoms']
 
         friends = []
-        one = C.numberfields.fields.find_one(query)
-        if one:
-            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) )) 
+        if db.nf_fields.exists({'degree': n, 'galt': t}):
+            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         prop2 = [('Label', label),
             ('Order', '\(%s\)' % order),
             ('n', '\(%s\)' % data['n']),
@@ -276,7 +220,7 @@ def render_group_webpage(args):
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
-        pretty = group_display_pretty(n,t,C)
+        pretty = group_display_pretty(n,t)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
             info['pretty_name'] = pretty
@@ -293,12 +237,12 @@ def search_input_error(info, bread):
 
 @galois_groups_page.route("/random")
 def random_group():
-    label = random_object_from_collection(base.getDBConnection().transitivegroups.groups)['label']
+    label = db.gps_transitive.random()
     return redirect(url_for(".by_label", label=label), 307)
 
 @galois_groups_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of Galois group data'
+    t = 'Completeness of Galois Group Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Galois group labels', url_for(".labels_page"))]
@@ -308,7 +252,7 @@ def completeness_page():
 
 @galois_groups_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Galois groups'
+    t = 'Labels for Galois Groups'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page"))]
@@ -316,7 +260,7 @@ def labels_page():
 
 @galois_groups_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Galois group data'
+    t = 'Source of the Galois Group Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
                 #('Source of the data', url_for(".how_computed_page")),

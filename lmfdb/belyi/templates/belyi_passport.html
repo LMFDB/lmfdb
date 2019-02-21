@@ -1,0 +1,67 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+{% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+<p><h2>Basic properties</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.degree', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{data.deg}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.group', title="Monodromy group") }}:<td>&nbsp;&nbsp;<td>{{data.group | safe}}<td></tr>
+  </table>
+</p>
+
+<p><h2>Generators</h2>
+
+  <table class="ntdata">
+      <thead><tr><td>Order</td><td>Partition</td></tr></thead>
+      <tbody>
+        {% for i in [0,1,2] %}
+           <tr><td>${{data.abc[i]}}$</td>
+              <td>${{data.lambdas[i]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+</p>
+
+<p><h2>Geometric data</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.genus', title="Genus") }}:<td>&nbsp;&nbsp;<td>${{data.g}}$<td></tr>
+  <tr><td>{{ KNOWL('belyi.geometry_type', title="Geometry type") }}:<td>&nbsp;&nbsp;<td>{{data.geomtype}}<td></tr>
+  </table>
+</p>
+
+<p><h2>Galois orbits</h2>
+  <table>
+  <tr><td>{{ KNOWL('belyi.pass_size', title="Passport size") }}:<td>&nbsp;&nbsp;<td>${{data.pass_size}}$</tr>
+  <tr><td>{{ KNOWL('belyi.num_orbits', title="Number of Galois orbits") }}:<td>&nbsp;&nbsp;<td>${{data.num_orbits}}$</tr>
+  </table>
+
+  <table class="ntdata">
+    <thead><tr><td>Label</td><td>Orbit size</td><td>Base field</td><td>Representative triple</td></tr></thead>
+    <tbody>
+      {% for g in data.galmapdata %}
+      <tr><td><a href="{{g[1]|safe}}">{{g[0]}}</a></td>
+        <td>${{g[2]}}$</td>
+        <td>
+          {% if g[3]['in_LMFDB'] %}
+          {{ g[3].base_field.knowl()|safe }}
+          {% if not g[3]['isQQ'] %}
+          ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+          {{ g[3].base_field.latex_poly }}.
+          {% endif %}
+          {% else %}
+          \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ g[3].base_field }}$.
+          {% endif %}
+        </td>
+        <td>${{g[4]}},{{g[5]}},{{g[6]}}$</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</p>
+  
+{% endblock %}

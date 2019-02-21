@@ -1,0 +1,81 @@
+{% extends 'homepage.html' %}
+{% import 'color.css' as color %}
+{% block content %}
+
+<style>
+<div.ratpts>span { white-space: nowrap; font-family: serif; }
+</style>
+
+<!--New table class to avoid spacing in LaTeX-links -->
+<style type="text/css">
+table.g2 a {
+  padding: 0;
+}
+
+<style>
+.toggle {margin-top:5px; margin-left:20px;}
+div.properties-body table tr td.label { vertical-align: top; }
+#content > h2.subhead { color:{{color.black}};}
+</style>
+
+{% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
+<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+<h2>Invariants</h2>
+  <p>
+    <table>
+    <tr><td>{{ KNOWL('belyi.degree', title="Degree") }}:<td><td>${{data.deg}}$<td></tr>
+    <tr><td>{{ KNOWL('belyi.group', title="Monodromy group") }}:<td><td>{{data.group | safe}}<td></tr>
+    <tr><td> Genus:</td><td><td>{{data.g}}</td> </tr>
+    <tr><td>{{ KNOWL('belyi.geometry_type', title="Geometry type") }}:<td><td>{{data.geomtype}}<td></tr>
+    </table>
+  </p>
+
+<h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
+  <p>
+    {% if data['in_LMFDB'] %}
+      {{ data.base_field.knowl()|safe }}
+      {% if not data['isQQ'] %}
+       ; {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+        {{ data.base_field.latex_poly }}.
+      {% endif %}
+    {% else %}
+      \(\mathbb{Q}(\nu)\); {{ KNOWL('nf.generator', 'Generator') }} \(\nu\), with {{ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }} ${{ data.base_field }}$.
+    {% endif %}
+  </p>
+</h2>
+
+<p><h2>Generators</h2>
+
+  <table class="ntdata">
+      <thead><tr><td>Order</td><td>Partition</td></tr></thead>
+      <tbody>
+        {% for i in [0,1,2] %}
+           <tr><td>${{data.abc[i]}}$</td>
+              <td>${{data.lambdas[i]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+
+</p>
+
+
+<h2>Curve</h2>
+  <p> \(\displaystyle {{data.curve}}\) </p>
+
+<h2>Map</h2>
+  <p> \(\displaystyle \phi = {{data.map}}\) </p>
+
+<h2>Passport properties</h2>
+    <table class="ntdata">
+      <thead><tr><td>Embedding $\nu \mapsto \nu_i \in \mathbb{C}$</td><td>Permutation triple</td></tr></thead>
+      <tbody>
+        {% for g in data.embeddings_and_triples %}
+           <td>${{g[0]}}$</td>
+           <td>${{g[1]}},{{g[2]}},{{g[3]}}$</td>
+           </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+{% endblock %}

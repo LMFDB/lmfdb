@@ -1,19 +1,17 @@
 import re
-import pymongo
-ASC = pymongo.ASCENDING
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
 #from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
 from flask import flash, make_response, send_file, request, render_template, redirect, url_for
 
-from lmfdb.base import getDBConnection
-from lmfdb.utils import to_dict, random_object_from_collection
+from lmfdb.db_backend import db
 
 from sage.all import ZZ, conway_polynomial
 
 from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
 from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start
+from lmfdb.search_parsing import parse_ints, parse_list
+from lmfdb.search_wrapper import search_wrap
 
 #should these functions be defined in lattices or somewhere else?
 from lmfdb.lattice.main import vect_to_sym, vect_to_matrix
@@ -81,13 +79,13 @@ def rep_galois_modl_render_webpage():
         info['counts'] = get_stats().counts()
         return render_template("rep_galois_modl-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list_remove('Completeness'), bread=bread)
     else:
-        return rep_galois_modl_search(**args)
+        return rep_galois_modl_search(args)
 
 # Random rep_galois_modl
 @rep_galois_modl_page.route("/random")
 def random_rep_galois_modl():
-    res = random_object_from_collection( getDBConnection().mod_l_galois.reps )
-    return redirect(url_for(".render_rep_galois_modl_webpage", label=res['label']))
+    label = db.modlgal_reps.random()
+    return redirect(url_for(".render_rep_galois_modl_webpage", label=label))
 
 
 rep_galois_modl_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
@@ -95,8 +93,8 @@ rep_galois_modl_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
 def split_rep_galois_modl_label(lab):
     return rep_galois_modl_label_regex.match(lab).groups()
 
-def rep_galois_modl_by_label_or_name(lab, C):
-    if C.mod_l_galois.reps.find({'$or':[{'label': lab}, {'name': lab}]}).limit(1).count() > 0:
+def rep_galois_modl_by_label_or_name(lab):
+    if db.modlgal_reps.exists({'$or':[{'label': lab}, {'name': lab}]}):
         return render_rep_galois_modl_webpage(label=lab)
     if rep_galois_modl_label_regex.match(lab):
         flash(Markup("The integral rep_galois_modl <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
@@ -104,94 +102,71 @@ def rep_galois_modl_by_label_or_name(lab, C):
         flash(Markup("No integral rep_galois_modl in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
     return redirect(url_for(".rep_galois_modl_render_webpage"))
 
-def rep_galois_modl_search(**args):
-    C = getDBConnection()
-    info = to_dict(args)  # what has been entered in the search boxes
+#download
+download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
+download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
+download_assignment_end = {'magma':';','sage':'','gp':''}
+download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
 
-    if 'download' in info:
-        return download_search(info)
+def download_search(info):
+    lang = info["submit"]
+    filename = 'integral_rep_galois_modls' + download_file_suffix[lang]
+    mydate = time.strftime("%d %B %Y")
+    # reissue saved query here
 
-    if 'label' in info and info.get('label'):
-        return rep_galois_modl_by_label_or_name(info.get('label'), C)
-    query = {}
-    try:
-        for field, name in (('dim','Dimension'),('det','Determinant'),('level',None),
-                            ('minimum','Minimal vector length'), ('class_number',None), ('aut','Group order')):
-            parse_ints(info, query, field, name)
-        # Check if length of gram is triangular
-        gram = info.get('gram')
-        if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
-            raise ValueError 
-        parse_list(info, query, 'gram', process=vect_to_sym)
-    except ValueError as err:
-        info['err'] = str(err)
-        return search_input_error(info)
+    res = list(db.modlgal_reps.search(ast.literal_eval(info["query"]), "gram"))
 
-    count = parse_count(info,50)
-    start = parse_start(info)
+    c = download_comment_prefix[lang]
+    s =  '\n'
+    s += c + ' Integral rep_galois_modls downloaded from the LMFDB on %s. Found %s rep_galois_modls.\n\n'%(mydate, len(res))
+    # The list entries are matrices of different sizes.  Sage and gp
+    # do not mind this but Magma requires a different sort of list.
+    list_start = '[*' if lang=='magma' else '['
+    list_end = '*]' if lang=='magma' else ']'
+    s += download_assignment_start[lang] + list_start + '\\\n'
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+    entry = lambda r: "".join([mat_start,str(r),mat_end])
+    # loop through all search results and grab the gram matrix
+    s += ",\\\n".join([entry(gram) for gram in res])
+    s += list_end
+    s += download_assignment_end[lang]
+    s += '\n'
+    strIO = StringIO.StringIO()
+    strIO.write(s)
+    strIO.seek(0)
+    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    info['query'] = dict(query)
-    res = C.mod_l_galois.reps.find(query).sort([('dim', ASC), ('det', ASC), ('level', ASC), ('class_number', ASC), ('label', ASC)]).skip(start).limit(count)
-    nres = res.count()
-
-
-
-    if(start >= nres):
-        start -= (1 + (start - nres) / count) * count
-    if(start < 0):
-        start = 0
-
-    info['number'] = nres
-    info['start'] = int(start)
-    info['more'] = int(start + count < nres)
-    if nres == 1:
-        info['report'] = 'unique match'
-    else:
-        if nres == 0:
-            info['report'] = 'no matches'
-        else:
-            if nres > count or start != 0:
-                info['report'] = 'displaying matches %s-%s of %s' % (start + 1, min(nres, start + count), nres)
-            else:
-                info['report'] = 'displaying all %s matches' % nres
-
-    res_clean = []
-    for v in res:
-        v_clean = {}
-        v_clean['label']=v['label']
-        v_clean['dim']=v['dim']
-        v_clean['det']=v['det']
-        v_clean['level']=v['level']
-        v_clean['gram']=vect_to_matrix(v['gram'])
-        res_clean.append(v_clean)
-
-    info['rep_galois_modls'] = res_clean
-
-    t = 'Mod &#x2113; Galois representations Search Results'
-
-    bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".index")), ('Search Results', ' ')]
-    properties = []
-    return render_template("rep_galois_modl-search.html", info=info, title=t, properties=properties, bread=bread, learnmore=learnmore_list())
-
-def search_input_error(info, bread=None):
-    t = 'Mod &#x2113; Galois representations Search Results Error'
-    if bread is None:
-        bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".index")),('Search Results', ' ')]
-    return render_template("rep_galois_modl-search.html", info=info, title=t, properties=[], bread=bread, learnmore=learnmore_list())
-
-
-
-
-
+@search_wrap(template="rep_galois_modl-search.html",
+             table=db.modlgal_reps,
+             title='Mod &#x2113; Galois representations Search Results',
+             err_title='Mod &#x2113; Galois representations Search Results Error',
+             per_page=20,
+             shortcuts={'download':download_search,
+                        'label':lambda info:rep_galois_modl_by_label_or_name(info.get('label'))},
+             projection=['label','dim','det','level','gram'],
+             cleaners={'gram':lambda v:vect_to_matrix(v['gram'])},
+             bread=lambda:[('Representations', "/Representation"),("mod &#x2113;", url_for(".index")), ('Search Results', ' ')],
+             properties=lambda:[],
+             learnmore=learnmore_list)
+def rep_galois_modl_search(info, query):
+    for field, name in (('dim','Dimension'), ('det','Determinant'),
+                        ('level',None), ('minimum','Minimal vector length'),
+                        ('class_number',None), ('aut','Group order')):
+        parse_ints(info, query, field, name)
+    # Check if length of gram is triangular
+    gram = info.get('gram')
+    if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
+        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        raise ValueError
+    parse_list(info, query, 'gram', process=vect_to_sym)
 
 @rep_galois_modl_page.route('/<label>')
 def render_rep_galois_modl_webpage(**args):
-    C = getDBConnection()
     data = None
     if 'label' in args:
         lab = args.get('label')
-        data = C.mod_l_galois.reps.find_one({'label': lab })
+        data = db.modlgal_reps.lookup(lab)
     if data is None:
         t = "Mod &#x2113; Galois representations Search Error"
         bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
@@ -205,19 +180,19 @@ def render_rep_galois_modl_webpage(**args):
 
     bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage")), ('%s' % data['label'], ' ')]
     credit = rep_galois_modl_credit
-    f = C.mod_l_galois.reps.find_one({'base_field':data['base_field'],'rep_type':data['rep_type'],'image_type':data['image_type'],'image_label':data['image_label'],'image_at':data['image_at'], 'projective_type':data['projective_type'],'projective_label':data['projective_label'],'poly_ker':data['poly_ker'],'poly_proj_ker':data['poly_proj_ker'], 'related_objects':data['related_objects'],'dim':data['dim'],'field_char':data['field_char'],'field_deg':data['field_deg'],'conductor':data['conductor'], 'weight': data['weight'],'abs_irr':data['abs_irr'],'image_order':data['image_order'],'degree_proj_field':data['degree_proj_field'], 'primes_conductor':data['primes_conductor'],'bad_prime_list':data['bad_prime_list'],'good_prime_list':data['good_prime_list']})
+
     for m in ['base_field','image_type','image_label','image_at','projective_type','projective_label','related_objects', 'label']:
-        info[m]=str(f[m])
+        info[m]=str(data[m])
     for m in ['dim','field_char','field_deg','conductor','weight','abs_irr','image_order','degree_proj_field']:
-        info[m]=int(f[m])
-    info['primes_conductor']=[int(i) for i in f['primes_conductor']]
+        info[m]=int(data[m])
+    info['primes_conductor']=[int(i) for i in data['primes_conductor']]
 
     for m in ['poly_ker','poly_proj_ker']:
-        info[m]=str(f[m]).replace("*", "").strip('(').strip(')')
+        info[m]=str(data[m]).replace("*", "").strip('(').strip(')')
 
-    if f['rep_type'] =="symp":
+    if data['rep_type'] =="symp":
         info['rep_type']="Symplectic"
-    elif f['rep_type'] =="orth":
+    elif data['rep_type'] =="orth":
         info['rep_type']="Orthogonal"
     else:
         info['rep_type']="Linear"
@@ -225,22 +200,22 @@ def render_rep_galois_modl_webpage(**args):
 
     if info['field_deg'] > int(1):
         try:
-            pol=str(conway_polynomial(f['characteristic'], f['deg'])).replace("*", "")
-            info['field_str']=str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(f['field_char']), str(f['field_char']), pol))
+            pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
+            info['field_str']=str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
         except:
             info['field_str']=""
 
 
     info['bad_prime_list']=[]
     info['good_prime_list']=[]
-    for n in f['bad_prime_list']:
+    for n in data['bad_prime_list']:
         try:
             n1=[int(n[0]), str(n[1]), str(n[2]), int(n[3]), int(n[4])]
         except:
             n1=[int(n[0]), str(n[1]), str(n[2]), str(n[3]), str(n[4])]
         info['bad_prime_list'].append(n1)
-    info['len_good']=[int(i+1) for i in range(len(f['good_prime_list'][0][1]))]
-    for n in f['good_prime_list']:
+    info['len_good']=[int(i+1) for i in range(len(data['good_prime_list'][0][1]))]
+    for n in data['good_prime_list']:
         try:
             n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), int(n[3]), int(n[4])]
         except:
@@ -288,42 +263,6 @@ def labels_page():
     return render_template("single.html", kid='rep_galois_modl.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
-#download
-download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\'}
-download_assignment_start = {'magma':'data := ','sage':'data = ','gp':'data = '}
-download_assignment_end = {'magma':';','sage':'','gp':''}
-download_file_suffix = {'magma':'.m','sage':'.sage','gp':'.gp'}
-
-def download_search(info):
-    lang = info["submit"]
-    filename = 'integral_rep_galois_modls' + download_file_suffix[lang]
-    mydate = time.strftime("%d %B %Y")
-    # reissue saved query here
-
-    res = getDBConnection().rep_galois_modls.reps.find(ast.literal_eval(info["query"]))
-
-    c = download_comment_prefix[lang]
-    s =  '\n'
-    s += c + ' Integral rep_galois_modls downloaded from the LMFDB on %s. Found %s rep_galois_modls.\n\n'%(mydate, res.count())
-    # The list entries are matrices of different sizes.  Sage and gp
-    # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
-    s += download_assignment_start[lang] + list_start + '\\\n'
-    mat_start = "Mat(" if lang == 'gp' else "Matrix("
-    mat_end = "~)" if lang == 'gp' else ")"
-    entry = lambda r: "".join([mat_start,str(r),mat_end])
-    # loop through all search results and grab the gram matrix
-    s += ",\\\n".join([entry(r['gram']) for r in res])
-    s += list_end
-    s += download_assignment_end[lang]
-    s += '\n'
-    strIO = StringIO.StringIO()
-    strIO.write(s)
-    strIO.seek(0)
-    return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
-
-
 @rep_galois_modl_page.route('/<label>/download/<lang>/')
 def render_rep_galois_modl_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
@@ -337,11 +276,8 @@ def render_rep_galois_modl_webpage_download(**args):
 
 
 def download_rep_galois_modl_full_lists_v(**args):
-    C = getDBConnection()
-    # FIXME THIS VARIABLE IS NEVER USED
-    # data = None
     label = str(args['label'])
-    res = C.mod_l_galois.reps.find_one({'label': label})
+    res = db.modlgal_reps.lookup(label, projection=['name','shortest'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such rep_galois_modl"
@@ -359,13 +295,10 @@ def download_rep_galois_modl_full_lists_v(**args):
 
 
 def download_rep_galois_modl_full_lists_g(**args):
-    C = getDBConnection()
-    # FIXME THIS VARIABLE IS NEVER USED
-    # data = None
     label = str(args['label'])
-    res = C.mod_l_galois.reps.find_one({'label': label})
+    reps = db.modlgal_reps.lookup(label, projection='genus_reps')
     mydate = time.strftime("%d %B %Y")
-    if res is None:
+    if reps is None:
         return "No such rep_galois_modl"
     lang = args['lang']
     c = download_comment_prefix[lang]
@@ -375,7 +308,7 @@ def download_rep_galois_modl_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['genus_reps']])
+    outstr += ",\\\n".join([entry(r) for r in reps])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

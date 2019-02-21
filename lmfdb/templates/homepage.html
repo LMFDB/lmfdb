@@ -33,78 +33,81 @@
 {% endif %}
 </a></div>
     <div class="right">
-      <div class="bread">
-        {% if bread %}
-          <a href="/">&#8962;</a>
+      <div class="upper">
+        <div class="bread">
+          {% if bread %}
+            <a href="/">&#8962;</a>
 {# there's a house symbol &#x1f3e0; but it does not work on all browsers#}
-          {% for b in bread -%}
-            &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
-          {% endfor %}
-         {% else %}
-          <a href="/">&#8962;</a>
-         {% endif %}
-      </div>
-      <div class="topright">
+            {% for b in bread -%}
+              &rarr; <a href="{{ b[1] }}"> {{ b[0]|striptags }}</a>
+            {% endfor %}
+           {% else %}
+            <a href="/">&#8962;</a>
+           {% endif %}
+        </div>
+        <div class="topright">
 {# search box does not work (see Issue #2389)
           <form method="GET" action="{{ url_for('search') }}" id="search-topright">
             <input type="text" placeholder="search ..." name="q" size="13" />
           </form>
 #}
-         {% if user_is_admin -%}
-            &middot;
-            <a href="{{ url_for('users.register') }}">RT</a>
-          {% endif %}
-          {% if user_is_authenticated -%}
-            &middot;
-            <a href="{{ url_for('users.info') }}">{{ username }}</a> 
-            &middot;
-            <a href="{{ url_for('users.logout') }}">Logout</a>
-          {%- else -%}
-            {# <a href="{{ url_for('users.register_new') }}">Register</a>
-            &middot; #}
-            {% if BETA %}
-            &middot;
-            <a href="{{ url_for('users.info') }}">Login</a>
+            {% if user_is_admin -%}
+              &middot;
+              <a href="{{ url_for('users.register') }}">Registration Tokens</a>
             {% endif %}
-          {%- endif %}
-          <br/>
+            {% if user_is_authenticated -%}
+              &middot;
+              <a href="{{ url_for('users.info') }}">{{ username }}</a> 
+              &middot;
+              <a href="{{ url_for('users.logout') }}">Logout</a>
+              <br/>
+            {%- else -%}
+              {# <a href="{{ url_for('users.register_new') }}">Register</a>
+              &middot; #}
+              {% if BETA %}
+              &middot;
+              <a href="{{ url_for('users.info') }}">Login</a>
+              <br/>
+              {% endif %}
+            {%- endif %}
 <!--
-          <span id="communication-wrapper">
-            <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-            <span id="communication"></span>
-          </span>
+            <span id="communication-wrapper">
+              <img id="communication-img" src="{{ url_for('static', filename='images/progress-green.gif') }}" />
+              <span id="communication"></span>
+            </span>
 -->
-      </div>
-      <div class="undertopright">
-          <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
-            &middot;
-          {% if g.show_menu %}
-             <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
-          {% else %}
-             <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
-          {% endif %}
-      </div>
+          <div class="undertopright">
+            <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
+              &middot;
+            {% if g.show_menu %}
+               <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
+            {% else %}
+               <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
+            {% endif %}
+          </div>
+        </div>
 {# deleting the confusing prev/next character links, 
    but leaving the code in case it is useful later
-      {% if navi is defined -%}
-        <div id="navi">
-         {% for txt, u in navi -%}
-          <a href="{{ u }}">{{ txt|safe }}</a>
-          {% if not loop.last -%}&middot;{%- endif %}
-         {%- endfor %}
-        </div>
-      {%- elif navi_raw is defined -%}
-        <div id="navi">{{ navi_raw|safe }}</div>
-      {%- endif %} 
+        {% if navi is defined -%}
+          <div id="navi">
+           {% for txt, u in navi -%}
+            <a href="{{ u }}">{{ txt|safe }}</a>
+            {% if not loop.last -%}&middot;{%- endif %}
+           {%- endfor %}
+          </div>
+        {%- elif navi_raw is defined -%}
+          <div id="navi">{{ navi_raw|safe }}</div>
+        {%- endif %} 
 #}
       {# this span inside a div thing is necessary to align it at the bottom, see css #}
 
-      {% if title_arithmetic -%}
-      <div id="title" class="arithmetic"><span id="title-content">{{ title_arithmetic|safe }}</span></div>
-      <div id="title" class="analytic nodisplay"><span id="title-content">{{ title_analytic|safe }}</span></div>
-      {% else %}
-      <div id="title"><span id="title-content">{{ title|safe }}</span></div>
-      {% endif %}
+        </div>
+        {% if title_arithmetic -%}
+        <div id="title" class="arithmetic">{{ title_arithmetic|safe }}</div>
+        <div id="title" class="analytic nodisplay">{{ title_analytic|safe }}</div>
+        {% else %}
+        <div id="title">{{ title|safe }}</div>
+        {% endif %}
 
     </div>
 </div>
@@ -125,12 +128,6 @@
 
 <div id="sidebar">
 {%- include "sidebar.html" -%}
-
-{# remove upload from sidebar #}
-{#% if user_is_authenticated -%#}
-    {#{ entry("Data", getUploadedFor(request.path, true) ) }#}
-{#% endif %#}
-
 </div>
 
 
@@ -215,13 +212,6 @@
     {%- endif %}
 
 <div id="main">
-  {# <div id="mathjax-info">
-    <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-    <br/>
-    Loading website and processing LaTeX ...
-    <br>
-    <span id="mathjax-log"></span>
-  </div> #} 
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">
@@ -309,7 +299,7 @@ The function which was called for this page is: {{calling_function}}
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
-      <a href="{{ url_for('management_board') }}">Management Board</a>
+      <a href="{{ url_for('editorial_board') }}">Editorial Board</a>
       {# <a href="{{ 'about' }}">About</a> #}
       &middot;
       {{ current_source|safe }}

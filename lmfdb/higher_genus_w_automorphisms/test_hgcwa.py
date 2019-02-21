@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class HigherGenusWithAutomorphismsTest(LmfdbTest):
@@ -21,12 +21,12 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
 
     def test_search_genus_group(self):
         L = self.tc.get('/HigherGenus/C/Aut/?genus=2&group=%5B48%2C29%5D&signature=&dim=&hyperelliptic=include&count=20&Submit=Search')
-        assert '2 matches' in L.data
+        assert 'both matches' in L.data
 
 
     def test_random(self):
         L = self.tc.get('/HigherGenus/C/Aut/random',follow_redirects=True)
-        assert 'Conjugacy classes for this' in L.data
+        assert 'Dimension of the corresponding' in L.data
 
     def test_magma_download(self):
         L = self.tc.get('/HigherGenus/C/Aut/5.32-27.0.2-2-2-4.1/download/magma')

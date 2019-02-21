@@ -2,10 +2,7 @@
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.ecnf.WebEllipticCurve import db_ecnfstats
-
-def format_percentage(num, denom):
-    return "%10.2f"%((100.0*num)/denom)
+from lmfdb.db_backend import db
 
 def field_data(s):
     r"""
@@ -24,17 +21,17 @@ def sort_field(F):
 logger = make_logger("ecnf")
 
 def ecnf_summary():
-    ecnfstats = db_ecnfstats()
+    ecnfstats = db.ec_nfcurves.stats
     ec_knowl = '<a knowl="ec">elliptic curves</a>'
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'
     deg_knowl = '<a knowl="nf.degree">degree</a>'
-    data = ecnfstats.find_one({'_id':'conductor_norm'})
+    data = ecnfstats.get_oldstat('conductor_norm')
     ncurves = comma(data['ncurves'])
     nclasses = comma(data['nclasses'])
-    data = ecnfstats.find_one({'_id':'field_label'})
+    data = ecnfstats.get_oldstat('field_label')
     nfields = len(data['counts'])
-    data = ecnfstats.find_one({'_id':'signatures_by_degree'})
+    data = ecnfstats.get_oldstat('signatures_by_degree')
     maxdeg = max(int(d) for d in data if d!='_id')
     return ''.join([r'The database currently contains {} '.format(ncurves),
                     ec_knowl,
@@ -46,7 +43,7 @@ def ecnf_summary():
                     r' up to {}.'.format(maxdeg)])
 
 def ecnf_field_summary(field):
-    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_field'})[field]
+    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_field')[field]
     ncurves = data['ncurves']
     s = '' if ncurves==1 else 's'
     ec_knowl = '<a knowl="ec">elliptic curve{}</a>'.format(s)
@@ -75,7 +72,7 @@ def ecnf_signature_summary(sig):
     cond_knowl = '<a knowl="ec.conductor">conductors</a>'
     r, s = [int(x) for x in sig.split(",")]
     d = r+2*s
-    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_signature'})[sig]
+    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_signature')[sig]
     ncurves = data['ncurves']
     nclasses = data['nclasses']
     max_norm = data['max_norm']
@@ -94,7 +91,7 @@ def ecnf_degree_summary(d):
     iso_knowl = '<a knowl="ec.isogeny_class">isogeny classes</a>'
     nf_knowl = '<a knowl="nf">number fields</a>'
     cond_knowl = '<a knowl="ec.conductor">conductors</a>'
-    data = db_ecnfstats().find_one({'_id':'conductor_norm_by_degree'})[str(d)]
+    data = db.ec_nfcurves.stats.get_oldstat('conductor_norm_by_degree')[str(d)]
     ncurves = data['ncurves']
     nclasses = data['nclasses']
     max_norm = data['max_norm']

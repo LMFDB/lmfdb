@@ -228,9 +228,9 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
  <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
  <div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
- <div class="analytic nodisplay">\[{{ eulerproduct }}\]</div>
+ <div class="analytic nodisplay">{{ eulerproduct }}</div>
 {% else %}
- <div>\[{{ eulerproduct }}\]</div>
+ <div>{{ eulerproduct }}</div>
 {% endif %}
 
  {% if factorization is defined %}

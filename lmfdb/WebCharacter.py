@@ -3,8 +3,7 @@
 from sage.misc.cachefunc import cached_method
 from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
 from flask import url_for
-import lmfdb
-from lmfdb.utils import make_logger
+from lmfdb.utils import make_logger, web_latex_split_on_pm
 logger = make_logger("DC")
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from WebNumberField import WebNumberField
@@ -132,7 +131,7 @@ class WebCharObject:
 ###  Dirichlet type
 
 class WebDirichlet(WebCharObject):
-    """ 
+    """
     For some applications (orbits, enumeration), Dirichlet characters may be
     represented by a couple (modulus, number) without computing the Dirichlet
     group.
@@ -337,7 +336,7 @@ class WebHecke(WebCharObject):
         numlabel = self.number2label( c.exponents() )
         if prim == None:
             prim = c.is_primitive()
-        return (modlabel, numlabel, self.char2tex(c), prim ) 
+        return (modlabel, numlabel, self.char2tex(c), prim )
 
     @staticmethod
     def ideal2tex(ideal):
@@ -430,7 +429,7 @@ class WebHecke(WebCharObject):
 class WebCharFamily(WebCharObject):
     """ compute first groups """
     _keys = [ 'title', 'credit', 'codelangs', 'type', 'nf', 'nflabel',
-            'nfpol', 'code', 'headers', 'contents' ]   
+            'nfpol', 'code', 'headers', 'contents' ]
     headers = [ 'modulus', 'order', 'structure', 'first characters' ]
 
     def __init__(self, **args):
@@ -483,7 +482,7 @@ class WebCharGroup(WebCharObject):
             'prevmod', 'next', 'nextmod', 'structure', 'codestruct', 'order',
             'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
-            'properties2', 'friends', 'rowtruncate', 'coltruncate'] 
+            'properties2', 'friends', 'rowtruncate', 'coltruncate']
 
     def __init__(self, **args):
         self._contents = None
@@ -575,7 +574,7 @@ class WebChar(WebCharObject):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'codegauss', 'codejacobi', 'codekloosterman']   
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def __init__(self, **args):
         self.maxcols = 30
@@ -662,6 +661,8 @@ class WebChar(WebCharObject):
 
     @property
     def friends(self):
+        from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+
         f = []
         cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
         f.append( ("Character Group", cglink) )
@@ -669,7 +670,7 @@ class WebChar(WebCharObject):
             f.append( ('Number Field', '/NumberField/' + self.nflabel) )
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, umber_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
-            if lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata(url[1:]):
+            if get_lfunction_by_url(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
@@ -705,7 +706,7 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     """
     Heritage: WebCharGroup -> __init__()
               WebDirichlet -> _compute()
-    """           
+    """
 
     def _compute(self):
         """ WARNING: do not remove otherwise _compute
@@ -765,9 +766,9 @@ class WebSmallDirichletGroup(WebDirichletGroup):
 
 class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     """
-    Heritage: WebCharacter -> __init__()
+    Heritage: WebChar -> __init__()
               WebDirichlet -> _compute()
-    """           
+    """
 
     def _compute(self):
         self.modulus = int(self.modlabel)
@@ -789,6 +790,11 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @property
     def indlabel(self):  return None
     def value(self, *args): return None
+
+    @property
+    def charsums(self, *args):
+        return False
+
     def gauss_sum(self, *args): return None
     def jacobi_sum(self, *args): return None
     def kloosterman_sum(self, *args): return None
@@ -837,17 +843,18 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         mod, num = self.modulus, self.number
         prim = self.isprimitive
         #beware this **must** be a generator
-        orbit = ( power_mod(num, k, mod) for k in xsrange(1, order) if gcd(k, order) == 1) # use xsrange not xrange
-        return ( self._char_desc(num, prim=prim) for num in orbit )
+        orbit = (power_mod(num, k, mod) for k in xsrange(1, order + 1)
+                 if gcd(k, order) == 1)
+        return (self._char_desc(num, prim=prim) for num in orbit)
 
-    def symbol_numerator(self): 
+    def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
         if self.order != 2:
             return None
         return symbol_numerator(self.conductor, self.chi.is_odd())
 
     @property
-    def symbol(self): 
+    def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
 
     @property
@@ -883,7 +890,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
               'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties2', 'friends', 'coltruncate',
-              'codegauss', 'codejacobi', 'codekloosterman']   
+              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
 
     def _compute(self):
         WebDirichlet._compute(self)
@@ -914,7 +921,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 
     @property
     def codeinducing(self):
-        return { 'sage': 'sage: chi.primitive_character()',
+        return { 'sage': 'chi.primitive_character()',
                  'pari': ['znconreyconductor(g,chi,&chi0)','chi0'] }
 
     @property
@@ -942,6 +949,15 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         return { 'sage': 'chi(x) # x integer',
                  'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
 
+    @property
+    def charsums(self):
+        if self.modulus < 1000:
+            return { 'gauss': self.gauss_sum(2),
+                     'jacobi': self.jacobi_sum(1),
+                     'kloosterman': self.kloosterman_sum('1,2') }
+        else:
+            return None
+
     def gauss_sum(self, val):
         val = int(val)
         mod, num = self.modulus, self.number
@@ -957,7 +973,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
-        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s. \)" % (val, chitex, deftex, g)
+        return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
     @property
     def codegauss(self):
@@ -980,7 +996,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
         deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
         from sage.all import latex
-        return r"\( \displaystyle J(%s,%s) = %s = %s.\)" % (chitex, psitex, deftex, latex(jacobi_sum))
+        return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
     @property
     def codejacobi(self):
@@ -1004,7 +1020,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
         \( \displaystyle K(%s,%s,\chi_{%s}(%s,&middot;))
         = \sum_{r \in \Z/%s\Z}
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
-        = %s. \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
+        = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
     @property
     def codekloosterman(self):
@@ -1014,7 +1030,7 @@ class WebDirichletCharacter(WebSmallDirichletCharacter):
 class WebHeckeExamples(WebHecke):
     """ this class only collects some interesting number fields """
 
-    _keys = [ 'title', 'credit', 'headers', 'contents' ]   
+    _keys = [ 'title', 'credit', 'headers', 'contents' ]
     headers = ['label','signature', 'polynomial' ]
 
     def __init__(self, **args):
@@ -1065,13 +1081,13 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 
     def first_moduli(self, bound=200):
         """ first ideals which are conductors """
-        bnf = self.k.pari_bnf()                                                           
+        bnf = self.k.pari_bnf()
         oldbound = 0
         while True:
             L = bnf.ideallist(bound)[oldbound:]
-            for l in L:   
-                if l == []: next                                                           
-                for ideal in l:                                            
+            for l in L:
+                if l == []: next
+                for ideal in l:
                     if gp.bnrisconductor(bnf,ideal):
                         yield self.k.ideal(ideal)
             """ double the range if one needs more ideal """
@@ -1116,7 +1132,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
 class WebHeckeCharacter(WebChar, WebHecke):
 
     def _compute(self):
-        WebHecke._compute(self) 
+        WebHecke._compute(self)
         self.number = self.label2number(self.numlabel)
         assert len(self.number) == self.G.ngens()
         self.chi = HeckeChar(self.H, self.number)
@@ -1229,9 +1245,9 @@ class WebHeckeGroup(WebCharGroup, WebHecke):
         return "Group of Hecke characters modulo %s"%(self.modulus)
 
     @property
-    def nf_pol(self):
+    def nfpol(self):
         #return self.nf.web_poly()
-        return self.k.polynomial()._latex_()
+        return web_latex_split_on_pm(self.k.polynomial())
 
     @property
     def codegen(self):

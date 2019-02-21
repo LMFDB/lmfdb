@@ -19,7 +19,7 @@ $(function() {
 <table>
 <tr>
  <td>Search</td>
- <td> 
+ <td>
  <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
     <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
@@ -30,32 +30,37 @@ $(function() {
 
 <tr>
  <td>Filter</td>
- <td>Category: 
+ <td>Category:
     {% for cat in categories -%}
-     <a 
+     <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', category = cat) }}">{{cat}}</a>
+      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
     </td></tr>
     <tr><td/><td>
-     <strong><a href="{{ url_for('.index') }}">clear category filter</a></strong>
+     <strong><a href="{{ url_for('.index', qualities=qualities, filtered = filtermode) }}">clear category filter</a></strong>
     {%- endif %}
  </td>
 </tr>
 
-{% if not searchmode and not categorymode %}
+{% if not searchmode %}
 <tr>
  <td></td>
  <td>
-  <form method="GET" action="{{ url_for('.index') }}">
-    Quality:
+ {% if categorymode %}
+   <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
+ {% else %}
+   <form method="POST" action="{{ url_for('.index', filtered='True') }}">
+ {% endif %}
+    Quality:&nbsp;
     {% for kq in knowl_qualities -%}
-     <input type="checkbox" id="{{ kq }}" name="{{ kq }}" {% if filters[loop.index0] -%}checked{%- endif %} />
-        <label for="{{ kq }}">{{ kq|capitalize }}</label>
+     <label for="{{ kq }}">{{ kq|capitalize }}</label>:
+     <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
+     &nbsp;&nbsp;
     {%- endfor %}
-    <button type="submit" name="filter">Filter</button>
+    <button type="submit">Filter</button>
    </form>
   </td>
 </tr>
@@ -63,7 +68,7 @@ $(function() {
 
 <tr>
  <td>More</td>
- <td> 
+ <td>
    <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
 </tr>
 </table>
@@ -74,9 +79,9 @@ $(function() {
     <td>{{ c }}</td>
     <td>
       {% for k in ks %}
-        <div title="{{k.title|striptags}} [{{k._id}}]" kid="{{k._id}}">
-          <span>{{ k._id }}</span>
-          <a href="{{ url_for('.show', ID=k._id) }}" >{{ k.title|safe }}</a>
+        <div title="{{k.title|striptags}} [{{k.id}}]" kid="{{k.id}}">
+          <span>{{ k.id }}</span>
+          <a href="{{ url_for('.show', ID=k.id) }}" >{{ k.title|safe }}</a>
         </div>
       {% endfor %}
      </td>

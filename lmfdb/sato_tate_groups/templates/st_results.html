@@ -49,17 +49,8 @@
 </table>
 </form>
 
-{% if info.err is not defined %}
-
-<h2> Results ({{info.report}})
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-</h2>
-
+{% include 'matches.html' %}
+{% if info.number %}
 <table class="ntdata">
 <tr>
     <th>{{ KNOWL('st_group.label', title='label') }}</th>
@@ -73,7 +64,7 @@
     <th>{{ KNOWL('st_group.trace_zero_density', title='$\mathrm{P}[t\!=\!0]$') }}</th>
     <th colspan="11">{{ KNOWL('st_group.trace_moments', title='trace moments') }}</th>
 </tr>
-{% for group in info.stgroups: %}
+{% for group in info.results: %}
 <tr>
     <td> <a href = "{{info.stgroup_url(group)}}"> {{group.label}} </a> </td>
     <td align=right> {{group.weight}} </td>
@@ -90,15 +81,10 @@
 </tr>
 {% endfor %}
 </table>
-
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

@@ -52,7 +52,7 @@ def get_nicename(db_name, collection_name):
             nice_name = coll_rec['data']['nice_name']
         else:
             db_rec = idc.get_db(db, db_name)
-            print db_rec
+            #print db_rec
             nice_name = db_rec['data']['nice_name']
         return nice_name
     except Exception as e:

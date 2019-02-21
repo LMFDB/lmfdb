@@ -13,10 +13,9 @@ text-align:right;
 
 <div>
   <p>
-    Currently the database contains all groups G acting as automorphisms of
-    curves  X from genus {{info.stats.genus.min}} up to genus
-    {{info.stats.genus.max}} so that the quotient space X/G is the Riemann
-    sphere (X/G has genus 0). There are {{info.stats.refined_passports.distinct}}
+    Currently the database contains all groups $G$ acting as automorphisms of
+    curves $X/\C$ of genus {{info.stats.genus.min}} to
+    {{info.stats.genus.max}} such that $X/G$ has genus 0. There are {{info.stats.refined_passports.distinct}}
     distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
     {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
     Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
@@ -43,7 +42,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 </p>
 
 
-<p>A  <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
+<p>A <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
 
 
     <h2>Find specific automorphisms of higher genus curves</h2>
@@ -92,14 +91,14 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
         <tr>
             <td align=right>
- {{KNOWL('group.order',title='Group Order(s)')}}:
+ {{KNOWL('group.order',title='Group order(s)')}}:
             </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
             <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
         </tr>
 
         <tr>
             <td align=right>
-	      Group:
+	      {{KNOWL('curve.highergenus.aut.groupnotation', title="Group identifier")}}:
             </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
       <td>
 	<span class="formexample">e.g. [4,2]</span>
@@ -137,7 +136,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	 </td></tr>
 
  <tr>  <td align=right>
-      Full automorphism group:
+      {{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}:
     </td>  <td> <select id='inc_full' name='inc_full'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>

@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 
+from lmfdb.db_backend import db
 from lmfdb.modular_forms.maass_forms.picard import mwfp_logger
 from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from flask import url_for
 
 
 class PicardDataTable(MFDataTable):
-    def __init__(self, dbname='HTPicard', **kwds):
-        MFDataTable.__init__(self, dbname, **kwds)
-
     def set_table(self, **kwds):
         self._name = kwds.get('name', '')
-        self._table = dict()
         self._table = []
         for r in range(self._nrows):
             self._table.append([])
@@ -19,12 +16,11 @@ class PicardDataTable(MFDataTable):
                 self._table[r].append({})
         rec_len = self._ncols * self._nrows
         skip = rec_len * self._skip_rec
-        mwfp_logger.debug("In mwfp.set_table: collections : {0}".format(self.collection()))
+        mwfp_logger.debug("In mwfp.set_table")
         mwfp_logger.debug("skip: {0} rec_len:{1}".format(skip, rec_len))
-        # only have one collection here...
-        c = self.collection()[0]
-        finds = c.find().sort('ev', 1).skip(skip).limit(rec_len)
-        mwfp_logger.debug("finds: {0} no. {1}:".format(finds, finds.count()))
+        info = {}
+        finds = db.mwfp.search({}, limit=rec_len, offset=skip, info=info)
+        mwfp_logger.debug("finds: {0} no. {1}:".format(finds, info['number']))
         i = 0
         for f in finds:
             mwfp_logger.debug("R: {0}".format(f['ev']))
@@ -35,8 +31,8 @@ class PicardDataTable(MFDataTable):
                     "Got too large row {0} from i={1} and self._nrows={2}".format(row, i, self._nrows))
                 break
             R = f['ev']
-            _id = f['_id']
-            url = url_for('mwfp.render_picard_maass_forms_get_one', docid=str(_id))
+            maass_id = f['maass_id']
+            url = url_for('mwfp.render_picard_maass_forms_get_one', docid=str(maass_id))
             self._table[row][col] = {'url': url, 'name': R}
             # mwfp_logger.debug("table[{0}][{1}]={2}".format(row,col,self._table[r][col]))
             i = i + 1
@@ -47,8 +43,8 @@ class PicardFormTable(MFDataTable):
     r"""
     To Display one form
     """
-    def __init__(self, dbname='HTPicard', **kwds):
-        MFDataTable.__init__(self, dbname, **kwds)
+    def __init__(self, **kwds):
+        MFDataTable.__init__(self, **kwds)
         self._docid = kwds.get('docid', None)
         if not self._docid:
             mwfp_logger.critical("You must supply an id!")
@@ -66,11 +62,8 @@ class PicardFormTable(MFDataTable):
         skip = rec_len * self._skip_rec
         mwfp_logger.debug("rows: {0}".format(self._nrows))
         mwfp_logger.debug("cols: {0}".format(self._ncols))
-        mwfp_logger.debug("In mwfp.set_table: collections : {0}".format(self.collection()))
         mwfp_logger.debug("skip: {0} rec_len:{1}".format(skip, rec_len))
-        # only have one collection here...
-        c = self.collection()[0]
-        f = c.find_one({'_id': self._docid})
+        f = db.mwfp_forms.lucky({'maass_id': self._docid})
         if not f:
             mwfp_logger.critical("You did not supply a valid id!")
             return

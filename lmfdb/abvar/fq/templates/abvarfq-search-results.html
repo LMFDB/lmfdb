@@ -21,7 +21,7 @@
             <td align=left>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
             <td align=left>{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</td>
             <td align=left>{{KNOWL('av.fq.angle_rank',title='angle rank')}}</td>
-            <td align=left>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</td>
+            <td align=left>{{ KNOWL('lf.newton_polygon',title="slopes") }}</td>
         </tr>
 
         <tr>
@@ -36,16 +36,16 @@
             <td align=left>{{ KNOWL('av.fq.initial_coefficients',title='initial coefficients')}}</td>
             <td align=left>{{ KNOWL('ag.fq.point_counts',title="points on variety") }}</td>
             <td align=left>{{ KNOWL('av.fq.curve_point_counts',title="points on curve") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="isogeny factors") }}</td>
-            <td align=left>{{KNOWL('av.fq.number_field',title='number field')}}</td>
+            <td align=left>{{ KNOWL('av.fq.number_field',title="number field") }}</td>
+	    <td align=left>{{ KNOWL('nf.galois_group',title="Galois group") }}</td>
         </tr>
 
         <tr>
             <td><input type='text' name='initial_coefficients' size=10 value="{{info.initial_coefficients}}" /></td>
             <td><input type='text' name='abvar_point_count' size=10 value="{{info.abvar_point_count}}" /></td>
             <td><input type='text' name='curve_point_count' size=10 value="{{info.curve_point_count}}"/></td>
-            <td><input type='text' name='decomposition' size=10 value="{{info.decomposition}}"/></td>
             <td><input type='text' name='number_field' size=10 value="{{info.number_field}}"/></td>
+            <td><input type='text' name='galois_group' size=10 value="{{info.galois_group}}"/></td>
         </tr>
 
         <tr>
@@ -53,7 +53,13 @@
             <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
             <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
             <td align=left>{{ KNOWL('av.princ_polarizable',title="princ polarizable") }}</td>
-	    <td align=left>{{ KNOWL('nf.galois_group',title="Galois group") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="simple factors") }}
+                <select name='simple_quantifier'>
+                    <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
+                    <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
+                    <option value='include' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
+                </select>
+            </td>
         </tr>
 
         <tr>
@@ -81,7 +87,35 @@
 		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
                 <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
             </select></td>
-	    <td><input type='text' name='galois_group' size=10 value="{{info.galois_group}}"/></td>
+            <td><input type='text' name='simple_factors' size=10 value="{{info.simple_factors}}"/></td>
+        </tr>
+
+        <tr>
+            <td align=left>{{ KNOWL('av.decomposition',title="dim 1 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="dim 2 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="dim 3 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="dim 4 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="dim 5 factors") }}</td>
+        </tr>
+
+        <tr>
+            <td><input type='text' name='dim1_factors' size=10 value="{{info.dim1_factors}}" /></td>
+            <td><input type='text' name='dim2_factors' size=10 value="{{info.dim2_factors}}" /></td>
+            <td><input type='text' name='dim3_factors' size=10 value="{{info.dim3_factors}}" /></td>
+            <td><input type='text' name='dim4_factors' size=10 value="{{info.dim4_factors}}" /></td>
+            <td><input type='text' name='dim5_factors' size=10 value="{{info.dim5_factors}}" /></td>
+        </tr>
+
+        <tr>
+            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 1 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 2 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 3 factors") }}</td>
+        </tr>
+
+        <tr>
+            <td><input type='text' name='dim1_distinct' size=10 value="{{info.dim1_distinct}}" /></td>
+            <td><input type='text' name='dim2_distinct' size=10 value="{{info.dim2_distinct}}" /></td>
+            <td><input type='text' name='dim3_distinct' size=10 value="{{info.dim3_distinct}}" /></td>
         </tr>
 
         <tr>
@@ -92,17 +126,8 @@
 
 </form>
 
-{% if info.err is defined %}
-
-<h2>Error</h2>
-<div>
-    {{ info.err|safe }}
-    <p>
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-
-{% else %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <style type="text/css">
     table td.center {
         text-align: center;
@@ -113,80 +138,32 @@ table td.params {
     font-family: monospace;
 }
 </style>
-
-
-<h2> Results ({{info.report}})
-    {% if info.start > 0 %}
-    <a href="#" class="navlink"
-        onclick="decrease_start_by_count_and_submit_form('re-search');return
-        false">Previous</A>
-    {% endif %}
-    {% if info.more > 0 %}
-    <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-    {% endif %}
-
-</h2>
 <table>
-    <tr>
-        <th class="center">{{ KNOWL('av.fq.lmfdb_label',title="LMFDB label") }}</th>
-        <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
-        <th class="center">{{ KNOWL('ag.base_field',title = "base field") }}</th>
-        <th class="center">{{ KNOWL('av.fq.weil_polynomial',title="Weil polynomial") }}</th>
-        <th class="center">{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</th>
-        <th align="left">{{ KNOWL('av.decomposition',title="isogeny factors") }}</th>
-    </tr>
-    {% for abvar in info.abvars: %}
-    <tr>
-        <td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
-        <td class="center">
-            {{abvar.g}}
-        </td>
-        <td class="center">${{ abvar.field() }}$</td>
-        <td class="center">${{ abvar.formatted_polynomial }}$</td>
-        <td class="center">$ {{ abvar.p_rank }}$</td>
-        <td class="center">{{abvar.decomposition_display_search(abvar.decomp)|safe}}</td>
-    </tr>
-    {% endfor %}
+  <tr>
+    <th class="center">{{ KNOWL('av.fq.lmfdb_label',title="LMFDB label") }}</th>
+    <th class="center">{{ KNOWL('ag.dimension',title = "dimension") }}</th>
+    <th class="center">{{ KNOWL('ag.base_field',title = "base field") }}</th>
+    <th class="center">{{ KNOWL('av.fq.weil_polynomial',title="Weil polynomial") }}</th>
+    <th class="center">{{ KNOWL('av.fq.p_rank',title="$p$-rank") }}</th>
+    <th align="left">{{ KNOWL('av.decomposition',title="isogeny factors") }}</th>
+  </tr>
+  {% for abvar in info.results: %}
+  <tr>
+    <td class="center"><a href="{{ url_for('abvarfq.by_label',label=abvar.label) }} ">{{abvar.label}}</a></td>
+    <td class="center">
+      {{abvar.g}}
+    </td>
+    <td class="center">${{ abvar.field() }}$</td>
+    <td class="center">${{ abvar.formatted_polynomial }}$</td>
+    <td class="center">$ {{ abvar.p_rank }}$</td>
+    <td class="center">{{abvar.decomposition_display_search(abvar.decomp)|safe}}</td>
+  </tr>
+  {% endfor %}
 </table>
-
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-    onclick="decrease_start_by_count_and_submit_form('re-search');return
-    false">Previous</A>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-
-<br>
-<br>
-<!-- Download Data!! Whoohooo!! -->
-{% if info.number < 100001 %}
-
-<form>
-Download all search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="hidden" name="download" value="1"/>
-<input type="hidden" name="query" value="{{info.query}}"/>
-</form>
-{% else %}
-There are too many isogeny classes in the search results for downloading.
-{% endif %} {# provide download links? #}
-
-{% endif %}
-
-<!-- Debugging! -->
-{% if DEBUG %}
-<hr>
-<div>
-    Query was: {{info.query}}
-</div>
-Start = {{info.start}}, Count = {{info.count}}
-{% endif %}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

@@ -21,7 +21,7 @@ EMF_TOP = "Holomorphic Cusp Forms"  # The name to use for the top of this caterg
 EMF = "emf"  # The current blueprint name
 emf = flask.Blueprint(EMF, __name__, template_folder="views/templates", static_folder="views/static")
 emf_logger = make_logger(emf)
-emf_logger.info("Initializing elliptic modular forms blueprint with Sage version %s, emf version %s" % (SAGE_VERSION, emf_version))
+#emf_logger.info("Initializing elliptic modular forms blueprint with Sage version %s, emf version %s" % (SAGE_VERSION, emf_version))
 
 ### Maximum values for computations
 N_max_comp = 50

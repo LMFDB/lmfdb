@@ -30,6 +30,10 @@
   </style>
 #}
 
+    {% set KNOWL_ID = "ec.%s"|format(ec['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
+
+
 <div>
   <h2>  Base field   {{ ec.field.knowl()|safe }} </h2>
 <p>
@@ -185,7 +189,7 @@ cellpadding="5";
 </div>
 
 <div>
-<h2> {{ KNOWL('ec.mordell-weil', title="Mordell-Weil rank and generators") }} </h2>
+<h2> {{ KNOWL('ec.mordell_weil', title="Mordell-Weil group") }} </h2>
 {% if ec.rk == "?" %}
 {% if ec.rk_bnds != "not available" %}
 <b>Rank</b> \(r\) satisfies \({{ ec.rank_bounds[0] }} \le r \)
@@ -214,9 +218,9 @@ Generators:
 </p>
 <p><b>
 {% if ec.rank_bounds[0] == 1 %}
-Height:
+{{ KNOWL('ec.canonical_height', title="Height") }}:
 {% else %}
-Heights:
+{{ KNOWL('ec.canonical_height', title="Heights") }}:
 {% endif %}</b>
 {% for h in ec.heights %}{%-if loop.index0-%}, {% endif %}{{h}}{% endfor %}
 </p>
@@ -225,7 +229,7 @@ Heights:
  {{ place_code('gens') }}
 
 <p>
-<b>Regulator:</b>
+<b>{{ KNOWL('ec.regulator', title="Regulator") }}:</b>
 {{ ec.reg }}
  {{ place_code('reg') }}
 </p>
@@ -419,6 +423,9 @@ It has not yet been determined whether or not it is a  {{KNOWL('ec.q_curve', '\(
 {% endif %}
 {% endif %}
 </div>
+
+    {% set KNOWL_ID = "ec.%s"|format(ec['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
 
 {% if DEBUG %}
 <hr>

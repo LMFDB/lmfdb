@@ -3,27 +3,11 @@ import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
 from lmfdb.WebNumberField import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.bianchi_modular_forms.web_BMF import db_forms
-
-def db_ecnf():
-    return getDBConnection().elliptic_curves.nfcurves
-
-def db_ecnfstats():
-    return getDBConnection().elliptic_curves.nfcurves.stats
-
-def db_nfdb():
-    return getDBConnection().numberfields.fields
-
-def db_iqf_labels():
-    return getDBConnection().elliptic_curves.IQF_labels
-
-def is_ecnf_isogeny_class_in_db(label_isogeny_class):
-    return db_ecnf().find({"class_label" : label_isogeny_class}).limit(1).count(True) > 0;
-
+from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -44,9 +28,8 @@ def convert_IQF_label(fld, lab):
         newlab = lab[1:-1].replace(",",".")
     if len(newlab.split("."))!=3:
         return newlab
-    data = db_iqf_labels().find_one({'fld':fld, 'old':newlab})
-    if data:
-        newlab = data['new']
+    newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
+    if newlab:
         if newlab!=lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
         return newlab
@@ -97,7 +80,7 @@ def ideal_from_string(K,s, IQF_format=False):
     it is of the form "[N,a,alpha]" where N is the norm, a the least
     positive integer in the ideal and alpha a second generator so that
     the ideal is (a,alpha).  alpha is a polynomial in the variable w
-    which represents the generator of K (but may actially be an
+    which represents the generator of K (but may actually be an
     integer).  """
     #print("ideal_from_string({}) over {}".format(s,K))
     N, a, alpha = s[1:-1].split(",")
@@ -115,6 +98,11 @@ def ideal_from_string(K,s, IQF_format=False):
         return I
     else:
         return "wrong" ## caller must check
+
+def pretty_ideal(I):
+    easy = I.number_field().degree()==2 or I.norm()==1
+    gens = I.gens_reduced() if easy else I.gens()
+    return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
 
 # HNF of an ideal I in a quadratic field
 
@@ -262,12 +250,14 @@ class ECNF(object):
         """
         searches for a specific elliptic curve in the ecnf collection by its label
         """
-        data = db_ecnf().find_one({"label": label})
+        data = db.ec_nfcurves.lookup(label)
         if data:
             return ECNF(data)
         print "No such curve in the database: %s" % label
 
     def make_E(self):
+        #print("Creating ECNF object for {}".format(self.label))
+        #sys.stdout.flush()
         K = self.field.K()
 
         # a-invariants
@@ -276,8 +266,13 @@ class ECNF(object):
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        N = ideal_from_string(K,self.conductor_ideal)
-        self.cond = web_latex(N)
+        if self.conductor_norm==1:
+            N = K.ideal(1)
+        else:
+            N = ideal_from_string(K,self.conductor_ideal)
+        # The following can trigger expensive computations!
+        #self.cond = web_latex(N)
+        self.cond = pretty_ideal(N)
         self.cond_norm = web_latex(self.conductor_norm)
         local_data = self.local_data
 
@@ -300,12 +295,12 @@ class ECNF(object):
         if not self.is_minimal:
             Pmin = self.non_min_primes[0]
             P_index = badprimes.index(Pmin)
-            self.non_min_prime = web_latex(Pmin)
+            self.non_min_prime = pretty_ideal(Pmin)
             disc_ords[P_index] += 12
 
         if self.conductor_norm == 1:  # since the factorization of (1) displays as "1"
             self.fact_cond = self.cond
-            self.fact_cond_norm = self.cond
+            self.fact_cond_norm = '1'
         else:
             Nfac = Factorization([(P,ld['ord_cond']) for P,ld in zip(badprimes,local_data)])
             self.fact_cond = web_latex_ideal_fact(Nfac)
@@ -314,22 +309,21 @@ class ECNF(object):
 
         # D is the discriminant ideal of the model
         D = prod([P**e for P,e in zip(badprimes,disc_ords)], K.ideal(1))
-        self.disc = web_latex(D)
+        self.disc = pretty_ideal(D)
         Dnorm = D.norm()
         self.disc_norm = web_latex(Dnorm)
         if Dnorm == 1:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
-            self.fact_disc_norm = self.disc
+            self.fact_disc_norm = '1'
         else:
             Dfac = Factorization([(P,e) for P,e in zip(badprimes,disc_ords)])
             self.fact_disc = web_latex_ideal_fact(Dfac)
             Dnormfac = Factorization([(q,e) for q,e in zip(badnorms,disc_ords)])
             self.fact_disc_norm = web_latex(Dnormfac)
 
-
         if not self.is_minimal:
             Dmin = ideal_from_string(K,self.minD)
-            self.mindisc = web_latex(Dmin)
+            self.mindisc = pretty_ideal(Dmin)
             Dmin_norm = Dmin.norm()
             self.mindisc_norm = web_latex(Dmin_norm)
             if Dmin_norm == 1:  # since the factorization of (1) displays as "1"
@@ -476,6 +470,7 @@ class ECNF(object):
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
+            ld['kod'] = ld['kod'].replace('\\\\', '\\')
             ld['kod'] = web_latex(ld['kod']).replace('$', '')
 
         # URLs of self and related objects:
@@ -527,7 +522,7 @@ class ECNF(object):
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                if db_forms().find_one({'label':self.bmf_label}) != None:
+                if is_bmf_in_db(self.bmf_label):
                     self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
                     self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
@@ -600,6 +595,8 @@ class ECNF(object):
             pol = str(self.field.poly())
             if lang=='pari':
                 pol = pol.replace('x',gen)
+            elif lang=='magma':
+                pol = str(self.field.poly().list())
             self._code['field'][lang] = (self._code['field'][lang] % pol).replace("<a>", "<%s>" % gen)
 
         for lang in ['sage', 'magma', 'pari']:

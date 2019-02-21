@@ -88,7 +88,7 @@ function updateStatus(newStatus, info){
     {% if db_name is none %}
       <h2 class='link'><a href = {{url_for('inventory_app.show_edit_child', id=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span></h2>
       Contains {{item[2]}} collections</br>
-      {% if current_user.is_authenticated() and not lockout %}
+      {% if user_is_authenticated and not lockout %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {db:"{{item[0]}}"})'>
       {% else %}
         <input type='button' value ='Edit Nice Name' title ='Please login to edit' disabled class=disabledbutton>
@@ -98,7 +98,7 @@ function updateStatus(newStatus, info){
       <h2 class='link'><a href = {{url_for('inventory_app.show_inventory', id=db_name, id2=item[0])}}>{{item[0]}} </a>-- <span id='{{item[0]}}'>{{item[1]}}</span>
          <span class='status'>{{item[3]}}</span></h2>
       Contains {{item[2][0]}} records of {{item[2][1]}} types </br>
-      {% if current_user.is_authenticated() and not lockout and not item[4] %}
+      {% if user_is_authenticated and not lockout and not item[4] %}
         <input type='button' id = '{{item[1]}}' value ='Edit Nice Name' onclick='promptNiceName(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <input type='button' id = '{{item[1]}}' value ='Edit Status' onclick='promptStatus(this, "{{item[0]}}", {collection:"{{item[0]}}"})'>
         <a href = {{url_for('inventory_app.show_edit_inventory', id=db_name, id2=item[0])}} id=invbutton>Edit Inventory</a>
@@ -106,7 +106,7 @@ function updateStatus(newStatus, info){
         <a href = {{url_for('inventory_app.show_records', id=db_name, id2=item[0])}} id=invbutton>View Records</a>
         <a href = {{url_for('inventory_app.show_edit_records', id=db_name, id2=item[0])}} id=invbutton>Edit Records</a>
         <a href = {{url_for('inventory_app.show_indices', id=db_name, id2=item[0])}} id=invbutton>View Indices</a>
-      {% elif current_user.is_authenticated() and not lockout %}
+      {% elif user_is_authenticated and not lockout %}
           <input type='button' value ='Edit Nice Name' title ='Scraping in progress, please wait' disabled class=disabledbutton>
           <input type='button' value ='Edit Status' title ='Scraping in progress, please wait' disabled class=disabledbutton>
           <input type='button' value ='Edit Inventory' title ='Scraping in progress, please wait' disabled class=disabledbutton>

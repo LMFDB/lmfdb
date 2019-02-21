@@ -12,9 +12,10 @@ url: https://www.math.u-bordeaux.fr/~ballombe/
 ---
 name: Samuele Anni
 email: samuele.anni@gmail.com
-affil: University of Heidelberg
+affil: University of Luxembourg
+url: https://wwwfr.uni.lu/recherche/fstc/mathematics_research_unit/people/samuele_anni
 ---
-name: Angelica Babei 
+name: Angelica Babei
 url: https://www.math.dartmouth.edu/~ababei/
 affil: Dartmouth College
 ---
@@ -25,8 +26,8 @@ url: http://math.bu.edu/people/jbala/
 affil: Boston University
 ---
 name: Alex Bartel
-url: http://homepages.warwick.ac.uk/~maslan/
-affil: University of Warwick
+url: https://www.gla.ac.uk/schools/mathematicsstatistics/staff/alexbartel/
+affil: University of Glasgow
 ---
 name: Jennifer Beineke
 url: http://mars.wne.edu/~jbeineke/
@@ -50,7 +51,7 @@ affil: Google Inc.
 name: Chris Brady
 affil: University of Warwick
 ---
-name: Benjamin Breen 
+name: Benjamin Breen
 url: https://www.math.dartmouth.edu/~breen/
 affil: Dartmouth College
 ---
@@ -75,7 +76,7 @@ affil: University of Bristol and AIM
 url: http://www.aimath.org/conrey/
 ---
 name: Edgar Costa
-url: http://www.math.dartmouth.edu/~edgarcosta/
+url: https://www.math.dartmouth.edu/~edgarcosta/
 affil: Dartmouth College
 ---
 name: John Cremona
@@ -103,8 +104,8 @@ email: maarten@mderickx.nl
 affil: Universiteit Leiden
 ---
 name: Martin Dickson
-url: http://www.maths.bris.ac.uk/~mamjd/
-affil: University of Bristol
+affil: Kings College London
+url:  https://nms.kcl.ac.uk/martin.dickson/
 ---
 name: Tim Dokchitser
 url: http://www.maths.bris.ac.uk/~matyd/
@@ -126,9 +127,11 @@ name: David W. Farmer
 email: farmer@aimath.org
 affil: AIM
 ---
+name: Albert Ford
+affil: Grinnell College
+---
 name: Markus Fraczek
 email: markus.fraczek@gmail.com
-affil: University of Warwick
 ---
 name: Sharon Frechette
 affil: College of Holy Cross
@@ -162,7 +165,7 @@ url: http://www.math.uwaterloo.ca/~dkhuynh/
 affil: University of Waterloo
 ---
 name: John Jones
-url: http://hobbes.la.asu.edu/
+url: https://hobbes.la.asu.edu/
 affil: Arizona State University
 ---
 name: Jon Keating
@@ -202,7 +205,7 @@ affil: Grinnell College
 ---
 name: Nicolas Mascot
 email: nmascot@math.u-bordeaux1.fr
-affil: University of Warwick
+affil: American University Beirut
 ---
 name: Mark McConnell
 email: mmcconnell17704@yahoo.com
@@ -223,7 +226,6 @@ affil: Université Paris 7
 ---
 name: Warren Moore
 email: warrenmoore30@yahoo.co.uk
-affil: University of Warwick
 ---
 name: Bartosz Naskręcki
 email: nasqret@gmail.com
@@ -233,10 +235,13 @@ url: https://bnaskrecki.faculty.wmi.amu.edu.pl/
 name: David Neill Asanza
 affil: Grinnell College
 ---
+name: Nhi Ngo
+affil: Grinnell College
+---
 name: Aurel Page
 url: http://www.normalesup.org/~page/index-en.html
 email: aurel.page@normalesup.org
-affil: University of Warwick
+affil: University of Bordeaux
 ---
 name: Jennifer Paulhus
 affil: Grinnell College
@@ -250,6 +255,10 @@ name: Robert Pollack
 affil: Boston University
 url: http://math.bu.edu/people/rpollack/
 ---
+name: Alexander D. Rahm
+affil: University of Luxembourg
+url: http://math.uni.lu/~rahm
+---
 name: Heather Ratcliffe
 affil: University of Warwick
 ---
@@ -258,6 +267,10 @@ name: Rishikesh
 name: David Roberts
 affil: University of Minnesota, Morris
 url: http://cda.mrs.umn.edu/~roberts/index.html
+---
+name: Fernando Rodriguez Villegas
+affil: ICTP, Trieste
+url: https://users.ictp.it/~villegas/
 ---
 name: Michael Rubinstein
 url: http://www.math.uwaterloo.ca/~mrubinst/
@@ -270,6 +283,9 @@ affil: Bucknell University
 name: George J. Schaeffer
 email: gschaeff@stanford.edu
 affil: Stanford University
+---
+name: Ciaran Schembri
+affil: University of Sheffield
 ---
 name: Sam Schiavone
 url: https://math.dartmouth.edu/~samschiavone/
@@ -338,8 +354,7 @@ url: http://www.maths.bris.ac.uk/~mahlt/
 affil: University of Bristol
 ---
 name: Alex Torzewski
-url: http://www2.warwick.ac.uk/fac/sci/maths/people/staff/torzewski/
-affil: University of Warwick
+affil: University College London
 ---
 name: Christelle Vincent
 affil: University of Vermont
@@ -347,7 +362,7 @@ email: christelle.vincent@uvm.edu
 url: http://www.uvm.edu/~cvincen1/
 ---
 name: John Voight
-url: http://www.math.dartmouth.edu/~jvoight
+url: https://www.math.dartmouth.edu/~jvoight
 affil: Dartmouth College
 ---
 name: Lynne Walling

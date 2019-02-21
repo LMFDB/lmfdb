@@ -167,8 +167,11 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
     return {'err':False, 'mess':''}
 
 def upload_indices(db, coll_id, data):
-    """Upload indices data for given collection"""
-
+    """Upload indices data for given collection
+    Note: this assumed the given data is complete, so first
+    removes any existing indices before uploading.
+    """
+    delete_collection_data(db, coll_id, 'indices')
     for item in data:
         invc.add_index(db, coll_id, data[item])
 
@@ -236,17 +239,30 @@ def delete_all_tables(db):
         except Exception as e:
             inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
 
-def delete_collection_data(inv_db, coll_id, tbl):
+def delete_collection_data(inv_db, coll_id, tbl, dry_run=False):
     """Clean out the data for given collection id
       Removes all entries for coll_id in auto, human or records
+
+      dry_run -- print items which would be deleted, but do nothing (debugging)
     """
     try:
         table_dat = inv.ALL_STRUC.get_table(tbl)
         fields_tbl = table_dat[inv.STR_NAME]
         fields_fields = table_dat[inv.STR_CONTENT]
 
-        rec_find = {fields_fields[1]:coll_id}
-        inv_db[fields_tbl].remove(rec_find)
+        if tbl != 'indexes' and tbl != 'indices':
+            rec_find = {fields_fields[1]:coll_id}
+        else:
+            rec_find = {fields_fields[2]:coll_id}
+
+        if not dry_run:
+            inv_db[fields_tbl].remove(rec_find)
+        else:
+            print 'Finding '+str(rec_find)
+            print 'Operation would delete:'
+            curs = inv_db[fields_tbl].find(rec_find)
+            for item in curs:
+                print item
     except Exception as e:
         inv.log_dest.error("Error removing fields " + str(e))
 

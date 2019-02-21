@@ -610,7 +610,7 @@ def update_and_check(coll, rec_find, rec_set):
         result = coll.find_and_modify(query=rec_find, update={"$set":rec_set}, upsert=False, full_response=True)
         _id = result['value']['_id']
     except Exception as e:
-        print e
+        #print e
         inv.log_dest.error("Error updating record "+str(rec_find)+' '+ str(e))
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':True}
@@ -659,11 +659,11 @@ def complete_human_table(inv_db_toplevel, db_id, coll_id):
         human_record = h_db.find_one(rec_find)
         #Should never be two records with same coll-id and name
         alter = False
+        try:
+            rec_set = human_record['data']
+        except:
+            rec_set = {}
         for field in inv.base_editable_fields:
-            try:
-                rec_set = human_record['data']
-            except:
-                rec_set = {}
             try:
                 a = human_record['data'][field]
                 assert(a or not a) #Use a for Pyflakes, but we don't care what is is
@@ -700,8 +700,8 @@ def cleanup_records(inv_db, coll_id, record_list):
             extant_hashes.append(ih.hash_record_schema(item['schema']))
         for item in db_record_list:
             if item['hash'] not in extant_hashes:
-                print 'Record no longer exists'
-                print item
+                #print 'Record no longer exists'
+                #print item
                 coll.remove(item)
 
     except Exception as e:

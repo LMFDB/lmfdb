@@ -1,5 +1,6 @@
 import json
 import inventory_live_data as ild
+import inventory_consistency as ic
 
 def act(request):
     """Unpack requested action and trigger it
@@ -11,13 +12,16 @@ def act(request):
     clean_scrapes -- Clean up any bad scrapes (i.e old but not complete)
     """
     request = json.loads(request)
-    print request
+    #print request
     action = request['action']
     #action = request['action']
     result = None
     reply = None
     data = None
-    if action == 'mark_gone':
+    if action == 'gen_report':
+        reply = ic.generate_report_threaded()
+        result = True
+    elif action == 'mark_gone':
         result = ild.update_gone_list()
     elif action == 'clean_gone':
         #result = ild.remove_gone_collections()

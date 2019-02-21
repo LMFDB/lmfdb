@@ -20,6 +20,7 @@ C= MongoClient(port=37010, host='lmfdb-ib')
 C['hgm'].authenticate('editor', password)
 
 hgm = C.hgm.newfamilies
+hgm = C.hgm.families    # now this is the new one
 
 saving = True
 
@@ -44,16 +45,34 @@ def fixname(s):
     a = re.sub(r'D(\d+)', r'D_{\1}',a)
     return a
 
-# Insert both forms into the database
+def pnotp(a,p):
+    pv = p**valuation(a,p)
+    return [pv, a/pv]
+
 def modvec(A,p):
     Ap = []
     for a in A:
-        v = valuation(a,p)
-        ap = p**v
-        aprime = a/ap
+        ap, aprime = pnotp(a,p)
         Ap.extend([ap]*euler_phi(aprime))
     Ap.sort(reverse=True)
     return Ap
+
+def notpvec(A,p):
+    Ap = []
+    for a in A:
+        ap, aprime = pnotp(a,p)
+        Ap.extend([aprime]*euler_phi(ap))
+    Ap.sort(reverse=True)
+    return Ap
+
+def orderAB(A,B):
+    if 1 in B:
+        return [A,B]
+    if 1 in A:
+        return [B,A]
+    if A[-1]<B[-1]:
+        return [A,B]
+    return [B,A]
 
 def killdup(A,B):
     aa=mset(A)
@@ -70,10 +89,14 @@ def killdup(A,B):
     return([aa,bb,cc])
 
 def galmunge(gg):
+    if gg[1]==0:  # means group not computed
+        return gg
     gg[1][2] = fixname(gg[1][2])
     return gg
 
 def fixsort(gg):
+    if gg[1]==0:  # means group not computed
+        return gg
     for k in range(3):
         gg[1][3][k] = sorted(gg[1][3][k], reverse=True)
     return gg
@@ -82,19 +105,15 @@ def modpair(A,B,p):
     vecs= [modvec(A,p),modvec(B,p)]
     return vecs
 
-def do_addrec(A,B,F):
+def do_addrec(F):
     global newrecs
-    degree, weight, A1, B1, hodge, imprim, bezout, snf, det, gal2, gal3, gal5, gal7  = F
+    degree, weight, A, B, hodge, imprim, bezout, snf, det, gal2, gal3, gal5, gal7  = F
     A.sort(reverse=True)
     B.sort(reverse=True)
+    A,B = orderAB(A,B)
     Astr = '.'.join([str(x) for x in A])
     Bstr = '.'.join([str(x) for x in B])
     label = "A%s_B%s" % (Astr, Bstr)
-    leader = A>B
-    if leader:
-        lead = "1"
-    else:
-        lead = "A%s_B%s" % (Bstr, Astr)
     mono = [[2,gal2], [3,gal3], [5,gal5], [7,gal7]]
     mono = [galmunge(z) for z in mono]
     mono = [fixsort(z) for z in mono]
@@ -104,8 +123,9 @@ def do_addrec(A,B,F):
         'weight': weight,
         'A': list2string(A),
         'B': list2string(B),
+        'Arev': list2string(B),
+        'Brev': list2string(A),
         'famhodge': list2string(hodge),
-        'leader': lead,
         'bezout': bezout,
         'snf': list2string(snf),
         'imprim': imprim,
@@ -118,11 +138,18 @@ def do_addrec(A,B,F):
         data['A'+str(p)] = list2string(mod[0])
         data['B'+str(p)] = list2string(mod[1])
         data['C'+str(p)] = list2string(mod[2])
-    for k in range(4):
-        p=mono[k][0]
-        data['Au'+str(p)] = list2string(sorted(mono[k][1][3][0],reverse=True))
-        data['Bu'+str(p)] = list2string(sorted(mono[k][1][3][1],reverse=True))
-        data['Cu'+str(p)] = list2string(sorted(mono[k][1][3][2],reverse=True))
+        mod = modpair(B,A,p)
+        mod = killdup(mod[0],mod[1])
+        data['A'+str(p)+'rev'] = list2string(mod[0])
+        data['B'+str(p)+'rev'] = list2string(mod[1])
+        # We don't search on C reversed
+        mod = [notpvec(A,p),notpvec(B,p)]
+        mod = killdup(mod[0],mod[1])
+        data['Au'+str(p)] = list2string(mod[0])
+        data['Bu'+str(p)] = list2string(mod[1])
+        data['Cu'+str(p)] = list2string(mod[2])
+        data['Au'+str(p)+'rev'] = list2string(mod[1])
+        data['Bu'+str(p)+'rev'] = list2string(mod[0])
 
     is_new = True
     for field in hgm.find({'label': label}):
@@ -140,12 +167,6 @@ def do_addrec(A,B,F):
     #else:
         #print "Have this one"
 
-def both_addrec(F):
-    A=F[2]
-    B=F[3]
-    do_addrec(A,B,F)
-    do_addrec(B,A,F)
-
 for path in sys.argv[1:]:
     print path
     filename = os.path.basename(path)
@@ -155,7 +176,7 @@ for path in sys.argv[1:]:
     dat = dat.replace('<','[')
     l = json.loads(dat)
     for motfam in l:
-        both_addrec(motfam)
+        do_addrec(motfam)
         count += 1
         #print "Count %d"%(count)
     fn.close()

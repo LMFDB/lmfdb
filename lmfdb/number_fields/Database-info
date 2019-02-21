@@ -1,13 +1,13 @@
 Fields in the number field database with sample values and type
 
 degree ---> 7 (int)
-disc_abs_key ---> 01358451728309129 (see below)
+disc_abs ---> 58451728309129
 label ---> 7.7.58451728309129.1 (string)
 disc_sign ---> 1 (int)
 signature ---> 7,0 (string)
-coeffs ---> 1163,-1433,-3988,1348,217,-84,-1,1 (string)
-ramps ---> [u'197'] (list of strings)
-galois ---> {u't': 1, u'n': 7} (bson.SON object)
+coeffs ---> [1163,-1433,-3988,1348,217,-84,-1,1] (list of ints)
+ramps ---> [197] (list of ints)
+galt ---> 1 (int)
 subs ---> [['1,0,1', 2], ['6,-2,1,0,1', 1]]
 
 Subs gives subfield information as a list of [field, multiplicity] where the 
@@ -29,17 +29,3 @@ reduced ---> 0 or 1 (0 if the polynomial is not polredabs'ed)
 Deprecated fields:
 -----------------
 subfields ---> [[[1, 0, 1], 2], [[6, -2, 1, 0, 1], 1]]
-
-disc_abs_key is a string produced as the second component of
-
-def make_disc_key(D):
-  s=1
-  if D<0: s=-1
-  Dz = D.abs()
-  if Dz==0: D1 = 0
-  else: D1 = int(Dz.log(10))
-  return s, '%03d%s'%(D1,str(Dz))
-
-The first 3 digits give log base 10 of abs(D), and that is
-concatenated with abs(D).
-

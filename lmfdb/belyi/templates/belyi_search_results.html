@@ -1,0 +1,87 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2>Refine search </h2>
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table>
+  <td>{{ KNOWL('belyi.degree', title='degree') }}</td>
+  <td>{{ KNOWL('belyi.group', title='group') }}</td>
+  <td>{{ KNOWL('belyi.orders', title='orders') }}</td>
+  <td>{{ KNOWL('belyi.abc', title='abc triple') }}</td>
+  <td>{{ KNOWL('belyi.genus', title='genus') }}</td>
+  <td>{{ KNOWL('belyi.orbit_size', title='orbit size') }}</td>
+  <td>{{ KNOWL('belyi.geometry_type', title='geometry type') }}</td>
+  </tr>
+
+  <tr>
+    <td><input type='text' name='deg' placeholder='4' style="width: 100px" value="{{info.deg}}"></td>
+    <td><input type='text' name='group' placeholder='4T5' style="width: 100px" value="{{info.group}}"></td>
+    <td><input type='text' name='abc' placeholder='5' style="width: 100px" value="{{info.abc}}"></td>
+    <td><input type='text' name='abc_list' placeholder='[4,4,3]' style="width: 100px" value="{{info.abc_list}}"></td>
+    <td><input type='text' name='g' placeholder='1' style="width: 100px" value="{{info.g}}"></td>
+    <td><input type='text' name='orbit_size' placeholder='2' style="width: 100px" value="{{info.orbit_size}}"></td>
+    <td><select name='geomtype' width="100" style="width: 100px" value="{{info.geomtype}}" >
+        <option ></option>
+        {% for G in info.geometry_types_list %}
+          {% if G == info.geomtype %}
+            <option value='{{G}}' selected>{{info.geometry_types_dict[G]}}</option>
+          {% else %}
+            <option value='{{G}}'>{{info.geometry_types_dict[G]}}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </td>
+  </tr>
+
+<tr style="height:50px">
+<td class="button"><button type='submit' value='refine' style="width: 110px">Search again</button></td>
+<td align=left colspan="7">
+<input type="hidden" name="query" value="{{info.query}}"/>
+Download all search results for&nbsp;
+<button type="submit" name="download" value="gp">Pari/GP</button>&nbsp;
+<button type="submit" name="download" value="sage">SageMath</button>&nbsp;
+<button type="submit" name="download" value="magma">Magma</button>&nbsp;
+</td>
+</tr>
+
+</table>
+</form>
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+
+
+
+<table class="ntdata">
+<tr>
+    <th>{{ KNOWL('belyi.label', title='Label') }}</th>
+    <th>{{ KNOWL('belyi.degree', title='Degree') }}</th>
+    <th>{{ KNOWL('belyi.group', title='Group') }}</th>
+    <th>{{ KNOWL('belyi.genus', title='Genus') }}</th>
+    <th>{{ KNOWL('belyi.orbit_size', title='Orbit Size') }}</th>
+    <th>{{ KNOWL('belyi.geometry_type', title='Geometry Type') }}</th>
+</tr>
+{% for galmap in info.results: %}
+<tr>
+    <td> <a href = "{{info.belyi_galmap_url(galmap.label)}}"> {{galmap.label}} </a> </td>
+    <td align=center> {{galmap.deg}} </td>
+    <td align=center> {{galmap.group}} </td>
+    <td align=center> {{galmap.g}}</td>
+    <td align=center> {{galmap.orbit_size}} </td>
+    <td align=center> {{galmap.geomtype}} </td>
+</tr>
+{% endfor %}
+</table>
+
+
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

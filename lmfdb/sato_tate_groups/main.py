@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import re, itertools
-from pymongo import ASCENDING
-from flask import render_template, url_for, redirect, request
+from flask import render_template, url_for, redirect, request, jsonify
 from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, random_object_from_collection, encode_plot, flash_error
-from lmfdb.base import getDBConnection
+from lmfdb.utils import to_dict, encode_plot, flash_error
 from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
+from lmfdb.db_backend import db
+from lmfdb.base import ctx_proc_userdata
+from psycopg2.extensions import QueryCanceledError
 
 from sage.all import ZZ, cos, sin, pi, list_plot, circle
 
@@ -38,29 +39,6 @@ st0_dict = {
 }
 
 ###############################################################################
-# Database connection
-###############################################################################
-
-the_stdb = None
-
-def stdb():
-    global the_stdb
-    if the_stdb is None:
-        the_stdb = getDBConnection().sato_tate_groups
-    return the_stdb
-
-# centralize db access here so that we can switch collection names when needed
-# stdb() should not be called elsewhere
-def st_groups():
-    return stdb().st_groups
-
-def st0_groups():
-    return stdb().st0_groups
-
-def small_groups():
-    return stdb().small_groups
-
-###############################################################################
 # Utility functions
 ###############################################################################
 
@@ -73,12 +51,12 @@ def comma_separated_list(list):
 def string_matrix(m):
     if len(m) == 0:
         return ''
-    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(m[i]) for i in range(len(m))]) + '\\end{bmatrix}'
+    return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(map(str, m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
 
 def st_link(label):
     if re.match(MU_LABEL_RE, label):
         return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    data = st_groups().find_one({'label':label})
+    data = db.gps_sato_tate.lookup(label)
     if not data:
         return label
     return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
@@ -98,7 +76,7 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = small_groups().find_one({'label':sg_label})
+    data = db.gps_small.lookup(sg_label)
     if data and 'pretty' in data:
         return data['pretty']
     return sg_label
@@ -145,14 +123,14 @@ def index():
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
-    title = 'Sato-Tate groups'
-    bread = [('Sato-Tate groups', '.')]
+    title = 'Sato-Tate Groups'
+    bread = [('Sato-Tate Groups', '.')]
     return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
 
 @st_page.route('/random')
 def random():
-    data = random_object_from_collection(st_groups())
-    return redirect(url_for('.by_label', label=data['label']), 307)
+    label = db.gps_sato_tate.random()
+    return redirect(url_for('.by_label', label=label), 307)
 
 @st_page.route('/<label>')
 def by_label(label):
@@ -179,28 +157,32 @@ def search_by_label(label):
     if re.match(MU_LABEL_NAME_RE, label):
         return redirect(url_for('.by_label',label='0.1.'+label.split('(')[1].split(')')[0]), 301)
     # check for general labels of the form w.d.name
-    data = {}
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
-            data = st_groups().find_one({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]},{'_id':False,'label':True})
+            label = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
         except ValueError:
-            data = {}
-    if not data:
+            label = None
+    if label is None:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
     else:
-        return redirect(url_for('.by_label', label=data['label']), 301)
+        return redirect(url_for('.by_label', label=label), 301)
 
+# This search function doesn't fit the model of search_wrapper very well,
+# So we don't use it.
 def search(**args):
     """ query processing for Sato-Tate groups -- returns rendered results page """
-
     info = to_dict(args)
     if 'jump' in info:
         return redirect(url_for('.by_label', label=info['jump']), 301)
     if 'label' in info:
         return redirect(url_for('.by_label', label=info['label']), 301)
-    bread = [('Sato-Tate groups', url_for('.index')),('Search Results', '.')]
+    template_kwds = {'bread':[('Sato-Tate Groups', url_for('.index')),('Search Results', '.')],
+                     'credit':credit_string,
+                     'learnmore':learnmore_list()}
+    title = 'Sato-Tate Group Search Results'
+    err_title = 'Sato-Tate Groups Search Input Error'
     count = parse_count(info, 25)
     start = parse_start(info)
     # if user clicked refine search always restart at 0
@@ -223,7 +205,7 @@ def search(**args):
         parse_rational(info,query,'trace_zero_density','trace zero density')
     except ValueError as err:
         info['err'] = str(err)
-        return render_template('st_results.html', info=info, title='Sato-Tate groups search input error', bread=bread, credit=credit_string)
+        return render_template('st_results.html', info=info, title=err_title, **template_kwds)
 
     # Check mu(n) groups first (these are not stored in the database)
     results = []
@@ -241,46 +223,38 @@ def search(**args):
     else:
         nres = 0
 
+    if 'result_count' in info:
+        nres += db.gps_sato_tate.count(query)
+        return jsonify({"nres":str(nres)})
+
     # Now lookup other (rational) ST groups in database
     if nres != INFINITY:
-        cursor = st_groups().find(query)
         start2 = start - nres if start > nres else 0
-        nres += cursor.count()
-        if start < nres and len(results) < count:
-            res = cursor.sort([('weight',ASCENDING), ('degree', ASCENDING), ('real_dimension', ASCENDING), ('identity_component', ASCENDING), ('name', ASCENDING)]).skip(start2).limit(count-len(results))
+        proj = ['label','weight','degree','real_dimension','identity_component','name','pretty','components','component_group','trace_zero_density','moments']
+        try:
+            res = db.gps_sato_tate.search(query, proj, limit=max(count - len(results), 0), offset=start2, info=info)
+        except QueryCanceledError as err:
+            ctx = ctx_proc_userdata()
+            flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])
+            info['err'] = str(err)
+            return render_template('st_results.html', info=info, title=err_title, **template_kwds)
+        info['number'] += nres
+        if start < info['number'] and len(results) < count:
             for v in res:
-                v_clean = {}
-                v_clean['label'] = v['label']
-                v_clean['weight'] = v['weight']
-                v_clean['degree'] = v['degree']
-                v_clean['real_dimension'] = v['real_dimension']
-                v_clean['identity_component'] = st0_pretty(v['identity_component'])
-                v_clean['name'] = v['name']
-                v_clean['pretty'] = v['pretty']
-                v_clean['components'] = v['components']
-                v_clean['component_group'] = sg_pretty(v['component_group'])
-                v_clean['trace_zero_density'] = v['trace_zero_density']
-                v_clean['trace_moments'] = trace_moments(v['moments'])
-                results.append(v_clean)
-    if nres == 0:
-        info['report'] = 'no matches'
-    elif nres == 1:
-        info['report'] = 'unique match'
+                v['identity_component'] = st0_pretty(v['identity_component'])
+                v['component_group'] = sg_pretty(v['component_group'])
+                v['trace_moments'] = trace_moments(v['moments'])
+                results.append(v)
     else:
-        if nres == INFINITY or nres > count or start > 0:
-            info['report'] = 'displaying matches %d-%d %s' % (start + 1, start + len(results), "of %d"%nres if nres != INFINITY else "")
-        else:
-            info['report'] = 'displaying all %s matches' % nres
+        info['number'] = 'infinity'
+        info['start'] = start
+        info['count'] = count
 
     info['st0_list'] = st0_list
     info['st0_dict'] = st0_dict
-    info['stgroups'] = results
+    info['results'] = results
     info['stgroup_url'] = lambda dbc: url_for('.by_label', label=dbc['label'])
-    info['start'] = start
-    info['count'] = count
-    info['more'] = 1 if nres < 0 or nres > start+count else 0
-    title = 'Sato-Tate group search results'
-    return render_template('st_results.html', info=info, credit=credit_string,learnmore=learnmore_list(), bread=bread, title=title)
+    return render_template('st_results.html', info=info, title=title, **template_kwds)
 
 ###############################################################################
 # Rendering
@@ -342,7 +316,7 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
-    data = st_groups().find_one({'label': label})
+    data = db.gps_sato_tate.lookup(label)
     info = {}
     if data is None:
         flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
@@ -352,13 +326,13 @@ def render_by_label(label):
     info['ambient'] = st_ambient(info['weight'],info['degree'])
     info['connected']=boolean_name(info['components'] == 1)
     info['rational']=boolean_name(info.get('rational',True))
-    st0 = st0_groups().find_one({'name':data['identity_component']})
+    st0 = db.gps_sato_tate0.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['st0_name']=st0['pretty']
     info['st0_description']=st0['description']
-    G = small_groups().find_one({'label':data['component_group']})
+    G = db.gps_small.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))
@@ -394,12 +368,12 @@ def render_st_group(info, portrait=None):
         ('Component group', '\(%s\)'%info['component_group']),
     ]
     bread = [
-        ('Sato-Tate groups', url_for('.index')),
+        ('Sato-Tate Groups', url_for('.index')),
         ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
         ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = 'Sato-Tate group \(' + info['pretty'] + '\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
+    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
     return render_template('st_display.html',
                            properties2=prop2,
                            credit=credit_string,
@@ -410,21 +384,21 @@ def render_st_group(info, portrait=None):
 
 @st_page.route('/Completeness')
 def completeness_page():
-    t = 'Completeness of Sato-Tate group data'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Completeness','')]
+    t = 'Completeness of Sato-Tate Group Data'
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
     return render_template('single.html', kid='dq.st.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def how_computed_page():
-    t = 'Source of Sato-Tate group data'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Source','')]
+    t = 'Source of Sato-Tate Group Data'
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
     return render_template('single.html', kid='dq.st.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Labels')
 def labels_page():
-    t = 'Labels for Sato-Tate groups'
-    bread = [('Sato-Tate groups', url_for('.index')), ('Labels','')]
+    t = 'Labels for Sato-Tate Groups'
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Labels','')]
     return render_template('single.html', kid='st_group.label',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))

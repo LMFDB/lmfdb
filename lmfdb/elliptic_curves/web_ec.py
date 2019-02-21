@@ -3,9 +3,8 @@ import re
 import os
 import yaml
 from flask import url_for
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
-from lmfdb.search_parsing import split_list
 from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
@@ -53,18 +52,6 @@ def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
 logger = make_logger("ec")
-
-def db_ec():
-    return getDBConnection().elliptic_curves.curves
-
-def db_ecstats():
-    return getDBConnection().elliptic_curves.curves.stats
-
-def padic_db():
-    return getDBConnection().elliptic_curves.padic_db
-
-def is_ec_isogeny_class_in_db(label_isogeny_class):
-    return db_ec().find({"lmfdb_iso" : label_isogeny_class} ).limit(1).count(True) > 0
 
 def split_galois_image_code(s):
     """Each code starts with a prime (1-3 digits but we allow for more)
@@ -119,7 +106,7 @@ def parse_ainvs(ai):
 def EC_ainvs(E):
     """ Return the a-invariants of a Sage elliptic curve in the correct format for the database.
     """
-    return str(list(E.ainvs())).replace(' ','')
+    return [int(a) for a in E.ainvs()]
 
 class WebEC(object):
     """
@@ -134,15 +121,15 @@ class WebEC(object):
         logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         # Next lines because the hyphens make trouble
-        self.xintcoords = split_list(dbdata['x-coordinates_of_integral_points'])
-        self.non_maximal_primes = dbdata['non-maximal_primes']
-        self.mod_p_images = dbdata['mod-p_images']
+        self.xintcoords = dbdata['xcoord_integral_points']
+        self.non_maximal_primes = dbdata['nonmax_primes']
+        self.mod_p_images = dbdata['modp_images']
 
         # Next lines because the python identifiers cannot start with 2
-        self.twoadic_index = dbdata['2adic_index']
-        self.twoadic_log_level = dbdata['2adic_log_level']
-        self.twoadic_gens = dbdata['2adic_gens']
-        self.twoadic_label = dbdata['2adic_label']
+        self.twoadic_index = dbdata.get('2adic_index')
+        self.twoadic_log_level = dbdata.get('2adic_log_level')
+        self.twoadic_gens = dbdata.get('2adic_gens')
+        self.twoadic_label = dbdata.get('2adic_label')
         # All other fields are handled here
         self.make_curve()
 
@@ -155,11 +142,11 @@ class WebEC(object):
         """
         try:
             N, iso, number = split_lmfdb_label(label)
-            data = db_ec().find_one({"lmfdb_label" : label})
+            data = db.ec_curves.lucky({"lmfdb_label" : label})
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
-                data = db_ec().find_one({"label" : label})
+                data = db.ec_curves.lucky({"label" : label})
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -180,7 +167,7 @@ class WebEC(object):
         # is still included.
 
         data = self.data = {}
-        data['ainvs'] = parse_ainvs(self.xainvs)
+        data['ainvs'] = self.ainvs
         data['conductor'] = N = ZZ(self.conductor)
         data['j_invariant'] = QQ(str(self.jinv))
         data['j_inv_factor'] = latex(0)
@@ -197,23 +184,25 @@ class WebEC(object):
         data['equation'] = self.equation
         local_data = self.local_data
         D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
+        for ld in local_data:
+            ld['kod'] = ld['kod'].replace("\\\\","\\")
         data['disc'] = D
         Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
         Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
 
         data['minq_D'] = minqD = self.min_quad_twist['disc']
         minq_label = self.min_quad_twist['label']
-        data['minq_label'] = db_ec().find_one({'label':minq_label}, ['lmfdb_label'])['lmfdb_label']
+        data['minq_label'] = db.ec_curves.lucky({'label':minq_label}, 'lmfdb_label')
         data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
-        try:
+        if self.degree is None:
+            data['degree'] = 0 # invalid, but will be displayed nicely
+        else:
             data['degree'] = self.degree
-        except AttributeError:
-            data['degree']  =0 # invalid, but will be displayed nicely
         if self.number == 1:
             data['an'] = self.anlist
             data['ap'] = self.aplist
         else:
-            r = db_ec().find_one({'lmfdb_iso':self.lmfdb_iso, 'number':1}, ['anlist','aplist'])
+            r = db.ec_curves.lucky({'lmfdb_iso':self.lmfdb_iso, 'number':1})
             data['an'] = r['anlist']
             data['ap'] = r['aplist']
 
@@ -258,7 +247,7 @@ class WebEC(object):
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db_ec().count({'lmfdb_iso':self.lmfdb_iso})
+        self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)
@@ -286,7 +275,7 @@ class WebEC(object):
 
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
-            data['p_adic_data_exists'] = (padic_db().find({'lmfdb_iso': self.lmfdb_iso}).count()) > 0
+            data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})
 
         # Iwasawa data (where present)
 
@@ -308,6 +297,7 @@ class WebEC(object):
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso))]
+
         if not self.cm:
             if N<=300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
@@ -327,6 +317,7 @@ class WebEC(object):
             self.plot = encode_plot(self.E.plot())
         except AttributeError:
             self.plot = encode_plot(EllipticCurve(data['ainvs']).plot())
+
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
         self.properties = [('Label', self.lmfdb_label),
@@ -352,7 +343,7 @@ class WebEC(object):
         mw['rank'] = self.rank
         mw['int_points'] = ''
         if self.xintcoords:
-            a1, a2, a3, a4, a6 = parse_ainvs(self.xainvs)
+            a1, a2, a3, a4, a6 = self.ainvs
             def lift_x(x):
                 f = ((x + a2) * x + a4) * x + a6
                 b = (a1*x + a3)
@@ -400,12 +391,10 @@ class WebEC(object):
         try:
             iwdata = self.iwdata
         except AttributeError: # For curves with no Iwasawa data
+            self.iwdata = None
             return
         iw = self.iw = {}
-        try:
-            iw['p0'] = self.iwp0
-        except AttributeError:
-            iw['p0'] = None
+        iw['p0'] = self.iwp0 # could be None
         iw['data'] = []
         pp = [int(p) for p in iwdata]
         badp = [l['p'] for l in self.local_data]
@@ -446,25 +435,22 @@ class WebEC(object):
                 iw['data'] += [[p,rtype,lambdas,mus]]
 
     def make_torsion_growth(self):
-        try:
-            tor_gro = self.tor_gro
-            self.torsion_growth_data_exists = True
-        except AttributeError:
+        if self.tor_gro is None:
             self.torsion_growth_data_exists = False
             return
-
+        tor_gro = self.tor_gro
+        self.torsion_growth_data_exists = True
         self.tg = tg = {}
         tg['data'] = tgextra = []
         # find all base-changes of this curve in the database, if any
-        from lmfdb.ecnf.WebEllipticCurve import db_ecnf
-        bcs = [res['label'] for res in  db_ecnf().find({'base_change': self.lmfdb_label}, projection={'label': True, '_id': False})]
+        bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
         bcfs = [lab.split("-")[0] for lab in bcs]
         for F, T in tor_gro.items():
             tg1 = {}
             tg1['bc'] = "Not in database"
             if ":" in F:
                 F = F.replace(":",".")
-                field_data = nf_display_knowl(F, getDBConnection(), field_pretty(F))
+                field_data = nf_display_knowl(F, field_pretty(F))
                 deg = int(F.split(".")[0])
                 bcc = [x for x,y in zip(bcs, bcfs) if y==F]
                 if bcc:
@@ -489,7 +475,9 @@ class WebEC(object):
             if d!=lastd:
                 tg1['m'] = len([x for x in tgextra if x['d']==d])
                 lastd = d
-        tg['maxd'] = max(db_ecstats().find_one({'_id': 'torsion_growth'})['degrees'])
+        ## Hard code for now
+        #tg['maxd'] = max(db.ec_curves.stats.get_oldstat('torsion_growth')['degrees'])
+        tg['maxd'] = 7
 
 
 

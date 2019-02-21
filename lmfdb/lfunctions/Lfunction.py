@@ -17,7 +17,7 @@ from Lfunctionutilities import (p2sage, string2number, get_bread,
                                 name_and_object_from_url)
 from LfunctionComp import EC_from_modform, isogeny_class_cm
 
-import LfunctionDatabase
+from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_lfunction_by_url, getHmfData, getHgmData, getEllipticCurveData
 import LfunctionLcalc
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
@@ -189,8 +189,7 @@ def makeLfromdata(L):
         L.negative_zeros = ["&minus;" + pos_zero for pos_zero in L.positive_zeros]
     else:
         dual_L_label = data['conjugate']
-        dual_L_data = LfunctionDatabase.getInstanceLdata(dual_L_label,
-                                                         label_type = "Lhash")
+        dual_L_data = get_lfunction_by_Lhash(dual_L_label)
         L.negative_zeros = ["&minus;" + str(pos_zero) for pos_zero in
                             dual_L_data['positive_zeros']]
         L.negative_zeros = L.negative_zeros[:zero_truncation]
@@ -387,8 +386,7 @@ class Lfunction_Dirichlet(Lfunction):
         Lhash = "dirichlet_L_{0}.{1}".format(self.charactermodulus,
                                                 self.characternumber)
         try:
-            self.lfunc_data = LfunctionDatabase.getInstanceLdata(Lhash,
-                                                         label_type = "Lhash")
+            self.lfunc_data = get_lfunction_by_Lhash(Lhash)
         except:
             raise KeyError('No L-function data for the Dirichlet character $\chi_{%d}(%d,\cdot)$ found in the database.'%(self.charactermodulus,self.characternumber))
 
@@ -464,7 +462,7 @@ class Lfunction_from_db(Lfunction):
         self.langlands = False
 
         self.__dict__.update(kwargs)
-        self.lfunc_data = LfunctionDatabase.get_lfunction_by_Lhash(self.Lhash)
+        self.lfunc_data = get_lfunction_by_Lhash(self.Lhash)
         makeLfromdata(self)
         self._set_web_displaynames()
         self.info = self.general_webpagedata()
@@ -481,8 +479,7 @@ class Lfunction_from_db(Lfunction):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(LfunctionDatabase
-                                       .get_instances_by_Lhash(factor_Lhash),
+                for instance in sorted(get_instances_by_Lhash(factor_Lhash),
                                        key=lambda elt: elt['url']):
                     url = instance['url']
                     name, obj_exists = name_and_object_from_url(url)
@@ -496,8 +493,7 @@ class Lfunction_from_db(Lfunction):
     @property
     def instances(self):
         linstances = []
-        for instance in sorted(LfunctionDatabase
-                               .get_instances_by_Lhash(self.Lhash),
+        for instance in sorted(get_instances_by_Lhash(self.Lhash),
                                key=lambda elt: elt['url']):
             url = instance['url']
             linstances.append((str(url), "/L/" + url))
@@ -506,8 +502,7 @@ class Lfunction_from_db(Lfunction):
     @property
     def origins(self):
         lorigins = []
-        for instance in sorted(LfunctionDatabase
-                               .get_instances_by_Lhash(self.Lhash),
+        for instance in sorted(get_instances_by_Lhash(self.Lhash),
                                key=lambda elt: elt['url']):
             name, obj_exists = name_and_object_from_url(instance['url'])
             if not name:
@@ -628,7 +623,7 @@ class Lfunction_EC(Lfunction):
         if self.base_field() == '1.1.1.1': #i.e. QQ
             lbread = get_bread(2,
                     [
-                      ('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                      ('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                       (self.label, url_for('.l_function_ec_page',
                               conductor_label=self.conductor,
                               isogeny_class_label = self.isogeny_class_label))
@@ -637,7 +632,7 @@ class Lfunction_EC(Lfunction):
             lbread = get_bread(self.degree,
                 [
                     # FIXME there is no .l_function_ecnf_browse_page
-                    #('Elliptic curve', url_for('.l_function_ec_browse_page')),
+                    #('Elliptic Curve', url_for('.l_function_ec_browse_page')),
                     (self.label,
                      url_for('.l_function_ecnf_page',
                             field_label = self.field_label,
@@ -655,8 +650,7 @@ class Lfunction_EC(Lfunction):
         lfactors = []
         if "," in self.Lhash:
             for factor_Lhash in  self.Lhash.split(","):
-                for instance in sorted(LfunctionDatabase
-                                       .get_instances_by_Lhash(factor_Lhash),
+                for instance in sorted(get_instances_by_Lhash(factor_Lhash),
                                        key=lambda elt: elt['url']):
                     url = instance['url']
                     name, obj_exists = name_and_object_from_url(url)
@@ -703,8 +697,7 @@ class Lfunction_EC(Lfunction):
     @property
     def origins(self):
         lorigins = []
-        for instance in sorted(LfunctionDatabase
-                               .get_instances_by_Lhash(self.Lhash),
+        for instance in sorted(get_instances_by_Lhash(self.Lhash),
                                key=lambda elt: elt['url']):
             url = instance['url'];
             name, obj_exists = name_and_object_from_url(url);
@@ -749,7 +742,7 @@ class Lfunction_EC(Lfunction):
         isogeny_class_url = "EllipticCurve/%s/%s/%s" % (self.field,
                                                         self.conductor_label,
                                                         self.isogeny_class_label)
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(isogeny_class_url)
+        self.lfunc_data = get_lfunction_by_url(isogeny_class_url)
         if not self.lfunc_data:
             raise KeyError('No L-function instance data for "%s" was found in the database.' % isogeny_class_url)
         return
@@ -908,12 +901,10 @@ class Lfunction_EMF(Lfunction):
 class Lfunction_Maass(Lfunction):
     """Class representing the L-function of a Maass form
 
-    Compulsory parameters: dbid (if not from DB
-                           fromDB  (True if data is in Lfuntions database
+    Compulsory parameters: maass_id (if not from DB)
+                           fromDB  (True if data is in Lfuntions database)
 
-    Possible parameters: dbName  (the name of the database for the Maass form)
-                        dbColl  (the name of the collection for the Maass form)
-                        group,level,char,R,ap_id  (if data is in Lfunctions DB
+    Possible parameters: group,level,char,R,ap_id  (if data is in Lfunctions DB)
     """
     def __init__(self, **args):
         constructor_logger(self, args)
@@ -930,17 +921,17 @@ class Lfunction_Maass(Lfunction):
                                     args, 'group', 'level', 'char', 'R', 'ap_id')
         else:
             validate_required_args ('Unable to construct L-function of Maass form.',
-                                    args, 'dbid')
+                                    args, 'maass_id')
 
         self._Ltype = "maass"
 
         if self.fromDB:   # L-function data is in Lfunctions DB
             # Load data from the database
-            self.dbid = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
+            self.maass_id = "ModularForm/%s/Q/Maass/%s/%s/%s/%s/" % (
                 self.group, self.level, self.char, self.R, self.ap_id)
-            self.lfunc_data = LfunctionDatabase.getInstanceLdata(self.dbid)
+            self.lfunc_data = get_lfunction_by_url(self.maass_id)
             if self.lfunc_data is None:
-                raise KeyError('No L-function instance data for "%s" was found in the database.' % self.dbid)
+                raise KeyError('No L-function instance data for "%s" was found in the database.' % self.maass_id)
 
             # Extract the data
             makeLfromdata(self)
@@ -961,8 +952,7 @@ class Lfunction_Maass(Lfunction):
         else:   # Generate from Maass form
 
             # Create the Maass form
-            DB = LfunctionDatabase.getMaassDb()
-            self.mf = WebMaassForm(DB, self.dbid, get_dirichlet_c_only=1)
+            self.mf = WebMaassForm(self.maass_id, get_dirichlet_c_only=1)
             self.group = 'GL2'
 
             # Extract the L-function information from the Maass form object
@@ -996,7 +986,7 @@ class Lfunction_Maass(Lfunction):
             self.primitive = True
             self.degree = 2
             self.quasidegree = 2
-            self.eigenvalue = float(self.mf.R if self.mf.R else 0)
+            self.eigenvalue = self.mf.R if self.mf.R else 0
             self.mu_fe = [aa + self.eigenvalue * I, aa - self.eigenvalue * I]
             self.nu_fe = []
             self.compute_kappa_lambda_Q_from_mu_nu()
@@ -1025,7 +1015,7 @@ class Lfunction_Maass(Lfunction):
             self.texnamecompleted1ms = "\\Lambda(1-s,f)"
         else:
             self.texnamecompleted1ms = "\\Lambda(1-s,\\overline{f})"
-        self.label = self.dbid
+        self.label = self.maass_id
 
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
@@ -1064,7 +1054,7 @@ class Lfunction_HMF(Lfunction):
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
         # Load form (f) from database
-        (f, F_hmf) = LfunctionDatabase.getHmfData(self.label)
+        (f, F_hmf) = getHmfData(self.label)
         if f is None:
             # NB raising an error is not a good way to handle this on website!
             raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.label)
@@ -1158,7 +1148,7 @@ class Lfunction_HMF(Lfunction):
         if self.level == 1:  # For level 1, the sign is always plus
             self.sign = 1
         else:  # for level>1, calculate sign from Fricke involution and weight
-            ALeigs = [al[1].replace('^', '**') for al in f['AL_eigenvalues']]
+            ALeigs = [str(al[1]).replace('^', '**') for al in f['AL_eigenvalues']]
             # the above fixed a bug at
             # L/ModularForm/GL2/TotallyReal/2.2.104.1/holomorphic/2.2.104.1-5.2-c/0/0/
             # but now the sign is wrong (i.e., not of absolute value 1 *)
@@ -1296,8 +1286,8 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         generateSageLfunction(self)
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.siegel"
-        self.info['title'] = ("$L(s,F)$, " + "where $F$ is a scalar-valued Siegel " +
-                      "modular form of weight " + str(self.weight) + ".")
+        self.info['title'] = ("$L(s,F)$, " + "Where $F$ is a Scalar-valued Siegel " +
+                      "Modular Form of Weight " + str(self.weight) + ".")
 
     def original_object(self):
         return self.S
@@ -1325,7 +1315,7 @@ class Lfunction_genus2_Q(Lfunction):
         # Load data from the database
         label_slash = self.label.replace(".","/")
         db_label = "Genus2Curve/Q/" + label_slash
-        self.lfunc_data = LfunctionDatabase.getInstanceLdata(db_label)
+        self.lfunc_data = get_lfunction_by_url(db_label)
         if self.lfunc_data == None:
             raise KeyError('No L-function instance data for "%s" was found '% db_label +
                            'in the database.' )
@@ -1589,7 +1579,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         self.label = args["label"]
 
         # Get the motive from the database
-        self.motive = LfunctionDatabase.getHgmData(self.label)
+        self.motive = getHgmData(self.label)
         if not self.motive:
             raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.label)
 
@@ -1679,7 +1669,7 @@ class SymmetricPowerLfunction(Lfunction):
                             "only for Elliptic Curves over Q.")
 
         # Create the elliptic curve
-        Edata = LfunctionDatabase.getEllipticCurveData(self.label + '1')
+        Edata = getEllipticCurveData(self.label + '1')
         if Edata is None:
             raise KeyError('No elliptic curve with label %s exists in the database' % self.label)
         else:
