@@ -11,7 +11,7 @@ try:
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 except NameError:
     pass
-from lmfdb.db_backend import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
+from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
 from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
@@ -1179,7 +1179,7 @@ class mf_newforms(TableChecker):
         bad_labels = []
         labels = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
         bad_labels.extend([label + " (count)" for label in labels])
-        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'dim', 'hecke_orbit_code', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'relative_dim', 'trace_display', 'traces', 'weight', 'weight_parity']:
+        for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_indexes', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'weight', 'weight_parity']:
             labels = self.check_crosstable('mf_newspaces', col, 'space_label', col, 'label')
             bad_labels.extend([label + " (%s)"%col for label in labels])
         return bad_labels
@@ -1432,8 +1432,8 @@ class mf_newforms(TableChecker):
 
     @slow(projection=['self_twist_discs', 'inner_twists'])
     def check_self_twist_disc(self, rec):
-        # check that self_twist_discs = [elt[6] for elt in inner_twists if elt[6] is not None]
-        return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None])
+        # check that self_twist_discs = is compatible with the last entries of inner_twists.
+        return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None and elt[6] != 1])
 
 
     @slow(projection=['level', 'self_twist_discs', 'traces'])
@@ -1484,7 +1484,7 @@ class mf_newforms(TableChecker):
                 for elt in conductor_string.split('_'):
                     pe = map(int, elt.split('e'))
                     if len(pe) == 1:
-                        conductor *= pe
+                        conductor *= pe[0]
                     elif len(pe) == 2:
                         conductor *= pe[0]**pe[1]
                     else:
@@ -2089,30 +2089,6 @@ test_types = [overall, overall_long, fast, slow]
 test_types_dict = dict(zip(test_types_txt, test_types))
 test_types_suffixes = dict(zip(test_types, suffixes))
 
-typs = [overall, overall_long, fast, slow]
-#def get_code(tbl, cls):
-#    return len(typs)*validated_tables.index(tbl)+typs.index(cls)
-#def run_tests(basedir, m):
-#    cls_num = m // len(typs)
-#    if cls_num >= len(validated_tables) or cls_num < 0:
-#        print "No such table (requested %sth table of %s)"%(cls_num+1, len(validated_tables))
-#    else:
-#        typ_num = m % len(typs)
-#        cls = validated_tables[cls_num]
-#        typ = typs[typ_num]
-#        suffix = suffixes[typ_num]
-#        if cls._get_checks_count(typ) > 0:
-#            logfile = os.path.join(basedir, '%s.%s'%(cls.__name__, suffix))
-#            runner = cls(logfile, typ)
-#            runner.run()
-#
-#if __name__ == '__main__':
-#    if len(sys.argv) != 3 or not os.path.isdir(sys.argv[1]) or not sys.argv[2].isdigit():
-#        print "Give an output directory and one integer argument, between 0 and %s.  See script for details on meaning." % (len(validated_tables) * len(typs) - 1)
-#    else:
-#        run_tests(sys.argv[1], int(sys.argv[2]))
-#
-
 def run_tests(logdir, tablename, typename):
     cls = validated_tables_dict[tablename]
     typ = test_types_dict[typename]
@@ -2142,8 +2118,8 @@ if __name__ == '__main__':
                 For example:
                  # parallel -j 8 sage -python {0} /scratch/logs ::: {{{1}}} ::: {{{2}}}
                 '''.format(sys.argv[0],
-                    ', '.join(validated_tables_txt[:2]),
-                    ', '.join(test_types_txt))
+                    ' '.join(validated_tables_txt[:2]),
+                    ' '.join(test_types_txt))
             ))
 
     parser.add_argument('logdir',
