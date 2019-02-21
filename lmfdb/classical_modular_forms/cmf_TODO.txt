@@ -1,12 +1,49 @@
 CRITICAL (BUGS):
 
-OUTSTANDING:
-* Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
+OUTSTANDING VERIFICATIONS:
++ Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
   - 101.7.f, box = {u'nonzero_newspace_count': 270662, u'Nmax': 4000, u'newspace_count': 270662, u'embeddings': False, u'lfunctions': False, u'Nmin': 101, u'Nk_count': 13585, u'embedding_count': 2133008444L, u'Nk2max': 40000, u'Nk2min': 4001, u'kmax': 12, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 13585, u'traces': False, u'straces': True}
   - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
++ Mismatched mf_gamma1 counts (13587 != 13585 and 1526 != 1475)
+* mf_hecke_cc.check_angles_interval: 1364.1.h.a.1363.3
++ mf_newforms.check_embeddings_count: 23.41.d.a
++ mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
+
+Bugs:
+* char_dir_values.check_character_values has a bug (fails on 1.1)
++ mf_newforms.check_projective_field has a bug (comparing with nf_fields numeric[] <> jsonb)
++ mf_newforms.check_self_twist_disc had a bug (fixed but not rerun)
+
+Disabled:
++ mf_newforms.check_artin_field disabled
++ mf_hecke_cc.check_ap2 disabled
++ (mf_hecke_cc.check_amn disabled)
++ mf_newspaces.check_sum_AL_dims disabled
++ mf_newforms.check_an_embedding disabled
++ mf_newforms.check_self_dual_by_poly disabled
++ mf_newforms.check_ disabled (each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity)
+Proposed disabled:
+
+
+Expected failures:
++ mf_newforms.check_analytic_rank_set: 24.39.h.c, 24.37.h.c, 23.41.d.a, 23.39.d.a
++ mf_newforms.check_self_twist_proved: 3396.2.h.a
++ (mf_newforms.check_analytic_rank_proved: 1158 failures)
+
+Timeouts:
+a  mf_gamma1.check_newspaces_hecke_orbit_dims timed out after 20980.85s
+a  mf_newforms.check_analytic_rank timed out after 17433.24s
+a  mf_newforms.check_analytic_rank_proved timed out after 19300.54s
+a  mf_newspaces.check_hecke_orbit_dims_newforms timed out after 21080.73s
+a  mf_newspaces.check_portraits_count timed out after 2050.00s
+ab mf_newspaces.check_Skchi_dim_formula timed out after 3630.91s (some rows taking more than a minute)
+ab mf_newspaces.check_dims timed out after 88.01s (too many rows over the slow threshold of 0.1s)
+ b mf_hecke_cc.check_an_length timed out after 3698.06s
+ b mf_hecke_cc.check_embedding_m timed out after 300.19s
+ b mf_newforms.check_roots_are_roots timed out after 57.21s
+
 
 IMPORTANT:
-* Fix Satake angles in weight 1 (Drew)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * See if there are other checks that should be added to check_related_objects (Edgar)
 * Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
@@ -24,8 +61,6 @@ IMPORTANT:
   - 23.39.d.a and 23.41.d.a (CC ap data ready for 23.39.d.a, Edgar, still waiting on 23.41.d.a, Drew)
   - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
-* Missing data:
-  - embedding data for 23:41:4 dimension 790 (Drew -- this may not finish before PR)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -117,12 +152,13 @@ NOT CMF STUFF:
 * It would be good to have an explanation of the connections in the "related objects" links when possible
 * Complex and rational extension types for postgres
 * In create_table, make label unique and add index; port to existing tables (David)
-* enable autovacuum on postgres config
 * Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
 * Saved queries for demos (cf checklist)
+* Do restats in different order (compute all counts then upload), and wipe counts if too many
+* Add indexes on counts and stats tables
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue

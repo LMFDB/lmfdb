@@ -146,7 +146,7 @@ def init_run_log(level_name=None):
         log_dest.setLevel(level)
 
     #Add handler only if not already present
-    if not len(log_dest.handlers):
+    if False: # not len(log_dest.handlers):
         log_file_handler = logging.FileHandler(LOG_FILE_NAME)
         formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
         log_file_handler.setFormatter(formatter)
@@ -167,7 +167,7 @@ def init_transac_log(level_name=None):
         log_transac.setLevel(level)
 
     #Add handler only if not already present
-    if not len(log_transac.handlers):
+    if False: #not len(log_transac.handlers):
         #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
         log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
         formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")

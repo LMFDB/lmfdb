@@ -302,7 +302,7 @@ class PostgresBase(object):
                         query = query.replace('%s','VALUES_LIST')
                     elif values:
                         query = query % (tuple(values))
-                    self.logger.info(query + " ran in %ss" % (t,))
+                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
         except (DatabaseError, InterfaceError):
@@ -774,8 +774,12 @@ class PostgresTable(PostgresBase):
                         value = Json(value)
                     cmd = "{0} = %s"
                     # For arrays, have to add an explicit typecast
-                    if coltype.endswith('[]') and path is None:
-                        cmd += '::' + coltype
+                    if coltype.endswith('[]'):
+                        if not path:
+                            cmd += '::' + coltype
+                        else:
+                            cmd += '::' + coltype[:-2]
+
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
@@ -2885,10 +2889,10 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.restore_indexes()
             self._break_stats()
-            self.stats.total += search_count
-            self.stats._record_count({}, self.stats.total)
             if restat:
                 self.stats.refresh_stats(total=False)
+            self.stats.total += search_count
+            self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
