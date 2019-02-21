@@ -25,18 +25,17 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 """
 
-
-import logging, tempfile, re, os, time, random, traceback, datetime
+import datetime, logging, os, random, re, tempfile, time, traceback
 from collections import defaultdict, Counter
+
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
+from sage.all import cartesian_product_iterator, binomial
+
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
-from sage.misc.mrange import cartesian_product_iterator
-from sage.functions.other import binomial
 from lmfdb.utils import make_logger, KeyedDefaultDict
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
-
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -222,7 +221,7 @@ class PostgresBase(object):
         # This function also sets self.conn
         db.register_object(self)
         self._db = db
-        from lmfdb.config import Configuration
+        from lmfdb.utils.config import Configuration
         logging_options = Configuration().get_logging()
         self.slow_cutoff = logging_options['slowcutoff']
         handler = logging.FileHandler(logging_options['slowlogfile'])
@@ -3467,7 +3466,7 @@ class PostgresStatsTable(PostgresBase):
         if cols:
             msg += "for " + ", ".join(cols)
         if constraint:
-            from lmfdb.display_stats import range_formatter
+            from lmfdb.utils import range_formatter
             msg += ": " + ", ".join("{col} = {disp}".format(col=col, disp=range_formatter(val)) for col, val in constraint.items())
         if threshold:
             msg += " (threshold=%s)" % threshold
@@ -4117,7 +4116,7 @@ class PostgresDatabase(PostgresBase):
         Interface to Postgres table av_fqisog
     """
     def _new_connection(self, **kwargs):
-        from lmfdb.config import Configuration
+        from lmfdb.utils.config import Configuration
         options = Configuration().get_postgresql()
         # overrides the options passed as keyword arguments
         for key, value in kwargs.iteritems():
@@ -4179,7 +4178,7 @@ class PostgresDatabase(PostgresBase):
         logging.info("Read/write to userdb: %s" % self._read_and_write_userdb)
         logging.info("Read/write to knowls: %s" % self._read_and_write_knowls)
         # Stores the name of the person making changes to the database
-        from lmfdb.config import Configuration
+        from lmfdb.utils.config import Configuration
         self.__editor = Configuration().get_logging().get('editor')
 
 
@@ -4671,7 +4670,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
         if remote_opts is None:
-            from lmfdb.config import Configuration
+            from lmfdb.utils.config import Configuration
             remote_opts = Configuration().get_postgresql_default()
 
         source = PostgresDatabase(**remote_opts)

@@ -21,7 +21,7 @@ class Configuration(object):
 
     def __init__(self, writeargstofile = False):
         default_config_file = "config.ini"
-        root_lmfdb_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
+        root_lmfdb_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..'))
         if root_lmfdb_path != os.path.abspath(os.getcwd()):
             default_config_file = os.path.relpath(os.path.join(root_lmfdb_path, default_config_file),os.getcwd())
 

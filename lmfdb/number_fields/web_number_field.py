@@ -7,7 +7,7 @@ from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html,\
         display_multiset, factor_base_factor, factor_base_factorization_latex
 from flask import url_for
 from collections import Counter
-from lmfdb.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
+from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 from lmfdb import db
 wnflog = make_logger("WNF")
 

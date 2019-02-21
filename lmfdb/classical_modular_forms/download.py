@@ -1,9 +1,11 @@
-from flask import  url_for, redirect, abort
+
 from ast import literal_eval
+
+from flask import  url_for, redirect, abort
+
 from lmfdb import db
 from lmfdb.backend.encoding import Json
-from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error
+from lmfdb.utils import Downloader, flash_error
 from lmfdb.classical_modular_forms.web_newform import WebNewform, encode_hecke_orbit
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 

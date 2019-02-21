@@ -2,20 +2,20 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-from lmfdb import db
+import re, random
+
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
-
-from lmfdb.artin_representations import artin_representations_page
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, clean_input
-from lmfdb.search_wrapper import search_wrap
-
-from math_classes import ArtinRepresentation
-from lmfdb.transitive_group import group_display_knowl
-
 from sage.all import ZZ
 
-import re, random
+from lmfdb import db
+from lmfdb.utils import (
+    parse_primes, parse_restricted, parse_element_of, parse_galgrp,
+    parse_ints, parse_container, clean_input,
+    search_wrap)
+from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.artin_representations import artin_representations_page
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
 

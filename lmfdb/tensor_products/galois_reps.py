@@ -11,7 +11,7 @@ sage: V1 = GaloisRepresentation(EllipticCurve("37a1"))
 sage: V1.motivic_weight
 sage: V1.local_euler_factor(37)
 
-sage: from lmfdb.WebCharacter import WebDirichletCharacter
+sage: from lmfdb.characters.web_character import WebDirichletCharacter
 sage: chi = WebDirichletCharacter(modulus=37,number=4)
 sage: V2 = GaloisRepresentation(chi)
 sage: V2.langlands
@@ -119,7 +119,7 @@ class GaloisRepresentation( Lfunction):
         if isinstance(thingy, sage.schemes.elliptic_curves.ell_rational_field.EllipticCurve_rational_field):
             self.init_elliptic_curve(thingy)
 
-        elif isinstance(thingy, lmfdb.WebCharacter.WebDirichletCharacter):
+        elif isinstance(thingy, lmfdb.characters.web_character.WebDirichletCharacter):
             self.init_dir_char(thingy)
 
         elif isinstance(thingy, lmfdb.artin_representations.math_classes.ArtinRepresentation):

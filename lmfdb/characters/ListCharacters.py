@@ -5,7 +5,7 @@ import re
 from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
 from lmfdb import db
-from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
+from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger
 try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:

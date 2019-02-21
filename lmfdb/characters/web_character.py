@@ -1,22 +1,5 @@
 # -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
-from sage.databases.cremona import cremona_letter_code
-from sage.misc.cachefunc import cached_method
-from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange
-from flask import url_for
-from lmfdb import db
-from lmfdb.utils import make_logger, web_latex_split_on_pm
-logger = make_logger("DC")
-from lmfdb.nfutils.psort import ideal_label, ideal_from_label
-from WebNumberField import WebNumberField
-try:
-    from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-except:
-    logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
-from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
-from lmfdb.characters.utils import url_character, complex2str, evalpolelt
-
 """
 Any character object is obtained as a double inheritance of
 
@@ -74,6 +57,22 @@ The design is the following:
 - the object classe ancestor triggers the __init__ method
 
 """
+
+from flask import url_for
+
+from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
+from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_method
+from sage.databases.cremona import cremona_letter_code
+
+from lmfdb import db
+from lmfdb.utils import make_logger, web_latex_split_on_pm
+from lmfdb.nfutils.psort import ideal_label, ideal_from_label
+from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup
+from lmfdb.characters.TinyConrey import ConreyCharacter, kronecker_symbol, symbol_numerator
+from lmfdb.characters.utils import url_character, complex2str, evalpolelt
+
+logger = make_logger("DC")
 
 #############################################################################
 ###

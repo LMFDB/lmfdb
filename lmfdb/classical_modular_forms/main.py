@@ -1,21 +1,30 @@
+
+
+from collections import defaultdict
+import re
+
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
-from collections import defaultdict
-from lmfdb import db
-from lmfdb.classical_modular_forms import cmf
-from lmfdb.search_parsing import parse_ints, parse_floats, parse_bool,\
-        parse_primes, parse_nf_string, parse_noop, parse_equality_constraints,\
-        integer_options, search_parser, parse_subset
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.utils import flash_error, to_dict, comma, display_knowl, bigint_knowl
-from lmfdb.classical_modular_forms.web_newform import WebNewform, convert_newformlabel_from_conrey,  quad_field_knowl, cyc_display, field_display_gen
-from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey, get_bread, get_search_bread, get_dim_bread, newform_search_link, ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE
-from lmfdb.classical_modular_forms.download import CMF_download
-from lmfdb.display_stats import StatsDisplay, per_row_total, per_col_total, sum_totaler
+from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range, prod
 from sage.databases.cremona import class_to_int, cremona_letter_code
-from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range
-from sage.misc.misc_c import prod
-import re
+
+from lmfdb import db
+from lmfdb.utils import (
+    parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string, parse_noop,
+    parse_equality_constraints, integer_options, parse_subset,
+    search_wrap,
+    flash_error, to_dict, comma, display_knowl, bigint_knowl,
+    StatsDisplay, proportioners, totaler)
+from lmfdb.utils.search_parsing import search_parser
+from lmfdb.classical_modular_forms import cmf
+from lmfdb.classical_modular_forms.web_newform import (
+    WebNewform, convert_newformlabel_from_conrey,
+    quad_field_knowl, cyc_display, field_display_gen)
+from lmfdb.classical_modular_forms.web_space import (
+    WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
+    get_bread, get_search_bread, get_dim_bread, newform_search_link,
+    ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+from lmfdb.classical_modular_forms.download import CMF_download
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -1090,14 +1099,14 @@ class CMF_stats(StatsDisplay):
                    'rm_discs': True}
     stat_list = [
         {'cols': ['level', 'weight'],
-         'proportioner': per_col_total,
-         'totaler': sum_totaler()},
+         'proportioner': proportioners.per_col_total,
+         'totaler': totaler()},
         {'cols': ['level', 'dim'],
-         'proportioner': per_row_total,
-         'totaler': sum_totaler()},
+         'proportioner': proportioners.per_row_total,
+         'totaler': totaler()},
         {'cols': ['char_order', 'relative_dim'],
-         'proportioner': per_row_total,
-         'totaler': sum_totaler()},
+         'proportioner': proportioners.per_row_total,
+         'totaler': totaler()},
         {'cols':'analytic_rank',
          'totaler':{'avg':True}},
         {'cols':'projective_image',
@@ -1110,8 +1119,8 @@ class CMF_stats(StatsDisplay):
         {'cols':'inner_twist_count'},
         {'cols':['self_twist_type', 'weight'],
          'title_joiner': ' by ',
-         'proportioner': per_col_total,
-         'totaler': sum_totaler(col_counts=False, corner_count=False)},
+         'proportioner': proportioners.per_col_total,
+         'totaler': totaler(col_counts=False, corner_count=False)},
         {'cols': 'cm_discs',
          'totaler':{}},
         {'cols': 'rm_discs',

@@ -3,6 +3,13 @@
 ## parse_newton_polygon and parse_abvar_decomp are defined in lmfdb.abvar.fq.search_parsing
 
 import re
+from collections import defaultdict, Counter
+
+from flask import flash
+from markupsafe import Markup
+from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
+from sage.misc.decorators import decorator_keywords
+
 SPACES_RE = re.compile(r'\d\s+\d')
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 FLOAT_STR = r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?'
@@ -21,13 +28,6 @@ SIGNED_LIST_RE = re.compile(r'^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$')
 FLOAT_RE = re.compile('^' + FLOAT_STR + '$')
 BRACKETING_RE = re.compile(r'(\[[^\]]*\])') # won't work for iterated brackets [[a,b],[c,d]]
 
-from flask import flash
-from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
-from sage.misc.decorators import decorator_keywords
-#from sage.misc.misc import subsets
-
-from markupsafe import Markup
-from collections import defaultdict, Counter
 
 class SearchParser(object):
     def __init__(self, f, clean_info, prep_ranges, prep_plus, pass_name, default_field, default_name, default_qfield):
@@ -518,7 +518,7 @@ def parse_gap_id(info, query, field='group', name='Group', qfield='group'):
 
 @search_parser(clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield):
-    from lmfdb.transitive_group import complete_group_codes
+    from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
         gcs = complete_group_codes(inp)
         nfield, tfield = qfield

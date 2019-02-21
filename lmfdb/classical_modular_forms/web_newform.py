@@ -1,25 +1,27 @@
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PolynomialRing,\
-    CDF, ZZ, CBF, cached_method, vector, lcm, RR
-from lmfdb import db
-from lmfdb.WebNumberField import nf_display_knowl
-from lmfdb.number_fields.number_field import field_pretty
-from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
-    web_latex_split_on_pm, web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,\
-    display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
-    display_knowl, factor_base_factorization_latex
-from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from lmfdb.transitive_group import small_group_label_display_knowl
-from lmfdb.sato_tate_groups.main import st_link
-from lmfdb.search_parsing import integer_options
-import re
 from collections import defaultdict
-from sage.databases.cremona import cremona_letter_code, class_to_int
-from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
+import bisect, re
+
+from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-import bisect
+from sage.all import (prime_range, latex, QQ, PolynomialRing,
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR)
+from sage.databases.cremona import cremona_letter_code, class_to_int
+
+from lmfdb import db
+from lmfdb.utils import (
+    coeff_to_poly, coeff_to_power_series, web_latex,
+    web_latex_split_on_pm, web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
+    display_knowl, factor_base_factorization_latex,
+    integer_options)
+from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
+from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
+from lmfdb.sato_tate_groups.main import st_link
+from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")

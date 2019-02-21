@@ -1,4 +1,4 @@
-from base import LmfdbTest
+from lmfdb.base import LmfdbTest
 import os, itertools, collections
 
 class TemplateNamespaceCollisionTest(LmfdbTest):

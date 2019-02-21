@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from ast import literal_eval
 import re
+from ast import literal_eval
 from operator import mul
+
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 
 from lmfdb import db
-from lmfdb.utils import to_dict, comma, flash_error, display_knowl
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.downloader import Downloader
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_bool, parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay, formatters)
+from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
-from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.display_stats import StatsDisplay, boolean_format
 
 credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki"
 
@@ -362,8 +364,8 @@ class G2C_stats(StatsDisplay):
                   'torsion_order': 'torsion subgroup orders'}
     formatters = {'aut_grp_id': aut_grp_format,
                   'geom_aut_grp_id': geom_aut_grp_format,
-                  'has_square_sha': boolean_format,
-                  'is_gl2_type': boolean_format,
+                  'has_square_sha': formatters.boolean,
+                  'is_gl2_type': formatters.boolean,
                   'real_geom_end_alg': st0_group_format,
                   'st_group': st_group_format}
 

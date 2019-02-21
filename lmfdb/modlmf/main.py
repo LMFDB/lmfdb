@@ -1,29 +1,19 @@
 # -*- coding: utf-8 -*-
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+import ast, re, StringIO, time
 
 from flask import render_template, request, url_for, make_response, redirect, flash, send_file
-
-from lmfdb.utils import web_latex_split_on_pm
-
+from markupsafe import Markup
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
+from lmfdb import db
+from lmfdb.utils import web_latex_split_on_pm, parse_ints, search_wrap
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
-from lmfdb.search_parsing import parse_ints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb import db
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
 
 modlmf_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
-
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def print_q_expansion(list):
     list=[str(c) for c in list]

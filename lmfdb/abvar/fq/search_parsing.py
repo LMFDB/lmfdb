@@ -1,6 +1,6 @@
 import re
 from sage.all import QQ
-from lmfdb.search_parsing import BRACKETING_RE, QQ_RE, _multiset_encode, search_parser
+from lmfdb.utils.search_parsing import BRACKETING_RE, QQ_RE, _multiset_encode, search_parser
 PAREN_RE = re.compile(r'(\([^\)]*\))') # won't work for iterated parentheses ((a,b),(c,d))
 
 @search_parser

@@ -4,7 +4,7 @@
 from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup
+from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
 from flask import url_for
 import re

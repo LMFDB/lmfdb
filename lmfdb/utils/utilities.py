@@ -4,30 +4,29 @@
 # @cached()
 # def func(): ...
 
+import cmath
 import logging
+import math
+import os
+import random
 import re
 import tempfile
-import random
-import os
 import time
-import math
-import cmath
-import sage
-from types import GeneratorType
-from urllib import urlencode
-
-from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, RealField, RIF, ZZ
-from sage.all import latex, valuation
-from sage.structure.element import Element
+from collections import defaultdict
 from copy import copy
 from functools import wraps
 from itertools import islice
+from types import GeneratorType
+from urllib import urlencode
+
 from flask import request, make_response, flash, url_for, current_app
+from markupsafe import Markup
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
-from markupsafe import Markup
+from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RIF, ZZ, QQ, latex, valuation, prime_range
+from sage.structure.element import Element
+
 from lmfdb.base import app
-from collections import defaultdict
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """
@@ -114,7 +113,7 @@ def key_for_numerically_sort(elt):
     return map(try_int, elt.split("."))
 
 def an_list(euler_factor_polynomial_fn,
-            upperbound=100000, base_field=sage.rings.all.RationalField()):
+            upperbound=100000, base_field=QQ):
     """
     Takes a fn that gives for each prime the Euler polynomial of the associated
     with the prime, given as a list, with independent coefficient first. This
@@ -130,8 +129,6 @@ def an_list(euler_factor_polynomial_fn,
     >>> an_list(euler)[:20]
     [1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0]
     """
-    from sage.rings.fast_arith import prime_range
-    from sage.rings.all import PowerSeriesRing
     from math import ceil, log
     PP = PowerSeriesRing(base_field, 'x', 1 + ceil(log(upperbound) / log(2.)))
 
@@ -165,14 +162,12 @@ def coeff_to_poly(c, var='x'):
     >>> coeff_to_poly("1 - 3*x + x**2")
     x**2 - 3*x + 1
     """
-    from sage.all import PolynomialRing, QQ
     return PolynomialRing(QQ, var)(c)
 
 def coeff_to_power_series(c, var='q', prec=None):
     """
     Convert a list or dictionary giving coefficients to a sage power series.
     """
-    from sage.all import PowerSeriesRing, QQ
     return PowerSeriesRing(QQ, var)(c, prec)
 
 def display_multiset(mset, formatter=str, *args):
@@ -397,9 +392,6 @@ def round_to_half_int(num, fraction=2):
     1/2
     """
     return round(num * 1.0 * fraction) / fraction
-
-
-
 
 def splitcoeff(coeff):
     """
@@ -1214,3 +1206,27 @@ class KeyedDefaultDict(defaultdict):
             raise KeyError((key,))
         self[key] = value = self.default_factory(key)
         return value
+
+def range_formatter(x):
+    if isinstance(x, dict):
+        if '$gte' in x:
+            a = x['$gte']
+        elif '$gt' in x:
+            a = x['$gt'] + 1
+        else:
+            a = None
+        if '$lte' in x:
+            b = x['$lte']
+        elif '$lt' in x:
+            b = x['$lt'] - 1
+        else:
+            b = None
+        if a == b:
+            return str(a)
+        elif b is None:
+            return "{0}-".format(a)
+        elif a is None:
+            raise ValueError
+        else:
+            return "{0}-{1}".format(a,b)
+    return str(x)

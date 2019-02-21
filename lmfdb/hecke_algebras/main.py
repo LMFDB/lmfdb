@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+import ast, re, StringIO, time
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-
-from lmfdb import db
-
+from markupsafe import Markup
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
+from lmfdb import db
+from lmfdb.utils import parse_ints, clean_input, search_wrap
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
-from lmfdb.search_parsing import parse_ints, clean_input
-from lmfdb.search_wrapper import search_wrap
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 l_range=[ell for ell in prime_range(14)]

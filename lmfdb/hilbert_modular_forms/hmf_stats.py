@@ -3,7 +3,7 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.base import app
 from lmfdb.utils import comma, make_logger
-from lmfdb.WebNumberField import nf_display_knowl
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from sage.misc.cachefunc import cached_method
 
 def field_sort_key(F):

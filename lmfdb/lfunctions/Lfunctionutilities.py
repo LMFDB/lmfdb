@@ -1,14 +1,19 @@
 # Different helper functions.
 
-import re
-from lmfdb.lfunctions import logger
-from flask import url_for
-import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, exp, pi, prod, floor, is_prime, prime_range
-from lmfdb.transitive_group import group_display_knowl
-from lmfdb import db
-from lmfdb.utils import display_complex, list_to_factored_poly_otherorder, list_factored_to_factored_poly_otherorder, key_for_numerically_sort, make_bigint
+import math, re
 
+from flask import url_for
+from sage.all import (
+    ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
+    LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part,
+    latex, factor, prime_divisors, exp, pi, prod, floor, is_prime, prime_range)
+
+from lmfdb import db
+from lmfdb.utils import (
+    display_complex, list_to_factored_poly_otherorder, make_bigint,
+    list_factored_to_factored_poly_otherorder, key_for_numerically_sort)
+from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.lfunctions import logger
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -65,32 +70,6 @@ def string2number(s):
             return Integer(strs)
     except:
         return s
-
-
-def pair2complex(pair):
-    ''' Turns the pair into a complex number.
-    '''
-    local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
-    if local:
-        rp = local.group(1)
-        if local.group(2):
-            ip = local.group(2)
-        else:
-            ip = 0
-    else:
-        rp = 0
-        ip = 0
-    return float(rp) + float(ip) * I
-
-
-def splitcoeff(coeff):
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-
-    return answer
 
 
 def styleTheSign(sign):

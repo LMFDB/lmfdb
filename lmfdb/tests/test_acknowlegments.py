@@ -1,6 +1,7 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+# -*- coding: utf-8 -*-
+
 import urllib2, ssl, errno
+from lmfdb.base import LmfdbTest
 
 class HomePageTest(LmfdbTest):
 

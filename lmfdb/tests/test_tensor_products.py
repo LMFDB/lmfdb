@@ -1,6 +1,6 @@
-# -*- coding: utf8 -*-
-from base import LmfdbTest
+# -*- coding: utf-8 -*-
 import unittest2
+from lmfdb.base import LmfdbTest
 
 class TensorProductTest(LmfdbTest):
     """

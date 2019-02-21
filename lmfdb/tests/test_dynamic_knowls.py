@@ -1,5 +1,6 @@
-# -*- coding: utf8 -*-
-from base import LmfdbTest
+# -*- coding: utf-8 -*-
+
+from lmfdb.base import LmfdbTest
 
 class DynamicKnowlTest(LmfdbTest):
     """

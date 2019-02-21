@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from base import LmfdbTest
-from flask import url_for
 import unittest2
+from flask import url_for
+from lmfdb.base import LmfdbTest
 
 class PermalinkTest(LmfdbTest):
 

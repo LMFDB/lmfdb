@@ -12,19 +12,19 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 
-import logging
-import utils
-import os
-import time
-from base import app, set_logfocus, get_logfocus, _init
-from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
-import sage
-from lmfdb.config import Configuration
+import logging, os, time
 
+from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
+from sage.version import version as sage_version
+
+from base import app, set_logfocus, get_logfocus#, _init
+from lmfdb.utils.utilities import LmfdbFormatter
+from lmfdb.utils.config import Configuration
 
 LMFDB_SAGE_VERSION = '7.1'
 
 def setup_logging():
+    from lmfdb.utils.config import Configuration
     logging_options = Configuration().get_logging();
     file_handler = logging.FileHandler(logging_options['logfile'])
 
@@ -38,7 +38,7 @@ def setup_logging():
     root_logger.setLevel(logging.INFO)
     root_logger.name = "LMFDB"
 
-    formatter = logging.Formatter(utils.LmfdbFormatter.fmtString.split(r'[')[0])
+    formatter = logging.Formatter(LmfdbFormatter.fmtString.split(r'[')[0])
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
@@ -46,18 +46,20 @@ def setup_logging():
     app.logger.addHandler(file_handler)
 
 
-if True:
-    # this bit is so that we can import website.py to use with gunicorn
-    # and to setup logging before anything
-    setup_logging()
-    logging.info("Configuration = %s" % Configuration().get_all())
+# this bit is so that we can import website.py to use with gunicorn
+# and to setup logging before anything
+setup_logging()
+logging.info("Configuration = %s" % Configuration().get_all())
 
-    _init()
-    if [int(c) for c in sage.version.version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
-        logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage.version.version,LMFDB_SAGE_VERSION))
+if [int(c) for c in sage_version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
+    logging.warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage_version,LMFDB_SAGE_VERSION))
 
 # Import top-level modules that makeup the site
 # Note that this necessarily includes everything, even code in still in an alpha state
+import backend
+assert backend
+import utils
+assert utils
 import pages
 assert pages
 import api
@@ -187,7 +189,7 @@ def robots_txt():
 
 @app.route("/style.css")
 def css():
-    from lmfdb.config import Configuration
+    from lmfdb.utils.config import Configuration
     color = Configuration().get_color()
     response = make_response(render_template("style.css", color_template=color))
     response.headers['Content-type'] = 'text/css'

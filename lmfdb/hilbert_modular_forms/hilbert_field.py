@@ -7,7 +7,7 @@ Initial version (University of Warwick 2015) Aurel Page and John Cremona
 
 from sage.all import ZZ
 from lmfdb import db
-from lmfdb.WebNumberField import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField
 
 def findvar(L):
     """

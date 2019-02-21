@@ -3,7 +3,7 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.utils import make_logger, web_latex, encode_plot
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
-from lmfdb.WebNumberField import field_pretty, nf_display_knowl
+from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
 from sage.all import latex, Matrix, ZZ, Infinity
 
 logger = make_logger("ecnf")

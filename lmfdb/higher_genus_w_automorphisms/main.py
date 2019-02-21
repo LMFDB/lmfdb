@@ -3,20 +3,18 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
-import StringIO
-import re
-import ast
-import yaml
-import os
-from lmfdb import db
-from flask import render_template, request, url_for, redirect, send_file, abort
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
-from lmfdb.search_wrapper import search_wrap
+import ast, os, re, StringIO, yaml
 
+from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+
+from lmfdb import db
+from lmfdb.utils import (
+    flash_error,
+    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    search_wrap)
 from lmfdb.sato_tate_groups.main import sg_pretty
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 

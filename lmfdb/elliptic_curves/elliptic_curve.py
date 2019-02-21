@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-from lmfdb import db
-from lmfdb.backend.encoding import Json
-from lmfdb.base import app
-from flask import render_template, url_for, request, redirect, make_response, send_file
-import tempfile
-import os
-import StringIO
+import ast, os, re, StringIO, tempfile, time
 
-from lmfdb.utils import web_latex, to_dict, web_latex_split_on_pm
+from flask import render_template, url_for, request, redirect, make_response, send_file
+from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
+from sage.databases.cremona import parse_cremona_label, class_to_int
+
+from lmfdb import db
+from lmfdb.base import app
+from lmfdb.backend.encoding import Json
+from lmfdb.utils import (
+    web_latex, to_dict, web_latex_split_on_pm,
+    parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
+    search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
 from lmfdb.elliptic_curves.ec_stats import get_stats
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs
-from lmfdb.search_parsing import parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of
-from lmfdb.search_wrapper import search_wrap
 
-import sage.all
-from sage.all import ZZ, QQ, EllipticCurve
 q = ZZ['x'].gen()
 
 #########################
@@ -33,12 +30,7 @@ def ec_credit():
 #   Utility functions
 #########################
 
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-QQ_RE = re.compile(r'^-?\d+(/\d+)?$')
-LIST_POSINT_RE = re.compile(r'^(\d+)(,\d+)*$')
-
 def cmp_label(lab1, lab2):
-    from sage.databases.cremona import parse_cremona_label, class_to_int
     a, b, c = parse_cremona_label(lab1)
     id1 = int(a), class_to_int(b), int(c)
     a, b, c = parse_cremona_label(lab2)
@@ -410,7 +402,6 @@ def plot_ec(label):
 
 
 def render_curve_webpage_by_label(label):
-    from sage.misc.misc import cputime
     cpt0 = cputime()
     t0 = time.time()
     data = WebEC.by_label(label)
@@ -457,7 +448,7 @@ def padic_data():
         else:
             val = int(data['val'])
             aprec = data['prec']
-            reg = sage.all.Qp(p, aprec)(int(data['unit']), aprec - val) << val
+            reg = Qp(p, aprec)(int(data['unit']), aprec - val) << val
             info['reg'] = web_latex(reg)
     else:
         info['reg'] = "no data"

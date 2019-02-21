@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from base import LmfdbTest
+from lmfdb.base import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
 

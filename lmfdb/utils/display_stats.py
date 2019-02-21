@@ -1,57 +1,24 @@
-from sage.all import UniqueRepresentation, lazy_attribute
-from flask import url_for
-from lmfdb.utils import format_percentage, display_knowl, KeyedDefaultDict
+
 from collections import defaultdict
 
-def range_formatter(x):
-    if isinstance(x, dict):
-        if '$gte' in x:
-            a = x['$gte']
-        elif '$gt' in x:
-            a = x['$gt'] + 1
-        else:
-            a = None
-        if '$lte' in x:
-            b = x['$lte']
-        elif '$lt' in x:
-            b = x['$lt'] - 1
-        else:
-            b = None
-        if a == b:
-            return str(a)
-        elif b is None:
-            return "{0}-".format(a)
-        elif a is None:
-            raise ValueError
-        else:
-            return "{0}-{1}".format(a,b)
-    return str(x)
+from flask import url_for
+from sage.all import UniqueRepresentation, lazy_attribute
 
-def boolean_format(value):
-    return 'True' if value else 'False'
+from lmfdb.utils.utilities import format_percentage, display_knowl, KeyedDefaultDict, range_formatter
 
-def boolean_unknown_format(value):
-    if value == 1:
-        return 'True'
-    elif value == -1:
-        return 'False'
-    else:
-        return 'Unknown'
+class formatters(object):
+    @classmethod
+    def boolean(cls, value):
+        return 'True' if value else 'False'
 
-##################################################################
-#                     Proportion strategies                      #
-##################################################################
-# We collect functions for computing proportions for 2-d         #
-# statistics grids.  To use them, include them in an item on the #
-# stat_list in the ``proportioner`` field.                       #
-# Some are parameterized (eg taking a query as a static input).  #
-# Each takes as input                                            #
-#   * a grid (list of lists) of dictionaries giving counts       #
-#   * a list giving unformatted row headers                      #
-#   * a list giving unformatted row headers                      #
-#   * a StatsDisplay                                             #
-# and modifies the grid to include proportions                   #
-##################################################################
+    @classmethod
+    def boolean_unknown(cls, value):
+        if value == 1:
+            return 'True'
+        elif value == -1:
+            return 'False'
+        else:
+            return 'Unknown'
 
 def _format_percentage(cnt, total, show_zero=False):
     """
@@ -62,189 +29,235 @@ def _format_percentage(cnt, total, show_zero=False):
     else:
         return format_percentage(cnt, total) + '%'
 
-def per_row_total(grid, row_headers, col_headers, stats):
-    """
-    Total is determined as the sum of the current row.
-    """
-    for row in grid:
-        total = sum(D['count'] for D in row)
-        for D in row:
-            D['proportion'] = _format_percentage(D['count'], total)
+class proportioners(object):
+    ##################################################################
+    #                     Proportion strategies                      #
+    ##################################################################
+    # We collect functions for computing proportions for 2-d         #
+    # statistics grids.  To use them, include them in an item on the #
+    # stat_list in the ``proportioner`` field.                       #
+    # Some are parameterized (eg taking a query as a static input).  #
+    # Each takes as input                                            #
+    #   * a grid (list of lists) of dictionaries giving counts       #
+    #   * a list giving unformatted row headers                      #
+    #   * a list giving unformatted row headers                      #
+    #   * a StatsDisplay                                             #
+    # and modifies the grid to include proportions                   #
+    ##################################################################
 
-def per_row_query(query):
-    """
-    Total is determined by row, given by the result of a query based on the row header.
-
-    Warning: this will execute a database query for each row in the grid.
-
-    INPUT:
-
-    - ``query`` -- a function that takes in the row header
-        and returns a dictionary for input to the ``count`` method.
-
-    OUTPUT:
-
-    A function for use as a proportioner.
-    """
-    def inner(grid, row_headers, col_headers, stats):
-        for row, header in zip(grid, row_headers):
-            total = stats.count(query(header))
+    @classmethod
+    def per_row_total(cls, grid, row_headers, col_headers, stats):
+        """
+        Total is determined as the sum of the current row.
+        """
+        for row in grid:
+            total = sum(D['count'] for D in row)
             for D in row:
                 D['proportion'] = _format_percentage(D['count'], total)
-    return inner
 
-def per_col_total(grid, row_headers, col_headers, stats):
-    """
-    Total is determined as the sum of the current column.
-    """
-    per_row_total(zip(*grid), col_headers, row_headers, stats)
+    @classmethod
+    def per_row_query(cls, query):
+        """
+        Total is determined by row, given by the result of a query based on the row header.
 
-def per_col_query(query):
-    """
-    Total is determined by column, given by the result of a query based on the column header.
+        Warning: this will execute a database query for each row in the grid.
 
-    Warning: this will execute a database query for each column in the grid.
+        INPUT:
 
-    INPUT:
+        - ``query`` -- a function that takes in the row header
+            and returns a dictionary for input to the ``count`` method.
 
-    - ``query`` -- a function that takes in the column header
-        and returns a dictionary for input to the ``count`` method.
+        OUTPUT:
 
-    OUTPUT:
+        A function for use as a proportioner.
+        """
+        def inner(grid, row_headers, col_headers, stats):
+            for row, header in zip(grid, row_headers):
+                total = stats.count(query(header))
+                for D in row:
+                    D['proportion'] = _format_percentage(D['count'], total)
+        return inner
 
-    A function for use as a proportioner.
-    """
-    def inner(grid, row_headers, col_headers, stats):
-        per_row_query(query)(zip(*grid), col_headers, row_headers, stats)
-    return inner
+    @classmethod
+    def per_col_total(cls, grid, row_headers, col_headers, stats):
+        """
+        Total is determined as the sum of the current column.
+        """
+        cls.per_row_total(zip(*grid), col_headers, row_headers, stats)
 
-def per_grid_query(query):
-    """
-    Total is determined by a query determined by both row and column headers.
+    @classmethod
+    def per_col_query(cls, query):
+        """
+        Total is determined by column, given by the result of a query based on the column header.
 
-    Warning: this will execute a database query for each cell in the grid.
+        Warning: this will execute a database query for each column in the grid.
 
-    INPUT:
+        INPUT:
 
-    - ``query`` -- a function that takes in the row and column headers and returns
-        a dictionary for input to the ``count`` method.
+        - ``query`` -- a function that takes in the column header
+            and returns a dictionary for input to the ``count`` method.
 
-    OUTPUT:
+        OUTPUT:
 
-    A function for use as a proportioner.
-    """
-    def inner(grid, row_headers, col_headers, stats):
-        for row, row_head in zip(grid, row_headers):
-            for D, col_head in zip(row, col_headers):
-                total = stats.count(query(row_head, col_head))
-                D['proportion'] = _format_percentage(D['count'], total)
-    return inner
+        A function for use as a proportioner.
+        """
+        def inner(grid, row_headers, col_headers, stats):
+            cls.per_row_query(query)(zip(*grid), col_headers, row_headers, stats)
+        return inner
 
-def per_grid_recurse(attr):
-    """
-    Total is determined by a recursive call to display_data,
-    with ``constraint`` and ``proportioner`` removed.
+    @classmethod
+    def per_grid_query(cls, query):
+        """
+        Total is determined by a query determined by both row and column headers.
 
-    INPUT:
+        Warning: this will execute a database query for each cell in the grid.
 
-    - ``attr`` -- a dictionary, as in the ``StatsDisplay.stats_list``.
+        INPUT:
 
-    OUTPUT:
+        - ``query`` -- a function that takes in the row and column headers and returns
+            a dictionary for input to the ``count`` method.
 
-    A function for use as a proportioner.
-    """
-    attr = dict(attr)
-    attr['base_url'] = '' # urls aren't used below
-    attr['constraint'] = {}
-    attr['proportioner'] = False
-    attr['totaler'] = False
-    def inner(grid, row_headers, col_headers, stats):
-        total_data = stats.display_data(**attr)
-        total_grid = total_data['grid']
-        total_cols = total_data['col_headers']
-        # Row headers have been zipped into the grid
-        total_rows = [r[0] for r in total_grid]
-        total_grid = [r[1] for r in total_grid]
-        # Align the total_grid with our grid
-        col_positions = [total_cols.index(col) for col in col_headers]
-        row_positions = [total_rows.index(row) for row in row_headers]
-        total_grid = [[total_grid[i][j] for j in col_positions] for i in row_positions]
-        # make the total_grid available to totalers
-        stats._total_grid = total_grid
-        for row, trow in zip(grid, total_grid):
-            for D, tD in zip(row, trow):
-                D['proportion'] = _format_percentage(D['count'], tD['count'])
-    return inner
+        OUTPUT:
 
-##################################################################
-#              1-d Proportioner/Totaler strategies               #
-##################################################################
-# In 1-d, the function takes just headers as input, rather than  #
-# both row and column headers.                                   #
-##################################################################
+        A function for use as a proportioner.
+        """
+        def inner(grid, row_headers, col_headers, stats):
+            for row, row_head in zip(grid, row_headers):
+                for D, col_head in zip(row, col_headers):
+                    total = stats.count(query(row_head, col_head))
+                    D['proportion'] = _format_percentage(D['count'], total)
+        return inner
 
-def recurse_1d(attr):
-    attr = dict(attr)
-    attr['base_url'] = ''
-    attr['constraint'] = None
-    attr['proportioner'] = False
-    attr['totaler'] = False
-    def inner(counts, headers, stats):
-        total_counts = stats.display_data(**attr)['counts']
-        for D, tD in zip(counts, total_counts):
-            D['proportion'] = _format_percentage(D['count'], tD['count'], show_zero=True)
-    return inner
+    @classmethod
+    def per_grid_recurse(cls, attr):
+        """
+        Total is determined by a recursive call to display_data,
+        with ``constraint`` and ``proportioner`` removed.
 
-def ratio_1d(query):
-    def inner(counts, headers, stats):
-        if query is not None:
-            stats._overall = stats._tmp_table.count(query)
-        # Otherwise stats._overall was set by display_data()
-        overall = stats._overall
-        for D in counts:
-            D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
-    return inner
+        INPUT:
 
-##################################################################
-#                     Totaler strategies                         #
-##################################################################
-# We collect functions for computing totals for 2-d              #
-# statistics grids.  To use them, include them in an item on the #
-# stat_list in the ``totaler`` field.                            #
-# Some are parameterized (eg options for including proportions). #
-# Each takes as input                                            #
-#   * a grid (list of lists) of dictionaries giving counts       #
-#   * a list giving unformatted row headers                      #
-#   * a list giving unformatted row headers                      #
-#   * a StatsDisplay                                             #
-# and modifies the grid to include proportions                   #
-##################################################################
+        - ``attr`` -- a dictionary, as in the ``StatsDisplay.stats_list``.
 
-def common_link(link_list):
-    """
-    Takes a nonempty list of links to search pages and returns the link with search options
-    the intersection of the search options.  The initial part of the link must be the same for all.
-    """
-    def _split(link):
-        H, T = link.split('?')
-        T = set(T.split('&'))
-        return H, T
-    head, tails = _split(link_list[0])
-    for link in link_list[1:]:
-        H, T = _split(link)
-        if H != head:
-            raise ValueError("Cannot vary main url")
-        tails.intersection_update(T)
-    return head +'?' + '&'.join(tails)
+        OUTPUT:
 
-def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_proportions=True, corner_count=None, corner_proportion=None, include_links=True, row_total_label='Total', col_total_label='Total'):
-    if corner_count and not (row_counts and col_counts):
-        raise ValueError
-    if corner_count is None:
-        corner_count = (row_counts and col_counts)
-    def inner(grid, row_headers, col_headers, stats):
+        A function for use as a proportioner.
+        """
+        attr = dict(attr)
+        attr['base_url'] = '' # urls aren't used below
+        attr['constraint'] = {}
+        attr['proportioner'] = False
+        attr['totaler'] = False
+        def inner(grid, row_headers, col_headers, stats):
+            total_data = stats.display_data(**attr)
+            total_grid = total_data['grid']
+            total_cols = total_data['col_headers']
+            # Row headers have been zipped into the grid
+            total_rows = [r[0] for r in total_grid]
+            total_grid = [r[1] for r in total_grid]
+            # Align the total_grid with our grid
+            col_positions = [total_cols.index(col) for col in col_headers]
+            row_positions = [total_rows.index(row) for row in row_headers]
+            total_grid = [[total_grid[i][j] for j in col_positions] for i in row_positions]
+            # make the total_grid available to totalers
+            stats._total_grid = total_grid
+            for row, trow in zip(grid, total_grid):
+                for D, tD in zip(row, trow):
+                    D['proportion'] = _format_percentage(D['count'], tD['count'])
+        return inner
+
+    ##################################################################
+    #              1-d Proportioner/Totaler strategies               #
+    ##################################################################
+    # In 1-d, the function takes just headers as input, rather than  #
+    # both row and column headers.                                   #
+    ##################################################################
+
+    @classmethod
+    def recurse_1d(cls, attr):
+        attr = dict(attr)
+        attr['base_url'] = ''
+        attr['constraint'] = None
+        attr['proportioner'] = False
+        attr['totaler'] = False
+        def inner(counts, headers, stats):
+            total_counts = stats.display_data(**attr)['counts']
+            for D, tD in zip(counts, total_counts):
+                D['proportion'] = _format_percentage(D['count'], tD['count'], show_zero=True)
+        return inner
+
+    @classmethod
+    def ratio_1d(cls, query):
+        def inner(counts, headers, stats):
+            if query is not None:
+                stats._overall = stats._tmp_table.count(query)
+            # Otherwise stats._overall was set by display_data()
+            overall = stats._overall
+            for D in counts:
+                D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
+        return inner
+
+class totaler(object):
+    ##################################################################
+    #                     Totaler strategies                         #
+    ##################################################################
+    # We collect functions for computing totals for 2-d              #
+    # statistics grids.  To use them, include them in an item on the #
+    # stat_list in the ``totaler`` field.                            #
+    # Some are parameterized (eg options for including proportions). #
+    # Each takes as input                                            #
+    #   * a grid (list of lists) of dictionaries giving counts       #
+    #   * a list giving unformatted row headers                      #
+    #   * a list giving unformatted row headers                      #
+    #   * a StatsDisplay                                             #
+    # and modifies the grid to include proportions                   #
+    ##################################################################
+
+    @classmethod
+    def common_link(cls, link_list):
+        """
+        Takes a nonempty list of links to search pages and returns the link with search options
+        the intersection of the search options.  The initial part of the link must be the same for all.
+        """
+        def _split(link):
+            H, T = link.split('?')
+            T = set(T.split('&'))
+            return H, T
+        head, tails = _split(link_list[0])
+        for link in link_list[1:]:
+            H, T = _split(link)
+            if H != head:
+                raise ValueError("Cannot vary main url")
+            tails.intersection_update(T)
+        return head + '?' + '&'.join(tails)
+
+    def __init__(self, row_counts=True, row_proportions=True, col_counts=True, col_proportions=True, corner_count=None, corner_proportion=None, include_links=True, row_total_label='Total', col_total_label='Total'):
+        if corner_count and not (row_counts and col_counts):
+            raise ValueError
+        if corner_count is None:
+            corner_count = (row_counts and col_counts)
+        self.row_counts = row_counts
+        self.row_proportions = row_proportions
+        self.col_counts = col_counts
+        self.col_proportions = col_proportions
+        self.corner_count = corner_count
+        self.corner_proportion = corner_proportion
+        self.include_links = include_links
+        self.row_total_label = row_total_label
+        self.col_total_label = col_total_label
+
+    def __call__(self, grid, row_headers, col_headers, stats):
         if not grid:
             return
+        row_counts = self.row_counts
+        row_proportions = self.row_proportions
+        col_counts = self.col_counts
+        col_proportions = self.col_proportions
+        corner_count = self.corner_count
+        corner_proportion = self.corner_proportion
+        include_links = self.include_links
+        row_total_label = self.row_total_label
+        col_total_label = self.col_total_label
+
         num_cols = len(grid[0])
         recursive_prop = (stats._total_grid is not None)
         if corner_proportion is None:
@@ -257,7 +270,7 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
             col_headers.append(row_total_label)
             for i, row in enumerate(grid):
                 total = sum(D['count'] for D in row)
-                query = common_link([D['query'] for D in row]) if include_links else None
+                query = self.common_link([D['query'] for D in row]) if include_links else None
                 if recursive_prop:
                     overall = sum(D['count'] for D in stats._total_grid[i])
                     if corner_count:
@@ -276,7 +289,7 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
                 if not corner_count and i == num_cols:
                     break
                 total = sum(elt['count'] for elt in col)
-                query = common_link([elt['query'] for elt in col]) if include_links else '?'
+                query = self.common_link([elt['query'] for elt in col]) if include_links else '?'
                 if query[-1] == '?': # no common search queries
                     query = None
                 if recursive_prop:
@@ -289,7 +302,7 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
         #    # Have to add the corner specially
         #    row_headers.append(col_total_label)
         #    row = [{'count':'', 'query':None, 'proportion':''} for _ in range(num_cols)]
-        #    query = common_link([r[-1]['query'] for r in grid]) if include_links else '?'
+        #    query = self.common_link([r[-1]['query'] for r in grid]) if include_links else '?'
         #    if query[-1] == '?':
         #        query = None
         #    if recursive_prop:
@@ -303,7 +316,6 @@ def sum_totaler(row_counts=True, row_proportions=True, col_counts=True, col_prop
         #    D = {'count':total, 'query':query, 'proportion':proportion}
         #    row.append(D)
         #    grid.append(row)
-    return inner
 
 class StatsDisplay(UniqueRepresentation):
     """
@@ -517,7 +529,7 @@ class StatsDisplay(UniqueRepresentation):
             if proportioner is None or show_total:
                 self._overall = total
             if proportioner is None or isinstance(proportioner, dict):
-                proportioner = ratio_1d(proportioner)
+                proportioner = proportioners.ratio_1d(proportioner)
             if proportioner:
                 proportioner(counts, headers, self)
             else:
@@ -660,15 +672,15 @@ class StatsDisplay(UniqueRepresentation):
             if totals[0]:
                 attributes['totaler'] = {'avg':False}
             if prop == 'recurse':
-                attributes['proportioner'] = recurse_1d(attributes)
+                attributes['proportioner'] = proportioners.recurse_1d(attributes)
         elif len(cols) == 2:
-            attributes['totaler'] = sum_totaler(row_counts=totals[0], col_counts=totals[1])
+            attributes['totaler'] = totaler(row_counts=totals[0], col_counts=totals[1])
             if prop == 'recurse':
-                attributes['proportioner'] = per_grid_recurse(attributes)
+                attributes['proportioner'] = proportioners.per_grid_recurse(attributes)
             elif prop == 'rows':
-                attributes['proportioner'] = per_row_total
+                attributes['proportioner'] = proportioners.per_row_total
             elif prop == 'cols':
-                attributes['proportioner'] = per_col_total
+                attributes['proportioner'] = proportioners.per_col_total
         if prop == 'none':
             attributes['proportioner'] = False
 

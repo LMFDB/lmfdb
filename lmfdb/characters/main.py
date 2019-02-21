@@ -7,7 +7,7 @@ from flask import render_template, url_for, request, redirect
 from sage.all import gcd, randint, euler_phi
 from lmfdb.utils import to_dict, flash_error
 from lmfdb.characters.utils import url_character
-from lmfdb.WebCharacter import (
+from lmfdb.characters.web_character import (
         WebDirichletGroup,
         WebSmallDirichletGroup,
         WebDirichletCharacter,
@@ -15,8 +15,8 @@ from lmfdb.WebCharacter import (
         WebDBDirichletCharacter,
         WebDBDirichletGroup
 )
-from lmfdb.WebCharacter import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
-from lmfdb.WebNumberField import WebNumberField
+from lmfdb.characters.web_character import WebHeckeExamples, WebHeckeFamily, WebHeckeGroup, WebHeckeCharacter
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters import characters_page
 from sage.databases.cremona import class_to_int
 from lmfdb import db

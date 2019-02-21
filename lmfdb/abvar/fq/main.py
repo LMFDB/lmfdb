@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-import StringIO
-from lmfdb import db
-from lmfdb.base import app
-from lmfdb.utils import to_dict, make_logger
-from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown
-from lmfdb.search_wrapper import search_wrap
-from search_parsing import parse_newton_polygon
-from isog_class import validate_label, AbvarFq_isoclass
-from stats import AbvarFqStats
+
+import ast, re, StringIO, time
+
 from flask import flash, render_template, url_for, request, redirect, send_file
 from markupsafe import Markup
 from sage.rings.all import PolynomialRing, ZZ
+
+from lmfdb import db
+from lmfdb.base import app
+from lmfdb.utils import (
+    to_dict, make_logger,
+    parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
+    parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
+    search_wrap)
+from . import abvarfq_page
+from .search_parsing import parse_newton_polygon
+from .isog_class import validate_label, AbvarFq_isoclass
+from .stats import AbvarFqStats
 
 logger = make_logger("abvarfq")
 

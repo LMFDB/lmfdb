@@ -6,42 +6,41 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
-import math
-import re
+import math, re
 
 from flask import url_for, request
-from lmfdb.backend.encoding import Json
-
-from Lfunctionutilities import string2number, get_bread,\
-                                compute_local_roots_SMF2_scalar_valued,\
-                                names_and_urls
-from LfunctionComp import isogeny_class_cm
-
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash,\
-                              get_instances_by_trace_hash, get_lfunction_by_url,\
-                              get_instance_by_url, getHmfData, getHgmData,\
-                              getEllipticCurveData, get_multiples_by_Lhash
-from Lfunction_base import Lfunction
-
-from lmfdb import db
-from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int,\
-                        display_complex, str_to_CBF
-
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,\
-                     is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,\
-                     EllipticCurve, NumberField, RealNumber, PowerSeriesRing,\
-                     latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute
+from sage.all import (
+    ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
+    is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,
+    EllipticCurve, NumberField, RealNumber, PowerSeriesRing,
+    latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute)
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
+from lmfdb import db
+from lmfdb.backend.encoding import Json
+from lmfdb.utils import (
+    web_latex, round_to_half_int, round_CBF_to_half_int,
+    display_complex, str_to_CBF,
+    Downloader)
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.WebNumberField import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from lmfdb.downloader import Downloader
+from Lfunction_base import Lfunction
+from lmfdb.lfunctions import logger
+from Lfunctionutilities import (
+    string2number, get_bread,
+    compute_local_roots_SMF2_scalar_valued,
+    names_and_urls)
+from LfunctionComp import isogeny_class_cm
+from LfunctionDatabase import (
+    get_lfunction_by_Lhash, get_instances_by_Lhash,
+    get_instances_by_trace_hash, get_lfunction_by_url,
+    get_instance_by_url, getHmfData, getHgmData,
+    getEllipticCurveData, get_multiples_by_Lhash)
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
