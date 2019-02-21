@@ -1803,16 +1803,12 @@ class mf_hecke_traces(TracesChecker):
     base_table = db.mf_newforms
     base_constraint = {}
 
-    @overall_long
-    def check_hecke_orbit_code_newforms(self):
-        # TIME > 1200s
-        # check that hecke_orbit_code is present in mf_newforms
-        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
 
 class mf_hecke_newspace_traces(TracesChecker):
     table = db.mf_hecke_newspace_traces
     base_table = db.mf_newspaces
     base_constraint = {'traces':{'$exists':True}}
+
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys

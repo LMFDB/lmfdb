@@ -2890,10 +2890,10 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.restore_indexes()
             self._break_stats()
-            self.stats.total += search_count
-            self.stats._record_count({}, self.stats.total)
             if restat:
                 self.stats.refresh_stats(total=False)
+            self.stats.total += search_count
+            self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
     def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
