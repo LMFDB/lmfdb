@@ -44,7 +44,6 @@ ab mf_newspaces.check_dims timed out after 88.01s (too many rows over the slow t
 
 
 IMPORTANT:
-* Fix Satake angles in weight 1 (Drew)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * See if there are other checks that should be added to check_related_objects (Edgar)
 * Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
@@ -155,7 +154,6 @@ NOT CMF STUFF:
 * It would be good to have an explanation of the connections in the "related objects" links when possible
 * Complex and rational extension types for postgres
 * In create_table, make label unique and add index; port to existing tables (David)
-* enable autovacuum on postgres config
 * Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not

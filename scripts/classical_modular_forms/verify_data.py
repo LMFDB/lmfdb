@@ -1,3 +1,4 @@
+#!/usr/bin/env sage -python
 ##################################
 # WARNING ## WARNING ## WARNING ##
 ##################################
@@ -1175,7 +1176,7 @@ class mf_newforms(TableChecker):
     @overall
     def check_newspaces_overlap(self):
         # TIME > 120s
-        # check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
+        # check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim, traces, trace_display match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
         bad_labels = []
         labels = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
         bad_labels.extend([label + " (count)" for label in labels])
@@ -1769,17 +1770,13 @@ class mf_hecke_nf(TableChecker):
                     if not (isinstance(e, _integer_types) and 0 <= 2*e < m):
                         return False
                 return True
-        print "A"
         if not all(check_val(a) for a in an):
             return False
-        print "B"
         if not all(check_val(a) for a in ap):
             return False
-        print "C"
         for p, a in zip(prime_range(100), ap):
             if a != an[p-1]:
                 return False
-        print "D"
         if rec['char_orbit_index'] != 1:
             if rec.get('hecke_ring_character_values') is None:
                 return False
@@ -1806,16 +1803,12 @@ class mf_hecke_traces(TracesChecker):
     base_table = db.mf_newforms
     base_constraint = {}
 
-    @overall_long
-    def check_hecke_orbit_code_newforms(self):
-        # TIME > 1200s
-        # check that hecke_orbit_code is present in mf_newforms
-        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
 
 class mf_hecke_newspace_traces(TracesChecker):
     table = db.mf_hecke_newspace_traces
     base_table = db.mf_newspaces
     base_constraint = {'traces':{'$exists':True}}
+
 
 class mf_hecke_lpolys(TableChecker):
     table = db.mf_hecke_lpolys
@@ -2131,15 +2124,36 @@ if __name__ == '__main__':
             metavar='TABLENAME',
             type=str,
             help='the table name to run the verification tests.'+\
-                    ' Allowed values are: '+', '.join(validated_tables_txt),
-                    choices=validated_tables_txt)
+                    ' Allowed values are: '+', '.join(['all'] + validated_tables_txt),
+                    choices=['all'] + validated_tables_txt)
     parser.add_argument('typename',
             metavar='TYPE',
             type=str,
             help='the type of test to run on the chosen table.'+\
-                    ' Allowed values are: '+', '.join(test_types_txt),
-                    choices=test_types_txt)
+                    ' Allowed values are: '+', '.join(['all'] + test_types_txt),
+                    choices=['all'] + test_types_txt)
 
-    run_tests(**vars(parser.parse_args()))
+    args, parallel_args = parser.parse_known_args()
+    options = vars(args)
+    if not (options['tablename'] == 'all' or options['typename'] == 'all'):
+        run_tests(**options)
+    else:
+        #use parallel to loop over all options
+        tables = validated_tables_txt if options['tablename'] == 'all' else [options['tablename']]
+        types = test_types_txt if options['typename'] == 'all' else [options['typename']]
+
+        import tempfile, subprocess
+        with tempfile.NamedTemporaryFile() as tables_file:
+            tables_file.write('\n'.join(tables) + '\n')
+            tables_file.flush()
+            with tempfile.NamedTemporaryFile() as types_file:
+                types_file.write('\n'.join(types) + '\n')
+                types_file.flush()
+                cmd = ['parallel'] + parallel_args
+                cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
+                cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
+                print "Running: {0}".format(subprocess.list2cmdline(cmd))
+                exitcode = subprocess.call(cmd)
 
 
+        exit(exitcode)
