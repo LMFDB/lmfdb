@@ -871,6 +871,9 @@ function switch_basis(btype) {
         c, e = map(int, elabel.split('.'))
         return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
+    def embedded_title(self, m):
+        return "Embedded Newform %s.%s"%(self.label, self.conrey_from_embedding(m))
+
     def _display_re(self, x, prec, method='round'):
         if abs(x) < 10**(-prec):
             return ""

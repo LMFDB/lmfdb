@@ -774,7 +774,7 @@ class PostgresTable(PostgresBase):
                         value = Json(value)
                     cmd = "{0} = %s"
                     # For arrays, have to add an explicit typecast
-                    if coltype.endswith('[]'):
+                    if coltype.endswith('[]') and path is None:
                         cmd += '::' + coltype
                     strings.append(SQL(cmd).format(key))
                     values.append(value)

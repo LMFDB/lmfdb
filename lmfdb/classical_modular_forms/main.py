@@ -299,6 +299,11 @@ def render_newform_webpage(label):
             info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
+    if info.get('m') and newform.dim > 1 and len(info['CC_m']) == 1:
+        # Primarily for redirects from L-function pages
+        title = newform.embedded_title(info['CC_m'][0])
+    else:
+        title = newform.title
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
@@ -307,7 +312,7 @@ def render_newform_webpage(label):
                            credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
-                           title=newform.title,
+                           title=title,
                            friends=newform.friends)
 
 def render_space_webpage(label):

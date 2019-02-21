@@ -9,7 +9,7 @@ IMPORTANT:
 * Fix Satake angles in weight 1 (Drew)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * See if there are other checks that should be added to check_related_objects (Edgar)
-* Change title when single m specified, jump and make sure m box is present (David)
+* Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
