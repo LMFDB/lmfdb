@@ -7,7 +7,6 @@ OUTSTANDING:
 
 IMPORTANT:
 * Fix Satake angles in weight 1 (Drew)
-* Fix sturm bound in mf_gamma1 (Drew)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * See if there are other checks that should be added to check_related_objects (Edgar)
 * Change title when single m specified, jump and make sure m box is present (David)
