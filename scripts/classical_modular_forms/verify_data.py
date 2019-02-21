@@ -532,7 +532,7 @@ class TableChecker(object):
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=cosntraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values = [value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
