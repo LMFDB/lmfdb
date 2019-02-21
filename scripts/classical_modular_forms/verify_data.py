@@ -702,12 +702,23 @@ class mf_newspaces(TableChecker):
         # TIME about 5s
         # check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
         return accumulate_failures(
+                self.check_non_null(
+                    ['traces'],
+                        self._box_query(box, {'dim':{'$gt':0}}))
+                   for box in db.mf_boxes.search({'straces':True}))
+
+    @overall
+    def check_box_traces(self):
+        # TIME about ??s
+        # check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
+        return accumulate_failures(
                 self.check_non_null([
                         'traces',
                         'trace_bound',
                         'num_forms',
                         'hecke_orbit_dims'], self._box_query(box, {'dim':{'$gt':0}}))
-                   for box in db.mf_boxes.search({'straces':True}))
+                   for box in db.mf_boxes.search({'traces':True}))
+
 
     @overall
     def check_char_orbit(self):
