@@ -1430,7 +1430,7 @@ class mf_newforms(TableChecker):
 
     #### slow ####
 
-    @slow(projection=['self_twist_discs', 'inner_twists'])
+    @slow(constraint={'inner_twists':{'$exists':True}}, projection=['self_twist_discs', 'inner_twists'])
     def check_self_twist_disc(self, rec):
         # check that self_twist_discs = is compatible with the last entries of inner_twists.
         return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None and elt[6] != 1])
