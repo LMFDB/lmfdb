@@ -7,6 +7,7 @@ OUTSTANDING VERIFICATIONS:
 + Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
   - 101.7.f, box = {u'nonzero_newspace_count': 270662, u'Nmax': 4000, u'newspace_count': 270662, u'embeddings': False, u'lfunctions': False, u'Nmin': 101, u'Nk_count': 13585, u'embedding_count': 2133008444L, u'Nk2max': 40000, u'Nk2min': 4001, u'kmax': 12, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 13585, u'traces': False, u'straces': True}
   - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
+  Note: this is expected, it is only when traces is set (not straces) that we should expect trace_bound, num_forms, hecke_orbit_dims to be set, which is not the case for the two spaces above, we just need to fix the verification.
 + Mismatched mf_gamma1 counts (13587 != 13585 and 1526 != 1475)
 + mf_newforms.check_embeddings_count: 23.41.d.a
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
