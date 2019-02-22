@@ -62,9 +62,7 @@ IMPORTANT:
  - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Fix the knowl mf.elliptic.lfunction: not only trivial character now so f.e. needs fixing. (Drew)
-* Prove self-twists for 1 newform where it is currently not proved (Drew)
 * Compute L-functions:
-  - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 
 FINAL CHECKS:
