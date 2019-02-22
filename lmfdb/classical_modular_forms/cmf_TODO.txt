@@ -47,7 +47,6 @@ Make embedded label work in jump box
 
 IMPORTANT:
 * Add eg descriptions for embedding inputs (David)
-* Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
 * Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - add capability to test a single form (David)
@@ -59,8 +58,6 @@ IMPORTANT:
  - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * Fix the knowl mf.elliptic.lfunction: not only trivial character now so f.e. needs fixing. (Drew)
-* Compute L-functions:
-  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
@@ -68,6 +65,8 @@ FINAL CHECKS:
 * Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
+* Compute L-functions:
+  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 * Prove all analytic ranks (Drew)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
 * code snippets for form and space pages in Sage and Pari.
