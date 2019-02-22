@@ -60,7 +60,6 @@ IMPORTANT:
  - check inner_twists through ap data (if feasible)
  - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* Fix the knowl mf.elliptic.lfunction: not only trivial character now so f.e. needs fixing. (Drew)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
