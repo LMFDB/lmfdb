@@ -230,15 +230,9 @@ def random_form():
 # Add routing for specifying an initial segment of level, weight, etc.
 # Also url_for_...
 
-def render_newform_webpage(label):
-    try:
-        newform = WebNewform.by_label(label)
-    except (KeyError,ValueError) as err:
-        return abort(404, err.args)
-    info = to_dict(request.args)
-    info['format'] = info.get('format', 'embed')
+def parse_n(info, newform, primes_only):
     p, maxp = 2, 10
-    if info['format'] in ['satake', 'satake_angle']:
+    if primes_only:
         while p <= maxp:
             if newform.level % p == 0:
                 maxp = next_prime(maxp)
@@ -257,7 +251,7 @@ def render_newform_webpage(label):
     if min(info['CC_n']) < 2:
         errs.append(r"We only show \(a_n\) with n at least 2")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 2]
-    if info['format'] in ['satake', 'satake_angle']:
+    if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
             errs.append("No good primes within n range; resetting to default")
@@ -265,6 +259,10 @@ def render_newform_webpage(label):
     elif len(info['CC_n']) == 0:
         errs.append("No n in specified range; restting to default")
         info['CC_n'] = range(maxp+1)
+    return errs
+
+def parse_m(info, newform):
+    errs = []
     maxm = min(newform.dim, 20)
     info['default_mrange'] = '1-%s'%maxm
     mrange = info.get('m', '1-%s'%maxm)
@@ -285,13 +283,28 @@ def render_newform_webpage(label):
     elif min(info['CC_m']) < 1:
         errs.append("Embeddings are labeled by positive integers")
         info['CC_m'] = [m for m in info['CC_m'] if m >= 1]
+    return errs
+
+def parse_prec(info):
     try:
         info['emb_prec'] = int(info.get('prec',6))
         if info['emb_prec'] < 1 or info['emb_prec'] > 15:
             raise ValueError
     except (ValueError, TypeError):
         info['emb_prec'] = 6
-        errs.append("<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)")
+        return ["<span style='color:black'>Precision</span> must be a positive integer, at most 15 (for higher precision, use the download button)"]
+    return []
+
+def render_newform_webpage(label):
+    try:
+        newform = WebNewform.by_label(label)
+    except (KeyError,ValueError) as err:
+        return abort(404, err.args)
+    info = to_dict(request.args)
+    info['format'] = info.get('format', 'embed')
+    errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
+    errs.extend(parse_m(info, newform))
+    errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if newform.cqexp_prec != 0:
         if max(info['CC_n']) >= newform.cqexp_prec:
@@ -299,11 +312,6 @@ def render_newform_webpage(label):
             info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
-    if info.get('m') and newform.dim > 1 and len(info['CC_m']) == 1:
-        # Primarily for redirects from L-function pages
-        title = newform.embedded_title(info['CC_m'][0])
-    else:
-        title = newform.title
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
@@ -312,7 +320,36 @@ def render_newform_webpage(label):
                            credit=credit(),
                            bread=newform.bread,
                            learnmore=learnmore_list(),
-                           title=title,
+                           title=newform.title,
+                           friends=newform.friends)
+
+def render_embedded_newform_webpage(newform_label, conrey_label):
+    try:
+        newform = WebNewform.by_label(newform_label)
+    except (KeyError,ValueError) as err:
+        return abort(404, err.args)
+    info = to_dict(request.args)
+    info['format'] = info.get('format', 'embed')
+    errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
+    m = int(newform.embedding_from_conrey(conrey_label))
+    info['CC_m'] = [m]
+    errs.extend(parse_prec(info))
+    newform.setup_cc_data(info)
+    if newform.cqexp_prec != 0:
+        if max(info['CC_n']) >= newform.cqexp_prec:
+            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+            info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
+    if errs:
+        flash(Markup("<br>".join(errs)), "error")
+    return render_template("cmf_embedded_newform.html",
+                           info=info,
+                           newform=newform,
+                           properties2=newform.properties,
+                           downloads=newform.downloads,
+                           credit=credit(),
+                           bread=newform.bread,
+                           learnmore=learnmore_list(),
+                           title=newform.embedded_title(m),
                            friends=newform.friends)
 
 def render_space_webpage(label):
@@ -380,7 +417,7 @@ def by_url_space_conreylabel(level, weight, conrey_index):
 
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
-    label = str(level)+"."+str(weight)+"."+char_orbit_label+"."+hecke_orbit
+    label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
@@ -389,14 +426,14 @@ def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-# From L-functions
+# Embedded modular form
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     assert conrey_index > 0
     assert embedding > 0
-    return redirect(url_for(".by_url_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, m=".".join(map(str, [conrey_index,embedding]))),  code=301)
-
-
+    newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+    conrey_label = ".".join(map(str, [conrey_index, embedding]))
+    return render_embedded_newform_webpage(newform_label, conrey_label)
 
 def url_for_label(label):
     slabel = label.split(".")

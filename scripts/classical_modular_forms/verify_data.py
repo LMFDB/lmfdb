@@ -80,6 +80,7 @@ class speed_decorator(object):
     """
     disabled = False # set to True to skip this check
     max_failures = 1 # maximum number of failures to show
+    ratio = 1 # ratio of rows to run this test on
     def __init__(self, f=None, **kwds):
         self._kwds = kwds
         if f is not None:
@@ -122,14 +123,13 @@ class slow(per_row):
     """
     A per-row check that is slow to run
     """
-    ratio = 0.1 # ratio of rows to run this test on
+    ratio = 0.1 # slow tests are by default run on 10% of rows
     timeout = 3600
 
 class fast(per_row):
     """
     A per-row check that is fast to run
     """
-    ratio = 1 # ratio of rows to run this test on
     timeout = 300
 
 class overall(one_query):
@@ -322,7 +322,7 @@ class TableChecker(object):
         join2 = [self._make_sql(j, "t2") for j in join2]
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_query(self, condition, constraint={}, values=[], table=None):
+    def _run_query(self, condition, constraint={}, values=[], table=None, ratio=1):
         """
         INPUT:
 
@@ -330,9 +330,12 @@ class TableChecker(object):
         - ``constraint`` -- a dictionary, as passed to the search method, or an SQL object
         """
         if table is None:
-            table = Identifier(self.table.search_table)
-        elif isinstance(table, basestring):
-            table = Identifier(table)
+            table = self.table.search_table
+        if isinstance(table, basestring):
+            if ratio == 1:
+                table = Identifier(table)
+            else:
+                table = SQL("{0} TABLESAMPLE SYSTEM({1})").format(Identifier(table), Literal(ratio))
         label_col = Identifier(self.label_col)
 
         # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
@@ -894,7 +897,7 @@ class mf_newspaces(TableChecker):
         return rec['sturm_bound'] == sturm_bound0(rec['level'], rec['weight'])
 
 
-    @slow(ratio=0.01, report_slow=1, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
+    @slow(ratio=0.01, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
     def check_Skchi_dim_formula(self, rec):
         # for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
         # sample: dimension_new_cusp_forms(DirichletGroup(100).1^2,4)
@@ -905,7 +908,7 @@ class mf_newspaces(TableChecker):
             dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
         return dimension_new_cusp_forms(dirchar, rec['weight']) == rec['relative_dim']
 
-    @slow(constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
+    @slow(report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
     def check_dims(self, rec):
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
         # Work around a bug in sage for Dirichlet characters in level 1
@@ -1318,7 +1321,7 @@ class mf_newforms(TableChecker):
                 # FIXME: coeffs is jsonb instead of numeric[]
                 self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
 
-    @overall_long(disabled=True)
+    @overall_long
     def check_artin_field(self):
         # TIME > 600s
         # if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
@@ -1441,7 +1444,7 @@ class mf_newforms(TableChecker):
 
     #### slow ####
 
-    @slow(projection=['self_twist_discs', 'inner_twists'])
+    @slow(constraint={'inner_twists':{'$exists':True}}, projection=['self_twist_discs', 'inner_twists'])
     def check_self_twist_disc(self, rec):
         # check that self_twist_discs = is compatible with the last entries of inner_twists.
         return set(rec['self_twist_discs']) == set([elt[6] for elt in rec['inner_twists'] if elt[6] is not None and elt[6] != 1])
@@ -1522,8 +1525,7 @@ class mf_newforms(TableChecker):
     def check_self_dual_by_poly(self, rec):
         # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
         f = self.ZZx(rec['field_poly'])
-        K = NumberField(f, 'a')
-        return (rec.get('is_self_dual') == K.is_totally_real())
+        return (rec.get('is_self_dual') == f.is_real_rooted())
 
     #@slow(constraint={'is_self_dual':{'$exists':True}, 'field_poly':None}, projection=['hecke_orbit_code', 'is_self_dual'])
     #def check_self_dual_by_embeddings_old(self, rec):
@@ -1570,11 +1572,11 @@ class mf_newforms(TableChecker):
 
     #### char_dir_orbits ####
 
-    @slow(disabled = True)
-    def check_(self, rec):
-        # TODO - use zipped table
-        # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
-        return True
+    #@slow(disabled = True)
+    #def check_inner_twist_character(self, rec):
+    #    # TODO - use zipped table
+    #    # check that each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity
+    #    return True
 
     #### mf_hecke_traces ####
 
@@ -1664,11 +1666,11 @@ class mf_newforms(TableChecker):
             dbroots.pop(best_i)
         return True
 
-    @slow(disabled=True)
-    def check_an_embedding(self, rec):
-        # TODO - zipped table
-        # When we have exact an, check that the inexact values are correct
-        pass
+    #@slow(disabled=True)
+    #def check_an_embedding(self, rec):
+    #    # TODO - zipped table
+    #    # When we have exact an, check that the inexact values are correct
+    #    pass
 
     @overall_long
     def check_traces(self):
@@ -1920,12 +1922,12 @@ class mf_hecke_cc(TableChecker):
         # check that lfunction_label is consistent with conrey_lebel, embedding_index
         return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('lfunction_label'), Identifier('conrey_index'), Identifier('embedding_index')))
 
-    @overall_long(disabled=True, timeout=36000)
+    @overall_long(timeout=36000)
     def check_amn(self):
         # Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
         pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
         query = SQL("NOT ({0})").format(SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs))
-        return self._run_query(query)
+        return self._run_query(query, ratio=0.1)
 
     @overall_long
     def check_angles_interval(self):
@@ -1944,11 +1946,11 @@ class mf_hecke_cc(TableChecker):
                 return False
         return True
 
-    @slow(disabled=True)
-    def check_ap2(self, rec):
-        # TODO - zipped tables
-        # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
-        pass
+    #@slow(disabled=True)
+    #def check_ap2(self, rec):
+    #    # TODO - zipped tables
+    #    # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
+    #    pass
 
     @slow
     def check_ap2_slow(self, rec):
@@ -2093,13 +2095,17 @@ class char_dir_values(TableChecker):
             adjust2 = 1
         else:
             adjust2 = 0
-        ngens = len(N.factor()) + adjust2
+        if N == 1:
+            # The character stores a value in the case N=1
+            ngens = 1
+        else:
+            ngens = len(N.factor()) + adjust2
         vals = rec['values']
         val_gens = rec['values_gens']
         val_gens_dict = dict(val_gens)
         if len(vals) != min(12, euler_phi(N)) or len(val_gens) != ngens:
             return False
-        if vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]:
+        if N > 2 and (vals[0][0] != N-1 or vals[1][0] != 1 or vals[1][1] != 0 or vals[0][1] not in [0, rec['order']//2]):
             return False
         if any(N.gcd(g) > 1 for g, gval in val_gens+vals):
             return False
