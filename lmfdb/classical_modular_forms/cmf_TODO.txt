@@ -9,7 +9,9 @@ OUTSTANDING VERIFICATIONS:
   - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
   Note: this is expected, it is only when traces is set (not straces) that we should expect trace_bound, num_forms, hecke_orbit_dims to be set, which is not the case for the two spaces above, we just need to fix the verification.
 + Mismatched mf_gamma1 counts (13587 != 13585 and 1526 != 1475)
+  The mismatch is due to checking mf_gamma1 dim > 100 when it should check that max(newspace_dims) > 100.
 + mf_newforms.check_embeddings_count: 23.41.d.a
+  These are all present now.
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
 Bugs:
