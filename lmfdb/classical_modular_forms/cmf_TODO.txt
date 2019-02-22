@@ -119,6 +119,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* move names_and_urls to somewhere else? fix the circular import in utils
 * add documentation for set_sort
 * list the analytic conductor on the L-function pages
 * remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
