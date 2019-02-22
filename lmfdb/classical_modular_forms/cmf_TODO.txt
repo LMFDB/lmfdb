@@ -24,8 +24,6 @@ Disabled:
 + mf_newforms.check_inner_twist_character disabled (comment out)
 
 Expected failures:
-+ mf_newforms.check_analytic_rank_set: 24.39.h.c, 24.37.h.c, 23.41.d.a, 23.39.d.a
-+ mf_newforms.check_self_twist_proved: 3396.2.h.a
 + (mf_newforms.check_analytic_rank_proved: 1158 failures)
 
 Timeouts:
