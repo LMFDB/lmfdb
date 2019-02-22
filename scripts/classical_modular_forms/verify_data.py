@@ -1404,13 +1404,12 @@ class mf_newforms(TableChecker):
 
     @overall_long
     def check_self_dual_by_embeddings(self):
+        # TIME > 1300s
         # if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual
         # I expect this to take about 3/4h
         # we a create a temp table as we can't use aggregates under WHERE
         db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc t1, mf_newforms t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
         query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
-        # alternative query, but most likely equally slow
-        #query = SQL("WITH foo AS (SELECT t1.label, t1.hecke_orbit_code FROM mf_newforms t1 WHERE t1.field_poly is NULL AND t1.is_self_dual) SELECT foo.label FROM foo, mf_hecke_cc t2 WHERE 0 != all( t2.an_normalized[:][2:2] ) LIMIT %s")
         cur = db._execute(query, [self._cur_limit])
         return [rec[0] for rec in cur]
 
@@ -1951,6 +1950,31 @@ class mf_hecke_cc(TableChecker):
         # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
         pass
 
+    @slow
+    def check_ap2_slow(self, rec):
+        # Check a_{p^2} = a_p^2 - chi(p) for primes up to 31
+        ls = rec['lfunction_label'].split('.')
+        level, weight, char = map(int, [ls[0], ls[1], ls[-2]])
+        char = DirichletGroup_conrey(level, CC)[chi]
+        for p in prime_range(31+1):
+            if level % p != 0:
+                # a_{p^2} = a_p^2 - chi(p)
+                charval = CC(2*char.logvalue(int(p)) * CC.pi()*CC.gens()[0]).exp()
+            else:
+                charval = 0
+            if  (CC(*Z[p**2 - 1]) - (CC(*Z[p-1])**2 - charval)).abs() > 1e-13:
+                return False
+        return True
+
+    @slow
+    def check_amn_slow(self, rec):
+        Z = [0] + [CC(*elt) for elt in rec['an_normalized']
+        for pp in prime_powers(len(Z)-1):
+            for k in range(1, (len(Z) - 1)//pp + 1):
+                if gcd(k, pp) == 1:
+                    if (Z[pp*k] - Z[pp]*Z[k]).abs() > 1e-13:
+                        return False
+        return True
 
 
 
