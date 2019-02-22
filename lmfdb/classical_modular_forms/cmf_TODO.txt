@@ -1,29 +1,27 @@
 CRITICAL (BUGS):
+* Server error on 1364.1.h.a, n=2-1000
+* Type in an invalid conrey label into Embedding box gives server error
+* Server error for embedded label in url
 
 OUTSTANDING VERIFICATIONS:
 + Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
   - 101.7.f, box = {u'nonzero_newspace_count': 270662, u'Nmax': 4000, u'newspace_count': 270662, u'embeddings': False, u'lfunctions': False, u'Nmin': 101, u'Nk_count': 13585, u'embedding_count': 2133008444L, u'Nk2max': 40000, u'Nk2min': 4001, u'kmax': 12, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 13585, u'traces': False, u'straces': True}
   - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
 + Mismatched mf_gamma1 counts (13587 != 13585 and 1526 != 1475)
-* mf_hecke_cc.check_angles_interval: 1364.1.h.a.1363.3
 + mf_newforms.check_embeddings_count: 23.41.d.a
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
 Bugs:
-* char_dir_values.check_character_values has a bug (fails on 1.1)
 + mf_newforms.check_projective_field has a bug (comparing with nf_fields numeric[] <> jsonb)
 + mf_newforms.check_self_twist_disc had a bug (fixed but not rerun)
 
 Disabled:
-+ mf_newforms.check_artin_field disabled
-+ mf_hecke_cc.check_ap2 disabled
-+ (mf_hecke_cc.check_amn disabled)
-+ mf_newspaces.check_sum_AL_dims disabled
-+ mf_newforms.check_an_embedding disabled
-+ mf_newforms.check_self_dual_by_poly disabled
-+ mf_newforms.check_ disabled (each level M in inner twists divides the level and that M.o identifies a character orbit in char_dir_orbits with the listed parity)
-Proposed disabled:
-
++ mf_hecke_cc.check_ap2 disabled (comment out)
++ mf_hecke_cc.check_amn disabled (re-enable after adding a TABLESAMPLE clause)
++ mf_newspaces.check_sum_AL_dims disabled (re-enable and optimize)
++ mf_newforms.check_an_embedding disabled (comment out)
++ mf_newforms.check_self_dual_by_poly disabled (try re-enabling, add degree limit, use root_unitary)
++ mf_newforms.check_inner_twist_character disabled (comment out)
 
 Expected failures:
 + mf_newforms.check_analytic_rank_set: 24.39.h.c, 24.37.h.c, 23.41.d.a, 23.39.d.a
@@ -42,12 +40,20 @@ ab mf_newspaces.check_dims timed out after 88.01s (too many rows over the slow t
  b mf_hecke_cc.check_embedding_m timed out after 300.19s
  b mf_newforms.check_roots_are_roots timed out after 57.21s
 
+Embedded modular form:
+Change q-expansion to complex, options for 10, 100, 1000 coefficients
+Related objects links to L-function, newform, newspace
+Hide inner twists and Hecke kernels
+Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
+Make embedded label work in jump box
 
 IMPORTANT:
+* Run amn and ap2 tests for 24.37.h.c and 24.39.h.c (Edgar)
+* Add eg descriptions for embedding inputs (David)
 * Figure out discrepancies in counts between mf_boxes and mf_gamma1 (Drew)
-* See if there are other checks that should be added to check_related_objects (Edgar)
 * Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
+ - add capability to test a single form (David)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
  - see scripts/verify_data.py
  - check that we have all the L-functions that we expect (Edgar)
@@ -58,7 +64,6 @@ IMPORTANT:
 * Fix the knowl mf.elliptic.lfunction: not only trivial character now so f.e. needs fixing. (Drew)
 * Prove self-twists for 1 newform where it is currently not proved (Drew)
 * Compute L-functions:
-  - 23.39.d.a and 23.41.d.a (CC ap data ready for 23.39.d.a, Edgar, still waiting on 23.41.d.a, Drew)
   - 24.37.h.c and 24.39.h.c (CC ap data ready for 24.37.b.c, Edgar, still waiting on 24.39.h.c, Drew)
   - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
 
