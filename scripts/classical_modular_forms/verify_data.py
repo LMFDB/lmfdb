@@ -15,8 +15,12 @@ except NameError:
 from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 from types import MethodType
 from collections import defaultdict
-from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from sage.all import Integer, prod, floor, mod, euler_phi, prime_pi, cached_function, ZZ, RR, ComplexField, Gamma1, Gamma0, PolynomialRing, dimension_new_cusp_forms, dimension_eis, prime_range, dimension_cusp_forms, dimension_modular_forms, kronecker_symbol, NumberField, gap, psi, infinity
+from lmfdb.utils import names_and_urls
+from sage.all import (Integer, prod, floor, mod, euler_phi, prime_pi,
+        cached_function, ZZ, RR, ComplexField, Gamma1, Gamma0, PolynomialRing,
+        dimension_new_cusp_forms, dimension_eis, prime_range,
+        dimension_cusp_forms, dimension_modular_forms, kronecker_symbol,
+        gap, psi, infinity, CC, gcd)
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from datetime import datetime
 
@@ -1946,18 +1950,14 @@ class mf_hecke_cc(TableChecker):
                 return False
         return True
 
-    #@slow(disabled=True)
-    #def check_ap2(self, rec):
-    #    # TODO - zipped tables
-    #    # Check a_{p^2} = a_p^2 - chi(p)*p^{k-1}a_p for primes up to 31
-    #    pass
 
-    @slow
+    @slow(ratio=0.001, projection=['lfunction_label', 'an_normalized'])
     def check_ap2_slow(self, rec):
         # Check a_{p^2} = a_p^2 - chi(p) for primes up to 31
         ls = rec['lfunction_label'].split('.')
-        level, weight, char = map(int, [ls[0], ls[1], ls[-2]])
+        level, weight, chi = map(int, [ls[0], ls[1], ls[-2]])
         char = DirichletGroup_conrey(level, CC)[chi]
+        Z = rec['an_normalized']
         for p in prime_range(31+1):
             if level % p != 0:
                 # a_{p^2} = a_p^2 - chi(p)
@@ -1968,10 +1968,10 @@ class mf_hecke_cc(TableChecker):
                 return False
         return True
 
-    @slow
+    @slow(ratio=0.001, projection=['lfunction_label', 'an_normalized'])
     def check_amn_slow(self, rec):
-        Z = [0] + [CC(*elt) for elt in rec['an_normalized']
-        for pp in prime_powers(len(Z)-1):
+        Z = [0] + [CC(*elt) for elt in rec['an_normalized']]
+        for pp in prime_range(len(Z)-1):
             for k in range(1, (len(Z) - 1)//pp + 1):
                 if gcd(k, pp) == 1:
                     if (Z[pp*k] - Z[pp]*Z[k]).abs() > 1e-13:

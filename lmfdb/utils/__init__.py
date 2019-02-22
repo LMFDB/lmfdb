@@ -27,7 +27,8 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template', 's
            'search_wrap',
            'Downloader',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
-           'Configuration']
+           'Configuration',
+           'names_and_urls', 'name_and_object_from_url']
 
 from flask import request, make_response, flash, url_for, render_template, send_file
 
@@ -61,3 +62,4 @@ from .search_wrapper import search_wrap
 from .downloader import Downloader
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
+from .names_and_urls import names_and_urls, name_and_object_from_url

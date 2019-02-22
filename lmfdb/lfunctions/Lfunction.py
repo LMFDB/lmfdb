@@ -21,7 +21,8 @@ from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, round_to_half_int, round_CBF_to_half_int,
     display_complex, str_to_CBF,
-    Downloader)
+    Downloader,
+    names_and_urls)
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
@@ -33,8 +34,7 @@ from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from Lfunctionutilities import (
     string2number, get_bread,
-    compute_local_roots_SMF2_scalar_valued,
-    names_and_urls)
+    compute_local_roots_SMF2_scalar_valued,)
 from LfunctionComp import isogeny_class_cm
 from LfunctionDatabase import (
     get_lfunction_by_Lhash, get_instances_by_Lhash,
