@@ -176,7 +176,8 @@ class WebNewform(object):
             self.hecke_ring_cyclotomic_generator = char_values['order']
             self.has_exact_qexp = False
         # sort by the generators
-        self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
+        if self.hecke_ring_character_values:
+            self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
