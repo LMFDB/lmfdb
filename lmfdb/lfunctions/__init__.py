@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb.app import app
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 from flask import Blueprint
 
 l_function_page = Blueprint("l_functions", __name__, template_folder='templates', static_folder="static")

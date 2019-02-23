@@ -2,7 +2,8 @@
 from flask import url_for
 from lmfdb import db
 from lmfdb.app import app
-from lmfdb.utils import comma, make_logger
+from lmfdb.utils import comma
+from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from sage.misc.cachefunc import cached_method
 

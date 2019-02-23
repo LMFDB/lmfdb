@@ -11,13 +11,8 @@ start this via $ sage -python website.py --port <portnumber>
 add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
 """
 
-import logging, os, time
-
-from flask import g, render_template, request, make_response, redirect, url_for, current_app, abort
-
-
+from lmfdb.logger import info
 from lmfdb.app import app
-from lmfdb.utils.config import Configuration
 
 # Importing the following top-level modules adds blueprints
 # to the app and imports further modules to make them functional
@@ -100,7 +95,8 @@ from inventory_app.inventory_app import inventory_app
 assert inventory_app
 
 def main():
-    logging.info("main: ...done.")
+    info("main: ...done.")
+    from lmfdb.utils.config import Configuration
     flask_options = Configuration().get_flask();
 
     if "profiler" in flask_options and flask_options["profiler"]:

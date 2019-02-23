@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-import sage
-from sage.all import gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari
-import yaml, os
-from sage.misc.cachefunc import cached_function
-from lmfdb.utils import make_logger, web_latex, coeff_to_poly, pol_to_html,\
-        display_multiset, factor_base_factor, factor_base_factorization_latex
-from flask import url_for
 from collections import Counter
-from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
+import os, yaml
+
+from flask import url_for
+from sage.all import (
+    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap,
+    AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, cached_function)
+
 from lmfdb import db
+from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
+        display_multiset, factor_base_factor, factor_base_factorization_latex)
+from lmfdb.logger import make_logger
+from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -160,7 +163,7 @@ def formatfield(coef):
     thefield = WebNumberField.from_coeffs(coef)
     if thefield._data is None:
         deg = len(coef) - 1
-        mypol = sage.all.latex(coeff_to_poly(coef))
+        mypol = latex(coeff_to_poly(coef))
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
         return mypol
@@ -377,7 +380,7 @@ class WebNumberField:
         subfield = self.from_coeffs(coef)
         if subfield._data is None:
             deg = len(coef) - 1
-            mypol = sage.all.latex(coeff_to_poly(coef))
+            mypol = latex(coeff_to_poly(coef))
             mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
             mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">Deg %d</a>' % (mypol,deg)
             return [mypol, coefmult[1]]

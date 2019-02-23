@@ -3,7 +3,7 @@
 import re
 from lmfdb import db
 from sage.all import UniqueRepresentation, cached_method
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 
 logger = make_logger("hgcwa")
 

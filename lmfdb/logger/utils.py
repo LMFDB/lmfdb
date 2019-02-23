@@ -2,7 +2,7 @@
 #  logging utilities
 ################################################################################
 
-import logging
+import logging, os
 
 class LmfdbFormatter(logging.Formatter):
     """
@@ -53,7 +53,7 @@ def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     to true, the corresponding lines will be bold.
     """
     import flask
-    from lmfdb.logging.start import get_logfocus
+    from .start import get_logfocus
     logfocus = get_logfocus()
     if type(bp_or_name) == flask.Blueprint:
         name = bp_or_name.name
@@ -83,6 +83,3 @@ def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
         for elt in extraHandlers:
             l.addHandler(elt)
     return l
-
-def timestamp():
-    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

@@ -65,7 +65,8 @@ from sage.all import gcd, Rational, power_mod, Integers, gp, xsrange, cached_met
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.utils import make_logger, web_latex_split_on_pm
+from lmfdb.utils import web_latex_split_on_pm
+from lmfdb.logger import make_logger
 from lmfdb.nfutils.psort import ideal_label, ideal_from_label
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters.HeckeCharacters import HeckeChar, RayClassGroup

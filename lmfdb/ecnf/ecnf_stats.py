@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb.app import app
-from lmfdb.utils import comma, make_logger
+from lmfdb.utils import comma
+from lmfdb.logger import make_logger
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb import db
 

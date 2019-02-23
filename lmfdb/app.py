@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import os
+import os, time
 
-import yaml
-from flask import Flask, g, render_template, url_for, abort
+from flask import Flask, g, render_template, request, make_response, redirect, url_for, current_app, abort
 from sage.env import SAGE_VERSION
 # acknowledgement page, reads info from CONTRIBUTORS.yaml
 
-from lmfdb.logging import timestamp
+from lmfdb.logger import logger_file_handler, critical
 from lmfdb.homepage import load_boxes, contribs
 
 ############################
@@ -28,9 +27,15 @@ def is_debug_mode():
 def set_beta_state():
     g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
 
+def is_beta():
+    from flask import g
+    return g.BETA
+
 ############################
 # Global app configuration #
 ############################
+
+app.logger.addHandler(logger_file_handler())
 
 # If the debug toolbar is installed then use it
 if app.debug:
@@ -184,6 +189,9 @@ def redirect_nonwww():
     if urlparts.netloc == 'lmfdb.org':
         replaced = urlparts._replace(netloc='www.lmfdb.org')
         return redirect(urlunparse(replaced), code=301)
+
+def timestamp():
+    return '[%s UTC]'%time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
 
 @app.errorhandler(404)
 def not_found_404(error):
@@ -377,7 +385,7 @@ def root_static_file(name):
         fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", name)
         if os.path.exists(fn):
             return open(fn).read()
-        logging.critical("root_static_file: file %s not found!" % fn)
+        critical("root_static_file: file %s not found!" % fn)
         return abort(404, 'static file %s not found.' % fn)
     app.add_url_rule('/%s' % name, 'static_%s' % name, static_fn)
 map(root_static_file, ['favicon.ico'])

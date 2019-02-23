@@ -7,7 +7,7 @@ assert housekeeping # silence pyflakes
 
 from lmfdb.app import app
 
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 from distutils.version import StrictVersion
 
 

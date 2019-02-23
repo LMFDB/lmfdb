@@ -2,8 +2,7 @@
 
 import flask
 
-import lmfdb
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 from lmfdb.app import app
 
 MF_TOP = "Modular Forms"

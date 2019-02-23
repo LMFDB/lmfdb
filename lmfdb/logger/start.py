@@ -1,6 +1,6 @@
 from logging import (FileHandler, getLogger, StreamHandler, Formatter,
-                     WARNING, DEBUG, INFO,
-                     info)
+                     INFO, WARNING, DEBUG,
+                     info, warning)
 
 from sage.version import version as sage_version
 
@@ -8,12 +8,14 @@ from .utils import LmfdbFormatter
 
 # logfocus
 logfocus = None
-def set_logfocus(lf):
-    global logfocus
-    logfocus = lf
-
 def get_logfocus():
+    # set by start_logging
     return logfocus
+
+file_handler = None
+def logger_file_handler():
+    # set by start_logging
+    return file_handler
 
 LMFDB_SAGE_VERSION = '7.1'
 def check_sage_version():
@@ -21,15 +23,17 @@ def check_sage_version():
         warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***"%(sage_version,LMFDB_SAGE_VERSION))
 
 def start_logging():
+    global logfocus, file_handler
     from lmfdb.utils.config import Configuration
     config = Configuration()
     logging_options = config.get_logging()
-    file_handler = FileHandler(logging_options['logfile'])
 
+    file_handler = FileHandler(logging_options['logfile'])
     file_handler.setLevel(WARNING)
+
     if 'logfocus' in logging_options:
-        set_logfocus(logging_options['logfocus'])
-        getLogger(get_logfocus()).setLevel(DEBUG)
+        logfocus = logging_options['logfocus']
+        getLogger(logfocus).setLevel(DEBUG)
 
     root_logger = getLogger()
     root_logger.setLevel(INFO)
@@ -40,7 +44,6 @@ def start_logging():
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
 
-    app.logger.addHandler(file_handler)
     info("Configuration = %s" % config.get_all())
     check_sage_version()
 

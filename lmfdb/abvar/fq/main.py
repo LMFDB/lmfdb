@@ -8,8 +8,9 @@ from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
 from lmfdb.app import app
+from lmfdb.logger import make_logger
 from lmfdb.utils import (
-    to_dict, make_logger,
+    to_dict,
     parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
     parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap)
