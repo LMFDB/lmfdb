@@ -1,4 +1,5 @@
 #!/usr/bin/env sage -python
+# -*- coding: utf-8 -*-
 ##################################
 # WARNING ## WARNING ## WARNING ##
 ##################################
