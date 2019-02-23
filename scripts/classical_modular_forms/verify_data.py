@@ -952,7 +952,7 @@ class mf_gamma1(TableChecker):
             if 'Dmin' in box:
                 query['newspace_dims']['$maxgte'] = box['Dmin']
             if 'Dmax' in box:
-                query['newspace_dims']['$maxlte'] = box['Dmax']
+                query['newspace_dims']['$anylte'] = box['Dmax']
 
             return query
         return accumulate_failures(self.check_count(box['Nk_count'], make_query(box))

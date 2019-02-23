@@ -641,8 +641,8 @@ class PostgresTable(PostgresBase):
             # FIXME, we should do recursion with _parse_special
             elif key == '$maxgte':
                 cmd = SQL("array_max({0}) >= %s")
-            elif key == '$maxlte':
-                cmd = SQL("array_max({0}) <= %s")
+            elif key == '$anylte':
+                cmd = SQL("%s >= ANY({0})")
             elif key == '$in':
                 if force_json:
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
