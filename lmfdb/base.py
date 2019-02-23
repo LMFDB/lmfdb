@@ -123,14 +123,16 @@ def urlencode(kwargs):
 def git_infos():
     try:
         from subprocess import Popen, PIPE
+        # cwd should be the root of git repo
+        cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..")
         git_rev_cmd = '''git rev-parse HEAD'''
         git_date_cmd = '''git show --format="%ci" -s HEAD'''
         git_contains_cmd = '''git branch --contains HEAD'''
         git_reflog_cmd = '''git reflog -n5'''
-        rev = Popen([git_rev_cmd], shell=True, stdout=PIPE).communicate()[0]
-        date = Popen([git_date_cmd], shell=True, stdout=PIPE).communicate()[0]
-        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE).communicate()[0]
-        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE).communicate()[0]
+        rev = Popen([git_rev_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
+        date = Popen([git_date_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
+        contains = Popen([git_contains_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
+        reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
         pairs = [[git_rev_cmd, rev],
                 [git_date_cmd, date],
                 [git_contains_cmd, contains],

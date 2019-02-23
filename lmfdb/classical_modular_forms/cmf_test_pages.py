@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 from lmfdb.backend.database import PostgresDatabase
 from sage.parallel.decorate import parallel

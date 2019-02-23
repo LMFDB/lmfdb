@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from lmfdb.base import app
 from lmfdb.utils import make_logger
 from flask import Blueprint

@@ -3,8 +3,6 @@
 import math
 from flask import url_for
 from lmfdb import db
-from lmfdb.classical_modular_forms.web_newform import WebNewform
-from lmfdb.classical_modular_forms.web_space import WebGamma1Space
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
@@ -558,6 +556,8 @@ def paintSvgHoloNew(condmax):
     return ans
 
 def paintSvgHolo(Nmin, Nmax, kmin, kmax):
+    # the import must be here to avoid circular import
+    from lmfdb.classical_modular_forms.web_space import WebGamma1Space
     xfactor = 90
     yfactor = 30
     extraSpace = 20
@@ -995,6 +995,9 @@ def reindex_characters(min_mod, max_mod, order_limit=12):
 ## General code to be used with plotsector routine.
 ## ============================================
 def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
+    # the import must be here to avoid circular import
+    from lmfdb.classical_modular_forms.web_newform import WebNewform
+    from lmfdb.classical_modular_forms.web_space import WebGamma1Space
     xfactor = 90
     yfactor = 30
     extraSpace = 20
