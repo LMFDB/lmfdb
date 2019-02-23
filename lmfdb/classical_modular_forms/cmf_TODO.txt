@@ -4,18 +4,12 @@ CRITICAL (BUGS):
 * Server error for embedded label in url
 
 OUTSTANDING VERIFICATIONS:
-+ Some newspaces that are in boxes with straces set don't have trace_bound, num_forms, hecke_orbit_dims set
-  - 101.7.f, box = {u'nonzero_newspace_count': 270662, u'Nmax': 4000, u'newspace_count': 270662, u'embeddings': False, u'lfunctions': False, u'Nmin': 101, u'Nk_count': 13585, u'embedding_count': 2133008444L, u'Nk2max': 40000, u'Nk2min': 4001, u'kmax': 12, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 13585, u'traces': False, u'straces': True}
-  - 25.13.f, {u'nonzero_newspace_count': 5747, u'newspace_count': 5747, u'embeddings': False, u'lfunctions': False, u'Nmin': 25, u'Nk_count': 1475, u'embedding_count': 4564288L, u'kmin': 13, u'Nk2max': 40000, u'Nk2min': 4001, u'Dmin': 101, u'split': False, u'omin': 2, u'eigenvalues': False, u'nonzero_Nk_count': 1475, u'traces': False, u'straces': True}
-  Note: this is expected, it is only when traces is set (not straces) that we should expect trace_bound, num_forms, hecke_orbit_dims to be set, which is not the case for the two spaces above, we just need to fix the verification.
-+ Mismatched mf_gamma1 counts (13587 != 13585 and 1526 != 1475)
-  The mismatch is due to checking mf_gamma1 dim > 100 when it should check that max(newspace_dims) > 100.
 + mf_newforms.check_embeddings_count: 23.41.d.a
   These are all present now.
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
 Bugs:
-+ mf_newforms.check_projective_field has a bug (comparing with nf_fields numeric[] <> jsonb)
++ mf_newforms.check_projective_field has a bug (fixed but not rerun)
 + mf_newforms.check_self_twist_disc had a bug (fixed but not rerun)
 
 Disabled:
@@ -54,11 +48,6 @@ IMPORTANT:
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
  - add capability to test a single form (David)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
- - see scripts/verify_data.py
- - check that we have all the L-functions that we expect (Edgar)
- - check self duality -> through the number field data, embedding data, lfunction self_dual
- - check inner_twists through ap data (if feasible)
- - parallelize (Edgar)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 
 FINAL CHECKS:
@@ -120,6 +109,8 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* after PR, reconvert nf_fields (as it will have new data), and do the swap
+* add to test.sh to verify '# -*- coding: utf-8 -*-
 * move names_and_urls to somewhere else? fix the circular import in utils
 * add documentation for set_sort
 * list the analytic conductor on the L-function pages

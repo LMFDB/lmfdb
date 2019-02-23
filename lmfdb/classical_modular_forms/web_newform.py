@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
 
 from collections import defaultdict
@@ -23,6 +24,7 @@ from lmfdb.sato_tate_groups.main import st_link
 from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
+EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
 
@@ -34,12 +36,16 @@ primes_for_angles = prime_range(an_storage_bound)
 def valid_label(label):
     return bool(LABEL_RE.match(label))
 
+def valid_emb_label(label):
+    return bool(EMB_LABEL_RE.match(label))
+
 def decode_hecke_orbit(code):
     level = str(code % 2**24)
     weight = str((code >> 24) % 2**12)
     char_orbit_label = cremona_letter_code((code >> 36) % 2**16)
     hecke_orbit_label = cremona_letter_code(code >> 52)
     return '.'.join([level, weight, char_orbit_label, hecke_orbit_label])
+
 def encode_hecke_orbit(label):
     level, weight, char_orbit_label, hecke_orbit_label = label.split('.')
     level = int(level)
@@ -103,7 +109,7 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
         return nf_display_knowl(label, name)
 
 class WebNewform(object):
-    def __init__(self, data, space=None, all_m = False, all_n = False):
+    def __init__(self, data, space=None, all_m = False, all_n = False, embedding = None):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
@@ -113,6 +119,7 @@ class WebNewform(object):
                 data[elt] = None
         self.__dict__.update(data)
         self._data = data
+        self.embedding = embedding
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
@@ -345,7 +352,7 @@ class WebNewform(object):
                         self.character_values[p].append((angle, value))
 
     @staticmethod
-    def by_label(label):
+    def by_label(label, embedding = None):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
@@ -360,7 +367,8 @@ class WebNewform(object):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
             raise ValueError("Newform %s not found" % label)
-        return WebNewform(data)
+        return WebNewform(data, embedding = embedding)
+
 
     @property
     def projective_image_latex(self):
@@ -864,7 +872,7 @@ function switch_basis(btype) {
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
-    def embedding_from_conrey(self, elabel):
+    def embedding_from_embedding_label(self, elabel):
         if not isinstance(elabel, basestring): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))

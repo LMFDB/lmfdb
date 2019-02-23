@@ -1,5 +1,4 @@
-
-
+# -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
 
@@ -323,15 +322,15 @@ def render_newform_webpage(label):
                            title=newform.title,
                            friends=newform.friends)
 
-def render_embedded_newform_webpage(newform_label, conrey_label):
+def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
-        newform = WebNewform.by_label(newform_label)
+        newform = WebNewform.by_label(newform_label, embedding = embedding_label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
     info['format'] = info.get('format', 'embed')
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
-    m = int(newform.embedding_from_conrey(conrey_label))
+    m = int(newform.embedding_from_conrey(embedding_label))
     info['CC_m'] = [m]
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
@@ -432,8 +431,8 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
     assert conrey_index > 0
     assert embedding > 0
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
-    conrey_label = ".".join(map(str, [conrey_index, embedding]))
-    return render_embedded_newform_webpage(newform_label, conrey_label)
+    embedding_label = ".".join(map(str, [conrey_index, embedding]))
+    return render_embedded_newform_webpage(newform_label, embedding_label)
 
 def url_for_label(label):
     slabel = label.split(".")

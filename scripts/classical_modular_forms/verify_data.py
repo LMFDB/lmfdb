@@ -1328,8 +1328,7 @@ class mf_newforms(TableChecker):
         # TIME > 240s
         # if present, check that projective_field_label identifies a number field in nf_fields with coeffs = projective_field
         return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) +
-                # FIXME: coeffs is jsonb instead of numeric[]
-                self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
+                self.check_crosstable('nf_fields_new', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
 
     @overall_long
     def check_artin_field(self):
