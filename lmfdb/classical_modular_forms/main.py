@@ -247,9 +247,9 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if min(info['CC_n']) < 2:
-        errs.append(r"We only show \(a_n\) with n at least 2")
-        info['CC_n'] = [n for n in info['CC_n'] if n >= 2]
+    if min(info['CC_n']) < 1:
+        errs.append(r"We only show \(a_n\) with n at least 1")
+        info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -268,7 +268,7 @@ def parse_m(info, newform):
     try:
         if '.' in mrange:
             # replace embedding codes with the corresponding integers
-            mrange = re.sub(r'\d+\.\d+', newform.embedding_from_conrey, mrange)
+            mrange = re.sub(r'\d+\.\d+', newform.embedding_from_embedding_label, mrange)
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
         info['CC_m'] = range(1,maxm+1)
@@ -324,13 +324,13 @@ def render_newform_webpage(label):
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
-        newform = WebNewform.by_label(newform_label, embedding = embedding_label)
+        newform = WebNewform.by_label(newform_label, embedding_label = embedding_label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
     info['format'] = info.get('format', 'embed')
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
-    m = int(newform.embedding_from_conrey(embedding_label))
+    m = int(newform.embedding_from_embedding_label(embedding_label))
     info['CC_m'] = [m]
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)

@@ -49,6 +49,7 @@ IMPORTANT:
  - add capability to test a single form (David)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
 * Add notes on provability/completeness to Artin image knowl (Drew)
+* change lfunction_label to label
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
