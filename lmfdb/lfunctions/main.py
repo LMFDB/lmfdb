@@ -48,7 +48,7 @@ def l_function_top_page():
 
 @l_function_page.route("/history")
 def l_function_history():
-    from lmfdb.pages import _single_knowl
+    from lmfdb.app import _single_knowl
     t = "A Brief History of L-functions"
 
     bc = [('L-functions', url_for('.l_function_top_page')),
