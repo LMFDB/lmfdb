@@ -6,8 +6,9 @@ import bisect, re
 
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import (prime_range, latex, QQ, PolynomialRing,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR)
+from sage.all import (prime_range, latex, QQ, PolynomialRing, ComplexField,
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, ceil,
+                      PowerSeriesRing)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -109,7 +110,7 @@ def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
         return nf_display_knowl(label, name)
 
 class WebNewform(object):
-    def __init__(self, data, space=None, all_m = False, all_n = False, embedding = None):
+    def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
@@ -119,7 +120,7 @@ class WebNewform(object):
                 data[elt] = None
         self.__dict__.update(data)
         self._data = data
-        self.embedding = embedding
+        self.embedding_label = embedding_label
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
@@ -145,32 +146,47 @@ class WebNewform(object):
             self.texp.append(tr['trace_an'])
         self.texp_prec = len(self.texp)
 
+        #self.char_conrey = self.conrey_indexes[0]
+        #self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
+        self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
+
         hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
-        eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
-        if eigenvals and eigenvals.get('an'):
-            self.has_exact_qexp = True
-            for attr in hecke_cols:
-                setattr(self, attr, eigenvals.get(attr))
-            m = self.hecke_ring_cyclotomic_generator
-            if m is None or m == 0:
-                zero = [0] * self.dim
-            else:
-                zero = []
-            self.qexp = [zero] + eigenvals['an']
-            self.qexp_prec = len(self.qexp)
-            self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-        else: # k > 1 and dim > 20
+        eigenvals = None
+        if self.embedding_label is None:
+            eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
+            if eigenvals and eigenvals.get('an'):
+                self.has_exact_qexp = True
+                for attr in hecke_cols:
+                    setattr(self, attr, eigenvals.get(attr))
+                m = self.hecke_ring_cyclotomic_generator
+                if m is None or m == 0:
+                    zero = [0] * self.dim
+                else:
+                    zero = []
+                self.qexp = [zero] + eigenvals['an']
+                self.qexp_prec = len(self.qexp)
+                self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+            else: # k > 1 and dim > 20
+                self.has_exact_qexp = False
+                self.single_generator = None
+        else:
+            # get data from char_dir_values
+            char_conrey = self.embedding_label.split('.')[0]
+            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, char_conrey)},['order','values_gens'])
+            self.hecke_ring_character_values = [[i,[[1, m]]] for i, m in char_values['values_gens']]
+            self.hecke_ring_cyclotomic_generator = char_values['order']
             self.has_exact_qexp = False
-            self.single_generator = None
+        # sort by the generators
+        self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
 
         ## CC_DATA
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
                                # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
+        self.embedding_m = None
+        if self.embedding_label:
+            self.embedding_m = int(re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, self.embedding_label))
 
-        self.char_conrey = self.conrey_indexes[0]
-        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
@@ -294,32 +310,41 @@ class WebNewform(object):
         """
         an_formats = ['embed','analytic_embed',None]
         angles_formats = ['satake','satake_angle',None]
-        m = info.get('m','1-%s'%(min(self.dim,20)))
-        if '.' in m:
-            m = re.sub(r'\d+\.\d+', self.embedding_from_conrey, m)
-        n = info.get('n','1-10')
-        CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
-        CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
-        # convert CC_n to an interval in [1,an_storage_bound]
-        CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
-        an_keys = (CC_n[0]-1, CC_n[1])
-        # extra 5 primes in case we hit too many bad primes
-        angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
-        format = info.get('format')
         cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        an_projection = 'an_normalized[%d:%d]' % an_keys
-        angles_projection = 'angles[%d:%d]' % angles_keys
-        if format in an_formats:
-            cc_proj.append(an_projection)
-        if format in angles_formats:
-            cc_proj.append(angles_projection)
-        query = {'hecke_orbit_code':self.hecke_orbit_code}
-        range_match = INTEGER_RANGE_RE.match(m)
-        if range_match:
-            low, high = int(range_match.group(1)), int(range_match.group(2))
-            query['embedding_m'] = {'$gte':low, '$lte':high}
+        if self.embedding_label is None:
+            m = info.get('m','1-%s'%(min(self.dim,20)))
+            if '.' in m:
+                m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
+            n = info.get('n','1-10')
+            CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
+            CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
+            # convert CC_n to an interval in [1,an_storage_bound]
+            CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
+            an_keys = (CC_n[0]-1, CC_n[1])
+            # extra 5 primes in case we hit too many bad primes
+            angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5, len(primes_for_angles)))
+            format = info.get('format')
+            an_projection = 'an_normalized[%d:%d]' % an_keys
+            angles_projection = 'angles[%d:%d]' % angles_keys
+            if format in an_formats:
+                cc_proj.append(an_projection)
+            if format in angles_formats:
+                cc_proj.append(angles_projection)
+            range_match = INTEGER_RANGE_RE.match(m)
+            query = {'hecke_orbit_code':self.hecke_orbit_code}
+            if range_match:
+                low, high = int(range_match.group(1)), int(range_match.group(2))
+                query['embedding_m'] = {'$gte':low, '$lte':high}
+            else:
+                query['embedding_m'] = {'$in': CC_m}
         else:
-            query['embedding_m'] = {'$in': CC_m}
+            an_projection = 'an_normalized'
+            an_keys = (0, an_storage_bound)
+            angles_keys = (0, len(primes_for_angles))
+            angles_projection = 'angles[%d:%d]' % angles_keys
+            cc_proj.extend([an_projection, angles_projection])
+            query = {'lfunction_label' : self.label + '.' + self.embedding_label}
+            format = None
 
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
@@ -352,7 +377,7 @@ class WebNewform(object):
                         self.character_values[p].append((angle, value))
 
     @staticmethod
-    def by_label(label, embedding = None):
+    def by_label(label, embedding_label = None):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
@@ -367,7 +392,7 @@ class WebNewform(object):
                 nontriv_text = "non trivial" if nontriv else "trivial"
                 raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
             raise ValueError("Newform %s not found" % label)
-        return WebNewform(data, embedding = embedding)
+        return WebNewform(data, embedding_label = embedding_label)
 
 
     @property
@@ -834,9 +859,39 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + '\(+O(q^{%d})\)' % prec
 
+    def q_expansion_cc(self, prec_max):
+        prec = min(self.cqexp_prec, prec_max)
+        if prec == 0:
+            return 'O(1)'
+        eigseq = self.cc_data[self.embedding_m]['an_normalized']
+        s = ''
+        for j in range(1, prec):
+            term = eigseq[j]
+            latexterm = display_complex(term[0], term[1], 6, method = "round", parenthesis = True)
+            if latexterm != '0':
+                if j > 0:
+                    if latexterm == '1':
+                        latexterm = ''
+                    elif latexterm == '-1':
+                        latexterm = '-'
+                    if j == 1:
+                        latexterm += ' q'
+                    else:
+                        latexterm += ' q^{%d}' % j
+                #print latexterm
+                if s != '' and latexterm[0] != '-':
+                    latexterm = '+' + latexterm
+                s += '\(' + latexterm + '\) '
+        # Work around bug in Sage's latex
+        s = s.replace('betaq', 'beta q')
+        return s + '\(+O(q^{%d})\)' % prec
+
+
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
-        if self.has_exact_qexp:
+        if self.embedding_label:
+            return self.q_expansion_cc(prec_max)
+        elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=False))

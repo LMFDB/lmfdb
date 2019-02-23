@@ -1685,7 +1685,8 @@ class mf_newforms(TableChecker):
     def check_traces(self):
         # check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         howmany = 200
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) LIMIT %s")
+        # we restrict to weight <= 272
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) AND t1.weight <= 272 LIMIT %s")
         cur = db._execute(query, [howmany, howmany, self._cur_limit])
         return [rec[0] for rec in cur]
 
