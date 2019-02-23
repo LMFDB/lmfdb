@@ -124,7 +124,7 @@ def git_infos():
     try:
         from subprocess import Popen, PIPE
         # cwd should be the root of git repo
-        cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)),".."))
+        cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)),"..")
         git_rev_cmd = '''git rev-parse HEAD'''
         git_date_cmd = '''git show --format="%ci" -s HEAD'''
         git_contains_cmd = '''git branch --contains HEAD'''
