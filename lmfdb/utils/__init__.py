@@ -13,7 +13,6 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template', 's
            'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix',
            'Pagination',
            'debug', 'flash_error', 'cached',
-           'LmfdbFormatter', 'make_logger',
            'ajax_url',
            'image_callback', 'encode_plot',
            'KeyedDefaultDict', 'range_formatter',
@@ -44,7 +43,6 @@ from .utilities import (
     polyquo_knowl, web_latex_poly, list_to_latex_matrix,
     Pagination,
     debug, flash_error, cached,
-    LmfdbFormatter, make_logger,
     ajax_url, # try to eliminate?
     image_callback, encode_plot,
     KeyedDefaultDict, range_formatter)

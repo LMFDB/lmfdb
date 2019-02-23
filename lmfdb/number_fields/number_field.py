@@ -8,7 +8,7 @@ from markupsafe import Markup
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints,

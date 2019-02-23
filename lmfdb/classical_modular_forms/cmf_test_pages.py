@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 from lmfdb.backend.database import PostgresDatabase
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt, ceil

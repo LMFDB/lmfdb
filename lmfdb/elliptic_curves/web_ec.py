@@ -4,7 +4,8 @@ import os
 import yaml
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list

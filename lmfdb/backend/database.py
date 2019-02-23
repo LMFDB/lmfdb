@@ -34,7 +34,8 @@ from psycopg2.extras import execute_values
 from sage.all import cartesian_product_iterator, binomial
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
-from lmfdb.utils import make_logger, KeyedDefaultDict
+from lmfdb.utils import KeyedDefaultDict
+from lmfdb.logger import make_logger
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 # This list is used when creating new tables

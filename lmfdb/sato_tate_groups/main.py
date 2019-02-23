@@ -7,7 +7,7 @@ from psycopg2.extensions import QueryCanceledError
 from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
 
 from lmfdb import db
-from lmfdb.base import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils import (
     to_dict, encode_plot, flash_error,
     parse_ints, parse_rational, parse_count, parse_start,

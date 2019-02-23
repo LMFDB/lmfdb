@@ -28,7 +28,7 @@ from lmfdb.lfunctions import l_function_page
 from lmfdb.modular_forms.maass_forms.maass_waveforms.views.mwf_plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.utils import to_dict, signtocolour, rgbtohex, key_for_numerically_sort
-from lmfdb.base import is_debug_mode
+from lmfdb.app import is_debug_mode
 from lmfdb import db
 
 def get_degree(degree_string):

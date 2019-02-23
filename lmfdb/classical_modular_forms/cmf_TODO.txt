@@ -153,6 +153,8 @@ NOT CMF STUFF:
 * Saved queries for demos (cf checklist)
 * Do restats in different order (compute all counts then upload), and wipe counts if too many
 * Add indexes on counts and stats tables
+* Add regexps for labels to meta_tables and use them.
+* Switch from pyflakes to flake8
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue

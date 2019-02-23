@@ -11,7 +11,7 @@ from markupsafe import Markup
 
 from lmfdb import db
 from lmfdb.backend.encoding import Json
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import (
     to_dict,
     parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints,

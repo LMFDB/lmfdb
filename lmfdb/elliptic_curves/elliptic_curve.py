@@ -6,7 +6,7 @@ from sage.all import ZZ, QQ, Qp, EllipticCurve, cputime
 from sage.databases.cremona import parse_cremona_label, class_to_int
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
     web_latex, to_dict, web_latex_split_on_pm,

@@ -1,4 +1,4 @@
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
 class ECNFTest(LmfdbTest):

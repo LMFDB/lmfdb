@@ -3,10 +3,11 @@
 from flask import url_for
 from collections import Counter
 
-from lmfdb.utils import make_logger, encode_plot
+from lmfdb.utils import encode_plot
+from lmfdb.logger import make_logger
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics

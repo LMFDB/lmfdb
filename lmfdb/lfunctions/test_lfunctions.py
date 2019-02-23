@@ -1,5 +1,5 @@
 from LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
 
