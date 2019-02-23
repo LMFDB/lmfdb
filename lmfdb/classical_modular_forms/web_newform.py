@@ -6,9 +6,8 @@ import bisect, re
 
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import (prime_range, latex, QQ, PolynomialRing, ComplexField,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, ceil,
-                      PowerSeriesRing)
+from sage.all import (prime_range, latex, QQ, PolynomialRing,
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
