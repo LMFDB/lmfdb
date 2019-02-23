@@ -8,7 +8,7 @@ from flask import render_template, request, url_for, redirect
 from sage.all import ZZ, latex, gap
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import (
     list_to_latex_matrix,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,

@@ -25,7 +25,7 @@ from werkzeug import cached_property
 from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RIF, ZZ, QQ, latex, valuation, prime_range
 from sage.structure.element import Element
 
-from lmfdb.base import app
+from lmfdb.app import app
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """

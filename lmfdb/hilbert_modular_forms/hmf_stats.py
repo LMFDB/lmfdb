@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import comma, make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from sage.misc.cachefunc import cached_method

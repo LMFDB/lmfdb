@@ -92,7 +92,6 @@ sage: VW.algebraic_coefficients(38)[36] == -38
 #import os
 #import weakref
 
-import lmfdb.base
 from lmfdb.lfunctions.Lfunction_base import Lfunction
 from lmfdb.lfunctions.HodgeTransformations import selberg_to_hodge, root_number_at_oo, hodge_to_selberg, tensor_hodge, gamma_factors
 

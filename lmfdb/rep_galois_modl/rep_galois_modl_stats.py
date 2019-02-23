@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import make_logger, comma
 from sage.misc.cachefunc import cached_method
 

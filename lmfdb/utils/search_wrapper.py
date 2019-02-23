@@ -3,7 +3,7 @@ from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from sage.misc.decorators import decorator_keywords
 
-from lmfdb.base import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils.search_parsing import parse_start, parse_count
 from lmfdb.utils.utilities import flash_error, to_dict
 

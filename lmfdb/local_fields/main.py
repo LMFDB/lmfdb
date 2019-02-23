@@ -6,7 +6,7 @@ from flask import render_template, request, url_for, redirect
 from sage.all import PolynomialRing, QQ, RR
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset,
     parse_galgrp, parse_ints, clean_input, parse_rats,

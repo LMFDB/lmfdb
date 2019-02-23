@@ -7,7 +7,7 @@ from markupsafe import Markup
 from sage.rings.all import PolynomialRing, ZZ
 
 from lmfdb import db
-from lmfdb.base import app
+from lmfdb.app import app
 from lmfdb.utils import (
     to_dict, make_logger,
     parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
