@@ -626,6 +626,7 @@ class PostgresTable(PostgresBase):
             # have to take modulus twice since MOD(-1,5) = -1 in postgres
             cmd = SQL("MOD(%s + MOD({0}, %s), %s) = %s").format(col)
             value = [value[1], value[1], value[1], value[0] % value[1]]
+
         else:
             if key == '$lte':
                 cmd = SQL("{0} <= %s")
@@ -637,6 +638,11 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} > %s")
             elif key == '$ne':
                 cmd = SQL("{0} != %s")
+            # FIXME, we should do recursion with _parse_special
+            elif key == '$maxgte':
+                col = SQL("array_max({0}) >= %s")
+            elif key == '$maxlte':
+                col = SQL("array_max({0}) <= %s")
             elif key == '$in':
                 if force_json:
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
