@@ -1919,7 +1919,10 @@ class mf_hecke_cc(TableChecker):
         return self._run_query(SQL("array_length({0}, 1) < 1000 OR array_length({0}, 2) != 2").format(
             Identifier("an_normalized")))
 
-
+    @overall_long
+    def check_angles_length(self):
+        # check that angles is a list of length at least 168
+        return self.check_array_len_gte_constant('angles', 168)
 
     @overall_long
     def check_lfunction_label_hoc(self):

@@ -868,7 +868,7 @@ function switch_basis(btype) {
         s = ''
         for j in range(1, prec):
             term = eigseq[j]
-            latexterm = display_complex(term[0], term[1], 6, method = "round", parenthesis = True)
+            latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True)
             if latexterm != '0':
                 if j > 0:
                     if latexterm == '1':
