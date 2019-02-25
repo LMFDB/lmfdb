@@ -1,22 +1,59 @@
 {% extends 'cmf_newform_common.html' %}
 
 {% block subcontent %}
+<a name="coefficient_data"></a>
 <h2>Coefficient data</h2>
-
 
 For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
 {{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p)\),
 and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
 
+
 <script>
-function show_primes_all(cl) {
-  $('.all').hide();
-  $('.primes').hide();
-  $('.'+cl).show();
-}
+  function show_primes_all_n(n, cl) {
+    $('.all').hide();
+    $('.primes').hide();
+    $('.noptions.' + cl).show();
+    $('.' + cl+'.' + n).show();
+  }
 </script>
-<a name="embeddings"></a>
+{% set class_n = [50, 100, 250, 1000] %}
+{% set subsets = [('primes', 'only primes','\(p\)'), ('all', 'all \(n\)','\(n\)')]%}
+{% set default_class = [50,'primes'] %}
+<div>
+  {% for s in subsets %}
+    {% for n in class_n %}
+      {% set extra = 'nodisplay' %}
+      {% if n == default_class[0] and s[0] == default_class[1] %}
+        {% set extra = '' %}
+      {% endif %}
+
+      {# deals with the other options #}
+      <div class="{{s[0]}} {{n|string}} {{extra}}" >
+      See
+      {% for ns in subsets %}
+       {%if ns != s %}
+         <a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">{{ns[1]}}</a>
+       {% endif %}
+      {% endfor %} {# for ns in subsets #}
+      </div>
+      {% endfor %} {# for n in class_n #}
+      {% set extra = 'nodisplay' %}
+      {% if s[0] == default_class[1] %}
+        {% set extra = '' %}
+      {% endif %}
+      <div class="noptions {{s[0]}} {{extra}}">
+      Display {{s[2]}} up to:
+      {% for k in class_n %}
+      <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="#coefficient_data">{{k}}</a>
+      {% endfor %}
+      </div>
+  {%endfor%}
+</div>
+
+
+{# we need to fix the coloring #}
 <div class="table-scroll-wrapper">
   <table class="ntdata complex-cols">
     <thead>
@@ -40,19 +77,29 @@ function show_primes_all(cl) {
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
-      {% for n in range(2,50) %}
-      {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
+      {% for n in range(2,1000) %}
+        {% set classes = ["all"] %}
+        {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
           {% set rowspan = 2 %}
-          {% set class_primes ="primes all" %}
+          {% do classes.append("primes") %}
         {% else %}
           {% set rowspan = 1 %}
-          {% set class_primes ="all nodisplay" %}
+          {% do classes.append("nodisplay") %}
         {% endif %}
+
         {% if loop.index is divisibleby(2) %}
           {% set shade = 'dark' %}
         {% else %}
           {% set shade = 'light' %}
         {% endif %}
+
+        {% for cn in class_n %}
+          {% if n <= cn %}
+            {% do classes.append(cn|string) %}
+          {% endif %}
+        {% endfor %}
+
+        {% set class = classes|join(" ") %}
 
         <tr class="{{class}}">
           <td rowspan="{{rowspan}}" class="{{shade}}">
@@ -95,12 +142,12 @@ function show_primes_all(cl) {
 
     {% endfor %} {# n in info.CC_n #}
     <tr>
-      <td>
+      <td colspan = 11>
     <span class="primes">
-        <a onclick="show_primes_all('all'); return true" href="#embeddings">See all \(n\)</a>
+        <a onclick="show_primes_all('all'); return true" href="#coefficient_data">See all \(n\)</a>
     </span>
     <span class="all nodisplay">
-        <a onclick="show_primes_all('primes'); return true" href="#embeddings">See only primes</a>
+        <a onclick="show_primes_all('primes'); return true" href="#coefficient_data">See only primes</a>
         </span>
       </td>
     </tr>
