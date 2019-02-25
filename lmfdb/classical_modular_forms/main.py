@@ -265,10 +265,15 @@ def parse_m(info, newform):
     maxm = min(newform.dim, 20)
     info['default_mrange'] = '1-%s'%maxm
     mrange = info.get('m', '1-%s'%maxm)
-    try:
-        if '.' in mrange:
-            # replace embedding codes with the corresponding integers
+    if '.' in mrange:
+        # replace embedding codes with the corresponding integers
+        # If error, need to replace 'm' by default
+        try:
             mrange = re.sub(r'\d+\.\d+', newform.embedding_from_embedding_label, mrange)
+        except ValueError:
+            errs.append("Invalid embedding label")
+            mrange = info['m'] = '1-%s'%maxm
+    try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
         info['CC_m'] = range(1,maxm+1)
@@ -330,7 +335,10 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     info = to_dict(request.args)
     info['format'] = info.get('format', 'embed')
     errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
-    m = int(newform.embedding_from_embedding_label(embedding_label))
+    try:
+        m = int(newform.embedding_from_embedding_label(embedding_label))
+    except ValueError as err:
+        return abort(404, err.args)
     info['CC_m'] = [m]
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)

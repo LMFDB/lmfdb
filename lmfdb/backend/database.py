@@ -3166,6 +3166,7 @@ class PostgresTable(PostgresBase):
                 tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
                 if len(tabletypes) == 0:
                     raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
+                parallel = min(parallel, len(tabletypes))
                 for tabletype in tabletypes:
                     print "Starting %s" % tabletype
                 cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
@@ -3195,6 +3196,10 @@ class PostgresTable(PostgresBase):
                         print "Starting %s checks for %s" % (typ.__name__, self.search_table)
                         verifier.run(typ, logdir, label)
         else:
+            msg = "Starting check %s" % check
+            if label is not None:
+                msg += " for label %s" % label
+            print msg
             verifier.run_check(check, label)
 
 class PostgresStatsTable(PostgresBase):
@@ -4910,6 +4915,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if len(tabletypes) == 0:
             # Shouldn't occur....
             raise ValueError("No verification tests defined!")
+        parallel = min(parallel, len(tabletypes))
         cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
         cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, 'all', speedtype]
         if debug:
