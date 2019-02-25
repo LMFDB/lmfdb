@@ -43,10 +43,11 @@ if len(sys.argv) == 3:
     chunk_size = (db.mf_hecke_cc.max_id() - db.mf_hecke_cc.min_id())/k + 1
     start_time = time.time()
     counter = 0
-    total = db.mf_hecke_cc.count({'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}})
+    query = {'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}}
+    total = db.mf_hecke_cc.count(query)
     print "%d: %d rows to check" % (j, total)
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'mf_hecke_cc_parallel.%d.log' % j), 'w') as F:
-        for rec in db.mf_hecke_cc.search({'id':{'$gte':j*chunk_size, '$lt':(j+1)*chunk_size}},['lfunction_label', 'an_normalized']):
+        for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized']):
             counter += 1
             if not check_amn_slow(rec):
                 F.write('%s:amn\n' % rec['lfunction_label'])
