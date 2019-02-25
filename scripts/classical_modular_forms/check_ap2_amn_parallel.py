@@ -46,19 +46,22 @@ if len(sys.argv) == 3:
     query = {'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}}
     total = db.mf_hecke_cc.count(query)
     print "%d: %d rows to check" % (j, total)
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
-        for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized']):
-            counter += 1
-            if not check_amn_slow(rec):
-                F.write('%s:amn\n' % rec['lfunction_label'])
-                F.flush()
-            if not check_ap2_slow(rec):
-                F.write('%s:ap2\n' % rec['lfunction_label'])
-                F.flush()
-            if total > 100:
-                if counter % (total/100) == 0:
-                    print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
-    print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
+    if total > 0:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
+            for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized']):
+                counter += 1
+                if not check_amn_slow(rec):
+                    F.write('%s:amn\n' % rec['lfunction_label'])
+                    F.flush()
+                if not check_ap2_slow(rec):
+                    F.write('%s:ap2\n' % rec['lfunction_label'])
+                    F.flush()
+                if total > 100:
+                    if counter % (total/100) == 0:
+                        print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
+        print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
+    else:
+        print "%d: DONE -- avg oo s'
 
 
 else:
