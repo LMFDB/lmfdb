@@ -12,7 +12,8 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 from lmfdb.logger import info
-import lmfdb.app
+import lmfdb.app # So that we can set it running below
+from lmfdb.app import app
 
 # Importing the following top-level modules adds blueprints
 # to the app and imports further modules to make them functional
@@ -102,7 +103,6 @@ def main():
     info("main: ...done.")
     from lmfdb.utils.config import Configuration
     flask_options = Configuration().get_flask();
-    app = lmfdb.app.app
 
     if "profiler" in flask_options and flask_options["profiler"]:
         print "Profiling!"
