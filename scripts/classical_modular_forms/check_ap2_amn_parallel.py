@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 try:
     # Make lmfdb available
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
