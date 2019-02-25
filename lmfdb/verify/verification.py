@@ -80,6 +80,7 @@ class slow(per_row):
     """
     A per-row check that is slow to run
     """
+    shortname = "slow"
     ratio = 0.1 # slow tests are by default run on 10% of rows
     timeout = 3600
 
@@ -87,18 +88,21 @@ class fast(per_row):
     """
     A per-row check that is fast to run
     """
+    shortname = "fast"
     timeout = 300
 
 class overall(one_query):
     """
     An overall check that is fast to run
     """
+    shortname = "over"
     timeout = 300
 
 class overall_long(one_query):
     """
     An overall check that is slow to run
     """
+    shortname = "long"
     timeout = 3600
 
 class TableChecker(object):
@@ -260,7 +264,7 @@ class TableChecker(object):
 
     def run(self, typ, logdir, label=None):
         self._cur_label = label
-        tname = "%s.%s" % (self.__class__.__name__, typ.__name__)
+        tname = "%s.%s" % (self.__class__.__name__, typ.shortname)
         olddir = os.path.join(logdir, "old")
         if not os.path.exists(olddir):
             os.makedirs(olddir)

@@ -2,16 +2,27 @@ import os, time
 from collections import defaultdict
 
 class Follower(object):
+    """
+    A class for printing the output of a verification run while it's being generated in parallel.
+
+    INPUT:
+
+    - ``logdir`` -- the base directory for logging
+    - ``tabletypes`` -- a list of strings giving the verifications to follow, in the form tablename.type
+        (e.g. "mf_newforms.long" or "char_dir_values.over")
+    - ``poll_interval`` -- the interval in seconds between checking on the status of the output.
+    """
     suffixes = ['log', 'progress', 'errors']
-    def __init__(self, logdir, total_count, poll_interval=0.1):
+    def __init__(self, logdir, tabletypes, poll_interval=0.1):
         self.logdir = logdir
+        self.basenames = tabletypes
         if poll_interval <= 0:
             raise ValueError("Poll interval must be positive")
         self.interval = poll_interval
         self.active = defaultdict(dict)
         self.done_files = set()
         self.started_files = set()
-        self.total_count = total_count
+        self.total_count = len(tabletypes)
 
     def read(self, basename, suffix):
         if not self.active[basename].get(suffix):
@@ -48,8 +59,8 @@ class Follower(object):
         # goes wrong since we produce a final report and the files will exist on the filesystem
         for filename in os.listdir(self.logdir):
             if filename.endswith('.done'):
-                if filename not in self.done_files:
-                    basename = filename[:-5]
+                basename = filename[:-5]
+                if basename in self.basenames and filename not in self.done_files:
                     self.done_files.add(filename)
                     for suffix in self.suffixes:
                         self.read(basename, suffix)

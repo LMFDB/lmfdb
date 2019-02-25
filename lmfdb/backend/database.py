@@ -3159,16 +3159,12 @@ class PostgresTable(PostgresBase):
                 types = verifier.all_types()
             else:
                 types = [verifier.speedtype(speedtype)]
-            total_count = 0
-            for typ in types:
-                if verifier.get_checks_count(typ) == 0:
-                    print "No %s checks defined for %s" % (typ.__name__, self.search_table)
-                else:
-                    print "Starting %s checks for %s" % (typ.__name__, self.search_table)
-                    total_count += 1
-                    if not parallel:
-                        verifier.run(typ, logdir, label)
             if parallel:
+                tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
+                if len(tabletypes) == 0:
+                    raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
+                for tabletype in tabletypes:
+                    print "Starting %s" % tabletype
                 cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
                 cmd = ['sage', '-python', cmd, '--logdir', logdir, '--tablename', str(self.search_table), '--speedtype', speedtype]
                 DEVNULL = open(os.devnull, 'wb')
@@ -3176,7 +3172,7 @@ class PostgresTable(PostgresBase):
                 if follow:
                     from lmfdb.verify.follower import Follower
                     try:
-                        Follower(logdir, total_count, follow).follow()
+                        Follower(logdir, tabletypes, follow).follow()
                     finally:
                         # kill the subprocess
                         # From the man page, the following will terminate child processes
@@ -3185,6 +3181,13 @@ class PostgresTable(PostgresBase):
                             pipe.send_signal(signal.SIGTERM)
                 else:
                     return pipe
+            else:
+                for typ in types:
+                    if verifier.get_checks_count(typ) == 0:
+                        print "No %s checks defined for %s" % (typ.__name__, self.search_table)
+                    else:
+                        print "Starting %s checks for %s" % (typ.__name__, self.search_table)
+                        verifier.run(typ, logdir, label)
         else:
             verifier.run_check(check, label)
 
@@ -4881,7 +4884,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         types = None
-        total_count = 0
+        tabletypes = []
         for tablename in self.tablenames:
             table = self[tablename]
             verifier = table._verifier
@@ -4893,14 +4896,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                         types = [verifier.speedtype(speedtype)]
                 for typ in types:
                     if verifier.get_checks_count(typ) != 0:
-                        total_count += 1
+                        tabletypes.append("%s.%s" % (tablename, typ.shortname))
+        if len(tabletypes) == 0:
+            # Shouldn't occur....
+            raise ValueError("No verification tests defined!")
         cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
         cmd = [cmd, '--logdir', logdir, '--tablename', 'all', '--speedtype', speedtype]
         pipe = subprocess.Popen(cmd)
         if follow:
             from lmfdb.verify.follower import Follower
             try:
-                Follower(logdir, total_count, follow).follow()
+                Follower(logdir, tabletypes, follow).follow()
             finally:
                 # kill the subprocess
                 # From the man page, the following will terminate child processes
