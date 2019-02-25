@@ -46,7 +46,7 @@ if len(sys.argv) == 3:
     query = {'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}}
     total = db.mf_hecke_cc.count(query)
     print "%d: %d rows to check" % (j, total)
-    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'mf_hecke_cc_parallel.%d.log' % j), 'w') as F:
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
         for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized']):
             counter += 1
             if not check_amn_slow(rec):
