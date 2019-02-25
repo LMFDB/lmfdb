@@ -23,7 +23,7 @@ def get_bread(**kwds):
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
              ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
-             ('embedding_label', 'Character %s', 'cmf.by_url_newform_conrey5')]
+             ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
@@ -294,7 +294,7 @@ class WebNewformSpace(object):
         return WebNewformSpace(data)
 
     @property
-    def char_conrey_link(self):
+    def char_orbit_link(self):
         label = '%s.%s' % (self.level, self.char_orbit_label)
         return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
 
@@ -305,7 +305,7 @@ class WebNewformSpace(object):
             ord_knowl = display_knowl('character.dirichlet.order', title='order')
             deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
             ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
-        return self.char_conrey_link + ord_deg
+        return self.char_orbit_link + ord_deg
 
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]

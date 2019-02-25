@@ -171,8 +171,8 @@ class WebNewform(object):
                 self.single_generator = None
         else:
             # get data from char_dir_values
-            char_conrey = self.embedding_label.split('.')[0]
-            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, char_conrey)},['order','values_gens'])
+            self.char_conrey = self.embedding_label.split('.')[0]
+            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)},['order','values_gens'])
             if char_values is None:
                 raise ValueError("Invalid Conrey label")
             self.hecke_ring_character_values = [[i,[[1, m]]] for i, m in char_values['values_gens']]
@@ -191,13 +191,19 @@ class WebNewform(object):
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
         # properties box
-        self.properties = [('Label', self.label)]
+        if embedding_label is None:
+            self.properties = [('Label', self.label)]
+        else:
+            self.properties = [('Label', '%s.%s' % (self.label, self.embedding_label))]
         if self.plot is not None:
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', str(self.level)),
-                            ('Weight', str(self.weight)),
-                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
+                            ('Weight', str(self.weight))]
+        if self.embedding_label is None:
+            self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
+        else:
+            self.properties.append(('Character', '%s.%s' % (self.level, self.char_conrey)))
 
         if self.is_self_dual != 0:
                 self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
@@ -388,6 +394,14 @@ class WebNewform(object):
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
+        if self.embedding_m is not None:
+            m = self.embedding_m
+            x = self.cc_data[m].get('embedding_root_real')
+            y = self.cc_data[m].get('embedding_root_imag')
+            if x is None or y is None:
+                self.embedding_root = None
+            else:
+                self.embedding_root = display_complex(x, y, 6, method='round')
 
     @staticmethod
     def by_label(label, embedding_label = None):
@@ -770,9 +784,16 @@ function switch_basis(btype) {
             return sum(c * zeta**e for c,e in data)
 
     @property
-    def char_conrey_link(self):
+    def char_orbit_link(self):
         label = '%s.%s' % (self.level, self.char_orbit_label)
         return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+
+    @property
+    def char_conrey_link(self):
+        if self.embedding_label is None:
+            raise ValueError
+        label = '%s.%s' % (self.level, self.embedding_label.split('.')[0])
+        return display_knowl('character.dirichlet.data', title=label, kwargs={'label':label})
 
     def display_character(self):
         if self.char_order == 1:
@@ -781,7 +802,7 @@ function switch_basis(btype) {
             ord_knowl = display_knowl('character.dirichlet.order', title='order')
             deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
             ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
-        return self.char_conrey_link + ord_deg
+        return self.char_orbit_link + ord_deg
 
     def display_character_values(self):
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']

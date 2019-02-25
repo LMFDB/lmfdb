@@ -293,7 +293,7 @@ class CMF_download(Downloader):
                                      'embedding_root_imag',
                                      'an_normalized',
                                      'angles'])
-        if data is None
+        if data is None:
             return abort(404, "No embedded newform found for %s"%(label))
         root = (data.pop('embedding_root_real', None),
                 data.pop('embedding_root_imag', None))

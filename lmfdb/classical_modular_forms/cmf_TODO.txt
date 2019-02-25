@@ -10,12 +10,9 @@ Embedded modular form:
 * Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
 * Display options 50, 250, 1000/2000/3000
 * Move significant digits to the top
-* Fix downloads: just download coefficients, update "all stored data"
-* Fix newform download complex embeddings to give a list of dictionaries
 
 IMPORTANT:
 * Make an consistent: always show digits after decimal place even if approximately integral
-* Discuss whether list of verifications should live in schema markdown file or code folder. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label, add level, weight, char_orbit_index, hecke_orbit, dual_conrey_label, dual_embedding_index, dual_embedding_m (Edgar)
 

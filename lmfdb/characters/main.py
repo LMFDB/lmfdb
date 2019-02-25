@@ -291,8 +291,8 @@ def _dir_knowl_data(label, orbit=False):
     if orbit and modulus <= 10000:
         inf = "Dirichlet Character Orbit %d.%s\n" % (modulus, webchar.orbit_label)
     else:
-        inf = "Dirichlet Character \chi_{%d}(%d, \cdot)\n" % (modulus, number)
-    inf += "<table class='chardata'>\n"
+        inf = r"Dirichlet Character \(\chi_{%d}(%d, \cdot)\)" % (modulus, number) + "\n"
+    inf += "<div><table class='chardata'>\n"
     def row_wrap(header, val):
         return "<tr><td>%s: </td><td>%s</td></tr>\n" % (header, val)
     inf += row_wrap('Conductor', webchar.conductor)
@@ -305,7 +305,11 @@ def _dir_knowl_data(label, orbit=False):
         if not orbit:
             inf += row_wrap('Orbit Label', '%d.%s' % (modulus, webchar.orbit_label))
         inf += row_wrap('Orbit Index', webchar.orbit_index)
-    inf += '</table>'
+    inf += '</table></div>\n'
+    if numbers is None:
+        inf += '<div align="right">\n'
+        inf += '<a href="%s">%s home page</a>\n' % (str(url_for("characters.render_Dirichletwebpage", modulus=modulus, number=number)), label)
+        inf += '</div>\n'
     return inf
 
 def dirichlet_character_data(label):
