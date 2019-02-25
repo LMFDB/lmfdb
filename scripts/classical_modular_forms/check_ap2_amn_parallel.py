@@ -42,14 +42,24 @@ if len(sys.argv) == 3:
     assert k > j
     assert j >= 0
     chunk_size = bound/k + 1
+    start_time = time.time()
+    counter = 0
+    total = db.mf_hecke_cc.count({'id':{'$gte':j*chunk_size, '$lt':(j+1)*chunk_size}})
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'mf_hecke_cc_parallel.%d.log' % j), 'w') as F:
         for rec in db.mf_hecke_cc.search({'id':{'$gte':j*chunk_size, '$lt':(j+1)*chunk_size}},['lfunction_label', 'an_normalized']):
+            counter += 1
             if not check_amn_slow(rec):
                 F.write('%s:amn\n' % rec['lfunction_label'])
                 F.flush()
             if not check_ap2_slow(rec):
                 F.write('%s:ap2\n' % rec['lfunction_label'])
                 F.flush()
+            if total > 1000:
+                if counter % (total/1000) == 0:
+                    print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
+    print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
+
+
 else:
     print r"""Usage:
         You should run this on legendre as: (this will use 40 cores):
