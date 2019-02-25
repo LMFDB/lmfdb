@@ -5,7 +5,7 @@
 <h2>Coefficient data</h2>
 
 For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
-{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p)\),
+{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p\),
 and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
 
@@ -15,18 +15,21 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     // hide everything
     $('.all').hide();
     $('.primes').hide();
-    // remove all the colors
-    $('.'+cl+.'light'+cl).switchClass("dark", "light");
-    $('.'+cl+.'dark'+cl).switchClass("light", "dark");
+    // swap colors
+    $('.'+cl+'.light'+cl).switchClass("dark", "light");
+    $('.'+cl+'.dark'+cl).switchClass("light", "dark");
+    // swap header
+    $('.header.' + cl).show();
+    // swap noptions
     $('.noptions.' + cl).show();
     $('.' + cl+'.' + n).show();
   }
 </script>
 
-{% macro render_display_options() %}
 {% set class_n = [50, 100, 250, 1000] %}
 {% set subsets = [('primes', 'only primes','\(p\)'), ('all', 'all \(n\)','\(n\)')]%}
 {% set default_class = [50,'primes'] %}
+{% macro render_display_options() %}
 <div>
   {% for s in subsets %}
     {% for n in class_n %}
@@ -65,15 +68,15 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 <div class="table-scroll-wrapper">
   <table class="ntdata complex-cols">
     <thead>
-      <tr>
+      <tr class="header all nodisplay">
         <th>
-          n
+          \(n\)
         </th>
         <th class='center' colspan="3">
           \(a_n\)
         </th>
         <th class='center' colspan="3">
-          \( a_{n} / n^{(k-1)/2} \)
+          \(a_n / n^{(k-1)/2}\)
         </th>
         <th class='center' colspan="3">
           \( \alpha_n \)
@@ -82,26 +85,47 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           \( \theta_n \)
         </th>
       </tr>
+      <tr class="header primes">
+        <th>
+          \(p\)
+        </th>
+        <th class='center' colspan="3">
+          \(a_p\)
+        </th>
+        <th class='center' colspan="3">
+          \(a_p / p^{(k-1)/2}\)
+        </th>
+        <th class='center' colspan="3">
+          \( \alpha_p\)
+        </th>
+        <th class='center'>
+          \( \theta_p \)
+        </th>
+      </tr>
+      <tr class="display" style="padding:0px; height:0px">
+        <th colspan="11" style="padding:0px; height:0px" ></th>
+      </tr>
+      {# FIXME: mssing line #}
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
       {% set pindex = 1 %}
       {% for n in range(2,1000) %}
-        {% set classes = ["all"] %}
-        {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
-          {% set rowspan = 2 %}
-          {% do classes.append("primes") %}
-          {% if pindex is divisibleby(2) %}
-            {% set shadep = 'darkprimes' %}
-          {% else %}
-            {% set shadep = 'lightprimes' %}
-          {% endif %}
-          {% set pindex = pindex + 1 %}
-        {% else %}
-          {% set shadep = 'noshadeprimes' %}
-          {% set rowspan = 1 %}
-          {% do classes.append("nodisplay") %}
-        {% endif %}
+      {% set classes = ["all"] %}
+      {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
+      {% set rowspan = 2 %}
+      {% do classes.append("primes") %}
+      {% if pindex is divisibleby(2) %}
+      {% set shadep = 'darkprimes' %}
+      {% else %}
+      {% set shadep = 'lightprimes' %}
+      {% endif %}
+      {% set pindex = pindex + 1 %}
+      {% else %}
+      {% set shadep = 'noshadeprimes' %}
+      {% set rowspan = 1 %}
+      {% do classes.append("nodisplay") %}
+      {% endif %}
 
         {% if loop.index is divisibleby(2) %}
           {% set shaden = 'darkall' %}
@@ -116,6 +140,9 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
             {% do classes.append(cn|string) %}
           {% endif %}
         {% endfor %}
+        {% if n > default_class[0] %}
+          {% do classes.append("nodisplay") %}
+        {% endif %}
 
         {% set class = classes|join(" ") %}
 
