@@ -3,8 +3,8 @@ from sage.all import prime_range, Integer, kronecker_symbol, PolynomialRing, Com
 
 from lmfdb.backend.database import db, SQL, Literal, IdentifierWrapper as Identifier
 from lmfdb.utils import names_and_urls
-from .mf import MfChecker, accumulate_failures
-from .verification import overall, overall_long, slow, fast
+from .mf import MfChecker
+from .verification import overall, overall_long, slow, fast, accumulate_failures
 
 CCC = ComplexField(200)
 

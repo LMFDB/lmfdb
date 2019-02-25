@@ -13,10 +13,10 @@ if is_running():
 _curdir = os.path.dirname(os.path.abspath(__file__))
 _prefix = 'lmfdb.verify.'
 for tablename in database.db.tablenames:
-    filename = os.path.join(_curdir, tablename, '.py')
+    filename = os.path.join(_curdir, tablename + '.py')
     if os.path.exists(filename):
         verifier = getattr(importlib.import_module(_prefix + tablename), tablename)
-        database.db[tablename]._verifier = verifier
+        database.db[tablename]._verifier = verifier()
 database.db.is_verifying = True
 db = database.db
 __all__ = ['db']
