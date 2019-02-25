@@ -333,8 +333,8 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['format'] = info.get('format', 'embed')
-    errs = parse_n(info, newform, info['format'] in ['satake', 'satake_angle'])
+    info['format'] = info.get('format', 'primes')
+    errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
