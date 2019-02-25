@@ -3123,7 +3123,7 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
-    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=0.1, debug=False):
+    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
         """
         Run the tests on this table defined in the lmfdb/verify folder.
 
@@ -3139,8 +3139,10 @@ class PostgresTable(PostgresBase):
         - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
         - ``parallel`` -- A cap on the number of threads to use in parallel (if 0, doesn't use parallel).
             If ``check`` or ``label`` is set, parallel is ignored and tests are run directly.
-        - ``follow`` -- The polling interval to follow the output if executed in parallel.
-            If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
+        - ``follow`` -- Which output logs to print to stdout.  'log' contains failed tests,
+            'errors' details on errors in tests, and 'progress' shows progress in running tests.
+            If False or empty, a subprocess.Popen object to the subprocess will be returned.
+        - ``poll_interval`` -- The polling interval to follow the output if executed in parallel.
         - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
         """
         if not self._db.is_verifying:
@@ -3176,7 +3178,7 @@ class PostgresTable(PostgresBase):
                 if follow:
                     from lmfdb.verify.follower import Follower
                     try:
-                        Follower(logdir, tabletypes, follow).follow()
+                        Follower(logdir, tabletypes, follow, poll_interval).follow()
                     finally:
                         # kill the subprocess
                         # From the man page, the following will terminate child processes

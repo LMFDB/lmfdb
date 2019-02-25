@@ -10,12 +10,16 @@ class Follower(object):
     - ``logdir`` -- the base directory for logging
     - ``tabletypes`` -- a list of strings giving the verifications to follow, in the form tablename.type
         (e.g. "mf_newforms.long" or "char_dir_values.over")
+    - ``suffixes`` -- which suffixes to print, a subset of ['log', 'progress', 'error'].
     - ``poll_interval`` -- the interval in seconds between checking on the status of the output.
     """
-    suffixes = ['log', 'progress', 'errors']
-    def __init__(self, logdir, tabletypes, poll_interval=0.1):
+    ok_suffixes = ['log', 'progress', 'errors']
+    def __init__(self, logdir, tabletypes, suffixes, poll_interval=0.1):
         self.logdir = logdir
         self.basenames = tabletypes
+        if not all(suffix in self.ok_suffixes for suffix in suffixes):
+            raise ValueError("Unrecognized suffix")
+        self.suffixes = suffixes
         if poll_interval <= 0:
             raise ValueError("Poll interval must be positive")
         self.interval = poll_interval
@@ -83,7 +87,7 @@ class Follower(object):
                 self.read(basename, suffix)
 
     def final_report(self):
-        for donefile in sorted(self.done_files):
+        for donefile in sorted(self.done_files, key=lambda x: ("FAILED" in x, x)):
             with open(os.path.join(self.logdir, donefile)) as F:
                 for line in F:
                     print line,
