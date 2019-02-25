@@ -3123,7 +3123,7 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
-    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=True, follow=0.1):
+    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=0.1):
         """
         Run the tests on this table defined in the lmfdb/verify folder.
 
@@ -3137,8 +3137,8 @@ class PostgresTable(PostgresBase):
         - ``label`` -- a string, giving the label for a particular object on which to run tests
             (as in the label_col attribute of the verifier).
         - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
-        - ``parallel`` -- whether to run tests in parallel.  If ``check`` or ``label`` is set,
-            parallel is ignored and tests are run directly.
+        - ``parallel`` -- A cap on the number of threads to use in parallel (if 0, doesn't use parallel).
+            If ``check`` or ``label`` is set, parallel is ignored and tests are run directly.
         - ``follow`` -- The polling interval to follow the output if executed in parallel.
             If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
         """
@@ -3152,7 +3152,7 @@ class PostgresTable(PostgresBase):
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         if label is not None:
-            parallel = False
+            parallel = 0
         verifier = self._verifier
         if check is None:
             if speedtype == 'all':
@@ -3166,7 +3166,7 @@ class PostgresTable(PostgresBase):
                 for tabletype in tabletypes:
                     print "Starting %s" % tabletype
                 cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
-                cmd = ['sage', '-python', cmd, '--logdir', logdir, '--tablename', str(self.search_table), '--speedtype', speedtype]
+                cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, str(self.search_table), speedtype]
                 DEVNULL = open(os.devnull, 'wb')
                 pipe = subprocess.Popen(cmd, stdout=DEVNULL)
                 if follow:
