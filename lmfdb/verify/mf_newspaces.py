@@ -235,7 +235,7 @@ class mf_newspaces(MfChecker):
         return rec['sturm_bound'] == sturm_bound0(rec['level'], rec['weight'])
 
 
-    @slow(ratio=0.01, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
+    @slow(ratio=0.001, report_slow=60, max_slow=10000, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'relative_dim', 'conrey_indexes'])
     def check_Skchi_dim_formula(self, rec):
         # for k > 1 check that dim is the Q-dimension of S_k^new(N,chi) (using sage dimension formula)
         # sample: dimension_new_cusp_forms(DirichletGroup(100).1^2,4)
@@ -246,7 +246,7 @@ class mf_newspaces(MfChecker):
             dirchar = DirichletGroup_conrey(rec['level'])[rec['conrey_indexes'][0]].sage_character()
         return dimension_new_cusp_forms(dirchar, rec['weight']) == rec['relative_dim']
 
-    @slow(report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
+    @slow(ratio=0.01, report_slow=10, constraint={'weight':{'$gt':1}}, projection=['level', 'weight', 'char_degree', 'eis_dim', 'cusp_dim', 'mf_dim', 'conrey_indexes'])
     def check_dims(self, rec):
         # for k > 1 check each of eis_dim, eis_new_dim, cusp_dim, mf_dim, mf_new_dim using Sage dimension formulas (when applicable)
         # Work around a bug in sage for Dirichlet characters in level 1

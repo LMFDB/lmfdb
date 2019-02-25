@@ -47,9 +47,9 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       Display {{s[2]}} up to:
       {% for k in class_n %}
       <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="#coefficient_data">{{k}}</a>
-      {% endfor %}
+      {% endfor %} {# for k in class_n #}
       </div>
-  {%endfor%}
+  {% endfor %} {# for s in subsets #}
 </div>
 
 
@@ -77,22 +77,32 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
+      {% set pindex = 1 %}
       {% for n in range(2,1000) %}
         {% set classes = ["all"] %}
         {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
           {% set rowspan = 2 %}
           {% do classes.append("primes") %}
+          {% if pindex is divisibleby(2) %}
+            {% set shadep = 'darkprimes' %}
+          {% else %}
+            {% set shadep = 'lightprimes' %}
+          {% endif %}
+          {% set pindex = pindex + 1 %}
         {% else %}
+          {% set shadep = 'noshadeprimes' %}
           {% set rowspan = 1 %}
           {% do classes.append("nodisplay") %}
         {% endif %}
 
         {% if loop.index is divisibleby(2) %}
+          {% set shaden = 'darkall' %}
           {% set shade = 'dark' %}
         {% else %}
+          {% set shaden = 'lightall' %}
           {% set shade = 'light' %}
         {% endif %}
-
+        {% set allshades = shade + ' ' + shaden + ' ' + shadep %}
         {% for cn in class_n %}
           {% if n <= cn %}
             {% do classes.append(cn|string) %}
@@ -102,36 +112,36 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
         {% set class = classes|join(" ") %}
 
         <tr class="{{class}}">
-          <td rowspan="{{rowspan}}" class="{{shade}}">
+          <td rowspan="{{rowspan}}" class="{{allshades}}">
             \({{n}}\)
           </td>
           {% set an_formats = ['embed', 'analytic_embed'] %}
           {% for format in an_formats %}
-            <td rowspan="{{rowspan}}" class="nowrap real">
+            <td rowspan="{{rowspan}}" class="nowrap real {{allshades}}">
               {{ newform.embedding_re(m, n, prec=info.emb_prec, format=format) | safe }}
             </td>
-            <td rowspan="{{rowspan}}" class="op">
+            <td rowspan="{{rowspan}}" class="op {{allshades}}">
               {{ newform.embedding_op(m, n, prec=info.emb_prec) | safe }}
             </td>
-            <td rowspan="{{rowspan}}" class="nowrap imag">
+            <td rowspan="{{rowspan}}" class="nowrap imag {{allshades}}">
               {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
             </td>
           {% endfor %}
           {% if rowspan == 2 %} {# if n is prime #}
            {% for i in [0,1] %}
             {%if i == 1 %}
-              <tr class="{{class}}">
+              <tr class="{{class}} {{allshades}}">
             {% endif %}
-            <td class="nowrap real">
+            <td class="nowrap real {{allshades}}">
               {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}
             </td>
-            <td class="op">
+            <td class="op {{allshades}}">
               {{ newform.satake_op(m,n,i) | safe }}
             </td>
-            <td class="imag">
+            <td class="imag {{allshades}}">
               {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
             </td>
-            <td class="nowrap right">
+            <td class="nowrap right {{allshades}}">
               {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}
             </td>
             </tr>
