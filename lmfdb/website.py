@@ -12,7 +12,10 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 from lmfdb.logger import info
-from lmfdb.app import app
+import lmfdb.app
+from lmfdb.backend.database import db
+if db.is_verifying:
+    raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
 
 # Importing the following top-level modules adds blueprints
 # to the app and imports further modules to make them functional
@@ -98,6 +101,7 @@ def main():
     info("main: ...done.")
     from lmfdb.utils.config import Configuration
     flask_options = Configuration().get_flask();
+    app = lmfdb.app.app
 
     if "profiler" in flask_options and flask_options["profiler"]:
         print "Profiling!"
@@ -105,6 +109,7 @@ def main():
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions = [30], sort_by=('cumulative','time','calls'))
         del flask_options["profiler"]
 
+    lmfdb.app.set_running()
     app.run(**flask_options)
 
 

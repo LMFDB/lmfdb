@@ -58,8 +58,8 @@ class mf_hecke_nf(MfChecker):
         # TIME about 2s
         # if hecke_ring_cyclotomic_generator > 0, check that field_poly_is_cyclotomic is set in mf_newforms record.
         # could be done with _run_crosstable from mf_newforms
-        cur = db._execute(SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label LIMIT %s"), [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label")
+        return self._run_query(query=query)
 
     @overall
     def check_maxp(self):

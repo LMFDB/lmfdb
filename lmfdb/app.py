@@ -31,6 +31,12 @@ def is_beta():
     from flask import g
     return g.BETA
 
+app.is_running = False
+def set_running():
+    app.is_running = True
+def is_running():
+    return app.is_running
+
 ############################
 # Global app configuration #
 ############################

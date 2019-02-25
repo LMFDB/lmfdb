@@ -253,8 +253,8 @@ class mf_newforms(MfChecker):
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT order_of_vanishing,(string_to_array(origin,'/'))[5:8],degree FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2"))
         db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
         db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
-        cur = db._execute(SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array )  LIMIT %s"), [self._cur_limit])
-        res = [rec[0] for rec in cur]
+        query = SQL("SELECT label FROM temp_mftbl t1 WHERE array_fill(t1.analytic_rank::smallint, ARRAY[t1.dim]) != ARRAY(SELECT t2.order_of_vanishing FROM temp_ltbl t2 WHERE t2.string_to_array = t1.string_to_array )")
+        res = self._run_query(query=query)
         db._execute(SQL("DROP TABLE temp_mftbl"))
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
@@ -266,9 +266,8 @@ class mf_newforms(MfChecker):
         # I expect this to take about 3/4h
         # we a create a temp table as we can't use aggregates under WHERE
         db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc t1, mf_newforms t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
-        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+        return self._run_query(query=query)
 
     @overall_long
     def check_self_dual_lfunctions(self):
@@ -278,8 +277,8 @@ class mf_newforms(MfChecker):
         db._execute(SQL("CREATE TEMP TABLE temp_ltbl AS SELECT (string_to_array(origin,'/'))[5:8], every(self_dual) self_dual FROM lfunc_lfunctions WHERE origin LIKE 'ModularForm/GL2/Q/holomorphic%' and degree=2 GROUP BY (string_to_array(origin,'/'))[5:8]"))
         db._execute(SQL("CREATE INDEX temp_ltbl_string_to_array_index on temp_ltbl using HASH(string_to_array)"))
         db._execute(SQL("CREATE INDEX temp_mftbl_string_to_array_index on temp_mftbl using HASH(string_to_array)"))
-        cur = db._execute(SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array LIMIT %s"), [self._cur_limit])
-        res = [rec[0] for rec in cur]
+        query = SQL("SELECT t1.label FROM temp_mftbl t1, temp_ltbl t2 WHERE t1.is_self_dual != t2.self_dual AND t2.string_to_array = t1.string_to_array")
+        res = self._run_query(query=query)
         db._execute(SQL("DROP TABLE temp_mftbl"))
         db._execute(SQL("DROP TABLE temp_ltbl"))
         return res
@@ -475,7 +474,7 @@ class mf_newforms(MfChecker):
         # check that embedding_root_real, and embedding_root_image present in mf_hecke_cc whenever field_poly is present
         # I didn't manage to write a generic one for this one
         join = self._make_join('hecke_orbit_code', None)
-        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} is not NULL LIMIT %s").format(
+        query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} IS NOT NULL").format(
                 Identifier(self.table._label_col),
                 Identifier(self.table.search_table),
                 Identifier('mf_hecke_cc'),
@@ -484,8 +483,7 @@ class mf_newforms(MfChecker):
                 Identifier("embedding_root_imag"),
                 Identifier("field_poly")
                 )
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        return self._run_query(query=query)
 
     @slow(constraint={'field_poly':{'$exists':True}}, projection=['field_poly', 'hecke_orbit_code'])
     def check_roots_are_roots(self, rec):
@@ -531,6 +529,5 @@ class mf_newforms(MfChecker):
         # check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
         howmany = 200
         # we restrict to weight <= 272
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) AND t1.weight <= 272 LIMIT %s")
-        cur = db._execute(query, [howmany, howmany, self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) AND t1.weight <= 272")
+        return self._run_query(query=query, values=[howmany, howmany])

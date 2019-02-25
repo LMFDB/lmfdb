@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import traceback, time, os, inspect
+import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
 
 from timeout_decorator import timeout, TimeoutError
-from sage.all import Integer
+from sage.all import Integer, vector, ZZ
 
 from lmfdb.backend.database import db, SQL, Composable, IdentifierWrapper as Identifier, Literal
 
@@ -103,142 +103,195 @@ class overall_long(one_query):
 
 class TableChecker(object):
     label_col = 'label' # default
-    def __init__(self, logfile=None, default_typ=None):
-        if logfile is None:
-            logfile = "%s.%s" % (self.__class__.__name__, default_typ.__name__)
-        self.logfile = logfile + '.log'
-        self.errfile = logfile + '.errors'
-        self.progfile = logfile + '.progress'
-        self.startfile = logfile + '.started'
-        self.donefile = logfile + '.done'
-        self.default_typ = default_typ
+
+    @staticmethod
+    def speedtype(typ):
+        if issubclass(typ, speed_decorator):
+            return typ
+        if typ == 'overall':
+            return overall
+        elif type == 'oveall_long':
+            return overall_long
+        elif type == 'fast':
+            return fast
+        elif type == 'slow':
+            return slow
+        else:
+            raise ValueError("Unrecognized speed type %s"%typ)
+
+    @staticmethod
+    def all_types():
+        return [overall, fast, overall_long, slow]
 
     @classmethod
-    def _get_checks_count(cls, typ):
+    def get_checks_count(cls, typ):
         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
-    def _get_checks(self, typ):
+    def get_checks(self, typ):
         return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
-    def _report_error(self, msg, log, prog):
-        with open(self.errfile, 'a') as err:
-            err.write(msg)
-            err.write(traceback.format_exc() + '\n')
-        log.write(msg)
-        prog.write(msg)
+    def get_check(self, check):
+        check = getattr(self.__class__, check)
+        if not isinstance(check, speed_decorator):
+            raise ValueError("Not a valid verification check")
+        return MethodType(check, self, self.__class__), check.__class__
+
+    def get_total(self, check):
+        return int(self.table.count(check.constraint) * check.ratio)
+
+    def get_iter(self, check, label):
+        projection = check.projection
+        if self.label_col not in projection:
+            projection = [self.label_col] + projection
+        if label is None:
+            return self.table.random_sample(check.ratio, check.constraint, projection)
+        else:
+            constraint = dict(check.constraint)
+            constraint[self.label_col] = label
+            return self.table.search(constraint, projection)
+
+    def get_progress_interval(self, check, total):
+        progress_interval = check.progress_interval
+        if progress_interval is None:
+            # Report about 100 times during run
+            if total < 10000:
+                progress_interval = 100 * (1 + total//10000)
+            else:
+                progress_interval = 1000 * (1 + total//100000)
+        return progress_interval
+
+    def _report_error(self, msg, log, prog, err):
+        err.write(msg)
+        err.write(traceback.format_exc() + '\n')
+        err.flush()
+        if err != log:
+            log.write(msg)
+        if err != prog:
+            prog.write(msg)
         return 1
 
-    def run(self, typ=None):
-        if typ is None:
-            typ = self.default_typ
-        table = self.table
-        checks = self._get_checks(typ)
-        failures = 0
-        disabled = 0
-        errors = 0
-        aborts = 0
-        timeouts = 0
-        with open(self.startfile, 'w') as startfile:
-            startfile.write("%s.%s started (pid %s)\n"%(self.__class__.__name__, typ.__name__, os.getpid()))
-        with open(self.logfile, 'a') as log:
-            with open(self.progfile, 'a') as prog:
-                start = time.time()
-                for check_num, check in enumerate(checks, 1):
-                    name = "%s.%s"%(self.__class__.__name__, check.__name__)
-                    if check.disabled:
-                        prog.write('%s (check %s/%s) disabled\n'%(name, check_num, len(checks)))
-                        disabled += 1
-                        continue
-                    check_start = time.time()
-                    prog.write('%s (check %s/%s) started at %s\n'%(name, check_num, len(checks), datetime.now()))
-                    prog.flush()
-                    if issubclass(typ, per_row):
-                        total = int(table.count(check.constraint) * check.ratio)
-                        progress_interval = check.progress_interval
-                        if progress_interval is None:
-                            # Report about 100 times during run
-                            if total < 10000:
-                                progress_interval = 100 * (1 + total//10000)
-                            else:
-                                progress_interval = 1000 * (1 + total//100000)
-                        projection = check.projection
-                        if self.label_col not in projection:
-                            projection = [self.label_col] + projection
-                        try:
-                            search_iter = table.random_sample(check.ratio, check.constraint, projection)
-                        except Exception as err:
+    def _run_check(self, check, typ, label, file_handles):
+        start = time.time()
+        prog, log, err = file_handles
+        name = "%s.%s"%(self.__class__.__name__, check.__name__)
+        if label is not None:
+            name += "[%s]" % label
+        self._cur_label = label
+        check_failures = 0
+        check_slow = 0
+        check_errors = 0
+        check_aborts = 0
+        check_timeouts = 0
+        try:
+            if issubclass(typ, per_row):
+                total = self.get_total(check)
+                progress_interval = self.get_progress_interval(check, total)
+                try:
+                    search_iter = self.get_iter(check, label)
+                except Exception as error:
+                    template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
+                    message = template.format(name, type(error).__name__, '\n'.join(error.args))
+                    self._report_error(message, log, prog, err)
+                    check_errors = 1
+                else:
+                    for rec_no, rec in enumerate(search_iter, 1):
+                        if rec_no % progress_interval == 0:
+                            prog.write('%d/%d in %.2fs\n'%(rec_no, total, time.time() - start))
+                            prog.flush()
+                        row_start = time.time()
+                        check_success = check(rec)
+                        row_time = time.time() - row_start
+                        if not check_success:
+                            log.write('%s: %s\n'%(name, rec[self.label_col]))
+                            check_failures += 1
+                            if check_failures >= check.max_failures:
+                                raise TooManyFailures
+                        if row_time >= check.report_slow:
+                            log.write('%s: %s (%d/%d) ok but took %.2fs\n'%(name, rec[self.label_col], rec_no, total, row_time))
+                            check_slow += 1
+                            if check_slow >= check.max_slow:
+                                raise TimeoutError
+                        if time.time() - start >= check.timeout:
+                            raise TimeoutError
+            else:
+                # self._cur_limit controls the max number of failures returned
+                self._cur_limit = check.max_failures
+                bad_labels = check()
+                if bad_labels:
+                    for label in bad_labels:
+                        log.write('%s: %s\n'%(name, label))
+                    check_failures = len(bad_labels)
+        except TimeoutError:
+            check_timeouts += 1
+            msg = '%s timed out after %.2fs\n'%(name, time.time() - start)
+            log.write(msg)
+            if log != prog:
+                prog.write(msg)
+        except TooManyFailures:
+            check_aborts += 1
+            msg = '%s aborted after %.2fs (too many failures)\n'%(name, time.time() - start)
+            log.write(msg)
+            if log != prog:
+                prog.write(msg)
+        except Exception:
+            if issubclass(typ, per_row):
+                msg = 'Exception in %s (%s):\n'%(name, rec.get(self.label_col, ''))
+            else:
+                msg = 'Exception in %s\n'%(name)
+            check_errors = self._report_error(msg, log, prog, err)
+        else:
+            prog.write('%s finished after %.2fs\n'%(name, time.time() - start))
+        finally:
+            log.flush()
+            prog.flush()
+        return vector(ZZ, [check_failures, check_errors, check_timeouts, check_aborts])
 
-                            template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
-                            message = template.format(name, type(err).__name__, '\n'.join(err.args))
-                            self._report_error(message)
-                            errors += 1
+    def run_check(self, check, label=None):
+        file_handles = sys.stdout, sys.stdout, sys.stdout
+        start = time.time()
+        checkfunc, typ = self.get_check(check)
+        status = self._run_check(checkfunc, typ, label, file_handles)
+        reports = []
+        for scount, sname in zip(status, ["failure", "error", "timeout", "abort"]):
+            if scount:
+                reports.append(pluralize(scount, sname))
+        status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
+        print "%s.%s %s in %.2fs\n" % (self.__class__.__name__, check, status, time.time() - start)
+
+    def run(self, typ, logdir, label=None):
+        self._cur_label = label
+        tname = "%s.%s" % (self.__class__.__name__, typ.__name__)
+        logfile = os.path.join(logdir, tname + '.log')
+        errfile = os.path.join(logdir, tname + '.errors')
+        progfile = os.path.join(logdir, tname + '.progress')
+        startfile = os.path.join(logdir, tname + '.started')
+        donefile = os.path.join(logdir, tname + '.done')
+        checks = self.get_checks(typ)
+        # status = failures, errors, timeouts, aborts
+        status = vector(ZZ, 4) # excludes disabled
+        disabled = 0
+        with open(startfile, 'w') as startfile:
+            startfile.write("%s.%s started (pid %s)\n"%(self.__class__.__name__, typ.__name__, os.getpid()))
+        with open(logfile, 'a') as log:
+            with open(progfile, 'a') as prog:
+                with open(errfile, 'a') as err:
+                    start = time.time()
+                    for check_num, check in enumerate(checks, 1):
+                        name = "%s.%s"%(self.__class__.__name__, check.__name__)
+                        if check.disabled:
+                            prog.write('%s (check %s/%s) disabled\n'%(name, check_num, len(checks)))
+                            disabled += 1
                             continue
-                    try:
-                        if issubclass(typ, per_row):
-                            check_failures = 0
-                            check_slow = 0
-                            for rec_no, rec in enumerate(search_iter, 1):
-                                if rec_no % progress_interval == 0:
-                                    prog.write('%d/%d in %.2fs\n'%(rec_no, total, time.time() - check_start))
-                                    prog.flush()
-                                row_start = time.time()
-                                check_success = check(rec)
-                                row_time = time.time() - row_start
-                                if not check_success:
-                                    log.write('%s: %s\n'%(name, rec[self.label_col]))
-                                    check_failures += 1
-                                    if check_failures >= check.max_failures:
-                                        raise TooManyFailures
-                                if row_time >= check.report_slow:
-                                    log.write('%s: %s (%d/%d) ok but took %.2fs\n'%(name, rec[self.label_col], rec_no, total, row_time))
-                                    check_slow += 1
-                                    if check_slow >= check.max_slow:
-                                        raise TimeoutError
-                                if time.time() - check_start >= check.timeout:
-                                    raise TimeoutError
-                        else:
-                            # self._cur_limit controls the max number of failures returned
-                            self._cur_limit = check.max_failures
-                            bad_labels = check()
-                            if bad_labels:
-                                for label in bad_labels:
-                                    log.write('%s: %s\n'%(name, label))
-                                failures += len(bad_labels)
-                    except TimeoutError:
-                        timeouts += 1
-                        msg = '%s timed out after %.2fs\n'%(name, time.time() - check_start)
-                        prog.write(msg)
-                        log.write(msg)
-                    except TooManyFailures:
-                        aborts += 1
-                        msg = '%s aborted after %.2fs (too many failures)\n'%(name, time.time() - check_start)
-                        prog.write(msg)
-                        log.write(msg)
-                    except Exception:
-                        if issubclass(typ, per_row):
-                            msg = 'Exception in %s (%s):\n'%(name, rec.get(self.label_col, ''))
-                        else:
-                            msg = 'Exception in %s\n'%(name)
-                        errors += self._report_error(msg, log, prog)
-                    else:
-                        prog.write('%s finished after %.2fs\n'%(name, time.time() - check_start))
-                    finally:
-                        if issubclass(typ, per_row):
-                            failures += check_failures
-                        log.flush()
+                        prog.write('%s (check %s/%s) started at %s\n'%(name, check_num, len(checks), datetime.now()))
                         prog.flush()
-        with open(self.donefile, 'a') as done:
+                        status += self._run_check(check, typ, label, (prog, log, err))
+        with open(donefile, 'a') as done:
             reports = []
-            if failures:
-                reports.append(pluralize(failures, "failure"))
-            if aborts:
-                reports.append(pluralize(aborts, "abort"))
-            if timeouts:
-                reports.append(pluralize(timeouts, "timeout"))
+            for scount, sname in zip(status, ["failure", "error", "timeout", "abort"]):
+                if scount:
+                    reports.append(pluralize(scount, sname))
             if disabled:
                 reports.append("%s disabled"%disabled)
-            if errors:
-                reports.append(pluralize(errors, "error"))
             status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
             done.write("%s.%s %s in %.2fs\n"%(self.__class__.__name__, typ.__name__, status, time.time() - start))
             os.remove(self.startfile)
@@ -277,33 +330,39 @@ class TableChecker(object):
         join2 = [self._make_sql(j, "t2") for j in join2]
         return SQL(" AND ").join(SQL("{0} = {1}").format(j1, j2) for j1, j2 in zip(join1, join2))
 
-    def _run_query(self, condition, constraint={}, values=[], table=None, ratio=1):
+    def _run_query(self, condition=None, constraint={}, values=[], table=None, query=None, ratio=1):
         """
         INPUT:
 
         - ``condition`` -- an SQL object giving a condition on the search table
         - ``constraint`` -- a dictionary, as passed to the search method, or an SQL object
+        - ``query`` -- an SQL object giving the query, leaving out only the _cur_label and _cur_limit parts.
+            Note that condition, constraint, table and ratio will be ignored if query is provided.
         """
-        if table is None:
-            table = self.table.search_table
-        if isinstance(table, basestring):
-            if ratio == 1:
-                table = Identifier(table)
-            else:
-                table = SQL("{0} TABLESAMPLE SYSTEM({1})").format(Identifier(table), Literal(ratio))
         label_col = Identifier(self.label_col)
+        if query is None:
+            if table is None:
+                table = self.table.search_table
+            if isinstance(table, basestring):
+                if ratio == 1:
+                    table = Identifier(table)
+                else:
+                    table = SQL("{0} TABLESAMPLE SYSTEM({1})").format(Identifier(table), Literal(ratio))
 
-        # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
-        query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
+            # WARNING: the following is not safe from SQL injection, so be careful if you copy this code
+            query = SQL("SELECT {0} FROM {1} WHERE {2}").format(
                 label_col,
                 table,
                 condition)
-        if not isinstance(constraint, Composable):
-            constraint, cvalues = self.table._parse_dict(constraint)
+            if not isinstance(constraint, Composable):
+                constraint, cvalues = self.table._parse_dict(constraint)
+                if constraint is not None:
+                    values = values + cvalues
             if constraint is not None:
-                values = values + cvalues
-        if constraint is not None:
-            query = SQL("{0} AND {1}").format(query, constraint)
+                query = SQL("{0} AND {1}").format(query, constraint)
+        if self._cur_label is not None:
+            query = SQL("{0} AND {1} = %s").format(query, label_col)
+            values += [self._cur_label]
         query = SQL("{0} LIMIT %s").format(query)
         cur = db._execute(query, values + [self._cur_limit])
         return [rec[0] for rec in cur]

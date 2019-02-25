@@ -20,39 +20,34 @@ class mf_hecke_cc(MfChecker):
     @overall_long
     def check_dim(self):
         # check that we have dim embeddings per hecke_orbit_code
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, COUNT(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, COUNT(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count")
+        return self._run_query(query=query)
 
     @overall_long
     def check_lfunction_label(self):
         # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
-        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+        return self._run_query(query=query)
 
     @overall_long
     def check_embedding_index(self):
         # check that embedding_index is consistent with conrey_label and embedding_m
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number")
+        return self._run_query(query=query)
 
     @overall
     def check_embedding_m(self):
         # About 250s
         # check that embedding_m is consistent with conrey_label and embedding_index
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number")
+        return self._run_query(query=query)
 
     @overall_long
     def check_conrey_indexes(self):
         # when grouped by hecke_orbit_code, check that conrey_indexs match conrey_indexes,  embedding_index ranges from 1 to relative_dim (when grouped by conrey_index), and embedding_m ranges from 1 to dim
         # ps: In check_embedding_m and check_embedding_index, we already checked that embedding_m and  check_embedding_index are in an increasing sequence
-        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_index)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim) LIMIT %s")
-        cur = db._execute(query, [self._cur_limit])
-        return [rec[0] for rec in cur]
+        query = SQL("WITH foo as (SELECT hecke_orbit_code, sort(array_agg(DISTINCT conrey_index)) conrey_indexes, count(DISTINCT embedding_index) relative_dim, count(embedding_m) dim FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND (t1.conrey_indexes != foo.conrey_indexes OR t1.relative_dim != foo.relative_dim OR t1.dim != foo.dim)")
+        return self._run_query(query=query)
 
     @overall_long
     def check_an_length(self):
@@ -61,7 +56,10 @@ class mf_hecke_cc(MfChecker):
         return self._run_query(SQL("array_length({0}, 1) < 1000 OR array_length({0}, 2) != 2").format(
             Identifier("an_normalized")))
 
-
+    @overall_long
+    def check_angles_length(self):
+        # check that angles is a list of length at least 168
+        return self.check_array_len_gte_constant('angles', 168)
 
     @overall_long
     def check_lfunction_label_hoc(self):

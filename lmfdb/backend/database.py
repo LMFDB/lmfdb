@@ -25,7 +25,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 """
 
-import datetime, logging, os, random, re, tempfile, time, traceback
+import datetime, logging, os, random, re, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
@@ -406,6 +406,7 @@ class PostgresTable(PostgresBase):
         set_column_info(self._search_cols, search_table)
         self._set_sort(sort)
         self.stats = PostgresStatsTable(self, total)
+        self._verifier = None # set when importing lmfdb.verify
 
     def _set_sort(self, sort):
         """
@@ -3122,6 +3123,70 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
+    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=True, follow=0.1):
+        """
+        Run the tests on this table defined in the lmfdb/verify folder.
+
+        If parallel is True, sage should be in your path or aliased appropriately.
+
+        INPUT:
+
+        - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
+        - ``check`` -- a string, giving the function name for a particular test.
+            If provided, ``speedtype`` will be ignored.
+        - ``label`` -- a string, giving the label for a particular object on which to run tests
+            (as in the label_col attribute of the verifier).
+        - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
+        - ``parallel`` -- whether to run tests in parallel.  If ``check`` or ``label`` is set,
+            parallel is ignored and tests are run directly.
+        - ``follow`` -- The polling interval to follow the output if executed in parallel.
+            If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
+        """
+        if not self._db.is_verifying:
+            raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
+        if self._verifier is None:
+            raise ValueError("No verifications defined for this table; add a class {0} in lmfdb/verify/{0}.py to enable".format(self.search_table))
+        lmfdb_root = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+        if logdir is None:
+            logdir = os.path.join(lmfdb_root, 'logs', 'verification')
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        if label is not None:
+            parallel = False
+        verifier = self._verifier
+        if check is None:
+            if speedtype == 'all':
+                types = verifier.all_types()
+            else:
+                types = [verifier.speedtype(speedtype)]
+            total_count = 0
+            for typ in types:
+                if verifier.get_checks_count(typ) == 0:
+                    print "No %s checks defined for %s" % (typ.__name__, self.search_table)
+                else:
+                    print "Starting %s checks for %s" % (typ.__name__, self.search_table)
+                    total_count += 1
+                    if not parallel:
+                        verifier.run(typ, logdir, label)
+            if parallel:
+                cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
+                cmd = [cmd, '--logdir', logdir, '--tablename', self.search_table, '--typename', speedtype]
+                pipe = subprocess.Popen(cmd)
+                if follow:
+                    from lmfdb.verify.follower import Follower
+                    try:
+                        Follower(logdir, total_count, follow).follow()
+                    finally:
+                        # kill the subprocess
+                        # From the man page, the following will terminate child processes
+                        if pipe.poll() is None:
+                            pipe.send_signal(signal.SIGTERM)
+                            pipe.send_signal(signal.SIGTERM)
+                else:
+                    return pipe
+        else:
+            verifier.run_check(check, label)
+
 class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
@@ -4193,7 +4258,6 @@ class PostgresDatabase(PostgresBase):
         self.__editor = Configuration().get_logging().get('editor')
 
 
-
         cur = self._execute(SQL('SELECT table_name, column_name, udt_name::regtype FROM information_schema.columns'))
         data_types = {}
         for table_name, column_name, regtype in cur:
@@ -4216,6 +4280,7 @@ class PostgresDatabase(PostgresBase):
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
+        self.is_verifying = False # set to true when importing lmfdb.verify
 
     def __repr__(self):
         return "Interface to Postgres database"
@@ -4792,5 +4857,55 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for tablename in self.tablenames:
                 table = self[tablename]
                 table.cleanup_from_reload()
+
+    def verify(self, speedtype="all", logdir=None, follow=0.1):
+        """
+        Run verification tests on all tables (if defined in the lmfdb/verify folder).
+        For more granular control, see the ``verify`` function on a particular table.
+
+        sage should be in your path or aliased appropriately.
+
+        INPUT:
+
+        - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
+        - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
+        - ``follow`` -- The polling interval to follow the output.
+            If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
+        """
+        if not self.is_verifying:
+            raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
+        lmfdb_root = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+        if logdir is None:
+            logdir = os.path.join(lmfdb_root, 'logs', 'verification')
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        types = None
+        total_count = 0
+        for tablename in self.tablenames:
+            table = self[tablename]
+            verifier = table._verifier
+            if verifier is not None:
+                if types is None:
+                    if speedtype == "all":
+                        types = verifier.all_types()
+                    else:
+                        types = [verifier.speedtype(speedtype)]
+                for typ in types:
+                    if verifier.get_checks_count(typ) != 0:
+                        total_count += 1
+        cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
+        cmd = [cmd, '--logdir', logdir, '--tablename', 'all', '--speedtype', speedtype]
+        pipe = subprocess.Popen(cmd)
+        if follow:
+            from lmfdb.verify.follower import Follower
+            try:
+                Follower(logdir, total_count, follow).follow()
+            finally:
+                # kill the subprocess
+                # From the man page, the following will terminate child processes
+                pipe.send_signal(signal.SIGTERM)
+                pipe.send_signal(signal.SIGTERM)
+        else:
+            return pipe
 
 db = PostgresDatabase()
