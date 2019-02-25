@@ -61,7 +61,7 @@ if __name__ == '__main__':
         type=str,
         help=('the type of test to run on the chosen table.' +
               ' Allowed values are: ' + ', '.join(['all'] + speedtypes)),
-        choices=['all'] + speedtypes)
+        choices=['all'] + speedtypes + ['over', 'long'])
 
     args, parallel_args = parser.parse_known_args()
     options = vars(args)

@@ -110,13 +110,13 @@ class TableChecker(object):
 
     @staticmethod
     def speedtype(typ):
-        if typ == 'overall':
+        if typ in ['overall', 'over']:
             return overall
-        elif type == 'oveall_long':
+        elif typ == ['long', 'overall_long']:
             return overall_long
-        elif type == 'fast':
+        elif typ == 'fast':
             return fast
-        elif type == 'slow':
+        elif typ == 'slow':
             return slow
         elif isinstance(typ, type) and issubclass(typ, speed_decorator):
             return typ

@@ -3123,7 +3123,7 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
-    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=0.1):
+    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=0.1, debug=False):
         """
         Run the tests on this table defined in the lmfdb/verify folder.
 
@@ -3141,6 +3141,7 @@ class PostgresTable(PostgresBase):
             If ``check`` or ``label`` is set, parallel is ignored and tests are run directly.
         - ``follow`` -- The polling interval to follow the output if executed in parallel.
             If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
+        - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
         """
         if not self._db.is_verifying:
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
@@ -3167,8 +3168,11 @@ class PostgresTable(PostgresBase):
                     print "Starting %s" % tabletype
                 cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
                 cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, str(self.search_table), speedtype]
-                DEVNULL = open(os.devnull, 'wb')
-                pipe = subprocess.Popen(cmd, stdout=DEVNULL)
+                if debug:
+                    pipe = subprocess.Popen(cmd)
+                else:
+                    DEVNULL = open(os.devnull, 'wb')
+                    pipe = subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
                 if follow:
                     from lmfdb.verify.follower import Follower
                     try:
@@ -4862,7 +4866,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 table = self[tablename]
                 table.cleanup_from_reload()
 
-    def verify(self, speedtype="all", logdir=None, follow=0.1):
+    def verify(self, speedtype="all", logdir=None, parallel=8, follow=0.1, debug=False):
         """
         Run verification tests on all tables (if defined in the lmfdb/verify folder).
         For more granular control, see the ``verify`` function on a particular table.
@@ -4873,11 +4877,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
         - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
+        - ``parallel`` -- A cap on the number of threads to use in parallel
         - ``follow`` -- The polling interval to follow the output.
             If 0, a parallel subprocess will be started and a subprocess.Popen object to it will be returned.
+        - ``debug`` -- if False, will redirect stdout and stderr for the spawned process to /dev/null.
         """
         if not self.is_verifying:
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
+        if parallel <= 0:
+            raise ValueError("Non-parallel runs not supported for whole database")
         lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
         if logdir is None:
             logdir = os.path.join(lmfdb_root, 'logs', 'verification')
@@ -4901,8 +4909,12 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             # Shouldn't occur....
             raise ValueError("No verification tests defined!")
         cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
-        cmd = [cmd, '--logdir', logdir, '--tablename', 'all', '--speedtype', speedtype]
-        pipe = subprocess.Popen(cmd)
+        cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, 'all', speedtype]
+        if debug:
+            pipe = subprocess.Popen(cmd)
+        else:
+            DEVNULL = open(os.devnull, 'wb')
+            pipe = subprocess.Popen(cmd, stdout=DEVNULL, stderr=DEVNULL)
         if follow:
             from lmfdb.verify.follower import Follower
             try:
