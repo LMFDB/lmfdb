@@ -12,6 +12,7 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 from lmfdb.logger import info
+import lmfdb.app # So that we can set it running below
 from lmfdb.app import app
 
 # Importing the following top-level modules adds blueprints
@@ -94,6 +95,10 @@ assert hecke_algebras
 from inventory_app.inventory_app import inventory_app
 assert inventory_app
 
+from lmfdb.backend.database import db
+if db.is_verifying:
+    raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
+
 def main():
     info("main: ...done.")
     from lmfdb.utils.config import Configuration
@@ -105,6 +110,7 @@ def main():
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions = [30], sort_by=('cumulative','time','calls'))
         del flask_options["profiler"]
 
+    lmfdb.app.set_running()
     app.run(**flask_options)
 
 
