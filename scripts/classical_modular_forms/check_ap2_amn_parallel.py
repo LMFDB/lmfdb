@@ -61,7 +61,7 @@ if len(sys.argv) == 3:
                         print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
         print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
     else:
-        print "%d: DONE -- avg oo s'
+        print "%d: DONE -- avg oo s" % j
 
 
 else:
