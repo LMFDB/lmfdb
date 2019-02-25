@@ -184,9 +184,6 @@ class WebNewform(object):
         self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
                                # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
-        self.embedding_m = None
-        if self.embedding_label:
-            self.embedding_m = int(re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, self.embedding_label))
 
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
@@ -309,9 +306,10 @@ class WebNewform(object):
           - ``CC_n`` -- a list of desired a_n
           - ``format`` -- one of 'embed', 'analytic_embed', 'satake', or 'satake_angle'
         """
-        an_formats = ['embed','analytic_embed',None]
-        angles_formats = ['satake','satake_angle',None]
+        an_formats = ['embed','analytic_embed','primes', 'all']
+        angles_formats = ['satake','satake_angle','primes', 'all']
         cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
+        format = info.get('format')
         if self.embedding_label is None:
             m = info.get('m','1-%s'%(min(self.dim,20)))
             if '.' in m:
@@ -324,7 +322,6 @@ class WebNewform(object):
             an_keys = (CC_n[0]-1, CC_n[1])
             # extra 5 primes in case we hit too many bad primes
             angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5, len(primes_for_angles)))
-            format = info.get('format')
             an_projection = 'an_normalized[%d:%d]' % an_keys
             angles_projection = 'angles[%d:%d]' % angles_keys
             if format in an_formats:
@@ -338,14 +335,15 @@ class WebNewform(object):
                 query['embedding_m'] = {'$gte':low, '$lte':high}
             else:
                 query['embedding_m'] = {'$in': CC_m}
+            self.embedding_m = None
         else:
+            self.embedding_m = int(info['CC_m'][0])
             an_projection = 'an_normalized'
             an_keys = (0, an_storage_bound)
             angles_keys = (0, len(primes_for_angles))
             angles_projection = 'angles[%d:%d]' % angles_keys
             cc_proj.extend([an_projection, angles_projection])
             query = {'lfunction_label' : self.label + '.' + self.embedding_label}
-            format = None
 
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
@@ -362,7 +360,7 @@ class WebNewform(object):
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
-            if format in ['embed',None]:
+            if format in ['embed', 'primes', 'all']:
                 self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
