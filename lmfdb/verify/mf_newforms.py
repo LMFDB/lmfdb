@@ -334,6 +334,12 @@ class mf_newforms(MfChecker):
                     return False
             return True
 
+    @fast(constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
+    def check_self_dual_by_poly(self, rec):
+        # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
+        f = self.ZZx(rec['field_poly'])
+        return (rec.get('is_self_dual') == f.is_real_rooted())
+
     @slow(projection=['level', 'weight', 'char_orbit_index', 'dim', 'related_objects'])
     def check_related_objects(self, rec):
         # check that URLS in related_objects are valid and identify objects present in the LMFDB
@@ -374,11 +380,6 @@ class mf_newforms(MfChecker):
 
     #### extra slow ####
 
-    @slow(disabled=True, constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
-    def check_self_dual_by_poly(self, rec):
-        # if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
-        f = self.ZZx(rec['field_poly'])
-        return (rec.get('is_self_dual') == f.is_real_rooted())
 
     #@slow(constraint={'is_self_dual':{'$exists':True}, 'field_poly':None}, projection=['hecke_orbit_code', 'is_self_dual'])
     #def check_self_dual_by_embeddings_old(self, rec):

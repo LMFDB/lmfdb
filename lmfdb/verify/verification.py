@@ -250,10 +250,12 @@ class TableChecker(object):
             prog.flush()
         return vector(ZZ, [check_failures, check_errors, check_timeouts, check_aborts])
 
-    def run_check(self, check, label=None):
+    def run_check(self, check, label=None, ratio=None):
         file_handles = sys.stdout, sys.stdout, sys.stdout
         start = time.time()
         checkfunc, typ = self.get_check(check)
+        if ratio is not None:
+            checkfunc.ratio = ratio
         status = self._run_check(checkfunc, typ, label, file_handles)
         reports = []
         for scount, sname in zip(status, ["failure", "error", "timeout", "abort"]):
@@ -346,12 +348,24 @@ class TableChecker(object):
 
     def _run_query(self, condition=None, constraint={}, values=[], table=None, query=None, ratio=1):
         """
+        Run a query to check a condition.
+
+        The number of returned failures will be limited by the
+        ``_cur_limit`` attribute of this ``TableChecker``.  If
+        ``_cur_label`` is set, only that label will be checked.
+
         INPUT:
 
         - ``condition`` -- an SQL object giving a condition on the search table
         - ``constraint`` -- a dictionary, as passed to the search method, or an SQL object
-        - ``query`` -- an SQL object giving the query, leaving out only the _cur_label and _cur_limit parts.
-            Note that condition, constraint, table and ratio will be ignored if query is provided.
+        - ``values`` -- a list of values to fill in for ``%s`` in the condition.
+        - ``table`` -- an SQL object or string giving the table to execute this query on.
+            Defaults to the table for this TableChecker.
+        - ``query`` -- an SQL object giving the whole query, leaving out only the
+            ``_cur_label`` and ``_cur_limit`` parts.  Note that ``condition``,
+            ``constraint``, ``table`` and ``ratio`` will be ignored if query is provided.
+        - ``ratio`` -- the ratio of rows in the table to run this query on.
+
         """
         label_col = Identifier(self.label_col)
         if query is None:

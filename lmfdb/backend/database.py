@@ -3123,7 +3123,7 @@ class PostgresTable(PostgresBase):
         """
         self._db.log_db_change(operation, tablename=self.search_table, **data)
 
-    def verify(self, speedtype="all", check=None, label=None, logdir=None, parallel=4, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
+    def verify(self, speedtype="all", check=None, label=None, ratio=None, logdir=None, parallel=4, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
         """
         Run the tests on this table defined in the lmfdb/verify folder.
 
@@ -3136,6 +3136,8 @@ class PostgresTable(PostgresBase):
             If provided, ``speedtype`` will be ignored.
         - ``label`` -- a string, giving the label for a particular object on which to run tests
             (as in the label_col attribute of the verifier).
+        - ``ratio`` -- for slow and fast tests, override the ratio of rows to be tested. Only valid
+            if ``check`` is provided.
         - ``logdir`` -- a directory to output log files.  Defaults to LMFDB_ROOT/logs/verification.
         - ``parallel`` -- A cap on the number of threads to use in parallel (if 0, doesn't use parallel).
             If ``check`` or ``label`` is set, parallel is ignored and tests are run directly.
@@ -3149,6 +3151,8 @@ class PostgresTable(PostgresBase):
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
         if self._verifier is None:
             raise ValueError("No verifications defined for this table; add a class {0} in lmfdb/verify/{0}.py to enable".format(self.search_table))
+        if ratio is not None and check is None:
+            raise ValueError("You can only provide a ratio if you specify a check")
         lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
         if logdir is None:
             logdir = os.path.join(lmfdb_root, 'logs', 'verification')
@@ -3166,6 +3170,7 @@ class PostgresTable(PostgresBase):
                 tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
                 if len(tabletypes) == 0:
                     raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
+                parallel = min(parallel, len(tabletypes))
                 for tabletype in tabletypes:
                     print "Starting %s" % tabletype
                 cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
@@ -3195,7 +3200,11 @@ class PostgresTable(PostgresBase):
                         print "Starting %s checks for %s" % (typ.__name__, self.search_table)
                         verifier.run(typ, logdir, label)
         else:
-            verifier.run_check(check, label)
+            msg = "Starting check %s" % check
+            if label is not None:
+                msg += " for label %s" % label
+            print msg
+            verifier.run_check(check, label=label, ratio=ratio)
 
 class PostgresStatsTable(PostgresBase):
     """
@@ -4910,6 +4919,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if len(tabletypes) == 0:
             # Shouldn't occur....
             raise ValueError("No verification tests defined!")
+        parallel = min(parallel, len(tabletypes))
         cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
         cmd = ['sage', '-python', cmd, '-j%s'%int(parallel), logdir, 'all', speedtype]
         if debug:

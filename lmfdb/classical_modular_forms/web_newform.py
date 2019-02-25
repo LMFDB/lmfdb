@@ -173,6 +173,8 @@ class WebNewform(object):
             # get data from char_dir_values
             char_conrey = self.embedding_label.split('.')[0]
             char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, char_conrey)},['order','values_gens'])
+            if char_values is None:
+                raise ValueError("Invalid Conrey label")
             self.hecke_ring_character_values = [[i,[[1, m]]] for i, m in char_values['values_gens']]
             self.hecke_ring_cyclotomic_generator = char_values['order']
             self.has_exact_qexp = False
@@ -930,6 +932,8 @@ function switch_basis(btype) {
         if not isinstance(elabel, basestring): # match object
             elabel = elabel.group(0)
         c, e = map(int, elabel.split('.'))
+        if e <= 0 or e > self.rel_dim:
+            raise ValueError("Invalid embedding")
         return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
     def embedded_title(self, m):

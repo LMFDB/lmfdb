@@ -1,24 +1,12 @@
 CRITICAL (BUGS):
-* Server error on 1364.1.h.a, n=2-1000
 * Type in an invalid conrey label into Embedding box gives server error
 * Server error for embedded label in url
 
 OUTSTANDING VERIFICATIONS:
-+ mf_newforms.check_embeddings_count: 23.41.d.a
-  These are all present now.
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
-Bugs:
-+ mf_newforms.check_projective_field has a bug (fixed but not rerun)
-+ mf_newforms.check_self_twist_disc had a bug (fixed but not rerun)
-
 Disabled:
-+ mf_hecke_cc.check_ap2 disabled (comment out)
-+ mf_hecke_cc.check_amn disabled (re-enable after adding a TABLESAMPLE clause)
 + mf_newspaces.check_sum_AL_dims disabled (re-enable and optimize)
-+ mf_newforms.check_an_embedding disabled (comment out)
-+ mf_newforms.check_self_dual_by_poly disabled (try re-enabling, add degree limit, use root_unitary)
-+ mf_newforms.check_inner_twist_character disabled (comment out)
 
 Expected failures:
 + (mf_newforms.check_analytic_rank_proved: 1158 failures)
