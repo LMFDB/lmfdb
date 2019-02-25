@@ -1,7 +1,3 @@
-CRITICAL (BUGS):
-* Type in an invalid conrey label into Embedding box gives server error
-* Server error for embedded label in url
-
 OUTSTANDING VERIFICATIONS:
 + mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
@@ -53,6 +49,7 @@ FINAL CHECKS:
 * q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github
+* Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
