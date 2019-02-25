@@ -55,8 +55,8 @@ if len(sys.argv) == 3:
             if not check_ap2_slow(rec):
                 F.write('%s:ap2\n' % rec['lfunction_label'])
                 F.flush()
-            if total > 1000:
-                if counter % (total/1000) == 0:
+            if total > 100:
+                if counter % (total/100) == 0:
                     print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
     print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
 
