@@ -110,6 +110,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* on _record_count do not try to write if you don't have the permissions
 * after PR, reconvert nf_fields (as it will have new data), and do the swap
 * add to test.sh to verify '# -*- coding: utf-8 -*-
 * move names_and_urls to somewhere else? fix the circular import in utils

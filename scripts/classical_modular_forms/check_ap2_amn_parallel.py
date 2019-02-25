@@ -14,7 +14,7 @@ def check_ap2_slow(rec):
     ls = rec['lfunction_label'].split('.')
     level, weight, chi = map(int, [ls[0], ls[1], ls[-2]])
     char = DirichletGroup_conrey(level, CC)[chi]
-    Z = rec['an_normalized']
+    Z = rec['an_normalized[0:1000]']
     for p in prime_range(31+1):
         if level % p != 0:
             # a_{p^2} = a_p^2 - chi(p)
@@ -28,7 +28,7 @@ def check_ap2_slow(rec):
 pairs = [(m,n) for m in range(2,1000) for n in range(m, 1000) if gcd(m,n) == 1 and m*n <= 1000]
 
 def check_amn_slow(rec):
-    Z = [0] + [CC(*elt) for elt in rec['an_normalized']]
+    Z = [0] + [CC(*elt) for elt in rec['an_normalized[0:1000]']]
     for m, n in pairs:
         if (Z[m*n] - Z[m]*Z[n]).abs() > 1e-11:
             return False
@@ -48,7 +48,7 @@ if len(sys.argv) == 3:
     print "%d: %d rows to check" % (j, total)
     if total > 0:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
-            for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized']):
+            for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized[0:1000]']):
                 counter += 1
                 if not check_amn_slow(rec):
                     F.write('%s:amn\n' % rec['lfunction_label'])
