@@ -1,5 +1,4 @@
 OUTSTANDING VERIFICATIONS:
-+ mf_newforms.check_traces: 1.274.a.a (maybe we should disable for high weight?)
 
 Disabled:
 + mf_newspaces.check_sum_AL_dims disabled (re-enable and optimize)
@@ -7,26 +6,18 @@ Disabled:
 Expected failures:
 + (mf_newforms.check_analytic_rank_proved: 1158 failures)
 
-Timeouts:
-a  mf_gamma1.check_newspaces_hecke_orbit_dims timed out after 20980.85s
-a  mf_newforms.check_analytic_rank timed out after 17433.24s
-a  mf_newforms.check_analytic_rank_proved timed out after 19300.54s
-a  mf_newspaces.check_hecke_orbit_dims_newforms timed out after 21080.73s
-a  mf_newspaces.check_portraits_count timed out after 2050.00s
-ab mf_newspaces.check_Skchi_dim_formula timed out after 3630.91s (some rows taking more than a minute)
-ab mf_newspaces.check_dims timed out after 88.01s (too many rows over the slow threshold of 0.1s)
- b mf_hecke_cc.check_an_length timed out after 3698.06s
- b mf_hecke_cc.check_embedding_m timed out after 300.19s
- b mf_newforms.check_roots_are_roots timed out after 57.21s
-
 Embedded modular form:
-Change q-expansion to complex, options for 10, 100, 1000 coefficients
-Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
+* Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
+* Display options 50, 250, 1000/2000/3000
+* Move significant digits to the top
+* Fix downloads: just download coefficients, update "all stored data"
+* Fix newform download complex embeddings to give a list of dictionaries
 
 IMPORTANT:
+* Make an consistent: always show digits after decimal place even if approximately integral
 * Discuss whether list of verifications should live in schema markdown file or code folder. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* change lfunction_label to label
+* change lfunction_label to label, add level, weight, char_orbit_index, hecke_orbit, dual_conrey_label, dual_embedding_index, dual_embedding_m (Edgar)
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)

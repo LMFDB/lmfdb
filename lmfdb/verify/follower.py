@@ -36,7 +36,7 @@ class Follower(object):
         if F is not None:
             line = F.readline()
             while line:
-                print line,
+                print '[%s.%s]: %s' % (basename, suffix, line),
                 line = F.readline()
 
     def open_file(self, basename, suffix):

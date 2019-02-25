@@ -137,8 +137,8 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           {% endfor %}
           {% if rowspan == 2 %} {# if n is prime #}
            {% for i in [0,1] %}
-            {%if i == 1 %}
-              <tr class="{{class}} {{allshades}}">
+            {% if i == 1 %}
+              <tr class="{{class}}">
             {% endif %}
             <td class="nowrap real {{allshades}}">
               {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}

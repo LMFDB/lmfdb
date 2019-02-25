@@ -257,6 +257,7 @@ class CMF_download(Downloader):
         if not db.mf_hecke_cc.exists({'hecke_orbit_code':code}):
             return abort(404, "No form found for %s"%(label))
         def cc_generator():
+            yield '[\n'
             for ev in db.mf_hecke_cc.search(
                     {'hecke_orbit_code':code},
                     ['lfunction_label',
@@ -270,7 +271,8 @@ class CMF_download(Downloader):
                         ev.get('embedding_root_imag'))
                 if root != (None, None):
                     D['root'] = root
-                yield Json.dumps(D) + '\n\n'
+                yield Json.dumps(D) + ',\n\n'
+            yield ']\n'
         filename = label + suffix
         title += ' for newform %s,'%(label)
         return self._wrap_generator(cc_generator(),
@@ -301,7 +303,6 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
-    
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:

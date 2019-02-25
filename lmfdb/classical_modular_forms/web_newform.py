@@ -378,6 +378,7 @@ class WebNewform(object):
                 chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
                 for p in self.cc_data.values()[0]['angles'].keys():
                     if p.divides(self.level):
+                        self.character_values[p] = None
                         continue
                     for chi in chars:
                         c = chi.logvalue(p) * self.char_order
@@ -1044,6 +1045,9 @@ function switch_basis(btype) {
 
     @cached_method
     def satake_angle(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         theta = self._get_theta(m, p, i)
         s = display_float(2*theta, prec, method='truncate')
         if s == "1":
@@ -1080,11 +1084,20 @@ function switch_basis(btype) {
         return theta
 
     def satake_re(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         return self._display_re(self._get_alpha(m, p, i).real(), prec)
 
     def satake_im(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         return self._display_im(abs(self._get_alpha(m, p, i).imag()), prec)
 
     def satake_op(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
