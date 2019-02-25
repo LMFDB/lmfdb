@@ -433,11 +433,21 @@ def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
+# Utility redirect for bread
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<conrey_with_embedding>/")
+def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, conrey_with_embedding):
+    if conrey_with_embedding.count('.') != 1:
+        return abort(404, "Invalid embedding label: periods")
+    conrey_index, embedding = conrey_with_embedding.split('.')
+    if not (conrey_index.isdigit() and embedding.isdigit()):
+        return abort(404, "Invalid embedding label: not integers")
+    return redirect(url_for("cmf.by_url_newform_conreylabel_with_embedding", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
+
 # Embedded modular form
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
-    assert conrey_index > 0
-    assert embedding > 0
+    if conrey_index <= 0 or embedding <= 0:
+        return abort(404, "Invalid embedding label: negative values")
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
