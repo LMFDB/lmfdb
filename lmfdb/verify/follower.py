@@ -73,7 +73,7 @@ class Follower(object):
 
     def final_report(self):
         for donefile in sorted(self.done_files):
-            with open(donefile) as F:
+            with open(os.path.join(self.logdir, donefile)) as F:
                 for line in F:
                     print line,
 
@@ -83,8 +83,8 @@ class Follower(object):
         """
         try:
             while not self.is_done():
-                self.incremental_report()
                 time.sleep(self.interval)
+                self.incremental_report()
             self.final_report()
         finally:
             # in case interrupted

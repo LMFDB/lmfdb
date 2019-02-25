@@ -5,6 +5,11 @@ This script is used to run verification jobs in parallel.  For more options (suc
 
 import argparse, os, subprocess, sys, tempfile, textwrap
 
+try:
+    # Make lmfdb available
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
+except NameError:
+    pass
 from lmfdb.verify import db
 
 def directory(path):
@@ -62,6 +67,7 @@ if __name__ == '__main__':
     options = vars(args)
     tablename = options.pop('tablename')
     if not (tablename == 'all' or options['speedtype'] == 'all'):
+        options['parallel'] = False
         db[tablename].verify(**options)
     else:
         #use parallel to loop over all options

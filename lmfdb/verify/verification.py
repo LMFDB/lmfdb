@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import traceback, time, os, inspect, sys
+import traceback, time, os, inspect, sys, shutil
 from types import MethodType
 from datetime import datetime
 
@@ -261,17 +261,27 @@ class TableChecker(object):
     def run(self, typ, logdir, label=None):
         self._cur_label = label
         tname = "%s.%s" % (self.__class__.__name__, typ.__name__)
-        logfile = os.path.join(logdir, tname + '.log')
-        errfile = os.path.join(logdir, tname + '.errors')
-        progfile = os.path.join(logdir, tname + '.progress')
-        startfile = os.path.join(logdir, tname + '.started')
-        donefile = os.path.join(logdir, tname + '.done')
+        olddir = os.path.join(logdir, "old")
+        if not os.path.exists(olddir):
+            os.makedirs(olddir)
+        files = []
+        for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
+            filename = os.path.join(logdir, tname + suffix)
+            if os.path.exists(filename):
+                n = 0
+                oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                while os.path.exists(oldfile):
+                    n += 1
+                    oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                shutil.move(filename, oldfile)
+            files.append(filename)
+        logfile, errfile, progfile, startfile, donefile = files
         checks = self.get_checks(typ)
         # status = failures, errors, timeouts, aborts
         status = vector(ZZ, 4) # excludes disabled
         disabled = 0
-        with open(startfile, 'w') as startfile:
-            startfile.write("%s.%s started (pid %s)\n"%(self.__class__.__name__, typ.__name__, os.getpid()))
+        with open(startfile, 'w') as startf:
+            startf.write("%s.%s started (pid %s)\n"%(self.__class__.__name__, typ.__name__, os.getpid()))
         with open(logfile, 'a') as log:
             with open(progfile, 'a') as prog:
                 with open(errfile, 'a') as err:
@@ -294,7 +304,7 @@ class TableChecker(object):
                 reports.append("%s disabled"%disabled)
             status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
             done.write("%s.%s %s in %.2fs\n"%(self.__class__.__name__, typ.__name__, status, time.time() - start))
-            os.remove(self.startfile)
+            os.remove(startfile)
 
     #####################
     # Utility functions #

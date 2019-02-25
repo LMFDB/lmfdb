@@ -3146,7 +3146,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
         if self._verifier is None:
             raise ValueError("No verifications defined for this table; add a class {0} in lmfdb/verify/{0}.py to enable".format(self.search_table))
-        lmfdb_root = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
         if logdir is None:
             logdir = os.path.join(lmfdb_root, 'logs', 'verification')
         if not os.path.exists(logdir):
@@ -3169,9 +3169,10 @@ class PostgresTable(PostgresBase):
                     if not parallel:
                         verifier.run(typ, logdir, label)
             if parallel:
-                cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', 'verify', 'verify_tables.py'))
-                cmd = [cmd, '--logdir', logdir, '--tablename', self.search_table, '--typename', speedtype]
-                pipe = subprocess.Popen(cmd)
+                cmd = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'verify', 'verify_tables.py'))
+                cmd = ['sage', '-python', cmd, '--logdir', logdir, '--tablename', str(self.search_table), '--speedtype', speedtype]
+                DEVNULL = open(os.devnull, 'wb')
+                pipe = subprocess.Popen(cmd, stdout=DEVNULL)
                 if follow:
                     from lmfdb.verify.follower import Follower
                     try:
@@ -4874,7 +4875,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if not self.is_verifying:
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..'))
         if logdir is None:
             logdir = os.path.join(lmfdb_root, 'logs', 'verification')
         if not os.path.exists(logdir):

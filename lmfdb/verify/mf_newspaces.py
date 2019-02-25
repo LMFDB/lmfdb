@@ -5,8 +5,8 @@ from sage.all import (
     dimension_eis, dimension_cusp_forms, dimension_modular_forms)
 
 from lmfdb.backend.database import db, SQL, IdentifierWrapper as Identifier
-from .mf import MfChecker, accumulate_failures, check_analytic_conductor
-from .verification import overall, overall_long, fast, slow
+from .mf import MfChecker, check_analytic_conductor
+from .verification import overall, overall_long, fast, slow, accumulate_failures
 
 @cached_function
 def sturm_bound0(level, weight):
