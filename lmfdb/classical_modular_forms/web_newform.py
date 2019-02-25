@@ -236,19 +236,25 @@ class WebNewform(object):
     # Breadcrumbs
     @property
     def bread(self):
-        return get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
-
+        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
+                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        if self.embedding_label is not None:
+            kwds['embedding_label'] = self.embedding_label
+        return get_bread(**kwds)
 
     @property
     def lfunction_labels(self):
         base_label = self.label.split('.')
-        res = []
-        for character in self.conrey_indexes:
-            for j in range(self.dim/self.char_degree):
-                label = base_label + [str(character), str(j + 1)]
-                lfun_label = '.'.join(label)
-                res.append(lfun_label)
-        return res
+        def make_label(character, j):
+            label = base_label + [str(character), str(j + 1)]
+            return '.'.join(label)
+        if self.embedding_label is None:
+            return [make_label(character, j)
+                    for character in self.conrey_indexes
+                    for j in range(self.dim/self.char_degree)]
+        else:
+            character, j = map(int, self.embedding_label.split('.'))
+            return [make_label(character, j-1)]
     @property
     def friends(self):
         # first newspaces
@@ -263,6 +269,8 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
+        if self.embedding_label is not None:
+            res.append(('Newform ' + self.label, nf_url))
 
         # then related objects
         res += names_and_urls(self.related_objects)
@@ -271,7 +279,7 @@ class WebNewform(object):
         if self.weight <= 200:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
-            if len(self.conrey_indexes)*self.rel_dim > 50:
+            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
                 res = map(lambda elt : list(map(str, elt)), res)
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
                 return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)

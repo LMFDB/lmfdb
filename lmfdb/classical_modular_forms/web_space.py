@@ -22,7 +22,8 @@ def get_bread(**kwds):
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label')]
+             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
+             ('embedding_label', 'Character %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
