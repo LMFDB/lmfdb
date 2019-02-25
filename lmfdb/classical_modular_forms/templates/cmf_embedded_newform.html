@@ -15,13 +15,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     // hide everything
     $('.all').hide();
     $('.primes').hide();
-    //// swap colors
-    //$('.'+cl+.'light'+cl).switchClass("dark", "light");
-    //$('.'+cl+.'dark'+cl).switchClass("light", "dark");
-    //// swap header
-    //$('.header'. + cl).show();
-    //// swap noptions
-    //$('.noptions.' + cl).show();
+    // swap colors
+    $('.'+cl+'.light'+cl).switchClass("dark", "light");
+    $('.'+cl+'.dark'+cl).switchClass("light", "dark");
+    // swap header
+    $('.header.' + cl).show();
+    // swap noptions
+    $('.noptions.' + cl).show();
     $('.' + cl+'.' + n).show();
   }
 </script>
@@ -70,7 +70,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     <thead>
       <tr class="header all nodisplay">
         <th>
-           \(n\)
+          \(n\)
         </th>
         <th class='center' colspan="3">
           \(a_n\)
@@ -102,27 +102,30 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           \( \theta_p \)
         </th>
       </tr>
-        {# FIXME: mssing line #}
+      <tr class="display" style="padding:0px; height:0px">
+        <th colspan="11" style="padding:0px; height:0px" ></th>
+      </tr>
+      {# FIXME: mssing line #}
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
       {% set pindex = 1 %}
       {% for n in range(2,1000) %}
-        {% set classes = ["all"] %}
-        {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
-          {% set rowspan = 2 %}
-          {% do classes.append("primes") %}
-          {% if pindex is divisibleby(2) %}
-            {% set shadep = 'darkprimes' %}
-          {% else %}
-            {% set shadep = 'lightprimes' %}
-          {% endif %}
-          {% set pindex = pindex + 1 %}
-        {% else %}
-          {% set shadep = 'noshadeprimes' %}
-          {% set rowspan = 1 %}
-          {% do classes.append("nodisplay") %}
-        {% endif %}
+      {% set classes = ["all"] %}
+      {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
+      {% set rowspan = 2 %}
+      {% do classes.append("primes") %}
+      {% if pindex is divisibleby(2) %}
+      {% set shadep = 'darkprimes' %}
+      {% else %}
+      {% set shadep = 'lightprimes' %}
+      {% endif %}
+      {% set pindex = pindex + 1 %}
+      {% else %}
+      {% set shadep = 'noshadeprimes' %}
+      {% set rowspan = 1 %}
+      {% do classes.append("nodisplay") %}
+      {% endif %}
 
         {% if loop.index is divisibleby(2) %}
           {% set shaden = 'darkall' %}
