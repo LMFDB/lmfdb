@@ -34,7 +34,6 @@ IMPORTANT:
 * Add eg descriptions for embedding inputs (David)
 * Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
 * Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
- - add capability to test a single form (David)
  - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label
