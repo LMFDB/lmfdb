@@ -16,17 +16,17 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     $('.all').hide();
     $('.primes').hide();
     // remove all the colors
-    $('.'+cl+.'light'+cl).switchClass("dark", "light");
-    $('.'+cl+.'dark'+cl).switchClass("light", "dark");
+    //$('.'+cl+.'light'+cl).switchClass("dark", "light");
+    //$('.'+cl+.'dark'+cl).switchClass("light", "dark");
     $('.noptions.' + cl).show();
     $('.' + cl+'.' + n).show();
   }
 </script>
 
-{% macro render_display_options() %}
 {% set class_n = [50, 100, 250, 1000] %}
 {% set subsets = [('primes', 'only primes','\(p\)'), ('all', 'all \(n\)','\(n\)')]%}
 {% set default_class = [50,'primes'] %}
+{% macro render_display_options() %}
 <div>
   {% for s in subsets %}
     {% for n in class_n %}
@@ -106,6 +106,9 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
             {% do classes.append(cn|string) %}
           {% endif %}
         {% endfor %}
+        {% if n > default_class[0] %}
+          {% do classes.append("nodisplay") %}
+        {% endif %}
 
         {% set class = classes|join(" ") %}
 
