@@ -5,7 +5,7 @@
 <h2>Coefficient data</h2>
 
 For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
-{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p)\),
+{{ KNOWL('mf.elliptic.satake_parameters',title='Satake parameters') }} \(\alpha_p\),
 and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
 
@@ -15,10 +15,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     // hide everything
     $('.all').hide();
     $('.primes').hide();
-    // remove all the colors
+    //// swap colors
     //$('.'+cl+.'light'+cl).switchClass("dark", "light");
     //$('.'+cl+.'dark'+cl).switchClass("light", "dark");
-    $('.noptions.' + cl).show();
+    //// swap header
+    //$('.header'. + cl).show();
+    //// swap noptions
+    //$('.noptions.' + cl).show();
     $('.' + cl+'.' + n).show();
   }
 </script>
@@ -65,15 +68,15 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 <div class="table-scroll-wrapper">
   <table class="ntdata complex-cols">
     <thead>
-      <tr>
+      <tr class="header all nodisplay">
         <th>
-          n
+           \(n\)
         </th>
         <th class='center' colspan="3">
           \(a_n\)
         </th>
         <th class='center' colspan="3">
-          \( a_{n} / n^{(k-1)/2} \)
+          \(a_n / n^{(k-1)/2}\)
         </th>
         <th class='center' colspan="3">
           \( \alpha_n \)
@@ -82,6 +85,24 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           \( \theta_n \)
         </th>
       </tr>
+      <tr class="header primes">
+        <th>
+          \(p\)
+        </th>
+        <th class='center' colspan="3">
+          \(a_p\)
+        </th>
+        <th class='center' colspan="3">
+          \(a_p / p^{(k-1)/2}\)
+        </th>
+        <th class='center' colspan="3">
+          \( \alpha_p\)
+        </th>
+        <th class='center'>
+          \( \theta_p \)
+        </th>
+      </tr>
+        {# FIXME: mssing line #}
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
