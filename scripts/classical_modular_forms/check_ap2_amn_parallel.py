@@ -40,25 +40,33 @@ if len(sys.argv) == 3:
     j = int(sys.argv[2])
     assert k > j
     assert j >= 0
-    chunk_size = (db.mf_hecke_cc.max_id() - db.mf_hecke_cc.min_id())/k + 1
+    _min_id = db.mf_hecke_cc.min_id()
+    _max_id = db.mf_hecke_cc.max_id()
+    chunk_size = (_max_id - _min_id )/k + 1
     start_time = time.time()
     counter = 0
-    query = {'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}}
+    minid = _min_id + j*chunk_size
+    maxid = _min_id + (j+1)*chunk_size
+    query = {'id':{'$gte': minid, '$lt': maxid}}
     total = db.mf_hecke_cc.count(query)
     print "%d: %d rows to check" % (j, total)
     if total > 0:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
-            for rec in db.mf_hecke_cc.search(query, ['lfunction_label', 'an_normalized[0:1000]']):
-                counter += 1
-                if not check_amn_slow(rec):
-                    F.write('%s:amn\n' % rec['lfunction_label'])
-                    F.flush()
-                if not check_ap2_slow(rec):
-                    F.write('%s:ap2\n' % rec['lfunction_label'])
-                    F.flush()
-                if total > 100:
-                    if counter % (total/100) == 0:
-                        print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
+            while counter < total:
+                for rec in db.mf_hecke_cc.search(query, ['id','lfunction_label', 'an_normalized[0:1000]'], sort = ['id'], limit = 1000):
+                    counter += 1
+                    if not check_amn_slow(rec):
+                        F.write('%s:amn\n' % rec['lfunction_label'])
+                        F.flush()
+                    if not check_ap2_slow(rec):
+                        F.write('%s:ap2\n' % rec['lfunction_label'])
+                        F.flush()
+                    if total > 100:
+                        if counter % (total/100) == 0:
+                            print "%d: %.2ff%% done -- avg %.3f s" % (j, counter*100./total, (time.time() - start_time)/counter)
+                assert rec['id'] > minid
+                minid = rec['id']
+                query = {'id':{'$gt': minid, '$lt': maxid}}
         print "%d: DONE -- avg %.3f s" % (j, (time.time() - start_time)/counter)
     else:
         print "%d: DONE -- avg oo s" % j
