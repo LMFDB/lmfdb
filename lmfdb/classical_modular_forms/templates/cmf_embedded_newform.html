@@ -12,12 +12,18 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
 <script>
   function show_primes_all_n(n, cl) {
+    // hide everything
     $('.all').hide();
     $('.primes').hide();
+    // remove all the colors
+    $('.'+cl+.'light'+cl).switchClass("dark", "light");
+    $('.'+cl+.'dark'+cl).switchClass("light", "dark");
     $('.noptions.' + cl).show();
     $('.' + cl+'.' + n).show();
   }
 </script>
+
+{% macro render_display_options() %}
 {% set class_n = [50, 100, 250, 1000] %}
 {% set subsets = [('primes', 'only primes','\(p\)'), ('all', 'all \(n\)','\(n\)')]%}
 {% set default_class = [50,'primes'] %}
@@ -51,6 +57,8 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       </div>
   {%endfor%}
 </div>
+{% endmacro %}
+{{ render_display_options() }}
 
 
 {# we need to fix the coloring #}
@@ -139,39 +147,20 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           {% else %}
             </tr>
           {% endif %}
-
     {% endfor %} {# n in info.CC_n #}
-    <tr>
-      <td colspan = 11>
-    <span class="primes">
-        <a onclick="show_primes_all('all'); return true" href="#coefficient_data">See all \(n\)</a>
-    </span>
-    <span class="all nodisplay">
-        <a onclick="show_primes_all('primes'); return true" href="#coefficient_data">See only primes</a>
-        </span>
-      </td>
-    </tr>
     </tbody>
   </table>
 </div>
+{{ render_display_options() }}
 
 <form id='complex_embeddings'>
   <table>
     <tr>
       <td>{{ KNOWL('dq.mf.elliptic.cc_prec', title='Significant digits') }}: </td>
       <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL('mf.elliptic.embedding_format',title='Format') }}: </td>
-      {% set formats = [('primes', 'primes only'), ('all','all')] %}
-      <td><select name='format' style="width: 170px">
-          {% for format in formats %}
-            <option value='{{format[0]}}' {% if info.format == format[0] %}selected{% endif %}>{{format[1]}}</option>
-          {% endfor %}
-      </select></td>
+      <td><button id="refresh_complex">Refresh table</button></td>
     </tr>
   </table>
-  <button id="refresh_complex">Refresh table</button>
 </form>
 
 
