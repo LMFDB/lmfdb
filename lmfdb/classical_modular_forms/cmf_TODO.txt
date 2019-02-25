@@ -25,16 +25,10 @@ ab mf_newspaces.check_dims timed out after 88.01s (too many rows over the slow t
 
 Embedded modular form:
 Change q-expansion to complex, options for 10, 100, 1000 coefficients
-Related objects links to L-function, newform, newspace
-Hide inner twists and Hecke kernels
 Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
-Make embedded label work in jump box
 
 IMPORTANT:
-* Add eg descriptions for embedding inputs (David)
-* Add anchor to link from L-function back to embedded modular form.  Discuss whether we should change any parts of the page for embedded modular forms (David)
-* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (David, Edgar)
- - see https://github.com/JohnCremona/CMFs/blob/master/PostgresSchema.md for detailed list of verifications for each table
+* Discuss whether list of verifications should live in schema markdown file or code folder. (David)
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label
 

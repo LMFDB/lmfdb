@@ -55,7 +55,8 @@ function get_all_embeddings(num_embeddings) {
     {% set shade = 'light' %}
     {% endif %}
     <tr>
-      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;">{{ newform.conrey_from_embedding(m) }}</td>
+      {% set embedding_label = newform.conrey_from_embedding(m) %}
+      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;"><a href="{{embedding_label}}">{{ embedding_label }}</a></td>
       {% if loop.index == 1 and newform.has_exact_qexp %}
       {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
       <td rowspan = "{{headcol_rowspan*(info.CC_m | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
@@ -152,11 +153,13 @@ function get_all_embeddings(num_embeddings) {
     <tr>
       <td>\(n\): </td>
       <td><input type='text' name='n' style="width: 160px" value="{{info.n}}" placeholder="{{info.default_nrange}}"></td>
+      <td><span class="formexample"> e.g. 2-40 or 990-1000</span></td>
     </tr>
     {% if newform.dim > 4 or (info.m) %}
     <tr>
       <td>{{ KNOWL('mf.elliptic.embedding',title='Embeddings') }}: </td>
       <td><input type='text' name='m' style="width: 160px" value="{{info.m}}" placeholder="1-{{newform.dim}}"></td>
+      <td><span class="formexample"> e.g. 1-3 or {{newform.conrey_indexes[-1]}}.{{newform.relative_dim}}</span></td>
     </tr>
     {% endif %}
     <tr>

@@ -433,12 +433,12 @@ def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
     label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index)+"."+hecke_orbit)
     return redirect(url_for_label(label), code=301)
 
-# Utility redirect for bread
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<conrey_with_embedding>/")
-def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, conrey_with_embedding):
-    if conrey_with_embedding.count('.') != 1:
+# Utility redirect for bread and links from embedding table
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
+def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embedding_label):
+    if embedding_label.count('.') != 1:
         return abort(404, "Invalid embedding label: periods")
-    conrey_index, embedding = conrey_with_embedding.split('.')
+    conrey_index, embedding = embedding_label.split('.')
     if not (conrey_index.isdigit() and embedding.isdigit()):
         return abort(404, "Invalid embedding label: not integers")
     return redirect(url_for("cmf.by_url_newform_conreylabel_with_embedding", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
@@ -454,16 +454,21 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
 
 def url_for_label(label):
     slabel = label.split(".")
-    if len(slabel) == 4:
-        return url_for(".by_url_newform_label", level=slabel[0], weight=slabel[1], char_orbit_label=slabel[2], hecke_orbit=slabel[3])
+    if len(slabel) == 6:
+        func = "cmf.by_url_newform_conreylabel_with_embedding"
+    elif len(slabel) == 4:
+        func = "cmf.by_url_newform_label"
     elif len(slabel) == 3:
-        return url_for(".by_url_space_label", level=slabel[0], weight=slabel[1], char_orbit_label=slabel[2])
+        func = "cmf.by_url_space_label"
     elif len(slabel) == 2:
-        return url_for(".by_url_full_gammma1_space_label", level=slabel[0], weight=slabel[1])
+        func = "cmf.by_url_full_gammma1_space_label"
     elif len(slabel) == 1:
-        return url_for(".by_url_level", level=slabel[0])
+        func = "cmf.by_url_level"
     else:
         raise ValueError("Invalid label")
+    keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    kwds = {keys[i]: val for i, val in enumerate(slabel)}
+    return url_for(func, **kwds)
 
 def jump_box(info):
     jump = info.pop("jump").strip()

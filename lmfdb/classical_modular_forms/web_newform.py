@@ -236,8 +236,11 @@ class WebNewform(object):
     # Breadcrumbs
     @property
     def bread(self):
-        return get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
-
+        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
+                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        if self.embedding_label is not None:
+            kwds['embedding_label'] = self.embedding_label
+        return get_bread(**kwds)
 
     @property
     def lfunction_labels(self):
@@ -250,7 +253,8 @@ class WebNewform(object):
                     for character in self.conrey_indexes
                     for j in range(self.dim/self.char_degree)]
         else:
-            return [make_label(*map(int, self.embedding_label.split('.')))]
+            character, j = map(int, self.embedding_label.split('.'))
+            return [make_label(character, j-1)]
     @property
     def friends(self):
         # first newspaces
