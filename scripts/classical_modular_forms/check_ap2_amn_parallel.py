@@ -36,15 +36,14 @@ def check_amn_slow(rec):
 
 import sys
 if len(sys.argv) == 3:
-    bound = db.mf_hecke_cc.max_id()
     k = int(sys.argv[1])
     j = int(sys.argv[2])
     assert k > j
     assert j >= 0
-    chunk_size = bound/k + 1
+    chunk_size = (db.mf_hecke_cc.max_id() - db.mf_hecke_cc.min_id())/k + 1
     start_time = time.time()
     counter = 0
-    total = db.mf_hecke_cc.count({'id':{'$gte':j*chunk_size, '$lt':(j+1)*chunk_size}})
+    total = db.mf_hecke_cc.count({'id':{'$gte': db.mf_hecke_cc.min_id() + j*chunk_size, '$lt': db.mf_hecke_cc.min_id() + (j+1)*chunk_size}})
     print "%d: %d rows to check" % (j, total)
     with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'mf_hecke_cc_parallel.%d.log' % j), 'w') as F:
         for rec in db.mf_hecke_cc.search({'id':{'$gte':j*chunk_size, '$lt':(j+1)*chunk_size}},['lfunction_label', 'an_normalized']):
