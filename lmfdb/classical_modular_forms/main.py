@@ -530,6 +530,10 @@ def download_newform_to_magma(label):
 def download_newform(label):
     return CMF_download().download_newform(label)
 
+@cmf.route("/download_embedded_newform/<label>")
+def download_embedded_newform(label):
+    return CMF_download().download_embedding(label)
+
 @cmf.route("/download_newspace/<label>")
 def download_newspace(label):
     return CMF_download().download_newspace(label)

@@ -294,15 +294,18 @@ class WebNewform(object):
     @property
     def downloads(self):
         downloads = []
-        if self.hecke_cutters or self.has_exact_qexp:
-            downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
-        if self.has_exact_qexp:
-            downloads.append(('Download q-expansion', url_for('.download_qexp', label=self.label)))
-        downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
-        if self.has_complex_qexp:
-            downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
-            downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
-        downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        if self.embedding_label is None:
+            if self.hecke_cutters or self.has_exact_qexp:
+                downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
+            if self.has_exact_qexp:
+                downloads.append(('Download q-expansion', url_for('.download_qexp', label=self.label)))
+            downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
+            if self.has_complex_qexp:
+                downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+                downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
+            downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        else:
+            downloads.append(('Download coefficient data', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
         return downloads
 
     def setup_cc_data(self, info):

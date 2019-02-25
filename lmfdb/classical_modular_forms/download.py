@@ -286,6 +286,24 @@ class CMF_download(Downloader):
     def download_satake_angles(self, label, lang='text'):
         return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
+    def download_embedding(self, label, lang='text'):
+        data = db.mf_hecke_cc.lucky({'lfunction_label':label},
+                                    ['lfunction_label',
+                                     'embedding_root_real',
+                                     'embedding_root_imag',
+                                     'an_normalized',
+                                     'angles'])
+        if data is None
+            return abort(404, "No embedded newform found for %s"%(label))
+        root = (data.pop('embedding_root_real', None),
+                data.pop('embedding_root_imag', None))
+        if root != (None, None):
+            data['root'] = root
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Coefficient data for embedded newform %s,'%label)
+
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
         if data is None:
