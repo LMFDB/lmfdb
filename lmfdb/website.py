@@ -12,10 +12,8 @@ add --debug if you are developing (auto-restart, full stacktrace in browser, ...
 """
 
 from lmfdb.logger import info
-import lmfdb.app
-from lmfdb.backend.database import db
-if db.is_verifying:
-    raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
+import lmfdb.app # So that we can set it running below
+from lmfdb.app import app
 
 # Importing the following top-level modules adds blueprints
 # to the app and imports further modules to make them functional
@@ -97,11 +95,14 @@ assert hecke_algebras
 from inventory_app.inventory_app import inventory_app
 assert inventory_app
 
+from lmfdb.backend.database import db
+if db.is_verifying:
+    raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
+
 def main():
     info("main: ...done.")
     from lmfdb.utils.config import Configuration
     flask_options = Configuration().get_flask();
-    app = lmfdb.app.app
 
     if "profiler" in flask_options and flask_options["profiler"]:
         print "Profiling!"
