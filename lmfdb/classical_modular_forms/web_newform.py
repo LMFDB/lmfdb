@@ -7,7 +7,8 @@ import bisect, re
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR,
+                      lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -314,6 +315,20 @@ class WebNewform(object):
             downloads.append(('Download coefficient data', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
         return downloads
 
+    @lazy_attribute
+    def an_cc_bound(self):
+        if self.weight == 1:
+            return 3000
+        elif self.level <= 1000:
+            return 1000
+        elif self.level <= 4000:
+            return 2000
+        else:
+            return 3000
+    @lazy_attribute
+    def primes_cc_bound(self):
+        return prime_pi(self.an_cc_bound)
+
     def setup_cc_data(self, info):
         """
         INPUT:
@@ -327,29 +342,19 @@ class WebNewform(object):
         """
         an_formats = ['embed','analytic_embed', None]
         angles_formats = ['satake','satake_angle', None]
+        analytic_shift_formats = ['embed', None]
         cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        an_bound = min(len(self.traces), an_storage_bound)
+        format = info.get('format')
+        query = {'hecke_orbit_code':self.hecke_orbit_code}
+
+
+        # deal with m
         if self.embedding_label is None:
-            format = info.get('format')
             m = info.get('m','1-%s'%(min(self.dim,20)))
             if '.' in m:
                 m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
-            n = info.get('n','1-10')
             CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
-            CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
-            # convert CC_n to an interval in [1,an_bound]
-            CC_n = ( max(1, min(CC_n)), min(an_bound, max(CC_n)) )
-            an_keys = (CC_n[0]-1, CC_n[1])
-            # extra 5 primes in case we hit too many bad primes
-            angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5, len(primes_for_angles)))
-            an_projection = 'an_normalized[%d:%d]' % an_keys
-            angles_projection = 'angles[%d:%d]' % angles_keys
-            if format in an_formats:
-                cc_proj.append(an_projection)
-            if format in angles_formats:
-                cc_proj.append(angles_projection)
             range_match = INTEGER_RANGE_RE.match(m)
-            query = {'hecke_orbit_code':self.hecke_orbit_code}
             if range_match:
                 low, high = int(range_match.group(1)), int(range_match.group(2))
                 query['embedding_m'] = {'$gte':low, '$lte':high}
@@ -357,14 +362,30 @@ class WebNewform(object):
                 query['embedding_m'] = {'$in': CC_m}
             self.embedding_m = None
         else:
-            format = 'all'
             self.embedding_m = int(info['CC_m'][0])
-            an_projection = 'an_normalized'
-            an_keys = (0, an_bound)
-            angles_keys = (0, prime_pi(an_bound))
-            angles_projection = 'angles[%d:%d]' % angles_keys
-            cc_proj.extend(['dual_conrey_index', 'dual_embedding_index', an_projection, angles_projection])
+            cc_proj.extend(['dual_conrey_index', 'dual_embedding_index'])
             query = {'lfunction_label' : self.label + '.' + self.embedding_label}
+
+        if format is None:
+            CC_n = (1, self.an_cc_bound)
+        else:
+            n = info.get('n','1-10')
+            CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
+            # convert CC_n to an interval in [1,an_bound]
+            CC_n = ( max(1, min(CC_n)), min(self.an_cc_bound, max(CC_n)) )
+        an_keys = (CC_n[0]-1, CC_n[1])
+        # extra 5 primes in case we hit too many bad primes
+        angles_keys = (
+                bisect.bisect_left(primes_for_angles, CC_n[0]),
+                min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5,
+                    self.primes_cc_bound)
+                )
+        an_projection = 'an_normalized[%d:%d]' % an_keys
+        angles_projection = 'angles[%d:%d]' % angles_keys
+        if format in an_formats:
+            cc_proj.append(an_projection)
+        if format in angles_formats:
+            cc_proj.append(angles_projection)
 
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
@@ -384,7 +405,7 @@ class WebNewform(object):
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
-            if format in ['embed', 'primes', 'all']:
+            if format in analytic_shift_formats:
                 self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
@@ -399,20 +420,18 @@ class WebNewform(object):
                         angle = float(c / self.char_order)
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
+
         if self.embedding_m is not None:
             m = self.embedding_m
             dci = self.cc_data[m].get('dual_conrey_index')
             dei = self.cc_data[m].get('dual_embedding_index')
-            if dci is None or dei is None:
-                self.dual_label = None
-            else:
-                self.dual_label = "%s.%s" % (dci, dei)
+            self.dual_label = "%s.%s" % (dci, dei)
             x = self.cc_data[m].get('embedding_root_real')
             y = self.cc_data[m].get('embedding_root_imag')
             if x is None or y is None:
                 self.embedding_root = None
             else:
-                self.embedding_root = display_complex(x, y, 6, method='round')
+                self.embedding_root = display_complex(x, y, 6, method='round', try_halfinteger=False)
 
     @staticmethod
     def by_label(label, embedding_label = None):
