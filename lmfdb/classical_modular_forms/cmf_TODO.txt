@@ -9,9 +9,9 @@ Expected failures:
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label
+* cap to 1000 and however, download all of them
 
 FINAL CHECKS:
-* Make sure indexes are appropriate, especially for new sort orders (Edgar)
 * Update RCS knowls to match final data set (Drew)
 * Finalize announcement e-mail and PR (David)
 

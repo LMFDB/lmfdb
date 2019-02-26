@@ -245,8 +245,8 @@ class WebNewform(object):
             kwds['embedding_label'] = self.embedding_label
         return get_bread(**kwds)
 
-    @property
-    def lfunction_labels(self):
+    @lazy_attribute
+    def embedding_labels(self):
         base_label = self.label.split('.')
         def make_label(character, j):
             label = base_label + [str(character), str(j + 1)]
@@ -291,7 +291,7 @@ class WebNewform(object):
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
                 return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
-                for lfun_label in self.lfunction_labels:
+                for lfun_label in self.embedding_labels:
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
                     res.append(('L-function ' + lfun_label, lfun_url))
 
@@ -363,7 +363,7 @@ class WebNewform(object):
         else:
             self.embedding_m = int(info['CC_m'][0])
             cc_proj.extend(['dual_conrey_index', 'dual_embedding_index'])
-            query = {'lfunction_label' : self.label + '.' + self.embedding_label}
+            query = {'label' : self.label + '.' + self.embedding_label}
 
         if format is None:
             CC_n = (1, self.an_cc_bound)

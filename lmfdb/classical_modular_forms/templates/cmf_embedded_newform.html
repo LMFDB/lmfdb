@@ -15,10 +15,10 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     $('.all').hide();
     $('.primes').hide();
     // set colors
-    $('.dark').removeClass("dark");
-    $('.light').removeClass("light");
-    $('.dark'+cl).addClass("dark");
-    $('.light'+cl).addClass("light");
+    $('.dark'+cl+'.' + n).removeClass("dark");
+    $('.light'+cl+'.' + n).removeClass("light");
+    $('.dark'+cl+'.' + n).addClass("dark");
+    $('.light'+cl+'.' + n).addClass("light");
     // swap header
     $('.header.' + cl).show();
     // swap noptions

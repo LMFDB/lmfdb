@@ -8,8 +8,8 @@ from .verification import overall, overall_long, slow
 
 class mf_hecke_cc(MfChecker):
     table = db.mf_hecke_cc
-    label_col = 'lfunction_label'
-    uniqueness_constraints = [['lfunction_label']]
+    label_col = 'label'
+    uniqueness_constraints = [['label']]
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -24,22 +24,22 @@ class mf_hecke_cc(MfChecker):
         return self._run_query(query=query)
 
     @overall_long
-    def check_lfunction_label(self):
-        # check that lfunction_label is consistent with hecke_orbit_code, conrey_label, and embedding_index
-        query = SQL("SELECT t1.lfunction_label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.lfunction_label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+    def check_label(self):
+        # check that label is consistent with hecke_orbit_code, conrey_label, and embedding_index
+        query = SQL("SELECT t1.label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
         return self._run_query(query=query)
 
     @overall_long
     def check_embedding_index(self):
         # check that embedding_index is consistent with conrey_label and embedding_m
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_index != row_number")
+        query = SQL("WITH foo AS ( SELECT label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT label FROM foo WHERE embedding_index != row_number")
         return self._run_query(query=query)
 
     @overall
     def check_embedding_m(self):
         # About 250s
         # check that embedding_m is consistent with conrey_label and embedding_index
-        query = SQL("WITH foo AS ( SELECT lfunction_label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT lfunction_label FROM foo WHERE embedding_m != row_number")
+        query = SQL("WITH foo AS ( SELECT label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT label FROM foo WHERE embedding_m != row_number")
         return self._run_query(query=query)
 
     @overall_long
@@ -62,15 +62,15 @@ class mf_hecke_cc(MfChecker):
         return self.check_array_len_gte_constant('angles', 168)
 
     @overall_long
-    def check_lfunction_label_hoc(self):
-        # check that lfunction_label is consistent with hecke_orbit_code
-        return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('lfunction_label')))
+    def check_label_hoc(self):
+        # check that label is consistent with hecke_orbit_code
+        return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('label')))
 
     @overall
-    def check_lfunction_label_conrey(self):
+    def check_label_conrey(self):
         # TIME about 230s
-        # check that lfunction_label is consistent with conrey_lebel, embedding_index
-        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('lfunction_label'), Identifier('conrey_index'), Identifier('embedding_index')))
+        # check that label is consistent with conrey_lebel, embedding_index
+        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('label'), Identifier('conrey_index'), Identifier('embedding_index')))
 
     @overall_long(timeout=36000)
     def check_amn(self):
@@ -86,21 +86,21 @@ class mf_hecke_cc(MfChecker):
         query = SQL("array_min(angles) <= -0.5 OR array_max(angles) > 0.5")
         return self._run_query(query)
 
-    @slow(ratio=0.001, projection=['lfunction_label', 'angles'])
+    @slow(ratio=0.001, projection=['label', 'angles'])
     def check_angles(self, rec):
         # TIME about 200000s for full table?
         # check that angles are null exactly for p dividing the level
-        level = int(rec['lfunction_label'].split('.')[0])
+        level = int(rec['label'].split('.')[0])
         for p, angle in zip(prime_range(1000), rec['angles']):
             if (level % p == 0) != (angle is None):
                 return False
         return True
 
 
-    @slow(ratio=0.001, projection=['lfunction_label', 'an_normalized'])
+    @slow(ratio=0.001, projection=['label', 'an_normalized'])
     def check_ap2_slow(self, rec):
         # Check a_{p^2} = a_p^2 - chi(p) for primes up to 31
-        ls = rec['lfunction_label'].split('.')
+        ls = rec['label'].split('.')
         level, weight, chi = map(int, [ls[0], ls[1], ls[-2]])
         char = DirichletGroup_conrey(level, CC)[chi]
         Z = rec['an_normalized']
@@ -114,7 +114,7 @@ class mf_hecke_cc(MfChecker):
                 return False
         return True
 
-    @slow(ratio=0.001, projection=['lfunction_label', 'an_normalized'])
+    @slow(ratio=0.001, projection=['label', 'an_normalized'])
     def check_amn_slow(self, rec):
         Z = [0] + [CC(*elt) for elt in rec['an_normalized']]
         for pp in prime_range(len(Z)-1):

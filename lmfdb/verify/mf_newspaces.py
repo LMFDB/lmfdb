@@ -145,7 +145,7 @@ class mf_newspaces(MfChecker):
         # if present, check that sum(hecke_orbit_dims) = dim
         return self.check_array_sum('hecke_orbit_dims', 'dim', {'hecke_orbit_dims':{'$exists':True}})
 
-    @overall(disabled=True)
+    @overall
     def check_sum_AL_dims(self):
         # if AL_dims is set, check that AL_dims sum to dim
         return self._run_query(SQL("{0} != (SELECT SUM(s) FROM (SELECT (x->2)::integer FROM jsonb_array_elements({1})) s)").format(Identifier('dim'), Identifier('AL_dims')), constraint={'AL_dims':{'$exists':True}})
