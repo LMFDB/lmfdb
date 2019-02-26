@@ -9,15 +9,16 @@ For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
 and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
 
-
 <script>
   function show_primes_all_n(n, cl) {
     // hide everything
     $('.all').hide();
     $('.primes').hide();
-    // swap colors
-    $('.'+cl+'.light'+cl).switchClass("dark", "light");
-    $('.'+cl+'.dark'+cl).switchClass("light", "dark");
+    // set colors
+    $('.dark').removeClass("dark");
+    $('.light').removeClass("light");
+    $('.dark'+cl).addClass("dark");
+    $('.light'+cl).addClass("light");
     // swap header
     $('.header.' + cl).show();
     // swap noptions
@@ -109,37 +110,37 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
-      {% set pindex = 1 %}
+      {% set pindex = [1] %}
       {% for n in range(2,1000) %}
-      {% set classes = ["all"] %}
-      {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
-      {% set rowspan = 2 %}
-      {% do classes.append("primes") %}
-      {% if pindex is divisibleby(2) %}
-      {% set shadep = 'darkprimes' %}
-      {% else %}
-      {% set shadep = 'lightprimes' %}
-      {% endif %}
-      {% set pindex = pindex + 1 %}
-      {% else %}
-      {% set shadep = 'noshadeprimes' %}
-      {% set rowspan = 1 %}
-      {% do classes.append("nodisplay") %}
-      {% endif %}
-
+        {% set classes = ["all"] %}
+        {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
+          {% set rowspan = 2 %}
+          {% do classes.append("primes") %}
+          {% if pindex[0] is divisibleby(2) %}
+            {% set shadep = 'darkprimes' %}
+            {% set shade = 'dark' %}
+          {% else %}
+            {% set shadep = 'lightprimes' %}
+            {% set shade = 'light' %}
+          {% endif %}
+          {% if pindex.append(pindex.pop() + 1) %}{% endif %} {# kludge because of stupid jinja scoping rules #}
+        {% else %}
+          {% set shadep = 'noshadeprimes' %}
+          {% set shade = 'light' %}
+          {% set rowspan = 1 %}
+          {% do classes.append("nodisplay") %}
+        {% endif %}
         {% if loop.index is divisibleby(2) %}
           {% set shaden = 'darkall' %}
-          {% set shade = 'dark' %}
         {% else %}
           {% set shaden = 'lightall' %}
-          {% set shade = 'light' %}
         {% endif %}
         {% set allshades = shade + ' ' + shaden + ' ' + shadep %}
         {% for cn in class_n %}
           {% if n <= cn %}
             {% do classes.append(cn|string) %}
           {% endif %}
-        {% endfor %}
+        {% endfor %} {# cn in class_n #}
         {% if n > default_class[0] %}
           {% do classes.append("nodisplay") %}
         {% endif %}
@@ -161,7 +162,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
             <td rowspan="{{rowspan}}" class="nowrap imag {{allshades}}">
               {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
             </td>
-          {% endfor %}
+          {% endfor %} {# format in an_formats #}
           {% if rowspan == 2 %} {# if n is prime #}
            {% for i in [0,1] %}
             {% if i == 1 %}
@@ -180,11 +181,12 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
               {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}
             </td>
             </tr>
-           {% endfor %}
-          {% else %}
+           {% endfor %} {# i in [0,1] #}
+           {% else %}
+            <td colspan=4 class="{{allshades}}"></td>
             </tr>
           {% endif %}
-    {% endfor %} {# n in info.CC_n #}
+    {% endfor %} {# n in range(2, 1000) #}
     </tbody>
   </table>
 </div>
