@@ -305,7 +305,7 @@ def l_function_cmf_old(level, weight, character, hecke_orbit, number):
                                     char_orbit_label=char_orbit_label,
                                     character=character,
                                     hecke_orbit=hecke_orbit,
-                                    number=1),
+                                    number=number),
                                     code=301)
 
 
