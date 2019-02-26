@@ -357,16 +357,19 @@ def display_complex(x, y, digits, method = "truncate",
     """
     if (try_halfinteger and abs(y) < 10.**(- digits - extra_truncation_digits))\
             or y == 0:
-        return display_float(x, digits, method=method,
-                                        extra_truncation_digits=extra_truncation_digits,
-                                        try_halfinteger=try_halfinteger)
+        return display_float(x, digits,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=try_halfinteger)
+
     if try_halfinteger and abs(x) < 10.**(- digits - extra_truncation_digits)\
             or x == 0:
         x = ""
     else:
-        x = display_float(x, digits, method=method,
-                                     extra_truncation_digits=extra_truncation_digits,
-                                     try_halfinteger=try_halfinteger)
+        x = display_float(x, digits,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=try_halfinteger)
     if y < 0:
         y = -y
         if x == "":
