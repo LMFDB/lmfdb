@@ -28,7 +28,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 </script>
 
 {% set class_n = [50, 250, (newform.traces | length)] %}
-{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\)','\(a_n\) with \(n\)')]%}
+{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
 {% set default_class = [50,'primes'] %}
 {% macro render_display_options() %}
 <div>
@@ -53,7 +53,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       <span class="{{s[0]}} {{n|string}} {{extra}}" >
       {% for ns in subsets %}
        {% if ns != s %}
-         (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">See {{ns[1]}} instead</a>)
+         (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">See {{ns[1]}}</a>)
        {% endif %}
       {% endfor %} {# for ns in subsets #}
       </span>
