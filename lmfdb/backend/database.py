@@ -1309,7 +1309,7 @@ class PostgresTable(PostgresBase):
         if qstr is not None:
             selecter = SQL("{0} WHERE {1}").format(selecter, qstr)
         selecter = SQL("{0} ORDER BY {1}").format(selecter, Identifier(col))
-        cur = self._execute(selecter)
+        cur = self._execute(selecter, values)
         return [res[0] for res in cur]
 
     def count(self, query={}, record=True):

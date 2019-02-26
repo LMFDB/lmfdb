@@ -273,6 +273,10 @@ class WebNewform(object):
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
             res.append(('Newform ' + self.label, nf_url))
+            if self.dual_label is not None and self.dual_label != self.embedding_label:
+                dlabel = self.label + '.' + self.dual_label
+                d_url = nf_url + '/' + '/'.join(self.dual_label.split('.'))
+                res.append(('Dual Form ' + dlabel, d_url))
 
         # then related objects
         res += names_and_urls(self.related_objects)
@@ -359,7 +363,7 @@ class WebNewform(object):
             an_keys = (0, an_bound)
             angles_keys = (0, prime_pi(an_bound))
             angles_projection = 'angles[%d:%d]' % angles_keys
-            cc_proj.extend([an_projection, angles_projection])
+            cc_proj.extend(['dual_conrey_index', 'dual_embedding_index', an_projection, angles_projection])
             query = {'lfunction_label' : self.label + '.' + self.embedding_label}
 
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
@@ -372,8 +376,11 @@ class WebNewform(object):
             self.cc_data = {}
             for embedded_mf in cc_data:
                 if format in an_formats:
+                    an_normalized = embedded_mf.pop(an_projection)
                     # we don't store a_0, thus the +1
-                    embedded_mf['an_normalized'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
+                    embedded_mf['an_normalized'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(an_normalized, an_keys[0] + 1)}
+                    cqexp_prec = an_keys[0] + len(an_normalized) + 1
+                    self.cqexp_prec = min(self.cqexp_prec, cqexp_prec)
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
@@ -394,6 +401,12 @@ class WebNewform(object):
                         self.character_values[p].append((angle, value))
         if self.embedding_m is not None:
             m = self.embedding_m
+            dci = self.cc_data[m].get('dual_conrey_index')
+            dei = self.cc_data[m].get('dual_embedding_index')
+            if dci is None or dei is None:
+                self.dual_label = None
+            else:
+                self.dual_label = "%s.%s" % (dci, dei)
             x = self.cc_data[m].get('embedding_root_real')
             y = self.cc_data[m].get('embedding_root_imag')
             if x is None or y is None:
@@ -780,6 +793,12 @@ function switch_basis(btype) {
             # sum of powers of zeta_m
             zeta = self._PrintRing.gen(0)
             return sum(c * zeta**e for c,e in data)
+
+    @property
+    def dual_link(self):
+        dlabel = self.label + '.' + self.dual_label
+        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/')
+        return '<a href="%s">%s</a>'%(d_url, dlabel)
 
     @property
     def char_orbit_link(self):
