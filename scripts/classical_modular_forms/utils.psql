@@ -171,3 +171,8 @@ $$;
 
 CREATE OR REPLACE FUNCTION jsonb_arr2numeric_arr(_js jsonb) RETURNS numeric[] LANGUAGE SQL IMMUTABLE AS
 'SELECT ARRAY(SELECT jsonb_array_elements_text(_js))::numeric[]';
+
+
+CREATE OR REPLACE FUNCTION join6dot(IN a text[]) RETURNS text LANGUAGE SQL IMMUTABLE AS $$
+SELECT a[1] || '.' || a[2] || '.' || a[3] || '.' || a[4] || '.' || a[5] || '.' || a[6];
+$$;
