@@ -11,7 +11,7 @@ Embedded modular form:
 
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
-* change lfunction_label to label, add level, weight, char_orbit_index, hecke_orbit, dual_conrey_label, dual_embedding_index, dual_embedding_m (Edgar)
+* change lfunction_label to label
 
 FINAL CHECKS:
 * Make sure indexes are appropriate, especially for new sort orders (Edgar)
