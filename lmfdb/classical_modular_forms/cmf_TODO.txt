@@ -11,8 +11,10 @@ IMPORTANT:
 * change lfunction_label to label
 * cap to 1000 and however, download all of them
 * server error when specifying only n = 2211, 3397.1.cz.a
-* rerun self twists disc 
+* rerun self twists disc
 * form 8064.2.j.g.575.9 displayin 0.0000 on qexp
+* add interesting new form with level > 4000
+* limit 1000
 
 FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
