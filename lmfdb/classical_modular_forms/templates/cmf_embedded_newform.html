@@ -28,11 +28,21 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 </script>
 
 {% set class_n = [50, 250, newform.cqexp_prec-1] %}
-{% set subsets = [('primes', 'only primes','\(p\)'), ('all', 'all \(n\)','\(n\)')]%}
+{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
 {% set default_class = [50,'primes'] %}
 {% macro render_display_options() %}
 <div>
   {% for s in subsets %}
+    {% set extra = 'nodisplay' %}
+    {% if s[0] == default_class[1] %}
+      {% set extra = '' %}
+    {% endif %}
+    <span class="noptions {{s[0]}} {{extra}}">
+    Display {{s[2]}} up to:
+    {% for k in class_n %}
+    <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="#coefficient_data">{{k}}</a>
+    {% endfor %} {# for k in class_n #}
+    </span>
     {% for n in class_n %}
       {% set extra = 'nodisplay' %}
       {% if n == default_class[0] and s[0] == default_class[1] %}
@@ -40,25 +50,14 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       {% endif %}
 
       {# deals with the other options #}
-      <div class="{{s[0]}} {{n|string}} {{extra}}" >
-      See
+      <span class="{{s[0]}} {{n|string}} {{extra}}" >
       {% for ns in subsets %}
        {% if ns != s %}
-         <a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">{{ns[1]}}</a>
+         (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">See {{ns[1]}}</a>)
        {% endif %}
       {% endfor %} {# for ns in subsets #}
-      </div>
-      {% endfor %} {# for n in class_n #}
-      {% set extra = 'nodisplay' %}
-      {% if s[0] == default_class[1] %}
-        {% set extra = '' %}
-      {% endif %}
-      <div class="noptions {{s[0]}} {{extra}}">
-      Display {{s[2]}} up to:
-      {% for k in class_n %}
-      <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="#coefficient_data">{{k}}</a>
-      {% endfor %} {# for k in class_n #}
-      </div>
+      </span>
+    {% endfor %} {# for n in class_n #}
   {% endfor %} {# for s in subsets #}
 </div>
 {% endmacro %}

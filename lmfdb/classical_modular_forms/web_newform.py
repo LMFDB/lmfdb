@@ -927,20 +927,16 @@ function switch_basis(btype) {
         if prec == 0:
             return 'O(1)'
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
-        s = ''
-        for j in range(1, prec):
+        s = '\(q\)'
+        for j in range(2, prec):
             term = eigseq[j]
-            latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True)
+            latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
             if latexterm != '0':
-                if j > 0:
-                    if latexterm == '1':
-                        latexterm = ''
-                    elif latexterm == '-1':
-                        latexterm = '-'
-                    if j == 1:
-                        latexterm += ' q'
-                    else:
-                        latexterm += ' q^{%d}' % j
+                if latexterm == '1':
+                    latexterm = ''
+                elif latexterm == '-1':
+                    latexterm = '-'
+                latexterm += ' q^{%d}' % j
                 #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
