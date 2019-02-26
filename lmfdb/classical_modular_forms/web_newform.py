@@ -908,7 +908,7 @@ function switch_basis(btype) {
         if prec == 0:
             return 'O(1)'
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
-        s = 'q'
+        s = '\(q\)'
         for j in range(2, prec):
             term = eigseq[j]
             latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
