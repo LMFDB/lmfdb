@@ -51,10 +51,9 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 
       {# deals with the other options #}
       <span class="{{s[0]}} {{n|string}} {{extra}}" >
-      (See
       {% for ns in subsets %}
        {% if ns != s %}
-         <a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">{{ns[1]}}</a>)
+         (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">See {{ns[1]}} instead</a>)
        {% endif %}
       {% endfor %} {# for ns in subsets #}
       </span>
