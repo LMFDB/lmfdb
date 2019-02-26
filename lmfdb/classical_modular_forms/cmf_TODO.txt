@@ -9,7 +9,7 @@ Expected failures:
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label
-* cap to 1000 and however, download all of them
+* cap to 1000 and however, download all of them (done?)
 * server error when specifying only n = 2211, 3397.1.cz.a
 * rerun self twists disc
 * form 8064.2.j.g.575.9 displayin 0.0000 on qexp

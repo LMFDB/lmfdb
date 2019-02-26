@@ -313,12 +313,6 @@ def render_newform_webpage(label):
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
-    # to be removed FIXME after check newform.an_cc_bound: is correct
-    # and then perhaps remove cqexp_prec
-    #if newform.cqexp_prec != 0:
-    #    if max(info['CC_n']) > newform.an_cc_bound:
-    #        errs.append(r"Only \(a_n\) up to %d are available"%(newform.an_cc_bound))
-    #        info['CC_n'] = [n for n in info['CC_n'] if n < newform.an_cc_bound]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_newform.html",
@@ -344,6 +338,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except ValueError as err:
         return abort(404, err.args)
     info['CC_m'] = [m]
+    info['CC_n'] = [0,1000]
     #errs.extend(parse_prec(info))
     errs = parse_prec(info)
     newform.setup_cc_data(info)

@@ -29,10 +29,8 @@ EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
 
-# for embedding_label None, we store a_n with n \in [1, an_storage_bound]
-an_storage_bound = 3000
-# we store alpha_p with p <= an_storage_bound
-primes_for_angles = prime_range(an_storage_bound)
+# we may store alpha_p with p <= 3000
+primes_for_angles = prime_range(3000)
 
 def valid_label(label):
     return bool(LABEL_RE.match(label))
@@ -180,8 +178,6 @@ class WebNewform(object):
             self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
 
         ## CC_DATA
-        self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
-                               # Should get updated in setup_cc_data.
         self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
 
 
@@ -365,7 +361,8 @@ class WebNewform(object):
             cc_proj.extend(['dual_conrey_index', 'dual_embedding_index'])
             query = {'label' : self.label + '.' + self.embedding_label}
 
-        if format is None:
+        if format is None and 'CC_n' not in info:
+            # for download
             CC_n = (1, self.an_cc_bound)
         else:
             n = info.get('n','1-10')
@@ -389,18 +386,14 @@ class WebNewform(object):
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
-            self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = an_keys[1] + 1
             self.cc_data = {}
             for embedded_mf in cc_data:
                 if format in an_formats:
                     an_normalized = embedded_mf.pop(an_projection)
                     # we don't store a_0, thus the +1
                     embedded_mf['an_normalized'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(an_normalized, an_keys[0] + 1)}
-                    cqexp_prec = an_keys[0] + len(an_normalized) + 1
-                    self.cqexp_prec = min(self.cqexp_prec, cqexp_prec)
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
@@ -940,10 +933,10 @@ function switch_basis(btype) {
         return s + '\(+O(q^{%d})\)' % prec
 
     def q_expansion_cc(self, prec_max):
-        prec = min(self.an_cc_bound + 1, prec_max)
+        eigseq = self.cc_data[self.embedding_m]['an_normalized']
+        prec = min(max(eigseq.keys()) + 1, prec_max)
         if prec == 0:
             return 'O(1)'
-        eigseq = self.cc_data[self.embedding_m]['an_normalized']
         s = '\(q\)'
         for j in range(2, prec):
             term = eigseq[j]
