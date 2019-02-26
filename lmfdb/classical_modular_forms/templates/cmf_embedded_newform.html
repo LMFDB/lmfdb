@@ -62,8 +62,18 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
   {% endfor %} {# for s in subsets #}
 </div>
 {% endmacro %}
+<br><br>
 {{ render_display_options() }}
 
+<form id='complex_embeddings'>
+  <table>
+    <tr>
+      <td>{{ KNOWL('dq.mf.elliptic.cc_prec', title='Significant digits') }}: </td>
+      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
+      <td><button id="refresh_complex">Refresh table</button></td>
+    </tr>
+  </table>
+</form>
 
 {# we need to fix the coloring #}
 <div class="table-scroll-wrapper">
@@ -191,19 +201,5 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
   </table>
 </div>
 {{ render_display_options() }}
-
-<form id='complex_embeddings'>
-  <table>
-    <tr>
-      <td>{{ KNOWL('dq.mf.elliptic.cc_prec', title='Significant digits') }}: </td>
-      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
-      <td><button id="refresh_complex">Refresh table</button></td>
-    </tr>
-  </table>
-</form>
-
-
-
-
 
 {% endblock %}

@@ -7,13 +7,9 @@ Expected failures:
 + (mf_newforms.check_analytic_rank_proved: 1158 failures)
 
 Embedded modular form:
-* Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
-* Display options 50, 250, 1000/2000/3000
-* Change formatting for Display options to make it one line.
-* Move significant digits to the top
+* Change formatting for render_display_options macro to make it one line.
 
 IMPORTANT:
-* Make an consistent: always show digits after decimal place even if approximately integral
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label, add level, weight, char_orbit_index, hecke_orbit, dual_conrey_label, dual_embedding_index, dual_embedding_m (Edgar)
 

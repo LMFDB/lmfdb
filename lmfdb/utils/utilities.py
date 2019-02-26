@@ -287,9 +287,9 @@ def to_dict(args, exclude = []):
 def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
-def display_float(x, digits, method = "truncate", extra_truncation_digits = 3):
+def display_float(x, digits, method = "truncate", extra_truncation_digits = 3, try_halfinteger=True):
     # if small, try to display it as an exact or half integer
-    if abs(x) < 10.**digits:
+    if try_halfinteger and abs(x) < 10.**digits:
         if is_exact(x):
             s = str(x)
             if len(s) < digits + 2: # 2 = '/' + '-'

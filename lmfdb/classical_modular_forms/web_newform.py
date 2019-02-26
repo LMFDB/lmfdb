@@ -143,6 +143,8 @@ class WebNewform(object):
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
         self.hecke_ring_character_values = None
+        self.single_generator = None
+        self.has_exact_qexp = False
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
             eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
@@ -158,10 +160,13 @@ class WebNewform(object):
                 self.qexp = [zero] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-            else: # k > 1 and dim > 20
-                self.has_exact_qexp = False
-                self.single_generator = None
         else:
+            hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
+            hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
+            if hecke_data:
+                for attr in hecke_cols:
+                    setattr(self, attr, hecke_data.get(attr))
+                self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
             # get data from char_dir_values
             self.char_conrey = self.embedding_label.split('.')[0]
             char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)},['order','values_gens'])
@@ -169,7 +174,6 @@ class WebNewform(object):
                 raise ValueError("Invalid Conrey label")
             self.hecke_ring_character_values = char_values['values_gens'] # [[i,[[1, m]]] for i, m in char_values['values_gens']]
             self.hecke_ring_cyclotomic_generator = char_values['order']
-            self.has_exact_qexp = False
         # sort by the generators
         if self.hecke_ring_character_values:
             self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
@@ -981,12 +985,12 @@ function switch_basis(btype) {
     def _display_re(self, x, prec, method='round'):
         if abs(x) < 10**(-prec):
             return ""
-        return r"%s"%(display_float(x, prec, method=method).replace('-','&minus;'))
+        return r"%s"%(display_float(x, prec, method=method, try_halfinteger=False).replace('-','&minus;'))
 
     def _display_im(self, y, prec, method='round'):
         if abs(y) < 10**(-prec):
             return ""
-        res = display_float(y, prec, method=method)
+        res = display_float(y, prec, method=method, try_halfinteger=False)
         if res == '1':
             res = ''
         return r"%s<em>i</em>"%(res)
