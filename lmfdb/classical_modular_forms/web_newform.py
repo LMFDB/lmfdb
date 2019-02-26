@@ -877,8 +877,8 @@ function switch_basis(btype) {
             return 'O(1)'
         eigseq = self.qexp[:prec]
         use_knowl = too_big(eigseq, 10**24)
-        s = ''
-        for j in range(len(eigseq)):
+        s = 'q'
+        for j in range(2,len(eigseq)):
             term = self._elt(eigseq[j])
             if term != 0:
                 latexterm = latex(term)
@@ -886,15 +886,11 @@ function switch_basis(btype) {
                     latexterm = make_bigint(latexterm)
                 if term.number_of_terms() > 1:
                     latexterm = r"(" +  latexterm + r")"
-                if j > 0:
-                    if term == 1:
-                        latexterm = ''
-                    elif term == -1:
-                        latexterm = '-'
-                    if j == 1:
-                        latexterm += ' q'
-                    else:
-                        latexterm += ' q^{%d}' % j
+                if term == 1:
+                    latexterm = ''
+                elif term == -1:
+                    latexterm = '-'
+                latexterm += ' q^{%d}' % j
                 #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
