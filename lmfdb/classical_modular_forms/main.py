@@ -251,7 +251,7 @@ def parse_n(info, newform, primes_only):
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
     if max(info['CC_n']) > newform.an_cc_bound:
-        errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
+        errs.append(r"Only \(a_n\) up to %s are available; limiting to \(n \le %d\)" % (newform.an_cc_bound, newform.an_cc_bound))
         info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
@@ -259,8 +259,8 @@ def parse_n(info, newform, primes_only):
             errs.append("No good primes within n range; resetting to default")
             info['CC_n'] = [n for n in prime_range(maxp+1) if newform.level % n != 0]
     elif len(info['CC_n']) == 0:
-        errs.append("No n in specified range; restting to default")
-        info['CC_n'] = range(maxp+1)
+        errs.append("No n in specified range; resetting to default")
+        info['CC_n'] = range(2, maxp+1)
     return errs
 
 def parse_m(info, newform):

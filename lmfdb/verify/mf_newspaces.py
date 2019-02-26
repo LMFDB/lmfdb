@@ -147,8 +147,12 @@ class mf_newspaces(MfChecker):
 
     @overall
     def check_sum_AL_dims(self):
-        # if AL_dims is set, check that AL_dims sum to dim
-        return self._run_query(SQL("{0} != (SELECT SUM(s) FROM (SELECT (x->2)::integer FROM jsonb_array_elements({1})) s)").format(Identifier('dim'), Identifier('AL_dims')), constraint={'AL_dims':{'$exists':True}})
+        """
+            If AL_dims is set, check that AL_dims sum to dim
+            Time: 0.3 s
+        """
+        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim !=( SELECT  SUM(s.d) FROM (SELECT ((jsonb_array_elements("AL_dims"))->>1)::int d FROM mf_newspaces t2 WHERE t2.label = t1.label) s ) AND  "AL_dims" is not NULL LIMIT 1')
+        return self._run_query(query=query)
     @overall
     def check_Nk2(self):
         # TIME about 1s
