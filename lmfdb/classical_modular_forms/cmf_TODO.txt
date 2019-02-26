@@ -6,9 +6,6 @@ Disabled:
 Expected failures:
 + (mf_newforms.check_analytic_rank_proved: 1158 failures)
 
-Embedded modular form:
-* Change formatting for render_display_options macro to make it one line.
-
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * change lfunction_label to label

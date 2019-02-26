@@ -237,19 +237,22 @@ def parse_n(info, newform, primes_only):
                 maxp = next_prime(maxp)
             p = next_prime(p)
     errs = []
-    info['default_nrange'] = '2-%s'%maxp
-    nrange = info.get('n', '2-%s'%maxp)
+    info['default_nrange'] = '2-%s' % maxp
+    nrange = info.get('n', '2-%s' % maxp)
     try:
-        info['CC_n'] = integer_options(nrange, 1000)
+        info['CC_n'] = integer_options(nrange, newform.an_cc_bound)
     except (ValueError, TypeError) as err:
         info['CC_n'] = range(2,maxp+1)
         if err.args and err.args[0] == 'Too many options':
-            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
+            errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
     if min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
+    if max(info['CC_n']) > newform.an_cc_bound:
+        errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
+        info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -276,7 +279,7 @@ def parse_m(info, newform):
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
-        info['CC_m'] = range(1,maxm+1)
+        info['CC_m'] = range(1, maxm+1)
         if err.args and err.args[0] == 'Too many options':
             errs.append('Web interface only supports 1000 embeddings at a time.  Use download link to get more (may take some time).')
         else:
@@ -310,10 +313,12 @@ def render_newform_webpage(label):
     errs.extend(parse_m(info, newform))
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
-    if newform.cqexp_prec != 0:
-        if max(info['CC_n']) >= newform.cqexp_prec:
-            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
-            info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
+    # to be removed FIXME after check newform.an_cc_bound: is correct
+    # and then perhaps remove cqexp_prec
+    #if newform.cqexp_prec != 0:
+    #    if max(info['CC_n']) > newform.an_cc_bound:
+    #        errs.append(r"Only \(a_n\) up to %d are available"%(newform.an_cc_bound))
+    #        info['CC_n'] = [n for n in info['CC_n'] if n < newform.an_cc_bound]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_newform.html",

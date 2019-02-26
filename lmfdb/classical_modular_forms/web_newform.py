@@ -317,14 +317,13 @@ class WebNewform(object):
 
     @lazy_attribute
     def an_cc_bound(self):
-        if self.weight == 1:
-            return 3000
-        elif self.level <= 1000:
+        if self.level <= 1000:
             return 1000
         elif self.level <= 4000:
             return 2000
         else:
             return 3000
+
     @lazy_attribute
     def primes_cc_bound(self):
         return prime_pi(self.an_cc_bound)
@@ -354,10 +353,10 @@ class WebNewform(object):
             if '.' in m:
                 m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
             CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
-            range_match = INTEGER_RANGE_RE.match(m)
-            if range_match:
-                low, high = int(range_match.group(1)), int(range_match.group(2))
-                query['embedding_m'] = {'$gte':low, '$lte':high}
+            CC_m = sorted(set(CC_m))
+            # if it is a range
+            if len(CC_m) - 1 == CC_m[-1] - CC_m[0]:
+                query['embedding_m'] = {'$gte':CC_m[0], '$lte':CC_m[-1]}
             else:
                 query['embedding_m'] = {'$in': CC_m}
             self.embedding_m = None
@@ -933,7 +932,6 @@ function switch_basis(btype) {
                         latexterm += ' q'
                     else:
                         latexterm += ' q^{%d}' % j
-                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
                 s += '\(' + latexterm + '\) '
@@ -942,7 +940,7 @@ function switch_basis(btype) {
         return s + '\(+O(q^{%d})\)' % prec
 
     def q_expansion_cc(self, prec_max):
-        prec = min(self.cqexp_prec, prec_max)
+        prec = min(self.an_cc_bound + 1, prec_max)
         if prec == 0:
             return 'O(1)'
         eigseq = self.cc_data[self.embedding_m]['an_normalized']
@@ -956,7 +954,6 @@ function switch_basis(btype) {
                 elif latexterm == '-1':
                     latexterm = '-'
                 latexterm += ' q^{%d}' % j
-                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
                 s += '\(' + latexterm + '\) '
