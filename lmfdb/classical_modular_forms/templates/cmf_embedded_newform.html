@@ -27,7 +27,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
   }
 </script>
 
-{% set class_n = [50, 250, (newform.traces | length)] %}
+{% set class_n = [50, 250, newform.cqexp_prec-1] %}
 {% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
 {% set default_class = [50,'primes'] %}
 {% macro render_display_options() %}
@@ -120,7 +120,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     <tbody>
       {% set m = newform.embedding_m %}
       {% set pindex = [1] %}
-      {% for n in range(2,(newform.traces|length)+1) %}
+      {% for n in range(2,newform.cqexp_prec) %}
         {% set classes = ["all"] %}
         {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
           {% set rowspan = 2 %}

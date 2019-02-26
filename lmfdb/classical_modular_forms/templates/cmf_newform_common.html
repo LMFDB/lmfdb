@@ -169,6 +169,7 @@
 </table>
 
 {% if newform.embedding_label %}
+
 <h2> Embedding invariants </h2>
 
 <table>
@@ -192,6 +193,14 @@
     <td>\(=\)</td>
     <td>{{ newform.char_conrey_link | safe}}</td>
   </tr>
+{% if newform.embedding_label != newform.dual_label %}
+  <tr>
+    <td>{{ KNOWL('mf.elliptic.dualform', 'Dual form') }}</td>
+    <td></td>
+    <td></td>
+    <td> {{ newform.dual_link | safe }} </td>
+  </tr>
+{% endif %}
 </table>
 {% endif %}
 
