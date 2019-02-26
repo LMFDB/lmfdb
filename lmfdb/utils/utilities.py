@@ -287,7 +287,9 @@ def to_dict(args, exclude = []):
 def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
-def display_float(x, digits, method = "truncate", extra_truncation_digits = 3, try_halfinteger=True):
+def display_float(x, digits, method = "truncate",
+                             extra_truncation_digits = 3,
+                             try_halfinteger=True):
     # if small, try to display it as an exact or half integer
     if try_halfinteger and abs(x) < 10.**digits:
         if is_exact(x):
@@ -328,7 +330,10 @@ def display_float(x, digits, method = "truncate", extra_truncation_digits = 3, t
                 s = s[:point]
     return s
 
-def display_complex(x, y, digits, method = "truncate", parenthesis = False, extra_truncation_digits = 3):
+def display_complex(x, y, digits, method = "truncate",
+                                  parenthesis = False,
+                                  extra_truncation_digits = 3,
+                                  try_halfinteger=True):
     """
     Examples:
     >>> display_complex(1.0001, 0, 3, parenthesis = True)
@@ -350,12 +355,16 @@ def display_complex(x, y, digits, method = "truncate", parenthesis = False, extr
     >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 1)
     '-1.123i'
     """
-    if abs(y) < 10.**(- digits - extra_truncation_digits):
-        return display_float(x, digits, method = method, extra_truncation_digits = extra_truncation_digits)
-    if abs(x) < 10.**(- digits - extra_truncation_digits):
+    if try_halfinteger and abs(y) < 10.**(- digits - extra_truncation_digits):
+        return display_float(x, digits, method=method,
+                                        extra_truncation_digits=extra_truncation_digits,
+                                        try_halfinteger=try_halfinteger)
+    if try_halfinteger and abs(x) < 10.**(- digits - extra_truncation_digits):
         x = ""
     else:
-        x = display_float(x, digits, method = method, extra_truncation_digits = extra_truncation_digits)
+        x = display_float(x, digits, method=method,
+                                     extra_truncation_digits=extra_truncation_digits,
+                                     try_halfinteger=try_halfinteger)
     if y < 0:
         y = -y
         if x == "":
@@ -367,7 +376,9 @@ def display_complex(x, y, digits, method = "truncate", parenthesis = False, extr
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, digits, method = method, extra_truncation_digits = extra_truncation_digits)
+    y = display_float(y, digits, method = method,
+                                 extra_truncation_digits = extra_truncation_digits,
+                                 try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
     if len(y) > 0 and y[-1] == '.':
