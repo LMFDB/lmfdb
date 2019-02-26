@@ -321,8 +321,8 @@ class WebNewform(object):
           - ``CC_n`` -- a list of desired a_n
           - ``format`` -- one of 'embed', 'analytic_embed', 'satake', or 'satake_angle'
         """
-        an_formats = ['embed','analytic_embed','primes', 'all']
-        angles_formats = ['satake','satake_angle','primes', 'all']
+        an_formats = ['embed','analytic_embed', None]
+        angles_formats = ['satake','satake_angle', None]
         cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
         an_bound = min(len(self.traces), an_storage_bound)
         if self.embedding_label is None:
