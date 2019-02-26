@@ -115,12 +115,11 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       <tr class="display" style="padding:0px; height:0px">
         <th colspan="11" style="padding:0px; height:0px" ></th>
       </tr>
-      {# FIXME: mssing line #}
     </thead>
     <tbody>
       {% set m = newform.embedding_m %}
       {% set pindex = [1] %}
-      {% for n in range(2,newform.cqexp_prec) %}
+      {% for n in range(2, 1000) %}
         {% set classes = ["all"] %}
         {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
           {% set rowspan = 2 %}
