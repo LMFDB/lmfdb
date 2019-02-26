@@ -333,19 +333,15 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    info['format'] = info.get('format', 'primes')
-    errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
+    #errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
         return abort(404, err.args)
     info['CC_m'] = [m]
-    errs.extend(parse_prec(info))
+    #errs.extend(parse_prec(info))
+    errs = parse_prec(info)
     newform.setup_cc_data(info)
-    if newform.cqexp_prec != 0:
-        if max(info['CC_n']) >= newform.cqexp_prec:
-            errs.append(r"Only \(a_n\) up to %s are available"%(newform.cqexp_prec-1))
-            info['CC_n'] = [n for n in info['CC_n'] if n < newform.cqexp_prec]
     if errs:
         flash(Markup("<br>".join(errs)), "error")
     return render_template("cmf_embedded_newform.html",

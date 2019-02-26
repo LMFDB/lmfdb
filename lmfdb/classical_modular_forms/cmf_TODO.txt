@@ -9,6 +9,7 @@ Expected failures:
 Embedded modular form:
 * Change embeddings section to "Coefficient data", flip rows and columns, display all options, button to restrict to prime rows
 * Display options 50, 250, 1000/2000/3000
+* Change formatting for Display options to make it one line.
 * Move significant digits to the top
 
 IMPORTANT:

@@ -6,7 +6,7 @@ import bisect, re
 
 from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-from sage.all import (prime_range, latex, QQ, PolynomialRing,
+from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
                       CDF, ZZ, CBF, cached_method, vector, lcm, RR)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
@@ -28,8 +28,8 @@ EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
 
-# we store a_n with n \in [1, an_storage_bound]
-an_storage_bound = 1000
+# for embedding_label None, we store a_n with n \in [1, an_storage_bound]
+an_storage_bound = 3000
 # we store alpha_p with p <= an_storage_bound
 primes_for_angles = prime_range(an_storage_bound)
 
@@ -135,24 +135,16 @@ class WebNewform(object):
 
         self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        traces = db.mf_hecke_traces.search({'hecke_orbit_code':self.hecke_orbit_code, 'n': {'$lt': 100}}, ['n', 'trace_an'], sort=['n'])
-        if not traces:
-            raise ValueError("Traces missing")
-        self.texp = [0]
-        for i, tr in enumerate(traces, 1):
-            if tr['n'] != i:
-                raise ValueError("Missing eigenvalues")
-            self.texp.append(tr['trace_an'])
+        self.texp = [0] + self.traces
         self.texp_prec = len(self.texp)
 
         #self.char_conrey = self.conrey_indexes[0]
         #self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
-        hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
-        eigenvals = None
         self.hecke_ring_character_values = None
         if self.embedding_label is None:
+            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
             eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
@@ -175,7 +167,7 @@ class WebNewform(object):
             char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)},['order','values_gens'])
             if char_values is None:
                 raise ValueError("Invalid Conrey label")
-            self.hecke_ring_character_values = [[i,[[1, m]]] for i, m in char_values['values_gens']]
+            self.hecke_ring_character_values = char_values['values_gens'] # [[i,[[1, m]]] for i, m in char_values['values_gens']]
             self.hecke_ring_cyclotomic_generator = char_values['order']
             self.has_exact_qexp = False
         # sort by the generators
@@ -206,7 +198,7 @@ class WebNewform(object):
             self.properties.append(('Character', '%s.%s' % (self.level, self.char_conrey)))
 
         if self.is_self_dual != 0:
-                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+            self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
         self.properties += [('Analytic conductor', '%.3f'%(self.analytic_conductor))]
 
         if self.analytic_rank is not None:
@@ -328,16 +320,17 @@ class WebNewform(object):
         an_formats = ['embed','analytic_embed','primes', 'all']
         angles_formats = ['satake','satake_angle','primes', 'all']
         cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        format = info.get('format')
+        an_bound = min(len(self.traces), an_storage_bound)
         if self.embedding_label is None:
+            format = info.get('format')
             m = info.get('m','1-%s'%(min(self.dim,20)))
             if '.' in m:
                 m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
             n = info.get('n','1-10')
             CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
             CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
-            # convert CC_n to an interval in [1,an_storage_bound]
-            CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
+            # convert CC_n to an interval in [1,an_bound]
+            CC_n = ( max(1, min(CC_n)), min(an_bound, max(CC_n)) )
             an_keys = (CC_n[0]-1, CC_n[1])
             # extra 5 primes in case we hit too many bad primes
             angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5, len(primes_for_angles)))
@@ -356,10 +349,11 @@ class WebNewform(object):
                 query['embedding_m'] = {'$in': CC_m}
             self.embedding_m = None
         else:
+            format = 'all'
             self.embedding_m = int(info['CC_m'][0])
             an_projection = 'an_normalized'
-            an_keys = (0, an_storage_bound)
-            angles_keys = (0, len(primes_for_angles))
+            an_keys = (0, an_bound)
+            angles_keys = (0, prime_pi(an_bound))
             angles_projection = 'angles[%d:%d]' % angles_keys
             cc_proj.extend([an_projection, angles_projection])
             query = {'lfunction_label' : self.label + '.' + self.embedding_label}
@@ -808,8 +802,20 @@ function switch_basis(btype) {
         gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
         vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
         for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
-            term = self._elt(chi_g)
-            latexterm = latex(term)
+            if self.embedding_label is None:
+                term = self._elt(chi_g)
+                latexterm = latex(term)
+            else:
+                order = self.hecke_ring_cyclotomic_generator
+                d = gcd(order, chi_g)
+                order = order // d
+                chi_g = chi_g // d
+                if order == 1:
+                    latexterm = '1'
+                elif order == 2:
+                    latexterm = '-1'
+                else:
+                    latexterm = r'e\left(\frac{%s}{%s}\right)'%(chi_g, order)
             color = "dark" if j%2 else "light"
             gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
             vals.append(r'      <td class="%s">\(%s\)</td>'%(color, latexterm))

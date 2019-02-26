@@ -164,6 +164,7 @@
     <td>\(\operatorname{ST}(f)\)</td>
     <td>\(=\)</td>
     <td>{{ newform.sato_tate_display() | safe }}</td>
+  </tr>
   {% endif %}
 </table>
 
@@ -271,7 +272,7 @@ function show_qexp(qstyle) {
 </form>
 {% endif %}
 
-{% if newform.char_order != 1 and (newform.dim <= 20 or newform.weight == 1) %}
+{% if newform.char_order != 1 and (newform.dim <= 20 or newform.weight == 1 or newform.embedding_label) %}
 <h2>Character Values</h2>
 <p>We give the values of \(\chi\) on generators for \(\left(\mathbb{Z}/{{newform.level}}\mathbb{Z}\right)^\times\).</p>
 <table class="ntdata">
