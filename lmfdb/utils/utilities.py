@@ -355,11 +355,13 @@ def display_complex(x, y, digits, method = "truncate",
     >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 1)
     '-1.123i'
     """
-    if try_halfinteger and abs(y) < 10.**(- digits - extra_truncation_digits):
+    if (try_halfinteger and abs(y) < 10.**(- digits - extra_truncation_digits))\
+            or y == 0:
         return display_float(x, digits, method=method,
                                         extra_truncation_digits=extra_truncation_digits,
                                         try_halfinteger=try_halfinteger)
-    if try_halfinteger and abs(x) < 10.**(- digits - extra_truncation_digits):
+    if try_halfinteger and abs(x) < 10.**(- digits - extra_truncation_digits)\
+            or x == 0:
         x = ""
     else:
         x = display_float(x, digits, method=method,
