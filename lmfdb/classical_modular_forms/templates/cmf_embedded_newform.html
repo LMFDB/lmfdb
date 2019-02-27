@@ -82,13 +82,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
         <th>
           \(n\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \(a_n\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \(a_n / n^{(k-1)/2}\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \( \alpha_n \)
         </th>
         <th class='center'>
@@ -99,13 +99,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
         <th>
           \(p\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \(a_p\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \(a_p / p^{(k-1)/2}\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center'>
           \( \alpha_p\)
         </th>
         <th class='center'>
@@ -162,13 +162,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           {% set an_formats = ['embed', 'analytic_embed'] %}
           {% for format in an_formats %}
             <td rowspan="{{rowspan}}" class="nowrap real">
-              {{ newform.embedding_re(m, n, prec=info.emb_prec, format=format) | safe }}
-            </td>
-            <td rowspan="{{rowspan}}" class="op">
-              {{ newform.embedding_op(m, n, prec=info.emb_prec) | safe }}
-            </td>
-            <td rowspan="{{rowspan}}" class="nowrap imag">
-              {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
+              {{ newform.embedding(m, n, prec=info.emb_prec, format=format) | safe }}
             </td>
           {% endfor %} {# format in an_formats #}
           {% if rowspan == 2 %} {# if n is prime #}
@@ -177,13 +171,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
               <tr class="{{class}} {{allshades}}">
             {% endif %}
             <td class="nowrap real">
-              {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}
-            </td>
-            <td class="op">
-              {{ newform.satake_op(m,n,i) | safe }}
-            </td>
-            <td class="imag">
-              {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
+              {{ newform.satake(m,n,i,prec=info.emb_prec) | safe }}
             </td>
             <td class="nowrap right">
               {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}

@@ -1113,8 +1113,10 @@ function switch_basis(btype) {
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
         if format == 'satake':
-            alpha = self._get_alpha(m, p, i)
-            return display_complex(alpha.real(), alpha.imag(), prec, method = 'round')
+            return " ".join([ elt(m, p, i, prec)
+                for elt in [self.satake_re, self.satake_op, self.satake_im]
+                ])
+
         else:
             return self.satake_angle(m, p, i, prec)
 

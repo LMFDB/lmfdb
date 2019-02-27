@@ -6,7 +6,6 @@ Expected failures:
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * rerun self twists disc
-* do not jump if at the top (embedded newform)
 
 FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
