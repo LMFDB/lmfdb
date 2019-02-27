@@ -290,14 +290,14 @@ def is_exact(x):
 def display_float(x, digits, method = "truncate",
                              extra_truncation_digits = 3,
                              try_halfinteger=True):
+    if abs(x) < 10.**(- digits - extra_truncation_digits):
+        return "0"
     # if small, try to display it as an exact or half integer
     if try_halfinteger and abs(x) < 10.**digits:
         if is_exact(x):
             s = str(x)
             if len(s) < digits + 2: # 2 = '/' + '-'
                 return str(x)
-        if abs(x) < 10.**(- digits - extra_truncation_digits):
-            return "0"
         k = round_to_half_int(x)
         if k == x :
             k2 = None
@@ -355,15 +355,13 @@ def display_complex(x, y, digits, method = "truncate",
     >>> display_complex(0.00049999, -1.12345, 3, parenthesis = False, extra_truncation_digits = 1)
     '-1.123i'
     """
-    if (try_halfinteger and abs(y) < 10.**(- digits - extra_truncation_digits))\
-            or y == 0:
+    if abs(y) < 10.**(- digits - extra_truncation_digits):
         return display_float(x, digits,
                 method=method,
                 extra_truncation_digits=extra_truncation_digits,
                 try_halfinteger=try_halfinteger)
 
-    if try_halfinteger and abs(x) < 10.**(- digits - extra_truncation_digits)\
-            or x == 0:
+    if abs(x) < 10.**(- digits - extra_truncation_digits):
         x = ""
     else:
         x = display_float(x, digits,

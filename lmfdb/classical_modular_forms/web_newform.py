@@ -875,6 +875,12 @@ function switch_basis(btype) {
                   th_wrap('mf.elliptic.self_twist_col', 'Type'),
                   th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
+        trivial = [elt for elt in self.inner_twists if elt[6] == 1]
+        CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
+                key = lambda elt: elt[2])
+        other = sorted([elt for elt in self.inner_twists if elt[6] == 0],
+                key = lambda elt: (elt[2],elt[3]))
+        self.inner_twists = trivial + CMRM + other
         for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
             label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
             parity = 'Even' if parity == 1 else 'Odd'
@@ -940,6 +946,7 @@ function switch_basis(btype) {
         s = '\(q\)'
         for j in range(2, prec):
             term = eigseq[j]
+            print term[0] == 0, term[1] == 0, term[0], term[1]
             latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
             if latexterm != '0':
                 if latexterm == '1':
@@ -1007,12 +1014,12 @@ function switch_basis(btype) {
         return "Embedded Newform %s.%s"%(self.label, self.conrey_from_embedding(m))
 
     def _display_re(self, x, prec, method='round'):
-        if abs(x) < 10**(-prec):
+        if abs(x) < 10**(-prec + 3):
             return ""
         return r"%s"%(display_float(x, prec, method=method, try_halfinteger=False).replace('-','&minus;'))
 
     def _display_im(self, y, prec, method='round'):
-        if abs(y) < 10**(-prec):
+        if abs(y) < 10**(-prec + 3):
             return ""
         res = display_float(y, prec, method=method, try_halfinteger=False)
         if res == '1':
@@ -1020,8 +1027,8 @@ function switch_basis(btype) {
         return r"%s<em>i</em>"%(res)
 
     def _display_op(self, x, y, prec):
-        xiszero = abs(x) < 10**(-prec)
-        yiszero = abs(y) < 10**(-prec)
+        xiszero = abs(x) < 10**(-prec + 3)
+        yiszero = abs(y) < 10**(-prec + 3)
         if xiszero and yiszero:
             return r"0"
         elif yiszero or (xiszero and y > 0):
