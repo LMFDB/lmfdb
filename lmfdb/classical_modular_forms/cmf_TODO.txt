@@ -6,8 +6,6 @@ Expected failures:
 IMPORTANT:
 * Add notes on provability/completeness to Artin image knowl (Drew)
 * rerun self twists disc
-* form 8064.2.j.g.575.9 displayin 0.0000 on qexp
-* add interesting new form with level > 4000
 * do not jump if at the top (embedded newform)
 
 FINAL CHECKS:

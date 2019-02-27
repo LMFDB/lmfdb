@@ -1021,7 +1021,7 @@ function switch_basis(btype) {
         if res == "0":
             return ""
         else:
-            return r.replace('-','&minus;'))
+            return r.replace('-','&minus;')
 
     def _display_im(self, y, prec, method='round', extra_truncation_digits=3):
         res = display_float(y, prec,
