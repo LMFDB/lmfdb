@@ -206,7 +206,7 @@ class TableChecker(object):
                         check_success = check(rec)
                         row_time = time.time() - row_start
                         if not check_success:
-                            log.write('%s: %s\n'%(name, rec[self.label_col]))
+                            log.write('%s: %s failed test\n'%(name, rec[self.label_col]))
                             check_failures += 1
                             if check_failures >= check.max_failures:
                                 raise TooManyFailures
@@ -223,7 +223,7 @@ class TableChecker(object):
                 bad_labels = check()
                 if bad_labels:
                     for label in bad_labels:
-                        log.write('%s: %s\n'%(name, label))
+                        log.write('%s: %s failed test\n'%(name, label))
                     check_failures = len(bad_labels)
         except TimeoutError:
             check_timeouts += 1

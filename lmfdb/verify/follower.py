@@ -1,5 +1,7 @@
-import os, time
+import os, re, time
 from collections import defaultdict
+
+redline = re.compile(r"An exception in|Exception in|failed test|FAILED with")
 
 class Follower(object):
     """
@@ -36,6 +38,9 @@ class Follower(object):
         if F is not None:
             line = F.readline()
             while line:
+                # Make failures red
+                if suffix == 'log' and redline.search(line):
+                    line = '\033[91m' + line + '\033[0m'
                 print '[%s.%s]: %s' % (basename, suffix, line),
                 line = F.readline()
 
@@ -90,6 +95,9 @@ class Follower(object):
         for donefile in sorted(self.done_files, key=lambda x: ("FAILED" in x, x)):
             with open(os.path.join(self.logdir, donefile)) as F:
                 for line in F:
+                    # Make failures red
+                    if redline.search(line):
+                        line = '\033[91m' + line + '\033[0m'
                     print line,
 
     def follow(self):
