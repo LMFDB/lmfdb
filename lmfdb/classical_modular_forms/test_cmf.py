@@ -326,8 +326,8 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
         assert '\(\pi\)' in page.data
-        assert '\(0.769946\pi\)' in page.data
-        assert '\(0.587925\pi\)' in page.data
+        assert '\(0.769947\pi\)' in page.data
+        assert '\(0.587926\pi\)' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
         assert r'0.965926' in page.data
