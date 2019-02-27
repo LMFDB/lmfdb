@@ -3163,7 +3163,7 @@ class PostgresTable(PostgresBase):
                         while os.path.exists(oldfile):
                             n += 1
                             oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                    shutil.move(filename, oldfile)
+                        shutil.move(filename, oldfile)
             if speedtype == 'all':
                 types = verifier.all_types()
             else:
