@@ -25,7 +25,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 """
 
-import datetime, logging, os, random, re, signal, subprocess, tempfile, time, traceback
+import datetime, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
@@ -428,20 +428,6 @@ class PostgresTable(PostgresBase):
 
     def __repr__(self):
         return "Interface to Postgres table %s"%(self.search_table)
-
-    def join(self, *args):
-        """
-        db.mf_newforms.joint_search(query={'is_cm':True},
-                            projection=['self_twist_discs', 'mf_newspaces.label'],
-                            other_tables=[('mf_newspaces', {'num_forms':{'$gte':4}}),
-                                          ('lfunc_lfunctions', ...)],
-                            join=[('space_label', 'mf_newspaces.label'), ('label', 'lfunc_lfunctions.origin')],
-                            limit=10,
-                            offset=0,
-                            sort=['Nk2', 'mf_newspaces.num_forms'],
-                            silent=False)
-        """
-        pass
 
     ##################################################################
     # Helper functions for querying                                  #
@@ -3129,6 +3115,9 @@ class PostgresTable(PostgresBase):
 
         If parallel is True, sage should be in your path or aliased appropriately.
 
+        Note that if check is not provided and parallel is False, no output will be printed, files
+        will still be written to the log directory.
+
         INPUT:
 
         - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
@@ -3162,14 +3151,29 @@ class PostgresTable(PostgresBase):
             parallel = 0
         verifier = self._verifier
         if check is None:
+            olddir = os.path.join(logdir, "old")
+            if not os.path.exists(olddir):
+                os.makedirs(olddir)
+            def move_to_old(tname):
+                for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
+                    filename = os.path.join(logdir, tname + suffix)
+                    if os.path.exists(filename):
+                        n = 0
+                        oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                        while os.path.exists(oldfile):
+                            n += 1
+                            oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                        shutil.move(filename, oldfile)
             if speedtype == 'all':
                 types = verifier.all_types()
             else:
                 types = [verifier.speedtype(speedtype)]
+            tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
+            if len(tabletypes) == 0:
+                raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
+            for tname in tabletypes:
+                move_to_old(tname)
             if parallel:
-                tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
-                if len(tabletypes) == 0:
-                    raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
                 parallel = min(parallel, len(tabletypes))
                 for tabletype in tabletypes:
                     print "Starting %s" % tabletype
@@ -3981,209 +3985,6 @@ class ExtendedTable(PostgresTable):
         result = self.lucky(*args, **kwds)
         if result:
             return self._type_conversion(result)
-
-class JoinedTable(PostgresBase):
-    """
-    A Python class representing the join of multiple PostgresTables (or their extras).
-
-    INPUT:
-
-    - ``tables`` -- a list of PostgresTables whose search tables will be joined
-    - ``joins`` -- a list of pairs of strings of the form 'tablename.colname' giving the join conditions
-    - ``extras`` -- a list of PostgresTables whose extra tables will be joined in addition to their search tables
-    - ``join_type`` -- 'inner', 'outer', 'left', 'right' (we do not support cross joins)
-    - ``distinguished`` -- whether the first table is distinguished: columns with no table specified will default to this table, and result keys from this table will not include tablename.  Otherwise, all table names must be specified.
-    """
-    def __init__(self, tables, joins, extras=None, join_type='inner', distinguished=False):
-        if len(tables) < 2:
-            raise ValueError("Joins should only be used for multiple tables")
-        if join_type not in ['inner', 'outer', 'left', 'right']:
-            raise ValueError("Invalid join type %s" % join_type)
-        db = tables[0]._db
-        ft = tables[0].search_table
-        PostgresBase.__init__(ft, db)
-        # Handle dt = None
-        self.distinguished = distinguished
-        self.tables = {T.search_table: T for T in tables}
-        self.extras = {E.search_table: E for E in extras} # search_table for use in _qualify
-        self.join_type = join_type
-        self.tablenames = [T.search_table for T in tables]
-        if tables[0]._label_col is None:
-            self._label_col = None
-        else:
-            self._label_col = ft + '.' + tables[0]._label_col
-        self._search_cols = tuple(sum(([T.search_table + '.' + cname for cname in T._search_cols] for T in tables), []))
-        self.joins = {}
-        def fill_dt(s):
-            # Need to fix to use _extra when appropriate
-            cnt = s.count('.')
-            if cnt == 0:
-                if s not in tables[0].col_type:
-                    raise ValueError("%s not a column of %s"%(s, ft))
-                return ft + '.' + s
-            if cnt == 1:
-                tname, cname = s.split('.')
-                tbl = db[tname]
-                if cname not in tbl.col_type:
-                    raise ValueError("%s not a column of %s"%(cname, tname))
-            raise ValueError("Too many periods in %s" % s)
-        for a, b in joins:
-            pass
-        for E in extras:
-            if E.extra_table is None:
-                raise ValueError("%s has no extra table" % E.search_table)
-            if E not in tables:
-                raise ValueError("extra tables should also be included in tables")
-            self.tablenames.append(E.extra_table)
-        self._all_cols = self._search_cols + tuple(sum(([E.extra_table + '.' + cname for cname in E._extra_cols] for E in extras), []))
-        self._user_cols = [self._user_show(col) for col in self._all_cols]
-
-    def _user_show(self, col):
-        """
-        INPUT:
-
-        - ``col`` -- a string, qualified with a table name
-
-        OUTPUT:
-
-        The string with _extra removed, and the name of the first table as well
-        if self.distinguished is set.
-        """
-        col = col.replace("_extra.", ".")
-        if self.distinguished:
-            col = col.replace(self.tablenames[0] + ".", "")
-        return col
-
-    def _qualify(self, col):
-        """
-        INPUT:
-
-        - ``col`` -- a string, as input by the user (without _extra)
-
-        OUTPUT:
-
-        The column, qualified by the appropriate table name
-        """
-        if '.' in col:
-            tname, cname = col.split('.', 1)
-            if tname not in self.tables:
-                # Could be a qualified column in the first table
-                # FIXME, local variable 'first_table' is assigned to but never used
-                first_table = self.tables[self.tablenames[0]]
-                assert first_table # to make pyflakes happy for the time bein
-                # FIXME undefined name 'distinguished'
-                distinguished = True # FIXME, to make pyflakes happy for the time being
-                if distinguished:
-                    cname = col
-                    tname = self.tablenames[0]
-                else:
-                    raise ValueError("%s not a valid table name"%tname)
-        elif self.distinguished:
-            cname = col
-            tname = self.tablenames[0]
-        else:
-            raise ValueError("Table name not specified")
-        if '.' in cname:
-            i = cname.index('.')
-        elif '[' in cname:
-            i = cname.index('[')
-        else:
-            i = len(cname)
-        cname, path = cname[:i], cname[i:]
-        if cname in self.tables[tname]._search_cols:
-            return tname + "." + cname + path
-        elif tname in self.extras and cname in self.extras[tname]._extra_cols:
-            return tname + "_extra." + cname + path
-        else:
-            raise ValueError("%s not a column of %s"%(cname, tname))
-
-    def _identifier(self, col):
-        """
-        INPUT:
-
-        - ``col`` -- a qualified column name
-
-        OUTPUT:
-
-        An SQL Composable object for use in db._execute
-        """
-        tname, cname = col.split('.')
-        return SQL("{0}.{1}").format(Identifier(tname), IdentifierWrapper(cname))
-
-    def _parse_projection(self, projection):
-        """
-        INPUT:
-
-        - ``projection`` -- either 0, 1, 2, a dictionary or list of column names,
-            as for _parse_projection on PostgresTable
-
-        OUTPUT:
-
-        - a tuple of columns to be selected for the user, qualified with their tablename
-        """
-        cols = []
-        if projection == 0:
-            if self._label_col is None:
-                raise RuntimeError("No label column for %s"%self.tablenames[0])
-            return (self._label_col,)
-        elif not projection:
-            raise ValueError("You must specify at least one key.")
-        if projection == 1:
-            return self._search_cols
-        elif projection == 2:
-            return self._all_cols
-        elif isinstance(projection, dict):
-            projvals = set(bool(val) for val in projection.values())
-            if len(projvals) > 1:
-                raise ValueError("You cannot both include and exclude.")
-            including = projvals.pop()
-            for col in self._all_cols:
-                user_col = self._user_show(col)
-                if (user_col in projection) == including:
-                    cols.append(col)
-                projection.pop(user_col, None)
-            if projection: # there were extra columns requested
-                raise ValueError("%s not column of joined table"%(", ".join(projection)))
-        else: # iterable or basestring
-            if isinstance(projection, basestring):
-                projection = [projection]
-            for col in projection:
-                colname = col.split('[',1)[0]
-                array_part = col[len(colname):]
-                if colname in self._user_cols:
-                    qualified_name = self._qualify(colname)
-                    cols.append(qualified_name + array_part)
-                else:
-                    raise ValueError("%s not column of joined table"%col)
-        return tuple(cols)
-
-    def _build_query(self, query, limit=None, offset=0, sort=None):
-        pass
-
-    def _search_iterator(self, cur, cols, projection):
-        """
-        Returns an iterator over the results in a cursor.
-
-        INPUT:
-
-        - ``cur`` -- a psycopg2 cursor
-        - ``cols`` -- a tuple of column names (qualified with their corresponding table names)
-        - ``projection`` -- the projection requested.
-
-        OUTPUT:
-
-        If projection is 0 or a string, an iterator that yields the label/column values of the query results
-        """
-        for rec in cur:
-            if projection == 0 or isinstance(projection, basestring):
-                yield rec[0]
-            else:
-                yield {k:v for k,v in zip(cols, rec)}
-
-    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, silent=False):
-        cols = self._parse_projection(projection)
-        vars = SQL(", ").join(self._identifier(col) for col in cols)
-        assert vars # FIXME, to make pyflakes happy for the time being
 
 class PostgresDatabase(PostgresBase):
     """

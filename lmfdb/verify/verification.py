@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import traceback, time, os, inspect, sys, shutil
+import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
 
@@ -206,7 +206,7 @@ class TableChecker(object):
                         check_success = check(rec)
                         row_time = time.time() - row_start
                         if not check_success:
-                            log.write('%s: %s\n'%(name, rec[self.label_col]))
+                            log.write('%s: %s failed test\n'%(name, rec[self.label_col]))
                             check_failures += 1
                             if check_failures >= check.max_failures:
                                 raise TooManyFailures
@@ -223,7 +223,7 @@ class TableChecker(object):
                 bad_labels = check()
                 if bad_labels:
                     for label in bad_labels:
-                        log.write('%s: %s\n'%(name, label))
+                        log.write('%s: %s failed test\n'%(name, label))
                     check_failures = len(bad_labels)
         except TimeoutError:
             check_timeouts += 1
@@ -267,20 +267,8 @@ class TableChecker(object):
     def run(self, typ, logdir, label=None):
         self._cur_label = label
         tname = "%s.%s" % (self.__class__.__name__, typ.shortname)
-        olddir = os.path.join(logdir, "old")
-        if not os.path.exists(olddir):
-            os.makedirs(olddir)
-        files = []
-        for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
-            filename = os.path.join(logdir, tname + suffix)
-            if os.path.exists(filename):
-                n = 0
-                oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                while os.path.exists(oldfile):
-                    n += 1
-                    oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                shutil.move(filename, oldfile)
-            files.append(filename)
+        files = [os.path.join(logdir, tname + suffix)
+                 for suffix in ['.log', '.errors', '.progress', '.started', '.done']]
         logfile, errfile, progfile, startfile, donefile = files
         checks = self.get_checks(typ)
         # status = failures, errors, timeouts, aborts
