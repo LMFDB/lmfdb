@@ -30,7 +30,7 @@
 
 <tr>
 <td align=left><input type='text' name='weight_grading' value="{{info.min_weight}}" size=10>
-<td align=left><input type='text' name='dirchar' value="{{info.dirchar}}"" size=10>
+<td align=left><input type='text' name='dirchar' value="{{info.dirchar}}" size=10>
 </table>
 
 
@@ -45,67 +45,33 @@
 
 </table>
 
-
 </form>
 
-{% if info.err is defined %}
-    <h2>Error</h2>
-    <div>
-    <!--  {{ info.err|safe }}-->
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-    </div>
-{% else %}
-    {% if info.report == "no matches" %}
-        <h2> No matches</h2>
-    {% else %}
-        <h2> Results ({{info.report}})
-        {% if info.start > 0 %}
-            <a href="#" class="navlink"
-               onclick="decrease_start_by_count_and_submit_form('re-search');return
-                        false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-        {% endif %}
-        </h2>
-
-        <table>
-        <tr>
-        <th>{{ KNOWL('modlmf.label', title='Label') }}</th>
-        <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</th>
-        <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
-        <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
-        <th>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}</th>
-        </tr>
-        {% for l in info.modlmfs %}
-            <tr>
-            <td align='left'><a href="{{url_for('modlmf.render_modlmf_webpage', label=l.label)}}">{{l.label}} </a></td>
-            <td>{{l.characteristic}}</td>
-            <td>{{l.deg}}</td>
-            <td>{{l.level}}</td>
-            <td>{{l.weight_grading}}</td>
-            </tr>
-        {% endfor %}
-        </table>
-        <hr>
-        {% if info.start > 0 %}
-            <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-        {% endif %}
-        {% if info.more > 0 %}
-            <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-        {% endif %}
-        <br>
-
-        <form>
-        Download all search results for
-        <input type="submit" name="submit" value="gp">
-        <input type="submit" name="submit" value="sage">
-        <input type="submit" name="submit" value="magma">
-        <input type="hidden" name="download" value="1"/>
-        <input type="hidden" name="query" value="{{info.query}}"/>
-        </form>
-    {% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
+<table>
+  <tr>
+    <th>{{ KNOWL('modlmf.label', title='Label') }}</th>
+    <th>{{ KNOWL('modlmf.characteristic', title='Field characteristic') }}</th>
+    <th>{{ KNOWL('modlmf.degree', title='Field degree') }}</th>
+    <th>{{ KNOWL('modlmf.level', title='Level')}}</th>
+    <th>{{ KNOWL('modlmf.weight_grading', title='Weight grading') }}</th>
+  </tr>
+  {% for l in info.results %}
+  <tr>
+    <td align='left'><a href="{{url_for('modlmf.render_modlmf_webpage', label=l.label)}}">{{l.label}} </a></td>
+    <td>{{l.characteristic}}</td>
+    <td>{{l.deg}}</td>
+    <td>{{l.level}}</td>
+    <td>{{l.weight_grading}}</td>
+  </tr>
+  {% endfor %}
+</table>
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
+{% include 'debug_info.hmlt' %}
 
 <script>
 //Try to get tbody first with jquery children. works faster!
@@ -126,11 +92,5 @@ function deleteRow(btn) {
   row.parentNode.removeChild(row);
 }
 </script>
-
-<!--<br>-->
-<!--{% if DEBUG %}-->
-<!--<p class="tex2jax_ignore">  Results for database query {{ info.query }}</p>-->
-
-<!--{% endif %}-->
 
 {% endblock %}

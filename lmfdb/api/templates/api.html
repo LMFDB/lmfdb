@@ -52,38 +52,38 @@ where the prefix "-" indicates to sort in descending order.
 <h4>Examples</h4>
 <ul>
     <li>
-    The query <a href='{{ url_for(".api_query", db="numberfields", collection="fields", signature="s2,5", _format="json") }}'>?signature=s2,5&amp;_format=json</a>
-    searches for numberfields with the signature <code>[2, 5]</code>
-    stored as a string (prefix "s") <code>"2,5"</code> and gives the result in the JSON format.
-    (The prefix "s" is optional, string is the default encoding for search values.)
+    The query <a href='{{ url_for(".api_query", table="nf_fields", degree='i12', r2="i5", _format="json") }}'>?degree=i12&amp;r2=i5&amp;_format=json</a>
+    searches for numberfields of degree 12 with the signature <code>[2, 5]</code> and gives the result in the JSON format.
     </li>
     <li>
     To search for integers or floats, prefix the value with "i" or "f".
     For example elliptic curves with rank 2 and torsion 5:
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", rank="i2", torsion="i5")}}'><code>?rank=i2&amp;torsion=i5</code></a>.
+    <a href='{{ url_for(".api_query", table="ec_curves", rank="i2", torsion="i5")}}'><code>?rank=i2&amp;torsion=i5</code></a>.
     </li>
     <li>
-    A list of strings (string encoded integers) for the <code>ainvs</code> parameter of an elliptic curve is
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="ls0;1;1;-840;39800", _format="yaml", _delim=";")}}'>
-       <code>?ainvs=ls0;1;1;-840;39800&amp;_format=yaml&amp;_delim=;</code></a>,
-    where the delimiter is "<code>;</code>" and the result formatted in YAML.
+    A string encoding a list of integers for the <code>ainvs</code> parameter of an elliptic curve is
+    <a href='{{ url_for(".api_query", table="ec_curves",  ainvs="li0;1;1;-840;39800", _format="yaml", _delim=";")}}'>
+       <code>?ainvs=li0;1;1;-840;39800&amp;_format=yaml&amp;_delim=;</code></a>,
+    the result formatted in YAML.
     </li>
+    {#
     <li>
     This query <a href='{{ url_for('.api_query', db="elliptic_curves", collection="curves", isogeny_matrix="py[[1,13],[13,1]]", _format="json") }}'>?isogeny_matrix=py[[1,13],[13,1]]</a>
     returns elliptic curves where the isogeny matrix is $\left(\begin{smallmatrix}1 & 13\\ 13 & 1\end{smallmatrix}\right)$.
     </li>
+    #}
     <li>
-    To see those elliptic curves, where the <code>ainvs</code> list contains the string-encoded integer <code>-769</code>
-    and the field <code>non-surjective_primes</code> contains the integer number 3:
-    {% set kw = {"non-surjective_primes" : "ci3"} %}
-    <a href='{{ url_for(".api_query", db="elliptic_curves", collection="curves", ainvs="cs-769", **kw) }}'>?ainvs=cs-769&amp;non-surjective_primes=ci3</a>.
+    To see those elliptic curves, where the field <code>torsion_structure</code> is the list  [2,2], encoded as a list of integers:
+    <a href='{{ url_for(".api_query", table="ec_curves", torsion_structure="ls2;2", _delim=";")}}'>?torsion_structure=ls2;2&amp;_delim=;</a>.
     </li>
+    <!--
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
-    query <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
+    query <a href="{{ url_for('.api_query', table='kwl_knowls', _fields='authors,last_author') }}"</a>?_fields=authors,last_author</a>.
     </li>
     <li>For sorting the result, use a query like
-    <a href="{{ url_for('.api_query', db='knowledge', collection='knowls', _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
+    <a href="{{ url_for('.api_query', table="kwl_knowls", _fields='authors,content', _sort='timestamp') }}">?_fields=content,authors&_sort=timestamp</a>.
     </li>
+    -->
 </ul>
 </div>
 
@@ -92,11 +92,13 @@ where the prefix "-" indicates to sort in descending order.
 {% for db, collections in databases.iteritems()|sort %}
   <li>
     <b>{{ db }}</b>
+    <!--
     (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
-       target="_blank">description</a>)
+    target="_blank">description</a>)
+    -->
     <br/>
-      {% for (collection, count) in collections %}
-        <a href="{{ url_for('.api_query', db=db, collection=collection) }}">{{ collection }} ({{ count }})</a>
+      {% for (fullname, shortname, count) in collections %}
+        <a href="{{ url_for('.api_query', table=fullname) }}">{{ shortname }} ({{ count }})</a>
         {% if not loop.last %}&middot;{% endif %}
       {% endfor %}
   </li>

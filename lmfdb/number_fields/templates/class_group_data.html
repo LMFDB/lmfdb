@@ -13,39 +13,60 @@ into four groups based on congruences:
 <li> $d\equiv 8\pmod {16}$
 </ul>
 For each congruence class above, there are 4096 files, indexed from
-$k=0$ to $k=4095$.  The $k$th file contains data for 
+$k=0$ to $k=4095$.  The $k$th file contains data for
 $k\cdot 2^{28} \leq |d| \lt (k+1)\cdot 2^{28}$.  The files are named
-accordingly, so the $k=12$ file for $d\equiv 7\pmod8$ is called
+accordingly, so the $k=12$th file for $d\equiv 7\pmod8$ is called
 <code>cl7mod8.12.gz</code>, the final extension because it has been
 compressed with <code>gzip</code>.  The compressed files range in size
 from 50 to 200 megabytes.
 
+<h3>File and data format</h3>
 <p>
-After uncompressing with <code>gzip</code>,
-files have the following format:
+The $k$th file of data for $d\equiv r\pmod{m}$ has filename of the form
+<code>cl{</code>$r$<code>}mod{</code>$m$}.{$k$} after uncompressing
+with <code>gzip</code>
+(for example, file $12$ for $d\equiv7\pmod8$ is <code>cl7mod8.12</code>).
+In this file there is one line per discriminant, with discriminants in order of their absolute
+  value.  The discriminants and associated class group data may be extracted as
+follows, where  for $i\ge1$ we define $-d_i$ to be the $i$th discriminant of the file:
 <ul>
-<li>There is one line per field
-<li>Discriminants for a given file are listed in order (in absolute value)
-<li>If $-d_i$ is the $i$th discriminant for a file, line $i+1$ has the form
+<li>Initialise $-d_0=k\cdot2^{28}+r$.
+<li>For $i\ge1$, let the data in line $i$ of the file be
 <table>
- <tr><td>$a$</td><td> $b$</td><td> $c_1 c_2 \ldots c_t$</td></tr>
+ <tr><td>$a$</td><td> $b$</td><td> $c_1\ c_2\ \ldots\ c_t$</td></tr>
 </table>
-</blockquote>
-to signify that 
+<li>
+Then
 <ul>
- <li>$d_{i+1} = d_i+m\cdot a$, ($m$ is the modulus for the file)
- <li>$h(-d_{i+1}) = b$,
- <li>invariant factors for the class group are $[c_1, c_2,\ldots, c_t]$.
+ <li>$d_{i} = d_{i-1}+m\cdot a$,
+ <li>$h(-d_{i}) = b$,
+ <li>the invariant factors for the class group are $[c_1, c_2,\ldots, c_t]$.
 </ul>
 In particular, $b=\prod_{j=1}^t c_j$.
 </ul>
-<h3>Getting files</h3>
+</p>
+
+<p>For example, the first two lines of file <code>cl4mod16.1</code> are
+<table>
+ <tr><td>$0$</td><td> $12160$</td><td> $380\ 4\ 4\ 2$</td></tr>
+ <tr><td>$2$</td><td> $4392$</td><td> $2196\ 2$</td></tr>
+</table>
+so
+<ul>
+<li> $-d_0=1\cdot2^{28}+4=268435460$, and then
+<li> $-d_1=-d_0+16\cdot0=268435460$, with class number $12160$,
+<li> $-d_2=-d_1+16\cdot2=268435492$, with class number $4392$,
+</ul>
+and so on.
+<p>
+
+<h3>File download</h3>
 
 <form>
 <table>
 <tr>
 <td align="right">
-$d \equiv $ 
+$d \equiv $
 <td align="left">
 <select name="filenamebase">
 <option value="cl3mod8">3 (mod 8)</option>

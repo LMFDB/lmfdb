@@ -80,7 +80,7 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/random").data
         assert 'redirected automatically' in L # random lattice
         L = self.tc.get("/Lattice/random", follow_redirects=True)
-        assert 'Normalized minimal vectors:' in L.data # check redirection
+        assert 'Normalized minimal vectors' in L.data # check redirection
 
     def test_downloadstring(self):
         L = self.tc.get("/Lattice/5.648.12.1.1").data

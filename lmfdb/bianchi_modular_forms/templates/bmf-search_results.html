@@ -69,24 +69,8 @@
 </table>
 </form>
 
-{% if info.number == 0 %}
-
-<h2> No matches</h2>
-
-{% else %}
-
-<h2> Results ({{info.report}})</h2>
-
-<hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</a>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a>
-{% endif %}
-
+{% include 'matches.html' %}
+{% if info.number %}
 <table class="ntdata">
 <tr>
 <th>Field</th>
@@ -97,7 +81,7 @@
 <th>{{ KNOWL('mf.bianchi.base_change', title='Base change') }} </th>
 <th>{{ KNOWL('mf.bianchi.cm', title='CM') }} </th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td>{{form.field_label}}</td>
 <td><a href={{url_for("bmf.render_bmf_space_webpage",field_label=form.field_label,
@@ -111,22 +95,10 @@
 </tr>
 {% endfor %}
 </table>
-
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A>
-{% endif %}
-<br>
+{% include 'debug_info.html' %}
 
-<br>
-<!--
-   <p class="tex2jax_ignore">
-   Results for database query {{ info.query }}
-   </p>
--->
-
-{% endif %}
 {% endblock %}

@@ -13,17 +13,19 @@ import time
 import math
 import cmath
 import sage
+from types import GeneratorType
 
 from sage.all import latex, CC
 from copy import copy
 from random import randint
 from functools import wraps
+from itertools import islice
 from flask import request, make_response, flash, url_for, current_app
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from markupsafe import Markup
 
-from lmfdb.base import app
+from lmfdb.base import app, ctx_proc_userdata
 
 ################################################################################
 #   number utilities
@@ -202,30 +204,6 @@ def splitcoeff(coeff):
     return answer
 
 
-def truncatenumber(numb, precision):
-    localprecision = precision
-    if numb < 0:
-        localprecision = localprecision + 1
-    truncation = float(10 ** (-1.0*localprecision))
-    if float(abs(numb - 1)) < truncation:
-        return("1")
-    elif float(abs(numb - 2)) < truncation:
-        return("2")
-    elif float(abs(numb - 3)) < truncation:
-        return("3")
-    elif float(abs(numb - 4)) < truncation:
-        return("4")
-    elif float(abs(numb)) < truncation:
-        return("0")
-    elif float(abs(numb + 1)) < truncation:
-        return("-1")
-    elif float(abs(numb + 2)) < truncation:
-        return("-2")
-    elif float(abs(numb - 0.5)) < truncation:
-        return("0.5")
-    elif float(abs(numb + 0.5)) < truncation:
-        return("-0.5")
-    return(str(numb)[0:int(localprecision)])
 
 ################################################################################
 #  display and formatting utilities
@@ -241,6 +219,10 @@ def comma(x):
     '12,345'
     """
     return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+
+
+def format_percentage(num, denom):
+    return "%10.2f"%((100.0*num)/denom)
 
 
 def signtocolour(sign):
@@ -283,14 +265,14 @@ def pol_to_html(p):
 
 
 ################################################################################
-#  latex/mathjax utilities
+#  latex/math rendering utilities
 ################################################################################
 
 def web_latex(x, enclose=True):
     """
     Convert input to latex string unless it's a string or unicode. The key word
     argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to make it a mathjax equation.
+    `\(` and `\)` to tag it as an equation in html.
 
     Note:
     if input is a factored ideal, use web_latex_ideal_fact instead.
@@ -311,7 +293,7 @@ def web_latex_ideal_fact(x, enclose=True):
     """
     Convert input factored ideal to latex string.  The key word argument
     `enclose` indicates whether to surround the string with `\(` and
-    `\)` to make it a mathjax equation.
+    `\)` to tag it as an equation in html.
 
     sage puts many parentheses around latex representations of factored ideals.
     This function removes excessive parentheses.
@@ -440,15 +422,11 @@ def list_to_latex_matrix(li):
 
     Example:
     >>> list_to_latex_matrix([[1,0],[0,1]])
-    '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0 & 1\\end{array}\\right)'
+    '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
-    dim = str(len(li[0]))
-    mm = r"\left(\begin{array}{*{"+dim+ r"}{r}}"
-    for row in li:
-        row = [str(a) for a in row]
-        mm += ' & '.join(row)
-        mm += r'\\'
-    mm = mm[:-2] # remove final line break
+    dim = len(li[0])
+    mm = r"\left(\begin{array}{"+dim*"r" +"}"
+    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
     mm += r'\end{array}\right)'
     return mm
 
@@ -496,8 +474,42 @@ def order_values(doc, field, sub_fields=["len", "val"]):
     return doc
 
 ################################################################################
-#  pymongo utilities
+#  pymongo utilities - will be removed soon
 ################################################################################
+
+from pymongo.errors import ExecutionTimeout
+
+def search_cursor_timeout_decorator(cursor, skip, limit):
+    r"""
+    INPUT:
+            - pymongo cursor
+            - skip value to pass to cursor (after cursor.count())
+            - limit value to pass to cursor (after cursor.count())
+
+    OUTPUT:
+            If the query doesn't time out returns the tuple (skip, cursor.count(), cursor.skip(skip).limit(limit))
+            If the query times out, it raises a ValueError
+    """
+
+    # 25 seconds, timeout, hopefully enough to avoid google's and gunicorn's timeout of 30s
+    cursor = cursor.max_time_ms(25000)
+    try:
+        ncursor = cursor.count()
+
+        # adjusts skip if necessary
+        if(skip >= ncursor):
+            skip -= (1 + (skip - ncursor) / limit) * limit
+        if(skip < 0):
+            skip = 0
+
+        cursor = cursor.skip(skip).limit(limit)
+    except ExecutionTimeout as err:
+        ctx = ctx_proc_userdata()
+        flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage']);
+        raise ValueError(err)
+
+    return skip, ncursor, cursor
+
 
 def random_object_from_collection(collection):
     """ retrieves a random object from mongo db collection; uses collection.rand to improve performance if present """
@@ -516,43 +528,50 @@ def random_object_from_collection(collection):
         # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
         return collection.aggregate([{ '$sample': { 'size': int(1) } } ]).next()
 
+################################################################################
+#  pagination utilities
+################################################################################
 
-def random_value_from_collection(collection,attribute):
-    """ retrieves the value of attribute (e.g. label) from a random object in mongo db collection; uses collection.rand to improve performance if present """
-    import pymongo
-    n = collection.rand.count()
-    if n:
-        m = collection.count()
-        if m != n:
-            current_app.logger.warning("Random object index {0}.rand is out of date ({1} < {2})".format(collection,n,m))
-        obj = collection.find_one({'_id':collection.rand.find_one({'num':randint(1,n)})['_id']},{'_id':False,attribute:True})
-        if obj: # we could get null here if objects have been deleted without recreating the collection.rand index, if this happens, just rever to old method
-            return obj.get(attribute)
-    if pymongo.version_tuple[0] < 3:
-        return collection.aggregate({ '$sample': { 'size': int(1) } }, cursor = {} ).next().get(attribute) # don't bother optimizing this
-    else:
-        # Changed in version 3.0: The aggregate() method always returns a CommandCursor. The pipeline argument must be a list.
-        return collection.aggregate([{ '$sample': { 'size': int(1) } }, { '$project' : {'_id':False,attribute:True}} ]).next().get(attribute)
+class ValueSaver(object):
+    """
+    Takes a generator and saves values as they are generated so that values can be retrieved multiple times.
+    """
+    def __init__(self, source):
+        self.source = source
+        self.store = []
+    def fill(self, stop):
+        """
+        Consumes values from the source until there are at least ``stop`` entries in the store.
+        """
+        if stop > len(self.store):
+            self.store.extend(islice(self.source, stop - len(self.store)))
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
+                raise ValueError("Only positive indexes supported")
+            self.fill(i.stop)
+            return self.store[i]
+        else:
+            self.fill(i+1)
+            return self.store[i]
+    def __len__(self):
+        raise TypeError("Unknown length")
 
+class Pagination(object):
+    """
+    INPUT:
 
-def attribute_value_counts(collection,attribute):
-    """ returns a sorted array of pairs (value,count) with count=collection.find({attribute:value}); uses collection.stats to improve peroformance if present """
-    if collection.stats.count():
-        m = collection.count()
-        stats = collection.stats.find_one({'_id':attribute},{'total':True,'counts':True})
-        if stats and 'counts' in stats:
-            # Don't use statistics that we know are out of date.
-            if stats['total'] != m:
-                current_app.logger.warning("Statistics in {0}.stats are out of date ({1} != {2}), they will not be used until they are updated.".format(collection,stats['total'],m))
-            else:
-                return stats['counts']
-    # note that pymongo will raise an error if the return value from .distinct is large than 16MB (this is a good thing)
-    return [[value,collection.find({attribute:value}).count()] for value in sorted(collection.distinct(attribute))]
-
-
-class MongoDBPagination(object):
-    def __init__(self, query, per_page, page, endpoint, endpoint_params):
-        self.query = query
+    - ``source`` -- a list or generator containing results.
+        If a generator, won't support the ``count`` or ``pages`` attributes
+    - ``per_page`` -- an integer, the number of results shown per page
+    - ``page`` -- the current page (initial value is 1)
+    - ``endpoint`` -- an argument for ``url_for`` to get more pages
+    - ``endpoint_params`` -- keyword arguments for the ``url_for`` call
+    """
+    def __init__(self, source, per_page, page, endpoint, endpoint_params):
+        if isinstance(source, GeneratorType):
+            source = ValueSaver(source)
+        self.source = source
         self.per_page = int(per_page)
         self.page = int(page)
         self.endpoint = endpoint
@@ -560,17 +579,33 @@ class MongoDBPagination(object):
 
     @cached_property
     def count(self):
-        return self.query.count(True)
+        return len(self.source)
 
     @cached_property
     def entries(self):
-        return self.query.skip(self.start).limit(self.per_page)
+        return self.source[self.start : self.start+self.per_page]
+
+    @cached_property
+    def has_next(self):
+        try:
+            self.source[self.start + self.per_page]
+        except IndexError:
+            return False
+        else:
+            return True
 
     has_previous = property(lambda x: x.page > 1)
-    has_next = property(lambda x: x.page < x.pages)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
     end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
+
+    @property
+    def end(self):
+        if isinstance(self.source, ValueSaver):
+            self.source.fill(self.start + self.per_page)
+            return len(self.source.store) - 1
+        else:
+            return min(self.start + self.per_page, self.count) - 1
 
     @property
     def previous(self):
@@ -583,21 +618,6 @@ class MongoDBPagination(object):
         kwds = copy(self.endpoint_params)
         kwds['page'] = self.page + 1
         return url_for(self.endpoint, **kwds)
-
-
-class LazyMongoDBPagination(MongoDBPagination):
-    @cached_property
-    def has_next(self):
-        return self.query.skip(self.start).limit(self.per_page + 1).count(True) > self.per_page
-
-    @property
-    def count(self):
-        raise NotImplementedError
-
-    @property
-    def pages(self):
-        raise NotImplementedError
-
 
 ################################################################################
 #  web development utilities
@@ -683,7 +703,7 @@ class LmfdbFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-def make_logger(bp_or_name, hl=False):
+def make_logger(bp_or_name, hl = False, extraHandlers = [] ):
     """
     creates a logger for the given blueprint. if hl is set
     to true, the corresponding lines will be bold.
@@ -711,10 +731,13 @@ def make_logger(bp_or_name, hl=False):
         l.setLevel(logging.DEBUG)
     else:
         l.setLevel(logging.WARNING)
-    formatter = LmfdbFormatter(hl=name if hl else None)
-    ch = logging.StreamHandler()
-    ch.setFormatter(formatter)
-    l.addHandler(ch)
+    if len(l.handlers) == 0:
+        formatter = LmfdbFormatter(hl=name if hl else None)
+        ch = logging.StreamHandler()
+        ch.setFormatter(formatter)
+        l.addHandler(ch)
+        for elt in extraHandlers:
+            l.addHandler(elt)
     return l
 
 
@@ -827,7 +850,7 @@ def ajax_more(callback, *arg_list, **kwds):
         res = ''
     if arg_list:
         url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { MathJax.Hub.Queue(['Typeset',MathJax.Hub,'%(nonce)s']);}); return false;" href="#">%(text)s</a></span>""" % locals()
+        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
     else:
         return res
 
@@ -867,4 +890,3 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None):
     fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches)
     virtual_file.seek(0)
     return "data:image/png;base64," + quote(b64encode(virtual_file.buf))
-

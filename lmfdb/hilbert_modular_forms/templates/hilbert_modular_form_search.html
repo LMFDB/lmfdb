@@ -85,25 +85,9 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 
 {% else %}
 
-{% if info.report == "no matches" %}
-
-<h2> No matches</h2>
-
-{% else %}
-
-<h2> Results: {{info.report}}</h2>
+{% include 'matches.html' %}
 
 {% if info.number > 0 %}
-
-<hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink"
-   onclick="decrease_start_by_count_and_submit_form('re-search');return
-            false">Previous</a>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</a></td>
-{% endif %}
 
 <table class="ntdata">
 <tr>
@@ -112,7 +96,7 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 <th>{{ KNOWL('mf.hilbert.level_norm', title='Level') }}</th>
 <th>{{ KNOWL('mf.hilbert.dimension', title='Dimension') }} </th>
 </tr>
-{% for form in info.forms: %}
+{% for form in info.results: %}
 <tr>
 <td align='left'><a href="{{url_for('hmf.render_hmf_webpage',field_label=form.field_label,label=form.label)}}">
   {{form.short_label}} </a></td>
@@ -125,14 +109,8 @@ Either modify your search above or go <input type=button value="Back" onClick="h
 {% endif %}
 
 <hr>
-{% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-{% endif %}
-{% if info.more > 0 %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-{% endif %}
+{% include 'forward_back.html' %}
 <br>
-{% endif %}
 {% endif %}
 <!--
    <p class="tex2jax_ignore">

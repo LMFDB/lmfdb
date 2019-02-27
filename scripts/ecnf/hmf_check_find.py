@@ -26,7 +26,7 @@ qcurves = C.elliptic_curves.curves
 
 print "setting hmfs, forms, fields"
 hmfs = C.hmfs
-forms = hmfs.forms.search # contains all data except eigenvalues
+forms = hmfs.forms
 fields = hmfs.fields
 hecke = hmfs.hecke        # contains eigenvalues
 

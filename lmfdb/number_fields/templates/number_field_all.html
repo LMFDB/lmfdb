@@ -57,7 +57,7 @@ A <a href={{url_for('.random_nfglobal')}}>random global number field</a> from th
 
 
 <h2> Search for fields </h2>
-<form>
+<form id="search" onsubmit="cleanSubmit(this.id)">
 <p>
 Enter values into one or more boxes to restrict the search.
 </p>
@@ -87,7 +87,7 @@ Enter values into one or more boxes to restrict the search.
 <span class="formexample"> e.g. 2,3</span></td>
 <td>
 <td>
-set of {{KNOWL('nf.ramified_prime', title='ramified primes')}} 
+set of {{KNOWL('nf.ramified_primes', title='ramified primes')}} 
 <select name='ram_quantifier'>
   <option value='contained'>subset of</option>
   <option value='exactly' selected='yes'>equal to</option>
@@ -109,7 +109,7 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 <tr>
 <td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
 <tr><td>
-<button type='submit' name='search' value='Search'>Search</button></td>
+<button type='submit'>Search</button></td>
 
 
 </table>

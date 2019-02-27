@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining Parameters') }}</h2>
+<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining parameters') }}</h2>
 
 <p>
   <p>
@@ -15,14 +15,52 @@
 <p><h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
   <p>
     <table>
-      <tr><td>Hodge vector:<td>&nbsp;&nbsp;<td>${{info.hodge}}$</tr>
-      <tr><td>Determinant:<td>&nbsp;&nbsp;<td>{{info.rf}}</tr>
-      <tr><td>Mod $2$ monodromy group <td> ${{info.gal2}}$ </tr>
-      <tr><td>Mod $3$ monodromy group <td> ${{info.gal3}}$ </tr>
-      <tr><td>Mod $5$ monodromy group <td> ${{info.gal5}}$ </tr>
-      <tr><td>Mod $7$ monodromy group <td> ${{info.gal7}}$ </tr>
+      <tr><td>{{KNOWL('hgm.degree', title="Degree")}}:<td>${{info.degree}}$
+      <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:<td>${{info.weight}}$
+      <tr><td>{{KNOWL('hgm.type', title="Type")}}:<td>{{info.type}}
+      <tr><td>{{KNOWL('mot.hodgevector', title="Hodge vector")}}:<td>$[{{info.hodge}}]$
+      <tr><td>{{KNOWL('hgm.imprimitivity_index', title="Imprimitivity index")}}:<td>${{info.imprim}}$
+      <tr><td>{{KNOWL('hgm.determinant', title="Motive determinant character")}}:<td>${{info.det}}$
+      <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:<td>${{info.bezoutmat}}$
+      <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:<td>${{info.bezoutdet}}$
+      <tr><td>{{KNOWL('hgm.bezout_module', title="Bezout module")}}:<td>${{info.snf}}$
     </table>
-  </p>
+  <p>
+<p><h2> $p$-parts of defining parameters</h2>
+<p>
+<table>
+<tr> <th> $p$ <th> $A_p$ <th> $B_p$ <th> $C_p$
+ {% for part in info.ppart %}
+ <tr>
+   <td> ${{part[0]}}$ 
+   <td> ${{info.showlist(part[1][0])}}$ 
+   <td> ${{info.showlist(part[1][1])}}$
+   <td> ${{info.showlist(part[1][2])}}$
+ {% endfor %}
+
+</table>
+
+<p>
+<p><h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$</h2>
+    <table>
+     <tr> <th> $\ell$ 
+          <th> Index
+          <th> Subimage
+          <th> Image <th> $A^\ell$ <th> $B^\ell$ <th> $C^\ell$
+          <th> Imprimitivity
+    {% for m in info.mono %}
+      {% if m[1]!=0 %}
+      <tr><td>${{m[0]}}$
+        <td> ${{m[3]}}$
+        <td> {{m[2]|safe}}
+        <td> {{m[1][2] | safe}}
+        <td> ${{info.showlist(m[1][3][0])}}$
+        <td> ${{info.showlist(m[1][3][1])}}$
+        <td> ${{info.showlist(m[1][3][2])}}$
+        <td> ${{m[1][3][3]}}$
+      {% endif %}
+    {% endfor %}
+    </table>
 <p><h2> {{ KNOWL('mot.hypgm.circle', title='Roots on the circle') }}</h2>
   <center>
       <img src="{{ info.plotcircle}}" width = "25%">

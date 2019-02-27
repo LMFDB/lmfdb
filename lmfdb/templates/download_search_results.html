@@ -1,0 +1,25 @@
+<br>
+<br>
+<div id="download-area">
+{% if info.number > 100000 %}
+<span id="download-msg">
+  There are too many search results for downloading.
+</span>
+{% else %}
+{% if info.exact_count %}
+<form id="download-form">
+{% else %}
+<span id="download-msg">
+  In order to download results, <a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">determine the number of results</a>.
+</span>
+<form id="download-form" style="display:none;">
+{% endif %}
+  Download all search results for&nbsp;
+  <button type="submit" name="Submit" value="gp">Pari/GP</button>&nbsp;
+  <button type="submit" name="Submit" value="sage">SageMath</button>&nbsp;
+  <button type="submit" name="Submit" value="magma">Magma</button>&nbsp;
+  <input type="hidden" name="download" value="1"/>
+  <input type="hidden" name="query" value="{{info.query}}"/>
+</form>
+{% endif %}
+</div>

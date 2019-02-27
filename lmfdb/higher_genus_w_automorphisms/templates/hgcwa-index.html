@@ -7,13 +7,24 @@ table.number_table td
 {
 text-align:right;
 }
-
-
 </style>
 
+{% include "hgcwa-clean-submit.html" %}
+
 <div>
-{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+  <p>
+    Currently the database contains all groups $G$ acting as automorphisms of
+    curves $X/\C$ of genus {{info.stats.genus.min}} to
+    {{info.stats.genus.max}} such that $X/G$ has genus 0. There are {{info.stats.refined_passports.distinct}}
+    distinct {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passports')}} in the database. The number of distinct
+    {{KNOWL('curve.highergenus.aut.generatingvector',title='generating vectors')}} is {{info.stats.generating_vectors.distinct}}.
+    Here are some <a href="{{url_for('.statistics')}}">further statistics</a>.
+  </p>
 </div>
+
+<!-- <div>
+{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
+</div> -->
 
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
@@ -27,16 +38,16 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 <p>{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curves')}}: by genus:
 {% for gen in info.genus_list %}
 <a href="?genus={{gen}}&inc_hyper=only">{{gen}}</a>
-{% endfor %} 
+{% endfor %}
 </p>
 
 
-<p>A  <a href={{url_for('.random_passport')}}>random refined passport</a> from the database.</p>
+<p>A <a href="{{url_for('.random_passport')}}">random refined passport</a> from the database.</p>
 
 
     <h2>Find specific automorphisms of higher genus curves</h2>
 
-    <form name="search" method = "get" action="{{search}}">
+    <form name="search" method = "get" action="{{url_for('.index')}}">
         <table class="">
 	  <tr>
 	    <td>
@@ -57,7 +68,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
 
         <h2>Search</h2>
-      <form name="search" method = "get" action="{{search}}">
+      <form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmitHGCWA(this.id)">
         <table class="">
           <tr align=left>
             <td align=right>
@@ -69,14 +80,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </td>
           </tr>
 
-          <tr>
-            <td align=right>
-	      Group:
-            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
-      <td>
-	<span class="formexample">e.g. [4,2]</span>
-      </td>
-          </tr>
+
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -84,6 +88,23 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       <td>
 	<span class="formexample">e.g. [0,2,3,3,6] or [0;2,3,8]</span>
 	  </td> </tr>
+
+        <tr>
+            <td align=right>
+ {{KNOWL('group.order',title='Group order(s)')}}:
+            </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
+            <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
+        </tr>
+
+        <tr>
+            <td align=right>
+	      {{KNOWL('curve.highergenus.aut.groupnotation', title="Group identifier")}}:
+            </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
+      <td>
+	<span class="formexample">e.g. [4,2]</span>
+      </td>
+          </tr>
+
 	 <tr><td align=right>
               {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
             </td><td><input type="integer" name="dim" value="" placeholder="1"></td>
@@ -92,11 +113,11 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	 </td> </tr>
               <tr>  <td align=right>
 	       {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
-            </td>  <td> <select name='inc_hyper'>
+       </td>  <td> <select id='inc_hyper' name='inc_hyper'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
@@ -104,36 +125,36 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
 	  <tr>  <td align=right>
 	       {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
-            </td>  <td> <select name='inc_cyc_trig'>
+       </td>  <td> <select id='inc_cyc_trig' name='inc_cyc_trig'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
 	 </td></tr>
 
  <tr>  <td align=right>
-      Full automorphism group:
-            </td>  <td> <select name='inc_full'>
+      {{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}:
+    </td>  <td> <select id='inc_full' name='inc_full'>
                     <option value='include'>include </option>
 		    <option value='exclude'>exclude</option>
                     <option value='only'>only</option>
-                 
+
                   </select>
                 </td>  <td>
 	<span class="formexample"></span>
 	 </td></tr>
-	  
+
           <tr>
           <td align=right>
               Maximum number of families to display:
-            </td><td><input type="text" name="count" value="20" size="10"></td>
+            </td><td><input id="count" type="text" name="count" value="20" size="10"></td>
           </tr>
   </table>
-        <button type="submit" name="Submit" value="Search">Search</button>
+        <button type='submit' value='search'>Search</button>
       </form>
-   
+
 
 {% endblock %}

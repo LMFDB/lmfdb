@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
 
 class EllCurveTest(LmfdbTest):
@@ -61,6 +61,21 @@ class EllCurveTest(LmfdbTest):
         assert '1490902050625' in L.data
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1') # Test factorisation
         assert '8798344145175011328000' in L.data
+
+    def test_download(self):
+        r"""
+        Check that the code download links work
+        """
+        L = self.tc.get('/EllipticCurve/2.0.4.1/5525.5/b/9')
+        assert 'Download Magma code' in L.data
+        assert 'Download SageMath code' in L.data
+        assert 'Download GP code' in L.data
+        L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/magma')
+        assert 'Magma code for working with elliptic curve 2.2.89.1-81.1-a1' in L.data
+        L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/sage')
+        assert 'SageMath code for working with elliptic curve 2.2.89.1-81.1-a1' in L.data
+        L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/gp')
+        assert 'Pari/GP code for working with elliptic curve 2.2.89.1-81.1-a1' in L.data
 
     def test_search(self):
         r"""

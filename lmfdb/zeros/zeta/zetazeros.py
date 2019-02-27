@@ -25,7 +25,7 @@ def zetazeros():
 
 @ZetaZeros.route("/Extent")
 def extent ():
-    t = 'Extent of data for Riemann zeta zeros'
+    t = 'Extent of Data for Riemann Zeta Zeros'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),
              ("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Extent', ' ')]
     return render_template('single.html', title=t, bread=bread, kid = "dq.zeros.zeta.extent")
@@ -33,7 +33,7 @@ def extent ():
 
 @ZetaZeros.route("/HowComputed")
 def howcomputed ():
-    t = 'How the Riemann zeta zeros were computed'
+    t = 'How the Riemann Zeta Zeros were Computed'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),
              ('How they were computed', ' ')]
     return render_template('single.html', title=t, bread=bread, kid = "dq.zeros.zeta.howcomputed")

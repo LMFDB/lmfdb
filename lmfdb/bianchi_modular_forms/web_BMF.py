@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import make_logger
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
@@ -11,23 +11,8 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
-def db_dims():
-    return getDBConnection().bmfs.dimensions
-
-def db_dimstats():
-    return getDBConnection().bmfs.dimensions.stats
-
-def db_forms():
-    return getDBConnection().bmfs.forms
-
-def db_nf_fields():
-    return getDBConnection().numberfields.fields
-
-def db_ecnf():
-    return getDBConnection().elliptic_curves.nfcurves
-
 def is_bmf_in_db(label):
-    return db_forms().find({"label": label}).limit(1).count(True) > 0
+    return db.bmf_forms.lookup(label, projection=0) is not None
 
 class WebBMF(object):
     """
@@ -53,7 +38,7 @@ class WebBMF(object):
         Searches for a specific Hilbert newform in the forms
         collection by its label.
         """
-        data = db_forms().find_one({"label" : label})
+        data = db.bmf_forms.lookup(label)
 
         if data:
             return WebBMF(data)
@@ -69,9 +54,9 @@ class WebBMF(object):
         from lmfdb.ecnf.WebEllipticCurve import FIELD
         self.field = FIELD(self.field_label)
         pretty_field = field_pretty(self.field_label)
-        self.field_knowl = nf_display_knowl(self.field_label, getDBConnection(), pretty_field)
+        self.field_knowl = nf_display_knowl(self.field_label, pretty_field)
         try:
-            dims = db_dims().find_one({'field_label':self.field_label, 'level_label':self.level_label})['gl2_dims']
+            dims = db.bmf_dims.lucky({'field_label':self.field_label, 'level_label':self.level_label}, projection='gl2_dims')
             self.newspace_dimension = dims[str(self.weight)]['new_dim']
         except TypeError:
             self.newspace_dimension = 'not available'
@@ -107,10 +92,14 @@ class WebBMF(object):
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        if self.sfe == 1:
-            self.sign = "+1"
-        elif self.sfe == -1:
-            self.sign = "-1"
+        
+        try:
+            if self.sfe == 1:
+                self.sign = "+1"
+            elif self.sfe == -1:
+                self.sign = "-1"
+        except AttributeError:
+            self.sfe = '?'
 
         if self.Lratio == '?':
             self.Lratio = "not determined"
@@ -127,10 +116,16 @@ class WebBMF(object):
                             ('Dimension', str(self.dimension))
         ]
 
-        if self.CM == '?':
+        try:
+            if self.CM == '?':
+                self.CM = 'not determined'
+            elif self.CM == 0:
+                self.CM = 'no'
+            else:
+                if self.CM%4 in [2,3]:
+                    self.CM = 4*self.CM
+        except AttributeError:
             self.CM = 'not determined'
-        elif self.CM == 0:
-            self.CM = 'no'
         self.properties2.append(('CM', str(self.CM)))
 
         self.bc_extra = ''
@@ -156,11 +151,10 @@ class WebBMF(object):
             self.bc_extra = ', but is a twist of the base-change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+'})\)'
         self.properties2.append(('Base-change', str(self.bc)))
 
-        curve = db_ecnf().find_one({'class_label':self.label})
-        if curve:
+        curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
+        if curve_bc is not None:
             self.ec_status = 'exists'
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
-            curve_bc = curve['base_change']
             curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
             bc_urls = [url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso) for cond, iso, num in curve_bc_parts]
             bc_labels = [newform_label(cond,2,1,iso) for cond,iso,num in curve_bc_parts]

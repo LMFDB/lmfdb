@@ -2,47 +2,51 @@
 {% block content %}
 {# Refine search page #}
 
-<form id="re-search">
-<input type="hidden" name="start" value="{{start}}"/>
-<input type="hidden" name="paging" value="0"/>
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
   <table>
     <tr>
-      <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
-      <td><input type='text' name='dimension' value="{{req.dimension}}" size=15/></td>
+      <td>{{ KNOWL('artin.dimension',title="dimension") }}</td>
+      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15/></td>
       <td><span class="formexample"> e.g. 1, 2-4 </span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
-      <td><input type='text' name='conductor' value="{{req.conductor}}" size=15/></td>
+      <td>{{ KNOWL('artin.conductor',title = "conductor") }}</td>
+      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15/></td>
       <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
     <tr>
-        <td>{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
-        <td><input type='text' name='group' value="{{req.group}}" size=15></td>
+        <td>{{ KNOWL('artin.gg_quotient',title="group") }}</td>
+        <td><input type='text' name='group' value="{{info.group}}" size=15></td>
         <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
     </tr>
     <tr>
-      <td>Ramified primes</td>
-      <td><input type='text' name='ramified' value="{{req.ramified}}" size=15/></td>
+        <td>{{ KNOWL('artin.permutation_container',title="smallest permutation container") }}</td>
+        <td><input type='text' name='container' value="{{info.container}}" size=15></td>
+        <td><span class="formexample"> e.g. 4T3 or 6T10</span></td>
+    </tr>
+    <tr>
+      <td>{{KNOWL('artin.ramified_primes', 'ramified primes')}}</td>
+      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15/></td>
       <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
     </tr>
     <tr>
-      <td>Unramified primes</td>
-      <td><input type='text' name='unramified' value = "{{req.unramified}}" size=15/></td>
+      <td>{{KNOWL('artin.unramified_primes', 'unramified primes')}}</td>
+      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15/></td>
       <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
     </tr>
     <tr>
-      <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
-      <td><input type='text' name='root_number' value = "{{req.root_number}}" size=15/></td>
+      <td>{{ KNOWL('artin.root_number',title="root number") }}</td>
+      <td><input type='text' name='root_number' value = "{{info.root_number}}" size=15/></td>
       <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
     </tr>
     <tr>
       <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
-      <td><input type='text' name='frobenius_schur_indicator' value = "{{req.frobenius_schur_indicator}}" size=15/></td>
+      <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" size=15/></td>
       <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character</span></td>
     </tr>
     <tr>
-      <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{req.count}}" size=10></td>
+      <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{info.count}}" size=10></td>
     </tr>
   <tr>
     <td class="button"><button type='submit' value='Search'>Search again</button></td>
@@ -50,51 +54,16 @@
   </table>
 </form>
 
-
-{% if req.err is defined %}
-
-{% if req.labelxyzzy is defined %}
-<form>
-<table border=0 cellpadding=5>
-<tr>
-<td>Field:&nbsp;&nbsp;</td>
-<td ><input type='text' name='natural' size=60 value="{{req.label}}"> </td>
-<td><button type='submit' name='search' value='Go'>Go</button></td>
-</tr>
-<tr>
-<td colspan="3" rowspan="2"><span class="formexample"> Enter either a
-<a href="FieldLabels">field label</a>, e.g. 2.2.5.1 for
-    \(\Q(\sqrt{5})\); a nickname, e.g. Q or Qsqrt5 or Qzeta7; or a polynomial in x, e.g. x^2+1</span></td>
-</tr>
-</table>
-</form>
-{% endif %}
-    
-    {% if req.err != '' %}
-        <h2>Error</h2>
-    {% endif %}
-            <div>
-              {{ req.err|safe }}
-    <p>
-      Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-      </div>
-
-
-{% else %}
-
-
-
-
-<h2> Results: {{report}} </h2>
-{% if nres > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 <div>
-  Galois conjugate representations are grouped into single lines.  
+  Galois conjugate representations are grouped into single lines.
 </div>
 
 <div>
 	<table border=1 cellpadding=5 class="ntdata">
 
-	<thead><tr><th>Label</th>
+	<thead><tr><th>{{KNOWL('artin.label', 'Label')}}</th>
         <th>{{ KNOWL('artin.dimension', title='Dimension') }}</th>
 	<th>{{ KNOWL('artin.conductor', title='Conductor') }}</th>
 	<th>Defining polynomial of {{ KNOWL('artin.number_field', title='Artin field') }} </th>
@@ -105,13 +74,13 @@
 	</tr></thead>
 	<tbody>
 
-        {% for artin in data%}
+        {% for artin in info.results%}
         {% set art = initfunc(artin['Baselabel'],1) %}
         {% set galccsize = art.galois_conjugacy_size() %}
           <tr><td>
           {% for cnt in range(galccsize) %}
         {% set artx = initfunc(artin['Baselabel'],cnt+1) %}
-        {% if sign_code == 0 or sign_code == art.sign() %}
+        {% if info.sign_code == 0 or info.sign_code == art.sign() %}
             <a href = "{{artx.url_for()}}">{{art.baselabel()}}c{{cnt+1}}</a>
         {% endif %}
           {% endfor %}
@@ -128,19 +97,9 @@
         {% endfor %}
 	</tbody>
 	</table>
-     {% if start > 0 %}
-         <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-      {% endif %}
-       {% if start +req.count  < nres %}
-   <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-    {% endif %}
-
-  {% endif %}
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
 {% endif %}
+{% include 'debug_info.html' %}
 
-{#
-<br>
-Original request {{req}} was turned into mongo query <span class="tex2jax_ignore">{{query}}</span>.
-<br>
-#}
 {% endblock %}

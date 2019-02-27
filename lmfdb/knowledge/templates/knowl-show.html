@@ -10,8 +10,15 @@
   <strong>Authors:</strong>
   <ul>
   {% for a in k.author_links() %}
-    <li><a href="{{ url_for('users.profile', userid=a['_id']) }}">{{ a['full_name'] or a['_id'] }}</a></li>
+    <li><a href="{{ url_for('users.profile', userid=a['username']) }}">{{ a['full_name'] or a['username'] }}</a></li>
   {% endfor %}
+  </ul>
+</div>
+<div style="margin-top: 30px;">
+  <strong>Knowl status:</strong>
+  <ul>
+    <li>Review status: {{ k.quality }}
+    <li>Last edited by {{k.last_author()}} on {{ k._timestamp }}
   </ul>
 </div>
 

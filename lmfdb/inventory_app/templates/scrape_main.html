@@ -1,0 +1,44 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+<script type="text/javascript" src="{{ url_for('inventory_app.static', filename='scraper.js') }}"></script>
+
+<script type="text/javascript">
+
+  var scrapeDest = "{{ url_for('inventory_app.submit_rescrape_request') }}";
+
+</script>
+{% endblock extra_script %}
+
+{% block title_block %}
+  Inventory Rescraping Options
+{% endblock title_block %}
+
+{% block main_body %}
+  <div class = 'important'>
+    Rescraping inventory information touches every record in the designated collection(s).
+    This can take a very long time, so proceed with caution. Large collections should only rescraped
+    during database downtime. <b> Editing the inventory for a collection is locked until the rescrape completes</b>
+  </div>
+  <div class = 'listing'>
+  {% for item in listing %}
+  <div class = 'unbreaking'>
+    <h2>{{item}}</h2>
+    {% if user_is_authenticated %}
+      <input type='button' id = '{{coll}}' class="scrape_button" value ='Rescan all collections' onclick='rescanAll("{{item}}")'>
+    {% else %}
+      <input type='button' value ='Rescan all collections' class="scrape_button" title ='Please login to scrape' disabled class=disabledbutton>
+    {% endif %}
+    <br></br>
+    {% for coll in listing[item] %}
+      {% if user_is_authenticated %}
+        <input type='button' id = '{{coll}}' class="scrape_button" value ='Rescan {{coll}}' onclick='rescan("{{item}}", "{{coll}}")'>
+      {% else %}
+        <input type='button' value ='Rescan {{coll}}' class="scrape_button" title ='Please login to scrape' disabled class=disabledbutton>
+      {% endif %}
+    <br></br>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock main_body %}

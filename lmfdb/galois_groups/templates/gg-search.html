@@ -9,82 +9,81 @@ table.ntdata a {
 }
 </style>
 
-<form id="re-search">
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
 <table border="0">
 
           <tr>
-            <td colspan="4" align="center">
+            <td colspan="6" align="center">
             <table>
               <tr>
-                <td align="center">Parity</td>
-                <td align="center">Cyclic</td>
-                <td align="center">Solvable</td>
-                <td align="center">Primitive</td>
+                <td align="center">{{KNOWL('gg.parity', 'Parity')}}</td>
+                <td align="center">{{KNOWL('group.cyclic', 'Cyclic')}}</td>
+                <td align="center">{{KNOWL('group.solvable', 'Solvable')}}</td>
+                <td align="center">{{KNOWL('gg.primitive', 'Primitive')}}</td>
               </tr>
               <tr>
                 <td> <select name='parity'>
  {% if info.parity=='1' %}
-                   <option value='0'>All</option>
+                   <option value='Any'>All</option>
                    <option value='-1'>Odd</option>
                    <option selected='yes' value='1'>Even</option>
  {% elif info.parity=='-1' %}
-                   <option value='0'>All</option>
+                   <option value='Any'>All</option>
                    <option selected='yes' value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
+                   <option selected='yes' value='Any'>All</option>
                    <option value='-1'>Odd</option>
                    <option value='1'>Even</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='cyc'>
- {% if info.cyc=='1' %}
-                   <option value='0'>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.cyc=='-1' %}
-                   <option value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.cyc=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.cyc=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='solv'>
- {% if info.solv=='1' %}
-                   <option value='0'>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.solv=='-1' %}
-                   <option value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.solv=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.solv=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
                 <td> <select name='prim'>
- {% if info.prim=='1' %}
-                   <option value='0'>All</option>
-                   <option selected='yes' value='1'>Yes</option>
-                   <option value='-1'>No</option>
- {% elif info.prim=='-1' %}
-                   <option value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option selected='yes' value='-1'>No</option>
+ {% if info.prim=='True' %}
+                   <option value='Any'>All</option>
+                   <option selected='yes' value='True'>Yes</option>
+                   <option value='False'>No</option>
+ {% elif info.prim=='False' %}
+                   <option value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option selected='yes' value='False'>No</option>
  {% else %}
-                   <option selected='yes' value='0'>All</option>
-                   <option value='1'>Yes</option>
-                   <option value='-1'>No</option>
+                   <option selected='yes' value='Any'>All</option>
+                   <option value='True'>Yes</option>
+                   <option value='False'>No</option>
  {% endif %}
                   </select>
                 </td>
@@ -96,15 +95,23 @@ table.ntdata a {
 
 <tr>
 <td align=left> 
-{{KNOWL('gg.degree',title='Degree')}} :<td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
+{{KNOWL('gg.degree',title='degree')}} <td align=left> <input type='text' name='n' size="5" value="{{info.n}}">
 </td>
 
 <td align=left> 
-{{KNOWL('gg.tnumber',title='$t$')}} :
-<td align=left> <input type="text" name="t" size="3" value="{{info.t}}" ></td>
+{{KNOWL('gg.tnumber',title='$t$')}} 
+<td align=left> <input type="text" name="t" size="5" value="{{info.t}}" ></td>
+
+<td align=left> 
+{{KNOWL('group.order',title='order')}} 
+<td align=left> <input type="text" name="order" size="5" value="{{info.order}}" ></td>
+<td align=left> 
+{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP id')}} 
+<td align=left><input type="text" name="gapid" size="5" value="{{info.gapid}}" ></td>
 </tr>
+
 <tr>
-<td align='left' colspan='4'>Maximum number of groups to display <input type='text' name='count' value="{{info.count}}" size='10'>
+<td align='left' colspan='8'>Maximum number of groups to display: <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 <tr>
@@ -115,14 +122,13 @@ table.ntdata a {
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
 <tr>
     <td>
       Search by {{KNOWL('gg.label',title="label")}}
-      <input type="text" name="jump_to" value="{{info.label}}"">
+      <input type="text" name="jump_to" value="{{info.label}}">
       <button type="submit" value="Find">Find</button>
     </td>
     <td>
@@ -131,28 +137,18 @@ table.ntdata a {
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
 <tr>
-<th>Label</th>
+<th>{{KNOWL('gg.label', title='Label')}}</th>
 <th>{{KNOWL('gg.simple_name', title='Name')}}</th>
-<th>Order</th>
+<th>{{KNOWL('group.order', title='Order')}}</th>
 <th>{{ KNOWL('gg.parity', 'Parity') }} </th>
 <th>{{ KNOWL('gg.solvable', 'Solvable') }}</th>
 {% if info.show_subs %}
@@ -163,11 +159,11 @@ table.ntdata a {
 </thead>
 <tbody>
 
-{% for group in info.groups: %}
+{% for group in info.results: %}
 {% set wgg = info.wgg(group) %}
 <tr>
 <td><a href="/GaloisGroup/{{group.label}}">{{group.label}}</a></td>
-<td>{{info.group_display([group.n, group.t])}}</td>
+<td>{{info.group_display(group.n, group.t)}}</td>
 <td align="right">{{group.order}}</td>
 <td align="right">{{group.parity}}</td>
 <td align="center">{{info.yesno(group.solv)}}</td>
@@ -181,16 +177,12 @@ table.ntdata a {
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'dummy_download_search_results.html' %}
+<p>
+Results are complete for degrees $\leq 23$.
 {% endif %}
-{% endif %}
+{% include 'debug_info.html' %}
 
 {% endblock %}

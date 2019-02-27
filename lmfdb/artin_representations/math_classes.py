@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import url_for, pol_to_html
-from lmfdb.artin_representations.databases.Dokchitser_databases import Dokchitser_ArtinRepresentation_Collection, Dokchitser_NumberFieldGaloisGroup_Collection
-from lmfdb.artin_representations.databases.standard_types import PolynomialAsSequenceTooLargeInt
+from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
 from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
 from lmfdb.WebNumberField import WebNumberField
@@ -72,62 +71,71 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
-class ArtinRepresentation(object):
-    @staticmethod
-    def collection(source="Dokchitser"):
-        if source == "Dokchitser":
-            return Dokchitser_ArtinRepresentation_Collection(getDBConnection())
+def _search_and_convert_iterator(cls, source):
+    for x in source:
+        yield cls(data=x)
 
+
+class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
             label=self._data['label']
         else:
-            if len(x)==1: # Assume we got a label
+            if len(x) == 1: # Assume we got a label
                 label = x[0]
                 parts = x[0].split("c")
                 base = parts[0]
                 conjindex = int(parts[1])
-            else: # Assume length 2, base and gorb index
+            elif len(x) == 2: # base and gorb index
                 base = x[0]
                 conjindex = x[1]
                 label = "%sc%s"%(str(x[0]),str(x[1]))
-            self._data = self.__class__.collection().find_and_convert_one({'Baselabel':str(base)})
+            else:
+                raise ValueError("Invalid number of positional arguments")
+            self._data = db.artin_reps.convert_lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
-            self._data['label']=label
+            self._data['label'] = label
             self._data.update(conj[0])
 
     @classmethod
-    def find(cls, *x, **y):
-        for item in cls.collection().find_and_convert(*x, **y):
-            yield ArtinRepresentation(data=item)
+    def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
+        results = db.artin_reps.search_and_convert(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        if limit is None:
+            return _search_and_convert_iterator(cls, results)
+        else:
+            return [cls(data=x) for x in results]
 
     @classmethod
-    def find_one(cls, *x, **y):
-        return ArtinRepresentation(data=cls.collection().find_and_convert_one(*x, **y))
+    def lucky(cls, *args, **kwds):
+        # What about label?
+        return cls(data=db.artin_reps.convert_lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
         return cls(baselabel,1)
 
     def baselabel(self):
-        return self._data["Baselabel"]
+        return str(self._data["Baselabel"])
 
     def label(self):
         return str(self._data['label'])
 
     def dimension(self):
-        return self._data["Dim"]
+        return int(self._data["Dim"])
 
     def conductor(self):
-        return self._data["Conductor_key"][4:]
+        return int(self._data["Conductor"])
+
+    def NFGal(self):
+        return  map(int, self._data["NFGal"]);
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
         factors = self.factored_conductor()
-        if str(self.conductor()) == "1":
+        if self.conductor() == 1:
             return "1"
         if len(factors) == 1 and factors[0][1] == 1:
             return str(self.conductor())
@@ -138,7 +146,7 @@ class ArtinRepresentation(object):
         return [(p, valuation(Integer(self.conductor()), p)) for p in self.bad_primes()]
 
     def factored_conductor_latex(self):
-        if int(self.conductor()) == 1:
+        if self.conductor() == 1:
             return "1"
 
         def power_prime(p, exponent):
@@ -181,8 +189,7 @@ class ArtinRepresentation(object):
         try:
             return self._nf
         except AttributeError:
-            tmp = str(self._data["NFGal"])
-            self._nf = NumberFieldGaloisGroup.find_one({"Polynomial": tmp})
+            self._nf = NumberFieldGaloisGroup.lucky({"Polynomial":  self.NFGal()})
         return self._nf
 
     def galois_conjugacy_size(self):
@@ -353,16 +360,15 @@ class ArtinRepresentation(object):
         from lmfdb.WebNumberField import nf_display_knowl
         nfgg = self.number_field_galois_group()
         if nfgg.url_for():
-            return nf_display_knowl(nfgg.label(), getDBConnection(), nfgg.polredabshtml())
+            return nf_display_knowl(nfgg.label(), nfgg.polredabshtml())
         else:
             return nfgg.polredabshtml()
 
     def group(self):
-        return group_display_short(self._data['Galois_nt'][0],self._data['Galois_nt'][1], getDBConnection())
+        return group_display_short(self._data['Galn'],self._data['Galt'])
 
     def pretty_galois_knowl(self):
-        C = getDBConnection()
-        return group_display_knowl(self._data['Galois_nt'][0],self._data['Galois_nt'][1],C)
+        return group_display_knowl(self._data['Galn'],self._data['Galt'])
 
     def __str__(self):
         try:
@@ -448,7 +454,7 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+        if self.conductor() == 1 and self.dimension() == 1:
             return [1]
         return []
 
@@ -457,7 +463,7 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+        if self.conductor() == 1 and self.dimension() == 1:
             return [0, 1]
         return []
 
@@ -466,7 +472,7 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+        if self.conductor() == 1 and self.dimension() == 1:
             return [-1, 1]
         return []
 
@@ -475,7 +481,7 @@ class ArtinRepresentation(object):
             assert self.primitive()
         except AssertionError:
             raise NotImplementedError
-        if int(self.conductor()) == 1 and int(self.dimension()) == 1:
+        if self.conductor() == 1 and self.dimension() == 1:
             return [1]
         return []
 
@@ -606,35 +612,45 @@ class G_gens(list):
 
 
 class NumberFieldGaloisGroup(object):
-    @staticmethod
-    def collection(source="Dokchitser"):
-        if source == "Dokchitser":
-            tmp = Dokchitser_NumberFieldGaloisGroup_Collection(getDBConnection())
-            return tmp
-
     def __init__(self, *x, **data_dict):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
+        elif len(x) > 1:
+            raise ValueError("Only one positional argument allowed")
         else:
-	    # Assume we got coeffstring
-            self._data = self.__class__.collection().find_and_convert_one({'Polynomial':str(x[0])})
+            if isinstance(x[0], basestring):
+                if x[0]:
+                    coeffs = x[0].split(',')
+                else:
+                    coeffs = []
+            else:
+                coeffs = x[0]
+            coeffs = [int(c) for c in coeffs]
+            self._data = db.artin_field_data.convert_lucky({'Polynomial':coeffs})
+            if self._data is None:
+                # This should probably be a ValueError, but we use an AttributeError for backward compatibility
+                raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
-    def find_one(cls, *x, **y):
-        return NumberFieldGaloisGroup(data=cls.collection().find_and_convert_one(*x, **y))
+    def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
+        results = db.artin_field_data.search_and_convert(query, projection, limit=limit, offset=offset, sort=sort, info=info)
+        if limit is None:
+            return _search_and_convert_iterator(cls, results)
+        else:
+            return [cls(data=x) for x in results]
 
     @classmethod
-    def find(cls, *x, **y):
-        for item in cls.collection().find_and_convert(*x, **y):
-            yield NumberFieldGaloisGroup(data=item)
+    def lucky(cls, *args, **kwds):
+        result = db.artin_field_data.convert_lucky(*args, **kwds)
+        if result is not None:
+            return cls(data=result)
 
     def degree(self):
         return self._data["TransitiveDegree"]
 
     def polynomial(self):
-        polstring = self._data["Polynomial"]
-        return PolynomialAsSequenceTooLargeInt([int(a) for a in polstring.split(",")])
+        return PolynomialAsSequenceTooLargeInt(self._data["Polynomial"])
 
     def polynomial_latex(self):
 	from sage.rings.all import PolynomialRing, QQ

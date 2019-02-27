@@ -4,7 +4,7 @@ from lmfdb.base import LmfdbTest
 class NumberFieldTest(LmfdbTest):
 
     # All tests should pass
-    
+
     def test_Q(self):
         L = self.tc.get('/NumberField/Q', follow_redirects=True)
         assert '\chi_{1}' in L.data
@@ -30,7 +30,7 @@ class NumberFieldTest(LmfdbTest):
         assert '275' in L.data # conductor
 
     def test_stuff_not_computed(self):
-        L = self.tc.get('/NumberField/23.1.459177995857290463522143518056811108.1', follow_redirects=True)
+        L = self.tc.get('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', follow_redirects=True)
         assert 'Not computed' in L.data
 
     def test_search_poly_mean2parser(self):
@@ -51,11 +51,11 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_label(self):
         L = self.tc.get('/NumberField/2.2.5.1')
-        assert '0.481211825059603' in L.data # regulator
+        assert '0.481211825' in L.data # regulator
 
     def test_url_naturallabel(self):
         L = self.tc.get('/NumberField/Qsqrt5', follow_redirects=True)
-        assert '0.481211825059603' in L.data # regulator
+        assert '0.481211825' in L.data # regulator
 
     def test_arith_equiv(self):
         L = self.tc.get('/NumberField/7.3.6431296.1', follow_redirects=True)
@@ -66,28 +66,40 @@ class NumberFieldTest(LmfdbTest):
         assert 'Twin sextic algebra' in L.data
 
     def test_how_computed(self):
-        L = self.tc.get('/NumberField/HowComputed')
-        assert 'Hunter searches' in L.data 
+        L = self.tc.get('/NumberField/Source')
+        assert 'Hunter searches' in L.data
 
     def test_galois_group_page(self):
         L = self.tc.get('/NumberField/GaloisGroups')
-        assert 'abstract group may have' in L.data 
+        assert 'abstract group may have' in L.data
 
     def test_imaginary_quadratic_page(self):
         L = self.tc.get('/NumberField/QuadraticImaginaryClassGroups')
-        assert 'Mosunov' in L.data 
+        assert 'Mosunov' in L.data
 
     def test_discriminants_page(self):
-        L = self.tc.get('/NumberField/Discriminants')
-        assert 'Jones-Roberts' in L.data 
+        L = self.tc.get('/NumberField/Source')
+        assert 'Jones-David Roberts' in L.data
 
     def test_field_labels_page(self):
         L = self.tc.get('/NumberField/FieldLabels')
-        assert 'with the same signature and absolute value of the' in L.data 
+        assert 'with the same signature and absolute value of the' in L.data
 
     def test_url_bad(self):
         L = self.tc.get('/NumberField/junk')
         assert 'Error' in L.data # error mesage
 
+    def test_random_field(self):
+        L = self.tc.get('/NumberField/random', follow_redirects=True)
+        assert 'Discriminant' in L.data
 
+    def test_statistics(self):
+        L = self.tc.get('/NumberField/stats', follow_redirects=True)
+        assert 'Class number' in L.data
 
+    def test_signature_search(self):
+        L = self.tc.get('/NumberField/?start=0&degree=6&signature=%5B0%2C3%5D&count=100', follow_redirects=True)
+        assert '6.0.61131.1' in L.data
+
+        L = self.tc.get('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', follow_redirects=True)
+        assert '7.3.1420409.1' in L.data

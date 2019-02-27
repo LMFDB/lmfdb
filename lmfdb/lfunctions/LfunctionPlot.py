@@ -2,7 +2,7 @@
 
 import math
 from flask import url_for
-import lmfdb.base as base
+from lmfdb.db_backend import db
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_newforms import WebNewForm
 from lmfdb.modular_forms.elliptic_modular_forms.backend.web_modform_space import WebModFormSpace
 from lmfdb.characters.ListCharacters import get_character_modulus
@@ -26,15 +26,29 @@ from lmfdb.utils import signtocolour
 ## of given degree (gives output for degree 3 and 4). Data is fetched from
 ## the database.
 ## ============================================
-def getAllMaassGraphHtml(degree):
+def getAllMaassGraphHtml(degree, signature=""):
     if degree == 3:
         groups = [ ["GL3", [1 , 4] ] ] 
     elif degree == 4:
         groups = [ ["GSp4", [1]], ["GL4", [1]] ] 
     else:
         return ""
+    if signature:
+        groups = []
 
     ans = ""
+    if signature == 'r0r0r0':
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL3", 1])
+        ans += getOneGraphHtml(["GL3", 4])
+    elif signature == 'r0r0r0r0':
+        ans += getGroupHtml(signature + 'selfdual')
+        ans += getOneGraphHtml(["GSp4", 1])
+        ans += getGroupHtml(signature)
+        ans += getOneGraphHtml(["GL4", 1])
+
+#        else:
+#            ans += getGroupHtml(g)
     for i in range(0, len(groups)):
         g = groups[i][0]
         ans += getGroupHtml(g)
@@ -46,22 +60,61 @@ def getAllMaassGraphHtml(degree):
 
 ## ============================================
 ## Returns the header and information about the Gamma-factors for the
-## group with name group (in html and MathJax)
+## group with name group (in html and with math)
 ## ============================================
 
 
 def getGroupHtml(group):
-    if group == 'GSp4':
-        ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
-        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
-        ans += "to Maass cusp forms for GSp(4) of level 1. "
-        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+    if group == 'r0r0r0':   # note: signature, not group.  Delete the groups, then change the name
+        ans = "<h3 id='r0r0r0'>L-functions of signature (0,0,0;)</h3>\n"
+        ans += "<div>"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\[\\begin{aligned}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\end{aligned}\\]\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 = 0\\). \n"
+        ans += "By permuting and possibly taking the complex conjugate, we may assume \\(\\mu_1 \ge \\mu_2 \ge 0\\), \n"
+        ans += "so the functional equation can be represented by a point \\( (\\mu_1, \\mu_2) \\) below "
+        ans += "the diagonal in the first quadrant of the Cartesian plane.</div>\n"
+    elif group == 'r0r0r0r0':
+        ans = "<h3 id='r0r0r0r0'>L-functions of signature (0,0,0,0;)</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\[\\begin{aligned}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s + i \\mu_3)"
+        ans += "\\Gamma_\\R(s + i \\mu_4)"
+        ans += "\\end{aligned}\\]\n"
+        ans += "with \\(\mu_j\in \\R\\) and \\(\\mu_1 + \\mu_2 + \\mu_3 + \\mu_4 = 0\\). \n"
+        ans += "By permuting and possibly conjugating, we may assume \\(0\\le \\mu_2 \\le \\mu_1 \\).\n"
+        ans += "</div>\n"
+    elif group == 'r0r0r0r0selfdual':
+        ans = "<h3 id='r0r0r0r0selfdual'>L-functions of signature (0,0,0,0;) with real coefficients</h3>\n"
+        ans += "<div>\n"
+        ans += "These L-functions satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s - i \\mu_1)"
         ans += "\\Gamma_\\R(s - i \\mu_2)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
+        ans += "with \\(\\mu_j\\) real.  By renaming and rearranging, we may assume \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
+
+    # groups, soon to be obsolete
+    elif group == 'GSp4':
+        ans = "<h3 id='GSp4_Q_Maass'>Maass cusp forms for GSp(4)</h3>\n"
+        ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
+        ans += "to Maass cusp forms for GSp(4) of level 1. "
+        ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
+        ans += "\\[\\begin{aligned}"
+        ans += "\\Gamma_\\R(s + i \\mu_1)"
+        ans += "\\Gamma_\\R(s + i \\mu_2)"
+        ans += "\\Gamma_\\R(s - i \\mu_1)"
+        ans += "\\Gamma_\\R(s - i \\mu_2)"
+        ans += "\\end{aligned}\\]\n"
         ans += "with \\(0 \\le \\mu_2 \\le \\mu_1\\).</div>\n"
 
     elif group == 'GL4':
@@ -69,12 +122,12 @@ def getGroupHtml(group):
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GL(4) of level 1. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\R(s + i \\mu_1)"
         ans += "\\Gamma_\R(s + i \\mu_2)"
         ans += "\\Gamma_\R(s - i \\mu_3)"
         ans += "\\Gamma_\R(s - i \\mu_4)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3 + \\mu_4\\).</div>\n"
 
 # template code to generate a knowl
@@ -92,11 +145,11 @@ def getGroupHtml(group):
         ans += "<div>Currently in the LMFDB, we have data on L-functions associated "
         ans += "to Maass cusp forms for GL(3) of levels 1 and 4. "
         ans += "These satisfy a functional equation with \\(\\Gamma\\)-factors\n"
-        ans += "\\begin{equation}"
+        ans += "\\[\\begin{aligned}"
         ans += "\\Gamma_\\R(s + i \\mu_1)"
         ans += "\\Gamma_\\R(s + i \\mu_2)"
         ans += "\\Gamma_\\R(s - i \\mu_3)"
-        ans += "\\end{equation}\n"
+        ans += "\\end{aligned}\\]\n"
         ans += "where \\(\\mu_1 + \\mu_2 = \\mu_3\\).</div>\n"
 
     else:
@@ -108,17 +161,17 @@ def getGroupHtml(group):
 ## ============================================
 ## Returns the header, some information and the url for the svg-file for
 ## the L-functions of the Maass forms for given group, level and
-## sign (of the functional equation) (in html and MathJax)
+## sign (of the functional equation) (in html with math)
 ## ============================================
 def getOneGraphHtml(gls):
     if len(gls) > 2:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + " and sign "
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + " and sign "
                + str(gls[2]) + "</h4>\n")
     else:
-        ans = ("<h4>Maass cusp forms of level " + str(gls[1]) + "</h4>\n")
+        ans = ("<h4>L-functions of conductor " + str(gls[1]) + "</h4>\n")
     ans += "<div>The dots in the plot correspond to L-functions with \\((\\mu_1,\\mu_2)\\) "
-    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). These have been found by a computer "
-    ans += "search. Click on any of the dots to get detailed information about "
+    ans += "in the \\(\\Gamma\\)-factors, colored according to the sign of the functional equation (blue indicates \\(\epsilon=1\\)). "
+    ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
     ans += ("<embed src='" + graphInfo['src'] + "' width='" +
@@ -163,20 +216,14 @@ def getWidthAndHeight(gls):
     ## TODO: This should be adjusted
     ##return ((700,450))
 
-    conn = base.getDBConnection()
-    db = conn.Lfunctions
-    collection = db.Lfunctions
-    LfunctionList = collection.find({'group': gls[0], 'conductor': gls[1]
-                                         },{'origin': True, 'root_number': True})
-
     xfactor = 20
     yfactor = 20
     extraSpace = 40
 
     xMax = 0
     yMax = 0
-    for l in LfunctionList:
-        splitId = l['origin'].split('/')[6].split('_')
+    for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
+        splitId = origin.split('/')[6].split('_')
 
         if float(splitId[0]) > xMax:
             xMax = float(splitId[0])
@@ -206,9 +253,6 @@ def paintSvgFileAll(glslist):  # list of group and level
     ans = "<svg  xmlns='http://www.w3.org/2000/svg'"
     ans += " xmlns:xlink='http://www.w3.org/1999/xlink'>\n"
 
-    conn = base.getDBConnection()
-    db = conn.Lfunctions
-    collection = db.Lfunctions
     paralist = []
     xMax = 0
     yMax = 0
@@ -216,11 +260,8 @@ def paintSvgFileAll(glslist):  # list of group and level
         group = gls[0]
         level = gls[1]
 
-        LfunctionList = collection.find(
-                {'group': group, 'conductor': level},
-                {'origin': True, 'root_number': True})
-
-        for l in LfunctionList:
+        for l in db.lfunc_lfunctions.search({'group': group, 'conductor': level},
+                                            ['origin', 'root_number']):
             splitOrigin = l['origin'].split('/')
             char = splitOrigin[5]
             R = splitOrigin[6]

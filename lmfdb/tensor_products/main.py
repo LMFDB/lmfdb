@@ -2,9 +2,7 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
-import pymongo
-ASC = pymongo.ASCENDING
-from lmfdb.base import  getDBConnection
+from lmfdb.db_backend import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
@@ -20,7 +18,7 @@ from lmfdb.lfunctions.main import render_lfunction_exception
 
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.l_function_top_page")),
-          ("Tensor products", url_for(".index"))]
+          ("Tensor Products", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
@@ -28,7 +26,7 @@ def get_bread(breads=[]):
 @tensor_products_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("tensor_products_index.html", title="Tensor products", bread=bread)
+    return render_template("tensor_products_index.html", title="Tensor Products", bread=bread)
 
 @tensor_products_page.route("/navigate/")
 def navigate():
@@ -37,7 +35,7 @@ def navigate():
 
     type1 = args.get('type1')
     type2 = args.get('type2')
-    return render_template("tensor_products_navigate.html", title="Tensor products navigation", bread=bread, type1=type1 , type2=type2)
+    return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1 , type2=type2)
 
 @tensor_products_page.route("/show/")
 def show():
@@ -134,11 +132,9 @@ def zeros(L):
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 def galois_rep_from_path(p):
-    C = getDBConnection()
     if p[0]=='EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        data = C.elliptic_curves.curves.find_one({'lmfdb_label':p[2]+"."+p[3]+p[4]})
-        ainvs = [int(a) for a in data['ainvs']]
+        ainvs = db.ec_curves.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 

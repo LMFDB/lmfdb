@@ -2,13 +2,6 @@
 
 {% block content %}
 
-<style>
-table,td {
-  border-right:solid 30px transparent;
-} 
-</style>
-  
-
 <p><h2> {{ KNOWL('lf.defining_polynomial', title='Defining polynomial') }}</h2>
 
 <p>
@@ -21,12 +14,12 @@ table,td {
 <h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
   <p>
     <table>
-      <tr><td>Base field:</td> <td>$\Q_{ {{info.p}} }$</td></tr>
+      <tr><td>Base field:</td> <td> {{info.base|safe}}
       <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$ :</td> <td>${{info.n}}$</td></tr>
       <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification exponent') }} $e$ :</td> <td>${{info.e}}$</td></tr>
       <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$ :</td> <td>${{info.f}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$ :</td> <td>${{info.c}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf}}</td></tr>
+      <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf|safe}}</td></tr>
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
       <tr><td> $|{{ info.autstring|safe }}(K/\Q_{ {{info.p}} })|$:</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
@@ -56,19 +49,19 @@ table,td {
 
   <p><h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
     <table>
-      <tr><td>Unramified subfield:</td><td>{{info.unram}}</tr>
-      <tr><td>Relative Eisenstein polynomial:</td><td>{{info.eisen}}</tr>
+      <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram}}</tr>
+      <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen}}</tr>
     </table>
   </p>
   <p><h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
     <table>
-      <tr><td>Galois group:</td><td>{{info.gal|safe}}</td></tr>
-      <tr><td>Inertia group:</td><td>{{info.inertia|safe}}</td></tr>
-      <tr><td>Unramified degree:</td><td>${{info.u}}$</td></tr>
-      <tr><td>Tame degree:</td><td>${{info.t}}$</td></tr>
-      <tr><td>Wild slopes:</td><td>{{info.slopes}}</td></tr>
-      <tr><td>Galois Mean Slope:</td><td>${{info.gms}}$</td></tr>
-      <tr><td>Galois Splitting Model:</td><td>{{info.gsm}}</td></tr>
+      <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>{{info.gal|safe}}</td></tr>
+      <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>{{info.inertia|safe}}</td></tr>
+      <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>${{info.u}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>${{info.t}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>{{info.slopes}}</td></tr>
+      <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>${{info.gms}}$</td></tr>
+      <tr><td>{{KNOWL('lf.global_splitting_model', title='Global splitting model')}}:</td><td>{{info.gsm}}</td></tr>
     </table>
   </p>
 

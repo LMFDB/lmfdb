@@ -1,4 +1,4 @@
-from sage.all import lcm, gcd
+from sage.all import lcm, gcd, I
 from sage.plot.graphics import Graphics
 from sage.plot.line import line
 from sage.plot.circle import circle
@@ -6,7 +6,7 @@ from sage.plot.text import text
 from sage.rings.rational import Rational
 from sage.rings.complex_field import ComplexField
 from sage.functions.log import exp
-from sage.symbolic.pynac import I
+#from sage.symbolic.pynac import I
 
 def circle_drops(A,B):
     # Drops going around the unit circle for those A and B.

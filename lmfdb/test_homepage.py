@@ -45,7 +45,7 @@ class HomePageTest(LmfdbTest):
         Check that the links in Box 3 work.
         """
         homepage = self.tc.get("/").data
-        self.check(homepage, "/L/", 'Holomorphic cusp form')
+        self.check(homepage, "/L/", 'Holomorphic Cusp Form')
         self.check(homepage, "/ModularForm/", r'Maass Forms on \(\GL(2,\Q) \)')
         self.check(homepage, "/EllipticCurve/Q/", 'curve, label or isogeny class label')
         self.check(homepage, "/NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')

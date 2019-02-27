@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import lmfdb
 from lmfdb.base import LmfdbTest
 from lmfdb.WebCharacter import WebDirichlet, WebHecke
+from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
 
@@ -108,6 +108,10 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
 
+    def test_valuefield(self):
+        W = self.tc.get('/Character/Dirichlet/13/2')
+        assert  'Value Field' in W.data
+
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -163,7 +167,7 @@ class DirichletCharactersTest(LmfdbTest):
         """ Check that the L-function link for 9999/2 is displayed if and only if the L-function data is present"""
         W = self.tc.get('/Character/Dirichlet/9999/2')
         assert '/SatoTateGroup/0.1.300' in W.data
-        b = lmfdb.lfunctions.LfunctionDatabase.getInstanceLdata('Character/Dirichlet/9999/2')
+        b = get_lfunction_by_url('Character/Dirichlet/9999/2')
         assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.data)
         
     def test_dirichletchar99999999999999999lfunc(self):

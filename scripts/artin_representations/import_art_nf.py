@@ -1,3 +1,4 @@
+#!/usr/local/bin/sage -python
 import sys, time, os
 assert time
 import bson
@@ -93,6 +94,9 @@ def artrepload(l):
   l['Conductor_key'] = cond_key
   l['NFGal'] = makels(l['NFGal'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
+  # Extract containing representation from the label
+  cont = l['Baselabel'].split('.')[2]
+  l['Container'] = cont
   #print str(l)
   count +=1
   outrecs.append(l)
@@ -162,9 +166,9 @@ for path in sys.argv[1:]:
 	      nfgal.insert_many(outrecs)
 	    if case == 'art rep':
 	      rep.insert_many(outrecs)
-
-if case == 'nfgal':
-  reindex_collection(art, 'field_data', 'field_data_new')
-if case == 'art rep':
-  reindex_collection(art, 'representations', 'representations_new')
+    if case == 'nfgal':
+      reindex_collection(art, 'field_data', 'field_data_new')
+    if case == 'art rep':
+      reindex_collection(art, 'representations', 'representations_new')
+    fn.close()
 

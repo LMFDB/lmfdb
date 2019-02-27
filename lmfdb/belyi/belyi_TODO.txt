@@ -1,0 +1,26 @@
+TODO:
+- genus 0 corner cases
+- hyperelliptic RR
+- hyperelliptic Newton
+- deg 7, g=2,3
+- show automorphism group on lmfdb page for galmaps
+- display coeffs for map, phi = (a0xy+a1xy^2+...)/(b0+b1x+...) where a0=... etc
+- database of passports even if the maps are not computed
+- incorporate Bailey's drawing software
+
+It would be nice if:
+- sort a,b,c
+- we use dots instead of dashes in the labels
+- we display the full S_3-action of maps (including the data when these are the same, and a map is isomorphic to one of its pullbacks under an element of S_3), including 1/phi, ...
+- we display the genus of the Galois closure and its ramification type; and then to link this with the curves with "many automorphisms"
+- we label arithmetic maps, and when they are congruence
+- we identify the (non)congruence subgroup of SL_2(ZZ) or Gamma(2) it corresponds to
+- maps with triangle groups mapping to other triangle groups are separately identified (and easy to browse)
+- compute and identify fiber products and imprimitive maps
+- when F=QQ, use polyring over QQ not QQ(nu)
+- Friends
+- embeddings in binary
+- factorization of phi (or divisor)
+- tripleredabs?
+- display info about group
+- download curve/map in magma then in sage and/or pari

@@ -9,6 +9,8 @@
 
 {% else %}
   <h1>You are not logged in</h1>
+  {% if user_can_write %}
+ 
 {#  <div style="margin-bottom: 20px">New user? 
      <a href="{{ url_for('.register_new') }}">Register here</a>
   </div>
@@ -26,6 +28,9 @@
       <tr><td /><td><button name="submit" type="submit">Login</button></td></tr>
     </table>
   </form>
+  {% else %}
+    This server is running with an unprivileged connection. You cannot log in since write access to the database is required for features behind the log in system
+  {% endif %}
 {% endif %}
 
 {% if user_is_authenticated %}
@@ -42,11 +47,6 @@
       <tr>
         <td>Full Name:</td>
         <td><input name="full_name" value="{{info.user.full_name}}" size="50" tabindex="1" /></td>
-        <td/>
-      </tr>
-      <tr>
-        <td>E-Mail:</td>
-        <td><input name="email" value="{{info.user.email}}" size="50" tabindex="2" /></td>
         <td/>
       </tr>
       <tr>

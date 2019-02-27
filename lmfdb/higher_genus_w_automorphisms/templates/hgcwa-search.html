@@ -2,29 +2,41 @@
 
 {% block content %}
 
-<form id="re-search">
+{% include "hgcwa-clean-submit.html" %}
+
+<form id="re-search" onsubmit="cleanSubmitHGCWA(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="paging" value="0"/>
 <table border="0">
 
 <tr>
-<td align=left> 
+<td align=left>
 {{KNOWL('ag.curve.genus',title='Genus')}}:</td><td align=left> <input type='text' name='genus' size="5" value="{{info.genus}}">
 </td>
-<td align=left> 
-Group: <td align=left> <input type="text" name="group" size="8" value="{{info.group}}" > 
 
-<td align=left> 
+<td align=left>
 {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
 <td align=left> <input type="text" name="signature" size="15" value="{{info.signature}}" >
 
 </tr>
 
-<tr><td>
-	      {{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
+<tr align=left>
+
+<td align=left>
+{{KNOWL('group.order',title='Group order(s)')}}:
+<td align=left> <input type="text" name="groupsize" size="15" value="{{info.groupsize}}" >
+<td align=left>
+{{KNOWL('curve.highergenus.aut.groupnotation',title="Group identifier")}}:
+<td align=left> <input type="text" name="group" size="8" value="{{info.group}}" >
 </td>
 
-  <td> <select name='inc_hyper'>
+</tr>
+
+<tr><td>
+{{KNOWL('ag.hyperelliptic_curve',title='Hyperelliptic curve(s)')}}:
+</td>
+
+  <td> <select id='inc_hyper' name='inc_hyper'>
 {% if info.inc_hyper == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -40,13 +52,13 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
-
-<td >
-	 {{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
 </td>
 
-  <td> <select name='inc_cyc_trig'>
+<td >
+{{KNOWL('ag.cyclic_trigonal',title='Cyclic trigonal curve(s)')}}:
+</td>
+
+  <td> <select id='inc_cyc_trig' name='inc_cyc_trig'>
 {% if info.inc_cyc_trig == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -62,14 +74,14 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
+</td>
 
 
 <td>
-	      Full automorphism group:
+{{KNOWL('curve.highergenus.aut.full',title="Full automorphism group")}}:
 </td>
 
-  <td> <select name='inc_full'>
+  <td> <select id='inc_full' name='inc_full'>
 {% if info.inc_full == "only" %}
            <option value="include">include</option>
            <option value="exclude">exclude</option>
@@ -85,47 +97,42 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
            <option value="only">only</option>
 {% endif %}
 {% endif %}
-</td> 
-  
-  
+</td>
+
+
 </tr>
 
 <tr>
 
- <td align=left> 
+ <td align=left>
 {{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family')}}:
 <td align=left> <input type="text" name="dim" size="5" value="{{info.dim}}" > </td>
 
-  
-<td align='left' colspan='4'>Maximum number of families to display: <input type='text' name='count' value="{{info.count}}" size='10'>
+
+<td align='left' colspan='4'>Maximum number of families to display: <input type='text' id='count' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
 
 <tr>
-<td align=left colspan="2"> 
+  <td>
 <button type='submit' value='refine'>Search again</button>
-</td></tr>
+</td>
+
+<td align=left colspan="3">
+{% if info.results|length > 0 %}
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+{% endif %}
+
+</td>
+</tr>
+
 </table>
 </form>
 
-
-
-{% if info.err is defined %}
-  <p>
-    Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)"> </p>
-{% else  %}
-
-
-<h2> Results: ({{info.report}})
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-</h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -134,13 +141,13 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
   <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}}</th>
   <th>{{KNOWL('ag.curve.genus',title='Genus')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension')}}</th>
-  <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='GAP/Magma group')}}</th>
+  <th>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group')}}</th>
   <th>{{KNOWL('curve.highergenus.aut.signature',title='Signature')}}</th>
 </tr>
 </thead>
 <tbody>
 
-{% for field in info.fields: %}
+{% for field in info.results: %}
 <tr>
 
   <td align='left'><a href="/HigherGenus/C/Aut/{{field.passport_label}}">{{field.passport_label}}</a></td>
@@ -156,19 +163,16 @@ Group: <td align=left> <input type="text" name="group" size="8" value="{{info.gr
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
+{% if info.results|length > 0 %}
+  <form>
+Download displayed results for 
+<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
+<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
+</form>
 {% endif %}
-
 {% endif %}
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

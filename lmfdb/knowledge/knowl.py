@@ -1,151 +1,12 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
-from lmfdb.base import getDBConnection
 from datetime import datetime
-import pymongo
-ASC = pymongo.ASCENDING
-DSC = pymongo.DESCENDING
 
-
-def get_knowls():
-    _C = getDBConnection()
-    return _C.knowledge.knowls
-
-def get_meta():
-    """
-    collection of meta-documents, like categories
-    """
-    _C = getDBConnection()
-    return _C.knowledge.meta
-
-
-def get_deleted_knowls():
-    _C = getDBConnection()
-    return _C.knowledge.deleted_knowls
-
-
-def save_history(knowl, who):
-    """
-    saves history tokens in a collection "history".
-    each entry has the _id of the updated knowl and at least a timestamp
-    and a reference to who has edtited it. also, the title is nice to
-    avoid an additional lookup when listing the history!
-    'state' can either be 'saved' (for the recent changes list) or 'locked'.
-    TODO also calculate a diff with python's difflib and store it here.
-    """
-    history = getDBConnection().knowledge.history
-    h_item = {'_id': knowl.id,
-              'title': knowl.title,
-              'time': datetime.utcnow(),
-              'who': who,
-              'state': 'saved'}
-    history.save(h_item)
-
-
-def get_history(limit=25):
-    """
-    returns the last @limit history items
-    """
-    history = getDBConnection().knowledge.history
-    return history.find({'state': 'saved'}, sort=[('time', DSC)], limit=limit)
-
-
-def is_locked(knowlid, delta_min=10):
-    """
-    returns a lock (as True), if there has been a lock in the last @delta_min minutes; else False.
-    attention, it discards all locks prior to @delta_min!
-    """
-    from datetime import datetime, timedelta
-    now = datetime.utcnow()
-    tdelta = timedelta(minutes=delta_min)
-    time = now - tdelta
-    history = getDBConnection().knowledge.history
-    #try:
-    history.remove({'state': 'locked', 'time': {'$lt': time}})
-    #except:
-    #    return None 
-    # search for both: either locked OR has been saved in the last 10 min
-    lock = history.find_one({'_id': knowlid, 'time': {'$gte': time}})
-    return lock or False
-
-
-def set_locked(knowl, who):
-    """
-    when a knowl is edited, a lock is created. who is the user id.
-    """
-    history = getDBConnection().knowledge.history
-    lock_item = {'_id': knowl.id,
-                 'title': knowl.title,
-                 'time': datetime.utcnow(),
-                 'who': who,
-                 'state': 'locked'}
-    history.save(lock_item)
-
-
-def get_knowl(ID, fields={"history": 0, "_keywords": 0}):
-    return get_knowls().find_one({'_id': ID}, fields)
-
-
-def knowl_title(kid):
-    """
-    just the title, used in the knowls in the templates for the pages.
-    returns None, if knowl does not exist.
-    """
-    k = get_knowl(kid, ['title'])
-    return k['title'] if k else None
-
-
-def knowl_exists(kid):
-    """
-    checks, if the given knowl with ID=@kid exists
-    """
-    return get_knowl(kid) is not None
-
-
-def extract_cat(kid):
-    if not hasattr(kid, 'split'):
-        return None
-    return kid.split(".")[0]
-
-# categories, level 0, never change this id
-CAT_ID = 'categories'
-
-
-def refresh_knowl_categories():
-    """
-    when saving, we refresh the knowl categories
-    (actually, this should only happen if it is a new knowl!)
-
-    TODO this should only be called by a housekeeping task, saving a new
-    knowl should be a simple set union with the existing list of categories
-    """
-    # assumes that all actual knowls have a title field
-    cats = set((extract_cat(_['_id']) for _ in get_knowls().find({},[])))
-    # set the categories list in the categories document in the 'meta' collection
-    get_meta().save({'_id': CAT_ID, 'categories': sorted(cats)})
-    return str(cats)
-
-
-def update_knowl_categories(cat):
-    """
-    when a new knowl is saved, it's category could be new. this function
-    ensures that we know it. this is much more efficient than the
-    refresh variant.
-    """
-    get_meta().update({'_id': CAT_ID}, {'$addToSet': {'categories': cat}})
-
-
-def get_categories():
-    c_doc = get_meta().find_one(CAT_ID)
-    return c_doc.get('categories', []) if c_doc else []
-
-
-def get_knowls_by_category(cat):
-    """searching for IDs that start with cat and continue with a dot + at least one char"""
-    # TODO later on search for the knowl field 'cat'
-    # return get_knowls().find({'_id' : { "$regex" : r"^%s\..+" % cat }}, ['title'])
-    return get_knowls().find({'cat': cat}, ['title'])
+from lmfdb.db_backend import db, PostgresBase, DelayCommit
+from lmfdb.db_encoding import Array
+from lmfdb.users.pwdmanager import userdb
+from psycopg2.sql import SQL, Identifier, Placeholder
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -155,6 +16,8 @@ hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
 common_words = set(
     ['and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'])
 
+# categories, level 0, never change this id
+#CAT_ID = 'categories'
 
 def make_keywords(content, kid, title):
     """
@@ -173,9 +36,212 @@ def make_keywords(content, kid, title):
     kws = filter(lambda _: _ not in common_words, kws)
     return kws
 
+def extract_cat(kid):
+    if not hasattr(kid, 'split'):
+        return None
+    return kid.split(".")[0]
+
+# We don't use the PostgresTable from lmfdb.db_backend
+# since it's aimed at constructing queries for mathematical objects
+
+class KnowlBackend(PostgresBase):
+    _default_fields = ['authors', 'cat', 'content', 'last_author', 'quality', 'timestamp', 'title'] # doesn't include id
+    def __init__(self):
+        PostgresBase.__init__(self, 'db_knowl', db)
+        self._rw_knowldb = db.can_read_write_knowls()
+
+    def can_read_write_knowls(self):
+        return self._rw_knowldb
+
+    def get_knowl(self, ID, fields=None):
+        if fields is None:
+            fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, (ID,))
+        if cur.rowcount > 0:
+            res = cur.fetchone()
+            return {k:v for k,v in zip(fields, res)}
+
+    def search(self, category="", filters=[], keywords="", author=None, sort=None):
+        restrictions = []
+        values = []
+        if category:
+            restrictions.append(SQL("cat = %s"))
+            values.append(category)
+        if len(filters) > 0:
+            restrictions.append(SQL("quality = ANY(%s)"))
+            values.append(Array([q for q in filters if q in knowl_qualities]))
+        if keywords:
+            keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
+            if keywords:
+                restrictions.append(SQL("_keywords @> %s"))
+                values.append(keywords)
+        if author is not None:
+            restrictions.append(SQL("authors @> %s"))
+            values.append([author])
+        selecter = SQL("SELECT id, title FROM kwl_knowls")
+        if restrictions:
+            selecter = SQL("{0} WHERE {1}").format(selecter, SQL(" AND ").join(restrictions))
+        if sort is not None:
+            selecter = SQL("{0} ORDER BY {1}").format(selecter, self._sort_str(sort))
+        cur = self._execute(selecter, values)
+        return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
+
+    def check_title_and_content(self):
+        # This should really be done at the database level now that we can require columns to be not null
+        cur = self._execute(SQL("SELECT COUNT(*) FROM kwl_knowls WHERE title IS NULL"))
+        notitle = cur.fetchone()[0]
+        cur = self._execute(SQL("SELECT COUNT(*) FROM kwl_knowls WHERE content IS NULL"))
+        nocontent = cur.fetchone()[0]
+        assert notitle == 0, "%s knowl(s) don't have a title" % notitle
+        assert nocontent == 0, "%s knowl(s) don't have content" % nocontent
+
+    def save(self, knowl, who):
+        """who is the ID of the user, who wants to save the knowl"""
+        new_history_item = self.get_knowl(knowl.id, ['id'] + self._default_fields + ['history'])
+        new_knowl = new_history_item is None
+        if new_knowl:
+            history = []
+            authors = []
+        else:
+            history = new_history_item.pop('history')
+            if history is not None:
+                history += [new_history_item]
+            else:
+                history = []
+            authors = new_history_item.pop('authors', [])
+            if authors is None:
+                authors = []
+
+        if who and who not in authors:
+            authors = authors + [who]
+
+        search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
+        cat = extract_cat(knowl.id)
+        values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
+        with DelayCommit(self):
+            insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
+            insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
+            self._execute(insterer, (knowl.id,) + values + values)
+            self.save_history(knowl, who)
+
+    def update(self, kid, key, value):
+        if key not in self._default_fields + ['history', '_keywords']:
+            raise ValueError("Bad key")
+        updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
+        self._execute(updater, (value, kid))
+
+    def save_history(self, knowl, who):
+        """
+        saves history tokens in a collection "history".
+        each entry has the _id of the updated knowl and at least a timestamp
+        and a reference to who has edited it. Also, the title is nice to
+        avoid an additional lookup when listing the history!
+        'state' can either be 'saved' (for the recent changes list) or 'locked'.
+        TODO also calculate a diff with python's difflib and store it here.
+        """
+        insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
+        now = datetime.utcnow()
+        values = (knowl.title, now, who, 'saved')
+        self._execute(insterer, (knowl.id,) + values + values)
+
+    def get_history(self, limit=25):
+        """
+        returns the last @limit history items
+        """
+        cols = ("id", "title", "time", "who")
+        selecter = SQL("SELECT {0} FROM kwl_history WHERE state = 'saved' ORDER BY time DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
+        cur = self._execute(selecter, (limit,))
+        return [{k:v for k,v in zip(cols, res)} for res in cur]
+
+    def delete(self, knowl):
+        """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
+        with DelayCommit(self):
+            insterer = SQL("INSERT INTO kwl_deleted (id, {0}) VALUES (%s, {1})").format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(', ').join(Placeholder() * len(self._default_fields)))
+            values = self.get_knowl(knowl.id)
+            self._execute(insterer, [knowl.id] + [values[i] for i in self._default_fields])
+            deletor = SQL("DELETE FROM kwl_knowls WHERE id = %s")
+            self._execute(deletor, (knowl.id,))
+
+    def is_locked(self, knowlid, delta_min=10):
+        """
+        if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
+        attention, it discards all locks prior to @delta_min!
+        """
+        from datetime import datetime, timedelta
+        now = datetime.utcnow()
+        tdelta = timedelta(minutes=delta_min)
+        time = now - tdelta
+        deletor = SQL("DELETE FROM kwl_history WHERE state = 'locked' AND time <= %s")
+        cur = self._execute(deletor, (time,))
+        selecter = SQL("SELECT who, time FROM kwl_history WHERE id = %s AND time >= %s LIMIT 1")
+        cur.execute(selecter, (knowlid, time))
+        if cur.rowcount > 0:
+            return {k:v for k,v in zip(["who", "time"], cur.fetchone())}
+
+    def set_locked(self, knowl, who):
+        """
+        when a knowl is edited, a lock is created. who is the user id.
+        """
+        insterer = SQL("INSERT INTO kwl_history (id, title, time, who, state) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (title, time, who, state) = (%s, %s, %s, %s)")
+        now = datetime.utcnow()
+        self._execute(insterer, (knowl.id, knowl.title, now, who, 'locked', knowl.title, now, who, 'locked'))
+
+    def knowl_title(self, kid):
+        """
+        just the title, used in the knowls in the templates for the pages.
+        returns None, if knowl does not exist.
+        """
+        k = self.get_knowl(kid, ['title'])
+        return k['title'] if k else None
+    def knowl_exists(self, kid):
+        """
+        checks if the given knowl with ID=@kid exists
+        """
+        return self.get_knowl(kid) is not None
+
+    def get_categories(self):
+        selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls")
+        cur = self._execute(selecter)
+        return sorted([res[0] for res in cur])
+
+    def cleanup(self, max_h=50):
+        """
+        reindexes knowls, also the list of categories. prunes history.
+        returns the list of categories (as a string), a count of the the number of knowls reindexed and the number of histories pruned.
+        """
+        with DelayCommit(self):
+            cats = self.get_categories()
+            selecter = SQL("SELECT (id, content, title) FROM kwl_knowls")
+            cur = self._execute(selecter)
+            updater = SQL("UPDATE kwl_knowls SET (cat, _keywords) = (%s, %s) WHERE id = %s")
+            for kid, content, title in cur:
+                cat = extract_cat(kid)
+                search_keywords = make_keywords(content, kid, title)
+                self._execute(updater, (cat, search_keywords, kid))
+            hcount = 0
+            selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
+            cur = self._execute(selecter)
+            updater = SQL("UPDATE kwl_knowls SET history = %s WHERE id = %s")
+            for kid, history in cur:
+                if len(history) > max_h:
+                    hcount += 1
+                    self._execute(updater, (history[-max_h:], kid))
+            counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
+            cur = self._execute(counter)
+            reindex_count = int(cur.fetchone()[0])
+        return cats, reindex_count, hcount
+
+knowldb = KnowlBackend()
+
+def knowl_title(kid):
+    return knowldb.knowl_title(kid)
+
+def knowl_exists(kid):
+    return knowldb.knowl_exists(kid)
+
 # allowed qualities for knowls
 knowl_qualities = ['beta', 'ok', 'reviewed']
-
 
 class Knowl(object):
     def __init__(self, ID, template_kwargs=None):
@@ -187,7 +253,7 @@ class Knowl(object):
         self.template_kwargs = template_kwargs or {}
 
         self._id = ID
-        data = get_knowl(ID)
+        data = knowldb.get_knowl(ID)
         if data:
             self._title = data.get('title', '')
             self._content = data.get('content', '')
@@ -206,37 +272,11 @@ class Knowl(object):
             self._timestamp = datetime.utcnow()
 
     def save(self, who):
-        """who is the ID of the user, who wants to save the knowl"""
-        new_history_item = get_knowl(self.id)
-        new_knowl = new_history_item is None
-        search_keywords = make_keywords(self.content, self.id, self.title)
-        cat = extract_cat(self.id)
-        update_op = {"$set": {
-                     'content': self.content,
-                     'title': self.title,
-                     'cat': cat,
-                     'quality': self.quality,
-                     'last_author': who,
-                     'timestamp': self.timestamp,
-                     '_keywords': search_keywords
-                     }}
-        if not new_knowl:
-            update_op["$push"] = {"history": new_history_item}
-        if who:
-            update_op['$addToSet'] = {"authors": who}
-        get_knowls().update({'_id': self.id}, update_op, upsert=True)
-        # TODO instead of refreshing all knowl categories, just do a
-        # set union with the existing categories list and the one from
-        # this new knowl!
-        if new_knowl:
-            update_knowl_categories(cat)
-        save_history(self, who)
+        knowldb.save(self, who)
 
     def delete(self):
         """deletes this knowl from the db. (DANGEROUS, ADMIN ONLY!)"""
-        get_deleted_knowls().save(get_knowls().find_one({'_id': self._id}))
-        get_knowls().remove({'_id': self._id})
-        refresh_knowl_categories()
+        knowldb.delete(self)
 
     @property
     def authors(self):
@@ -247,12 +287,14 @@ class Knowl(object):
         Basically finds all full names for all the referenced authors.
         (lookup for all full names in just *one* query, hence the or)
         """
-        a_query = [{'_id': _} for _ in self.authors]
-        a = []
-        if len(a_query) > 0:
-            users = getDBConnection().userdb.users
-            a = users.find({"$or": a_query}, ["full_name"])
-        return a
+        return userdb.full_names(self.authors)
+
+    def last_author(self):
+        """
+        Full names for the last authors.
+        (lookup for all full names in just *one* query, hence the or)
+        """
+        return userdb.lookup(self._last_author)["full_name"]
 
     @property
     def id(self):
@@ -297,7 +339,11 @@ class Knowl(object):
         Example: KNOWL('algebra.dirichlet_series') should be replaced
         with "Dirichlet Series" and nothing else.
         """
-        return self._title
+        title = self._title
+        #from flask import g
+        # if self._quality=='beta' and g.BETA:
+        #     title += " (beta status)"
+        return title
 
     @title.setter
     def title(self, title):
@@ -307,11 +353,10 @@ class Knowl(object):
         self._store_db("title", title)
 
     def _store_db(self, key, value):
-        get_knowls().update({'_id': self._id},
-                            {'$set': {key: value}})
+        knowldb.update(self.id, key, value)
 
     def exists(self):
-        return get_knowls().find({'_id': self._id}).count() > 0
+        return knowldb.knowl_exists(self._id)
 
     def data(self, fields=None):
         """
@@ -320,7 +365,7 @@ class Knowl(object):
         the given fields.
         """
         if not self._title or not self._content:
-            data = get_knowl(self._id, fields)
+            data = knowldb.get_knowl(self._id, fields)
             if data:
                 self._title = data['title']
                 self._content = data['content']

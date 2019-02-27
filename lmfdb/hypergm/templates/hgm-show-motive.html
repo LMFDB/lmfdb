@@ -7,33 +7,36 @@
 <p>
   <p>
     <table>
-      <tr><td> $A$: </td> <td> ${{ info.A }}$ </td></tr>
-      <tr><td> $B$: </td> <td> ${{ info.B }}$ </td></tr>
-      <tr><td> $t$: </td> <td> ${{ info.t }}$ </td></tr>
+      <tr><td> $A$: <td> $[{{ info.A }}]$ </td></tr>
+      <tr><td> $B$: <td> $[{{ info.B }}]$ </td></tr>
+      <tr><td> $t$: <td> ${{ info.t }}$ </td></tr>
     </table>
 </p>
 
 <p><h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
   <p>
     <table>
-      <tr><td>Hodge vector:<td>&nbsp;&nbsp;<td>${{info.hodge}}$</tr>
-      <tr><td>Signature:<td>&nbsp;&nbsp;<td>{{info.sig}}</tr>
-      <tr><td>Conductor<td>&nbsp;&nbsp;<td>${{info.cond}}$</tr>
-      <tr><td>Determinant:<td>&nbsp;&nbsp;<td>$ {{info.det}}$</tr>
-      <tr><td>Root number:<td>&nbsp;&nbsp;<td>$ {{info.sign}}$</tr>
+      <tr><td>{{KNOWL('hgm.type', 'Type')}}:<td>&nbsp;&nbsp;<td>{{info.type}}
+      <tr><td>{{KNOWL('mot.hodgevector', 'Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.hodge}}$
+      <tr><td>{{KNOWL('hgm.familyhodgevector', 'Family Hodge vector')}}:<td>&nbsp;&nbsp;<td>${{info.famhodge}}$
+      <tr><td>{{KNOWL('hgm.signature', 'Signature')}}:<td>&nbsp;&nbsp;<td>{{info.sig}}
+      <tr><td>{{KNOWL('hgm.conductor', 'Conductor')}}:<td>&nbsp;&nbsp;<td>${{info.cond}}$
+      <tr><td>{{KNOWL('hgm.determinant', 'Determinant character')}}:<td>&nbsp;&nbsp;<td>$\chi_{  {{info.det}} }$
+      <tr><td>{{KNOWL('lfunction.sign', 'Root number')}}:<td>&nbsp;&nbsp;<td>$ {{info.sign}}$
 {# 
       <tr><td>Second moment: <td> </tr>
       <tr><td>Fourth moment: <td> </tr>
 #} 
-      <tr><td>Difficulty: <td>&nbsp;&nbsp;<td>${{info.req}}$  </tr>
+      <tr><td>{{KNOWL('lfunction.difficulty', 'Difficulty')}}: <td>&nbsp;&nbsp;<td>${{info.req}}$  </tr>
     </table>
   </p>
 
-<p><h2> Local information</h2>
+<p><h2> {{ KNOWL('hgm.local_information', 'Local information') }}</h2>
 
   <p>
     <table>
-<tr> <td> $p$ <td> $c_p$ <td> $F_p(x)$ <td> 2 <td> 3 <td> 5 <td> 7 </tr>
+<tr> <th> $p$ <th> $c_p$ <th> $F_p(x)$ <th> 2 <th> 3 <th> 5 <th> 7 
+  <th> $|\textrm{Gal}(F_p(x))|$ <th> $|D|$
 {% for loc in info.locinfo: %}
 <tr><td> ${{loc[0]}}$: 
 <td>${{loc[1]}}$
@@ -42,8 +45,10 @@
 <td>${{loc[4]}}$
 <td>${{loc[5]}}$
 <td>${{loc[6]}}$
-</tr>
+<td>${{loc[7]}}$
+<td>${{loc[8]}}$
 {% endfor %}
+<tr><td><td><td><td>${{info.lcms[0]}}$<td> ${{info.lcms[1]}}$ <td>${{info.lcms[2]}}$ <td>${{info.lcms[3]}}$ 
 </table>
 
 

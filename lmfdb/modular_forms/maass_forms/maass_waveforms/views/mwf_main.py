@@ -23,16 +23,17 @@ AUTHORS:
 
 import flask
 from flask import render_template, url_for, request, make_response, send_file
-import bson
 import StringIO
 from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
-from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters, connect_db, get_collections_info
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
+from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
+from bson.binary import Binary
 
 
 # this is a blueprint specific default for the tempate system.
@@ -70,20 +71,15 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         mwf_logger.debug("browse info=%s" % info)
         return render_browse_all_eigenvalues(**info)
 
-    DB = connect_db()
-    if not info['collection'] or info['collection'] == 'all':
-        # FIXME: metadata returned by get_collections_info is never used, only side effect appears to be logging messages
-        # md = get_collections_info()
-        get_collections_info()
     info['cur_character'] = character
     if level > 0:
-        info['maass_weight'] = DB.weights(int(level))
+        info['maass_weight'] = maass_db.weights(int(level))
         info['cur_level'] = level
 
     if weight > -1:
         info['cur_weight'] = weight
         if level > 0:
-            info['maass_character'] = DB.characters(int(level), float(weight))
+            info['maass_character'] = maass_db.characters(int(level), float(weight))
     if character > - 1:
         info['cur_character'] = character
 
@@ -92,21 +88,21 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         mwf_logger.debug("info=%s" % info)
         mwf_logger.debug("search=%s" % search)
         return render_search_results_wp(info, search)
-    title = 'Maass forms'
-    info['list_of_levels'] = DB.levels()
+    title = 'Maass Forms'
+    info['list_of_levels'] = maass_db.levels()
     if info['list_of_levels']:
         info['max_level'] = max(info['list_of_levels'])
     else:
         info['max_level'] = 0
     mwf_logger.debug("info3=%s" % info)
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass forms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['title'] = title
-    DB.set_table()
-    DB.table['ncols'] = 10
-    info['DB'] = DB
-    info['dbcount'] = DB.count()
+    maass_db.set_table()
+    maass_db.table['ncols'] = 10
+    info['DB'] = maass_db
+    info['dbcount'] = maass_db.count()
     info['limit'] = maxNumberOfResultsToShow
     return render_template("mwf_navigate.html", **info)
 
@@ -124,11 +120,11 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     info['max_R'] = max_R
     info['coloreven'] = rgbtohex(signtocolour(1))
     info['colorodd'] = rgbtohex(signtocolour(-1))
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
 
-    return render_template("mwf_browse_graph.html", title='Browsing graph of Maass forms', **info)
+    return render_template("mwf_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
 
 
 @mwf.route("/<maass_id>", methods=['GET', 'POST'])
@@ -139,20 +135,16 @@ def render_one_maass_waveform(maass_id, **kwds):
     in a format that is readable by python.
     """
     info = get_args_mwf(**kwds)
-    try:
-        info['maass_id'] = bson.objectid.ObjectId(maass_id)
-    except bson.errors.InvalidId:
-        return flask.abort(404)
+    info['maass_id'] = maass_id
     mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
     if (info.get('download', '') == 'coefficients'  or
         info.get('download', '') == 'all'):
-        DB = connect_db()
         maass_id = info['maass_id']
         try:
-            f = WebMaassForm(DB, maass_id)
+            f = WebMaassForm(maass_id)
         except KeyError:
             flask.abort(404)
-        filename = str(f._maassid) + '.txt'
+        filename = str(f._maass_id) + '.txt'
         if info.get('download', '') == 'coefficients':
             res = f.coeffs
         else:
@@ -178,16 +170,11 @@ def plot_maassform(maass_id):
     Render the plot of the Maass waveform as a pg-file.
     Loads it from the database.
     """
-    try:
-        maass_id = bson.objectid.ObjectId(maass_id)
-    except bson.errors.InvalidId:
+    plot = maass_db.get_maassform_plot_by_id(maass_id)
+    if not plot:
         return flask.abort(404)
-    DB = connect_db()
-    data = DB.get_maassform_plot_by_id(maass_id)
-    if not data:
-        return flask.abort(404)
-    data = data['plot']
-    response = make_response(loads(data))
+
+    response = make_response(loads(Binary(str(plot), 0)))
     response.headers['Content-type'] = 'image/png'
     return response
 
@@ -200,17 +187,16 @@ def render_one_maass_waveform_wp(info, prec=9):
     indicates to round to 0 when the difference is less than 1e-`prec`.
     """
     info["check"] = []
-    DB = connect_db()
     maass_id = info['maass_id']
     mwf_logger.debug("id1={0}".format(maass_id))
     try:
-        MF = WebMaassForm(DB, maass_id)
+        MF = WebMaassForm(maass_id)
     except KeyError:
         return flask.abort(404)
     info['MF'] = MF
-    info['title'] = "Maass form"
-    info['bread'] = [('Modular forms', url_for('mf.modular_form_main_page')),
-                     ('Maass waveforms', url_for('.render_maass_waveforms'))]
+    info['title'] = "Maass Form"
+    info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
+                     ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     if hasattr(MF,'level'):
         info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
         info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
@@ -257,7 +243,7 @@ def render_one_maass_waveform_wp(info, prec=9):
                           ('All coefficients of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
                                    download='coefficients')) ]
-    mwf_logger.debug("count={0}".format(DB.count()))
+    mwf_logger.debug("count={0}".format(maass_db.count()))
     ch = info['MF'].character
     s = "\( \chi_{" + str(level) + "}(" + str(ch) + ",\cdot) \)"
     # Q: Is it possible to get the knowls into the properties?
@@ -319,16 +305,14 @@ def render_search_results_wp(info, search):
     mwf_logger.debug("Search:{0}".format(search))
     if not isinstance(search, dict):
         search = {}
-    if 'limit' not in search:
-        search['limit'] = maxNumberOfResultsToShow
-    else:
-        search['limit'] = min(maxNumberOfResultsToShow, search['limit'])
-    if 'skip' not in search:
-        search['skip'] = 0
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),
-             ('Maass forms', url_for('.render_maass_waveforms'))]
+    limit = search.pop('limit', maxNumberOfResultsToShow)
+    if limit > maxNumberOfResultsToShow:
+        limit = maxNumberOfResultsToShow
+    offset = search.pop('skip', 0)
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
-    info['evs'] = evs_table2(search)
+    info['evs'] = evs_table2(search, limit=limit, offset=offset)
     mwf_logger.debug("in render_search_results. info2={0}".format(info))
     if int(info.get('weight', 0)) == 1:
         info['wtis1'] = "selected"
@@ -339,25 +323,24 @@ def render_search_results_wp(info, search):
     if info.get('browse', None) is not None:
         info['title'] = 'Browse Maassforms'
         if int(info.get('weight', -1)) in [0, 1]:
-            info['title'] += ' of weight {0}'.format(info['weight'])
+            info['title'] += ' of Weight {0}'.format(info['weight'])
             if info.get('level', 0) > 0:
-                info['title'] += ' and level {0}'.format(info['level'])
+                info['title'] += ' and Level {0}'.format(info['level'])
         elif int(info.get('Level', 0)) > 0:
-            info['title'] += ' of level {0}'.format(info['level'])
+            info['title'] += ' of Level {0}'.format(info['level'])
     else:
         info['title'] = 'Search Results'
     mwf_logger.debug("in render_search_results. info={0}".format(info))
     return render_template("mwf_display_search_result.html", **info)
 
 
-def evs_table2(search, twodarray=False):
+def evs_table2(search, twodarray=False, limit=50, offset=0):
     r"""
     Returns an object containing the results of a search for Maass forms.
     """
-    DB = connect_db()
     table = []
     nrows = 0
-    fs = DB.get_Maass_forms(search)
+    fs = maass_db.get_Maass_forms(search, limit=limit, offset=offset)
     mwf_logger.debug("numrec:{0}".format(len(fs)))
     for f in fs:  # indices:
         row = {}
@@ -374,9 +357,6 @@ def evs_table2(search, twodarray=False):
             row['k'] = k
         ##
         chi = f.get('Character', 0)
-        conrey = f.get('Conrey', 0)
-        if conrey == 0:  # we need to change to conrey's notation
-            chi = DB.getDircharConrey(N, chi)
         ## Now get the COnrey number.
         ## First the character
         if k == 0:
@@ -395,7 +375,7 @@ def evs_table2(search, twodarray=False):
         row['symmetry'] = st
         er = f.get('Error', 0)
         if er > 0:
-            er = "{0:1.0e}".format(er)
+            er = "{0:1.0e}".format(float(er))
         else:
             er = "unknown"
         row['err'] = er
@@ -421,7 +401,7 @@ def evs_table2(search, twodarray=False):
                 s = 'n/a'
             row['cuspevs'] = s
 
-        url = url_for('mwf.render_one_maass_waveform', maass_id=f.get('_id'))
+        url = url_for('mwf.render_one_maass_waveform', maass_id=f.get('maass_id'))
         row['url'] = url
         nrows += 1
         if twodarray:
@@ -454,8 +434,8 @@ def evs_table2(search, twodarray=False):
         search.pop('limit')
     if 'skip' in search:
         search.pop('skip')
-    evs['totalrecords'] = DB.count(search, filtered=False)
-    evs['totalrecords_filtered'] = DB.count(search, filtered=True)
+    evs['totalrecords'] = maass_db.count(search)
+    evs['totalrecords_filtered'] = len(fs)
 
     return evs
 
@@ -468,7 +448,7 @@ def evs_table2(search, twodarray=False):
 @mwf.route("/Tables", methods=met)
 def render_browse_all_eigenvalues(**kwds):
     info = get_args_mwf(**kwds)
-    bread = [('Modular forms', url_for('mf.modular_form_main_page')),('Maass forms', url_for('.render_maass_waveforms'))]
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),('Maass Forms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
     info['colheads'] = ['Level', 'Weight', 'Char',
                         'Eigenvalue', 'Symmetry',
@@ -488,22 +468,9 @@ def render_browse_all_eigenvalues(**kwds):
 
 @mwf.route("/Tables_get", methods=met)
 def get_table():
-    search = get_search_parameters({})
-    mwf_logger.debug("args=%s" % request.args)
-    mwf_logger.debug("method=%s" % request.method)
-    # mwf_logger.debug("req.form=%s"%request.form)
-    if isinstance(request.form, dict):
-        for key in request.form.keys():
-            mwf_logger.debug("{0}:{1}".format(key, request.form[key]))
-    mwf_logger.debug("search:{0}".format(search))
-    if not isinstance(search, dict):
-        search = {}
-    # if not search.has_key('limit'):
-    search['limit'] = request.form.get('iDisplayLength', 10000)
-    if 'skip' not in search:
-        search['skip'] = 0
-    search['skip'] = request.form.get('iDisplayStart', 0)
-    evs = evs_table2(search, True)
+    limit = request.form.get('iDisplayLength', 10000)
+    offset = request.form.get('iDisplayStart', 0)
+    evs = evs_table2({}, twodarray=True, limit=limit, offset=offset)
     res = {
         "aoColumns": evs['table']['colheads'],
         "aaData": evs['table']['data'],
@@ -514,101 +481,6 @@ def get_table():
     mwf_logger.debug("totalrecords:{0}".format(evs['totalrecords']))
     # print "res=",res
     return res
-
-
-def evs_table(search, twodarray=False):
-    DB = connect_db()
-
-    indices = DB.find_Maass_form_id(search)
-    table = []
-    nrows = 0
-    for fid in indices:
-        f = WebMaassForm(DB, fid, get_coeffs=False)
-        row = {}
-        R = f.R
-        N = f.level
-        k = f.weight
-        if R is None or N is None or k is None:
-            continue
-        row['R'] = R
-        row['N'] = N
-        if k == 0 or k == 1:
-            row['k'] = int(k)
-        else:
-            row['k'] = k
-        # j = f.get('Character',0)
-        ## Now get the COnrey number.
-        ## First the character
-        if k == 0:
-             # s+=url_for('characters.render_Dirichletwebpage',modulus=level,number=ch)
-            row['ch'] = f.the_character()  # conrey_character_name(N,chi)
-        else:
-            row['ch'] = "eta"
-        st = f.symmetry
-        if st == 1:
-            st = "odd"
-        elif st == 0:
-            st = "even"
-        else:
-            st = "n/a"
-        row['symmetry'] = st
-        er = f.error
-        if er > 0:
-            er = "{0:1.0e}".format(er)
-        else:
-            er = "unknown"
-        row['err'] = er
-        dim = f.dim
-        if dim is None:
-            dim = 1  # "undefined"
-        row['dim'] = dim
-        numc = f.num_coeff
-        row['numc'] = numc
-        cev = f.cusp_evs
-        row['fricke'] = 'n/a'
-        row['cuspevs'] = 'n/a'
-        if row['k'] == 0 and isinstance(cev, list):
-            if len(cev) > 1:
-                fricke = cev[1]
-                row['fricke'] = fricke
-            row['cuspevs'] = cev
-        url = url_for('mwf.render_one_maass_waveform', maass_id=f._maassid)
-        row['url'] = url
-        nrows += 1
-        if twodarray:
-            s = '<a href="{0}">{1}</a>'.format(row['url'], row['R'])
-            rowr = [row['N'], row['k'], row['ch'], s,
-                    row['symmetry'], row['err'], row['dim'], row['numc'],
-                    row['fricke'], row['cuspevs']]
-            table.append(rowr)
-        else:
-            # row=row.values()
-            table.append(row)
-    mwf_logger.debug("nrows:".format(nrows))
-    evs = {'table': {}}
-    evs['table']['data'] = table
-    evs['table']['nrows'] = nrows
-    evs['table']['ncols'] = 10
-    evs['table']['colheads'] = []
-    knowls = ['mf.maass.mwf.level', 'mf.maass.mwf.weight', 'mf.maass.mwf.character',
-              'mf.maass.mwf.eigenvalue', 'mf.maass.mwf.symmetry',
-              'mf.maass.mwf.precision', 'mf.maass.mwf.dimension',
-              'mf.maass.mwf.ncoefficients', 'mf.maass.mwf.fricke',
-              'mf.maass.mwf.atkinlehner']
-    titles = ['Level', 'Weight', 'Char',
-              'Eigenvalue', 'Symmetry',
-              'Precision', 'Mult.',
-              'Coeff.', 'Fricke', 'Atkin-Lehner']
-    for i in range(10):
-        evs['table']['colheads'].append((knowls[i], titles[i]))
-    if 'limit' in search:
-        search.pop('limit')
-    if 'skip' in search:
-        search.pop('skip')
-    evs['totalrecords'] = DB.count(search)
-
-    return evs
-
 
 def conrey_character_name(N, chi):
     return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"

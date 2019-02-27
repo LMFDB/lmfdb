@@ -1,3 +1,15 @@
+User-agent: SemrushBot
+Disallow: /static/
+Disallow: /api/
+
+User-agent: SemrushBot-SA
+Disallow: /static/
+Disallow: /api/
+
+User-agent: SemrushBot-SI
+Disallow: /static/
+Disallow: /api/
+
 User-agent: *
 Disallow: /static/
 Disallow: /api/

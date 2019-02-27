@@ -33,7 +33,7 @@
     <td>{{L.degree}}</td>
     <td>{{L.level}}</td>
     <td>{{L.signature}}</td>
-    <td><a href="{{url_for("by_ec_label", label=L.special.label)}}1">Elliptic curve {{L.special.label}}1</a></td>
+    <td><a href="{{url_for("ec.by_ec_label", label=L.special.label)}}1">Elliptic curve {{L.special.label}}1</a></td>
 {% endif %}
 {%- endmacro %}
 

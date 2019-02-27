@@ -34,11 +34,12 @@
 &nbsp;&nbsp;A <a href="random">random Dirichlet character</a> from the database</td>
 </p>
 
-<h2> Find a specific Dirichlet character by {{KNOWL('character.dirichlet.conrey', title="label") }} </h2>
+<h2> Find a specific  {{KNOWL('character.dirichlet', title="Dirichlet character") }} or {{KNOWL('character.dirichlet.group', title="Dirichlet character group") }}  by
+  {{KNOWL('character.dirichlet.conrey', title="label") }} or {{KNOWL('character.dirichlet.modulus', title="modulus") }} </h2>
 <form>
     <input type='text' name='label' size=10 value="{{args.label}}" placeholder="13.2" required>
     <button type='submit' name='lookup' value='1'> Find  </button>
-    <span class="formexample"> e.g. 13.2 -- represents the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\).</span>
+    <span class="formexample"> e.g. 13.2 for the Dirichlet character \(\displaystyle\chi_{13}(2,&middot;)\), or 13 for the group of characters modulo 13.</span>
 </form>
 
 <h2> Search for characters </h2>
@@ -72,6 +73,7 @@ Enter criteria into one or more boxes to restrict the search.
     <input type='hidden' name='limit' value='25'/>
 </form>
 
+{#
 <h2> Create a character table </h2>
 <form action="{{ url_for('characters.dirichlet_table') }}" method="get"> 
     <table>
@@ -86,4 +88,5 @@ Enter criteria into one or more boxes to restrict the search.
         <button type='submit' name='create' value='1' > Create </button>
     </td>
 </form>
+#}
 {% endblock %}

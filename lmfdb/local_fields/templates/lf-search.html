@@ -2,15 +2,13 @@
 
 {% block content %}
 
-<form id="re-search">
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
 <table border="0">
 
 <tr>
 <td align=left> 
 {{KNOWL('lf.degree',title='Degree')}}:</td><td align=left> <input type='text' name='n' size=3 value="{{info.n}}">
-</td>
 <td align=left> 
 {{KNOWL('lf.discriminant_exponent',title='Discriminant exponent')}} $c$:
 <td align=left> <input type="text" name="c" size="3" value="{{info.c}}" >
@@ -19,7 +17,6 @@
 {{KNOWL('nf.galois_group',title='Galois group')}}:
 <td align=left> <input type="text" name="gal" size="8" value="{{info.gal}}" >
 
-</tr>
 <tr>
 <td align=left> 
 Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{info.p}}" ></td>
@@ -28,12 +25,15 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 {{KNOWL('lf.ramification_index',title='Ramification index')}} $e$:
 <td align=left> 
 <input type="text" name="e" size="3" value="{{info.e}}" >
-</tr>
+
+<td align=left>
+  {{KNOWL('lf.top_slope',title='Top slope')}}:
+<td align=left> 
+<input type="text" name="topslope" size="8" value="{{info.topslope}}">
+
 
 <tr>
 <td align='left' colspan='4'>Maximum number of fields to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
-</tr>
 
 <tr>
 <td align=left colspan="2"> 
@@ -43,7 +43,6 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -57,21 +56,11 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </tr>
 </table>
 </form>
-
+{% endif %}
 {% endif %}
 
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-
-
-<h2> Results: ({{info.report}}) </h2>
-
-{% if info.number > 0 %}
+{% include 'matches.html' %}
+{% if info.number %}
 
 <table border=1 cellpadding=5 class="ntdata">
 <thead>
@@ -87,14 +76,14 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 </thead>
 <tbody>
 
-{% for field in info.fields: %}
+{% for field in info.results: %}
 <tr>
 <td align='left'><a href="/LocalNumberField/{{field.label}}">{{info.display_poly(field.coeffs)|safe}}</a></td>
 <td>{{field.p}}</td>
 <td>{{field.e}}</td>
 <td>{{field.f}}</td>
 <td>{{field.c}}</td>
-<td>{{info.group_display(field.gal)}}</td>
+<td>{{info.group_display(field.n, field.gal)}}</td>
 <td>$ {{info.slopedisp(field.slopes, field.t, field.u)}}$</td>
 </tr>
 
@@ -102,19 +91,10 @@ Prime $p$:</td><td align=left> <input type="text" name="p" size="3" value="{{inf
 
 </tbody>
 </table>
-<br>
-
-     {% if info.start > 0 %}
-<a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-<a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-
-
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-{% endif %}
-
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

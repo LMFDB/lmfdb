@@ -35,7 +35,7 @@
 {% endif %}
 
 {% if info['subgroups']|count or info['supgroups']|count %}
-<h2> {{ KNOWL('st_group.subsupgroups', title='Subgoups and Supergroups') }} </h2>
+<h2> {{ KNOWL('st_group.subsupgroups', title='Subgroups and Supergroups') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.subgroups', title='Maximal Subgroups') }}:</td><td>{{info['subgroups']|safe}}</td></tr>
     <tr><td>{{ KNOWL('st_group.supgroups', title='Minimal Supergroups') }}:</td><td>{{info['supgroups']|safe}}</td></tr>

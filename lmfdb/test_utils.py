@@ -21,6 +21,7 @@ from lmfdb.utils import (
     to_dict,
     truncate_number,
     comma,
+    format_percentage,
     signtocolour,
     rgbtohex,
     pol_to_html,
@@ -119,6 +120,13 @@ class UtilsTest(unittest2.TestCase):
         self.assertEqual(comma(123), "123")
         self.assertEqual(comma(123456789), "123,456,789")
 
+    def test_format_percentage(self):
+        r"""
+        Checking utility: format_percentage
+        """
+        self.assertEqual(format_percentage(12,31), '     38.71')
+        self.assertEqual(format_percentage(12,37), '     32.43')
+
     def test_signtocolour(self):
         r"""
         Checking utility: signtocolour
@@ -146,7 +154,7 @@ class UtilsTest(unittest2.TestCase):
                          '<i>x</i><sup>3</sup> + 1')
 
     ################################################################################
-    #  latex/mathjax utilities
+    #  latex/math rendering utilities
     ################################################################################
 
     def test_web_latex(self):
@@ -206,10 +214,10 @@ class UtilsTest(unittest2.TestCase):
         Checking utility: list_to_latex_matrix
         """
         identity_list = [[1,0], [0,1]]
-        identity_rep = '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0 & 1\\end{array}\\right)'
+        identity_rep = '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
         self.assertEqual(list_to_latex_matrix(identity_list), identity_rep)
 
         # malformed matrices should work
         malformed = [[1,0], [0]]
-        malform_rep = '\\left(\\begin{array}{*{2}{r}}1 & 0\\\\0\\end{array}\\right)'
+        malform_rep = '\\left(\\begin{array}{rr}1 & 0\\\\0\\end{array}\\right)'
         self.assertEqual(list_to_latex_matrix(malformed), malform_rep)

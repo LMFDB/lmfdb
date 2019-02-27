@@ -2,12 +2,16 @@
 
 import re
 from lmfdb.lfunctions import logger
+from flask import url_for
 import math
 from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, Primes, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor
 from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from lmfdb.transitive_group import group_display_knowl
-from lmfdb.base import getDBConnection
+from lmfdb.db_backend import db
 from lmfdb.utils import truncate_number
+from lmfdb.hilbert_modular_forms.web_HMF import is_hmf_in_db
+from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
+from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import is_newform_in_db
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -64,7 +68,7 @@ def string2number(s):
     except:
         return s
 
-    
+
 def pair2complex(pair):
     ''' Turns the pair into a complex number.
     '''
@@ -121,7 +125,7 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, truncationexp, precis
     except TypeError:     # mostly a hack for Dirichlet L-functions
         if seriescoefftype == "serieshtml":
             if coeff == "I":
-                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype) 
+                return " + " + "$i$" + "&middot;" + seriesvar(index, seriestype)
             elif coeff == "-I":
                 return "&minus;" + " $i$" + "&middot;" + seriesvar(index, seriestype)
             else:
@@ -295,7 +299,7 @@ def lfuncDShtml(L, fmt):
 #    if fmt == "analytic" or fmt == "langlands":
     if fmt in ["analytic", "langlands", "arithmetic"]:
         ans += "<table class='dirichletseries'><tr>"
-        ans += "<td valign='top'>"  # + "$" 
+        ans += "<td valign='top'>"  # + "$"
         if fmt == "arithmetic":
             ans += "<span class='term'>"
             ans += L.htmlname_arithmetic
@@ -333,9 +337,9 @@ def lfuncDShtml(L, fmt):
                     "serieshtml", "dirichlethtml", -6, 5)
             if tmp != "":
                 nonzeroterms += 1
-            ans = ans + " <span class='term'>" + tmp + "</span> "  
+            ans = ans + " <span class='term'>" + tmp + "</span> "
                 # need a space between spans to allow line breaks. css stops a break within a span
-     
+
             if nonzeroterms > maxcoeffs:
                 break
             if(nonzeroterms % numperline == 0):
@@ -345,16 +349,16 @@ def lfuncDShtml(L, fmt):
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
-            ans = "\[\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \]\n"
+            ans = "\[\\begin{aligned} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{aligned} \]\n"
 
         elif L.Ltype() == "dirichlet":
-            ans = "\[\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{aligned}\]"
             ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
             ans = ans + ", number " + str(L.characternumber) + "."
 
         else:
-            ans = "\[\\begin{equation} \n " + L.texname + \
-                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n " + L.texname + \
+                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{aligned}\]"
     return(ans)
 
 
@@ -370,9 +374,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = "\\begin{equation} \n " + L.texname_arithmetic + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname_arithmetic + " = "
         else:
-            ans = "\\begin{equation} \n " + L.texname + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += "\\prod_p (1 - p^{-s})^{-1}"
         elif L.Ltype() == "dirichlet":
@@ -403,10 +407,13 @@ def lfuncEPtex(L, fmt):
                         "} (1 - \\alpha_{j,p}\\,  p^{-s})^{-1}"
             else:
                 ans += "\\prod_p \\  (1 - \\alpha_{p}\\,  p^{-s})^{-1}"
+        elif L.Ltype() == "general":
+            return ("For information concerning the Euler product, see other "
+                    "instances of this L-function.")
 
         else:
             return("No information is available about the Euler product.")
-        ans += " \n \\end{equation}"
+        ans += " \n \\end{aligned}\]"
         return(ans)
     else:
         return("No information is available about the Euler product.")
@@ -459,25 +466,24 @@ def lfuncEPhtml(L,fmt):
     eptable += "</tr>\n"
     eptable += "</thead>"
     goodorbad = "bad"
-    C = getDBConnection()
     for lf in L.bad_lfactors:
         try:
             thispolygal = list_to_factored_poly_otherorder(lf[1], galois=True)
-            eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" + 
+            eptable += ("<tr><td>" + goodorbad + "</td><td>" + str(lf[0]) + "</td><td>" +
                         "$" + thispolygal[0] + "$" +
                         "</td>")
             if L.degree > 2:
-                eptable += "<td class='galois'>" 
+                eptable += "<td class='galois'>"
                 this_gal_group = thispolygal[1]
                 if this_gal_group[0]==[0,0]:
                     pass   # do nothing, because the local faco is 1
                 elif this_gal_group[0]==[1,1]:
-                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C,'$C_1$') 
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],'$C_1$')
                 else:
-                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+                    eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
                 for j in range(1,len(thispolygal[1])):
                     eptable += "$\\times$"
-                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                    eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
                 eptable += "</td>"
             eptable += "</tr>\n"
 
@@ -497,15 +503,15 @@ def lfuncEPhtml(L,fmt):
         if L.degree > 2:
             eptable += "<td class='galois'>"
             this_gal_group = thispolygal[1]
-            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C) 
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
             for j in range(1,len(thispolygal[1])):
                 eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
             eptable += "</td>"
         eptable += "</tr>\n"
 
 
-#        eptable += "<td>" + group_display_knowl(4,1,C) + "</td>"
+#        eptable += "<td>" + group_display_knowl(4,1) + "</td>"
 #        eptable += "</tr>\n"
         goodorbad = ""
         firsttime = ""
@@ -519,10 +525,10 @@ def lfuncEPhtml(L,fmt):
         if L.degree > 2:
             this_gal_group = thispolygal[1]
             eptable += "<td class='galois'>"
-            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1],C)
+            eptable += group_display_knowl(this_gal_group[0][0],this_gal_group[0][1])
             for j in range(1,len(thispolygal[1])):
                 eptable += "$\\times$"
-                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1],C)
+                eptable += group_display_knowl(this_gal_group[j][0],this_gal_group[j][1])
             eptable += "</td>"
 
         eptable += "</tr>\n"
@@ -574,7 +580,7 @@ def lfuncEpSymPower(L):
         ans += poly_string
     ans += '\\prod_{p \\nmid %d }\\prod_{j=0}^{%d} ' % (L.E.conductor(),L.m)
     ans += '\\left(1- \\frac{\\alpha_p^j\\beta_p^{%d-j}}' % L.m
-    ans += '{p^{s}} \\right)^{-1}'    
+    ans += '{p^{s}} \\right)^{-1}'
     return ans
 
 #---------
@@ -605,7 +611,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
+        ans = "\\begin{aligned}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
             # ans+=latex(L.level)+"^{\\frac{s}{2}}"
             ans += latex(L.level) + "^{s/2}"
@@ -648,7 +654,7 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-        ans += "\n\\end{align}\n"
+        ans += "\n\\end{aligned}\n"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + ",\\ "
         ans += str(int(L.level)) + ",\\ "
@@ -886,7 +892,7 @@ def getConductorIsogenyFromLabel(label):
             while iso[0].isdigit():
                 cond += iso[0]
                 iso = iso[1:]
-                
+
         # Strip off the curve number
         while iso[-1].isdigit():
             iso = iso[:-1]
@@ -894,6 +900,73 @@ def getConductorIsogenyFromLabel(label):
 
     except:
         return None, None
-    
 
+#######################################################################
+# Functions for interacting with web structure
+#######################################################################
+
+# TODO This needs to be able to handle any sort of L-function.
+# There should probably be a more relevant field
+# in the database, instead of trying to extract this from a URL
+def name_and_object_from_url(url):
+    url_split = url.split("/");
+    name = None;
+    obj_exists = False;
+
+    if url_split[0] == "EllipticCurve":
+        if url_split[1] == 'Q':
+            # EllipticCurve/Q/341641/a
+            label_isogeny_class = ".".join(url_split[-2:]);
+            # count doesn't honor limit!
+            obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
+        else:
+            # EllipticCurve/2.2.140.1/14.1/a
+            label_isogeny_class =  "-".join(url_split[-3:]);
+            obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
+        name = 'Isogeny class ' + label_isogeny_class;
+
+    elif url_split[0] == "ModularForm":
+        if url_split[1] == 'GL2':
+            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
+                # ModularForm/GL2/Q/holomorphic/14/2/1/a
+                full_label = ".".join(url_split[-4:])
+                name =  'Modular form ' + full_label;
+                obj_exists = is_newform_in_db(full_label);
+
+            elif  url_split[2] == 'TotallyReal':
+                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
+                label = url_split[-1];
+                name =  'Hilbert modular form ' + label;
+                obj_exists = is_hmf_in_db(label);
+
+            elif url_split[2] ==  'ImaginaryQuadratic':
+                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
+                label = '-'.join(url_split[-3:])
+                name = 'Bianchi modular form ' + label;
+                obj_exists = is_bmf_in_db(label);
+    return name, obj_exists
+
+def get_bread(degree, breads=[]):
+    """
+    Returns the two top levels of bread crumbs plus the ones supplied in breads.
+    """
+    breadcrumb = [('L-functions', url_for('.l_function_top_page')),
+          ('Degree ' + str(degree),
+           url_for('.l_function_degree_page', degree='degree' + str(degree)))]
+    for b in breads:
+        breadcrumb.append(b)
+    return breadcrumb
+
+# Convert  r0r0c1 to (0,0;1), for example
+def parse_codename(text):
+
+    ans = text
+    if 'c' in text:
+        ans = re.sub('c', ';', ans, 1)
+    else:
+        ans += ';'
+    ans = re.sub('r', '', ans, 1)
+    ans = re.sub('(r|c)', ',', ans)
+
+    return '(' + ans + ')'
 

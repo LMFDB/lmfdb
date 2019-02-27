@@ -3,6 +3,11 @@ from lmfdb.base import LmfdbTest
 
 class EllCurveTest(LmfdbTest):
 
+    def check_args_with_timeout(self, path, text):
+        timeout_error = 'The search query took longer than expected!'
+        data = self.tc.get(path, follow_redirects=True).data
+        assert (text in data) or (timeout_error in data)
+
     # All tests should pass
     #
     def test_int_points(self):
@@ -53,12 +58,10 @@ class EllCurveTest(LmfdbTest):
         assert '[1, -1, 1, 9588, 2333199]' in L.data
 
     def test_SurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100')
-        assert '[0, 0, 1, -270, -1708]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=2&surj_quantifier=include&nonsurj_primes=&count=100', '[0, 0, 1, -270, -1708]');
 
     def test_NonSurjPrimes_search(self):
-        L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100')
-        assert '[0, 0, 0, -36705844875, 2706767485056250]' in L.data
+        self.check_args_with_timeout('/EllipticCurve/Q/?start=0&conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=37&count=100', '[0, 0, 0, -36705844875, 2706767485056250]');
 
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
@@ -70,7 +73,7 @@ class EllCurveTest(LmfdbTest):
 
     def test_dl_all(self):
         L = self.tc.get('/EllipticCurve/Q/download_all/26.b2')
-        assert '["1", "-1", "1", "-3", "3"]' in L.data
+        assert '[1, -1, 1, -3, 3]' in L.data
 
     def test_sha(self):
         L = self.tc.get('EllipticCurve/Q/?start=0&conductor=&jinv=&rank=2&torsion=&torsion_structure=&sha=2-&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
@@ -86,5 +89,12 @@ class EllCurveTest(LmfdbTest):
         Test for factorization of large discriminants
         """
         L = self.tc.get('/EllipticCurve/Q/26569/a/1')
-        assert '\(-1 \cdot 163^{9} \)' in L.data
+        assert r'\(-1 \cdot 163^{9} \)' in L.data
 
+    def test_torsion_growth(self):
+        """
+        Test for torsion growth data
+        """
+        L = self.tc.get('/EllipticCurve/Q/392/c/1')
+        assert ' is strictly larger than ' in L.data
+        assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data

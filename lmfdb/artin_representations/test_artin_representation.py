@@ -1,6 +1,6 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from lmfdb.base import LmfdbTest
-
+#import unittest2
 
 class ArtinRepTest(LmfdbTest):
 
@@ -18,4 +18,9 @@ class ArtinRepTest(LmfdbTest):
         #L = self.tc.get('/ArtinRepresentation/4/3655/1/')
         L = self.tc.get('/ArtinRepresentation/4.5_17_43.8t44.1c1')
         assert ('Odd' in L.data)
+
+    # big degree fields ok
+    def test_big_degree(self):
+        L = self.tc.get('/ArtinRepresentation/2.1951e2.120.1c1')
+        assert '24T201' in L.data # Galois group
 

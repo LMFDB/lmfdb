@@ -47,7 +47,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/Q/11/a/')
         assert '0.2538418609' in L.data
         assert 'Isogeny class 11.a' in L.data
-        assert 'Modular form 11.2a' in L.data 
+        assert 'Modular form 11.2a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/Zeros/EllipticCurve/Q/11/a/')
@@ -63,26 +63,26 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/31.1/a/')
         assert '0.3599289595' in L.data
-        assert 'Isogeny class 2.2.5.1-31.1-a' in L.data 
-        assert 'Isogeny class 2.2.5.1-31.2-a' in L.data 
+        assert 'Isogeny class 2.2.5.1-31.1-a' in L.data
+        assert 'Isogeny class 2.2.5.1-31.2-a' in L.data
         assert 'Hilbert modular form 2.2.5.1-31.1-a' in L.data
         assert 'Hilbert modular form 2.2.5.1-31.2-a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/EllipticCurve/2.2.5.1/80.1/a/')
         assert '0.5945775518' in L.data
-        assert 'Isogeny class 2.2.5.1-80.1-a' in L.data 
-        assert 'Isogeny class 20.a' in L.data 
+        assert 'Isogeny class 2.2.5.1-80.1-a' in L.data
+        assert 'Isogeny class 20.a' in L.data
         assert 'Isogeny class 100.a' in L.data
         assert 'Hilbert modular form 2.2.5.1-80.1-a' in L.data
         assert '/SatoTateGroup/1.2.' in L.data
 
         L = self.tc.get('/L/EllipticCurve/2.0.11.1/256.1/a/')
-        assert 'Isogeny class 2.0.11.1-256.1-a' in L.data 
-        assert 'Isogeny class 2.0.11.1-256.1-b' in L.data 
-        assert 'Isogeny class 2.2.44.1-16.1-a' in L.data 
-        assert 'Isogeny class 2.2.44.1-16.1-c' in L.data 
-        assert 'Hilbert modular form 2.2.44.1-16.1-a' in L.data 
+        assert 'Isogeny class 2.0.11.1-256.1-a' in L.data
+        assert 'Isogeny class 2.0.11.1-256.1-b' in L.data
+        assert 'Isogeny class 2.2.44.1-16.1-a' in L.data
+        assert 'Isogeny class 2.2.44.1-16.1-c' in L.data
+        assert 'Hilbert modular form 2.2.44.1-16.1-a' in L.data
         assert 'Hilbert modular form 2.2.44.1-16.1-c' in L.data
         assert 'Bianchi modular form 2.0.11.1-256.1-a' in L.data
         assert 'Bianchi modular form 2.0.11.1-256.1-b' in L.data
@@ -129,15 +129,18 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lgl2maass(self):
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/')
-        assert '4.548454921423' in L.data
+        assert '1 + 4.54845492142i' in L.data
+        # FIXME
+        # these zeros cannot be correct to this much precision
+        # the eigenvalue was computed to lower precision
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/Maass/4f5695df88aece2afe000021/')
-        assert '7.872942342977' in L.data
+        assert '7.8729423429' in L.data
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
-        assert '5.0987419087' in L.data
+        assert '5.09874190873i' in L.data
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/Maass/4f55571b88aece241f000013/')
-        assert '11.6149703378' in L.data
+        assert '11.614970337' in L.data
         L = self.tc.get('/L/ModularForm/GL2/Q/Maass/4cb8503a58bca91458000032/')
-        assert '9.5336952613' in L.data
+        assert '1 + 9.53369526135i' in L.data
 
     def test_Lgl3maass(self):
         L = self.tc.get('/L/ModularForm/GL3/Q/Maass/1/1/20.39039_14.06890/-0.0742719/')
@@ -149,7 +152,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')
         assert '0.556' in L.data
         assert 'Graph' in L.data
-        L = self.tc.get('/L/Zeros/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')        
+        L = self.tc.get('/L/Zeros/ModularForm/GL4/Q/Maass/1/1/16.89972_2.272587_-6.03583/0.55659019/')
         assert '16.18901597' in L.data
 
     def test_Lsym2EC(self):
@@ -184,7 +187,7 @@ class LfunctionTest(LmfdbTest):
         assert '3718837' in L.data
         L = self.tc.get('L/NumberField/14.14.28152039412241052225421312.1/')
         assert 'chi_{172}' in L.data and 'chi_{43}' in L.data
-        
+
     def test_Ldedekindabelian(self):
         L = self.tc.get('/L/NumberField/3.3.81.1/')
         assert 'Graph' in L.data
@@ -229,12 +232,12 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lmain(self):
         L = self.tc.get('/L/')
-        assert 'Riemann' in L.data
+        assert 'Riemann' in L.data and 'Signature' in L.data
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
         assert 'Dirichlet L-function' in L.data and 'Conductor range' in L.data and 'Primitive Dirichlet character' in L.data
-   
+
     def test_Ldegree2(self):
         L = self.tc.get('/L/degree2/')
         assert '1.73353' in L.data and '/EllipticCurve/Q/234446.a' in L.data
@@ -266,23 +269,23 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic' in L.data
 
     def test_Ldegree3MaassForm(self):
-        L = self.tc.get('/L/degree3/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree3/r0r0r0/')
+        assert 'equation' in L.data
 
     def test_Ldegree3EllipticCurve(self):
         L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
         assert 'Elliptic' in L.data
 
     def test_Ldegree4MaassForm(self):
-        L = self.tc.get('/L/degree4/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree4/r0r0r0r0/')
+        assert 'functional' in L.data
 
     def test_Ldegree4EllipticCurve(self):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')
         assert 'Elliptic' in L.data
 
     def test_Lhgm(self):
-        L = self.tc.get('/L/Motive/Hypergeometric/Q/A2_B1/t-2.3') # To be moved eventually
+        L = self.tc.get('/L/Motive/Hypergeometric/Q/A4_B2.1/t-1.1')
         assert 'Graph' in L.data
 
     def test_Lgenus2(self):
@@ -294,6 +297,18 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 15360.f' in L.data
         L = self.tc.get('/L/Zeros/Genus2Curve/Q/15360/f/')
         assert '2.15654793578' in L.data
+
+    def test_Llhash(self):
+        r"""
+        Checking L/lhash/ pages
+        """
+        # The hash for /L/EllipticCurve/Q/324016/h
+        L = self.tc.get('/L/lhash/1938322253992393114/')
+        self.assertTrue('324016' in L.data,
+                "Missing data in /L/lhash/1938322253992393114/")
+        L = self.tc.get('/L/lhash/dirichlet_L_6253.458/')
+        self.assertTrue('1.0612' in L.data,
+                "Missing data in /L/lhash/dirichlet_L_6253.458/")
 
 
     #------------------------------------------------------
@@ -317,10 +332,6 @@ class LfunctionTest(LmfdbTest):
         print str(L)
         assert 'OK' in str(L)
 
-    def test_LdedekindZeros(self):
-        L = self.tc.get('/L/Zeros/NumberField/3.1.23.1/')
-        assert '5.1156833288' in L.data
-
     def test_LartinPlot(self):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/2.2e2_17.4t3.2c1/')
         assert 'OK' in str(L)
@@ -330,8 +341,8 @@ class LfunctionTest(LmfdbTest):
         assert 'OK' in str(L)
 
     def test_LHGMZeros(self):
-        L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1_t1.2/')
-        assert '4.307350233' in L.data
+        L = self.tc.get('/L/Zeros/Motive/Hypergeometric/Q/A2.2.2.2_B1.1.1.1/t-1.1/')
+        assert '4.497732273' in L.data
 
 
     #------------------------------------------------------
@@ -363,7 +374,7 @@ class LfunctionTest(LmfdbTest):
         assert 'No elliptic curve with label ' in L.data
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'This Elliptic curve has complex multiplication and the symmetric power of its L-function is then not primitive.' in L.data
-        
+
 
     #------------------------------------------------------
     # Testing units not tested above

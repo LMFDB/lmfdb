@@ -59,7 +59,7 @@
 <h2> Search </h2>
 Please enter a value or leave blank:
 <p></p>
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
      <td align=right>base {{ KNOWL('nf',title = "number field") }}</td>
@@ -71,14 +71,16 @@ Please enter a value or leave blank:
   curves</td>
   <td>
          <select name='include_base_change'>
-           <option value="off">exclude</option>
-           <option value="on" selected>include</option>
+          {% set base_change_values = [('', 'include'), ('off', 'exclude'),  ('only', 'only')] %}
+          {% for val, text in base_change_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
          </select>
   </td>
   <td align=right>{{ KNOWL('ec.q_curve',title="Q_curves") }} </td>
   <td>
          <select name='include_Q_curves'>
-           <option value="include" selected>include</option>
+           <option value="" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
          </select>
@@ -97,14 +99,14 @@ Please enter a value or leave blank:
   <td>
          <select name='include_isogenous'>
            <option value="off">exclude</option>
-           <option value="on" selected>include</option>
+           <option value="" selected>include</option>
          </select>
   </td>
      <td align=right>{{ KNOWL('ec.complex_multiplication',title =
      "CM") }}  curves </td>
      <td>
          <select name='include_cm'>
-           <option value="include" selected>include</option>
+           <option value="" selected>include</option>
            <option value="exclude">exclude</option>
            <option value="only">only</option>
          </select>

@@ -15,17 +15,17 @@ table.reptable td, table.reptable th {
 
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
-      <tr><td>Degree $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
-      <tr><td>Transitive number $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
+      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
+      <tr><td>{{KNOWL('gg.tnumber', 'Transitive number')}} $t$ :<td>&nbsp;&nbsp;<td>${{info.t}}$</tr>
       {% if info.pretty_name %}
       <tr><td>{{KNOWL('gg.simple_name', title='Group')}} :<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
       <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}} :<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
-      <tr><td>Parity:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
-      <tr><td>Primitive:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
-      <tr><td>Generators:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
-      <tr><td>$|\textrm{Aut}(F/K)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
-      <tr><td>Low degree resolvents:<td>&nbsp;&nbsp;<td>{{info.resolve|safe}}</tr>
+      <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
+      <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
+      <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
+      <tr><td>{{KNOWL('gg.field_automorphisms', '$|\Aut(F/K)|$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
+      <tr><td>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}:<td>&nbsp;&nbsp;<td>{{info.resolve|safe}}</tr>
     </table>
   </p>
 
@@ -71,10 +71,11 @@ table.reptable td, table.reptable th {
 <p><h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
   <div>
     <table>
-      <tr><td>Order:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</tr>
-      <tr><td>Cyclic:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</tr>
-      <tr><td>Abelian:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</tr>
-      <tr><td>Solvable:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</tr>
+      <tr><td>{{KNOWL('group.order','Order')}}:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</tr>
+      <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</tr>
+      <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</tr>
+      <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</tr>
+      <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation','GAP id')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}</tr>
     </table>
 
     <table>

@@ -4,9 +4,8 @@
 
 <h2> Further refine search </h2>
 
-<form id="re-search">
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
 <table border="0">
 
 <tr>
@@ -24,24 +23,24 @@
 <tr>
 <td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
 <td align=right colspan="2">
-set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
+set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
 {% if info.ram_quantifier == 'contained' %}
 <select name = "ram_quantifier">
   <option value='contained' selected='yes'>subset of</option>
-  <option value='exactly'>equal to</option>
+  <option value=''>equal to</option>
   <option value='include'>superset of</option>
 </select>
-{% elif info.ram_quantifier == 'exactly' %}
+{% elif info.ram_quantifier == 'include' %}
 <select name = "ram_quantifier">
   <option value='contained'>subset of</option>
-  <option value='exactly' selected='yes'>equal to</option>
-  <option value='include'>superset of</option>
+  <option value='' >equal to</option>
+  <option value='include' selected='yes'>superset of</option>
 </select>
 {% else %}
 <select name = "ram_quantifier">
   <option value='contained'>subset of</option>
-  <option value='exactly' >equal to</option>
-  <option value='include' selected='yes'>superset of</option>
+  <option value='' selected='yes'>equal to</option>
+  <option value='include'>superset of</option>
 </select>
 {% endif %}
  <td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
@@ -61,7 +60,6 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </form>
 
 {% if info.err is defined %}
-
 {% if info.label is defined %}
 <form>
 <table border=0 cellpadding=5>
@@ -78,17 +76,9 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </table>
 </form>
 {% endif %}
-
-<h2>Error</h2>
-<div>
-  {{ info.err|safe }}
-  <p>
-  Either modify your search above or go <input type=button value="Back" onClick="history.go(-1)">
-</div>
-{% else %}
-<h2> Results: ({{info.report}})</h2>
-
-{% if info.number > 0 %}
+{% endif %}
+{% include 'matches.html' %}
+{% if info.number %}
 <table border=1 cellpadding=5 class="ntdata" id="fieldTab"`>
 <thead>
 <tr>
@@ -100,7 +90,7 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 </tr>
 </thead>
 <tbody>
-{% for field in info.fields: %}
+{% for field in info.results: %}
 {% set wnf = info.wnf(field) %}
 <tr>
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
@@ -124,39 +114,10 @@ set of {{KNOWL('nf.ramified_prime', title='ramified primes')}}
 {% endfor %}
 </tbody>
 </table>
-<br>
-     {% if info.start > 0 %}
-      <a href="#" class="navlink" onclick="decrease_start_by_count_and_submit_form('re-search');return false">Previous</A>
-     {% endif %}
-     {% if info.start +info.count  < info.number %}
-      <a href="#" class="navlink" onclick="increase_start_by_count_and_submit_form('re-search');return false">Next</A></td>
-     {% endif %}
-<br>
-<br>
-{% if info.number < 100001 %}
-<form>
-Download all {{info.number}} search results for
-<input type="submit" name="Submit" value="gp">
-<input type="submit" name="Submit" value="sage">
-<input type="submit" name="Submit" value="magma">
-<input type="submit" name="Submit" value="mathematica">
-<input type="hidden" name="download" value="1"/>
-<input type="hidden" name="degree" value="{{info.degree}}"/>
-<input type="hidden" name="signature" value="{{info.signature}}"/>
-<input type="hidden" name="galois_group" value="{{info.galois_group}}"/>
-<input type="hidden" name="class_number" value="{{info.class_number}}"/>
-<input type="hidden" name="class_group" value="{{info.class_group}}"/>
-<input type="hidden" name="ur_primes" value="{{info.ur_primes}}"/>
-<input type="hidden" name="ram_primes" value="{{info.ram_primes}}"/>
-<input type="hidden" name="ram_quantifier" value="{{info.ram_quantifier}}"/>
-<input type="hidden" name="discriminant" value="{{info.discriminant}}"/>
-
-</form>
-{% else %}
-There are too many fields in the search results for downloading.
-{% endif %} {# provide download links? #}
-{% endif %} {# info.number > 0 #}
+<hr>
+{% include 'forward_back.html' %}
+{% include 'download_search_results.html' %}
 {% endif %}
-
+{% include 'debug_info.html' %}
 
 {% endblock %}

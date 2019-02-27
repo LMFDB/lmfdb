@@ -52,46 +52,51 @@ Artin representation: <input type='text' name='natural' size='50' example='3.2e3
 <h2> Search for an Artin representation </h2>
 Enter values into one or more boxes to restrict the search.
 <p></p>
-<form>
+<form id="search" onsubmit="cleanSubmit(this.id)">
   <table>
     <tr>
-        <td align="right">{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+        <td align="left">{{ KNOWL('artin.dimension',title="dimension") }}</td>
         <td><input type='text' name='dimension' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 1, 2-4 </span></td>
     </tr>
 
     <tr>
-        <td align="right">{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+        <td align="left">{{ KNOWL('artin.conductor',title = "conductor") }}</td>
         <td><input type='text' name='conductor' placeholder="50-100,150-210" size=15></td>
         <td><span class="formexample"> e.g. 50, 100-200</span></td>
     </tr>
 
     <tr>
-        <td align="right">{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
+        <td align="left">{{ KNOWL('artin.gg_quotient',title="group") }}</td>
         <td><input type='text' name='group' placeholder="A5" size=15></td>
         <td><span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
     </tr>
 
     <tr>
-        <td align="right">{{ KNOWL('artin.ramified_primes', title="Ramified primes") }}</td>
+        <td align="left">{{ KNOWL('artin.permutation_container',title="smallest permutation container") }}</td>
+        <td><input type='text' name='container' placeholder="6T13" size=15></td>
+        <td><span class="formexample"> e.g. 6T13 or 7T6</span></td>
+
+    <tr>
+        <td align="left">{{ KNOWL('artin.ramified_primes', title="ramified primes") }}</td>
         <td><input type='text' name='ramified' placeholder="2" size=15></td>
         <td><span class="formexample"> e.g. 2, 3 (no range allowed)</span></td>
     </tr>
     
     <tr>
-        <td align="right">{{ KNOWL('artin.unramified_primes', title="Unramified primes") }}</td>
+        <td align="left">{{ KNOWL('artin.unramified_primes', title="unramified primes") }}</td>
         <td><input type='text' name='unramified' placeholder="5,7" size=15></td>
         <td><span class="formexample"> e.g. 5, 7, 13  (no range allowed)</span></td>
     </tr>
     
     <tr>
-        <td align="right">{{ KNOWL('artin.root_number',title="Root number") }}</td>
+        <td align="left">{{ KNOWL('artin.root_number',title="root number") }}</td>
         <td><input type='text' name='root_number' placeholder="1" size=15></td>
         <td><span class="formexample"> at the moment, one of 1 or -1 </span></td>
     </tr>
 
     <tr>
-        <td align="right">{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
+        <td align="left">{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
         <td><input type='text' name='frobenius_schur_indicator' placeholder="1" size=15></td>
         <td><span class="formexample"> +1 for orthogonal, -1 for symplectic, 0 for non-real character </span></td>
     </tr>

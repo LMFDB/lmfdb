@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# This script runs nosetests for the whole project.
-# It also generates a coverage report when the "coverage" module is installed.
-# including a HTML report 
+# This script runs pytest for the whole project.
+# It also generates a coverage report when the "pytest-cov" plugin is
+# installed, including a HTML report
 
 # Note: to run the tests, sage must be in your path.  If necessary do
 # export PATH=$PATH:/path/to/sage
-# To run it, first install or upgrade "nose", "unittest2" "coverage" and "pyflakes".
-# e.g. $ pip install --user -U nose coverage unittest2 pyflakes
-# or inside the Sage environment: $ easy_install -U nose
-#                                 $ easy_install -U coverage
+# To run it, first install or upgrade "pytest", "unittest2" "pytest-cov" and
+# "pyflakes".  e.g. $ pip install --user -U pytest pytest-cov unittest2 pyflakes
+# or $ sage -pip install --user -U pytest pytest-cov unittest2 pyflakes
+# or inside the Sage environment: $ easy_install -U pytest
+#                                 $ easy_install -U pytest-cov
 #                                 $ easy_install -U unittest2
 #                                 $ easy_install -U pyflakes
 # Second, call it in three ways, either
@@ -19,6 +20,8 @@
 # or (for example)
 # $ ./test.sh  lmfdb/knowledge
 # to test only a part of LMFDB
+# To run tests with 3 cores in parallel, use
+# $ ./test.sh -n 3
 
 cd `dirname "$0"`
 
@@ -27,12 +30,14 @@ find . -name '*.pyc' -delete
 
 WHAT=''
 COVER=''
+
 if [[ "$1" == "coverage" ]]; then
-  rm -rf lmfdb/cover
-  COVER='--with-coverage --cover-erase --cover-package=lmfdb --cover-html'
-else
-  WHAT="$@"
+  rm -rf lmfdb/htmlcov
+  shift
+  COVER='--cov=lmfdb --cov-report html'
 fi
+
+WHAT="$@"
 
 echo "Running pyflakes..."
 read PYFLAKES_ERRCNT < <(find . | grep "\.py$" | xargs pyflakes 2>&1 | tee /dev/stderr | grep "py:" -c)
@@ -42,7 +47,7 @@ else
   echo "pyflakes is happy"
 fi
 
-ARGS='-v -s --testmatch="(?:^|\/)[Tt]est_"'
+ARGS='-v -s'
 
 SAGE_COMMAND=$SAGE
 if [[ "$SAGE_COMMAND" == "" ]]; then
@@ -51,10 +56,9 @@ fi
 echo "Using Sage command $SAGE_COMMAND"
 
 if [[ -n $WHAT ]]; then
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $WHAT $COVER'"
+   eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER $WHAT"
 else
-   cd lmfdb
-   eval "$SAGE_COMMAND -sh -c 'nosetests $ARGS $COVER'"
+   eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER lmfdb/"
 fi
 
 if [[ $PYFLAKES_ERRCNT > 0 ]]; then

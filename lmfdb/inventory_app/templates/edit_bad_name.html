@@ -1,0 +1,18 @@
+{% extends "base_edit.html" %}
+
+{% block extra_script %}
+{% endblock extra_script %}
+
+{% block title_block %}
+    Bad Request
+{% endblock title_block %}
+
+{% block main_body %}
+<div>
+{% if coll_name is none %}
+  <h2> No database {{db_name}} exists </h2>
+{% else %}
+  <h2> No collection {{db_name}}.{{coll_name}} exists </h2>
+{% endif %}
+</div>
+{% endblock main_body %}
