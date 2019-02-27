@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import traceback, time, os, inspect, sys, shutil
+import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
 
@@ -267,20 +267,8 @@ class TableChecker(object):
     def run(self, typ, logdir, label=None):
         self._cur_label = label
         tname = "%s.%s" % (self.__class__.__name__, typ.shortname)
-        olddir = os.path.join(logdir, "old")
-        if not os.path.exists(olddir):
-            os.makedirs(olddir)
-        files = []
-        for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
-            filename = os.path.join(logdir, tname + suffix)
-            if os.path.exists(filename):
-                n = 0
-                oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                while os.path.exists(oldfile):
-                    n += 1
-                    oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                shutil.move(filename, oldfile)
-            files.append(filename)
+        files = [os.path.join(logdir, tname + suffix)
+                 for suffix in ['.log', '.errors', '.progress', '.started', '.done']]
         logfile, errfile, progfile, startfile, donefile = files
         checks = self.get_checks(typ)
         # status = failures, errors, timeouts, aborts

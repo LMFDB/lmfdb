@@ -25,7 +25,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 """
 
-import datetime, logging, os, random, re, signal, subprocess, tempfile, time, traceback
+import datetime, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
@@ -3115,6 +3115,9 @@ class PostgresTable(PostgresBase):
 
         If parallel is True, sage should be in your path or aliased appropriately.
 
+        Note that if check is not provided and parallel is False, no output will be printed, files
+        will still be written to the log directory.
+
         INPUT:
 
         - ``speedtype`` -- a string: "overall", "overall_long", "fast", "slow" or "all".
@@ -3148,14 +3151,29 @@ class PostgresTable(PostgresBase):
             parallel = 0
         verifier = self._verifier
         if check is None:
+            olddir = os.path.join(logdir, "old")
+            if not os.path.exists(olddir):
+                os.makedirs(olddir)
+            def move_to_old(tname):
+                for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
+                    filename = os.path.join(logdir, tname + suffix)
+                    if os.path.exists(filename):
+                        n = 0
+                        oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                        while os.path.exists(oldfile):
+                            n += 1
+                            oldfile = os.path.join(olddir, tname + str(n) + suffix)
+                    shutil.move(filename, oldfile)
             if speedtype == 'all':
                 types = verifier.all_types()
             else:
                 types = [verifier.speedtype(speedtype)]
+            tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
+            if len(tabletypes) == 0:
+                raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
+            for tname in tabletypes:
+                move_to_old(tname)
             if parallel:
-                tabletypes = ["%s.%s" % (self.search_table, typ.shortname) for typ in types if verifier.get_checks_count(typ) > 0]
-                if len(tabletypes) == 0:
-                    raise ValueError("No checks of type %s defined for %s" % (", ".join(typ.__name__ for typ in types), self.search_table))
                 parallel = min(parallel, len(tabletypes))
                 for tabletype in tabletypes:
                     print "Starting %s" % tabletype
