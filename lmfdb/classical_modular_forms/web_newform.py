@@ -1021,7 +1021,7 @@ function switch_basis(btype) {
         if res == "0":
             return ""
         else:
-            return r.replace('-','&minus;')
+            return res.replace('-','&minus;')
 
     def _display_im(self, y, prec, method='round', extra_truncation_digits=3):
         res = display_float(y, prec,
@@ -1094,7 +1094,7 @@ function switch_basis(btype) {
                 y *= self.analytic_shift[n]
         return self._display_op(x, y, prec)
 
-    def embedding(self,  m, n=None, prec=6, format='embed')
+    def embedding(self,  m, n=None, prec=6, format='embed'):
         return " ".join([ elt(m, n, prec, format)
             for elt in [self.embedding_re, self.embedding_op, self.embedding_im]
             ])
