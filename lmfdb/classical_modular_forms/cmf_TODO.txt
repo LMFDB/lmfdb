@@ -8,6 +8,8 @@ IMPORTANT:
 * rerun self twists disc
 * form 8064.2.j.g.575.9 displayin 0.0000 on qexp
 * add interesting new form with level > 4000
+* stats links for CM use wrong search key
+* do not jump if at the top (embedded newform)
 
 FINAL CHECKS:
 * Update RCS knowls to match final data set (Drew)
