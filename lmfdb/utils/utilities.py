@@ -288,7 +288,7 @@ def is_exact(x):
     return (type(x) in [int, long]) or (isinstance(x, Element) and x.parent().is_exact())
 
 def display_float(x, digits, method = "truncate",
-                             extra_truncation_digits = 3,
+                             extra_truncation_digits=3,
                              try_halfinteger=True):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
@@ -332,7 +332,7 @@ def display_float(x, digits, method = "truncate",
 
 def display_complex(x, y, digits, method = "truncate",
                                   parenthesis = False,
-                                  extra_truncation_digits = 3,
+                                  extra_truncation_digits=3,
                                   try_halfinteger=True):
     """
     Examples:
