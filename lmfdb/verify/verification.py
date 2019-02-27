@@ -42,6 +42,7 @@ class speed_decorator(object):
         self._kwds = kwds
         if f is not None:
             self.__name__ = f.__name__
+            self.__doc__ = f.__doc__
             for key, val in kwds.items():
                 setattr(self, key, val)
             if self.timeout is None:
@@ -303,6 +304,15 @@ class TableChecker(object):
     #####################
     # Utility functions #
     #####################
+    def _test_equality(self, a, b, verbose, msg=None):
+        if a == b:
+            return True
+        if verbose:
+            if msg is None:
+                msg = "{0} != {1}"
+            print msg.format(a, b)
+        return False
+
     def _make_sql(self, s, tablename=None):
         """
         Create an SQL Composable object out of s.
@@ -643,13 +653,17 @@ class TableChecker(object):
     label_conversion = {}
     @overall
     def check_label(self):
-        # check that label matches self.label
+        """
+        check that label matches self.label
+        """
         if self.label is not None:
             return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
 
     uniqueness_constraints = []
     @overall
     def check_uniqueness_constraints(self):
-        # check that the uniqueness constraints are satisfied
+        """
+        check that the uniqueness constraints are satisfied
+        """
         constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
         return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]

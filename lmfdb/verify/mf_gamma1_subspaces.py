@@ -10,5 +10,7 @@ class mf_gamma1_subspaces(SubspacesChecker):
 
     @overall
     def check_sub_dim(self):
-        # check that sub_dim = dim S_k^new(Gamma1(sub_level))
+        """
+        check that sub_dim = dim S_k^new(Gamma1(sub_level))
+        """
         return self.check_crosstable('mf_gamma1', 'sub_dim', ['sub_level', 'weight'], 'dim', ['level', 'weight'])
