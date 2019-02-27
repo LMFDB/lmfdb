@@ -27,7 +27,10 @@ class mf_newspaces(MfChecker):
     @overall
     def check_box_count(self):
         """
-        there should be exactly one row for every newspace in mf_boxes; for each box performing mf_newspaces.count(box query) should match newspace_count for box, and mf_newspaces.count() should be the sum of these
+        there should be exactly one row for every newspace in
+        mf_boxes; for each box performing mf_newspaces.count(box
+        query) should match newspace_count for box, and
+        mf_newspaces.count() should be the sum of these
         """
         # TIME about 20s
         return accumulate_failures(self.check_count(box['newspace_count'], self._box_query(box))
@@ -36,7 +39,8 @@ class mf_newspaces(MfChecker):
     @overall
     def check_box_hecke_cutter_primes(self):
         """
-        check that hecke_cutter_primes is set whenever space is in a box with eigenvalues set, `min(dims) <= 20`, and weight > 1
+        check that hecke_cutter_primes is set whenever space is in a
+        box with eigenvalues set, `min(dims) <= 20`, and weight > 1
         """
         # TIME about 2s
         return accumulate_failures(self.check_non_null(['hecke_cutter_primes'], self._box_query(box, {'dim':{'$lte':20,'$gt':0}, 'weight':{'$gt':1}}))
@@ -45,7 +49,8 @@ class mf_newspaces(MfChecker):
     @overall
     def check_box_straces(self):
         """
-        check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
+        check that traces, trace_bound, num_forms, and
+        hecke_orbit_dims are set if space is in a box with straces set
         """
         # TIME about 5s
         return accumulate_failures(
@@ -57,7 +62,8 @@ class mf_newspaces(MfChecker):
     @overall
     def check_box_traces(self):
         """
-        check that traces, trace_bound, num_forms, and hecke_orbit_dims are set if space is in a box with straces set
+        check that traces, trace_bound, num_forms, and
+        hecke_orbit_dims are set if space is in a box with straces set
         """
         # TIME about ??s
         return accumulate_failures(
