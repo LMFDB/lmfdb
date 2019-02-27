@@ -1158,7 +1158,10 @@ class CMF_stats(StatsDisplay):
                         'inner_twist_count': (lambda x: 'inner_twist_count={0}'.format(x if x != 'Unknown' else '-1')),
                         'relative_dim': rel_dim_formatter,
                         'level_primes': level_primes_formatter,
-                        'level_radical': level_radical_formatter}
+                        'level_radical': level_radical_formatter,
+                        'cm_discs': (lambda t: r'self_twist_discs=%d' % (t,)),
+                        'rm_discs': (lambda t: r'self_twist_discs=%d' % (t,)),
+                        }
     split_lists = {'cm_discs': True,
                    'rm_discs': True}
     stat_list = [
