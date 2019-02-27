@@ -481,8 +481,11 @@ def elliptic_curve_search(info, query):
         info['number'] = 1
         query['number'] = 1
 
-    if 'include_base_change' in info and info['include_base_change'] == 'off':
-        query['base_change'] = []
+    if 'include_base_change' in info:
+        if info['include_base_change'] == 'off':
+            query['base_change'] = []
+        if info['include_base_change'] == 'only':
+            query['base_change'] = {'$ne':[]}
     else:
         info['include_base_change'] = "on"
 

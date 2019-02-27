@@ -32,7 +32,7 @@ Installation
 
    ```
       sage -i gap_packages
-      sage -i database_gap
+      sage -i database_gap # only needed if sage version < 8.6
       sage -i pip
       sage -b
       # in the 'lmfdb/' directory:
