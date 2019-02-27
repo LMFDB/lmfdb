@@ -3224,8 +3224,15 @@ class PostgresTable(PostgresBase):
             is run by default and the constraint on rows for which this test is run are shown.
         """
         self._check_verifications_enabled()
+        green = '\033[92m'
+        red = '\033[91m'
+        stop = '\033[0m'
         def show_check(name, check, typ):
-            print ' '*2 + name
+            if typ.__name__ in ['overall', 'fast']:
+                color = green
+            else:
+                color = red
+            print '* ' + color + name + stop
             if details:
                 if check.ratio < 1:
                     ratio_fmt = 'Ratio of rows: {val:.2%}'
@@ -3234,7 +3241,7 @@ class PostgresTable(PostgresBase):
                 for line in inspect.getdoc(check).split('\n'):
                     print ' '*4 + line
                 for attr, fmt in [
-                        ('disabled', 'Disabled')
+                        ('disabled', 'Disabled'),
                         ('ratio', ratio_fmt),
                         ('max_failures', 'Max failures: {val}'),
                         ('timeout', 'Timeout after: {val}s'),
@@ -3248,12 +3255,14 @@ class PostgresTable(PostgresBase):
                         print ' '*6 + fmt.format(val=cattr)
         verifier = self._verifier
         for typ in ['over', 'fast', 'long', 'slow']:
+            color = green if typ in ['over', 'fast'] else red
             typ = verifier.speedtype(typ)
             if verifier.get_checks_count(typ) > 0:
-                print "{0} checks (default {1:.0%} of rows, {2}s timeout)".format(typ.__name__, float(typ.ratio), typ.timeout)
+                name = color + typ.__name__ + stop
+                print "\n{0} checks (default {1:.0%} of rows, {2}s timeout)".format(name, float(typ.ratio), typ.timeout)
                 for checkname, check in inspect.getmembers(verifier.__class__):
                     if isinstance(check, typ):
-                        print show_check(checkname, check, typ)
+                        show_check(checkname, check, typ)
 
 class PostgresStatsTable(PostgresBase):
     """

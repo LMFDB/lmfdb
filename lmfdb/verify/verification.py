@@ -113,7 +113,7 @@ class TableChecker(object):
     def speedtype(typ):
         if typ in ['overall', 'over']:
             return overall
-        elif typ == ['long', 'overall_long']:
+        elif typ in ['long', 'overall_long']:
             return overall_long
         elif typ == 'fast':
             return fast
@@ -141,15 +141,17 @@ class TableChecker(object):
             raise ValueError("Not a valid verification check")
         return MethodType(check, self, self.__class__), check.__class__
 
-    def get_total(self, check):
-        return int(self.table.count(check.constraint) * check.ratio)
+    def get_total(self, check, ratio):
+        if ratio is None: ratio=check.ratio
+        return int(self.table.count(check.constraint) * ratio)
 
-    def get_iter(self, check, label):
+    def get_iter(self, check, label, ratio):
+        if ratio is None: ratio = check.ratio
         projection = check.projection
         if self.label_col not in projection:
             projection = [self.label_col] + projection
         if label is None:
-            return self.table.random_sample(check.ratio, check.constraint, projection)
+            return self.table.random_sample(ratio, check.constraint, projection)
         else:
             constraint = dict(check.constraint)
             constraint[self.label_col] = label
@@ -175,7 +177,7 @@ class TableChecker(object):
             prog.write(msg)
         return 1
 
-    def _run_check(self, check, typ, label, file_handles):
+    def _run_check(self, check, typ, label, file_handles, ratio=None):
         start = time.time()
         prog, log, err = file_handles
         name = "%s.%s"%(self.__class__.__name__, check.__name__)
@@ -189,10 +191,10 @@ class TableChecker(object):
         check_timeouts = 0
         try:
             if issubclass(typ, per_row):
-                total = self.get_total(check)
+                total = self.get_total(check, ratio)
                 progress_interval = self.get_progress_interval(check, total)
                 try:
-                    search_iter = self.get_iter(check, label)
+                    search_iter = self.get_iter(check, label, ratio)
                 except Exception as error:
                     template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
                     message = template.format(name, type(error).__name__, '\n'.join(error.args))
@@ -255,9 +257,7 @@ class TableChecker(object):
         file_handles = sys.stdout, sys.stdout, sys.stdout
         start = time.time()
         checkfunc, typ = self.get_check(check)
-        if ratio is not None:
-            checkfunc.ratio = ratio
-        status = self._run_check(checkfunc, typ, label, file_handles)
+        status = self._run_check(checkfunc, typ, label, file_handles, ratio)
         reports = []
         for scount, sname in zip(status, ["failure", "error", "timeout", "abort"]):
             if scount:
