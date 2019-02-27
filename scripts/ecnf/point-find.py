@@ -2,23 +2,18 @@
 r""" Functions to add ranks and generators to elliptic curves in the
 database by outputting a Magma script and parsing its output """
 
-import os.path
-import os
-import pymongo
-from lmfdb.ecnf.WebEllipticCurve import ECNF
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-C['admin'].authenticate('lmfdb', 'lmfdb')
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
+# 2019-02-27: converted to work with the postgres database (JEC)
+
+from lmfdb import db
+
 print "setting nfcurves and qcurves"
-nfcurves = C.elliptic_curves.nfcurves
-qcurves = C.elliptic_curves.curves
+nfcurves = db.ec_nfcurves
+qcurves = db.ec_curves
+
+from sage.all import QQ, EllipticCurve
+from lmfdb.number_fields.web_number_field import WebNumberField
+from scripts.ecnf.import_ecnf_data import nf_lookup
+from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
 
 def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
     r"""
@@ -217,17 +212,15 @@ def encode_points(Plist):
     return [encode_point(P) for P in Plist]
 
 def make_curve(dbCurve):
-    nf = WebNumberField(dbCurve['field_label'])
-    coeffs = dbCurve['ainvs']  # list of 5 lists of d strings
-    ainvs = [nf.K()([QQ(str(c)) for c in s]) for s in coeffs]
-    from sage.schemes.elliptic_curves.all import EllipticCurve
+    nf = nf_lookup(dbCurve['field_label'])
+    ainvs = parse_ainvs(nf,dbCurve['ainvs'])
     return EllipticCurve(ainvs)
 
 def get_generators(field, iso_class, test_saturation=False, verbose=False, store=False):
     r""" Retrieves the curves in the isogeny class from the database, finds
     their ranks (or bounds) and generators, and optionally stores the
     result back in the database.  """
-    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
+    res = nfcurves.search({'field_label': field, 'short_class_label': iso_class})
     if not res:
         raise ValueError("No curves in the database ovver field %s in class %s" % (field, iso_class))
     Es = [make_curve(e) for e in res]
@@ -242,17 +235,18 @@ def get_generators(field, iso_class, test_saturation=False, verbose=False, store
     # We find the curves again, since the cursor times out after 10
     # miniutes and finding the generators can take longer than that.
 
-    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
+    res = nfcurves.search({'field_label': field, 'short_class_label': iso_class})
     for e, mw in zip(res, mwi):
+        label = e['label']
         data = {}
         data['rank_bounds'] = [int(r) for r in mw[0]]
         if mw[0][0] == mw[0][1]:
             data['rank'] = int(mw[0][0])
         data['gens'] = encode_points(mw[1])
         if verbose:
-            print("About to update %s using data %s" % (e['label'], data))
+            print("About to update curve {} using data {}".format(label, data))
         if store:
-            nfcurves.update_one(e, {'$set': data}, upsert=True)
+            nfcurves.upsert({'label':label}, e)
         else:
             if verbose:
                 print("(not done, dummy run)")
@@ -271,17 +265,18 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_satur
     if max_cond_norm:
         query['conductor_norm']['$lte'] = int(max_cond_norm)
 
-    res = nfcurves.find(query)
-    print("%s curves over field %s found" % (res.count(), field))
-    res.sort([('conductor_norm', pymongo.ASCENDING)])
+    res_info = {}
+    res = nfcurves.search(query, info=res_info)
+    print("{} curves over field {} found".format(res_info['number'], field))
+
     # extract the class labels all at the start, since otherwise the
     # cursor might timeout:
     classes = [r['short_class_label'] for r in res]
     for isoclass in classes:
-        res = nfcurves.find_one({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
+        res = nfcurves.lucky({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
         if 'rank' in res or 'rank_bounds' in res:
-            print("Isogeny class %s already has rank data" % isoclass)
+            print("Isogeny class {} already has rank data".format(isoclass))
         else:
-            print("Getting generators for isogeny class %s" % isoclass)
+            print("Getting generators for isogeny class {}".format(isoclass))
             get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
 
