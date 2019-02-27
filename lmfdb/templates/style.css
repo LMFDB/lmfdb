@@ -380,7 +380,7 @@ body > .debug {
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
-  max-height: 426px; /* 21 items with padding: 22 + 21*19 + 5 */
+  max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
   overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
@@ -650,9 +650,11 @@ table a[knowl] {
   padding: 0;
 }
 
-
 table.ntdata a {
   display: block;
+}
+table.chardata a {
+  display: inline;
 }
 table td.top {
   vertical-align:top;
@@ -685,14 +687,24 @@ table.ntdata th {
   text-align: left;
 }
 
-table.ntdata tr.odd,
-table.ntdata tr:nth-child(odd),
-table.ntdata tr:first-child {
+table.ntdata > tr.odd,
+table.ntdata > tbody > tr.odd,
+table.ntdata > thead > tr.odd,
+table.ntdata > tr:nth-child(odd),
+table.ntdata > tbody > tr:nth-child(odd),
+table.ntdata > thead > tr:nth-child(odd),
+table.ntdata > tr:first-child
+table.ntdata > tbody > tr:first-child
+table.ntdata > thead > tr:first-child {
     background: {{color.table_ntdata_background_c1}};
 }
 
-table.ntdata tr.even,
-table.ntdata tr:nth-child(even) {
+table.ntdata > tr.even,
+table.ntdata > tbody > tr.even,
+table.ntdata > thead > tr.even,
+table.ntdata > tr:nth-child(even),
+table.ntdata > tbody > tr:nth-child(even),
+table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
 }
 
@@ -935,8 +947,11 @@ td.right {
 table.ntdata .middle {
     vertical-align: middle;
 }
-table.ntdata tr.dark {
+table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
+}
+table.ntdata tr.light td {
+    background: white;
 }
 table.ntdata td.dark {
     background: {{color.table_ntdata_background_2}};
@@ -2035,37 +2050,41 @@ p.short {
   margin: 0px;
 }
 
-#table-scroll-wrapper {
+.table-scroll-wrapper {
     overflow-y:auto;
 }
 
-#table-scroll-wrapper table {
+.table-scroll-wrapper table {
     margin-right: 1px;
     margin-bottom: 1px;
     border-collapse: collapse;
 }
-#table-scroll-wrapper th {
+.table-scroll-wrapper th {
     position: -webkit-sticky; top: 0;
     position: sticky; top: 0;
     z-index:1;
     background:{{color.table_ntdata_background_2}};
     background-clip: padding-box;
 }
-#table-scroll-wrapper thead tr {
-    border-bottom: 0; /* We need to put the border on th:after for scrolling */
+.cmf-dim-table th.level {
+    padding-left: 80px;
 }
-#table-scroll-wrapper th:after {
-    content:'';
-    position:absolute;
-    left: 0;
-    bottom: 0;
-    width:100%;
+th.weight-label {
+    padding-left: 5px;
+    padding-right: 0px;
+}
+
+div.table-scroll-wrapper thead tr {
+    border-bottom: 0;
+}
+div.table-scroll-wrapper thead > tr:last-child > th {
     border-bottom: 2px solid {{ color.table_ntdata_border}};
 }
-#table-scroll-wrapper td.border-right {
+
+.table-scroll-wrapper td.border-right, .table-scroll-wrapper th.border-right {
     border-right: 0; /* We need to put the border on td:after for scrolling */
 }
-#table-scroll-wrapper td.border-right:after {
+.table-scroll-wrapper .border-right:after {
     content:'';
     position:absolute;
     right: 0;
@@ -2073,13 +2092,13 @@ p.short {
     height:100%;
     border-right: 2px solid {{ color.table_ntdata_border}};
 }
-#table-scroll-wrapper .sticky-col {
+.table-scroll-wrapper .sticky-col {
     position: -webkit-sticky; left: 0;
     position: sticky; left: 0;
     z-index:2;
     background-clip: padding-box;
 }
-#table-scroll-wrapper th.sticky-head {
+.table-scroll-wrapper th.sticky-head {
     position: -webkit-sticky; left: 0; top: 0;
     position: sticky; left: 0; top: 0;
     z-index:3;
@@ -2149,7 +2168,7 @@ table.ntdata td.embedding-wrap {
     margin: 0;
     padding: 0;
 }
-#table-scroll-wrapper table.sticky-embeddings {
+.table-scroll-wrapper table.sticky-embeddings {
     margin: 0;
     padding: 0;
     min-width: 55px;
@@ -2188,3 +2207,19 @@ input::-webkit-input-placeholder {
     color: #cccccc;
 }
 
+.table_rotate {
+  /* FF3.5+ */
+  -moz-transform: rotate(180deg);
+  /* Opera 10.5 */
+  -o-transform: rotate(180deg);
+  /* Saf3.1+, Chrome */
+  -webkit-transform: rotate(180deg);
+  /* IE6,IE7 */
+  filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=0.166);
+  /* IE8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.166)";
+  /* Standard */
+  transform: rotate(180deg);
+  writing-mode: vertical-lr;
+  white-space: nowrap;
+}

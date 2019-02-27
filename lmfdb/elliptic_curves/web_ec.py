@@ -3,11 +3,12 @@ import re
 import os
 import yaml
 from flask import url_for
-from lmfdb.db_backend import db
-from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb import db
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl, string2list
+from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
 
 from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 

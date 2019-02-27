@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import StringIO
 from ast import literal_eval
-import re
-import time
+import re, StringIO, time
+
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.misc.cachefunc import cached_function
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, comma, flash_error, display_knowl
-from lmfdb.search_parsing import parse_ints, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.downloader import Downloader
-from lmfdb.display_stats import StatsDisplay
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay)
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
 

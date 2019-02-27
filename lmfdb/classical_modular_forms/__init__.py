@@ -1,5 +1,6 @@
-from lmfdb.base import app
-from lmfdb.utils import make_logger
+# -*- coding: utf-8 -*-
+from lmfdb.app import app
+from lmfdb.logger import make_logger
 from flask import Blueprint
 
 cmf_page = Blueprint("cmf", __name__, template_folder='templates', static_folder="static")

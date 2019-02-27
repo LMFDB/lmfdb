@@ -74,7 +74,7 @@ $(function() {
 
 
 /* javascript code to generate the properties box */
-function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
+function properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim) {
   //body reference
   var body = document.getElementById("properties_script").parentElement
   var ul = document.createElement('ul');
@@ -91,10 +91,10 @@ function properties_lfun(initialFriends, label, nf_url, char_labels, rel_dim) {
     add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
   }
 
-  for (var i = 0; i < char_labels.length; i++) {
+  for (var i = 0; i < conrey_indexes.length; i++) {
     for (var j = 1; j <= rel_dim; j++) {
-      var lfun_text = 'L-function ' + label + '.' + char_labels[i].toString() + '.' + j.toString();
-      var lfun_url = '/L'+nf_url + '/' + char_labels[i].toString() + '/' + j.toString();
+      var lfun_text = 'L-function ' + label + '.' + conrey_indexes[i].toString() + '.' + j.toString();
+      var lfun_url = '/L'+nf_url + '/' + conrey_indexes[i].toString() + '/' + j.toString();
       add_friend(ul, lfun_text, lfun_url);
     }
   }
@@ -167,7 +167,7 @@ function knowl_click_handler($el) {
       // at least 600px (for small tables)
       // and deduce margins and borders
       var margins_and_borders = 2*table_border_knowl_width + parseInt(td_tag.css('padding-left')) + parseInt(td_tag.css('padding-right'))
-      var max_width = Math.max(600, Math.min(row_width, desired_main_width)) - margins_and_borders;
+      var max_width = Math.max(700, Math.min(row_width, desired_main_width)) - margins_and_borders;
 
       log("max_width: " + max_width);
       var style_wrapwidth = "style='max-width: " + max_width + "px; white-space: normal;'";
@@ -345,19 +345,22 @@ function increase_start_by_count_and_submit_form(form_id) {
   $('form[id='+form_id+']').submit()
 };
 
-function get_count_of_results() {
+function get_count_of_results(download_limit) {
     var address = window.location.href
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
     address += "&result_count=1";
-    $.ajax({url: address, success: get_count_callback});
+    var callback = function(res) {
+        get_count_callback(res, download_limit);
+    }
+    $.ajax({url: address, success: callback});
 };
 
-function get_count_callback(res) {
+function get_count_callback(res, download_limit) {
     $('#result-count').html(res['nres']);
-    if (parseInt(res, 10) > 100000) {
+    if (parseInt(res['nres'], 10) > download_limit) {
         $("#download-msg").html("There are too many search results for downloading.");
     } else {
         $("#download-msg").html("");
@@ -387,7 +390,8 @@ function cleanSubmit(id)
   var item, i, n = 0;
   for(i = 0; item = allInputs[i]; i++) {
     if (item.getAttribute('name') ) {
-      if (!item.value) {
+        // Special case count so that we strip the default value
+        if (!item.value || (item.getAttribute('name') == 'count' && item.value == 50)) {
         item.setAttribute('name', '');
       } else {
         n++
@@ -507,3 +511,4 @@ function show_stats_rows(hsh, to_show) {
   var viewportTop = $(window).scrollTop();
   return elementBottom < viewportTop;
 };
+

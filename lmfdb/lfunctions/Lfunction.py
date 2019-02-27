@@ -6,35 +6,41 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
-import math
-import re
+import math, re
 
 from flask import url_for, request
-from lmfdb.db_encoding import Json
-
-from Lfunctionutilities import (string2number, get_bread,
-                                compute_local_roots_SMF2_scalar_valued,
-                                names_and_urls)
-from LfunctionComp import isogeny_class_cm
-
-from LfunctionDatabase import get_lfunction_by_Lhash, get_instances_by_Lhash, get_instances_by_trace_hash, get_lfunction_by_url, get_instance_by_url, getHmfData, getHgmData, getEllipticCurveData
-from Lfunction_base import Lfunction
-
-from lmfdb.db_backend import db
-from lmfdb.lfunctions import logger
-from lmfdb.utils import web_latex, round_to_half_int, round_CBF_to_half_int, display_complex, str_to_CBF
-
-from sage.all import ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime, is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,  EllipticCurve, NumberField, RealNumber, PowerSeriesRing, CDF, latex, CBF, RBF, RIF, primes_first_n, next_prime
+from sage.all import (
+    ZZ, QQ, RR, CC, Integer, Rational, Reals, nth_prime,
+    is_prime, factor,  log, real,  I, gcd, sqrt, prod, ceil,
+    EllipticCurve, NumberField, RealNumber, PowerSeriesRing,
+    latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute)
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
+from lmfdb import db
+from lmfdb.backend.encoding import Json
+from lmfdb.utils import (
+    web_latex, round_to_half_int, round_CBF_to_half_int,
+    display_complex, str_to_CBF,
+    Downloader,
+    names_and_urls)
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.WebNumberField import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
-from lmfdb.downloader import Downloader
+from Lfunction_base import Lfunction
+from lmfdb.lfunctions import logger
+from Lfunctionutilities import (
+    string2number, get_bread,
+    compute_local_roots_SMF2_scalar_valued,)
+from LfunctionComp import isogeny_class_cm
+from LfunctionDatabase import (
+    get_lfunction_by_Lhash, get_instances_by_Lhash,
+    get_instances_by_trace_hash, get_lfunction_by_url,
+    get_instance_by_url, getHmfData, getHgmData,
+    getEllipticCurveData, get_multiples_by_Lhash)
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -100,11 +106,11 @@ def makeLfromdata(L):
     L.primitive = data.get('primitive', None)
     L.selfdual = data.get('self_dual', None)
     if data.get('root_number', None) is not None:
-        # we first need to convert from unicode to a regular strin
+        # we first need to convert from unicode to a regular string
         L.sign = str_to_CBF(data['root_number'])
     else:
         # this is a numeric converted to LMFDB_RealLiteral
-        L.sign = 2*RBF(str(data.get('sign_arg'))).exppii()
+        L.sign = (2*CBF(str(data.get('sign_arg')))).exppii()
     assert (L.sign.abs() - 1).abs().mid() < 1e-5
     if L.selfdual:
         L.sign = RIF(L.sign.real()).unique_integer()
@@ -118,7 +124,7 @@ def makeLfromdata(L):
         L.motivic_weight = ZZ(L.motivic_weight)
         L.analytic_normalization = QQ(L.motivic_weight)/2
     else:
-        # this is a numeric convered to RealLiteral
+        # this is a numeric converted to RealLiteral
         L.analytic_normalization = round_to_half_int(data.get('analytic_normalization'))
         L.motivic_weight = '' # ZZ(2*L.analytic_normalization)
 
@@ -141,11 +147,11 @@ def makeLfromdata(L):
         central_value = 0
     elif L.leading_term is not None:
         #  convert to string in case it is in unicode string
-        central_value =  CDF(str(L.leading_term))
+        central_value =  CC(str(L.leading_term))
     else:
         # we use the plot_values
         if L.selfdual:
-            central_value = CDF(data['plot_values'][0])
+            central_value = CC(data['plot_values'][0])
         else:
             central_value = data['plot_values'][0]/sqrt(L.sign)
         # we should avoid displaying 10 digits as usual, as this is just a hack
@@ -155,7 +161,7 @@ def makeLfromdata(L):
         L.values = [ central_value ]
     else:
         #  convert to string in case it is in unicode string
-        L.values = [ [float(x), CDF(str(xval))] for x, xval in data['values']] + [ central_value ]
+        L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']] + [ central_value ]
 
 
     # Optional properties
@@ -177,12 +183,18 @@ def makeLfromdata(L):
     L.localfactors = data.get('euler_factors', None)
     L.bad_lfactors = data.get('bad_lfactors', None)
 
+    # the first euler factors factored
+    localfactors_factored = data.get('euler_factors_factorization', None)
+    if localfactors_factored is not None:
+        L.localfactors_factored_dict = dict(zip(primes_first_n(len(localfactors_factored)), localfactors_factored))
+    else:
+        L.localfactors_factored_dict = {}
+
     if L.coefficient_field == "CDF":
         # convert pairs of doubles to CDF
-        pairtoCDF = lambda x: CDF(tuple(x))
-        pairtoCDF = lambda x: CDF(*tuple(x))
-        L.localfactors = map(lambda x: map(pairtoCDF, x), L.localfactors)
-        L.bad_lfactors = [ [p, map(pairtoCDF, elt)] for p, elt in L.bad_lfactors]
+        pairtoCC = lambda x: CC(*tuple(x))
+        L.localfactors = map(lambda x: map(pairtoCC, x), L.localfactors)
+        L.bad_lfactors = [ [p, map(pairtoCC, elt)] for p, elt in L.bad_lfactors]
 
     # add missing bad factors
     known_bad_lfactors = [p for p,_ in  L.bad_lfactors]
@@ -556,38 +568,25 @@ class Lfunction_from_db(Lfunction):
         self.credit = ''
         self.label = ''
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "general"
 
-    @property
+    @lazy_attribute
     def langlands(self):
         # this controls data on the Euler product, but is not stored
         # systematically in the database. Default to True until this
         # is retrievable from the database.
         return True
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(self.degree)
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return self.Lhash
 
-    @property
-    def factors_origins(self):
-        lfactors = []
-        if "," in self.Lhash:
-            for factor_Lhash in  self.Lhash.split(","):
-                # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = elt.get('trace_hash',None)
-                if trace_hash is not None:
-                    instances = get_instances_by_trace_hash(elt['degree'], str(trace_hash))
-                else:
-                    instances = get_instances_by_Lhash(factor_Lhash)
-                lfactors.extend(names_and_urls(instances))
-        return lfactors
+
 
     def get_Lhash_by_url(self, url):
         instance = get_instance_by_url(url)
@@ -596,19 +595,58 @@ class Lfunction_from_db(Lfunction):
         return instance['Lhash']
 
 
-    @property
+    @lazy_attribute
     def origins(self):
+        # objects that arise the same identical L-function
         lorigins = []
         instances = get_instances_by_Lhash(self.Lhash)
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         if self.trace_hash is not None:
             instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
-        lorigins = names_and_urls(instances)
+        return names_and_urls(instances)
         if not self.selfdual and hasattr(self, 'dual_link'):
             lorigins.append(("Dual L-function", self.dual_link))
         return lorigins
 
     @property
+    def friends(self):
+        # dual L-function and objects such that the L-functions contain this L-function as a factor
+        related_objects = []
+        if not self.selfdual and hasattr(self, 'dual_link'):
+            related_objects.append(("Dual L-function", self.dual_link))
+
+        instances = [elt for elt in get_multiples_by_Lhash(self.Lhash) if elt['Lhash'] != self.Lhash]
+        if self.trace_hash is not None:
+            instances += [elt for elt in get_multiples_by_Lhash(str(self.trace_hash)) if elt['Lhash'] != self.Lhash and elt['Lhash'] != str(self.trace_hash) ]
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        # the only thing that we might be missing are genus 2 L-functions
+        # hence, self.degree = 2, self.type = CMF
+        if self.degree == 2:
+            # our only hope is to find the missing genus 2 curve with a CMF
+            for Lhash in  set(elt['Lhash'] for elt in instances if elt['type'] == 'CMF'):
+                elt = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = elt.get('trace_hash',None)
+                if trace_hash is not None and elt['degree'] == 4:
+                    # names_and_urls will remove duplicates
+                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+        return related_objects + names_and_urls(instances)
+
+    @lazy_attribute
+    def factors_origins(self):
+        # objects for the factors
+        instances = []
+        if "," in self.Lhash:
+            for factor_Lhash in  set(self.Lhash.split(",")):
+                # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
+                trace_hash = elt.get('trace_hash',None)
+                if trace_hash is not None:
+                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+                # names_and_urls will remove duplicates
+                instances.extend(get_instances_by_Lhash(factor_Lhash))
+        return names_and_urls(instances)
+
+    @lazy_attribute
     def instances(self):
         # we got here by tracehash or Lhash
         if self._Ltype == "general":
@@ -621,28 +659,24 @@ class Lfunction_from_db(Lfunction):
         else:
             return []
 
-    @property
-    def friends(self):
-        return []
-
-    @property
+    @lazy_attribute
     def downloads(self):
         return [['Download Euler factors', self.download_euler_factor_url],
                 ['Download zeros', self.download_zeros_url],
                 ['Download Dirichlet coefficients', self.download_dirichlet_coeff_url]]
 
-    @property
+    @lazy_attribute
     def download_euler_factor_url(self):
         return request.path.replace('/L/', '/L/download_euler/')
 
-    @property
+    @lazy_attribute
     def download_zeros_url(self):
         return request.path.replace('/L/', '/L/download_zeros/')
-    @property
+    @lazy_attribute
     def download_dirichlet_coeff_url(self):
         return request.path.replace('/L/', '/L/download_dirichlet_coeff/')
 
-    @property
+    @lazy_attribute
     def download_url(self):
         return request.path.replace('/L/', '/L/download/')
 
@@ -701,7 +735,7 @@ class Lfunction_from_db(Lfunction):
 
 
 
-    @property
+    @lazy_attribute
     def chilatex(self):
         try:
             if int(self.characternumber) != 1:
@@ -739,39 +773,39 @@ class Lfunction_from_db(Lfunction):
         self.info['title_analytic'] = ("L-function" + title_end)
         return
 
-    @property
+    @lazy_attribute
     def htmlname(self):
         return "<em>L</em>(<em>s</em>)"
 
-    @property
+    @lazy_attribute
     def htmlname_arithmetic(self):
         return self.htmlname
 
-    @property
+    @lazy_attribute
     def texname(self):
         return "L(s)"
 
-    @property
+    @lazy_attribute
     def texname_arithmetic(self):
         return self.texname
 
-    @property
+    @lazy_attribute
     def texnamecompleted1ms(self):
         if self.selfdual:
             return "\\Lambda(1-s)"
         else:
             return "\\overline{\\Lambda}(1-s)"
-    @property
+    @lazy_attribute
     def texnamecompleted1ms_arithmetic(self):
         if self.selfdual:
             return "\\Lambda(%d-s)" % (self.motivic_weight + 1)
         else:
             return "\\overline{\\Lambda}(%d-s)" % (self.motivic_weight + 1)
 
-    @property
+    @lazy_attribute
     def texnamecompleteds(self):
         return  "\\Lambda(s)"
-    @property
+    @lazy_attribute
     def texnamecompleteds_arithmetic(self):
         return self.texnamecompleteds
 
@@ -781,7 +815,7 @@ class Lfunction_from_db(Lfunction):
     #        raise KeyError('No L-function instance data for "%s" was found in the database.' % self.url)
     #    return
 
-    @property
+    @lazy_attribute
     def knowltype(self):
         return None
 
@@ -820,21 +854,31 @@ class Lfunction_CMF(Lfunction_from_db):
         self.__dict__.update(kwargs)
         self.label_args = (self.modform_level, self.weight, self.char_orbit_label, self.hecke_orbit, self.character, self.number)
         self.url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/%d/%d" % self.label_args
+        self.orbit_url = "ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s" % self.label_args[:4]
         Lfunction_from_db.__init__(self, url = self.url)
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return  "classical modular form"
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return ".".join(map(str, self.label_args))
 
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+
+    @property
+    def friends(self):
+        """The 'related objects' to show on webpage."""
+        lfriends = Lfunction_from_db.friends.fget(self)
+        root_orbit_url = '/' + self.orbit_url
+        if not any(root_orbit_url == elt[1] for elt in lfriends):
+            lfriends += names_and_urls([self.orbit_url])
+        return lfriends
 
 #    def _set_title(self):
 #        title = "L-function of a homomorphic cusp form of weight %s, level %s, and %s" % (
@@ -874,17 +918,19 @@ class Lfunction_CMF_orbit(Lfunction_from_db):
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return  "classical modular form orbit"
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return ".".join(map(str, self.label_args))
 
-    @property
+    @lazy_attribute
     def bread(self):
         return get_bread(self.degree, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree' + str(self.degree)))])
+
+
 
 #    def _set_title(self):
 #        conductor_str = "$ %s $" % latex(self.modform_level)
@@ -924,11 +970,11 @@ class Lfunction_EC(Lfunction_from_db):
 
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "ellipticcurve"
 
-    @property
+    @lazy_attribute
     def base_field(self):
         """base_field of the EC"""
         return self.field_label
@@ -949,7 +995,7 @@ class Lfunction_EC(Lfunction_from_db):
         self.long_isogeny_class_label = self.conductor_label + '.' + self.isogeny_class_label
         return
 
-    @property
+    @lazy_attribute
     def bread(self):
         """breadcrumbs for webpage"""
         if self.base_field == '1.1.1.1': #i.e. QQ
@@ -962,14 +1008,14 @@ class Lfunction_EC(Lfunction_from_db):
         return lbread
 
 
-    @property
+    @lazy_attribute
     def field(self):
         return "Q" if self.field_degree == 1 else self.field_label
 
     @property
     def friends(self):
         """The 'friends' to show on webpage."""
-        lfriends = []
+        lfriends = Lfunction_from_db.friends.fget(self)
         if self.base_field == '1.1.1.1': #i.e. QQ
             # only show symmetric powers for non-CM curves
             if not isogeny_class_cm(self.origin_label):
@@ -982,14 +1028,14 @@ class Lfunction_EC(Lfunction_from_db):
         return lfriends
 
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         if self.field_degree == 1:
             llabel = self.long_isogeny_class_label
         else:
             llabel = self.field_label + "-" + self.long_isogeny_class_label
         return llabel
-    @property
+    @lazy_attribute
     def knowltype(self):
         if self.field_degree == 1:
             return "ec.q"
@@ -1019,19 +1065,19 @@ class Lfunction_genus2_Q(Lfunction_from_db):
         Lfunction_from_db.__init__(self, url = self.url)
         self.numcoeff = 30
 
-    @property
+    @lazy_attribute
     def origin_label(self):
         return  self.isogeny_class_label
 
-    @property
+    @lazy_attribute
     def _Ltype(self):
         return "genus2curveQ"
 
-    @property
+    @lazy_attribute
     def knowltype(self):
         return "g2c.q"
 
-    @property
+    @lazy_attribute
     def factors_origins(self):
         # this is just a hack, and the data should be replaced
         instances = []

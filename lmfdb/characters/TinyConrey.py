@@ -58,7 +58,7 @@ class ConreyCharacter:
 
     @property
     def texname(self):
-        from lmfdb.WebCharacter import WebDirichlet
+        from lmfdb.characters.web_character import WebDirichlet
         return WebDirichlet.char2tex(self.modulus, self.number)
 
     @cached_method

@@ -2,18 +2,13 @@
 
 import re
 
-from lmfdb.db_backend import db
 from flask import render_template, url_for, request
-from lmfdb.half_integral_weight_forms import hiwf_page
-
 from sage.all import QQ, PolynomialRing, PowerSeriesRing
 
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints
-from lmfdb.search_wrapper import search_wrap
-
-from lmfdb.WebNumberField import nf_display_knowl
-
+from lmfdb import db
+from lmfdb.utils import flash_error, parse_ints, search_wrap
+from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.half_integral_weight_forms import hiwf_page
 
 @hiwf_page.route("/")
 def half_integral_weight_form_render_webpage():
@@ -32,7 +27,7 @@ def half_integral_weight_form_render_webpage():
              table=db.halfmf_forms,
              title='Half Integral Weight Cusp Forms Search Results',
              err_title='Half Integral Weight Cusp Forms Search Input Error',
-             per_page=100,
+             per_page=50,
              shortcuts={'label':lambda info:render_hiwf_webpage(label=info['label'])},
              projection=['level','label','weight','character','dim'],
              cleaners={'char': lambda v:"\chi_{"+v['character'].split(".")[0]+"}("+v['character'].split(".")[1]+",\cdot)",

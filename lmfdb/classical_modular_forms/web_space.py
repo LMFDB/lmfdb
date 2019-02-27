@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 # See genus2_curves/web_g2c.py
 # See templates/space.html for how functions are called
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
-from lmfdb.characters.utils import url_character
+from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
 from flask import url_for
 import re
@@ -21,7 +22,8 @@ def get_bread(**kwds):
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label')]
+             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
+             ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
@@ -42,6 +44,37 @@ def newform_search_link(text, title=None, **kwd):
     query = '&'.join('%s=%s'%(key, val) for key, val in kwd.items())
     link = "%s?%s"%(url_for('.index'), query)
     return "<a href='%s'%s>%s</a>"%(link, "" if title is None else " title='%s'"%title, text)
+
+def cyc_display(m, d, real_sub):
+    r"""
+    Used to display cyclotomic fields and their real subfields.
+
+    INPUT:
+
+    - ``m`` -- the order of the root of unity generating the field.
+    - ``d`` -- the degree of the cyclotomic field over Q
+    - ``real_sub`` -- whether to display the real subfield instead.
+
+    OUTPUT:
+
+    A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
+    """
+    if d == 1:
+        name = r'\(\Q\)'
+    elif m == 4:
+        name = r'\(\Q(i)\)'
+    elif real_sub:
+        name = r'\(\Q(\zeta_{%s})^+\)' % m
+    else:
+        name = r'\(\Q(\zeta_{%s})\)' % m
+    if d < 24:
+        if real_sub:
+            label = rcyclolookup[m]
+        else:
+            label = cyclolookup[m]
+        return nf_display_knowl(label, name=name)
+    else:
+        return name
 
 def ALdim_table(al_dims, level, weight):
     # Assume that the primes always appear in the same order
@@ -121,7 +154,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
         N.k.c --> N.k.i
     """
     N, k, chi = map(int, spacelabel_conrey.split('.'))
-    return db.mf_newspaces.lucky({'char_labels': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
+    return db.mf_newspaces.lucky({'conrey_indexes': {'$contains': chi}, 'level': N, 'weight': k}, projection='label')
 
 
 class DimGrid(object):
@@ -192,12 +225,11 @@ class WebNewformSpace(object):
         self.num_forms = data.get('num_forms')
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
-        self.char_conrey = self.char_labels[0]
+        self.char_conrey = self.conrey_indexes[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
-        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_char_labels', 'sub_mult'])
-        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_char_labels'][0], old['sub_mult']) for old in oldspaces]
+        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
+        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
         self.plot =  db.mf_newspace_portraits.lookup(self.label, projection = "portrait")
 
@@ -231,7 +263,7 @@ class WebNewformSpace(object):
             ('Download all stored data', url_for('.download_newspace', label=self.label)),
         ]
 
-        if self.char_labels[0] == 1:
+        if self.conrey_indexes[0] == 1:
             self.trivial_character = True
             character_str = "Trivial Character"
             if self.dim == 0:
@@ -242,7 +274,7 @@ class WebNewformSpace(object):
         else:
             self.trivial_character = False
             character_str = r"Character {level}.{orbit_label}".format(level=self.level, orbit_label=self.char_orbit_label)
-            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.char_labels[0])
+            # character_str = r"Character \(\chi_{{{level}}}({conrey}, \cdot)\)".format(level=self.level, conrey=self.conrey_indexes[0])
             self.dim_str = r"\(%s\)"%(self.dim)
         self.title = r"Space of Cuspidal Newforms of Level %s, Weight %s, and %s"%(self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
@@ -261,8 +293,22 @@ class WebNewformSpace(object):
             raise ValueError("Space %s not found" % label)
         return WebNewformSpace(data)
 
+    @property
+    def char_orbit_link(self):
+        label = '%s.%s' % (self.level, self.char_orbit_label)
+        return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+
+    def display_character(self):
+        if self.char_order == 1:
+            ord_deg = " (trivial)"
+        else:
+            ord_knowl = display_knowl('character.dirichlet.order', title='order')
+            deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
+            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
+        return self.char_orbit_link + ord_deg
+
     def _vec(self):
-        return [self.level, self.weight, self.char_labels[0]]
+        return [self.level, self.weight, self.conrey_indexes[0]]
 
     def mf_latex(self):
         return common_latex(*(self._vec() + ["M"]))
@@ -292,7 +338,7 @@ class WebNewformSpace(object):
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
 
     def subspace_latex(self, new=False):
-        return common_latex("M", self.weight, self.char_labels[0], "S", 0, "new" if new else "", symbolic_chi=True)
+        return common_latex("M", self.weight, self.conrey_indexes[0], "S", 0, "new" if new else "", symbolic_chi=True)
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
@@ -312,13 +358,16 @@ class WebNewformSpace(object):
     def hecke_cutter_display(self):
         return ", ".join(r"\(%d\)" % p for p in self.hecke_cutter_primes)
 
+    def display_character_field(self):
+        return cyc_display(self.char_order, self.char_degree, False)
+
 class WebGamma1Space(object):
     def __init__(self, level, weight):
         data = db.mf_gamma1.lucky({'level':level,'weight':weight})
         if data is None:
             raise ValueError("Space not in database")
         self.__dict__.update(data)
-        self.odd_weight = bool(self.weight % 2)
+        self.weight_parity = -1 if (self.weight % 2) == 1 else 1
         if level == 1 or ZZ(level).is_prime():
             self.factored_level = ''
         else:
@@ -330,10 +379,10 @@ class WebGamma1Space(object):
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         # by default we sort on char_orbit_index
-        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity':-1 if self.odd_weight else 1}))
+        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         oldspaces = db.mf_gamma1_subspaces.search({'level':level, 'sub_level':{'$ne':level}, 'weight':weight}, ['sub_level','sub_mult'])
         self.oldspaces = [(old['sub_level'],old['sub_mult']) for old in oldspaces]
-        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces)
+        self.dim_grid = sum(DimGrid.from_db(space) for space in newspaces) if newspaces else DimGrid()
         #self.mf_dim = sum(space['mf_dim'] for space in newspaces)
         #self.eis_dim = sum(space['eis_dim'] for space in newspaces)
         #self.eis_new_dim = sum(space['eis_new_dim'] for space in newspaces)
@@ -451,10 +500,10 @@ class WebGamma1Space(object):
         ans = []
         for i, (space, forms) in enumerate(self.decomp):
             rowtype = "oddrow" if i%2 else "evenrow"
-            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['char_labels'][0])
+            chi_str = r"\chi_{%s}(%s, \cdot)" % (space['level'], space['conrey_indexes'][0])
             chi_rep = '<a href="' + url_for('characters.render_Dirichletwebpage',
                                              modulus=space['level'],
-                                             number=space['char_labels'][0])
+                                             number=space['conrey_indexes'][0])
             chi_rep += '">\({}\)</a>'.format(chi_str)
 
             num_chi = space['char_degree']

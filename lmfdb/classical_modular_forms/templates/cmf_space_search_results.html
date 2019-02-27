@@ -1,116 +1,16 @@
-{% extends 'homepage.html' %}
+{% extends 'cmf_space_refine_search.html' %}
 
-{% block content %}
-
-<h2>Refine search </h2>
-
-<form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
-<input type="hidden" name="hidden_search_type" value="{{info.search_type}}"/>
-
-<table>
-  <tr>
-    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-    <td><div class="float-left">{{ KNOWL('mf.elliptic.weight', title='Weight') }}</div>
-      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
-        <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
-        <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
-      </select></div>
-    </td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Cusp. new dim.') }}</td>
-    <td>Num. {{ KNOWL('mf.elliptic.newform', title='newforms') }}</td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
-  </tr>
-
-  <tr>
-    <td><input type='text' style="width: 140px;" name='level' placeholder='4' value='{{info.level}}'></td>
-    <td><input type='text' style="width: 140px;" name='weight' placeholder='2' value='{{info.weight}}'></td>
-    <td><input type='text' style="width: 140px;" name='dim' placeholder='1-4' value='{{info.dim}}'></td>
-    <td><input type='text' style="width: 140px;" name='num_forms' placeholder='3' value='{{info.num_forms}}'></td>
-    <td><input type='text' style="width: 140px;" name='analytic_conductor' placeholder='1' value='{{info.analytic_conductor}}'></td>
-  </tr>
-
-  <tr>
-    <td> {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
-      <select name='prime_quantifier'>
-        <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
-        <option value='exact'{% if info.prime_quantifier == 'exact' %} selected='yes'{% endif %}>equal to</option>
-        <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
-      </select>
-    </td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}
-      <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
-        <option></option>
-        <option value="even"{{ "selected" if info.char_parity == 'even'}}>even</option>
-        <option value="odd"{{ "selected" if info.char_parity == 'odd'}}>odd</option>
-      </select>
-    </td>
-    <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
-    <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
-  </tr>
-
-  <tr>
-    <td><input type='text' name='level_primes' example='2,3' style="width: 140px" value="{{info.level_primes}}"></td>
-    <td><input type='text' style="width: 140px;" name='char_label' placeholder='20.d' value='{{info.char_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='prim_label' placeholder='1.a' value='{{info.prim_label}}'></td>
-    <td><input type='text' style="width: 140px;" name='char_order' placeholder='1' value='{{info.char_order}}'></td>
-    <td><input type='text' style="width: 140px;" name='Nk2' placeholder='1' value='{{info.Nk2}}'></td>
-  </tr>
-
-  <tr style="height:50px">
-    <td class="button"><button type='submit' name='search_type' value='Spaces' style="width: 150px" onclick='resetStart()'>Search again</button></td>
-    <td>{{ KNOWL('mf.elliptic.include_all_spaces', title='All spaces') }}
-      <select name='all_spaces'>
-        <option value="no"{{ "selected" if info.all_spaces == 'no'}}>No</option>
-        <option value="yes"{{ "selected" if info.all_spaces == 'yes'}}>Yes</option>
-    </select></td>
-  </tr>
-</table>
-</form>
+{% block show_results %}
 
 {% include 'matches.html' %}
 {% if info.number %}
-{% set show_AL = info.show_ALdims_col(info.results) %}
 
-<table class="ntdata">
-  <thead class="dark">
-    <tr class="middle">
-      <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-      <th>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(A\)') }}</th>
-      <th>{{ KNOWL('mf.elliptic.character', title='\(\chi\)') }}</th>
-      <th class="center">{{ KNOWL('character.dirichlet.order', title='\(\operatorname{ord}(\chi)\)') }}</th>
-      <th class="center">{{ KNOWL('mf.elliptic.display_dim', title='Dim.') }}</th>
-      <th class="center">{{ KNOWL('mf.elliptic.dim_decomposition', title='Decomp.') }}</th>
-      {% if show_AL %}
-      <th class="center">{{ KNOWL('mf.elliptic.atkin_lehner_dims', title='AL-dims.') }}</th>
-      {% endif %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for space in info.results %}
-    <tr>
-      <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
-      <td> \({{ space.analytic_conductor }}\) </td>
-      <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['char_labels'][0]) }}"> \( \chi_{ {{space.level}} }({{space.char_labels[0]}}, \cdot) \)</a> </td>
-      <td class="center"> \({{ space.char_order }}\) </td>
-      <td class="center"> \({{ space.dim }}\) </td>
-      <td class="nowrap center">{{ info.display_decomp(space) | safe}}</td>
-      {% if show_AL %}
-      <td class="nowrap center">{{ info.display_ALdims(space) | safe}}</td>
-      {% endif %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% include 'cmf_space_list.html' %}
 
 {% include 'forward_back.html' %}
 {% if info.download_spaces(info.results) %}
 {% include 'download_search_results.html' %}
 {% endif %}
 {% endif %}
-{% include 'debug_info.html' %}
 
 {% endblock %}
