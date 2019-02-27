@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Hypergeometric motives
-# Author: John Jones 
+# Author: John Jones
 
 import re
 
-from lmfdb.db_backend import db
 from flask import render_template, request, url_for, redirect, abort
-from lmfdb.utils import image_callback, flash_error
-from lmfdb.search_parsing import clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.transitive_group import small_group_display_knowl
-from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
 from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
+
+from lmfdb import db
+from lmfdb.utils import (
+    image_callback, flash_error, list_to_factored_poly_otherorder,
+    clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted,
+    search_wrap)
+from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
@@ -208,7 +209,7 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return hgm_search(request.args)
-    info = {'count': 20}
+    info = {'count': 50}
     return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
 
 
@@ -264,7 +265,7 @@ def hgm_jump(info):
              table=db.hgm_motives, # overridden if family search
              title=r'Hypergeometric Motive over $\Q$ Search Result',
              err_title=r'Hypergeometric Motive over $\Q$ Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':hgm_jump},
              bread=lambda:get_bread([("Search Results", '')]),
              credit=lambda:HGM_credit,

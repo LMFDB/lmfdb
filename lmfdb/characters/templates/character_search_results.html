@@ -72,6 +72,7 @@ table td.params {
 <table>
 <tr>
   <th class="center">{{ KNOWL('character.dirichlet.conrey', title='Conrey label')}}</th>
+  <th class="center">{{ KNOWL('character.dirichlet.galois_orbit_label', title='Orbit label')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.modulus', title='Modulus')}}</th>
   <th class="center">{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</th>
   <th align="center">{{ KNOWL('character.dirichlet.order', title='Order') }}</th>
@@ -79,9 +80,10 @@ table td.params {
   <th align="center">{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</th>
 </tr>
 
-{% for (mod,num,cond,order,par,prim,name) in info.chars: %}
+{% for (mod, num, cond, orbit_label, order, par, prim, name) in info.chars: %}
 <tr>
 <td class="center"><a href="{{mod}}/{{num}}">{{name}}</a></td>
+<td class="center">{{orbit_label}}</a></td>
 <td class="center">{{mod}}</td>
 <td class="center">{{cond}}</td>
 <td class="center">{{order}}</td>

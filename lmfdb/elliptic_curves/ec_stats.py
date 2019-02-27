@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import app
-from lmfdb.utils import comma, make_logger, format_percentage
-from lmfdb.db_backend import db
+from lmfdb.app import app
+from lmfdb.utils import comma, format_percentage
+from lmfdb.logger import make_logger
+from lmfdb import db
 from flask import url_for
 
 logger = make_logger("ec")

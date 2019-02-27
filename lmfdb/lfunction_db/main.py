@@ -1,4 +1,4 @@
-from lmfdb.db_backend import db
+from lmfdb import db
 import flask
 from flask import render_template, request
 from lmfdb.utils import Pagination

@@ -8,7 +8,7 @@ function populateIndexViewerPage(blockList, startVisible=true){
   //Create the HTML elements using the blocklist
   //We create in two chunks
 
-  setScanDate(blockList.date);
+  //setScanDate(blockList.date);
   setNiceTitle(blockList);
 
   console.log(blockList);

@@ -24,8 +24,6 @@ addons:
             - libssl-dev
             # needed for pyflakes
             - python-pip
-            # to have mongo shell
-            - mongodb-org-shell
             # to run nosetests in parallel
             - parallel
 
@@ -48,7 +46,9 @@ install:
     - export MAKE='make -j4'
     - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
     # travis_wait extends the default 10 minute timeout to 30 minutes
-    - travis_wait 30 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
+    # what is the load on the server
+    - uptime
+    - travis_wait 40 time tar xf sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2 -C ${HOME}
 
     # trigger the patch once script
     - ${SAGE} --version > patch_once_log
@@ -58,11 +58,8 @@ install:
     - ${SAGE} -pip install -r requirements.txt
 
 before_script:
-    # assert that m0.lmfdb.xyz accepts our connections
-    - nc -vz  m0.lmfdb.xyz 27017
-    # create a list of files and folder where we will run the tests
-    - ls  lmfdb/*.py  > list
-    - ls -d lmfdb/*/ >> list
+    # assert that devmirror.lmfdb.xyz accepts our connections
+    - nc -vz  devmirror.lmfdb.xyz 5432
     # how much free ram do we have
     - free -m
     # what is the load on the server
@@ -70,7 +67,7 @@ before_script:
 
 script:
     # run pyflakes
-    - pyflakes lmfdb/ > pyflakeslog
+    - pyflakes . > pyflakeslog
     - if [[ $(wc -l < pyflakeslog) != 0 ]]; then echo "ERROR pyflakes failed!"; cat pyflakeslog; else echo "PASS pyflakes is happy!"; fi
     # Check that pytest is installed
     - ${SAGE} -sh -c "pytest --version"

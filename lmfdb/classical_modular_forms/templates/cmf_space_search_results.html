@@ -1,0 +1,16 @@
+{% extends 'cmf_space_refine_search.html' %}
+
+{% block show_results %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+{% include 'cmf_space_list.html' %}
+
+{% include 'forward_back.html' %}
+{% if info.download_spaces(info.results) %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% endif %}
+
+{% endblock %}

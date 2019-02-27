@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
 
-import re, itertools
-from flask import render_template, url_for, redirect, request, jsonify
-from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, encode_plot, flash_error
-from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
-from lmfdb.db_backend import db
-from lmfdb.base import ctx_proc_userdata
-from psycopg2.extensions import QueryCanceledError
+import itertools, re
 
-from sage.all import ZZ, cos, sin, pi, list_plot, circle
+from flask import render_template, url_for, redirect, request, jsonify
+from psycopg2.extensions import QueryCanceledError
+from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
+
+from lmfdb import db
+from lmfdb.app import ctx_proc_userdata
+from lmfdb.utils import (
+    to_dict, encode_plot, flash_error,
+    parse_ints, parse_rational, parse_count, parse_start,
+    parse_ints_to_list_flash, clean_input)
+from lmfdb.sato_tate_groups import st_page
 
 ###############################################################################
 # Globals
 ###############################################################################
 
-MU_LABEL_RE = '^0\.1\.[1-9][0-9]*'
+MU_LABEL_RE = '^0\.1\.[1-9][0-9]*$'
 MU_LABEL_NAME_RE = r'^0\.1\.mu\([1-9][0-9]*\)$'
+NU1_MU_LABEL_RE = '^[1-9][0-9]*\.2\.1\.d[1-9][0-9]*$'
+SU2_MU_LABEL_RE = '^[1-9][0-9]*\.2\.3\.c[1-9][0-9]*$'
 ST_LABEL_RE = '^\d+\.\d+\.\d+\.\d+\.\d+[a-z]+$'
 ST_LABEL_SHORT_RE = '^\d+\.\d+\.\d+\.\d+\.\d+$'
 ST_LABEL_NAME_RE = r'^\d+\.\d+\.[a-zA-z0-9\{\}\(\)\[\]\_\,]+'
@@ -30,8 +35,7 @@ st0_dict = {
     'SO(1)':'\\mathrm{SO}(1)',
     'U(1)':'\\mathrm{U}(1)',
     'SU(2)':'\\mathrm{SU}(2)',
-    'U(1)_2':'\\mathrm{U}(1)_2',
-    'SU(2)_2':'\\mathrm{SU}(2)_2',
+    'U(2)':'\\mathrm{U}(2)',
     'U(1)xU(1)':'\\mathrm{U}(1)\\times\\mathrm{U}(1)',
     'U(1)xSU(2)':'\\mathrm{U}(1)\\times\\mathrm{SU}(2)',
     'SU(2)xSU(2)':'\\mathrm{SU}(2)\\times\\mathrm{SU}(2)',
@@ -53,13 +57,37 @@ def string_matrix(m):
         return ''
     return '\\begin{bmatrix}' + '\\\\'.join(['&'.join(map(str, m[i])) for i in range(len(m))]) + '\\end{bmatrix}'
 
-def st_link(label):
+def get_name(label):
     if re.match(MU_LABEL_RE, label):
-        return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), '\\mu(%s)'%label.split('.')[2])
-    data = db.gps_sato_tate.lookup(label)
-    if not data:
+        name = r'\mu(%s)'%label.split('.')[2]
+    elif re.match(NU1_MU_LABEL_RE, label):
+        if label.split('.')[3] == 'd1':
+            if label.split('.')[0] == '1':
+                label = '1.2.1.2.1a'
+            name = r'N(\mathrm{U}(1))'
+        else:
+            name = r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:]
+    elif re.match(SU2_MU_LABEL_RE, label):
+        if label.split('.')[3] == 'c1':
+            if label.split('.')[0] == '1':
+                label = '1.2.3.1.1a'
+            name = r'\mathrm{SU}(2)'
+        else:
+            name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
+    else:
+        data = db.gps_sato_tate.lookup(label)
+        if data:
+            name = data['pretty']
+        else:
+            name = None
+    return name, label
+
+def st_link(label):
+    name, label = get_name(label)
+    if name is None:
         return label
-    return '''<a href=%s>$%s$</a>'''% (url_for('.by_label', label=label), data['pretty'])
+    else:
+        return '<a href=%s>$%s$</a>' % (url_for('st.by_label', label=label), name)
 
 def st_ambient(weight, degree):
     return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree
@@ -73,6 +101,10 @@ def trace_moments(moments):
 def st0_pretty(st0_name):
     if re.match('SO\(1\)\_\d+', st0_name):
         return '\\mathrm{SO}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match('U\(1\)\_\d+', st0_name):
+        return '\\mathrm{U}(1)_{%s}' % st0_name.split('_')[1]
+    if re.match('SU\(2\)\_\d+', st0_name):
+        return '\\mathrm{SU}(2)_{%s}' % st0_name.split('_')[1]
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
@@ -84,6 +116,7 @@ def sg_pretty(sg_label):
 # dictionary for quick and dirty prettification that does not access the database
 st_pretty_dict = {
     'USp(4)':'\\mathrm{USp}(4)',
+    'U(2)':'\\mathrm{U}(2)',
     'SU(2)':'\\mathrm{SU}(2)',
     'U(1)':'\\mathrm{U}(1)',
     'N(U(1))':'N(\\mathrm{U}(1))'
@@ -137,6 +170,10 @@ def by_label(label):
     clean_label = clean_input(label)
     if clean_label != label:
         return redirect(url_for('.by_label', label=clean_label), 301)
+    if label == '1.2.1.d1':
+        return redirect(url_for('.by_label', label='1.2.1.2.1a'), 301)
+    if label == '1.2.3.c1':
+        return redirect(url_for('.by_label', label='1.2.3.1.1a'), 301)
     return search_by_label(label)
 
 ###############################################################################
@@ -152,6 +189,12 @@ def search_by_label(label):
         return redirect(url_for('.by_label',label=label+'a'),301)
     # check for labels of the form 0.1.n corresponding to mu(n)
     if re.match(MU_LABEL_RE, label):
+        return render_by_label(label)
+    # check for labels of the form w.2.1.dn corresponding to N(U(1)) x mu(n)
+    if re.match(NU1_MU_LABEL_RE, label):
+        return render_by_label(label)
+    # check for labels of the form w.2.3.cn corresponding to SU(2) x mu(n)
+    if re.match(SU2_MU_LABEL_RE, label):
         return render_by_label(label)
     # check for labels of the form 0.1.mu(n) (redirecto to 0.1.n)
     if re.match(MU_LABEL_NAME_RE, label):
@@ -274,9 +317,9 @@ def mu_info(n):
     rec['components'] = int(n)
     rec['ambient'] = '\mathrm{O}(1)' if n <= 2 else '\mathrm{U}(1)'
     rec['connected'] = boolean_name(rec['components'] == 1)
-    rec['st0_name'] = '\mathrm{SO}(1)'
+    rec['st0_name'] = 'SO(1)'
     rec['identity_component'] = st0_pretty(rec['st0_name'])
-    rec['st0_description'] = '\\mathrm{trivial}'
+    rec['st0_description'] = r'\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
     rec['trace_zero_density']='0'
     rec['abelian'] = boolean_name(True)
@@ -301,11 +344,107 @@ def mu_info(n):
 def mu_portrait(n):
     """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
     if n <= 120:
-        plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n, axes=False)
+        plot =  list_plot([(cos(2*pi*m/n),sin(2*pi*m/n)) for m in range(n)],pointsize=30+60/n,axes=False)
     else:
         plot = circle((0,0),1,thickness=3)
     plot.xmin(-1); plot.xmax(1); plot.ymin(-1); plot.ymax(1)
     plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
+    return encode_plot(plot)
+
+def su2_mu_info(w,n):
+    """ return data for ST group SU(2) x mu(n) (of any wt > 0); these groups are not stored in the database """
+    assert w > 0 and n > 0
+    n = ZZ(n)
+    rec = {}
+    rec['label'] = "%d.2.3.c%d"%(w,n)
+    rec['weight'] = w
+    rec['degree'] = 2
+    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
+    rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
+    rec['real_dimension'] = 3
+    rec['components'] = int(n)
+    rec['ambient'] = '\mathrm{U}(2)'
+    rec['connected'] = boolean_name(rec['components'] == 1)
+    rec['st0_name'] = 'SU(2)'
+    rec['identity_component'] = st0_pretty(rec['st0_name'])
+    rec['st0_description'] = r'\left\{\begin{bmatrix}\alpha&\beta\\-\bar\beta&\bar\alpha\end{bmatrix}:\alpha\bar\alpha+\beta\bar\beta = 1,\ \alpha,\beta\in\mathbb{C}\right\}'
+    rec['component_group'] = 'C_{%d}'%n
+    rec['abelian'] = boolean_name(True)
+    rec['cyclic'] = boolean_name(True)
+    rec['solvable'] = boolean_name(True)
+    rec['trace_zero_density']='0'
+    rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
+    rec['numgens'] = 1
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    su2moments = ['1','0','1','0','2','0','5','0','14','0','42','0','132']
+    rec['moments'] += [['a_1'] + [su2moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['trace_moments'] = trace_moments(rec['moments'])
+    rec['counts'] = []
+    return rec
+
+def su2_mu_portrait(n):
+    """ returns an encoded line plot of SU(2) x mu(n) in the complex plane """
+    if n == 1:
+        return db.gps_sato_tate.lookup('1.2.3.1.1a').get('trace_histogram')
+    if n <= 120:
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)])
+    else:
+        plot = circle((0,0),2,fill=True)
+    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
+    plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
+    return encode_plot(plot)
+
+
+def nu1_mu_info(w,n):
+    """ return data for ST group N(U(1)) x mu(n) (of any wt > 0); these groups are not stored in the database """
+    assert w > 0 and n > 0
+    n = ZZ(n)
+    rec = {}
+    rec['label'] = "%d.2.1.d%d"%(w,n)
+    rec['weight'] = w
+    rec['degree'] = 2
+    rec['rational'] = boolean_name(True if n <= 2 else False)
+    rec['name'] = 'U(1)[D%d]'%n if n > 1 else 'N(U(1))'
+    rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
+    rec['real_dimension'] = 1
+    rec['components'] = int(2*n)
+    rec['ambient'] = '\mathrm{U}(2)'
+    rec['connected'] = boolean_name(rec['components'] == 1)
+    rec['st0_name'] = 'U(1)'
+    rec['identity_component'] = st0_pretty(rec['st0_name'])
+    rec['st0_description'] = '\\left\\{\\begin{bmatrix}\\alpha&0\\\\0&\\bar\\alpha\\end{bmatrix}:\\alpha\\bar\\alpha = 1,\\ \\alpha\\in\\mathbb{C}\\right\\}'
+    rec['component_group'] = 'D_{%d}'%n
+    rec['abelian'] = boolean_name(n <= 2)
+    rec['cyclic'] = boolean_name(n <= 1)
+    rec['solvable'] = boolean_name(True)
+    rec['trace_zero_density']='1/2'
+    rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
+    rec['numgens'] = 2
+    rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
+    rec['supgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,p*n)) for p in [2,3,5]] + ["$\ldots$"])
+    rec['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(13)]]
+    nu1moments = ['1','0','1','0','3','0','10','0','35','0','126','0','462']
+    rec['moments'] += [['a_1'] + [nu1moments[m] if m % n == 0  else '0' for m in range(13)]]
+    rec['trace_moments'] = trace_moments(rec['moments'])
+    rec['counts'] = [['a_1', [[0,n]]]]
+    return rec
+
+def nu1_mu_portrait(n):
+    """ returns an encoded scatter plot of the nth roots of unity in the complex plane """
+    if n == 1:
+        return db.gps_sato_tate.lookup('1.2.1.2.1a').get('trace_histogram')
+    if n <= 120:
+        plot =  sum([line2d([(-2*cos(2*pi*m/n),-2*sin(2*pi*m/n)),(2*cos(2*pi*m/n),2*sin(2*pi*m/n))],thickness=3) for m in range(n)]) + circle((0,0),0.1,rgbcolor=(0,0,0),fill=True)
+    else:
+        plot = circle((0,0),2,fill=True)
+    plot.xmin(-2); plot.xmax(2); plot.ymin(-2); plot.ymax(2)
+    plot.set_aspect_ratio(4.0/3.0)
+    plot.axes(False)
     return encode_plot(plot)
 
 def render_by_label(label):
@@ -316,6 +455,20 @@ def render_by_label(label):
             flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
             return redirect(url_for(".index"))
         return render_st_group(mu_info(n), portrait=mu_portrait(n))
+    if re.match(NU1_MU_LABEL_RE, label):
+        w = ZZ(label.split('.')[0])
+        n = ZZ(label.split('.')[3][1:])
+        if 2*n > 10**20:
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", 2*n)
+            return redirect(url_for(".index"))
+        return render_st_group(nu1_mu_info(w,n), portrait=nu1_mu_portrait(n))
+    if re.match(SU2_MU_LABEL_RE, label):
+        w = ZZ(label.split('.')[0])
+        n = ZZ(label.split('.')[3][1:])
+        if n > 10**20:
+            flash_error("number of components %s is too large, it should be less than 10^{20}$.", n)
+            return redirect(url_for(".index"))
+        return render_st_group(su2_mu_info(w,n), portrait=su2_mu_portrait(n))
     data = db.gps_sato_tate.lookup(label)
     info = {}
     if data is None:
@@ -330,7 +483,8 @@ def render_by_label(label):
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
-    info['st0_name']=st0['pretty']
+    info['st0_name']=st0['name']
+    info['identity_component']=st0['pretty']
     info['st0_description']=st0['description']
     G = db.gps_small.lookup(data['component_group'])
     if not G:
@@ -364,7 +518,7 @@ def render_st_group(info, portrait=None):
         ('Real dimension', '%d'%info['real_dimension']),
         ('Components', '%d'%info['components']),
         ('Contained in','\(%s\)'%info['ambient']),
-        ('Identity Component', '\(%s\)'%info['st0_name']),
+        ('Identity Component', '\(%s\)'%info['identity_component']),
         ('Component group', '\(%s\)'%info['component_group']),
     ]
     bread = [
