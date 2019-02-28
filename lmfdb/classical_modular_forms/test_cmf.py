@@ -311,24 +311,24 @@ class CmfTest(LmfdbTest):
 
     def test_dual(self):
         urls_set = [
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a')
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1', 'Dual Form 5.9.c.a.3.1')
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1', 'Dual Form 5.9.c.a.2.1')
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual Form 5.9.c.a.2.1'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual Form 5.9.c.a.3.1'),
                 ],
-                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a')
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3', 'Dual Form 5.9.c.a.3.3')
-                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3', 'Dual Form 5.9.c.a.2.3')
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual Form 5.9.c.a.2.3'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual Form 5.9.c.a.3.3'),
                 ],
                 [
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a')
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1')
-                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1')
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1'),
                 ]
                 ]
         for urls in urls_set:
             for i, (url, _) in enumerate(urls):
                 page = self.tc.get(url)
-                for other, name in urls:
+                for j, (other, name) in enumerate(urls):
                     if i != j:
                         assert other in page.data
                         if i > 0:
@@ -344,7 +344,7 @@ class CmfTest(LmfdbTest):
             page = self.tc.get(url)
             # root
             assert 'Root' in page.data
-            assert '0.500000'  in page.data 
+            assert '0.500000'  in page.data
             assert '0.866025' in page.data
             # p = 13
             for n in ['2.50000', '2.59808', '0.693375', '0.720577']:
@@ -449,7 +449,7 @@ class CmfTest(LmfdbTest):
         for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
             page = self.tc.get(url)
-            assert '3412.76' in page.data
+            assert '3412.77' in page.data
             assert '1.55372e49' in page.data
             assert '1.00032e49' in page.data
 
@@ -465,7 +465,7 @@ class CmfTest(LmfdbTest):
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
             page = self.tc.get(url)
             assert '0.993913' in page.data
-            assert '1.36786' in page.data
+            assert '1.36787' in page.data
 
         for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
@@ -476,7 +476,7 @@ class CmfTest(LmfdbTest):
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/3/']:
             page = self.tc.get(url)
             assert '0.216496' in page.data
-            assert '2.15536' in page.data
+            assert '2.15537' in page.data
 
         # test some exact values
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/e/a/?n=97&m=8&prec=6&format=satake_angle')

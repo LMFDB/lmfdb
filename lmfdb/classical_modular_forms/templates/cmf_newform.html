@@ -57,7 +57,8 @@ function get_all_embeddings(num_embeddings) {
     {% endif %}
     <tr>
       {% set embedding_label = newform.conrey_from_embedding(m) %}
-      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;"><a href="{{embedding_label}}">{{ embedding_label }}</a></td>
+      {% set embedding_link = newform.embedded_mf_link(m) %}
+      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;"><a href="{{embedding_link}}">{{ embedding_label }}</a></td>
       {% if loop.index == 1 and newform.has_exact_qexp %}
       {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
       <td rowspan = "{{headcol_rowspan*(info.CC_m | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
