@@ -11,7 +11,7 @@ from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 # Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
-class Lfunction:
+class Lfunction(object):
     """Class representing a general L-function
     """
 

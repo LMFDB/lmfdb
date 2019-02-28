@@ -4,8 +4,8 @@ from lmfdb.knowledge import logger
 from datetime import datetime
 import time
 
-from lmfdb.db_backend import db, PostgresBase, DelayCommit
-from lmfdb.db_encoding import Array
+from lmfdb.backend.database import db, PostgresBase, DelayCommit
+from lmfdb.backend.encoding import Json
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -42,7 +42,7 @@ def extract_cat(kid):
         return None
     return kid.split(".")[0]
 
-# We don't use the PostgresTable from lmfdb.db_backend
+# We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
 
 class KnowlBackend(PostgresBase):
@@ -91,15 +91,15 @@ class KnowlBackend(PostgresBase):
             values.append(category)
         if len(filters) > 0:
             restrictions.append(SQL("quality = ANY(%s)"))
-            values.append(Array([q for q in filters if q in knowl_qualities]))
+            values.append([q for q in filters if q in knowl_qualities])
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
                 restrictions.append(SQL("_keywords @> %s"))
-                values.append(keywords)
+                values.append(Json(keywords))
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
-            values.append([author])
+            values.append(Json(author))
         selecter = SQL("SELECT id, title FROM kwl_knowls")
         if restrictions:
             selecter = SQL("{0} WHERE {1}").format(selecter, SQL(" AND ").join(restrictions))
@@ -139,7 +139,7 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        values = (authors, cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, history, search_keywords)
+        values = (Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, Json(history), Json(search_keywords))
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls (id, {0}, history, _keywords) VALUES (%s, {1}) ON CONFLICT (id) DO UPDATE SET ({0}, history, _keywords) = ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
@@ -148,7 +148,9 @@ class KnowlBackend(PostgresBase):
         self.cached_titles[knowl.id] = knowl.title
 
     def update(self, kid, key, value):
-        if key not in self._default_fields + ['history', '_keywords']:
+        if key in ['authors', 'history', '_keywords']:
+            value = Json(value)
+        elif key not in self._default_fields:
             raise ValueError("Bad key")
         updater = SQL("UPDATE kwl_knowls SET ({0}) = ROW(%s) WHERE id = %s").format(Identifier(key))
         self._execute(updater, (value, kid))
@@ -242,7 +244,7 @@ class KnowlBackend(PostgresBase):
             for kid, content, title in cur:
                 cat = extract_cat(kid)
                 search_keywords = make_keywords(content, kid, title)
-                self._execute(updater, (cat, search_keywords, kid))
+                self._execute(updater, (cat, Json(search_keywords), kid))
             hcount = 0
             selecter = SQL("SELECT id, history FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(selecter)
@@ -250,7 +252,7 @@ class KnowlBackend(PostgresBase):
             for kid, history in cur:
                 if len(history) > max_h:
                     hcount += 1
-                    self._execute(updater, (history[-max_h:], kid))
+                    self._execute(updater, (Json(history[-max_h:]), kid))
             counter = SQL("SELECT COUNT(*) FROM kwl_knowls WHERE history IS NOT NULL")
             cur = self._execute(counter)
             reindex_count = int(cur.fetchone()[0])

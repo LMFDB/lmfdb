@@ -2,6 +2,8 @@
 
 {% block content %}
 
+    {% set KNOWL_ID = "av.fq.%s"|format(cl['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 
 <h2>Invariants</h2>
 
@@ -123,5 +125,8 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 {{cl.basechangeinfo|safe}}
 {% endif %}
 </p>
+
+    {% set KNOWL_ID = "av.fq.%s"|format(cl['label']) %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
 
 {% endblock %}

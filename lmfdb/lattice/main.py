@@ -1,29 +1,23 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-import StringIO
+import ast, re, StringIO, time
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
+from flask import render_template, request, url_for, redirect, make_response, flash, send_file
 from markupsafe import Markup
-
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.utils import web_latex_split_on_pm
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
-from lmfdb.search_wrapper import search_wrap
-
+from lmfdb.utils import (
+    web_latex_split_on_pm,
+    parse_ints, parse_list, parse_count, parse_start, clean_input,
+    search_wrap)
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 from lmfdb.lattice.isom import isom
+from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 # Database connection
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # utilitary functions for displays 
 

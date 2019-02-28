@@ -1,14 +1,18 @@
 # Different helper functions.
 
-import re
-from lmfdb.lfunctions import logger
-from flask import url_for
-import math
-from sage.all import ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing, LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part, latex, factor, prime_divisors, prime_pi, exp, pi, prod, floor, primes_first_n, is_prime
-from lmfdb.transitive_group import group_display_knowl
-from lmfdb.db_backend import db
-from lmfdb.utils import display_complex, list_to_factored_poly_otherorder
+import math, re
 
+from flask import url_for
+from sage.all import (
+    ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
+    LaurentSeriesRing, O, Integer, primes, CDF, I, real_part, imag_part,
+    latex, factor, prime_divisors, exp, pi, prod, floor, is_prime, prime_range)
+
+from lmfdb.utils import (
+    display_complex, list_to_factored_poly_otherorder, make_bigint,
+    list_factored_to_factored_poly_otherorder)
+from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.lfunctions import logger
 
 ###############################################################
 # Functions for displaying numbers in correct format etc.
@@ -24,7 +28,7 @@ def p2sage(s):
     if type(z) in [list, tuple]:
         return [p2sage(t) for t in z]
     else:
-        Qa = PolynomialRing(RationalField(),"a");
+        Qa = PolynomialRing(RationalField(),"a")
         for f in [ZZ, RR, CC, Qa]:
             try:
                 return f(z)
@@ -65,32 +69,6 @@ def string2number(s):
             return Integer(strs)
     except:
         return s
-
-
-def pair2complex(pair):
-    ''' Turns the pair into a complex number.
-    '''
-    local = re.match(" *([^ ]+)[ \t]*([^ ]*)", pair)
-    if local:
-        rp = local.group(1)
-        if local.group(2):
-            ip = local.group(2)
-        else:
-            ip = 0
-    else:
-        rp = 0
-        ip = 0
-    return float(rp) + float(ip) * I
-
-
-def splitcoeff(coeff):
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-
-    return answer
 
 
 def styleTheSign(sign):
@@ -274,23 +252,24 @@ def lfuncDShtml(L, fmt):
 
     elif fmt == "abstract":
         if L.Ltype() == "riemann":
-            ans = "\[\\begin{equation} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{equation} \]\n"
+            ans = "\[\\begin{aligned} \n \\zeta(s) = \\sum_{n=1}^{\\infty} n^{-s} \n \\end{aligned} \]\n"
 
         elif L.Ltype() == "dirichlet":
-            ans = "\[\\begin{equation} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n L(s,\\chi) = \\sum_{n=1}^{\\infty} \\chi(n) n^{-s} \n \\end{aligned}\]"
             ans = ans + "where $\\chi$ is the character modulo " + str(L.charactermodulus)
             ans = ans + ", number " + str(L.characternumber) + "."
 
         else:
-            ans = "\[\\begin{equation} \n " + L.texname + \
-                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{equation}\]"
+            ans = "\[\\begin{aligned} \n " + L.texname + \
+                " = \\sum_{n=1}^{\\infty} a(n) n^{-s} \n \\end{aligned}\]"
     return(ans)
 
 
 
 
 def lfuncEPtex(L, fmt):
-    """ Returns the LaTex for displaying the Euler product of the L-function L.
+    """
+        Returns the LaTex for displaying the Euler product of the L-function L.
         fmt could be any of the values: "abstract"
     """
     from Lfunction import Lfunction_from_db
@@ -307,10 +286,9 @@ def lfuncEPtex(L, fmt):
     ans = ""
     if fmt == "abstract" or fmt == "arithmetic":
         if fmt == "arithmetic":
-            ans = "\\begin{equation} \n " + L.texname_arithmetic + " = "
+            ans = "\[\\begin{aligned} \n " + L.texname_arithmetic + " = "
         else:
-            ans = "\\begin{equation} \n " + L.texname + " = "
-
+            ans = "\[\\begin{aligned} \n " + L.texname + " = "
         if L.Ltype() == "riemann":
             ans += "\\prod_p (1 - p^{-s})^{-1}"
 
@@ -350,13 +328,13 @@ def lfuncEPtex(L, fmt):
 
 
         else:
-            return("\\text{No information is available about the Euler product.}")
-        ans += " \n \\end{equation}"
+            return("No information is available about the Euler product.")
+        ans += " \n \\end{aligned}\]"
         return(ans)
     else:
         return("\\text{No information is available about the Euler product.}")
 
-def lfuncEPhtml(L,fmt, prec = None):
+def lfuncEPhtml(L,fmt):
     """
         Euler product as a formula and a table of local factors.
     """
@@ -401,29 +379,26 @@ def lfuncEPhtml(L,fmt, prec = None):
         ans += str(L.degree - 1) + ". "
 
     # Figuring out good and bad primes
-    bad_primes = []
-    for lf in L.bad_lfactors:
-        bad_primes.append(lf[0])
-    eulerlim = 25
-    good_primes = []
-    for p in primes_first_n(eulerlim):
-        if p not in bad_primes:
-            good_primes.append(p)
+    bad_primes = [p for p, _ in L.bad_lfactors]
+    good_primes = [p for p in prime_range(100) if p not in bad_primes]
+    p_index = dict(zip(prime_range(100), range(len(prime_range(100)))))
 
 
     #decide if we display galois
     display_galois = True
     if L.degree <= 2  or L.degree >= 12:
         display_galois = False
-    if L.coefficient_field == "CDF":
+    elif L.coefficient_field == "CDF":
+        display_galois = False
+    elif all(None in elt for elt in (L.localfactors + L.bad_lfactors)):
         display_galois = False
 
     def pretty_poly(poly, prec = None):
         out = "1"
         for i,elt in enumerate(poly):
             if elt is None or (i == prec and prec != len(poly) - 1):
-                out += "O(%s)" % (seriesvar(i, "polynomial"),)
-                break;
+                out += "+O(%s)" % (seriesvar(i, "polynomial"),)
+                break
             elif i > 0:
                 out += seriescoeff(elt, i, "series", "polynomial", 3)
         return out
@@ -433,37 +408,41 @@ def lfuncEPhtml(L,fmt, prec = None):
     eptable += "<table class='ntdata euler'>\n"
     eptable += "<thead>"
     eptable += "<tr class='space'><th class='weight'></th><th class='weight'>$p$</th>"
-    if L.degree > 2  and L.degree < 12:
-        display_galois = True
+    if display_galois:
         eptable += "<th class='weight galois'>$\Gal(F_p)$</th>"
-    else:
-        display_galois = False
     eptable += r"""<th class='weight' style="text-align: left;">$F_p$</th>"""
     eptable += "</tr>\n"
     eptable += "</thead>"
+    def group_display_knowl_C1_as_trivial(n,k):
+        if [n,k] == [1,1]:
+            return group_display_knowl(n, k, '$C_1$')
+        else:
+            return group_display_knowl(n, k)
     def row(trclass, goodorbad, p, poly):
+        if isinstance(poly[0], list):
+            galois_pretty_factors = list_factored_to_factored_poly_otherorder
+        else:
+            galois_pretty_factors = list_to_factored_poly_otherorder
         out = ""
         try:
             if L.coefficient_field == "CDF" or None in poly:
-                factors = str(pretty_poly(poly, prec = prec))
+                factors = '\( %s \)' % pretty_poly(poly)
+                gal_groups = [[0,0]]
             elif not display_galois:
-                factors = list_to_factored_poly_otherorder(poly, galois=display_galois, prec = prec, p = p)
+                factors = galois_pretty_factors(poly, galois=display_galois, p = p)
+                factors =  make_bigint('\( %s \)' % factors)
             else:
-                factors, gal_groups = list_to_factored_poly_otherorder(poly, galois=display_galois, p = p)
-            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>";
+                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p = p)
+                factors =  make_bigint('\( %s \)' % factors)
+            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
                 if gal_groups[0]==[0,0]:
-                    pass   # do nothing, because the local faco is 1
-                elif gal_groups[0]==[1,1]:
-                    out += group_display_knowl(gal_groups[0][0], gal_groups[0][1],'$C_1$')
+                    pass   # do nothing, because the local factor is 1
                 else:
-                    out += group_display_knowl(gal_groups[0][0], gal_groups[0][1])
-                for n, k in gal_groups[1:]:
-                    out += "$\\times$"
-                    out += group_display_knowl(n, k)
+                    out += "$\\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
                 out += "</td>"
-            out += "<td>" +"$" + factors + "$" + "</td>"
+            out += "<td> %s </td>" % factors
             out += "</tr>\n"
 
         except IndexError:
@@ -471,24 +450,29 @@ def lfuncEPhtml(L,fmt, prec = None):
         return out
     goodorbad = "bad"
     trclass = ""
-    for lf in L.bad_lfactors:
-        eptable += row(trclass, goodorbad, lf[0], lf[1])
+    for p, lf in L.bad_lfactors:
+        if p in L.localfactors_factored_dict:
+            lf = L.localfactors_factored_dict[p]
+        eptable += row(trclass, goodorbad, p, lf)
         goodorbad = ""
         trclass = ""
     goodorbad = "good"
     trclass = " class='first'"
-    good_primes1 = good_primes[:9]
-    good_primes2 = good_primes[9:]
-    for j in good_primes1:
-        this_prime_index = prime_pi(j) - 1
-        eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
-        goodorbad = ""
-        trclass = ""
-    trclass = " id='moreep'  class='more nodisplay'"
-    for j in good_primes2:
-        this_prime_index = prime_pi(j) - 1
-        eptable += row(trclass, goodorbad, j, L.localfactors[this_prime_index])
-        trclass = " class='more nodisplay'"
+    for j, good_primes in enumerate([good_primes[:9], good_primes[9:]]):
+        for p in good_primes:
+            if p in L.localfactors_factored_dict:
+                lf = L.localfactors_factored_dict[p]
+            else:
+                lf = L.localfactors[p_index[p]]
+            eptable += row(trclass, goodorbad, p, lf)
+            goodorbad = ""
+            if j == 0:
+                trclass = ""
+            elif j == 1:
+                trclass = " class='more nodisplay'"
+        else:
+            if j == 0:
+                trclass = " id='moreep'  class='more nodisplay'"
 
     eptable += r"""<tr class="less toggle"><td colspan="2"> <a onclick="show_moreless(&quot;more&quot;); return true" href="#moreep">show more</a></td>"""
 
@@ -569,7 +553,7 @@ def lfuncFEtex(L, fmt):
         tex_name_1ms = L.texnamecompleted1ms
     ans = ""
     if fmt == "arithmetic" or fmt == "analytic":
-        ans = "\\begin{align}\n" + tex_name_s + "=\\mathstrut &"
+        ans = "\\begin{aligned}\n" + tex_name_s + "=\\mathstrut &"
         if L.level > 1:
             if L.level >= 10**8 and not is_prime(int(L.level)):
                 ans += r"\left(%s\right)^{s/2}" % latex(L.level_factored)
@@ -611,7 +595,7 @@ def lfuncFEtex(L, fmt):
             ans += "\quad (\\text{with }\epsilon \\text{ not computed})"
         if L.sign == 0 and L.degree > 1:
             ans += "\quad (\\text{with }\epsilon \\text{ unknown})"
-        ans += "\n\\end{align}\n"
+        ans += "\n\\end{aligned}\n"
     elif fmt == "selberg":
         ans += "(" + str(int(L.degree)) + ",\\ "
         if L.level >= 10**8 and not is_prime(int(L.level)):
@@ -884,94 +868,7 @@ def getConductorIsogenyFromLabel(label):
     except:
         return None, None
 
-#######################################################################
-# Functions for interacting with web structure
-#######################################################################
 
-# TODO This needs to be able to handle any sort of L-function.
-# There should probably be a more relevant field
-# in the database, instead of trying to extract this from a URL
-def name_and_object_from_url(url):
-    url_split = url.split("/");
-    name = '??';
-    obj_exists = False;
-    #FIXME this is not robust against extra slashes
-
-    if url_split[0] == "EllipticCurve":
-        if url_split[1] == 'Q':
-            # EllipticCurve/Q/341641/a
-            label_isogeny_class = ".".join(url_split[-2:]);
-            obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
-        else:
-            # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:]);
-            obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class;
-
-    elif url_split[0] == "Character":
-        # Character/Dirichlet/19/8
-        assert url_split[1] == "Dirichlet"
-        name = """Dirichlet Character \(\chi_{%s} (%s, \cdot) \)""" %  tuple(url_split[-2:])
-        label = ".".join(url_split[-2:])
-        obj_exists = db.char_dir_values.exists({"label" : label})
-
-    elif url_split[0] == "Genus2Curve":
-        # Genus2Curve/Q/310329/a
-        assert url_split[1] == 'Q'
-        label_isogeny_class = ".".join(url_split[-2:]);
-        obj_exists = db.g2c_curves.exists({"class" : label_isogeny_class})
-        name = 'Isogeny class ' + label_isogeny_class;
-
-
-    elif url_split[0] == "ModularForm":
-        if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
-                if len(url_split) == 10:
-                    # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
-                    newform_label = ".".join(url_split[-6:-2])
-                    conrey_newform_label = ".".join(url_split[-6:])
-                    name =  'Modular form ' + conrey_newform_label
-                    obj_exists = db.mf_newforms.label_exists(newform_label)
-                elif len(url_split) == 8:
-                    # ModularForm/GL2/Q/holomorphic/24/2/f/a
-                    newform_label = ".".join(url_split[-4:])
-                    name =  'Modular form ' + newform_label;
-                    obj_exists = db.mf_newforms.label_exists(newform_label)
-
-
-            elif  url_split[2] == 'TotallyReal':
-                # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
-                label = url_split[-1];
-                name =  'Hilbert modular form ' + label;
-                obj_exists = db.hmf_forms.label_exists(label);
-
-            elif url_split[2] ==  'ImaginaryQuadratic':
-                # ModularForm/GL2/ImaginaryQuadratic/2.0.4.1/98.1/a
-                label = '-'.join(url_split[-3:])
-                name = 'Bianchi modular form ' + label;
-                obj_exists = db.bmf_forms.label_exists(label);
-    return name, obj_exists
-
-def names_and_urls(instances):
-    res = []
-    names = []
-    for instance in instances:
-        if not isinstance(instance, basestring):
-            instance = instance['url']
-        name, obj_exists = name_and_object_from_url(instance)
-        if not name:
-            name = ''
-        if obj_exists:
-            url = "/"+instance
-        else:
-            name = '(%s)' % (name)
-            url = ""
-        # avoid duplicates
-        if name not in names:
-            res.append((name, url))
-            names.append(name)
-
-    return res
 
 def get_bread(degree, breads=[]):
     """
@@ -983,3 +880,17 @@ def get_bread(degree, breads=[]):
     for b in breads:
         breadcrumb.append(b)
     return breadcrumb
+
+# Convert  r0r0c1 to (0,0;1), for example
+def parse_codename(text):
+
+    ans = text
+    if 'c' in text:
+        ans = re.sub('c', ';', ans, 1)
+    else:
+        ans += ';'
+    ans = re.sub('r', '', ans, 1)
+    ans = re.sub('(r|c)', ',', ans)
+
+    return '(' + ans + ')'
+

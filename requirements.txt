@@ -12,6 +12,5 @@ pytest
 pytest-cov
 pytest-xdist
 pyyaml
-seaborn
 unittest2
 pymongo

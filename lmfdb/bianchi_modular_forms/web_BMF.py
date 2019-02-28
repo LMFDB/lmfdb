@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
-from lmfdb.utils import make_logger
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
+from lmfdb import db
+from lmfdb.logger import make_logger
+from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex
@@ -88,10 +88,14 @@ class WebBMF(object):
                               web_latex(p.gens_reduced()[0]),
                               web_latex(ap)] for p,ap in zip(badp, self.AL_eigs)]
         self.sign = 'not determined'
-        if self.sfe == 1:
-            self.sign = "+1"
-        elif self.sfe == -1:
-            self.sign = "-1"
+        
+        try:
+            if self.sfe == 1:
+                self.sign = "+1"
+            elif self.sfe == -1:
+                self.sign = "-1"
+        except AttributeError:
+            self.sfe = '?'
 
         if self.Lratio == '?':
             self.Lratio = "not determined"
@@ -108,10 +112,16 @@ class WebBMF(object):
                             ('Dimension', str(self.dimension))
         ]
 
-        if self.CM == '?':
+        try:
+            if self.CM == '?':
+                self.CM = 'not determined'
+            elif self.CM == 0:
+                self.CM = 'no'
+            else:
+                if self.CM%4 in [2,3]:
+                    self.CM = 4*self.CM
+        except AttributeError:
             self.CM = 'not determined'
-        elif self.CM == 0:
-            self.CM = 'no'
         self.properties2.append(('CM', str(self.CM)))
 
         self.bc_extra = ''

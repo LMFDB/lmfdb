@@ -49,11 +49,12 @@ search a more complete <a href="/zeros/first/?limit=100&start=0&end=30&degree=4"
 degree 4</a> L-functions, or
 -->
 browse
-by {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
+by {{ KNOWL('lfunction.signature', title='signature') }}
+or {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
 </div>
 
 <p>
-<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree4')}}">Maass&nbsp;form&nbsp;for&nbsp;$\GL(4)$</a>
+<a href="{{url_for('l_functions.l_function_browse_page', degree='degree4', gammasignature='r0r0r0r0')}}">Signature (0,0,0,0;)</a>
 &nbsp;&nbsp;&nbsp;
 <a href="{{url_for('l_functions.l_function_ec_sym3_browse_page')}}">Symmetric&nbsp;cube&nbsp;of&nbsp;L-function&nbsp;of&nbsp;elliptic&nbsp;curve</a>
 &nbsp;&nbsp;&nbsp;

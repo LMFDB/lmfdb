@@ -1,5 +1,5 @@
 from LfunctionPlot import paintSvgHolo, paintSvgChar, paintSvgFileAll
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class LfunctionTest(LmfdbTest):
 
@@ -89,7 +89,6 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/')
         assert '/SatoTateGroup/1.2.' in L.data
         assert 'Isogeny class 2.0.1879.1-1.0.1-a' in L.data
-        assert "(Bianchi modular form 2.0.1879.1-1.0.1-a)" in L.data, L.data
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/')
         assert '/SatoTateGroup/1.2.' in L.data
@@ -139,6 +138,10 @@ class LfunctionTest(LmfdbTest):
 
 
     def test_Lcmf(self):
+        # test old links
+        L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/11/2/1/a/0/', follow_redirects = True)
+        assert "Modular form 11.2.a.a.1.1" in L.data
+
         # check the zeros agree across 3 instances
         L = self.tc.get('/L/Zeros/EllipticCurve/2.0.11.1/11.1/a/')
         assert '6.36261389471308870138602900888' in L.data
@@ -160,7 +163,7 @@ class LfunctionTest(LmfdbTest):
         for i in range(1,6):
             assert 'Modular form 13.12.a.a.1.%d' % i  in L.data
         assert '371293' in L.data # L_3 root
-        assert '1856465' in L.data # a_13
+        assert '2.54e3' in L.data # a_13
 
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/7/3/b/a/')
@@ -169,7 +172,7 @@ class LfunctionTest(LmfdbTest):
         assert '7.21458918128718444354242474222' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
-        assert '1341682069728' in L.data # a26
+        assert '1.34e12' in L.data # a26
         L = self.tc.get('/L/Zeros/ModularForm/GL2/Q/holomorphic/1/18/a/a/')
         assert '18.17341115038590061946085869072' in L.data
 
@@ -212,7 +215,7 @@ class LfunctionTest(LmfdbTest):
         assert '0.729971' in L.data
         assert '(2,\ 490,\ (\ :1/2),\ 1)' in L.data
         assert '0.940863335931152039286421559408' in L.data
-        assert '1+7T+ p T^{2}' in L.data
+        assert '1 + 7 T + p T^{2}' in L.data
         assert '\chi_{490} (1, \cdot )' in L.data
         L = self.tc.get('/L/EllipticCurve/Q/490/a/')
         assert '0.9408633359311520' in L.data
@@ -225,7 +228,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 + 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '$1 + 6T + 29T^{2}$' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
 
@@ -237,7 +240,7 @@ class LfunctionTest(LmfdbTest):
         assert '(2,\ 350,\ (\ :1/2),\ 0.991 - 0.126i)' in L.data
         assert '2.00692' in L.data
         assert '0.127359' in L.data
-        assert '$1 + 6T + 29T^{2}$' in L.data
+        assert '1 + 6T + 29T^{2}' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
 
@@ -249,8 +252,8 @@ class LfunctionTest(LmfdbTest):
         assert '4.04397' in L.data
         assert '1.68486586956382681209348921118' in L.data
         assert '3.10207045712088492456262227600' in L.data
-        assert '(1+T+ p T^{2})(1+7T+ p T^{2})' in L.data
-        assert '(1-2T+ p T^{2})^{2}' in L.data
+        assert '( 1 + T + p T^{2} )( 1 + 7 T + p T^{2} )' in L.data
+        assert '( 1 - 2 T + p T^{2} )^{2}' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/129/2/a/d/')
         assert 'Modular form 129.2.a.d' in L.data
@@ -258,7 +261,7 @@ class LfunctionTest(LmfdbTest):
             assert 'Modular form 129.2.a.d.1.%d' % i in L.data
 
         assert '1.04395' in L.data
-        assert '(1+T)^{3}' in L.data
+        assert '( 1 + T )^{3}' in L.data
         assert '1.55341889806322957326786121161' in L.data
         assert r'S_4\times C_2' in L.data
 
@@ -269,7 +272,7 @@ class LfunctionTest(LmfdbTest):
                 assert 'Modular form 60.2.i.a.%d.%d' % (c,i) in L.data, 'Modular form 60.2.%d.a.%d' % (c,i)
         assert '0.676894' in L.data
         assert '2.15777231959226116393597609132' in L.data
-        assert '$1-2T+2T^{2}-2 p T^{3}+ p^{2} T^{4}$' in L.data
+        assert '1 - 2 T + 2 T^{2} - 2 p T^{3} + p^{2} T^{4}' in L.data
         assert '(8,\ 12960000,\ (\ :1/2, 1/2, 1/2, 1/2),\ 1)' in L.data
 
         L = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/207/2/i/b/')
@@ -277,7 +280,7 @@ class LfunctionTest(LmfdbTest):
             assert 'Modular form 207.2.i.b.%d.1' % c in L.data, 'Modular form 207.2.%d.d.1' % c
         assert '0.233961' in L.data
         assert '0.096070203083029088532433951629' in L.data
-        assert '$1-T+T^{2}+21T^{3}-219T^{4}-1365T^{5}-219 p T^{6}+21 p^{2} T^{7}+ p^{3} T^{8}- p^{4} T^{9}+ p^{5} T^{10}$' in L.data
+        assert '1 -  T + T^{2} + 21 T^{3} - 219 T^{4} - 1365 T^{5} - 219 p T^{6} + 21 p^{2} T^{7} + p^{3} T^{8} -  p^{4} T^{9} + p^{5} T^{10}' in L.data
         assert 'Plot not available' in L.data
 
 
@@ -374,7 +377,7 @@ class LfunctionTest(LmfdbTest):
 
     def test_Lmain(self):
         L = self.tc.get('/L/')
-        assert 'Riemann' in L.data
+        assert 'Riemann' in L.data and 'Signature' in L.data
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')
@@ -411,16 +414,16 @@ class LfunctionTest(LmfdbTest):
         assert 'Elliptic' in L.data
 
     def test_Ldegree3MaassForm(self):
-        L = self.tc.get('/L/degree3/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree3/r0r0r0/')
+        assert 'equation' in L.data
 
     def test_Ldegree3EllipticCurve(self):
         L = self.tc.get('/L/degree3/EllipticCurve/SymmetricSquare/')
         assert 'Elliptic' in L.data
 
     def test_Ldegree4MaassForm(self):
-        L = self.tc.get('/L/degree4/MaassForm/')
-        assert 'Maass' in L.data
+        L = self.tc.get('/L/degree4/r0r0r0r0/')
+        assert 'functional' in L.data
 
     def test_Ldegree4EllipticCurve(self):
         L = self.tc.get('/L/degree4/EllipticCurve/SymmetricCube/')

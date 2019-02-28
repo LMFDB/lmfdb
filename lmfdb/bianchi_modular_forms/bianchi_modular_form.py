@@ -4,24 +4,23 @@ import re
 
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
-
 from sage.all import latex
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, web_latex_ideal_fact
-from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string, parse_start, parse_count
-from lmfdb.search_wrapper import search_wrap
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, web_latex_ideal_fact,
+    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
+    search_wrap)
+from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
+from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_display_knowl
-from lmfdb.nfutils.psort import ideal_from_label
 
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
@@ -110,10 +109,10 @@ def bianchi_modular_form_postprocess(res, info, query):
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
                        "level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "sfe": lambda v: "+1" if v.get('sfe')==1 else "-1",
+                       "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
                        "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
                        "bc": lambda v: bc_info(v['bc']),
-                       "cm": lambda v: cm_info(v.get('CM'))},
+                       "cm": lambda v: cm_info(v.pop('CM', '?'))},
              bread=lambda:[('Bianchi Modular Forms', url_for(".index")),
                            ('Search Results', '.')],
              learnmore=learnmore_list,
@@ -122,20 +121,10 @@ def bianchi_modular_form_search(info, query):
     """Function to handle requests from the top page, either jump to one
     newform or do a search.
     """
-    for field in ['field_label', 'weight', 'level_norm', 'dimension']:
-        if info.get(field):
-            if field == 'weight':
-                query['weight'] = info[field]
-            elif field == 'field_label':
-                parse_nf_string(info,query,field,'base number field',field)
-            elif field == 'label':
-                query[field] = info[field]
-            elif field == 'dimension':
-                query['dimension'] = int(info[field])
-            elif field == 'level_norm':
-                query[field] = parse_range(info[field])
-            else:
-                query[field] = info[field]
+    parse_nf_string(info, query, 'field_label', name='base number field')
+    parse_noop(info, query, 'label')
+    parse_ints(info, query, 'dimension')
+    parse_ints(info, query, 'level_norm')
     if not 'sfe' in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
@@ -301,9 +290,9 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
-                    'sfe': "+1" if f['sfe']==1 else "-1",
+                    'sfe': "+1" if f.get('sfe',None)==1 else "-1" if f.get('sfe',None)==-1 else "?",
                     'bc': bc_info(f['bc']),
-                    'cm': cm_info(f['CM']),
+                    'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]

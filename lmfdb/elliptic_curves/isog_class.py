@@ -3,7 +3,7 @@ from flask import url_for
 from lmfdb.utils import web_latex, encode_plot
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label
-from lmfdb.db_backend import db
+from lmfdb import db
 
 from sage.all import latex, matrix, PowerSeriesRing, QQ
 
@@ -103,7 +103,7 @@ class ECisog_class(object):
                            ]
 
 
-        self.downloads = [('Download coefficients of newform', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
+        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
         if self.lmfdb_iso == self.iso:

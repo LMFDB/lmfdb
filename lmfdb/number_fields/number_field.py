@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-D
 
-import time, os
+import ast, os, re, StringIO, time
+
 import flask
-from lmfdb.base import app
 from flask import render_template, request, url_for, redirect, send_file, flash, make_response
-import StringIO
-from lmfdb.number_fields import nf_page, nf_logger
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor, factor_base_factorization_latex
-from lmfdb.db_backend import db
-from lmfdb.local_fields.main import show_slope_content
-import ast
-
 from markupsafe import Markup
-
-import re
-
-assert nf_logger
-
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
 
-from lmfdb.transitive_group import group_display_knowl, cclasses_display_knowl,character_table_display_knowl, group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts, group_character_table_knowl_guts, group_alias_table
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.utils import (
+    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
+    clean_input, nf_string_to_label, parse_galgrp, parse_ints,
+    parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
+    search_wrap)
+from lmfdb.local_fields.main import show_slope_content
+from lmfdb.galois_groups.transitive_group import (
+    group_display_knowl, cclasses_display_knowl,character_table_display_knowl,
+    group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts,
+    group_character_table_knowl_guts, group_alias_table)
+from lmfdb.number_fields import nf_page, nf_logger
+from lmfdb.number_fields.web_number_field import (
+    field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
+    factor_base_factorization_latex)
 
-from lmfdb.utils import web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm
-from lmfdb.search_parsing import clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string
-from lmfdb.search_wrapper import search_wrap
+assert nf_logger
 
 NF_credit = 'the PARI group, J. Voight, J. Jones, D. Roberts, J. Kl&uuml;ners, G. Malle'
 Completename = 'Completeness of the data'
@@ -75,7 +76,8 @@ def global_numberfield_summary():
 
 def learnmore_list():
     return [(Completename, url_for(".render_discriminants_page")), 
-            ('How data was computed', url_for(".how_computed_page")), 
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
             ('Global number field labels', url_for(".render_labels_page")), 
             ('Galois group labels', url_for(".render_groups_page")), 
             ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
@@ -101,12 +103,20 @@ def poly_to_field_label(pol):
 def NF_redirect():
     return redirect(url_for("number_fields.number_field_render_webpage", **request.args), 301)
 
-@nf_page.route("/HowComputed")
-def how_computed_page():
-    learnmore = learnmore_list_remove('was computed')
-    t = 'How Number Field Data was Computed'
+@nf_page.route("/Source")
+def source():
+    learnmore = learnmore_list_remove('Source')
+    t = 'Source of Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
-    return render_template("single.html", kid='dq.nf.howcomputed', 
+    return render_template("single.html", kid='rcs.source.nf', 
+        credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
+
+@nf_page.route("/Reliability")
+def reliability():
+    learnmore = learnmore_list_remove('Reliability')
+    t = 'Reliability of Number Field Data'
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Reliability', ' ')]
+    return render_template("single.html", kid='rcs.rigor.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 @nf_page.route("/GaloisGroups")
@@ -126,12 +136,12 @@ def render_labels_page():
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
 
-@nf_page.route("/Discriminants")
+@nf_page.route("/Completeness")
 def render_discriminants_page():
     learnmore = learnmore_list_remove('Completeness')
     t = 'Completeness of Global Number Field Data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
-    return render_template("single.html", kid='dq.nf.completeness', 
+    return render_template("single.html", kid='rcs.cande.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
 
@@ -280,15 +290,14 @@ def number_field_render_webpage():
             'degree_list': range(1, max_deg + 1),
             'signature_list': sig_list,
             'class_number_list': range(1, 6) + ['6..10'],
-            'count': '20',
+            'count': '50',
             'nfields': comma(nfields),
             'maxdeg': max_deg,
             'discriminant_list': discriminant_list
         }
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        info['learnmore'] = [(Completename, url_for(".render_discriminants_page")), ('How data was computed', url_for(".how_computed_page")), ('Global number field labels', url_for(".render_labels_page")), ('Galois group labels', url_for(".render_groups_page")), ('Quadratic imaginary class groups', url_for(".render_class_group_data"))]
-        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=info.pop('learnmore'))
+        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(args)
 
@@ -675,16 +684,13 @@ def number_field_jump(info):
              table=db.nf_fields,
              title='Global Number Field Search Results',
              err_title='Global Number Field Search Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
-             learnmore=lambda:[('Global number field labels', url_for(".render_labels_page")),
-                               ('Galois group labels', url_for(".render_groups_page")),
-                               (Completename, url_for(".render_discriminants_page")),
-                               ('Quadratic imaginary class groups', url_for(".render_class_group_data"))])
+             learnmore=learnmore_list)
 def number_field_search(info, query):
     parse_ints(info,query,'degree')
     parse_galgrp(info,query, qfield=('degree', 'galt'))
@@ -733,7 +739,7 @@ def sage_residue_field_degrees_function(nf):
 
 def main_work(k1, D, typ):
     # Difference for sage vs pari array indexing
-    ind = 3 if typ is 'sage' else 4
+    ind = 3 if typ == 'sage' else 4
     def decomposition(p):
         if not ZZ(p).divides(D):
             dec = k1.idealprimedec(p)

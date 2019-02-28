@@ -7,8 +7,8 @@ import json
 import flask
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
+from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
@@ -65,7 +65,7 @@ def full_index():
 @api_page.route("/stats")
 def stats():
     def mb(x):
-        return int(round(x/1000000.0))
+        return int(round(x/2**20.))
     info={}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
@@ -98,7 +98,10 @@ def stats():
         indexSize += sizes['index_bytes']
         if csize >= int(info['minsize']):
             dname, name = split_db(tablename)
-            link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if tablename not in db.tablenames:
+                link = tablename
+            else:
+                link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
             if sizes['nrows']:
                 avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
             else:
@@ -128,9 +131,25 @@ def stats():
     info['stats'] = [stats[key] for key in sortedkeys]
     return render_template('api-stats.html', info=info)
 
+
+
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
-    return api_query(table, id = id)
+    if id == 'schema':
+        out = ''
+        table = getattr(db, table)
+        col_type = table.col_type
+        out = """
+        <table>
+        <tr>
+        <th> name </th><th>type</th>
+        </tr>
+        """;
+        for c in sorted(col_type.keys()):
+            out += "<tr><td>%s</td><td> %s </td>\n" % (c, col_type[c]) 
+        return out
+    else:
+        return api_query(table, id = id)
 
 @api_page.route("/<table>")
 @api_page.route("/<table>/")

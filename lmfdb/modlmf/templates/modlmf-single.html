@@ -142,8 +142,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#q_exp_output").load("{{info.q_exp_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "q_exp_output"]);
+            {# render the output #}
+            renderMathInElement($("#q_exp_output").get(0), katexOpts);
         });
 }
 $(function() {

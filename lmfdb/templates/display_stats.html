@@ -1,39 +1,31 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<div>
+<p>
 {{ info.summary | safe }}
-</div>
+</p>
+{% if info.extent_knowl %}
+<p>
+{{ KNOWL_INC(info.extent_knowl) }}
+</p>
+{% endif %}
 
 {% for d in info.distributions %}
-<h2> Distribution of {{KNOWL(d.attribute.knowl, title = d.attribute.top_title)}} </h2>
-<div>
-<table border=1>
-{% for r in d.rows %}
-<tr>
-<th>{{d.attribute.row_title}}</th>
-{% for c in r %}
-<td>{{c.value|safe}}</td>
-{% endfor %}
-</tr>
-<tr>
-<th>count</th>
-{% for c in r %}
-<td><a href='{{c.query}}'>{{c.count}}</a></td>
-{% endfor %}
-</tr>
-<tr>
-<th>proportion</th>
-{% for c in r %}
-<td>{{c.proportion}}%</td>
-{% endfor %}
-</tr>
-<tr height = 10px></tr>
+
+{% if d.attribute.top_title %}
+<h2 id="{{d.attribute.hash}}-anchor"> Distribution of {{ d.attribute.top_title | safe }}</h2>
+{% endif %}
+{% for paragraph in d.attribute.intro %}
+<p>{{paragraph}}</p>
 {% endfor %}
 
-</table>
-</div>
-{% endfor %}
+{% if (d.attribute.cols | length) == 1 %}
+{% include 'stat_1d.html' %}
+{% else %}
+{% include 'stat_2d.html' %}
+{% endif %}
+
+{% endfor %} {# info.distributions #}
 
 <p>
 </p>

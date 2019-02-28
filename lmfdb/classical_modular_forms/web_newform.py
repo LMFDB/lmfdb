@@ -1,38 +1,42 @@
+# -*- coding: utf-8 -*-
 # See templates/newform.html for how functions are called
 
-from sage.all import prime_range, latex, QQ, PolynomialRing,\
-    CDF, ZZ, CBF, cached_method, vector, lcm
-from lmfdb.db_backend import db
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup,\
-    factor_base_factorization_latex
-
-from lmfdb.number_fields.number_field import field_pretty
-from flask import url_for
-from lmfdb.utils import coeff_to_poly, coeff_to_power_series, web_latex,\
-    web_latex_split_on_pm, web_latex_poly, bigint_knowl,\
-    display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,\
-    display_knowl
-from lmfdb.characters.utils import url_character
-from lmfdb.lfunctions.Lfunctionutilities import names_and_urls
-from lmfdb.search_parsing import integer_options
-import re
 from collections import defaultdict
-from sage.databases.cremona import cremona_letter_code, class_to_int
-from web_space import convert_spacelabel_from_conrey, get_bread
+import bisect, re
+
+from flask import url_for
 from dirichlet_conrey import DirichletGroup_conrey, DirichletCharacter_conrey
-import bisect
+from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR,
+                      lazy_attribute)
+from sage.databases.cremona import cremona_letter_code, class_to_int
+
+from lmfdb import db
+from lmfdb.utils import (
+    coeff_to_poly, coeff_to_power_series, web_latex,
+    web_latex_split_on_pm, web_latex_poly, bigint_knowl, bigpoly_knowl, too_big, make_bigint,
+    display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
+    display_knowl, factor_base_factorization_latex,
+    integer_options, names_and_urls)
+from lmfdb.number_fields.web_number_field import nf_display_knowl
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
+from lmfdb.sato_tate_groups.main import st_link
+from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
+EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
 
 
-# we store a_n with n \in [1, an_storage_bound]
-an_storage_bound = 1000
-# we store alpha_p with p <= an_storage_bound
-primes_for_angles = prime_range(an_storage_bound)
+# we may store alpha_p with p <= 3000
+primes_for_angles = prime_range(3000)
 
 def valid_label(label):
     return bool(LABEL_RE.match(label))
+
+def valid_emb_label(label):
+    return bool(EMB_LABEL_RE.match(label))
 
 def decode_hecke_orbit(code):
     level = str(code % 2**24)
@@ -40,6 +44,7 @@ def decode_hecke_orbit(code):
     char_orbit_label = cremona_letter_code((code >> 36) % 2**16)
     hecke_orbit_label = cremona_letter_code(code >> 52)
     return '.'.join([level, weight, char_orbit_label, hecke_orbit_label])
+
 def encode_hecke_orbit(label):
     level, weight, char_orbit_label, hecke_orbit_label = label.split('.')
     level = int(level)
@@ -65,16 +70,55 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 def newform_conrey_exists(newformlabel_conrey):
     return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
+def quad_field_knowl(disc):
+    r = 2 if disc > 0 else 0
+    field_label = "2.%d.%d.1" % (r, abs(disc))
+    field_name = field_pretty(field_label)
+    return nf_display_knowl(field_label, field_name)
+
+def field_display_gen(label, poly, disc=None, self_dual=None, truncate=0):
+    """
+    This function is used to display a number field knowl.  When the field
+    is not in the LMFDB, it uses a dynamic knowl displaying the polynomial
+    and discriminant.  Otherwise, it uses the standard LMFDB number field knowl.
+
+    INPUT:
+
+    - ``label`` -- the LMFDB label for the field (``None`` if not in the LMFDB)
+    - ``poly`` -- the defining polynomial for the field as a list
+    - ``disc`` -- the discriminant of the field, as a list of (p, e) pairs
+    - ``truncate`` -- an integer, the maximum length of the field label before truncation.
+        If 0, no truncation will occur.
+    """
+    if label is None:
+        if poly:
+            if self_dual:
+                unit = ZZ(1)
+            else:
+                unit = ZZ(-1)**((len(poly)-1)//2)
+            return polyquo_knowl(poly, disc, unit, 12)
+        else:
+            return ''
+    else:
+        name = field_pretty(label)
+        if truncate and name == label and len(name) > truncate:
+            parts = label.split('.')
+            parts[2] = r'\(\cdots\)'
+            name = '.'.join(parts)
+        return nf_display_knowl(label, name)
+
 class WebNewform(object):
-    def __init__(self, data, space=None, all_m = False, all_n = False):
+    def __init__(self, data, space=None, all_m = False, all_n = False, embedding_label = None):
         #TODO validate data
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
-        #FIXME
-        for elt in ['hecke_ring_power_basis', 'field_poly_root_of_unity']:
+
+        # Make up for db_backend currently deleting Nones
+        for elt in db.mf_newforms.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
         self._data = data
+        self.embedding_label = embedding_label
 
         self.hecke_orbit_label = cremona_letter_code(self.hecke_orbit - 1)
 
@@ -82,110 +126,138 @@ class WebNewform(object):
             self.factored_level = ''
         else:
             self.factored_level = ' = ' + ZZ(self.level).factor()._latex_()
-        # We always print analytic conductor with 1 decimal digit
-        self.analytic_conductor = '%.1f'%(self.analytic_conductor)
-        self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
-
-        try:
-            self.hecke_ring_index_factored = "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
-        except AttributeError:
-            pass #  self.hecke_ring might be not set
-
-        if self.has_inner_twist != 0:
-            if self.inner_twist_proved:
-                if len(self.inner_twist == 1):
-                    self.star_twist = 'inner twist'
-                else:
-                    self.star_twist = 'inner twists'
-            elif len(self.inner_twist) == 1:
-                self.star_twist = 'inner twist*'
-            else:
-                self.star_twist = 'inner twists*'
-        self.has_analytic_rank = data.get('analytic_rank') is not None
-
-        eigenvals = db.mf_hecke_nf.search({'hecke_orbit_code':self.hecke_orbit_code,  'n':{'$lt':100}}, ['n','an','trace_an'], sort=['n'])
-        if eigenvals:  # this should always be true
-            self.has_exact_qexp = True
-            zero = [0] * self.dim
-            self.qexp = [zero]
-            self.texp = [0]
-            for i, ev in enumerate(eigenvals, 1):
-                if ev['n'] != i:
-                    raise ValueError("Missing eigenvalue")
-                self.texp.append(ev['trace_an'])
-                if ev.get('an'):
-                    self.qexp.append(ev['an'])
-                else:
-                    # only had traces
-                    self.has_exact_qexp = False
-            self.qexp_prec = len(self.qexp)
-            self.texp_prec = len(self.texp)
-        else:
-            self.has_exact_qexp = False
+        if 'field_disc_factorization' not in data: # Until we have search results include nulls
+            self.field_disc_factorization = None
+        elif self.field_disc_factorization:
+            self.field_disc_factorization = [(ZZ(p), ZZ(e)) for p, e in self.field_disc_factorization]
         self.rel_dim = self.dim // self.char_degree
 
-        ## CC_DATA
-        self.cqexp_prec = 1001 # Initial estimate for error messages in render_newform_webpage.
-                               # Should get updated in setup_cc_data.
-        self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
+        self.has_analytic_rank = data.get('analytic_rank') is not None
 
-        self.char_conrey = self.char_labels[0]
-        self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_conrey)
-        if self.has_inner_twist:
-            self.inner_twist = [(chi,url_character(type='Dirichlet', modulus=self.level, number=chi)) for chi in self.inner_twist]
+        self.texp = [0] + self.traces
+        self.texp_prec = len(self.texp)
+
+        #self.char_conrey = self.conrey_indexes[0]
+        #self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.character_label = "\(" + str(self.level) + "\)." + self.char_orbit_label
 
-        # Make up for db_backend currently deleting Nones
-        if not hasattr(self, 'hecke_cutters'):
-            self.hecke_cutters = None
-        self.has_further_properties = (self.is_cm != 0 or self.__dict__.get('is_twist_minimal') or self.has_inner_twist != 0 or self.char_orbit_index == 1 and self.level != 1 or self.hecke_cutters)
+        self.hecke_ring_character_values = None
+        self.single_generator = None
+        self.has_exact_qexp = False
+        if self.embedding_label is None:
+            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
+            eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, ['an'] + hecke_cols)
+            if eigenvals and eigenvals.get('an'):
+                self.has_exact_qexp = True
+                for attr in hecke_cols:
+                    setattr(self, attr, eigenvals.get(attr))
+                m = self.hecke_ring_cyclotomic_generator
+                if m is None or m == 0:
+                    zero = [0] * self.dim
+                else:
+                    zero = []
+                self.qexp = [zero] + eigenvals['an']
+                self.qexp_prec = len(self.qexp)
+                self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+        else:
+            hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
+            hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code':self.hecke_orbit_code}, hecke_cols)
+            if hecke_data:
+                for attr in hecke_cols:
+                    setattr(self, attr, hecke_data.get(attr))
+                self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
+            # get data from char_dir_values
+            self.char_conrey = self.embedding_label.split('.')[0]
+            char_values = db.char_dir_values.lucky({'label': '%s.%s' % (self.level, self.char_conrey)},['order','values_gens'])
+            if char_values is None:
+                raise ValueError("Invalid Conrey label")
+            self.hecke_ring_character_values = char_values['values_gens'] # [[i,[[1, m]]] for i, m in char_values['values_gens']]
+            self.hecke_ring_cyclotomic_generator = char_values['order']
+        # sort by the generators
+        if self.hecke_ring_character_values:
+            self.hecke_ring_character_values.sort(key = lambda elt: elt[0])
+
+        ## CC_DATA
+        self.has_complex_qexp = False # stub, overwritten by setup_cc_data.
+
 
         self.plot =  db.mf_newform_portraits.lookup(self.label, projection = "portrait")
 
         # properties box
-        self.properties = [('Label', self.label)]
+        if embedding_label is None:
+            self.properties = [('Label', self.label)]
+        else:
+            self.properties = [('Label', '%s.%s' % (self.label, self.embedding_label))]
         if self.plot is not None:
-            self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
+            self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', str(self.level)),
-                            ('Weight', str(self.weight)),
-                            ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label))]
-        try:
-            # The try shouldn't be hit except when we're adding data
-            if self.is_self_dual != 0:
-                self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Analytic rank', str(int(self.analytic_rank))),
-                                    ('Dimension', str(self.dim))])
-        except (AttributeError, TypeError): # TypeError in case self.analytic_rank = None
-            # no data for analytic rank
-            self.properties.extend([('Analytic conductor', self.analytic_conductor),
-                                    ('Dimension', str(self.dim))])
+                            ('Weight', str(self.weight))]
+        if self.embedding_label is None:
+            self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
+        else:
+            self.properties.append(('Character', '%s.%s' % (self.level, self.char_conrey)))
 
-        if self.is_cm == 1:
-            self.properties += [('CM discriminant', str(self.__dict__.get('cm_disc')))]
-        elif self.is_cm == -1:
+        if self.is_self_dual != 0:
+            self.properties += [('Self dual', 'Yes' if self.is_self_dual == 1 else 'No')]
+        self.properties += [('Analytic conductor', '%.3f'%(self.analytic_conductor))]
+
+        if self.analytic_rank is not None:
+            self.properties += [('Analytic rank', str(int(self.analytic_rank)))]
+
+        self.properties += [('Dimension', str(self.dim))]
+
+        if self.projective_image:
+            self.properties += [('Projective image', '\(%s\)' % self.projective_image_latex)]
+        # Artin data would make the property box scroll
+        #if self.artin_degree: # artin_degree > 0
+        #    self.properties += [('Artin image size', str(self.artin_degree))]
+        #if self.artin_image:
+        #    self.properties += [('Artin image', '\(%s\)' %  self.artin_image_display)]
+
+        if self.is_cm and self.is_rm:
+            disc = ', '.join([ str(d) for d in self.self_twist_discs ])
+            self.properties += [('CM/RM disc.', disc)]
+        elif self.is_cm:
+            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d < 0 ])
+            self.properties += [('CM disc.', disc)]
+        elif self.is_rm:
+            disc = ' and '.join([ str(d) for d in self.self_twist_discs if d > 0 ])
+            self.properties += [('RM disc.', disc)]
+        elif self.weight == 1:
+            self.properties += [('CM/RM', 'No')]
+        else:
             self.properties += [('CM', 'No')]
-
-        # Breadcrumbs
-        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label, hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
-
+        if self.inner_twist_count >= 1:
+            self.properties += [('Inner twists', str(self.inner_twist_count))]
         self.title = "Newform %s"%(self.label)
 
-    @cached_method
-    def lfunction_labels(self):
-        base_label = map(str, [self.level, self.weight, self.char_orbit_label,  self.hecke_orbit_label])
-        res = []
-        for character in self.char_labels:
-            for j in range(self.dim/self.char_degree):
-                label = base_label + [str(character), str(j + 1)]
-                lfun_label = '.'.join(label)
-                res.append(lfun_label)
-        return res
+    # Breadcrumbs
+    @property
+    def bread(self):
+        kwds = dict(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label,
+                    hecke_orbit=cremona_letter_code(self.hecke_orbit - 1))
+        if self.embedding_label is not None:
+            kwds['embedding_label'] = self.embedding_label
+        return get_bread(**kwds)
+
+    @lazy_attribute
+    def embedding_labels(self):
+        base_label = self.label.split('.')
+        def make_label(character, j):
+            label = base_label + [str(character), str(j + 1)]
+            return '.'.join(label)
+        if self.embedding_label is None:
+            return [make_label(character, j)
+                    for character in self.conrey_indexes
+                    for j in range(self.dim/self.char_degree)]
+        else:
+            character, j = map(int, self.embedding_label.split('.'))
+            return [make_label(character, j-1)]
     @property
     def friends(self):
-        res = names_and_urls(self.related_objects)
+        # first newspaces
+        res = []
         base_label = map(str, [self.level, self.weight])
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
         ns1_label = '.'.join(base_label)
@@ -196,27 +268,69 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
+        if self.embedding_label is not None:
+            res.append(('Newform ' + self.label, nf_url))
+            if self.dual_label is not None and self.dual_label != self.embedding_label:
+                dlabel = self.label + '.' + self.dual_label
+                d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
+                res.append(('Dual Form ' + dlabel, d_url))
 
-        if self.weight > 1:
+        # then related objects
+        res += names_and_urls(self.related_objects)
+
+        # finally L-functions
+        if self.weight <= 200:
             if db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
+            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
+                res = map(lambda elt : list(map(str, elt)), res)
+                # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
+                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
-                for lfun_label in self.lfunction_labels():
+                for lfun_label in self.embedding_labels:
                     lfun_url =  '/L' + cmf_base + lfun_label.replace('.','/')
                     res.append(('L-function ' + lfun_label, lfun_url))
+
         return res
+
 
     @property
     def downloads(self):
         downloads = []
-        if self.has_exact_qexp:
-            downloads.append(('Download coefficients of q-expansion', url_for('.download_qexp', label=self.label)))
-        downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
-        if self.has_complex_qexp:
-            downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
-            downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
-        downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        if self.embedding_label is None:
+            if self.hecke_cutters or self.has_exact_qexp:
+                downloads.append(('Download to Magma', url_for('.download_newform_to_magma', label=self.label)))
+            if self.has_exact_qexp:
+                downloads.append(('Download q-expansion', url_for('.download_qexp', label=self.label)))
+            downloads.append(('Download trace form', url_for('.download_traces', label=self.label)))
+            if self.has_complex_qexp:
+                downloads.append(('Download complex embeddings', url_for('.download_cc_data', label=self.label)))
+                downloads.append(('Download Satake angles', url_for('.download_satake_angles', label=self.label)))
+            downloads.append(('Download all stored data', url_for('.download_newform', label=self.label)))
+        else:
+            downloads.append(('Download coefficient data', url_for('.download_embedded_newform', label='%s.%s'%(self.label, self.embedding_label))))
         return downloads
+
+    @lazy_attribute
+    def an_cc_bound(self):
+        if self.level <= 1000:
+            return 1000
+        elif self.level <= 4000:
+            return 2000
+        else:
+            return 3000
+
+    @lazy_attribute
+    def primes_cc_bound(self):
+        return prime_pi(self.an_cc_bound)
+
+
+    @lazy_attribute
+    def one_column_display(self):
+        if self.embedding_m:
+            an = self.cc_data[self.embedding_m]['an_normalized'].values()
+            return all([x == 0 or y == 0 for x, y in an])
+
 
     def setup_cc_data(self, info):
         """
@@ -229,57 +343,77 @@ class WebNewform(object):
           - ``CC_n`` -- a list of desired a_n
           - ``format`` -- one of 'embed', 'analytic_embed', 'satake', or 'satake_angle'
         """
-        an_formats = ['embed','analytic_embed',None]
-        angles_formats = ['satake','satake_angle',None]
-        m = info.get('m','1-%s'%(min(self.dim,20)))
-        n = info.get('n','1-10')
-        CC_m = info.get('CC_m', integer_options(m))
-        CC_n = info.get('CC_n', integer_options(n))
-        # convert CC_n to an interval in [1,an_storage_bound]
-        CC_n = ( max(1, min(CC_n)), min(an_storage_bound, max(CC_n)) )
+        an_formats = ['embed','analytic_embed', None]
+        angles_formats = ['satake','satake_angle', None]
+        analytic_shift_formats = ['embed', None]
+        cc_proj = ['conrey_index','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
+        format = info.get('format')
+        query = {'hecke_orbit_code':self.hecke_orbit_code}
+
+
+        # deal with m
+        if self.embedding_label is None:
+            m = info.get('m','1-%s'%(min(self.dim,20)))
+            if '.' in m:
+                m = re.sub(r'\d+\.\d+', self.embedding_from_embedding_label, m)
+            CC_m = info['CC_m'] if 'CC_m' in info else integer_options(m)
+            CC_m = sorted(set(CC_m))
+            # if it is a range
+            if len(CC_m) - 1 == CC_m[-1] - CC_m[0]:
+                query['embedding_m'] = {'$gte':CC_m[0], '$lte':CC_m[-1]}
+            else:
+                query['embedding_m'] = {'$in': CC_m}
+            self.embedding_m = None
+        else:
+            self.embedding_m = int(info['CC_m'][0])
+            cc_proj.extend(['dual_conrey_index', 'dual_embedding_index'])
+            query = {'label' : self.label + '.' + self.embedding_label}
+
+        if format is None and 'CC_n' not in info:
+            # for download
+            CC_n = (1, self.an_cc_bound)
+        else:
+            n = info.get('n','1-10')
+            CC_n = info['CC_n'] if 'CC_n' in info else integer_options(n)
+            # convert CC_n to an interval in [1,an_bound]
+            CC_n = ( max(1, min(CC_n)), min(self.an_cc_bound, max(CC_n)) )
         an_keys = (CC_n[0]-1, CC_n[1])
         # extra 5 primes in case we hit too many bad primes
-        angles_keys = (bisect.bisect_left(primes_for_angles, CC_n[0]), bisect.bisect_right(primes_for_angles, CC_n[1]) + 5)
-        format = info.get('format')
-        cc_proj = ['conrey_label','embedding_index','embedding_m','embedding_root_real','embedding_root_imag']
-        an_projection = 'an[%d:%d]' % an_keys
+        angles_keys = (
+                bisect.bisect_left(primes_for_angles, CC_n[0]),
+                min(bisect.bisect_right(primes_for_angles, CC_n[1]) + 5,
+                    self.primes_cc_bound)
+                )
+        an_projection = 'an_normalized[%d:%d]' % an_keys
         angles_projection = 'angles[%d:%d]' % angles_keys
         if format in an_formats:
             cc_proj.append(an_projection)
         if format in angles_formats:
             cc_proj.append(angles_projection)
-        query = {'hecke_orbit_code':self.hecke_orbit_code}
-        range_match = INTEGER_RANGE_RE.match(m)
-        if range_match:
-            low, high = int(range_match.group(1)), int(range_match.group(2))
-            query['embedding_m'] = {'$gte':low, '$lte':high}
-        else:
-            query['embedding_m'] = {'$in': CC_m}
 
         cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
-            self.cqexp_prec = 0
         else:
             self.has_complex_qexp = True
-            self.cqexp_prec = an_keys[1] + 1
             self.cc_data = {}
             for embedded_mf in cc_data:
-                #as they are stored as a jsonb, large enough elements might be recognized as an integer
                 if format in an_formats:
+                    an_normalized = embedded_mf.pop(an_projection)
                     # we don't store a_0, thus the +1
-                    embedded_mf['an'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(embedded_mf.pop(an_projection), an_keys[0] + 1)}
+                    embedded_mf['an_normalized'] = {i: [float(x), float(y)] for i, (x, y) in enumerate(an_normalized, an_keys[0] + 1)}
                 if format in angles_formats:
                     embedded_mf['angles'] = {primes_for_angles[i]: theta for i, theta in enumerate(embedded_mf.pop(angles_projection), angles_keys[0])}
                 self.cc_data[embedded_mf.pop('embedding_m')] = embedded_mf
-            if format in ['analytic_embed',None]:
-                self.analytic_shift = {i : float(i)**((1-ZZ(self.weight))/2) for i in self.cc_data.values()[0]['an'].keys()}
+            if format in analytic_shift_formats:
+                self.analytic_shift = {i : RR(i)**((ZZ(self.weight)-1)/2) for i in self.cc_data.values()[0]['an_normalized'].keys()}
             if format in angles_formats:
                 self.character_values = defaultdict(list)
                 G = DirichletGroup_conrey(self.level)
-                chars = [DirichletCharacter_conrey(G, char) for char in self.char_labels]
+                chars = [DirichletCharacter_conrey(G, char) for char in self.conrey_indexes]
                 for p in self.cc_data.values()[0]['angles'].keys():
                     if p.divides(self.level):
+                        self.character_values[p] = None
                         continue
                     for chi in chars:
                         c = chi.logvalue(p) * self.char_order
@@ -287,9 +421,20 @@ class WebNewform(object):
                         value = CDF(0,2*CDF.pi()*angle).exp()
                         self.character_values[p].append((angle, value))
 
+        if self.embedding_m is not None:
+            m = self.embedding_m
+            dci = self.cc_data[m].get('dual_conrey_index')
+            dei = self.cc_data[m].get('dual_embedding_index')
+            self.dual_label = "%s.%s" % (dci, dei)
+            x = self.cc_data[m].get('embedding_root_real')
+            y = self.cc_data[m].get('embedding_root_imag')
+            if x is None or y is None:
+                self.embedding_root = None
+            else:
+                self.embedding_root = display_complex(x, y, 6, method='round', try_halfinteger=False)
 
     @staticmethod
-    def by_label(label):
+    def by_label(label, embedding_label = None):
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
@@ -298,59 +443,119 @@ class WebNewform(object):
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
             Nk2 = int(N) * int(k) * int(k)
-            max_Nk2 = db.mf_newforms.max('Nk2')
-            if Nk2 > max_Nk2:
-                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\)."%(Nk2, max_Nk2))
+            nontriv = not (a == 'a')
+            from main import Nk2_bound
+            if Nk2 > Nk2_bound(nontriv = nontriv):
+                nontriv_text = "non trivial" if nontriv else "trivial"
+                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
             raise ValueError("Newform %s not found" % label)
-        return WebNewform(data)
+        return WebNewform(data, embedding_label = embedding_label)
+
+
+    @property
+    def projective_image_latex(self):
+        if self.projective_image:
+            return '%s_{%s}' % (self.projective_image[:1], self.projective_image[1:])
 
     def field_display(self):
+        """
+        This function is used to display the coefficient field.
+
+        When the relative dimension is 1 (and dimension larger than 2),
+        it displays the coefficient field as a cyclotomic field.  Otherwise,
+        if the field is in the lmfdb it displays it using the standard number
+        field knowl; if not it uses a dynamic knowl showing the coefficient field.
+        """
         # display the coefficient field
-        label = self.__dict__.get("nf_label")
-        if label is None:
-            poly = self.__dict__.get('field_poly')
-            if poly:
-                return polyquo_knowl(poly)
-            else:
-                return 'Unknown'
-        elif label == u'1.1.1.1':  # rationals, special case
-            return nf_display_knowl(self.nf_label, name=r"\(\Q\)")
+        m = self.field_poly_root_of_unity
+        d = self.dim
+        if m and (d != 2 or self.hecke_ring_cyclotomic_generator):
+            return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
-            return self.field_knowl()
+            return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
-    def cm_field_knowl(self):
-        # The knowl for the CM field, with appropriate title
-        if self.__dict__.get('cm_disc', 0) == 0:
-            raise ValueError("Not CM")
-        cm_label = "2.0.%s.1"%(-self.cm_disc)
-        return nf_display_knowl(cm_label, field_pretty(cm_label))
+    @property
+    def artin_field_display(self):
+        """
+        For weight 1 forms, displays the Artin field.
+        """
+        label, poly = self.artin_field_label, self.artin_field
+        return field_display_gen(label, poly)
 
-    def field_knowl(self):
-        if self.rel_dim == 1:
-            return self.cyc_display()
-        label = self.__dict__.get("nf_label")
-        if label:
-            return nf_display_knowl(label, field_pretty(label))
+    @property
+    def projective_field_display(self):
+        """
+        For weight 1 forms, displays the kernel of the projective Galois rep.
+        """
+        label, poly = self.projective_field_label, self.projective_field
+        return field_display_gen(label, poly)
+
+    @property
+    def artin_image_display(self):
+        if self.artin_image:
+            pretty = db.gps_small.lookup(self.artin_image, projection = 'pretty')
+            return pretty if pretty else self.artin_image
+        return None
+
+    def artin_image_knowl(self):
+        return small_group_label_display_knowl(self.artin_image)
+
+    def rm_and_cm_field_knowl(self, sign=1):
+        if self.self_twist_discs:
+            disc = [ d for d in self.self_twist_discs if sign*d > 0 ]
+            return ' and '.join( map(quad_field_knowl, disc) )
         else:
-            return "Not in LMFDB"
+            return ''
 
-    def cyc_display(self):
-        if self.char_degree == 1:
-            name = r'\(\Q\)'
-        else:
+    def cyc_display(self, m=None, real_sub=False):
+        r"""
+        Used to display cyclotomic fields and their real subfields.
+
+        INPUT:
+
+        - ``m`` -- if ``None``, m is set to the order of the character
+        (or the order of the field generator when the defining polynomial
+        is cyclotomic and the relative dimension is 1).
+        - ``real_sub`` -- If ``True``, will display the real subfield instead.
+
+        OUTPUT:
+
+        A string or knowl showing the cyclotomic field Q(\zeta_m) or Q(\zeta_m)^+.
+        """
+        if m is None:
             m = self.char_order
+            d = self.char_degree
             if self.dim == self.char_degree and self.field_poly_root_of_unity:
                 # the relative dimension is 1 and the coefficient field is cyclotomic
                 # We want to display it using the appropriate root of unity
                 m = self.field_poly_root_of_unity
-            if m == 4:
-                name = r'\(\Q(i)\)'
-            else:
-                name = r'\(\Q(\zeta_{%s})\)' % m
-        if self.char_degree < 24:
-            return nf_display_knowl(cyclolookup[self.char_order], name=name)
         else:
-            return name
+            d = self.dim
+        return cyc_display(m, d, real_sub)
+
+    def ring_display(self):
+        if self.dim == 1:
+            return r'\(\Z\)'
+        nbound = self.hecke_ring_generator_nbound
+        if nbound == 2:
+            return r'\(\Z[a_1, a_2]\)'
+        elif nbound == 3:
+            return r'\(\Z[a_1, a_2, a_3]\)'
+        else:
+            return r'\(\Z[a_1, \ldots, a_{%s}]\)' % nbound
+
+    @property
+    def hecke_ring_index_factored(self):
+        if self.hecke_ring_index_factorization is not None:
+            return "\( %s \)" % factor_base_factorization_latex(self.hecke_ring_index_factorization)
+        return None
+
+    def ring_index_display(self):
+        fac = self.hecke_ring_index_factored
+        if self.hecke_ring_index_proved:
+            return fac
+        else:
+            return r'multiple of %s' % fac
 
     def display_newspace(self):
         s = r'\(S_{%s}^{\mathrm{new}}('
@@ -361,34 +566,14 @@ class WebNewform(object):
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):
-        polynomials = []
-        truncated = False
-        for p,F in self.hecke_cutters:
-            cut = len(F) - 1
-            count = 0
-            while cut >= 0 and count < 8:
-                if F[cut]:
-                    count += 1
-                cut -= 1
-            if count < 8 or cut == 0 and abs(F[0]) < 100:
-                F = latex(coeff_to_poly(F, 'T%s'%p))
-            else:
-                # truncate to the first 8 nonzero coefficients
-                F = [0]*(cut+1) + F[cut+1:]
-                F = latex(coeff_to_poly(F, 'T%s'%p)) + r' + \cdots'
-                truncated = True
-            polynomials.append(web_latex_split_on_pm(F))
+        polynomials = [bigpoly_knowl(F, var='T%s'%p) for p,F in self.hecke_cutters]
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
         knowl = display_knowl('mf.elliptic.hecke_cutter', title=title)
         desc = "<p>This newform can be constructed as the "
-        if truncated or len(polynomials) > 1:
-            if len(polynomials) > 1:
-                desc += "intersection of the kernels "
-            else:
-                desc += "kernel "
-            desc += "of the following %s acting on %s:</p>\n<table>"
+        if len(polynomials) > 1:
+            desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
             desc = desc % (knowl, self.display_newspace())
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
         elif len(polynomials) == 1:
@@ -399,8 +584,8 @@ class WebNewform(object):
         return desc
 
     def defining_polynomial(self):
-        if self.__dict__.get('field_poly'):
-            return web_latex_split_on_pm(web_latex(coeff_to_poly(self.field_poly), enclose=False))
+        if self.field_poly:
+            return web_latex_poly(self.field_poly, superscript=True)
         return None
 
     def Qnu(self):
@@ -416,16 +601,23 @@ class WebNewform(object):
             return r"\(=\)"
 
     def _make_frac(self, num, den):
+        paren = ('+' in num or '-' in num)
         if den == 1:
             return num
         elif den < 10**8:
-            return r"\((\)%s\()/%s\)"%(num, den)
+            if paren:
+                return r"\((\)%s\()/%s\)" % (num, den)
+            else:
+                return "%s\(/%s\)" % (num, den)
         else:
-            return r"\((\)%s\()/\)%s"%(num, bigint_knowl(den))
+            if paren:
+                return r"\((\)%s\()/\)%s" % (num, bigint_knowl(den))
+            else:
+                return r"%s\(/\)%s" % (num, bigint_knowl(den))
 
     @property
     def _nu_latex(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
@@ -435,13 +627,25 @@ class WebNewform(object):
 
     @property
     def _nu_var(self):
-        if self.field_poly_root_of_unity != 0:
+        if self.field_poly_is_cyclotomic:
             if self.field_poly_root_of_unity == 4:
                 return 'i'
             else:
                 return r"zeta%s" % self.field_poly_root_of_unity
         else:
             return r"nu"
+
+    @property
+    def _zeta_print(self):
+        # This will often be the same as _nu_var, since self.hecke_ring_cyclotomic_generator
+        # is often the same as field_poly_root_of_unity
+        m = self.hecke_ring_cyclotomic_generator
+        if m == 4:
+            return 'i'
+        elif m is None or m == 0:
+            raise ValueError
+        else:
+            return r"zeta%s" % m
 
     def _make_table(self, basis):
         s = '<table class="coeff_ring_basis">\n'
@@ -454,7 +658,7 @@ class WebNewform(object):
         for i, (num, den) in enumerate(zip(self.hecke_ring_numerators, self.hecke_ring_denominators)):
             numsize = sum(len(str(c)) for c in num if c)
             if numsize > 80:
-                num = web_latex_poly(num, self._nu_latex, superscript=True, cutoff=8)
+                num = web_latex_poly(num, self._nu_latex, superscript=True)
             else:
                 num = web_latex(coeff_to_poly(num, self._nu_var))
             betai = r'\(\beta_{%s}\)'%i
@@ -464,7 +668,7 @@ class WebNewform(object):
     def _order_basis_inverse(self):
         basis = [('\(1\)', r'\(\beta_0\)')]
         for i, (num, den) in enumerate(zip(self.hecke_ring_inverse_numerators[1:], self.hecke_ring_inverse_denominators[1:])):
-            num = web_latex_poly(num, r'\beta', superscript=False, cutoff=40)
+            num = web_latex_poly(num, r'\beta', superscript=False)
             if i == 0:
                 nupow = r'\(%s\)' % self._nu_latex
             else:
@@ -521,16 +725,19 @@ function switch_basis(btype) {
     def order_gen(self):
         if self.field_poly_root_of_unity == 4:
             return r'\(i = \sqrt{-1}\)'
-        elif self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
+        elif self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
             return r'a primitive root of unity \(\zeta_{%s}\)' % self.field_poly_root_of_unity
         elif self.dim == 2:
             c, b, a = map(ZZ, self.field_poly)
             D = b**2 - 4*a*c
             d = D.squarefree_part()
             s = (D//d).isqrt()
-            k, l = map(ZZ, self.hecke_ring_numerators[1])
-            k = k / self.hecke_ring_denominators[1]
-            l = l / self.hecke_ring_denominators[1]
+            if self.hecke_ring_power_basis:
+                k, l = ZZ(0), ZZ(1)
+            else:
+                k, l = map(ZZ, self.hecke_ring_numerators[1])
+                k = k / self.hecke_ring_denominators[1]
+                l = l / self.hecke_ring_denominators[1]
             beta = vector((k - (b*l)/(2*a), ((s*l)/(2*a)).abs()))
             den = lcm(beta[0].denom(), beta[1].denom())
             beta *= den
@@ -558,32 +765,171 @@ function switch_basis(btype) {
                 betas = r"\beta_1,\ldots,\beta_{%s}" % (self.dim - 1)
             return r'a basis \(1,%s\) for the coefficient ring described below' % (betas)
 
+    def order_gen_below(self):
+        m = self.field_poly_root_of_unity
+        if m == 0:
+            return r" in terms of a root \(\nu\) of %s" % self.defining_polynomial()
+        elif self.field_poly_is_real_cyclotomic:
+            return r" in terms of \(\nu = \zeta_{%s} + \zeta_{%s}^{-1}\)" % (m, m)
+        else:
+            return ""
+
+    @property
+    def _PrintRing(self):
+        # the order='negdeglex' assures constant terms come first
+        # univariate polynomial rings don't support order,
+        # we work around it by introducing a dummy variable
+        m = self.hecke_ring_cyclotomic_generator
+        if m is not None and m != 0:
+            return PolynomialRing(QQ, [self._zeta_print, 'dummy'], order = 'negdeglex')
+        elif self.single_generator:
+            if self.hecke_ring_power_basis and self.field_poly_is_cyclotomic:
+                return PolynomialRing(QQ, [self._nu_var, 'dummy'], order = 'negdeglex')
+            else:
+                return PolynomialRing(QQ, ['beta', 'dummy'], order = 'negdeglex')
+        else:
+            return PolynomialRing(QQ, ['beta%s' % i for i in range(1, self.dim)], order = 'negdeglex')
+
+    @property
+    def _Rgens(self):
+        R = self._PrintRing
+        if self.single_generator:
+            beta = R.gen(0)
+            return [beta**i for i in range(0, self.dim)]
+        else:
+            return [1] + list(R.gens())
+
+    def _elt(self, data):
+        """
+        Returns an element of a polynomial ring whose print representation
+        agrees with the specified data
+        """
+        m = self.hecke_ring_cyclotomic_generator
+        if m is None or m == 0:
+            # normal representation: as a list of coefficients
+            return sum(c * gen for c, gen in zip(data, self._Rgens))
+        else:
+            # sum of powers of zeta_m
+            zeta = self._PrintRing.gen(0)
+            return sum(c * zeta**e for c,e in data)
+
+    @property
+    def dual_link(self):
+        dlabel = self.label + '.' + self.dual_label
+        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/') + '/'
+        return '<a href="%s">%s</a>'%(d_url, dlabel)
+
+    @property
+    def char_orbit_link(self):
+        label = '%s.%s' % (self.level, self.char_orbit_label)
+        return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+
+    @property
+    def char_conrey_link(self):
+        if self.embedding_label is None:
+            raise ValueError
+        label = '%s.%s' % (self.level, self.embedding_label.split('.')[0])
+        return display_knowl('character.dirichlet.data', title=label, kwargs={'label':label})
+
+    def display_character(self):
+        if self.char_order == 1:
+            ord_deg = " (trivial)"
+        else:
+            ord_knowl = display_knowl('character.dirichlet.order', title='order')
+            deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
+            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
+        return self.char_orbit_link + ord_deg
+
+    def display_character_values(self):
+        gens = [r'      <td class="dark border-right border-bottom">\(n\)</td>']
+        vals = [r'      <td class="dark border-right">\(\chi(n)\)</td>']
+        for j, (g, chi_g) in enumerate(self.hecke_ring_character_values):
+            if self.embedding_label is None:
+                term = self._elt(chi_g)
+                latexterm = latex(term)
+            else:
+                order = self.hecke_ring_cyclotomic_generator
+                d = gcd(order, chi_g)
+                order = order // d
+                chi_g = chi_g // d
+                if order == 1:
+                    latexterm = '1'
+                elif order == 2:
+                    latexterm = '-1'
+                else:
+                    latexterm = r'e\left(\frac{%s}{%s}\right)'%(chi_g, order)
+            color = "dark" if j%2 else "light"
+            gens.append(r'      <td class="%s border-bottom">\(%s\)</td>'%(color, g))
+            vals.append(r'      <td class="%s">\(%s\)</td>'%(color, latexterm))
+        return '    <tr>\n%s    </tr>\n    <tr>\n%s    </tr>'%('\n'.join(gens), '\n'.join(vals))
+
+    def display_inner_twists(self):
+        if self.inner_twist_count == -1:
+            # Only CM data available
+            if self.is_cm:
+                discriminant = self.cm_discs[0]
+                return '<p>Only self twists have been computed for this newform, which has CM by %s.</p>' % (quad_field_knowl(discriminant))
+            else:
+                return '<p>This newform does not have CM; other inner twists have not been computed.</p>'
+        def th_wrap(kwl, title):
+            return '    <th>%s</th>' % display_knowl(kwl, title=title)
+        def td_wrap(val):
+            return '    <td>%s</th>' % val
+        twists = ['<table class="ntdata">', '<thead>', '  <tr>',
+                  th_wrap('character.dirichlet.galois_orbit_label', 'Char. orbit'),
+                  th_wrap('character.dirichlet.parity', 'Parity'),
+                  #th_wrap('character.dirichlet.order', 'Order'),
+                  th_wrap('mf.elliptic.inner_twist_multiplicity', 'Mult.'),
+                  th_wrap('mf.elliptic.self_twist_col', 'Type'),
+                  th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
+                  '  </tr>', '</thead>', '<tbody>']
+        trivial = [elt for elt in self.inner_twists if elt[6] == 1]
+        CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
+                key = lambda elt: elt[2])
+        other = sorted([elt for elt in self.inner_twists if elt[6] == 0],
+                key = lambda elt: (elt[2],elt[3]))
+        self.inner_twists = trivial + CMRM + other
+        for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
+            label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
+            parity = 'Even' if parity == 1 else 'Odd'
+            proved = 'yes' if proved == 1 else 'no'
+            link = display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+            if discriminant == 0:
+                field = ''
+            elif discriminant == 1:
+                field = 'trivial'
+            else:
+                cmrm = 'CM by ' if discriminant < 0 else 'RM by '
+                field = cmrm + quad_field_knowl(discriminant)
+            twists.append('  <tr>')
+            twists.extend(map(td_wrap, [link, parity, mult, field, proved])) # add order back eventually
+            twists.append('  </tr>')
+        twists.extend(['</tbody>', '</table>'])
+        return '\n'.join(twists)
+
+    def sato_tate_display(self):
+        if self.sato_tate_group:
+            return st_link(self.sato_tate_group)
+        else:
+            return ''
+
     def eigs_as_seqseq_to_qexp(self, prec_max):
-        # Takes a sequence of sequence of integers and returns a string for the corresponding q expansion
+        # Takes a sequence of sequence of integers (or pairs of integers in the hecke_ring_cyclotomic_generator != 0 case) and returns a string for the corresponding q expansion
         # For example, eigs_as_seqseq_to_qexp([[0,0],[1,3]]) returns "\((1+3\beta_{1})q\)\(+O(q^2)\)"
         prec = min(self.qexp_prec, prec_max)
         if prec == 0:
             return 'O(1)'
         eigseq = self.qexp[:prec]
-        d = len(eigseq[0])
-        if self.single_generator:
-            if self.hecke_ring_power_basis and self.field_poly_root_of_unity != 0:
-                R = PolynomialRing(QQ, self._nu_var)
-            else:
-                R = PolynomialRing(QQ, 'beta')
-            beta = R.gen()
-            Rgens = [beta**i for i in range(d)]
-        else:
-            R = PolynomialRing(QQ, ['beta%s' % i for i in range(1,d)])
-            Rgens = [1] + [g for g in R.gens()]
+        use_knowl = too_big(eigseq, 10**24)
         s = ''
         for j in range(len(eigseq)):
-            term = sum([Rgens[i]*eigseq[j][i] for i in range(d)])
+            term = self._elt(eigseq[j])
             if term != 0:
                 latexterm = latex(term)
+                if use_knowl:
+                    latexterm = make_bigint(latexterm)
                 if term.number_of_terms() > 1:
-                    latexterm = r"\left(" +  latexterm + r"\right)"
-
+                    latexterm = r"(" +  latexterm + r")"
                 if j > 0:
                     if term == 1:
                         latexterm = ''
@@ -593,7 +939,6 @@ function switch_basis(btype) {
                         latexterm += ' q'
                     else:
                         latexterm += ' q^{%d}' % j
-                #print latexterm
                 if s != '' and latexterm[0] != '-':
                     latexterm = '+' + latexterm
                 s += '\(' + latexterm + '\) '
@@ -601,9 +946,34 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + '\(+O(q^{%d})\)' % prec
 
+    def q_expansion_cc(self, prec_max):
+        eigseq = self.cc_data[self.embedding_m]['an_normalized']
+        prec = min(max(eigseq.keys()) + 1, prec_max)
+        if prec == 0:
+            return 'O(1)'
+        s = '\(q\)'
+        for j in range(2, prec):
+            term = eigseq[j]
+            latexterm = display_complex(term[0]*self.analytic_shift[j], term[1]*self.analytic_shift[j], 6, method = "round", parenthesis = True, try_halfinteger=False)
+            if latexterm != '0':
+                if latexterm == '1':
+                    latexterm = ''
+                elif latexterm == '-1':
+                    latexterm = '-'
+                latexterm += ' q^{%d}' % j
+                if s != '' and latexterm[0] != '-':
+                    latexterm = '+' + latexterm
+                s += '\(' + latexterm + '\) '
+        # Work around bug in Sage's latex
+        s = s.replace('betaq', 'beta q')
+        return s + '\(+O(q^{%d})\)' % prec
+
+
     def q_expansion(self, prec_max=10):
         # Display the q-expansion, truncating to precision prec_max.  Will be inside \( \).
-        if self.has_exact_qexp:
+        if self.embedding_label:
+            return self.q_expansion_cc(prec_max)
+        elif self.has_exact_qexp:
             prec = min(self.qexp_prec, prec_max)
             if self.dim == 1:
                 s = web_latex_split_on_pm(web_latex(coeff_to_power_series([self.qexp[n][0] for n in range(prec)],prec=prec),enclose=False))
@@ -615,8 +985,10 @@ function switch_basis(btype) {
 
     def trace_expansion(self, prec_max=10):
         prec = min(self.texp_prec, prec_max)
-        return web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
-
+        s = web_latex_split_on_pm(web_latex(coeff_to_power_series(self.texp[:prec], prec=prec), enclose=False))
+        if too_big(self.texp[:prec], 10**24):
+            s = make_bigint(s)
+        return s
 
     def embed_header(self, n, format='embed'):
         if format == 'embed':
@@ -635,54 +1007,46 @@ function switch_basis(btype) {
 
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
-        return "{c}.{e}".format(c=self.cc_data[m]['conrey_label'], e=((m-1)%self.rel_dim)+1)
+        return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
+    def embedded_mf_link(self, m):
+        # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
+        return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
+    def embedding_from_embedding_label(self, elabel):
+        if not isinstance(elabel, basestring): # match object
+            elabel = elabel.group(0)
+        c, e = map(int, elabel.split('.'))
+        if e <= 0 or e > self.rel_dim:
+            raise ValueError("Invalid embedding")
+        return str(self.rel_dim * self.conrey_indexes.index(c) + e)
 
-    def embedding(self, m, n=None, prec=6, format='embed'):
-        """
-        Return the value of the ``m``th embedding on a specified input.
-        Should only be used when all of the entries in this column are either real
-        or imaginary.
+    def embedded_title(self, m):
+        return "Embedded Newform %s.%s"%(self.label, self.conrey_from_embedding(m))
 
-        INPUT:
-
-        - ``m`` -- an integer, specifying which embedding to use.
-        - ``n`` -- a positive integer, specifying which a_n.  If None, returns the image of
-            the generator of the field (i.e. the root corresponding to this embedding).
-        - ``prec`` -- the precision to display floating point values
-        - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
-        """
-        if n is None:
-            x = self.cc_data[m].get('embedding_root_real', None)
-            y = self.cc_data[m].get('embedding_root_imag', None)
-            if x is None or y is None:
-                return '?' # we should never see this if we have an exact qexp
-        else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
-                x *= self.analytic_shift[n]
-                y *= self.analytic_shift[n]
-        if self.cc_data[m]['real']:
-            return display_float(x, prec)
-        else:
-            return display_complex(x, y, prec)
-
-    def _display_re(self, x, prec):
-        if abs(x) < 10**(-prec):
+    def _display_re(self, x, prec, method='round', extra_truncation_digits=3):
+        res = display_float(x, prec,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=False)
+        if res == "0":
             return ""
-        return r"%s"%(display_float(x, prec).replace('-','&minus;'))
+        else:
+            return res.replace('-','&minus;')
 
-    def _display_im(self, y, prec):
-        if abs(y) < 10**(-prec):
+    def _display_im(self, y, prec, method='round', extra_truncation_digits=3):
+        res = display_float(y, prec,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=False)
+        if res == "0":
             return ""
-        res = display_float(y, prec)
-        if res == '1':
-            res = ''
+        elif res == "1":
+            res = ""
         return r"%s<em>i</em>"%(res)
 
-    def _display_op(self, x, y, prec):
-        xiszero = abs(x) < 10**(-prec)
-        yiszero = abs(y) < 10**(-prec)
+    def _display_op(self, x, y, prec, extra_truncation_digits=3):
+        xiszero = abs(x) < 10**(-prec + extra_truncation_digits)
+        yiszero = abs(y) < 10**(-prec + extra_truncation_digits)
         if xiszero and yiszero:
             return r"0"
         elif yiszero or (xiszero and y > 0):
@@ -692,16 +1056,28 @@ function switch_basis(btype) {
         elif y < 0:
             return r"&minus;"
 
+    #    Return the value of the ``m``th embedding on a specified input.
+    #    Should only be used when all of the entries in this column are either real
+    #    or imaginary.
+
+    #    INPUT:
+
+    #    - ``m`` -- an integer, specifying which embedding to use.
+    #    - ``n`` -- a positive integer, specifying which a_n.  If None, returns the image of
+    #        the generator of the field (i.e. the root corresponding to this embedding).
+    #    - ``prec`` -- the precision to display floating point values
+    #    - ``format`` -- either ``embed`` or ``analytic_embed``.  In the second case, divide by n^((k-1)/2).
+
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:
             x = self.cc_data[m].get('embedding_root_real', None)
             if x is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
+            x, y = self.cc_data[m]['an_normalized'][n]
+            if format == 'embed':
                 x *= self.analytic_shift[n]
-        return self._display_re(x, prec)
+        return self._display_re(x, prec, method='round')
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
         if n is None:
@@ -709,20 +1085,30 @@ function switch_basis(btype) {
             if y is None:
                 return '' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
-            if format == 'analytic_embed':
+            x, y = self.cc_data[m]['an_normalized'][n]
+            if format == 'embed':
                 y *= self.analytic_shift[n]
-        return self._display_im(abs(y), prec) # sign is handled in embedding_op
+        return self._display_im(abs(y), prec, method='round') # sign is handled in embedding_op
 
-    def embedding_op(self, m, n=None, prec=6):
+    def embedding_op(self, m, n=None, prec=6, format='embed'):
         if n is None:
             x = self.cc_data[m].get('embedding_root_real', None)
             y = self.cc_data[m].get('embedding_root_imag', None)
             if x is None or y is None:
                 return '?' # we should never see this if we have an exact qexp
         else:
-            x, y = self.cc_data[m]['an'][n]
+            x, y = self.cc_data[m]['an_normalized'][n]
+            # we might decide to not display an operator if normalized value is too small
+            if format == 'embed':
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
         return self._display_op(x, y, prec)
+
+    def embedding(self,  m, n=None, prec=6, format='embed'):
+        return " ".join([ elt(m, n, prec, format)
+            for elt in [self.embedding_re, self.embedding_op, self.embedding_im]
+            ])
+
 
     def satake(self, m, p, i, prec=6, format='satake'):
         """
@@ -737,15 +1123,20 @@ function switch_basis(btype) {
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
         if format == 'satake':
-            alpha = self._get_alpha(m, p, i)
-            return display_complex(alpha.real(), alpha.imag(), prec)
+            return " ".join([ elt(m, p, i, prec)
+                for elt in [self.satake_re, self.satake_op, self.satake_im]
+                ])
+
         else:
             return self.satake_angle(m, p, i, prec)
 
     @cached_method
     def satake_angle(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         theta = self._get_theta(m, p, i)
-        s = display_float(2*theta, prec)
+        s = display_float(2*theta, prec, method='round')
         if s == "1":
             s =  r'\pi'
         elif s== "-1":
@@ -780,21 +1171,20 @@ function switch_basis(btype) {
         return theta
 
     def satake_re(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         return self._display_re(self._get_alpha(m, p, i).real(), prec)
 
     def satake_im(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         return self._display_im(abs(self._get_alpha(m, p, i).imag()), prec)
 
     def satake_op(self, m, p, i, prec=6):
+        if not self.character_values[p]:
+            # bad prime
+            return ''
         alpha = self._get_alpha(m, p, i)
         return self._display_op(alpha.real(), alpha.imag(), prec)
-
-    def an_range(self, L, format='embed'):
-        if format in ['embed', 'analytic_embed']:
-            return [n for n in L if n >= 2 and n < self.cqexp_prec]
-        else:
-            return [p for p in L if p >= 2 and p < self.cqexp_prec and ZZ(p).is_prime() and not ZZ(p).divides(self.level)]
-
-    def m_range(self, L):
-        return [m for m in L if m >= 1 and m <= self.dim]
-

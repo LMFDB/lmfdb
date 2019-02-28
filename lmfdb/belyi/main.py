@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import StringIO
 from ast import literal_eval
-import re
-import time
+import re, StringIO, time
+
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.misc.cachefunc import cached_function
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, comma, flash_error, display_knowl
-from lmfdb.search_parsing import parse_ints, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.downloader import Downloader
-from lmfdb.display_stats import StatsDisplay
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay)
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
 
@@ -381,22 +381,14 @@ class Belyi_stats(StatsDisplay):
 
     table = db.belyi_galmaps
     baseurl_func = ".index"
-    stat_list = [
-        {'cols':'deg',
-         'row_title':'degree',
-         'knowl':'belyi.degree',
-         'avg':True},
-        {'cols':'orbit_size',
-         'top_title':'Galois orbit size',
-         'row_title':'size',
-         'knowl':'belyi.orbit_size',
-         'avg':True},
-        {'cols':'g',
-         'top_title':'genus',
-         'row_title':'genus',
-         'knowl':'belyi.genus',
-         'avg':True},
-    ]
+    row_titles = {'deg': 'degree',
+                  'orbit_size': 'size',
+                  'g': 'genus'}
+    top_titles = {'orbit_size': 'Galois orbit size'}
+    knowls = {'deg': 'belyi.degree',
+              'orbit_size': 'belyi.orbit_size',
+              'g': 'belyi.genus'}
+    stat_list = [{'cols':col, 'totaler': {'avg':True}} for col in ['deg', 'orbit_size', 'g']]
 
 @belyi_page.route("/stats")
 def statistics():

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import WebDirichlet, WebHecke
+from lmfdb.tests import LmfdbTest
+from lmfdb.characters.web_character import WebDirichlet, WebHecke
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
@@ -108,6 +108,10 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/1/1')
         assert  '/NumberField/1.1.1.1' in W.data
 
+    def test_valuefield(self):
+        W = self.tc.get('/Character/Dirichlet/13/2')
+        assert  'Value Field' in W.data
+
     #@unittest2.skip("wait for new DirichletConrey")
     def test_dirichletcharbig(self):
         """ nice example to check the Conrey naming scheme
@@ -147,7 +151,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar531(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
         assert '/Character/Dirichlet/531/247' in W.data
-        assert '(356,235)' in W.data, "generators"
+        assert '(119,415)' in W.data, "generators"
         #assert 'Kloosterman sum' in W.data
         assert  '(\\zeta_{87})' in W.data, "field of values"
 

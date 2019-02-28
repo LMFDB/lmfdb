@@ -8,9 +8,9 @@
 
 from sage.all import QQ, polygen
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 
 logger = make_logger("hmf")
 
