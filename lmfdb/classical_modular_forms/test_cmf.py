@@ -353,15 +353,17 @@ class CmfTest(LmfdbTest):
             # p = 47
             for n in ['3.46410', '0.505291', '0.967559', '0.252646', '0.918699']:
                 assert n in page.data
-            
+
             assert 'Newspace 13.2.e' in page.data
             assert 'Newform 13.2.e.a' in page.data
             assert 'Dual Form 13.2.e.a.' in page.data
             assert 'Isogeny class 169.a' in page.data
             assert 'L-function 13.2.e.a.' in page.data
 
-
             assert '0.103805522628' in page.data
+
+            assert '13.2.e.a.4.1' in page.data
+            assert '13.2.e.a.10.1' in page.data
 
 
     def test_satake(self):

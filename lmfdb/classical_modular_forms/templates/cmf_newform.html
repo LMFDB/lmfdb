@@ -95,7 +95,7 @@ function get_all_embeddings(num_embeddings) {
         {{ newform.embedding_re(m,n,prec=info.emb_prec,format=info.format) | safe }}
       </td>
       <td class="op">
-        {{ newform.embedding_op(m,n,prec=info.emb_prec) | safe }}
+        {{ newform.embedding_op(m,n,prec=info.emb_prec, format=info.format) | safe }}
       </td>
       <td class="nowrap imag">
         {{ newform.embedding_im(m,n,prec=info.emb_prec,format=info.format) | safe }}
