@@ -622,27 +622,28 @@ Data Validation
    be decorated with one of the four speed types imported from
    `lmfdb.verify.verification`.
 
-   `fast` and `slow` tests are run by iterating over rows in the
+   The fastest option is to write an SQL query that searches for
+   violations of your condition.  The `TableChecker class has various
+   utilities for writing such queries, such as `check_values`,
+   `check_iff`, `check_count`.  You can also write the query directly
+   and use `_run_query`.  If you want to run queries that check
+   consistency accross multiple tables, see the `check_crosstable`
+   utility functions.  For fast queries you can use the `@overall`
+   decorator; if your query takes longer than about a minute, you may
+   want to use the `@overall_long` decorator instead.
+
+   `@fast` and `@slow` tests are run by iterating over rows in the
    table.  They take a dictionary representing a row as input, and
    should return either True (if the test passes) or False.  You can
    provide keyword arguments to the decorator: `ratio` controls the
    fraction of rows in your table on which the test is run,
    `projection` controls which columns of the table are present in the
    record, and `constraint` provides a constraint on rows on which the
-   test is run.  The difference between fast and slow tests is just
-   a matter of convention: fast tests are run by default on every row
-   of the table and should take about a minute each to run, while
-   slow tests are run by default on 10% of the rows of a table and can
-   take longer.
-
-   `overall` and `overall_long` tests are run by executing an SQL
-   query that searches for a violation of a condition.  You can use
-   some of the utility functions available as methods on
-   `TableChecker` such as `check_values`, `check_iff`,
-   `check_count`or you can write your own query and use the
-   `_run_query` method.  If you want to run queries that check
-   consistency accross multiple tables, see the `check_crosstable`
-   utility functions.
+   test is run.  The difference between fast and slow tests is just a
+   matter of convention: fast tests are run by default on every row of
+   the table and should take about a minute each to run, while slow
+   tests are run by default on 10% of the rows of a table and can take
+   longer.
 
    You must run verification tests manually from a Sage prompt.
    First, run `from lmfdb.verify import db`.  This will give you a
@@ -661,3 +662,10 @@ Data Validation
    `LMFDB_ROOT/logs/verification`), and will also print the output
    sent to this folder to your terminal.  You can control which output
    you see using the `follow` option.
+
+1. How can I see what verification functions are written for a given table?
+
+   You can use the `list_verifications()` method.  With
+   `details=False` it will show a list of verification functions; if
+   `details=True` it will also print their docstrings and
+   configuration options that differ from the deaults.

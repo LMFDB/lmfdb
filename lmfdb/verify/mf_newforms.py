@@ -18,7 +18,11 @@ class mf_newforms(MfChecker):
     @overall
     def check_box_count(self):
         """
-        there should be exactly one row for every newform in a box listed in mf_boxes with newform_count set; for each such box performing mf_newforms.count(box query) should match newform_count for box, and mf_newforms.count() should be the sum of these
+        there should be exactly one row for every newform in a box
+        listed in mf_boxes with newform_count set; for each such box
+        performing mf_newforms.count(box query) should match
+        newform_count for box, and mf_newforms.count() should be the
+        sum of these
         """
         # TIME about 15s
         total_count = 0
@@ -53,7 +57,12 @@ class mf_newforms(MfChecker):
     @overall
     def check_newspaces_overlap(self):
         """
-        check that all columns mf_newforms has in common with mf_newspaces other than label, dim, relative_dim, traces, trace_display match (this covers all atributes that depend only on level, weight, char) (this implies) check that space_label is present in mf_newspaces
+        check that all columns mf_newforms has in common with
+        mf_newspaces other than label, dim, relative_dim, traces,
+        trace_display match (this covers all atributes that depend
+        only on level, weight, char) (this implies) check that
+        space_label is present in mf_newspaces
+
         """
         # TIME > 120s
         bad_labels = []
@@ -109,7 +118,10 @@ class mf_newforms(MfChecker):
     @overall
     def check_number_field(self):
         """
-        if nf_label is present, check that there is a record in nf_fields and that mf_newforms field_poly matches nf_fields coeffs, and check that is_self_dual agrees with signature, and field_disc agrees with disc_sign * disc_abs in nf_fields
+        if nf_label is present, check that there is a record in
+        nf_fields and that mf_newforms field_poly matches nf_fields
+        coeffs, and check that is_self_dual agrees with signature, and
+        field_disc agrees with disc_sign * disc_abs in nf_fields
         """
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
@@ -148,7 +160,9 @@ class mf_newforms(MfChecker):
     @overall
     def check_cmrm_discs(self):
         """
-        check that self_twist_discs is consistent with self_twist_type (e.g. if self_twist_type is 3, there should be 3 self_twist_discs, one pos, two neg)
+        check that self_twist_discs is consistent with self_twist_type
+        (e.g. if self_twist_type is 3, there should be 3
+        self_twist_discs, one pos, two neg)
         """
         # TIME about 10s
         return (self.check_array_len_eq_constant('rm_discs', 0, {'is_rm': False}) +
@@ -192,7 +206,9 @@ class mf_newforms(MfChecker):
     @overall
     def check_sato_tate_value(self):
         """
-        for k>1 check that sato_tate_group is consistent with is_cm and char_order (it should be (k-1).2.3.cn where n=char_order if is_cm is false, and (k-1).2.1.dn if is_cm is true)
+        for k>1 check that sato_tate_group is consistent with is_cm
+        and char_order (it should be (k-1).2.3.cn where n=char_order
+        if is_cm is false, and (k-1).2.1.dn if is_cm is true)
         """
         return (self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.3.c")), constraint={'is_cm':False, 'weight':{'$gt':1}}) +
                 self._run_query(SQL("sato_tate_group != (weight-1) || {0} || char_order").format(Literal(".2.1.d")), constraint={'is_cm':True, 'weight':{'$gt':1}}))
@@ -215,7 +231,8 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_projective_field(self):
         """
-        if present, check that projective_field_label identifies a number field in nf_fields with coeffs = projective_field
+        if present, check that projective_field_label identifies a
+        number field in nf_fields with coeffs = projective_field
         """
         # TIME > 240s
         return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) +
@@ -224,7 +241,8 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_artin_field(self):
         """
-        if present, check that artin_field_label identifies a number field in nf_fields with coeffs = artin_field
+        if present, check that artin_field_label identifies a number
+        field in nf_fields with coeffs = artin_field
         """
         # TIME > 600s
         return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) +
@@ -242,7 +260,9 @@ class mf_newforms(MfChecker):
     @overall
     def check_trivial_character_cols(self):
         """
-        check that atkin_lehner_eigenvals, atkin_lehner_string, and fricke_eigenval are present if and only if char_orbit_index=1 (trivial character)
+        check that atkin_lehner_eigenvals, atkin_lehner_string, and
+        fricke_eigenval are present if and only if char_orbit_index=1
+        (trivial character)
         """
         # TIME about 1s
         yes = {'$exists':True}
@@ -251,7 +271,8 @@ class mf_newforms(MfChecker):
     @overall
     def check_inner_twists(self):
         """
-        check that inner_twists is consistent with inner_twist_count and that both are present if field_poly is set
+        check that inner_twists is consistent with inner_twist_count
+        and that both are present if field_poly is set
         """
         return (self._run_query(SQL("inner_twist_count != (SELECT SUM(s) FROM UNNEST((inner_twists[1:array_length(inner_twists,1)][2:2])) s)"), constraint={'inner_twist_count':{'$gt':0}}) +
                 self.check_values({'inner_twists':{'$exists':True}, 'inner_twist_count':{'$gt':0}}, {'field_poly':{'$exists':True}}))
@@ -313,7 +334,9 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_analytic_rank(self):
         """
-        if analytic_rank is present, check that matches order_of_vanishing in lfunctions record, and is are constant across the orbit
+        if analytic_rank is present, check that matches
+        order_of_vanishing in lfunctions record, and is are constant
+        across the orbit
         """
         # TIME about 1200s
         db._execute(SQL("CREATE TEMP TABLE temp_mftbl AS SELECT label, string_to_array(label,'.'), analytic_rank, dim FROM mf_newforms WHERE analytic_rank is NOT NULL"))
@@ -329,7 +352,9 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_self_dual_by_embeddings(self):
         """
-        if is_self_dual is present but field_poly is not present, check that embedding data in mf_hecke_cc is consistent with is_self_dual
+        if is_self_dual is present but field_poly is not present,
+        check that embedding data in mf_hecke_cc is consistent with
+        is_self_dual
         """
         # TIME > 1300s
         # I expect this to take about 3/4h
@@ -357,7 +382,9 @@ class mf_newforms(MfChecker):
     @fast(constraint={'projective_field':{'$exists':True}}, projection=['projective_field', 'projective_image', 'projective_image_type'])
     def check_projective_field_degree(self, rec, verbose=False):
         """
-        if present, check that projective_field has degree matching projective_image (4 for A4,S4, 5 for A5, 4 for D2, n for other Dn)
+        if present, check that projective_field has degree matching
+        projective_image (4 for A4,S4, 5 for A5, 4 for D2, n for other
+        Dn)
         """
         # TIME about 10s
         # TODO - rewrite as an overall check
@@ -367,19 +394,23 @@ class mf_newforms(MfChecker):
             deg *= 2
         return self._test_equality(deg, len(coeffs) - 1, verbose)
 
-    #### slow ####
-
-    @slow(constraint={'inner_twists':{'$exists':True}}, projection=['self_twist_discs', 'inner_twists'])
+    @fast(constraint={'inner_twists':{'$exists':True}}, projection=['self_twist_discs', 'inner_twists'])
     def check_self_twist_disc(self, rec, verbose=False):
         """
         check that self_twist_discs = is compatible with the last entries of inner_twists.
         """
         return self._test_equality(set(rec['self_twist_discs']), set([elt[6] for elt in rec['inner_twists'] if elt[6] not in [None, 0, 1]]), verbose)
 
+    #### slow ####
+
     @slow(projection=['level', 'self_twist_discs', 'traces'])
     def check_inert_primes(self, rec, verbose=False):
         """
-        for each discriminant D in self_twist_discs, check that for each prime p not dividing the level for which (D/p) = -1, check that traces[p] = 0 (we could also check values in mf_hecke_nf and/or mf_hecke_cc, but this would be far more costly)
+        for each discriminant D in self_twist_discs, check that for
+        each prime p not dividing the level for which (D/p) = -1,
+        check that traces[p] = 0 (we could also check values in
+        mf_hecke_nf and/or mf_hecke_cc, but this would be far more
+        costly)
         """
         # TIME about 3600s for full table
         N = rec['level']
@@ -416,7 +447,8 @@ class mf_newforms(MfChecker):
     @fast(constraint={'nf_label':None, 'field_poly':{'$exists':True}}, projection=['field_poly', 'is_self_dual'])
     def check_self_dual_by_poly(self, rec, verbose=False):
         """
-        if nf_label is not present and field_poly is present, check whether is_self_dual is correct (if feasible)
+        if nf_label is not present and field_poly is present, check
+        whether is_self_dual is correct (if feasible)
         """
         f = self.ZZx(rec['field_poly'])
         success = (rec.get('is_self_dual') == f.is_real_rooted())
@@ -479,7 +511,9 @@ class mf_newforms(MfChecker):
     @slow(ratio=1, constraint={'artin_image':{'$exists':True}}, projection=['projective_image', 'artin_image', 'artin_degree'])
     def check_artin_image(self, rec, verbose=False):
         """
-        if present, check that artin_image is consistent with artin_degree and projective_image (quotient of artin_image by its center should give projective_image)
+        if present, check that artin_image is consistent with
+        artin_degree and projective_image (quotient of artin_image by
+        its center should give projective_image)
         """
         aimage = rec['artin_image']
         pimage = rec.get('projective_image')
@@ -549,7 +583,8 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_embeddings_count(self):
         """
-        check that for such box with embeddings set, the number of rows in mf_hecke_cc per hecke_orbit_code matches dim
+        check that for such box with embeddings set, the number of
+        rows in mf_hecke_cc per hecke_orbit_code matches dim
         """
         # TIME > 1000s
         return accumulate_failures(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
@@ -565,7 +600,8 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_roots(self):
         """
-        check that embedding_root_real, and embedding_root_image present in mf_hecke_cc whenever field_poly is present
+        check that embedding_root_real, and embedding_root_image
+        present in mf_hecke_cc whenever field_poly is present
         """
         # TIME > 240s
         # I didn't manage to write a generic one for this one
@@ -629,7 +665,10 @@ class mf_newforms(MfChecker):
     @overall_long
     def check_traces(self):
         """
-        check that summing (unnormalized) an over embeddings with a given hecke_orbit_code gives an approximation to tr(a_n) -- we probably only want to do this for specified newforms/newspaces, otherwise this will take a very long time.
+        check that summing (unnormalized) an over embeddings with a
+        given hecke_orbit_code gives an approximation to tr(a_n) -- we
+        probably only want to do this for specified
+        newforms/newspaces, otherwise this will take a very long time.
         """
         howmany = 200
         # we restrict to weight <= 272
