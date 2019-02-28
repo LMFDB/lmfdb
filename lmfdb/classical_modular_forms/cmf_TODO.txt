@@ -65,6 +65,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* if we are editing a knowl, when hitting cancel, shouldn't send you back to the search
 * on _record_count do not try to write if you don't have the permissions
 * after PR, reconvert nf_fields (as it will have new data), and do the swap
 * add to test.sh to verify '# -*- coding: utf-8 -*-
