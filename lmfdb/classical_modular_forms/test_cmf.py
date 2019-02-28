@@ -663,6 +663,11 @@ class CmfTest(LmfdbTest):
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:
             assert elt in page.data
 
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+2000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces')
+        assert 'Error: We limit downloads of traces to 1000 forms' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+30000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces')
+        assert '863.2.c.a' in page.data
+
 
 
     def test_random(self):
