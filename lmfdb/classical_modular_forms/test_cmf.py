@@ -309,75 +309,179 @@ class CmfTest(LmfdbTest):
 
 
 
+    def test_dual(self):
+        urls_set = [
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/', 'Dual Form 5.9.c.a.2.1'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/', 'Dual Form 5.9.c.a.3.1'),
+                ],
+                [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/', 'Dual Form 5.9.c.a.2.3'),
+                ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/', 'Dual Form 5.9.c.a.3.3'),
+                ],
+                [
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1'),
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1'),
+                ]
+                ]
+        for urls in urls_set:
+            for i, (url, _) in enumerate(urls):
+                page = self.tc.get(url)
+                for j, (other, name) in enumerate(urls):
+                    if i != j:
+                        assert other in page.data
+                        if i > 0:
+                            assert name in page.data
+
+                if i > 0:
+                    assert 'Embedding label' in page.data
+                    assert 'Root' in page.data
+
+    def test_embedded_invariants(self):
+        for url in ['/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', '/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/']:
+
+            page = self.tc.get(url)
+            # root
+            assert 'Root' in page.data
+            assert '0.500000'  in page.data
+            assert '0.866025' in page.data
+            # p = 13
+            for n in ['2.50000', '2.59808', '0.693375', '0.720577']:
+                assert n in page.data
+
+            # p = 47
+            for n in ['3.46410', '0.505291', '0.967559', '0.252646', '0.918699']:
+                assert n in page.data
+
+            assert 'Newspace 13.2.e' in page.data
+            assert 'Newform 13.2.e.a' in page.data
+            assert 'Dual Form 13.2.e.a.' in page.data
+            assert 'Isogeny class 169.a' in page.data
+            assert 'L-function 13.2.e.a.' in page.data
+
+            assert '0.103805522628' in page.data
+
+            assert '13.2.e.a.4.1' in page.data
+            assert '13.2.e.a.10.1' in page.data
+
+
     def test_satake(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
-        assert r'0.707107' in page.data
-        assert r'0.957427' in page.data
-        assert r'0.223607' in page.data
-        assert r'0.974679' in page.data
-        assert r'0.288675' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake',
+                '/ModularForm/GL2/Q/holomorphic/11/2/a/a/1/1/']:
+            page = self.tc.get(url)
+            assert r'0.707107' in page.data
+            assert r'0.957427' in page.data
+            assert r'0.223607' in page.data
+            assert r'0.974679' in page.data
+            assert r'0.288675' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?format=satake')
-        assert r'0.750000' in page.data
-        assert r'0.661438' in page.data
-        assert r'0.272727' in page.data
-        assert r'0.962091' in page.data
-        assert r'1' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake',
+                '/ModularForm/GL2/Q/holomorphic/7/3/b/a/6/1/']:
+            page = self.tc.get(url)
+            assert r'0.750000' in page.data
+            assert r'0.661438' in page.data
+            assert r'0.272727' in page.data
+            assert r'0.962091' in page.data
+        assert r'1.00000' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle')
-        assert '\(\pi\)' in page.data
-        assert '\(0.769946\pi\)' in page.data
-        assert '\(0.587925\pi\)' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/7/3/b/a/?&format=satake_angle',
+                '/ModularForm/GL2/Q/holomorphic/7/3/b/a/6/1/']:
+            page = self.tc.get(url)
+            assert '\(\pi\)' in page.data
+            assert '\(0.769947\pi\)' in page.data
+            assert '\(0.587926\pi\)' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake')
-        assert r'0.965926' in page.data
-        assert r'0.258819' in page.data
-        assert r'0.990338' in page.data
-        assert r'0.550990' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/21/2/e/a/?format=satake',
+                '/ModularForm/GL2/Q/holomorphic/21/2/e/a/4/1/',
+                '/ModularForm/GL2/Q/holomorphic/21/2/e/a/16/1/',
+                ]:
+            page = self.tc.get(url)
+            assert r'0.965926' in page.data
+            assert r'0.258819' in page.data
+            assert r'0.990338' in page.data
+            assert r'0.550990' in page.data
 
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/5/9/c/a/?n=2-10&m=1-6&prec=6&format=satake')
-        assert '0.972878' in page.data
-        assert '0.231320' in page.data
-        assert '0.00593626' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/5/9/c/a/?n=2-10&m=1-6&prec=6&format=satake',
+                '/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/1/',
+                '/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/1/',
+                ]:
+            page = self.tc.get(url)
+            assert '0.972878' in page.data
+            assert '0.231320' in page.data
+
+        for url in ['/ModularForm/GL2/Q/holomorphic/5/9/c/a/?n=2-10&m=1-6&prec=6&format=satake',
+                '/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3/',
+                '/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3/',
+                ]:
+            page = self.tc.get(url)
+            assert '0.00593626' in page.data
 
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake')
-        assert '0.998759' in page.data
-        assert '0.0498090' in page.data
-        assert '0.542515' in page.data
-        assert '0.840046' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake',
+                '/ModularForm/GL2/Q/holomorphic/31/2/c/a/5/1/',
+                '/ModularForm/GL2/Q/holomorphic/31/2/c/a/25/1/',
+                ]:
+            page = self.tc.get(url)
+            assert '0.998759' in page.data
+            assert '0.0498090' in page.data
+            assert '0.542515' in page.data
+            assert '0.840046' in page.data
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake_angle')
-        assert '0.984138\pi' in page.data
-        assert '0.317472\pi' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/31/2/c/a/?m=1-4&n=2-10&prec=6&format=satake_angle',
+                '/ModularForm/GL2/Q/holomorphic/31/2/c/a/5/1/',
+                '/ModularForm/GL2/Q/holomorphic/31/2/c/a/25/1/',
+                ]:
+            page = self.tc.get(url)
+            assert '0.984139\pi' in page.data
+            assert '0.317472\pi' in page.data
 
 
         #test large floats
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed')
-        assert '213.765' in page.data
-        assert '5.39613e49' in page.data
-        assert '7.61562e49' in page.data
-        assert '3412.76' in page.data
-        assert '1.55372e49' in page.data
-        assert '1.00032e49' in page.data
-        assert '3626.53' in page.data
-        assert '1.17540e49' in page.data
-        assert '1.20001e50' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
+            page = self.tc.get(url)
+            assert '213.765' in page.data
+            assert '5.39613e49' in page.data
+            assert '7.61562e49' in page.data
+
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
+            page = self.tc.get(url)
+            assert '3412.77' in page.data
+            assert '1.55372e49' in page.data
+            assert '1.00032e49' in page.data
+
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/3/']:
+            page = self.tc.get(url)
+            assert '3626.53' in page.data
+            assert '1.17540e49' in page.data
+            assert '1.20001e50' in page.data
 
         # same numbers but normalized
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed')
-        assert '0.993913' in page.data
-        assert '1.36786' in page.data
-        assert '0.286180' in page.data
-        assert '0.179671' in page.data
-        assert '0.216496' in page.data
-        assert '2.15536' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
+            page = self.tc.get(url)
+            assert '0.993913' in page.data
+            assert '1.36787' in page.data
+
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
+            page = self.tc.get(url)
+            assert '0.286180' in page.data
+            assert '0.179671' in page.data
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+                    '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/3/']:
+            page = self.tc.get(url)
+            assert '0.216496' in page.data
+            assert '2.15537' in page.data
 
         # test some exact values
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/e/a/?n=97&m=8&prec=6&format=satake_angle')
         assert '0.0890699' in page.data
-        assert '0.689069' in page.data
+        assert '0.689070' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/d/a/?m=4&n=97&prec=6&format=satake_angle')
         assert '0.237314' in page.data
@@ -402,6 +506,15 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=2-10000&prec=6&format=embed')
         assert "Only" in page.data
         assert "up to 1000 are available" in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7524/2/l/b/?n=5000&m=&prec=&format=embed')
+        assert "Only" in page.data
+        assert "up to 3000 are available" in page.data
+        assert "in specified range; resetting to default" in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7524/2/l/b/?n=1500-4000&m=&prec=&format=embed')
+        assert "Only" in page.data
+        assert "up to 3000 are available" in page.data
+        assert "limiting to" in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=3.5&prec=6&format=embed')
         assert "must be an integer, range of integers or comma separated list of integers" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/419/3/h/a/?n=2-10&m=1-20000&prec=6&format=embed', follow_redirects=True)
@@ -453,6 +566,17 @@ class CmfTest(LmfdbTest):
         r"""
         Test download function
         """
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/23.10', follow_redirects=True)
+        assert '[0, 187, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, 969023, -478731' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i', follow_redirects=True)
+        assert '[0, 14, 0, 0, -2, 0, 0, 0, 0, 0, -2, 0, 0, 1, 0, 0, -10, 0, 0, 1, 0, 0' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i.maria.josefina', follow_redirects=True)
+        assert 'Invalid label' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.mz', follow_redirects=True)
+        assert 'Label not found:'
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.c', follow_redirects=True)
+        assert 'We have not computed traces for' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data

@@ -27,16 +27,19 @@ class CMF_download(Downloader):
 
     def _get_traces(self, label):
         if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection='traces')
+            traces = db.mf_gamma1.lookup(label, projection=['traces'])
         elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection='traces')
+            traces = db.mf_newspaces.lookup(label, projection=['traces'])
         elif label.count('.') == 3:
-            traces = db.mf_newforms.lookup(label, projection='traces')
+            traces = db.mf_newforms.lookup(label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s"%label)
         if traces is None:
             return abort(404, "Label not found: %s"%label)
-        return [0] + traces
+        elif traces.get('traces') is None:
+            return abort(404, "We have not computed traces for: %s"%label)
+        else:
+            return [0] + traces['traces']
 
     # Sage functions to generate everything
     discrete_log_sage = [

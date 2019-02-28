@@ -272,7 +272,7 @@ class WebNewform(object):
             res.append(('Newform ' + self.label, nf_url))
             if self.dual_label is not None and self.dual_label != self.embedding_label:
                 dlabel = self.label + '.' + self.dual_label
-                d_url = nf_url + '/' + '/'.join(self.dual_label.split('.'))
+                d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
         # then related objects
@@ -816,7 +816,7 @@ function switch_basis(btype) {
     @property
     def dual_link(self):
         dlabel = self.label + '.' + self.dual_label
-        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/')
+        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/') + '/'
         return '<a href="%s">%s</a>'%(d_url, dlabel)
 
     @property
@@ -1008,6 +1008,9 @@ function switch_basis(btype) {
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
+    def embedded_mf_link(self, m):
+        # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
+        return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
         if not isinstance(elabel, basestring): # match object
