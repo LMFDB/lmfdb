@@ -567,6 +567,17 @@ class CmfTest(LmfdbTest):
         Test download function
         """
 
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/23.10', follow_redirects=True)
+        assert '[0, 187, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, -11, 969023, -478731' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i', follow_redirects=True)
+        assert '[0, 14, 0, 0, -2, 0, 0, 0, 0, 0, -2, 0, 0, 1, 0, 0, -10, 0, 0, 1, 0, 0' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/1161.1.i.maria.josefina', follow_redirects=True)
+        assert 'Invalid label' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.mz', follow_redirects=True)
+        assert 'Label not found:'
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.c', follow_redirects=True)
+        assert 'We have not computed traces for' in page.data
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
