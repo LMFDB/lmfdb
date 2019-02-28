@@ -318,15 +318,51 @@ class CmfTest(LmfdbTest):
                 [('/ModularForm/GL2/Q/holomorphic/5/9/c/a/', 'Newform 5.9.c.a')
                 ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/2/3', 'Dual Form 5.9.c.a.3.3')
                 ('/ModularForm/GL2/Q/holomorphic/5/9/c/a/3/3', 'Dual Form 5.9.c.a.2.3')
-                ]]
+                ],
+                [
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/', 'Newform 13.2.e.a')
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', 'Dual Form 13.2.e.a.4.1')
+                ('/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/', 'Dual Form 13.2.e.a.10.1')
+                ]
+                ]
         for urls in urls_set:
-            for url, _ in enumerate(urls):
+            for i, (url, _) in enumerate(urls):
                 page = self.tc.get(url)
                 for other, name in urls:
                     if i != j:
                         assert other in page.data
                         if i > 0:
                             assert name in page.data
+
+                if i > 0:
+                    assert 'Embedding label' in page.data
+                    assert 'Root' in page.data
+
+    def test_embedded_invariants(self):
+        for url in ['/ModularForm/GL2/Q/holomorphic/13/2/e/a/4/1/', '/ModularForm/GL2/Q/holomorphic/13/2/e/a/10/1/']:
+
+            page = self.tc.get(url)
+            # root
+            assert 'Root' in page.data
+            assert '0.500000'  in page.data 
+            assert '0.866025' in page.data
+            # p = 13
+            for n in ['2.50000', '2.59808', '0.693375', '0.720577']:
+                assert n in page.data
+
+            # p = 47
+            for n in ['3.46410', '0.505291', '0.967559', '0.252646', '0.918699']:
+                assert n in page.data
+            
+            assert 'Newspace 13.2.e' in page.data
+            assert 'Newform 13.2.e.a' in page.data
+            assert 'Dual Form 13.2.e.a.' in page.data
+            assert 'Isogeny class 169.a' in page.data
+            assert 'L-function 13.2.e.a.' in page.data
+
+
+            assert '0.103805522628' in page.data
+
 
     def test_satake(self):
         for url in ['/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake',
