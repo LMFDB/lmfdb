@@ -13,4 +13,3 @@ pytest-cov
 pytest-xdist
 pyyaml
 unittest2
-pymongo

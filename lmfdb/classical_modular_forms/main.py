@@ -599,7 +599,7 @@ newform_only_fields = {
     'analytic_rank': 'Analytic rank',
     'is_self_dual': 'Is self dual',
 }
-def common_parse(info, query):
+def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
@@ -623,7 +623,7 @@ def common_parse(info, query):
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
-    if info.get('search_type') != 'SpaceDimensions':
+    if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
         else:
@@ -938,7 +938,7 @@ def dimension_form_postprocess(res, info, query):
     dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
     # Determine which entries should have an "n/a"
     na_query = {}
-    common_parse(info, na_query)
+    common_parse(info, na_query, na_check=True)
     dim_dict = {}
     for rec in db.mf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
         N = rec['level']
