@@ -626,8 +626,9 @@ class CMF_download(Downloader):
             out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors
-            if not isinstance(hecke_nf, dict):
-                return hecke_nf
+            # this line will never be ran if the data is correct
+            if not isinstance(hecke_nf, dict): # pragma: no cover
+                return hecke_nf  # pragma: no cover
             out += self._magma_ExtendMultiplicatively() + newlines
             out += self._magma_qexpCoeffs(newform, hecke_nf) + newlines
 
