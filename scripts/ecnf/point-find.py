@@ -14,6 +14,7 @@ from sage.all import QQ, EllipticCurve
 from lmfdb.number_fields.web_number_field import WebNumberField
 from scripts.ecnf.import_ecnf_data import nf_lookup
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
+from lmfdb.backend.encoding import LmfdbRealLiteral, RealEncoder
 
 def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
     r"""
@@ -198,12 +199,17 @@ def MWInfo_curves(curves, HeightBound=None, test_saturation=False, verbose=False
     return fixed_MWI
 
 
-def encode_point(P):
+def old_encode_point(P):
     r"""
-    Converts a list of points into a list of lists of 3 lists of d lists of strings
+    Converts a point [x,y,z] into a 3-list of d-lists of strings
     """
     return [[str(x) for x in list(c)] for c in list(P)]
 
+def encode_point(P):
+    r"""
+    Converts a point into a string encoding a 3-list of d-lists of rationals
+    """
+    return str([list(c) for c in list(P)]).replace(" ","")
 
 def encode_points(Plist):
     r"""
@@ -236,17 +242,20 @@ def get_generators(field, iso_class, test_saturation=False, verbose=False, store
     # miniutes and finding the generators can take longer than that.
 
     res = nfcurves.search({'field_label': field, 'short_class_label': iso_class})
-    for e, mw in zip(res, mwi):
+    for e, E, mw in zip(res, Es, mwi):
         label = e['label']
         data = {}
         data['rank_bounds'] = [int(r) for r in mw[0]]
         if mw[0][0] == mw[0][1]:
             data['rank'] = int(mw[0][0])
-        data['gens'] = encode_points(mw[1])
+        gens = mw[1]
+        data['gens'] = encode_points(gens)
+        data['heights'] = [str(P.height()) for P in gens]
+        data['reg'] = E.regulator_of_points(gens)
         if verbose:
             print("About to update curve {} using data {}".format(label, data))
         if store:
-            nfcurves.upsert({'label':label}, e)
+            nfcurves.upsert({'label':label}, data)
         else:
             if verbose:
                 print("(not done, dummy run)")
@@ -274,7 +283,7 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_satur
     classes = [r['short_class_label'] for r in res]
     for isoclass in classes:
         res = nfcurves.lucky({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
-        if 'rank' in res or 'rank_bounds' in res:
+        if False:#'rank' in res or 'rank_bounds' in res:
             print("Isogeny class {} already has rank data".format(isoclass))
         else:
             print("Getting generators for isogeny class {}".format(isoclass))
