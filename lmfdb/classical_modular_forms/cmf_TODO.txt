@@ -27,6 +27,7 @@ FINAL CHECKS:
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github
 * Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
+* Delete mf.elliptic.trace-expansion, update references to use mf.elliptic.trace_expansions
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -113,6 +114,7 @@ NOT CMF STUFF:
 * Add rename_column method to database.py
 * Add regexps for labels to meta_tables and use them.
 * Switch from pyflakes to flake8
+* Fix json/array bug when deleting a knowl
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue

@@ -100,11 +100,13 @@ class mf_newforms(MfChecker):
     @overall
     def check_traces_length(self):
         """
-        check that traces is present and has length at least 10000
+        check that traces is present and has length at least 1000*k for a k depending on th level
         """
         # TIME about 20s
         return (self.check_non_null(['traces']) +
-                self.check_array_len_gte_constant('traces', 1000))
+                self.check_array_len_gte_constant('traces', 1000, constraint={'level':{'$lte':1000}}) +
+                self.check_array_len_gte_constant('traces', 2000, constraint={'level':{'$gt':1000, '$lte':4000}}) +
+                self.check_array_len_gte_constant('traces', 3000, constraint={'level':{'$gt':4000}}))
 
     @overall
     def check_trace_display(self):
