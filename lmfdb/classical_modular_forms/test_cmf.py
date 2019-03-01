@@ -580,6 +580,10 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_traces/27.2.e.a', follow_redirects=True)
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.foo', follow_redirects=True)
+        assert 'Invalid label' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.foo.bar', follow_redirects=True)
+        assert 'No form found' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_cc_data/27.2.e.a', follow_redirects=True)
         assert '0.5, -2.2282699087' in page.data
         assert '-0.498394' in page.data
@@ -602,6 +606,10 @@ class CmfTest(LmfdbTest):
         assert "244.4.w" in page.data
 
     def test_download_magma(self):
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/23.1.b.a.z')
+        assert 'Label not found' in page.data
+
         from sage.all import magma_free
         # test MakeNewformModFrm
         for label, expected in [
@@ -662,6 +670,11 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:
             assert elt in page.data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+2000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
+        assert 'Error: We limit downloads of traces to 1000 forms' in page.data
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+30000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
+        assert '863.2.c' in page.data
 
 
 

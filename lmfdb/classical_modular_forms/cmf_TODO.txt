@@ -1,14 +1,11 @@
 OUTSTANDING VERIFICATIONS:
 
 Expected failures:
-+ (mf_newforms.check_analytic_rank_proved: 298 failures)
++ (mf_newforms.check_analytic_rank_proved: 261 failures)
 
 IMPORTANT:
-* Add notes on provability/completeness to Artin image knowl (Drew)
 
 FINAL CHECKS:
-* Update RCS knowls to match final data set (Drew)
-* Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Compute L-functions:
@@ -66,6 +63,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* if we are editing a knowl, when hitting cancel, shouldn't send you back to the search
 * on _record_count do not try to write if you don't have the permissions
 * after PR, reconvert nf_fields (as it will have new data), and do the swap
 * add to test.sh to verify '# -*- coding: utf-8 -*-
