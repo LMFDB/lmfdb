@@ -164,7 +164,7 @@ function knowl_click_handler($el) {
       log("desired_main_width: " + desired_main_width);
       // no larger than the current row width (for normal tables)
       // no larger than the desired main width (for extra large tables)
-      // at least 600px (for small tables)
+      // at least 700px (for small tables)
       // and deduce margins and borders
       var margins_and_borders = 2*table_border_knowl_width + parseInt(td_tag.css('padding-left')) + parseInt(td_tag.css('padding-right'))
       var max_width = Math.max(700, Math.min(row_width, desired_main_width)) - margins_and_borders;
