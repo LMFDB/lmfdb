@@ -1,14 +1,11 @@
 OUTSTANDING VERIFICATIONS:
 
 Expected failures:
-+ (mf_newforms.check_analytic_rank_proved: 298 failures)
++ (mf_newforms.check_analytic_rank_proved: 261 failures)
 
 IMPORTANT:
-* Add notes on provability/completeness to Artin image knowl (Drew)
 
 FINAL CHECKS:
-* Update RCS knowls to match final data set (Drew)
-* Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Compute L-functions:
