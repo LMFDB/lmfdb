@@ -163,9 +163,9 @@ favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
                             ('23.2.a.a','First trivial-character non-rational form'),
                             ('1.12.a.a','Delta'),
                             ('124.1.i.a','First non-dihedral weight 1 form'),
+                            ('148.1.f.a','First S4 form'),
                             ],
                             [
-                            ('148.1.f.a','First S4 form'),
                             ('633.1.m.b','First A5 form'),
                             ('163.3.b.a','Best q-expansion'),
                             ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
@@ -173,7 +173,8 @@ favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
                             ('3600.1.e.a','Many zeros in q-expansion'),
                             ('983.2.c.a','Large dimension'),
                             ('3997.1.cz.a','Largest projective image'),
-                            ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists')]]
+                            ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists'),
+                            ('random','Random form')]]
 favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
                           ('23.10', 'Mile high 11s'),
                           ('3311.1.h', 'Most weight 1 forms'),
@@ -220,7 +221,7 @@ def index():
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
-@cmf.route("/random")
+@cmf.route("/random/")
 def random_form():
     if len(request.args) > 0:
         info = to_dict(request.args)
