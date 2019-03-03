@@ -85,13 +85,14 @@ class CmfTest(LmfdbTest):
         from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
         for l in favorite_newform_labels:
             for elt, desc in l:
-                elt in main_page
-                desc in main_page
-                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                assert ("Newform %s" % elt) in page.data
-                # redirect to the same page
-                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                assert ("Newform %s" % elt) in page.data
+                if elt != 'random':
+                    elt in main_page
+                    desc in main_page
+                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                    assert ("Newform %s" % elt) in page.data
+                    # redirect to the same page
+                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                    assert ("Newform %s" % elt) in page.data
         for l in favorite_space_labels:
             for elt, desc in l:
                 elt in main_page
