@@ -103,6 +103,10 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
 
+
+_counts_cols = ["cols", "values", "count", "extra"]
+_stats_cols = ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"]
+
 def IdentifierWrapper(name, convert = True):
     """
     Returns a composable representing an SQL identifer.
@@ -357,6 +361,27 @@ class PostgresBase(object):
                 L.append(SQL("{0} DESC").format(Identifier(col[0])))
         return SQL(", ").join(L)
 
+    def _column_types(self, table_name, data_types=None):
+        """
+        Returns the column list, column types (as a dict), and has_id for a given table_name
+        """
+        has_id = False
+        col_list = []
+        col_type = {}
+        if data_types is None or table_name not in data_types:
+            # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+            cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+        else:
+            cur = data_types[table_name]
+        for rec in cur:
+            col = rec[0]
+            col_type[col] = rec[1]
+            if col != 'id':
+                col_list.append(col)
+            else:
+                has_id = True
+        return col_list, col_type, has_id,
+
 class PostgresTable(PostgresBase):
     """
     This class is used to abstract a table in the LMFDB database
@@ -372,7 +397,7 @@ class PostgresTable(PostgresBase):
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types = None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types=None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
@@ -382,31 +407,24 @@ class PostgresTable(PostgresBase):
         PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
-        def set_column_info(col_list, table_name):
-            if data_types is None or table_name not in data_types:
-                # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
-                cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
-            else:
-                cur = data_types[table_name]
-            for rec in cur:
-                col = rec[0]
-                self.col_type[col] = rec[1]
-                if col != 'id':
-                    col_list.append(col)
-                else:
-                    self.has_id = True
         self._search_cols = []
         if has_extras:
             self.extra_table = search_table + "_extras"
-            self._extra_cols = []
-            set_column_info(self._extra_cols, self.extra_table)
+            self._extra_cols, self.col_type, _ = self._column_types(
+                                                        self.extra_table,
+                                                        data_types=data_types)
         else:
             self.extra_table = None
             self._extra_cols = []
-        set_column_info(self._search_cols, search_table)
+
+        self._search_cols, extend_coltype, self.has_id = self._column_types(
+                                                        search_table,
+                                                        data_types=data_types)
+        self.col_type.update(extend_coltype)
         self._set_sort(sort)
         self.stats = PostgresStatsTable(self, total)
         self._verifier = None # set when importing lmfdb.verify
+
 
     def _set_sort(self, sort):
         """
@@ -2647,9 +2665,8 @@ class PostgresTable(PostgresBase):
         counts = {}
         tabledata = [(self.search_table, self._search_cols, True, searchfile),
                      (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
-                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
-                                         "constraint_values", "threshold"], False, statsfile)]
+                     (self.stats.counts, _counts_cols, False, countsfile),
+                     (self.stats.stats, _stats_cols, False, statsfile)]
         addedid = None
         with DelayCommit(self, commit, silence=True):
             for table, cols, header, filename in tabledata:
@@ -2911,17 +2928,27 @@ class PostgresTable(PostgresBase):
         self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.get("sep", u"\t")
 
-        tabledata = [(self.search_table, self._search_cols, True, searchfile),
-                     (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
-                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
-                                         "constraint_values", "threshold"], False, statsfile)]
-        metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
-                    ("meta_constraints", "table_name", "constraint_name, table_name, type, columns, check_func", constraintsfile),
-                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col, total", metafile)
-                    ]
+        tabledata = [
+                # tablename, cols, addid, write_header, filename
+                (self.search_table, self._search_cols, True, True, searchfile),
+                (self.extra_table, self._extra_cols, True, True, extrafile),
+                (self.stats.counts, _counts_cols, False, False, countsfile),
+                (self.stats.stats, _stats_cols, False, False, statsfile)
+                ]
+
+        metadata = [
+                ("meta_indexes", "table_name",
+                    "index_name, table_name, type, columns, modifiers, storage_params",
+                    indexesfile),
+                ("meta_constraints", "table_name",
+                    "constraint_name, table_name, type, columns, check_func",
+                    constraintsfile),
+                ("meta_tables", "name",
+                    "name, sort, id_ordered, out_of_order, has_extras, label_col, total",
+                    metafile)
+                ]
         with DelayCommit(self, commit):
-            for table, cols, addid, filename in tabledata:
+            for table, cols, addid, write_header, filename in tabledata:
                 if filename is None:
                     continue
                 now = time.time()
@@ -2931,7 +2958,8 @@ class PostgresTable(PostgresBase):
                 cur = self.conn.cursor()
                 with open(filename, "w") as F:
                     try:
-                        self._write_header_lines(F, cols, sep=sep)
+                        if write_header:
+                            self._write_header_lines(F, cols, sep=sep)
                         cur.copy_to(F, table, columns=cols_wquotes, **kwds)
                     except Exception:
                         self.conn.rollback()
@@ -4158,6 +4186,9 @@ class PostgresDatabase(PostgresBase):
 
     def __repr__(self):
         return "Interface to Postgres database"
+
+
+
 
     def login(self):
         """
