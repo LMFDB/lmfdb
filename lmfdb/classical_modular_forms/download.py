@@ -153,7 +153,7 @@ class CMF_download(Downloader):
 
         dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
-        level, weight = label.split('.')[:2]
+        level, weight = map(int, label.split('.')[:2])
         level_data = self.assign(lang, 'level', level);
         weight_data = self.assign(lang, 'weight', weight);
 
