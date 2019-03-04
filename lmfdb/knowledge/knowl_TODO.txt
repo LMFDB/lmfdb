@@ -1,10 +1,10 @@
 TASKS:
-* Modify schema as described below
+
+* Fill in source column for existing annotation knowls
 * Modify knowl code to create new entry when saving rather than updating and adding to history
 * Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
 * Implement renaming: change the id for all instances in the table
 * Make links column update when saving knowl
-* Search with wildcards (use tilde operator and a checkbox on the search; think about details)
 * Update quality restrictions on search to use status rather than quality
 * Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
 * Add autosaves by updating an inprogress knowl record
@@ -12,20 +12,22 @@ TASKS:
 * Automatically fill in type if ends in .top or .bottom
 * Add filter for showing top/bottom knowls when searching (off by default).  Never show comments knowls in main list.
 * For annotations, add link back to object from display page (not when displayed as part of homepage)
-* For knowls that have quality 'reviewed', check to see which should have status 1
 * Add ability to view history and revert to old version
 * Add ability to view diffs against old versions when editing knowl
-* Delete kwl_history and kwl_deleted tables
 * Update scripts that copy knowls to production
-* Add column to userdb.users for knowl reviewing privledges, add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
+* add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
+
+Later:
+* Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
+* Delete kwl_history and kwl_deleted tables
+* For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
+
+It would be nice if:
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
 * Add ability to search for knowls with comments
+* Search with wildcards (use tilde operator and a checkbox on the search; think about details)
 
 SCHEMA MODIFICATIONS:
-* Delete history column
-* Rename to kwl_knowls2 and port existing data
-* Fill in links for existing knowls
-* Fill in source column for existing annotation knowls
 
 New and modified columns in `kwl_knowls`
 Column           | Type                        | Notes
@@ -48,6 +50,21 @@ Modify `userdb.user`
 Column         | Type     | Notes
 ---------------|----------|------
 knowl_reviewer | boolean  | Whether this user can review knowls
+
+SQL COMMANDS:
+
+CREATE TABLE kwl_knowls2 LIKE kwl_knowls INCLUDING ALL;
+ALTER TABLE kwl_knowls2 ADD COLUMN status smallint;
+ALTER TABLE kwl_knowls2 ADD COLUMN type smallint;
+ALTER TABLE kwl_knowls2 ADD COLUMN links text[];
+ALTER TABLE kwl_knowls2 ADD COLUMN source text;
+ALTER TABLE kwl_knowls2 ADD COLUMN reviewer text;
+ALTER TABLE kwl_knowls2 ADD COLUMN reviewer_timestamp timestamp;
+ALTER TABLE kwl_knowls2 DROP COLUMN history;
+INSERT INTO kwl_knowls2(id, cat, title, content, authors, last_author, quality, timestamp, _keywords) SELECT id, cat, title, content, authors, last_author, quality, timestamp, _keywords FROM kwl_knowls;
+WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
+CREATE TABLE kwl_locks (id text, timestamp timestamp, username text);
+ALTER TABLE userdb.users ADD COLUMN knowl_reviewer text;
 
 NOTES FOR WORKSHOP
 * Remind people that they can use KNOWL_INC
