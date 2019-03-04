@@ -7,8 +7,8 @@
 
     <div>
      The Knowl {{ k.title }} is currently or has been recently edited by 
-     <a href="{{ url_for('users.profile', userid = lock.who) }}">{{ get_username(lock.who) }}</a>
-     at {{ lock.time|fmtdatetime }}. There might be a conflict!
+     <a href="{{ url_for('users.profile', userid = lock.username) }}">{{ get_username(lock.username) }}</a>
+     at {{ lock.timestamp|fmtdatetime }}. There might be a conflict!
     </div>
 
     <div style="margin-top: 30px">

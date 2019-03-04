@@ -306,7 +306,7 @@ def edit(ID):
             lock = knowldb.is_locked(knowl.id)
         except DatabaseError as e:
             logger.info("Oops, failed to get the lock. Error: %s" %e)
-    author_edits = lock and lock['who'] == current_user.get_id()
+    author_edits = lock and lock['username'] == current_user.get_id()
     logger.debug(author_edits)
     if author_edits:
         lock = None
@@ -366,7 +366,16 @@ def history():
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flask.flash("Snif! Knowl %s deleted and gone forever :-(" % ID)
+    flask.flash("Knowl %s has been marked as deleted." % ID)
+    return flask.redirect(url_for(".index"))
+
+
+@knowledge_page.route("/undelete/<ID>")
+@admin_required
+def undelete(ID):
+    k = Knowl(ID)
+    k.undelete()
+    flask.flash("Knowl %s has been marked as beta." % ID)
     return flask.redirect(url_for(".index"))
 
 
@@ -396,7 +405,6 @@ def save_form():
     k.quality = request.form['quality']
     k.timestamp = datetime.now()
     k.save(who=current_user.get_id())
-    knowldb.save_history(k, current_user.get_id())
     return flask.redirect(url_for(".show", ID=ID))
 
 
@@ -502,18 +510,6 @@ def render(ID, footer=None, kwargs=None, raw=False):
         return resp
     except Exception, e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
-
-
-@knowledge_page.route("/_cleanup")
-@housekeeping
-def cleanup():
-    """
-    reindexes knowls, also the list of categories. prunes history.
-    this is an internal task just for admins!
-    """
-    cats, reindex_count, prune_count = knowldb.cleanup()
-    return "categories: %s <br/>reindexed %s knowls<br/>pruned %s histories" % (cats, reindex_count, prune_count)
-
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
 def index():

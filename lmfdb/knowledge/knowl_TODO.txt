@@ -10,7 +10,6 @@ Front end:
 * add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
 * Subtle indication on production site that knowls are awaiting review (at bottom)
 
-
 Back end:
 * Modify knowl code to create new entry when saving rather than updating and adding to history
 * Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
@@ -63,13 +62,16 @@ knowl_reviewer | boolean  | Whether this user can review knowls
 SQL COMMANDS:
 
 CREATE TABLE kwl_knowls2 LIKE kwl_knowls INCLUDING ALL;
-ALTER TABLE kwl_knowls2 ADD COLUMN status smallint;
-ALTER TABLE kwl_knowls2 ADD COLUMN type smallint;
+ALTER TABLE kwl_knowls2 ADD COLUMN status smallint DEFAULT 0;
+ALTER TABLE kwl_knowls2 ADD COLUMN type smallint DEFAULT 0;
 ALTER TABLE kwl_knowls2 ADD COLUMN links text[];
 ALTER TABLE kwl_knowls2 ADD COLUMN source text;
 ALTER TABLE kwl_knowls2 ADD COLUMN reviewer text;
 ALTER TABLE kwl_knowls2 ADD COLUMN reviewer_timestamp timestamp;
 ALTER TABLE kwl_knowls2 DROP COLUMN history;
+ALTER TABLE kwl_knowls2 DROP CONSTRAINT kwl_knowls2_pkey;
+ALTER TABLE kwl_knowls2 ALTER COLUMN title SET NOT NULL;
+ALTER TABLE kwl_knowls2 ALTER COLUMN content SET NOT NULL;
 INSERT INTO kwl_knowls2(id, cat, title, content, authors, last_author, quality, timestamp, _keywords) SELECT id, cat, title, content, authors, last_author, quality, timestamp, _keywords FROM kwl_knowls;
 WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
 CREATE TABLE kwl_locks (id text, timestamp timestamp, username text);
