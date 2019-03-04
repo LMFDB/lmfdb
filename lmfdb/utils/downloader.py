@@ -179,8 +179,6 @@ class Downloader(object):
         func_start = self.get('function_start',{}).get(lang,[])
         func_body = self.get('function_body',{}).get(lang,[])
         func_end = self.get('function_end',{}).get(lang,[])
-        start = self.delim_start[lang]
-        end = self.delim_end[lang]
         if isinstance(self.columns, basestring):
             proj = [self.columns]
         elif isinstance(self.columns, list):
