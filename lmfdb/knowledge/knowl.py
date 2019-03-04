@@ -4,8 +4,8 @@ from lmfdb.knowledge import logger
 from datetime import datetime
 import time
 
-from lmfdb.db_backend import db, PostgresBase, DelayCommit
-from lmfdb.db_encoding import Json
+from lmfdb.backend.database import db, PostgresBase, DelayCommit
+from lmfdb.backend.encoding import Json
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -42,7 +42,7 @@ def extract_cat(kid):
         return None
     return kid.split(".")[0]
 
-# We don't use the PostgresTable from lmfdb.db_backend
+# We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
 
 class KnowlBackend(PostgresBase):

@@ -5,9 +5,9 @@ from main import (login_page, login_manager, admin_required,
 assert admin_required # silence pyflakes
 assert housekeeping # silence pyflakes
 
-from lmfdb.base import app
+from lmfdb.app import app
 
-from lmfdb.utils import make_logger
+from lmfdb.logger import make_logger
 from distutils.version import StrictVersion
 
 

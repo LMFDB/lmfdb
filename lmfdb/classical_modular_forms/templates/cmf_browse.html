@@ -66,7 +66,7 @@ Info was: {{info}}
 {% for sublist in info.space_list %}
 <p>
   {% if loop.index == 1 %}
-  Some interesting spaces:
+  Some interesting newspaces:
   {% endif %}
   {% for space in sublist %}
   <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
@@ -74,7 +74,9 @@ Info was: {{info}}
 </p>
 {% endfor %}
 
-<h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
+<a href = "?search_type=Spaces">Create a search</a> for newspaces.
+
+<h2> Find a specific newform or newspace by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
 <form>
 <input type='text' name='jump' placeholder='3.6.1.a'>
@@ -89,11 +91,20 @@ Info was: {{info}}
   <table>
     <tr>
 
-      <td colspan=2>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td>
+        <select name='level_type' style="width: 105px;">
+          <option value="">unrestricted</option>
+          <option value="prime">prime</option>
+          <option value="prime_power">prime power</option>
+          <option value="square">square</option>
+          <option value="squarefree">squrefree</option>
+        </select>
+      </td>
       <td><input type='text' style="width: 160px;" name='level' placeholder='4'></td>
       <td><span class="formexample"> e.g. 4, 1-20</td>
-      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
 
+      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
       <td>
         <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
           <option value="">any parity</option>

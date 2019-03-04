@@ -2,16 +2,19 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-from lmfdb.db_backend import db
-from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
-from lmfdb.utils import web_latex, coeff_to_poly, pol_to_html, display_multiset
-from lmfdb.search_parsing import parse_galgrp, parse_ints, clean_input, parse_rats
-from lmfdb.search_wrapper import search_wrap
 from sage.all import PolynomialRing, QQ, RR
-from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.utils import (
+    web_latex, coeff_to_poly, pol_to_html, display_multiset,
+    parse_galgrp, parse_ints, clean_input, parse_rats,
+    search_wrap)
+from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.galois_groups.transitive_group import (
+    group_display_short, group_display_knowl, group_display_inertia,
+    small_group_data, WebGaloisGroup)
 
 LF_credit = 'J. Jones and D. Roberts'
 

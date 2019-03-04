@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template, url_for, request, redirect, make_response, flash
+from markupsafe import Markup
 
-from lmfdb.db_backend import db
+from lmfdb import db
+from lmfdb.utils import (
+    web_latex_split_on_pm,
+    parse_nf_string, parse_ints, parse_hmf_weight,
+    search_wrap)
+from lmfdb.ecnf.main import split_class_label
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
-
-from lmfdb.ecnf.main import split_class_label
-
-from lmfdb.WebNumberField import WebNumberField
-
-from markupsafe import Markup
-from lmfdb.utils import web_latex_split_on_pm
-from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight
-from lmfdb.search_wrapper import search_wrap
 
 
 def get_hmf(label):

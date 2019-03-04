@@ -1,5 +1,5 @@
 
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class AVTest(LmfdbTest):
 
@@ -14,7 +14,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the formatted polynomial displays correctly
         """
-        self.check_args("/Variety/Abelian/Fq/2/9/aj_bl",'1-9x+37x^{2}-81x^{3}+81x^{4}')
+        self.check_args("/Variety/Abelian/Fq/2/9/aj_bl",'1 - 9 x + 37 x^{2} - 81 x^{3} + 81 x^{4}')
 
     def test_display_field(self):
         r"""

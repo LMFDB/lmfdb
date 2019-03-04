@@ -947,8 +947,11 @@ td.right {
 table.ntdata .middle {
     vertical-align: middle;
 }
-table.ntdata tr.dark {
+table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
+}
+table.ntdata tr.light td {
+    background: white;
 }
 table.ntdata td.dark {
     background: {{color.table_ntdata_background_2}};

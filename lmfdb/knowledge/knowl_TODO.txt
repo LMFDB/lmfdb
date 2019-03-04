@@ -16,6 +16,7 @@ TASKS:
 * Add ability to view diffs against old versions when editing knowl
 * Update scripts that copy knowls to production
 * add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
+* Subtle indication on production site that knowls are awaiting review (at bottom)
 
 Later:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
@@ -23,6 +24,8 @@ Later:
 * For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
 
 It would be nice if:
+* When editing a knowl, some way to find the name of a knowl that defines a particular keyword
+* Some visual distinction between mathematical content and LMFDB-specific content
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
 * Add ability to search for knowls with comments
 * Search with wildcards (use tilde operator and a checkbox on the search; think about details)

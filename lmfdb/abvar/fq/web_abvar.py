@@ -2,9 +2,9 @@
 import re
 from flask import url_for
 
-from lmfdb.db_backend import db
-from lmfdb.WebNumberField import WebNumberField, nf_display_knowl
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb import db
+from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl
+from lmfdb.galois_groups.transitive_group import group_display_knowl
 
 lmfdb_label_regex = re.compile(r'(\d+)\.(\d+)\.([a-z_]+)')
 

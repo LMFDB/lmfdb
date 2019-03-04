@@ -1,20 +1,20 @@
 # parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_forms/populate_embeddings_mf_hecke_cc.py 40 ::: {0..39}
-from sage.all import  vector, PolynomialRing, ZZ, NumberField
+from sage.all import matrix, vector, PolynomialRing, ZZ, NumberField, ComplexField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
 from  lmfdb.db_backend import db
 ZZx = PolynomialRing(ZZ, "x")
 
-def convert_eigenvals_to_qexp(basis, eigenvals):
+def convert_eigenvals_to_qexp(basis, eigenvals, normalization):
     qexp = []
-    for i, ev in enumerate(eigenvals):
-        an = sum(elt * basis[i] for i, elt in enumerate(ev))
+    for j, ev in enumerate(eigenvals, 1):
+        an = sum(elt * basis[i] * j**normalization for i, elt in enumerate(ev))
         qexp.append(an)
     return qexp
 
 
 def upsert_embedding(id_number, skip = True):
-    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
+    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an_normalized', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
     if skip:
@@ -23,7 +23,7 @@ def upsert_embedding(id_number, skip = True):
                 return
     row_embeddings =  {}
     hecke_orbit_code = rowcc['hecke_orbit_code']
-    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code})
+    newform = db.mf_newforms.lucky({'hecke_orbit_code':hecke_orbit_code},['label','weight','field_poly','dim'])
     if newform is None:
         # No newform in db
         return
@@ -53,20 +53,19 @@ def upsert_embedding(id_number, skip = True):
         an_nf = hecke_nf['an']
         betas_embedded = [map(elt, betas) for elt in embeddings]
         CCC = betas_embedded[0][0].parent()
-        qexp = [convert_eigenvals_to_qexp(elt, an_nf) for elt in betas_embedded]
-        min_len = min(len(rowcc['an']), len(qexp[0]))
-        an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an'][:min_len]))
+        normalization = -CCC(newform['weight'] - 1).real()/2
+        qexp = [convert_eigenvals_to_qexp(elt, an_nf, normalization) for elt in betas_embedded]
+        min_len = min(len(rowcc['an_normalized']), len(qexp[0]))
+        an_cc = vector(CCC, map(lambda x: CCC(x[0], x[1]), rowcc['an_normalized'][:min_len]))
         #qexp_diff = [ (vector(CCC, elt[:min_len]) - an_cc).norm() for elt in qexp ]
         # normalized, to avoid the unstability comming from large weight
         qexp_diff = [ vector([(elt- an_cc[i])/elt.abs() for i, elt in enumerate(q) if elt != 0]).norm() for j,q in enumerate(qexp)]
 
         qexp_diff_sorted = sorted(qexp_diff)
         min_diff = qexp_diff_sorted[0]
-        #print "min_diff = %.2e \t min_diff/2nd = %.2e" % (min_diff, min_diff/qexp_diff_sorted[1])
 
         #assuring that is something close to zero, and that no other value is close to it
-        assert min_diff < 1e-6
-        assert min_diff/qexp_diff_sorted[1] < 1e-15
+        assert min_diff < 1e-6 and min_diff/qexp_diff_sorted[1] < 1e-15, "id = %d label = %s\nmin_diff = %.2e \t min_diff/2nd = %.2e\nan_cc = %s\nqexp = %s" % (id_number, rowcc['lfunction_label'], min_diff, min_diff/qexp_diff_sorted[1], vector(ComplexField(20), an_cc[:5]), matrix(ComplexField(20), [elt[:5] for elt in qexp]))
 
         for i, elt in enumerate(qexp_diff):
             if elt == min_diff:
@@ -84,7 +83,7 @@ if len(sys.argv) == 3:
     start = int(sys.argv[2])
     assert k > start
     hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}}, projection='id')))
+    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}, 'embedding_root_real':{'$exists':False}}, projection='id', sort = [])))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)

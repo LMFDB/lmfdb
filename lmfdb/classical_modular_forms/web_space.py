@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 # See genus2_curves/web_g2c.py
 # See templates/space.html for how functions are called
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import ZZ
 from sage.databases.cremona import cremona_letter_code
-from lmfdb.characters.utils import url_character
-from lmfdb.WebNumberField import nf_display_knowl, cyclolookup, rcyclolookup
+from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.utils import display_knowl, web_latex_split_on_pm, web_latex, coeff_to_power_series
 from flask import url_for
 import re
@@ -22,7 +22,8 @@ def get_bread(**kwds):
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label')]
+             ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
+             ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
@@ -226,7 +227,6 @@ class WebNewformSpace(object):
         self.has_trace_form = (data.get('traces') is not None)
         self.char_conrey = self.conrey_indexes[0]
         self.char_conrey_str = '\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.char_conrey_link = url_character(type='Dirichlet', modulus=self.level, number=self.char_orbit_label)
         self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
         oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
@@ -292,6 +292,20 @@ class WebNewformSpace(object):
         if data is None:
             raise ValueError("Space %s not found" % label)
         return WebNewformSpace(data)
+
+    @property
+    def char_orbit_link(self):
+        label = '%s.%s' % (self.level, self.char_orbit_label)
+        return display_knowl('character.dirichlet.orbit_data', title=label, kwargs={'label':label})
+
+    def display_character(self):
+        if self.char_order == 1:
+            ord_deg = " (trivial)"
+        else:
+            ord_knowl = display_knowl('character.dirichlet.order', title='order')
+            deg_knowl = display_knowl('character.dirichlet.degree', title='degree')
+            ord_deg = r" (of %s \(%d\) and %s \(%d\))" % (ord_knowl, self.char_order, deg_knowl, self.char_degree)
+        return self.char_orbit_link + ord_deg
 
     def _vec(self):
         return [self.level, self.weight, self.conrey_indexes[0]]

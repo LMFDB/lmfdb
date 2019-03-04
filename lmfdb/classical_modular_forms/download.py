@@ -1,9 +1,9 @@
-from flask import  url_for, redirect, abort
+# -*- coding: utf-8 -*-
 from ast import literal_eval
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
-from lmfdb.downloader import Downloader
-from lmfdb.utils import flash_error
+from flask import  url_for, redirect, abort
+from lmfdb import db
+from lmfdb.backend.encoding import Json
+from lmfdb.utils import Downloader, flash_error
 from lmfdb.classical_modular_forms.web_newform import WebNewform, encode_hecke_orbit
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
@@ -17,7 +17,7 @@ class CMF_download(Downloader):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
         data = db.mf_hecke_nf.lucky({'label':label}, proj)
         if not data:
-            return abort(404, "No q-expansion found for %s"%label)
+            return None
         # Make up for db_backend currently deleting Nones
         for elt in proj:
             if elt not in data:
@@ -27,16 +27,19 @@ class CMF_download(Downloader):
 
     def _get_traces(self, label):
         if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection='traces')
+            traces = db.mf_gamma1.lookup(label, projection=['traces'])
         elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection='traces')
+            traces = db.mf_newspaces.lookup(label, projection=['traces'])
         elif label.count('.') == 3:
-            traces = db.mf_newforms.lookup(label, projection='traces')
+            traces = db.mf_newforms.lookup(label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s"%label)
         if traces is None:
             return abort(404, "Label not found: %s"%label)
-        return [0] + traces
+        elif traces.get('traces') is None:
+            return abort(404, "We have not computed traces for: %s"%label)
+        else:
+            return [0] + traces['traces']
 
     # Sage functions to generate everything
     discrete_log_sage = [
@@ -145,9 +148,8 @@ class CMF_download(Downloader):
 
     def download_qexp(self, label, lang='sage'):
         hecke_nf = self._get_hecke_nf(label)
-        # to return errors
-        if not isinstance(hecke_nf, dict):
-            return hecke_nf
+        if hecke_nf is None:
+            return abort(404, "No q-expansion found for %s" % label)
 
         dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
@@ -258,20 +260,22 @@ class CMF_download(Downloader):
         if not db.mf_hecke_cc.exists({'hecke_orbit_code':code}):
             return abort(404, "No form found for %s"%(label))
         def cc_generator():
+            yield '[\n'
             for ev in db.mf_hecke_cc.search(
                     {'hecke_orbit_code':code},
-                    ['lfunction_label',
+                    ['label',
                      'embedding_root_real',
                      'embedding_root_imag',
                      col],
-                    sort=['conrey_label', 'embedding_index']):
-                D = {'label':ev.get('lfunction_label'),
+                    sort=['conrey_index', 'embedding_index']):
+                D = {'label':ev.get('label'),
                      col:ev.get(col)}
                 root = (ev.get('embedding_root_real'),
                         ev.get('embedding_root_imag'))
                 if root != (None, None):
                     D['root'] = root
-                yield Json.dumps(D) + '\n\n'
+                yield Json.dumps(D) + ',\n\n'
+            yield ']\n'
         filename = label + suffix
         title += ' for newform %s,'%(label)
         return self._wrap_generator(cc_generator(),
@@ -280,18 +284,35 @@ class CMF_download(Downloader):
                                     title=title)
 
     def download_cc_data(self, label, lang='text'):
-        return self._download_cc(label, lang, 'an', '.cplx', 'Complex embeddings')
+        return self._download_cc(label, lang, 'an_normalized', '.cplx', 'Complex embeddings')
 
     def download_satake_angles(self, label, lang='text'):
         return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
+
+    def download_embedding(self, label, lang='text'):
+        data = db.mf_hecke_cc.lucky({'label':label},
+                                    ['label',
+                                     'embedding_root_real',
+                                     'embedding_root_imag',
+                                     'an_normalized',
+                                     'angles'])
+        if data is None:
+            return abort(404, "No embedded newform found for %s"%(label))
+        root = (data.pop('embedding_root_real', None),
+                data.pop('embedding_root_imag', None))
+        if root != (None, None):
+            data['root'] = root
+        return self._wrap(Json.dumps(data),
+                          label,
+                          lang=lang,
+                          title='Coefficient data for embedded newform %s,'%label)
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s"%label)
         form = WebNewform(data)
-        form.setup_cc_data({'m':'1-%s'%form.dim,
-                            'n':'1-1000'})
+        form.setup_cc_data({'m':'1-%s'%form.dim})
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
             data['traces'] = form.texp
@@ -302,7 +323,6 @@ class CMF_download(Downloader):
                           lang=lang,
                           title='Stored data for newform %s,'%(label))
 
-    
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
@@ -593,7 +613,7 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s"%label)
         newform = WebNewform(data)
-        hecke_nf = self._get_hecke_nf(label);
+        hecke_nf = self._get_hecke_nf(label)
 
         out = []
         newlines = ['']*2;
@@ -606,8 +626,9 @@ class CMF_download(Downloader):
             out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors
-            if not isinstance(hecke_nf, dict):
-                return hecke_nf
+            # this line will never be ran if the data is correct
+            if not isinstance(hecke_nf, dict): # pragma: no cover
+                return hecke_nf  # pragma: no cover
             out += self._magma_ExtendMultiplicatively() + newlines
             out += self._magma_qexpCoeffs(newform, hecke_nf) + newlines
 

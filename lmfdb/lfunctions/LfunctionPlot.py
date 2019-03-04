@@ -2,12 +2,11 @@
 
 import math
 from flask import url_for
-from lmfdb.db_backend import db
-from lmfdb.classical_modular_forms.web_newform import WebNewform
-from lmfdb.classical_modular_forms.web_space import WebGamma1Space
+from lmfdb import db
 from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.lfunctions import logger
 from sage.all import prod
+from sage.arith.srange import srange
 from lmfdb.utils import signtocolour
 from sage.databases.cremona import cremona_letter_code
 
@@ -305,6 +304,58 @@ def paintSvgFileAll(glslist):  # list of group and level
     ans += svgEnd()
     return(ans)
 
+## ============================================
+## Returns the svg-code for a simple coordinate system.
+## width = width of the system
+## height = height of the system
+## xMax = maximum in first (x) coordinate
+## yMax = maximum in second (y) coordinate
+## xfactor = the number of pixels per unit in x
+## yfactor = the number of pixels per unit in y
+## ticlength = the length of the tickmarks
+## ============================================
+def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
+               str(width) + "' y2='" + str(height) +
+               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
+                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    for i in range(1, xMax + 1):
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
+                             str(height - ticlength) + "' x2='" +
+                             str(i * xfactor) + "' y2='" + str(height) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(5, xMax + 1, 5):
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='" +
+                             str(height - 2 * ticlength) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
+                             "' y2='" + str(height) + "' x2='" +
+                             str(i * xfactor) +
+                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    for i in range(1, yMax + 1):
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * yfactor) + "' x2='" +
+                             str(ticlength) + "' y2='" +
+                             str(height - i * yfactor) +
+                             "' style='stroke:rgb(0,0,0);'/>\n")
+
+    for i in range(5, yMax + 1, 5):
+        xmlText = xmlText + ("<text x='5' y='" +
+                             str(height - i * yfactor + 3) +
+                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
+                             str(i) + "</text>\n")
+
+        xmlText = xmlText + ("<line x1='0' y1='" +
+                             str(height - i * yfactor) + "' x2='" + str(width) +
+                             "' y2='" + str(height - i * yfactor) +
+                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+
+    return(xmlText)
 
 ## ============================================
 ## Returns the svg-code for a simple coordinate system.
@@ -316,25 +367,25 @@ def paintSvgFileAll(glslist):  # list of group and level
 ## yfactor = the number of pixels per unit in y
 ## ticlength = the length of the tickmarks
 ## ============================================
-def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
+def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
                str(width) + "' y2='" + str(height) +
                "' style='stroke:rgb(0,0,0);'/>\n")
-    xsign = 1 if xMax >= 1 else -1
-    ysign = 1 if yMax >= 1 else -1
-    for i in range(xMin, xMax + 1, xsign * dashedx):
+    xsign = 1 if xMax >= 0 else -1
+    ysign = 1 if yMax >= 0 else -1
+    for i in srange(xMin, xMax, xsign * dashedx):
         xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='" +
                              str(xsign * height - 2 * ticlength) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>"
-                             + str(i + xoffset) + "</text>\n")
+                             + "{:.5g}".format(i + xoffset) + "</text>\n")
 
         xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor) +
                              "' y2='" + str(ysign * height) + "' x2='" +
                              str(i * xsign * xfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    for i in range(1, xMax + 1, xsign):
+    for i in srange(xMin, xMax, xsign * dashedx):
         xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='" +
                              str(ysign*height - ticlength) + "' x2='" +
                              str(i * xfactor) + "' y2='" + str(ysign * height) +
@@ -343,17 +394,17 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yM
 
     # y-axis
     xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
-    for i in range(1, yMax + 1, ysign*dashedy):
+    for i in srange(yMin, yMax + 1, ysign*dashedy):
         xmlText = xmlText + ("<text x='-10' y='" +
                              str(ysign*height - i * ysign * yfactor + 3) +
                              "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+                             "{:.5g}".format(float(i)) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='" +
                              str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width) +
                              "' y2='" + str(height - i * ysign * yfactor) +
                              "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-    for i in range(yMin, yMax + 1, ysign*dashedy):
+    for i in srange(yMin, yMax + 1, ysign*dashedy):
         xmlText = xmlText + ("<line x1='0' y1='" +
                              str(height - i * ysign * yfactor) + "' x2='" +
                              str(ticlength) + "' y2='" +
@@ -373,10 +424,15 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yM
 ## the L-functions of holomorphic cusp forms.
 ## ============================================
 def getOneGraphHtmlHolo(condmax):
-    #image_url = url_for('.browseGraphHoloNew', **{'condmax':condmax})
-    image_url = url_for('static', filename='images/browseGraphHoloNew_201.svg')
-    logger.debug(image_url)
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % (image_url, 1000, 680) +
+    if condmax == 1:
+        pic = (url_for('static', filename='images/browseGraphHoloNew_1.svg'), 2023, 610)
+    elif condmax == 0.501:
+        pic = (url_for('static', filename='images/browseGraphHoloNew_0.501.svg'), 1020, 550)
+    else:
+        logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
+        pic = (url_for('.browseGraphHoloNew', **{'condmax':condmax}), 1010, 600)
+    logger.debug(pic[0])
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic +
            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
@@ -419,26 +475,25 @@ def paintSvgHoloNew(condmax):
         # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
-        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=1.5, light=.75, rot=3.8))
+        return map(lambda (r,g,b): "("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")", seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8))
 
 
-    radius = 3.3
-    #top_space = 4*radius
+    radius = 3
 
     values = {}
     max_k = 0 # the largest weight we see
 
-    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','conrey_indexes','dim','char_degree']):
+    for nf in db.mf_newforms.search({'analytic_conductor':{'$lte':condmax}},projection=['analytic_conductor','label','weight','conrey_indexes','dim','char_degree'],sort=[('analytic_conductor',1)]):
         level, k, _, hecke_letter = nf['label'].split('.')
         if int(k) > max_k:
             max_k = int(k)
-        if nf['analytic_conductor'] not in values:
-            values[nf['analytic_conductor']] = []
+        if nf['weight'] not in values:
+            values[nf['weight']] = []
         if nf['dim'] == 1:
             lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(nf['label'].split('.'))
             z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
             if z1 is not None:
-                values[nf['analytic_conductor']].append([nf['label'].split('.'), z1, lfun_url])
+                values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
             for character in nf['conrey_indexes']:
                 for j in range(nf['dim']/nf['char_degree']):
@@ -446,17 +501,17 @@ def paintSvgHoloNew(condmax):
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
                     z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
                     if z1 is not None:
-                        values[nf['analytic_conductor']].append([label, z1, lfun_url])
+                        values[nf['weight']].append([label, z1, lfun_url, nf["analytic_conductor"]])
 
 
     points = []
     y_max = 0.0
     x_max = 0.0
     y_scale = 60
-    x_scale = 6
-    x_offset = 40 # the first analytic conductor is 47 or something so this is pleasing
-    for Nk2 in sorted(values.keys()):
-        for label, z1, lfun_url in values[Nk2]:
+    x_scale = 2000
+    x_offset = 0
+    for wei in sorted(values.keys()):
+        for label, z1, lfun_url, Nk2 in values[wei]:
             N, k = label[:2]
             x = x_scale*float(Nk2)
             y = y_scale*z1
@@ -471,16 +526,12 @@ def paintSvgHoloNew(condmax):
     ans = svgBegin()
     ans += "<g transform='translate(10 0)'>\n" # give ourselves a little space
 
-    ans += "<g transform='translate(0 40)'>\n" # give ourselves a little space
-    ans += paintCS(x_max - x_offset*x_scale + 4*x_scale , y_max + y_scale, int(x_max/x_scale-x_offset + 1) + 3, int(y_max/y_scale), x_scale, y_scale, 7, xoffset = x_offset, dashedx = 5, dashedy = 1)
-    ans += "</g>\n"
-
-    ans += "<g transform='translate(" + str(-x_offset*x_scale) + " 50)'>\n" # give ourselves a little space
     cfw = colorsForWeights(max_k) # pick our colour pallette we need colors for weights 1 (at some point) to max_k inclusive
+
 
     for p in points:
         x = str(p[0])
-        y = str(y_scale*10 - p[1]) # flip the graph + a little space as the largest value is approx 9.2
+        y = str(y_max + y_scale/2 - p[1]) # flip the graph + a little space as the largest value is approx 9.2
         ans += "<a xlink:href='" + "/L/" + p[2] + "/' target='_top'>\n"
         ans += "<circle cx='" + x
         ans += "' cy='" + y
@@ -489,20 +540,15 @@ def paintSvgHoloNew(condmax):
         ans += "<title>" + p[3] + "</title>"
         ans += "</circle></a>\n"
 
-    # Draw axes
+    # axes on top of dots
+    ans += paintCSNew(x_max - x_offset*x_scale,
+            y_max + y_scale/2,
+            x_max/x_scale,
+            y_max/y_scale,
+            x_scale,
+            y_scale,
+            7, xoffset = x_offset, dashedx = 0.05, dashedy = 1, xMin = 0)
 
-    #ans += ("<line x1='" + str(40*x_scale) + "' y1='0' x2='" + str(x_max + radius) +
-    #        "' y2='0' style='stroke:rgb(0,0,0);'/>\n")
-    #ans += ("<line x1='" + str(40*x_scale) + "' y1='0' x2='" + str(40*x_scale) + "' y2='" + str(y_max) + "' style='stroke:rgb(0,0,0);'/>\n")
-
-    # Increments for axes
-    #for i in range(40, -1):
-    #    ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
-    #            str(height - float(ybase) * yfactor)[0:7] +
-    #            "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
-    #            + str(numberwithlabel) + "</text>\n")
-
-    ans += "</g>\n"
     ans += "</g>"
 
     ans += svgEnd()
@@ -510,6 +556,8 @@ def paintSvgHoloNew(condmax):
     return ans
 
 def paintSvgHolo(Nmin, Nmax, kmin, kmax):
+    # the import must be here to avoid circular import
+    from lmfdb.classical_modular_forms.web_space import WebGamma1Space
     xfactor = 90
     yfactor = 30
     extraSpace = 20
@@ -947,6 +995,9 @@ def reindex_characters(min_mod, max_mod, order_limit=12):
 ## General code to be used with plotsector routine.
 ## ============================================
 def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
+    # the import must be here to avoid circular import
+    from lmfdb.classical_modular_forms.web_newform import WebNewform
+    from lmfdb.classical_modular_forms.web_space import WebGamma1Space
     xfactor = 90
     yfactor = 30
     extraSpace = 20
