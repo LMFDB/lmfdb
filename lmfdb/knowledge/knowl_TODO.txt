@@ -1,29 +1,35 @@
 TASKS:
 
-* Fill in source column for existing annotation knowls
-* Modify knowl code to create new entry when saving rather than updating and adding to history
-* Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
-* Implement renaming: change the id for all instances in the table
-* Make links column update when saving knowl
+Front end:
 * Update quality restrictions on search to use status rather than quality
-* Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
-* Add autosaves by updating an inprogress knowl record
-* Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
-* Automatically fill in type if ends in .top or .bottom
 * Add filter for showing top/bottom knowls when searching (off by default).  Never show comments knowls in main list.
+* Automatically fill in type if ends in .top or .bottom
 * For annotations, add link back to object from display page (not when displayed as part of homepage)
 * Add ability to view history and revert to old version
 * Add ability to view diffs against old versions when editing knowl
-* Update scripts that copy knowls to production
 * add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
 * Subtle indication on production site that knowls are awaiting review (at bottom)
+
+
+Back end:
+* Modify knowl code to create new entry when saving rather than updating and adding to history
+* Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
+* Make links column update when saving knowl
+* Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
+
+Data:
+* Fill in source column for existing annotation knowls
 
 Later:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
 * Delete kwl_history and kwl_deleted tables
 * For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
+* Update scripts that copy knowls to production
 
 It would be nice if:
+* Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
+* Implement renaming: change the id for all instances in the table
+* Add autosaves by updating an inprogress knowl record
 * When editing a knowl, some way to find the name of a knowl that defines a particular keyword
 * Some visual distinction between mathematical content and LMFDB-specific content
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
