@@ -60,14 +60,14 @@ Info was: {{info}}
 </p>
 
 <p>
-Create a <a href = "?search_type=Spaces">search</a> for spaces,
+Create a <a href = "?search_type=Spaces">search</a> for newspaces,
  a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
 </p>
 
 {% for sublist in info.space_list %}
 <p>
   {% if loop.index == 1 %}
-  Some interesting spaces:
+  Some interesting newspaces:
   {% endif %}
   {% for space in sublist %}
   <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
@@ -76,7 +76,7 @@ Create a <a href = "?search_type=Spaces">search</a> for spaces,
 {% endfor %}
 
 
-<h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
+<h2> Find a specific newform or newspace by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
 <form>
 <input type='text' name='jump' placeholder='3.6.1.a'>

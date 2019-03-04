@@ -668,4 +668,46 @@ Data Validation
    You can use the `list_verifications()` method.  With
    `details=False` it will show a list of verification functions; if
    `details=True` it will also print their docstrings and
-   configuration options that differ from the deaults.
+   configuration options that differ from the defaults.
+
+SQL Tips
+--------
+
+Sometimes the interface isn't enough, and you need to do something directly with SQL.
+Note that some of these operations will require you to be logged in as editor.
+
+1. How can I change the type of a column from jsonb to an array?
+
+   When we first switched to postgres, we planned to use jsonb for
+   everything.  But we have since learned that there are some
+   advantages to using Postgres arrays.  If you want to convert from
+   jsonb to an array (of numerics) for example, you could do the
+   following.  We first check to see if this column is being used in
+   any indexes or constraints.  If it were, you would need to update
+   `meta_indexes` or `meta_constraints`.
+
+   ```
+   lmfdb=> SELECT * FROM meta_indexes WHERE columns @> '["heights"]'::jsonb;
+    index_name | table_name | type | columns | modifiers | storage_params
+   ------------+------------+------+---------+-----------+----------------
+   (0 rows)
+   lmfdb=> SELECT * FROM meta_constraints WHERE columns @> '["heights"]'::jsonb;
+    constraint_name | table_name | type | columns | check_func
+   -----------------+------------+------+---------+------------
+   (0 rows)
+   lmfdb=> ALTER TABLE ec_nfcurves ADD COLUMN new_heights numeric[];
+   ALTER TABLE
+   lmfdb=> SELECT label, heights, (SELECT array_agg(value::numeric) FROM jsonb_array_elements_text(heights)) AS new_heights FROM ec_nfcurves WHERE jsonb_array_len(heights) > 1 LIMIT 3;
+           label        |                  heights                  |               new_heights
+   ---------------------+-------------------------------------------+------------------------------------------
+    2.2.8.1-2066.2-e1   | [0.2026108605260589, 0.1517386576969303]  | {0.2026108605260589,0.1517386576969303}
+    3.1.23.1-15857.3-A2 | [0.06782294138768774, 0.6525410927449266] | {0.06782294138768774,0.6525410927449266}
+    3.1.23.1-18509.3-A1 | [0.1658028623327324, 0.2297502250210176]  | {0.1658028623327324,0.2297502250210176}
+   (3 rows)
+   lmfdb=> UPDATE ec_nfcurves SET new_heights = (SELECT array_agg(value::numeric) FROM jsonb_array_elements_text(heights));
+   UPDATE 661073
+   lmfdb=> ALTER TABLE ec_nfcurves RENAME COLUMN heights TO old_heights;
+   ALTER TABLE
+   lmfdb=> ALTER TABLE ec_nfcurves RENAME COLUMN new_heights TO heights;
+   ALTER TABLE
+   ```

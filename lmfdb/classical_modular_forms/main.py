@@ -790,8 +790,8 @@ def trace_search(info, query):
 
 @search_wrap(template="cmf_space_trace_search_results.html",
              table=db.mf_newspaces,
-             title='Newform Space Search Results',
-             err_title='Newform Space Search Input Error',
+             title='Newspace Search Results',
+             err_title='Newspace Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_space_traces},
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
@@ -998,8 +998,8 @@ def dimension_space_search(info, query):
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
-             title='Newform Space Search Results',
-             err_title='Newform Space Search Input Error',
+             title='Newspace Search Results',
+             err_title='Newspace Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_spaces},
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],
