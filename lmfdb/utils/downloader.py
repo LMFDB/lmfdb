@@ -32,7 +32,7 @@ class Downloader(object):
       reconstruct appropriate objects in that system.
       For skipped languages, no function will be defined.
 
-    You may also want to override the default behavior of the display function,
+    You may also want to override the default behavior of the `to_lang` function,
     which is used to print the values of the columns.
 
     An instance of the resulting class is usually then
@@ -90,7 +90,7 @@ class Downloader(object):
         if inp is None:
             return self.none[lang]
         if isinstance(inp, str) or isinstance(inp, unicode):
-            return str(inp)
+            return '"{0}"'.format(str(inp))
         if isinstance(inp, int):
             return str(inp)
         if level == 0:
@@ -99,7 +99,7 @@ class Downloader(object):
         else:
             start = self.delim_start[lang]
             end = self.delim_end[lang]
-            sep = ','
+            sep = ', '
         try:
             if level == 0:
                 begin = start + '\\\n'
@@ -113,8 +113,7 @@ class Downloader(object):
     def assign(self, lang, name, elt, level = 0, prepend = ''):
         return name + ' ' + self.assignment_defn[lang] + ' ' + self.to_lang(lang, elt, level, prepend) + self.line_end[lang] + '\n'
 
-    def display(self, column_values):
-        return ', '.join(str(val) for val in column_values)
+
     def get(self, name, default=None):
         if hasattr(self, name):
             return getattr(self, name)
@@ -201,11 +200,11 @@ class Downloader(object):
             query = literal_eval(info.get('query','{}'))
             data = list(self.table.search(query, projection=proj))
             if label_col:
-                label_list = ['"' + str(res[label_col]) + '"' for res in data]
+                label_list = [res[label_col] for res in data]
             if onecol:
-                res_list = [self.display([res.get(wo_label[0])]) for res in data]
+                res_list = [res.get(wo_label[0]) for res in data]
             else:
-                res_list = [start + self.display([res.get(col) for col in wo_label]) + end for res in data]
+                res_list = [[res.get(col) for col in wo_label]  for res in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s"%err)
         c = self.comment_prefix[lang]
@@ -227,17 +226,13 @@ class Downloader(object):
                 data_desc = [data_desc]
             for line in data_desc:
                 s += c + ' %s\n' % line
-        if make_data_comment:
+        if make_data_comment and func_body:
             s += c + '\n'
             s += c + ' ' + make_data_comment  + '\n'
         s += '\n'
-        s += 'labels ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += ',\n'.join(label_list)
-        s += self.start_and_end[lang][1]
+        s += self.assign(lang, "labels", label_list)
         s += '\n\n'
-        s += 'data ' + self.assignment_defn[lang] + self.start_and_end[lang][0] + '\\\n'
-        s += str(',\n'.join(res_list))
-        s += self.start_and_end[lang][1]
+        s += self.assign(lang, "data", res_list)
         if func_body:
             s += '\n\n'
             s += '\n'.join(func_start) + '\n'
