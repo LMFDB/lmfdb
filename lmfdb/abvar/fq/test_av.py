@@ -1,4 +1,5 @@
-from lmfdb.base import LmfdbTest
+
+from lmfdb.tests import LmfdbTest
 
 class AVTest(LmfdbTest):
 
@@ -13,7 +14,7 @@ class AVTest(LmfdbTest):
         r"""
         Check that the formatted polynomial displays correctly
         """
-        self.check_args("/Variety/Abelian/Fq/2/9/aj_bl",'1-9x+37x^{2}-81x^{3}+81x^{4}')
+        self.check_args("/Variety/Abelian/Fq/2/9/aj_bl",'1 - 9 x + 37 x^{2} - 81 x^{3} + 81 x^{4}')
 
     def test_display_field(self):
         r"""
@@ -92,7 +93,7 @@ class AVTest(LmfdbTest):
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         # The following is part of the base64 encoded image of the Newton
         # polygon for this isogeny class.
-        assert "4S8eKLeWaDFgkQAKBLwgPyECAAQFeEB%2BQlQACALggPKIMA" in page
+        assert r"data:image/png;base64,iVBORw0KGgo" in page
 
     def test_circle_plot(self):
         r"""
@@ -101,7 +102,7 @@ class AVTest(LmfdbTest):
         page = self.tc.get("/Variety/Abelian/Fq/2/4/ad_g").data
         # The following is part of the base64 encoded image of the circle plot
         # for this isogeny class.
-        assert "gMA4O7CwsJ06NAhDqLDaVBAYEkcQAcA4EccRIezo" in page
+        assert r"data:image/png;base64,iVBORw0KGgo" in page
 
     def test_property_box(self):
         r"""

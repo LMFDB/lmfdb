@@ -14,7 +14,7 @@
 import string
 import re
 import flask
-from lmfdb.base import app
+from lmfdb.app import app
 from datetime import datetime
 from flask import render_template, render_template_string, request, url_for, make_response
 #from flask.ext.login import login_required, current_user

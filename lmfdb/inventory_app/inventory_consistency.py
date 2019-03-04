@@ -1,27 +1,16 @@
 
-from bson import SON
 import lmfdb_inventory as inv
 from inventory_live_data import get_lockout_state
 import inventory_helpers as ih
 from scrape_helpers import get_completed_scrapes, get_live_scrapes_older_than
 import datetime
 import threading
+from lmfdb import db
 
 
 def get_latest_report():
-
-    try:
-        got_client = inv.setup_internal_client(editor=True, remote=False)
-        assert(got_client == True)
-        idb = inv.int_client
-        inv_db = idb[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
-
-    reports = inv_db['ops'].find({'isa':'report', 'scan_date':{'$exists':True}})
-    sorted_reports = sorted(reports, key=lambda s : s['scan_date'])
-    return sorted_reports[-1]
+    sorted_reports = db.inv_ops.search({'report':{'$exists':True}}, sort=[['time',-1]], limit=1)
+    return None if not sorted_reports else sorted_reports[0]
 
 def generate_report_threaded():
 
@@ -38,58 +27,47 @@ def generate_report():
        Can take a while to run
     """
     report = {}
-    try:
-        got_client = inv.setup_internal_client(editor=True, remote=False)
-        assert(got_client == True)
-        idb = inv.int_client
-        inv_db = inv.int_client[inv.get_inv_db_name()]
-    except Exception as e:
-        inv.log_dest.error("Error getting Db connection "+ str(e))
-        return False
 
     #Check connection, editor status etc
-    report['connection'] = report_connection(idb, inv_db)
+    report['connection'] = report_connection()
 
-    all_colls=list(inv_db['collection_ids'].find())
+    all_tables=list(db.inv_tables.search())
 
-    report['fields'] = report_fields_tables(inv_db, all_colls)
-    report['latest'] = report_latest_changes(all_colls)
-    report['gone'] = report_gone(all_colls)
-    report['scrapes'] = report_scrapes(inv_db)
+    report['fields'] = report_fields_tables(all_tables)
+    report['latest'] = report_latest_changes(all_tables)
+    report['gone'] = report_gone(all_tables)
+    report['scrapes'] = report_scrapes()
 
-    report_record = {'isa':'report', 'scan_date': datetime.datetime.now(), 'report':report}
-    inv_db['ops'].insert_one(report_record)
+    report_record = {'time': datetime.datetime.now(), 'report':report}
+    db.inv_ops.insert_many([report_record])
 #    return report
 
-def report_connection(idb, inv_db):
+def report_connection():
     """Check connection, check is inventory, check inventory is as expected
     """
-
-    roles = idb['admin'].command(SON({"connectionStatus":int(1)}))
-    can_write = 'readWrite' in [el['role'] for el in roles['authInfo']['authenticatedUserRoles'] if el['db']=='inventory']
-    inv_ok = inv.validate_mongodb(inv_db)
+    can_write = not db._read_only
     lockout = get_lockout_state()
-    return {'can_write':can_write, 'inv_ok': inv_ok, 'global_lock':lockout}
+    return {'can_write':can_write, 'global_lock':lockout}
 
-def report_fields_tables(inv_db, colls):
+def report_fields_tables(tables):
     """Generate report items for consistency of fields tables
     Checks that auto and human match in keys
     Check human.data contains expected fields
     """
 
     patch=[]
-    for item in colls:
-         a=inv_db['fields_human'].find({'coll_id':item['_id']}).count()
-         b=inv_db['fields_auto'].find({'coll_id':item['_id']}).count()
-         if a != b:
-             list_a = set([el['name'] for el in inv_db['fields_human'].find({'coll_id':item['_id']}, {'name':1})])
-             list_b = set([el['name'] for el in inv_db['fields_auto'].find({'coll_id':item['_id']}, {'name':1})])
-             keys = list(list_a.symmetric_difference(list_b))
-             patch.append((item['name'], item['_id'], a, b, keys))
+    for item in tables:
+        a = db.inv_fields_human.count({'table_id':item['_id']})
+        b = db.inv_fields_auto.count({'table_id':item['_id']})
+        if a != b:
+            list_a = set(db.inv_fields_human.search({'table_id':item['_id']}, 'name'))
+            list_b = set(db.inv_fields_auto.search({'table_id':item['_id']}, 'name'))
+            keys = list(list_a.symmetric_difference(list_b))
+            patch.append((item['name'], item['_id'], a, b, keys))
 
     bad_items = []
-    for item in colls:
-        all_human=inv_db['fields_human'].find({'coll_id':item['_id']})
+    for item in tables:
+        all_human=db.inv_fields_human.search({'table_id':item['_id']})
         key_list = []
         for field in all_human:
                 for key in inv.base_editable_fields:
@@ -101,25 +79,22 @@ def report_fields_tables(inv_db, colls):
         if len(key_list) > 0 : bad_items.append((item['name'], item['_id'], key_list))
     return {'table_match':{'num':len(patch), 'items':patch}, 'human_missing':{'num':len(bad_items), 'items':bad_items}}
 
-def report_latest_changes(colls):
+def report_latest_changes(tables):
     """Report on date of latest rescrapes
     """
 
-    sorted_colls = sorted(colls, key=lambda s : s['scan_date'])
-    latest_scan = sorted_colls[-1]
+    sorted_tables = sorted(tables, key=lambda s : s['scan_date'])
+    latest_scan = sorted_tables[-1]
 
     return {'latest_scan': latest_scan}
 
-def report_gone(colls):
+def report_gone(tables):
     gone_stat = ih.status_to_code('gone')
-    gone_colls = [item for item in colls if item['status'] == gone_stat]
+    gone_tables = [item for item in tables if item['status'] == gone_stat]
 
-    return {'colls_gone' :{'num':len(gone_colls), 'items': gone_colls}}
+    return {'tables_gone' :{'num':len(gone_tables), 'items': gone_tables}}
 
-def report_scrapes(inv_db):
-    scrapes_hung =  get_live_scrapes_older_than(inv_db)
-
-    scrapes_last_month = get_completed_scrapes(inv_db, n_days=30)
-
-
+def report_scrapes():
+    scrapes_hung =  get_live_scrapes_older_than()
+    scrapes_last_month = get_completed_scrapes(n_days=30)
     return {'scrapes_hung': len(scrapes_hung) > 0, 'scrapes_run':len(scrapes_last_month)}

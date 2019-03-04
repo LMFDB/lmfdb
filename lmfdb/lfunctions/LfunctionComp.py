@@ -1,6 +1,6 @@
 # Functions for getting info about elliptic curves and related modular forms
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # TODO These should perhaps be defined in the elliptic curves codebase
 

@@ -1,0 +1,38 @@
+<table class="statgrid">
+  <tr><th></th><th></th><th colspan="{{ d.col_headers | length}}"> {{info.stats._short_display[d.attribute.cols[1]]}}</td></tr>
+  <tr>
+    <th></th>
+    <th></th>
+    {% for chead in d.col_headers %}
+    <th class="chead">{{ chead }}</th>
+    {% endfor %}
+  </tr>
+  {% for rhead, row in d.grid %}
+  <tr>
+    {% if loop.index == 1 %}
+    <th rowspan="{{ (d.grid | length) * 2 }}">
+      <div class="table_rotate">
+        {{info.stats._short_display[d.attribute.cols[0]]}}
+      </div>
+    </th>
+    {% endif %}
+    <th class="rhead" rowspan=2>{{ rhead }}</th>
+    {% for c in row %}
+    {% if c.count %}
+    {% if c.query %}
+    <td class="cnt"><a href='{{c.query}}'>{{c.count}}</a></td>
+    {% else %}
+    <td class="cnt">{{c.count}}</td>
+    {% endif %}
+    {% else %}
+    <td class="cnt"></td>
+    {% endif %}
+    {% endfor %}
+  </tr>
+  <tr>
+    {% for c in row %}
+    <td class="prop">{{c.proportion}}</td>
+    {% endfor %}
+  </tr>
+  {% endfor %} {# d.grid #}
+</table>
