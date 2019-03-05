@@ -4767,7 +4767,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     print meta
                     assert meta["name"] == tablename
                     search_columns = {"boolean":["None"]}
-                    extra_columns = {}
+                    extra_columns = None
                     if meta["has_extras"] == "t":
                         extra_columns = {"boolean":["extra"]}
                     self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
