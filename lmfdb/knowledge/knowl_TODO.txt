@@ -1,24 +1,15 @@
 TASKS:
 
 Front end:
-* Update quality restrictions on search to use status rather than quality
-* Add filter for showing top/bottom knowls when searching (off by default).  Never show comments knowls in main list.
-* Automatically fill in type if ends in .top or .bottom
-* For annotations, add link back to object from display page (not when displayed as part of homepage)
-* Add ability to view history and revert to old version
+* Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
-* add review function at the bottom of the knowl view page (rather than having to explicitly edit), which should update reviewer, review_timestamp and status
 * Subtle indication on production site that knowls are awaiting review (at bottom)
 
 Back end:
-* Modify knowl code to create new entry when saving rather than updating and adding to history
-* Change knowl display code to use `SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC` rather than `lucky`
-* Make links column update when saving knowl
-* Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
+* Implement renaming: change the id for all instances in the table
 
 Data:
 * Switch from jsonb to text[]
-* Fill in source column for existing annotation knowls
 
 Later:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
@@ -28,13 +19,21 @@ Later:
 
 It would be nice if:
 * Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
-* Implement renaming: change the id for all instances in the table
 * Add autosaves by updating an inprogress knowl record
-* When editing a knowl, some way to find the name of a knowl that defines a particular keyword
+
+* When editing a knowl, use the all_defines property to find the name of a knowl that defines a particular keyword.  Maybe with a right click menu (google for context menu)
+
 * Some visual distinction between mathematical content and LMFDB-specific content
+
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
 * Add ability to search for knowls with comments
+
 * Search with wildcards (use tilde operator and a checkbox on the search; think about details)
+
+Questions:
+* Confirmation when reviewing?
+* What should happen if someone tries to create a knowl with the same id as one that has been deleted?
+* Who should have permission to rename?
 
 SCHEMA MODIFICATIONS:
 
@@ -44,7 +43,9 @@ Column           | Type                        | Notes
 status           | smallint                    | 1=reviewed, 0=beta, -1=in progress, -2=deleted, default 0
 type             | smallint                    | 1=top, 0=normal, -1=bottom, -2=comments, default 0
 links            | text[]                      | List of knowls that this knowl refers to
+defines          | text[]                      | List of terms this knowl defines (terms wrapped in **)
 source           | text                        | url for object that this knowl is an annotation for; NULL if not an annotation
+source_name      | text                        | name for object; NULL if not an annotation
 reviewer         | text                        | username of reviewer
 review_timestamp | timestamp without time zone | time when this knowl was marked as reviewed
 
@@ -66,21 +67,44 @@ CREATE TABLE kwl_knowls2 LIKE kwl_knowls INCLUDING ALL;
 ALTER TABLE kwl_knowls2 ADD COLUMN status smallint DEFAULT 0;
 ALTER TABLE kwl_knowls2 ADD COLUMN type smallint DEFAULT 0;
 ALTER TABLE kwl_knowls2 ADD COLUMN links text[];
+ALTER TABLE kwl_knowls2 ADD COLUMN defines text[];
 ALTER TABLE kwl_knowls2 ADD COLUMN source text;
+ALTER TABLE kwl_knowls2 ADD COLUMN source_name text;
 ALTER TABLE kwl_knowls2 ADD COLUMN reviewer text;
 ALTER TABLE kwl_knowls2 ADD COLUMN reviewer_timestamp timestamp;
 ALTER TABLE kwl_knowls2 DROP COLUMN history;
 ALTER TABLE kwl_knowls2 DROP CONSTRAINT kwl_knowls2_pkey;
 ALTER TABLE kwl_knowls2 ALTER COLUMN title SET NOT NULL;
 ALTER TABLE kwl_knowls2 ALTER COLUMN content SET NOT NULL;
+ALTER TABLE kwl_knowls2 ALTER COLUMN timestamp SET NOT NULL;
 GRANT SELECT ON kwl_knowls2 TO lmfdb;
 GRANT SELECT ON kwl_knowls2 TO webserver;
 INSERT INTO kwl_knowls2(id, cat, title, content, authors, last_author, quality, timestamp, _keywords) SELECT id, cat, title, content, authors, last_author, quality, timestamp, _keywords FROM kwl_knowls;
-WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
 
-UPDATE kwl_knowls2 SET id = 'cmf.' || substring(id from 13) WHERE id LIKE 'mf.elliptic.%';
+WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
+UPDATE kwl_knowls2 SET links = '{}' WHERE links IS NULL;
+WITH matches AS (SELECT id, regexp_matches(content, '\*\*([^\*]+)\*\*', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT trim(matches.list[1]) ORDER BY trim(matches.list[1])) AS defines FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET defines = agged.defines FROM agged WHERE kwl_knowls2.id = agged.id;
+UPDATE kwl_knowls2 SET defines = '{}' WHERE defines IS NULL;
+
+UPDATE kwl_knowls2 SET id = 'cmf' || substring(id from 12) WHERE id LIKE 'mf.elliptic%';
 UPDATE kwl_knowls2 SET id = 'dq.cmf.' || substring(id from 16) WHERE id LIKE 'dq.mf.elliptic.%';
 UPDATE kwl_knowls2 SET content = regexp_replace(content, 'mf\.elliptic', 'cmf', 'g');
+
+UPDATE kwl_knowls2 SET type = 1 WHERE id LIKE '%.top';
+UPDATE kwl_knowls2 SET type = -1 WHERE id LIKE '%.bottom';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'g2c\.(.*)\.top', E'Genus2Curve/Q/\\1'), regexp_replace(id, 'g2c\.(.*)\.top', E'Genus 2 Curve \\1')) WHERE id LIKE 'g2c.%.top';
+UPDATE kwl_knowls2 SET source_name = 'Genus 2 Isogeny Class 277.a' WHERE id = 'g2c.277.a.top';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'ec\.q\.(.*)\.top', E'EllipticCurve/Q/\\1'), regexp_replace(id, 'ec\.q\.(.*)\.top', E'Elliptic Curve \\1')) WHERE id LIKE 'ec.q.%.top';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'ec\.q\.(.*)\.bottom', E'EllipticCurve/Q/\\1'), regexp_replace(id, 'ec\.q\.(.*)\.bottom', E'Elliptic Curve \\1')) WHERE id LIKE 'ec.q.%.bottom';
+UPDATE kwl_knowls2 SET (source, source_name) = ('EllipticCurve/6.6.300125.1/1.1/a/2', 'Elliptic Curve 6.6.300125.1-1.1-a2') WHERE id = 'ec.6.6.300125.1-1.1-a2.top';
+UPDATE kwl_knowls2 SET (source, source_name) = ('EllipticCurve/2.0.11.1/11.1/a/1', 'Elliptic Curve 2.0.11.1-11.1-a1') WHERE id = 'ec.2.0.11.1-11.1-a1.top';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'lattice\.(.*)\.top', E'Lattice/\\1'), regexp_replace(id, 'lattice\.(.*)\.top', E'Lattice \\1')) WHERE id LIKE 'lattice.%.top';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'nf\.(.*)\.top', E'NumberField/\\1'), regexp_replace(id, 'nf\.(.*)\.top', E'Number Field \\1')) WHERE id LIKE 'nf.%.top';
+UPDATE kwl_knowls2 SET source = regexp_replace(id, 'nf\.(.*)\.bottom', E'NumberField/\\1') WHERE id LIKE 'nf.%.bottom';
+UPDATE kwl_knowls2 SET (source, source_name) = (regexp_replace(id, 'nf\.(.*)\.bottom', E'NumberField/\\1'), regexp_replace(id, 'nf\.(.*)\.bottom', E'Number Field \\1')) WHERE id LIKE 'nf.%.bottom';
+UPDATE kwl_knowls2 SET (id, source, source_name) = ('cmf.1.12.a.a.top', 'ModularForm/GL2/Q/holomorphic/1.12.a.a', 'Newform 1.12.a.a') WHERE id = 'mf.1.12.a.a.top';
+UPDATE kwl_knowls2 SET (source, source_name) = ('GaloisGroup/4t3', 'Galois Group 4T3') WHERE id = 'gg.4t3.bottom';
+
 
 CREATE TABLE kwl_locks (id text, timestamp timestamp, username text);
 ALTER TABLE userdb.users ADD COLUMN knowl_reviewer boolean DEFAULT FALSE;

@@ -53,14 +53,34 @@ $(function() {
    <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
  {% else %}
    <form method="POST" action="{{ url_for('.index', filtered='True') }}">
- {% endif %}
-    Quality:&nbsp;
-    {% for kq in knowl_qualities -%}
-     <label for="{{ kq }}">{{ kq|capitalize }}</label>:
-     <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
-     &nbsp;&nbsp;
-    {%- endfor %}
-    <button type="submit">Filter</button>
+     {% endif %}
+     <table>
+       <tr>
+         <td>
+           Quality:
+         </td>
+         {% for kq in knowl_qualities -%}
+         <td>
+           <label for="{{ kq }}">{{ kq|capitalize }}</label>:
+           <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
+         </td>
+         {%- endfor %}
+         <td rowspan=2 style="vertical-align:center">
+           <button type="submit">Filter</button>
+         </td>
+       </tr>
+       <tr>
+         <td>
+           Type:
+         </td>
+         {% for kt in knowl_types -%}
+         <td>
+           <label for="{{ kt }}">{{ kt|capitalize }}</label>:
+           <input type="checkbox" name="{{ kt }}" value="on" {% if kt in types -%}checked="checked"{%- endif %} />
+         </td>
+         {%- endfor %}
+       </tr>
+     </table>
    </form>
   </td>
 </tr>

@@ -20,7 +20,7 @@ from flask import render_template, render_template_string, request, url_for, mak
 #from flask.ext.login import login_required, current_user
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
-from lmfdb.users import admin_required, housekeeping
+from lmfdb.users import admin_required, knowl_reviewer_required
 import markdown
 from lmfdb.knowledge import logger
 
@@ -298,7 +298,9 @@ def edit(ID):
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
-    knowl = Knowl(ID)
+    knowl = Knowl(ID, editing=True)
+    if not knowl.exists():
+        return flask.abort(404, "No knowl found with the given id")
 
     lock = None
     if request.args.get("lock", "") != 'ignore':
@@ -326,20 +328,24 @@ def edit(ID):
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
-    try:
-        k = Knowl(ID)
+    k = Knowl(ID)
+    if k.exists():
         r = render(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
-        b = get_bread([('%s' % title, url_for('.show', ID=ID))])
+    else:
+        if current_user.is_admin() and k.exists(allow_deleted=True):
+            k = Knowl(ID, allow_deleted=True)
+            r = render(ID, footer="0", raw=True, allow_deleted=True)
+            title = (k.title or "'%s'" % k.id) + " (DELETED)"
+        else:
+            return flask.abort(404, "No knowl found with the given id")
+    b = get_bread([('%s' % title, url_for('.show', ID=ID))])
 
-        return render_template("knowl-show.html",
-                           title=k.title,
+    return render_template("knowl-show.html",
+                           title=title,
                            k=k,
                            render=r,
                            bread=b)
-    except Exception:
-        flask.abort(404, "No knowl found with the given id");
-
 
 @knowledge_page.route("/raw/<ID>")
 def raw(ID):
@@ -366,18 +372,33 @@ def history():
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flask.flash("Knowl %s has been marked as deleted." % ID)
+    flask.flash("Knowl %s has been deleted." % ID)
     return flask.redirect(url_for(".index"))
 
 
-@knowledge_page.route("/undelete/<ID>")
+@knowledge_page.route("/resurrect/<ID>")
 @admin_required
-def undelete(ID):
+def resurrect(ID):
     k = Knowl(ID)
-    k.undelete()
-    flask.flash("Knowl %s has been marked as beta." % ID)
-    return flask.redirect(url_for(".index"))
+    k.resurrect()
+    flask.flash("Knowl %s has been resurrected." % ID)
+    return flask.redirect(url_for(".show", ID=ID))
 
+@knowledge_page.route("/review/<ID>")
+@knowl_reviewer_required
+def review(ID):
+    k = Knowl(ID)
+    k.review(who=current_user.get_id())
+    flask.flash("Knowl %s has been positively reviewed." % ID)
+    return flask.redirect(url_for(".show", ID=ID))
+
+@knowledge_page.route("/demote/<ID>")
+@knowl_reviewer_required
+def demote(ID):
+    k = Knowl(ID)
+    k.review(who=current_user.get_id(), set_beta=True)
+    flask.flash("Knowl %s has been returned to beta." % ID)
+    return flask.redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
@@ -404,12 +425,13 @@ def save_form():
     k.content = request.form['content']
     k.quality = request.form['quality']
     k.timestamp = datetime.now()
+    k.status = 0
     k.save(who=current_user.get_id())
     return flask.redirect(url_for(".show", ID=ID))
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
-def render(ID, footer=None, kwargs=None, raw=False):
+def render(ID, footer=None, kwargs=None, raw=False, allow_deleted=False):
     """
     this method renders the given Knowl (ID) to insert it
     dynamically in a website. It is intended to be used
@@ -424,7 +446,7 @@ def render(ID, footer=None, kwargs=None, raw=False):
     include *just* the string and not the response object.
     """
     try:
-        k = Knowl(ID)
+        k = Knowl(ID, allow_deleted=allow_deleted)
     except Exception:
         logger.critical("Failed to render knowl %s"%ID)
         errmsg = "Sorry, the knowledge database is currently unavailable."
@@ -517,24 +539,24 @@ def index():
 
 
     filtermode = request.args.get("filtered")
-    from knowl import knowl_status_code
+    from knowl import knowl_status_code, knowl_type_code
     if request.method == 'POST':
         qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
+        types = [typ for typ in knowl_type_code if request.form.get(typ, "") == "on"]
     elif request.method == 'GET':
         qualities = request.args.getlist('qualities')
+        types = request.args.getlist('types')
 
     if filtermode:
         filters = [ q for q in qualities if q in knowl_status_code ]
+        types = [ typ for typ in types if typ in knowl_type_code ]
         # If "in progress" requested, should add author = current_user.get_id()
     else:
         filters = []
+        types = ["normal"]
 
     search = request.args.get("search", "")
-    print "cur_cat", cur_cat
-    print "filters", filters
-    print "search", search
-    knowls = knowldb.search(cur_cat, filters, search.lower())
-    print "knowls", len(knowls)
+    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=search.lower())
 
     def first_char(k):
         t = k['title']
@@ -558,6 +580,7 @@ def index():
     #    knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
+    print knowl_type_code
     return render_template("knowl-index.html",
                            title="Knowledge Database",
                            bread=get_bread(),
@@ -565,9 +588,11 @@ def index():
                            search=search,
                            searchbox=searchbox(search, bool(search)),
                            knowl_qualities=knowl_qualities,
+                           qualities = qualities,
                            searchmode=bool(search),
                            categories = knowldb.get_categories(),
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),
                            filtermode = filtermode,
-                           qualities = qualities)
+                           knowl_types=knowl_type_code.keys(),
+                           types=types)

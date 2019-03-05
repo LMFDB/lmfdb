@@ -2,10 +2,12 @@
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
 from datetime import datetime
+from collections import defaultdict
 import time
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
 from lmfdb.backend.encoding import Json
+from lmfdb.app import is_beta
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -13,25 +15,26 @@ import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
-url_from_knowl = {
-    re.compile(r'g2c\.(.*)'): 'Genus2Curve/Q/{0}',
-    re.compile(r'av\.fq\.(.*)'): 'Variety/Abelian/Fq/{0}',
-    re.compile(r'st_group\.(.*)'): 'SatoTateGroup/{0}',
-    re.compile(r'hecke_algebra\.(.*)'): 'ModularForm/GL2/Q/HeckeAlgebra/{0}',
-    re.compile(r'hecke_algebra_l_adic\.(.*)'): 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2',
-    re.compile(r'gal\.modl\.(.*)'): 'Representation/Galois/ModL/{0}',
-    re.compile(r'modlmf\.(.*)'): 'ModularForm/GL2/ModL/{0}',
-    re.compile(r'gg\.(.*)'): 'GaloisGroup/{0}',
-    re.compile(r'belyi\.(.*)'): 'Belyi/{0}',
-    re.compile(r'mf.siegel.family\.(.*)'):'',
-    re.compile(r'lattice\.(.*)'): 'Lattice/{0}',
-    re.compile(r'mf\.(.*)'): 'ModularForm/GL2/Q/holomorphic/{0}',
-    re.compile(r'nf\.(.*)'): 'NumberField/{0}',
-    re.compile(r'ec\.q\.(.*)'): 'EllipticCurve/Q/{0}',
-    re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'): 'EllipticCurve/{0}/{1}/{2}/{3}'
-}
+url_from_knowl = [
+    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Curve {0}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Isogeny Class {0}'),
+    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois Group {0}T{1}'),
+    (re.compile(r'lattice\.(.*)'), 'Lattice/{0}', 'Lattice {0}'),
+    (re.compile(r'cmf\.(.*)'), 'ModularForm/GL2/Q/holomorphic/{0}', 'Newform {0}'),
+    (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number Field {0}'),
+    (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic Curve {0}'),
+    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic Curve {0}-{1}-{2}{3}'),
+    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian Variety Isogeny Class {0}'),
+    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate Group {0}'),
+    (re.compile(r'belyi\.(.*)'), 'Belyi/{0}', 'Belyi Map {0}'),
+    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke Algebra {0}'),
+    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke Algebra {0}'),
+    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
+    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
+]
 # We need to convert knowl
-link_finder_re = re.compile("""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
+link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -74,24 +77,35 @@ def extract_typ(kid):
             prelabel = m.group(1)
             typ = -1
         else:
-            return 0, None
-    
-    return typ, url
+            return 0, None, None
+    url = None
+    name = None
+    for matcher, url_pattern, name_pattern in url_from_knowl:
+        m = matcher.match(prelabel)
+        if m:
+            url = pattern.format(*m.groups())
+            name = name_pattern.format(*m.groups())
+            break
+    return typ, url, name
 
 def extract_links(content):
     return sorted(set(x[1] for x in link_finder_re.findall(content)))
+
+def extract_defines(content):
+    return sorted(set(x[0].strip() for x in defines_finder_re.findall(content)))
 
 # We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
 
 class KnowlBackend(PostgresBase):
-    _default_fields = ['authors', 'cat', 'content', 'last_author', 'timestamp', 'title', 'status', 'type', 'links', 'source'] # doesn't include id, _keywords, reviewer or review_timestamp
+    _default_fields = ['authors', 'cat', 'content', 'last_author', 'timestamp', 'title', 'status', 'type', 'links', 'defines', 'source', 'source_name'] # doesn't include id, _keywords, reviewer or review_timestamp
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
         #FIXME this should be moved to the config file
         self.caching_time = 10
         self.cached_titles_timestamp = 0;
+        self.cached_defines_timestamp = 0;
         self.cached_titles = {}
 
     @property
@@ -102,18 +116,33 @@ class KnowlBackend(PostgresBase):
             self.cached_titles = dict([(elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'])])
         return self.cached_titles
 
+    @property
+    def all_defines(self):
+        now = time.time()
+        if now - self.cached_defines_timestamp > self.caching_time:
+            self.cached_defines_timestamp = now
+            self.cached_defines = defaultdict(list)
+            for elt in self.get_all_defines():
+                for term in elt['defines']:
+                    self.cached_defines[term].append(elt['id'])
+        return self.cached_defines
 
     def can_read_write_knowls(self):
         return self._rw_knowldb
 
-    def get_knowl(self, ID, fields=None):
+    def get_knowl(self, ID, fields=None, beta=None, allow_deleted=False):
         if fields is None:
             fields = ['id'] + self._default_fields
+        if beta is None:
+            beta = is_beta()
         selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [ID, 0])
+        if not beta:
+            cur = self._execute(selecter, [ID, 1])
+            if cur.rowcount > 0:
+                return {k:v for k,v in zip(fields, cur.fetchone())}
+        cur = self._execute(selecter, [ID, -2 if allow_deleted else 0])
         if cur.rowcount > 0:
-            res = cur.fetchone()
-            return {k:v for k,v in zip(fields, res)}
+            return {k:v for k,v in zip(fields, cur.fetchone())}
 
     def get_all_knowls(self, fields=None):
         if fields is None:
@@ -122,12 +151,19 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, [0])
         return [{k:v for k,v in zip(fields, res)} for res in cur]
 
-    def search(self, category="", filters=[], keywords="", author=None, sort=[], projection=['id', 'title']):
+    def get_all_defines(self):
+        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter)
+        return [{k:v for k,v in zip(['id', 'defines'], res)} for res in cur]
+
+    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title']):
         """
         INPUT:
 
         - ``category`` -- a knowl category such as "ec"  or "mf".
-        - ``filters`` -- a list, giving a subset of "beta", "reviewed", "in progress" and "deleted"
+        - ``filters`` -- a list, giving a subset of "beta", "reviewed", "in progress" and "deleted".
+            Knowls in the returned list will have their most recent status among the provided values.
+        - ``types`` -- a list, giving a subset of ["normal", "annotations"]
         - ``keywords`` -- a string giving a space separated list of lower case keywords from the id, title and content.
         - ``author`` -- a string or list of strings giving authors
         - ``sort`` -- a list of strings or pairs (x, dir) where x is a column name and dir is 1 or -1.
@@ -138,12 +174,9 @@ class KnowlBackend(PostgresBase):
         if category:
             restrictions.append(SQL("cat = %s"))
             values.append(category)
-        if len(filters) > 0:
-            restrictions.append(SQL("status = ANY(%s)"))
-            values.append([knowl_status_code[q] for q in filters if q in knowl_status_code])
-        else:
-            restrictions.append(SQL("status >= %s"))
-            values.append(0)
+        if 'in progress' not in filters:
+            restrictions.append(SQL("status != %s"))
+            values.append(-1)
         if keywords:
             keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
             if keywords:
@@ -152,22 +185,44 @@ class KnowlBackend(PostgresBase):
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
             values.append(Json(author))
-        has_timestamp = any(x == 'timestamp' or isinstance(x, (list, tuple)) and x[0] == 'timestamp' for x in sort)
         # In order to be able to sort by arbitrary columns, we have to select everything here.
         # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
         fields = ['id'] + self._default_fields
         sqlfields = SQL(", ").join(map(Identifier, fields))
         projfields = [(col, fields.index(col)) for col in projection]
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE {1} ORDER BY id, timestamp DESC").format(sqlfields, SQL(" AND ").join(restrictions))
+        if restrictions:
+            restrictions = SQL(" WHERE ") + SQL(" AND ").join(restrictions)
+        else:
+            restrictions = SQL("")
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls2{1} ORDER BY id, timestamp DESC").format(sqlfields, restrictions)
+        secondary_restrictions = []
+        if len(filters) > 0:
+            secondary_restrictions.append(SQL("knowls.{0} = ANY(%s)").format(Identifier("status")))
+            values.append([knowl_status_code[q] for q in filters if q in knowl_status_code])
+        else:
+            secondary_restrictions.append(SQL("status >= %s"))
+            values.append(0)
+        if not types:
+            # default to just showing normal knowls
+            types = ["normal"]
+        if len(types) == 1:
+            secondary_restrictions.append(SQL("abs(type) = %s"))
+            values.append(knowl_type_code[types[0]])
+        else:
+            secondary_restrictions.append(SQL("abs(type) <= %s"))
+            values.append(1)
+        secondary_restrictions = SQL(" AND ").join(secondary_restrictions)
         if sort:
-            selecter = SQL("SELECT {0} FROM ({1}) knowls ORDER BY {2}").format(sqlfields, selecter, self._sort_str(sort))
-        print selecter.as_string(self.conn)
+            sort = SQL(" ORDER BY ") + self._sort_str(sort)
+        else:
+            sort = SQL("")
+        selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(sqlfields, selecter, secondary_restrictions, sort)
         cur = self._execute(selecter, values)
         return [{k:res[i] for k,i in projfields} for res in cur]
 
     def save(self, knowl, who):
         """who is the ID of the user, who wants to save the knowl"""
-        most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields)
+        most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
         new_knowl = most_recent is None
         if new_knowl:
             authors = []
@@ -179,14 +234,15 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        typ, source = extract_typ(knowl.id)
+        typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        # id, authors, cat, content, last_author, timestamp, title, status, type, links, source
-        values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, 0, typ, links, source, Json(search_keywords))
+        defines = extract_defines(knowl.content)
+        # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
+        values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, Json(search_keywords))
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
-            self._execute(insterer, (knowl.id,) + values)
+            self._execute(insterer, values)
         self.cached_titles[knowl.id] = knowl.title
 
     def get_history(self, limit=25):
@@ -195,8 +251,13 @@ class KnowlBackend(PostgresBase):
         """
         cols = ("id", "title", "timestamp", "last_author")
         selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE status >= %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
-        cur = self._execute(selecter, (0, limit,))
+        cur = self._execute(selecter, [0, limit])
         return [{k:v for k,v in zip(cols, res)} for res in cur]
+
+    def get_edit_history(self, ID):
+        selecter = SQL("SELECT timestamp, last_author, content FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp DESC")
+        cur = self._execute(selecter, [0, ID])
+        return [{k:v for k,v in zip(["timestamp", "last_author", "content"], rec)} for rec in cur]
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -205,10 +266,15 @@ class KnowlBackend(PostgresBase):
         if knowl.id in self.cached_titles:
             self.cached_titles.pop(knowl.id)
 
-    def undelete(self, knowl):
+    def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
         updator = SQL("UPDATE kwl_knowls2 SET status=%s WHERE status=%s AND id=%s")
         self._execute(updator, [0, -2, knowl.id])
+        self.cached_titles[knowl.id] = knowl.title
+
+    def review(self, knowl, who, set_beta=False):
+        updator = SQL("UPDATE kwl_knowls2 SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
+        self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
     def is_locked(self, knowlid, delta_min=10):
         """
@@ -220,7 +286,7 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
-        cur.execute(selecter, (knowlid, time))
+        cur = self._execute(selecter, (knowlid, time))
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["username", "timestamp"], cur.fetchone())}
 
@@ -237,13 +303,18 @@ class KnowlBackend(PostgresBase):
         just the title, used in the knowls in the templates for the pages.
         returns None, if knowl does not exist.
         """
-        return self.titles.get(kid, None)
+        return self.titles.get(kid)
 
-    def knowl_exists(self, kid):
+    def knowl_exists(self, kid, allow_deleted=False):
         """
         checks if the given knowl with ID=@kid exists
         """
-        return self.knowl_title(kid) is not None
+        kt = self.knowl_title(kid)
+        if kt is not None:
+            return True
+        if allow_deleted:
+            return self.get_knowl(kid, ['id'], beta=True, allow_deleted=True) is not None
+        return False
 
     def get_categories(self):
         selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls2")
@@ -260,10 +331,11 @@ def knowl_exists(kid):
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
-knowl_type_code = {'top': 1, 'normal': 0, 'bottom': -1, 'comments': -2}
+reverse_status_code = {v:k for k,v in knowl_status_code.items()}
+knowl_type_code = {'annotations': 1, 'normal': 0}
 
 class Knowl(object):
-    def __init__(self, ID, template_kwargs=None):
+    def __init__(self, ID, template_kwargs=None, editing=False, allow_deleted=False):
         """
         template_kwars is the list of additional parameters that
         are passed into the knowl the point where the knowl is
@@ -271,28 +343,29 @@ class Knowl(object):
         """
         self.template_kwargs = template_kwargs or {}
 
-        self._id = ID
+        self.id = ID
         #given that we cache it's existence it is quicker to check for existence
-        if self.exists():
-            data = knowldb.get_knowl(ID)
+        if self.exists(allow_deleted=allow_deleted):
+            data = knowldb.get_knowl(ID, allow_deleted=allow_deleted)
         else:
-            data = None
-        if data:
-            self._title = data.get('title', '')
-            self._content = data.get('content', '')
-            self._quality = data.get('quality', 'beta')
-            self._authors = data.get('authors', [])
-            self._category = data.get('cat', extract_cat(ID))
-            self._last_author = data.get('last_author', '')
-            self._timestamp = data.get('timestamp', datetime.utcnow())
-        else:
-            self._title = ''
-            self._content = ''
-            self._quality = 'beta'
-            self._category = extract_cat(ID)
-            self._authors = []
-            self._last_author = ''
-            self._timestamp = datetime.utcnow()
+            data = {}
+        self.title = data.get('title', '')
+        self.content = data.get('content', '')
+        self.status = data.get('status', 0)
+        self.quality = reverse_status_code.get(self.status)
+        self.authors = data.get('authors', [])
+        self.category = data.get('cat', extract_cat(ID))
+        self._last_author = data.get('last_author', '')
+        self.timestamp = data.get('timestamp', datetime.utcnow())
+        self.links = data.get('links', [])
+        self.defines = data.get('defines', [])
+        self.type = data.get('type', 0)
+        self.source = data.get('source')
+        self.source_name = data.get('source_name')
+        self.reviewer = data.get('reviewer')
+        self.review_timestamp = data.get('review_timestamp')
+        if editing:
+            self.edit_history = knowldb.get_edit_history(ID)
 
     def save(self, who):
         knowldb.save(self, who)
@@ -301,19 +374,21 @@ class Knowl(object):
         """Marks the knowl as deleted.  Admin only."""
         knowldb.delete(self)
 
-    def undelete(self):
+    def resurrect(self):
         """Brings the knowl back from being deleted by setting status to beta.  Admin only."""
-        knowldb.undelete(self)
+        knowldb.resurrect(self)
 
-    @property
-    def authors(self):
-        return self._authors
+    def review(self, who, set_beta=False):
+        """Mark the knowl as positively reviewed."""
+        knowldb.review(self, who, set_beta)
 
     def author_links(self):
         """
         Basically finds all full names for all the referenced authors.
         (lookup for all full names in just *one* query, hence the or)
         """
+        if not self.authors:
+            return []
         return userdb.full_names(self.authors)
 
     def last_author(self):
@@ -321,63 +396,12 @@ class Knowl(object):
         Full names for the last authors.
         (lookup for all full names in just *one* query, hence the or)
         """
+        if not self._last_author:
+            return ""
         return userdb.lookup(self._last_author)["full_name"]
 
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def content(self):
-        return self._content
-
-    @content.setter
-    def content(self, content):
-        """stores the given content string in the database"""
-        if not isinstance(content, basestring):
-            raise Exception("content has to be of type 'basestring'")
-        self._content = content
-
-    @property
-    def category(self):
-        return self._category
-
-    @property
-    def quality(self):
-        return self._quality
-
-    @quality.setter
-    def quality(self, quality):
-        """a measurment information, if this is just "beta", or reviewed ..."""
-        if len(quality) == 0:
-            return
-        if not quality in knowl_qualities:
-            logger.warning("quality '%s' is not allowed")
-            return
-        self._quality = quality
-
-    @property
-    def title(self):
-        """
-        This just returns the "title" string, which is exactly the one
-        that will be visible in the websites.
-        Example: KNOWL('algebra.dirichlet_series') should be replaced
-        with "Dirichlet Series" and nothing else.
-        """
-        title = self._title
-        #from flask import g
-        # if self._quality=='beta' and g.BETA:
-        #     title += " (beta status)"
-        return title
-
-    @title.setter
-    def title(self, title):
-        if not isinstance(title, basestring):
-            raise Exception("title needs to be of type 'basestring'")
-        self._title = title
-
-    def exists(self):
-        return knowldb.knowl_exists(self._id)
+    def exists(self, allow_deleted=False):
+        return knowldb.knowl_exists(self.id, allow_deleted=allow_deleted)
 
     def data(self, fields=None):
         """
@@ -385,15 +409,15 @@ class Knowl(object):
         keyword 'fields' is a list of strings,only
         the given fields.
         """
-        if not self._title or not self._content:
-            data = knowldb.get_knowl(self._id, fields)
+        if not self.title or not self.content:
+            data = knowldb.get_knowl(self.id, fields)
             if data:
-                self._title = data['title']
-                self._content = data['content']
+                self.title = data['title']
+                self.content = data['content']
                 return data
 
-        data = {'title': self._title,
-                'content': self._content}
+        data = {'title': self.title,
+                'content': self.content}
         return data
 
     def __unicode__(self):
