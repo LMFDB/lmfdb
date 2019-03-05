@@ -3,182 +3,194 @@
 
 {% block description %}
 
-        {{ place_code('init') }}
+{{ place_code('init') }}
 
-        {# Kronecker symbol #}
-        {% if symbol %}
-        {% if isprimitive == "Yes" and indlabel %}
-        <h2>
-            {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
-        </h2>
+{# Kronecker symbol #}
 
-        {{ place_code('symbol') }}
-        <p> {{ symbol }} </p>
-        {% endif %}
-        {% endif %}
+{% if symbol %}
+  {% if isprimitive == "Yes" and indlabel %}
+    <h2>
+      {{ KNOWL('character.dirichlet.kronecker_symbol', title = 'Kronecker symbol') }} representation
+    </h2>
 
-        {# Inducing character #}
-        {% if isprimitive=="No" and indlabel %}
-            <h2>
-                {{KNOWL('character.dirichlet.induce',title='Inducing')}} {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
-            </h2>
-            {{ place_code('inducing') }}
-           <p>
-            <a href="{{ url_character(
-                type = type,
-                number_field = nflabel,
-                modulus = condlabel,
-                number  = indlabel)}}">
-                {{inducing}}
-            </a>  {% if symbol %}  = {{ symbol }} {% endif %}
-            </p>
-        {% endif %}
+    {{ place_code('symbol') }}
 
-        {# Values on generators #}
-        {% if modulus>2 and genvalues %}
-            <h2>
-                {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
-            </h2>
-            {{ place_code('genvalues') }}
-            <p>
-                {{ generators }} &rarr; {{ genvalues }}
-            </p>
-        {% endif %}
+    <p> {{ symbol }} </p>
+  {% endif %}
+{% endif %}
 
-        {# Values #}
 
-        {% if values %}
-        <h2>
-           {% if coltruncate %}
-            {{ KNOWL('character.dirichlet.values', title="First values") }}
-           {% else %}
-            {{ KNOWL('character.dirichlet.values', title="Values") }}
-           {% endif %}
-        </h2>
-        {# I don't know why you need the 'overflow:auto' twice --David F #}
-        <div style='overflow:auto'>
-            <table class="values" style='overflow:auto'>
-                <thead>
-                    <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
-                </thead>
-                <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
-            </table>
-        </div>
+{# Basic properties #}
 
-        {% set value_default = 2 %}
-        <form> value  at&nbsp;
-            <input id="calc-value-input" size=10 placeholder={{value_default}}>
-            <button id="calc-value-go"> Compute </button>
-            <span class="formexample"> e.g. {{value_default}} </span>
-        </form>
-        <div class="output"><span id="calc-value-output"></span></div>
-        {% endif %}
+<h2>
+  {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }}
+</h2>
 
-        {# Basic properties #}
+<table>
+  <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
+  <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
+  <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
+  <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
+  {% if parity %}
+  <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
+  {% endif %}
+  {% if modulus <= 10000 %}
+  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_index',title='Orbit index')}} </td> <td>=</td> <td> {{ orbit_index }} </td></tr>
+  {% endif %}
+</table>
 
-        <h2> {{ KNOWL('character.dirichlet.basic_properties', title="Basic properties") }} </h2>
+{% if galoisorbit %}
 
-        <table>
-            <tr> <td colspan='3'> {{ place_code('cond') }} </td> </tr>
-            <tr> <td>{{KNOWL('character.dirichlet.conductor',title='Conductor')}}</td> <td>=</td> <td>{{ conductor }}</td> </tr>
-            <tr> <td colspan='3'> {{ place_code('order') }} </td> </tr>
-            <tr> <td> {{KNOWL('character.dirichlet.order',title='Order')}} </td> <td>=</td> <td>{{ order }}</td> </tr>
-            {% if parity %}
-            <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
-            <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
-            {% endif %}
-            <tr> <td> {{KNOWL('character.dirichlet.real',title='Real')}} </td> <td>=</td> <td> {{ isreal }} </td> </tr>
-            <tr> <td colspan='3'> {{ place_code('isprimitive') }} </td> </tr>
-            <tr> <td> {{KNOWL('character.dirichlet.primitive',title='Primitive')}} </td> <td>=</td> <td> {{ isprimitive }} </td> </tr>
-        </table>
+{# Galois Orbits #}
 
-         {# Galois Orbits #}
-        <h2>
-            {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
-        </h2>
-          {{ place_code('galoisorbit') }}
-        <p>
-        {% for mod,num,label,prim in galoisorbit %}
-        {% if loop.index > limit %} ... {% break %} {% endif %}
-        <a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
-                {{label}}
-            </a>
-        {% endfor %}
-        </p>
+<h2>
+  {{ KNOWL('character.dirichlet.galois_orbit', title="Galois orbit") }}
+</h2>
+{{ place_code('galoisorbit') }}
+<p>
+{% for mod,num,label,prim in galoisorbit %}
+{% if loop.index > limit %} ... {% break %} {% endif %}
+<a href="{{ url_character(type=type, number_field=nflabel, modulus=mod, number=num)}}">
+  {{label}}
+</a>
+{% endfor %}
+</p>
+{% endif %} {# galoisorbit #}
 
-        {# Fields #}
-        <h2>
-            {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
-        </h2>
-        <table>
-            {% if valuefield %}
-            <tr>
-                <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}} </td>
-                {% if vflabel %}
-                <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
-                {% else %}
-                <td> {{ valuefield }} </td>
-                {% endif %}
-            </tr>
-            {% endif %}
-            {% if kerfield %}
-            <tr>
-                <td>{{ kerfield }}</td>
-                <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
-                     defined by {{ kfpol }}
-                </td>
-            </tr>
-            {% endif %}
-        </table>
+{# Inducing character #}
 
-        {# sums #}
+{% if isprimitive=="No" and indlabel %}
+  <h2>
+    {{KNOWL('character.dirichlet.induce',title='Inducing')}} {{ KNOWL('character.dirichlet.primitive', title="primitive character") }}
+  </h2>
+  {{ place_code('inducing') }}
+  <p>
+    <a href="{{ url_character(type = type, number_field = nflabel,
+      modulus = condlabel, number  = indlabel)}}"> {{inducing}} </a>
+    {% if symbol %}  = {{ symbol }} {% endif %}
+  </p>
+{% endif %}
 
-        {% if type=='Dirichlet' and charsums %}
 
-        {# Gauss sum #}
+{# Values on generators #}
+{% if modulus>2 and genvalues %}
+<h2>
+  {{ KNOWL('character.dirichlet.values_on_gens', title="Values on generators") }}
+</h2>
 
-        <h2>
-            {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
-        </h2>
-        {{ place_code('gauss') }}
-        {% set gauss_default = 2 %}
-        <form> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
-            <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
-            <button id="calc-gauss-go"> Compute </button>
-            <span class="formexample"> e.g. {{gauss_default}} </span>
-        </form>
-        <div class="output"><span id="calc-gauss-output">{{ charsums.gauss|safe }}</span></div>
+{{ place_code('genvalues') }}
 
-        {# Jacobi sum #}
+<p>
+{{ generators }} &rarr; {{ genvalues }}
+</p>
+{% endif %}
 
-        <h2>
-            {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
-        </h2>
-        {{ place_code('jacobi') }}
-        {% set jacobi_default = 1 %}
-        <form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
-            <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
-            <button id="calc-jacobi-go"> Compute </button>
-            <span class="formexample"> e.g. 1</span>
-        </form>
-        <div class="output"><span id="calc-jacobi-output">{{ charsums.jacobi|safe }}</span></div>
+{# Values #}
 
-        {# Kloosterman sum #}
+{% if values %}
+<h2>
+  {% if coltruncate %}
+    {{ KNOWL('character.dirichlet.values', title="First values") }}
+  {% else %}
+    {{ KNOWL('character.dirichlet.values', title="Values") }}
+  {% endif %}
+</h2>
+<div style='overflow:auto'>
+  <table class="values">
+    <thead>
+      <tr>{% for a in groupelts %}<td>{{a}}</td>{%endfor%}</tr>
+    </thead>
+    <tr>{% for v in values %}<td>{{v}}</td>{%endfor%}</tr>
+  </table>
+</div>
 
-        <h2>
-            {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
-        </h2>
-        {{ place_code('kloosterman') }}
-        {% set kloosterman_default_a = 1 %}
-        {% set kloosterman_default_b = 2 %}
-        <form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
-            <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
-            <button id="calc-kloosterman-go"> Compute </button>
-            <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
-        </form>
-        <div class="output"><span id="calc-kloosterman-output">{{ charsums.kloosterman|safe }}</span></div>
+{% set value_default = 2 %}
+<form> value  at&nbsp;
+  <input id="calc-value-input" size=10 placeholder={{value_default}}>
+  <button id="calc-value-go"> Compute </button>
+  <span class="formexample"> e.g. {{value_default}} </span>
+</form>
+<div class="output"><span id="calc-value-output"></span></div>
+{% endif %}
 
-        {% endif %} {# charsums #}
+{# Fields #}
+<h2>
+  {{ KNOWL('character.dirichlet.related_fields', 'Related number fields') }}
+</h2>
+<table>
+  {% if valuefield %}
+  <tr>
+    <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}} </td>
+    {% if vflabel %}
+    <td> <a href="/NumberField/{{vflabel}}">{{ valuefield }}</a> </td>
+    {% else %}
+    <td> {{ valuefield }} </td>
+    {% endif %}
+  </tr>
+  {% endif %}
+  {% if kerfield %}
+  <tr>
+    <td>{{ kerfield }}</td>
+    <td> Field <a href="/NumberField/{{kflabel}}">{{ kflabel }}</a>
+      defined by {{ kfpol }}
+    </td>
+  </tr>
+  {% endif %}
+</table>
+
+{# sums #}
+
+{% if type=='Dirichlet' and charsums %}
+
+{# Gauss sum #}
+
+<h2>
+    {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
+</h2>
+{{ place_code('gauss') }}
+{% set gauss_default = 2 %}
+<form> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
+    <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
+    <button id="calc-gauss-go"> Compute </button>
+    <span class="formexample"> e.g. {{gauss_default}} </span>
+</form>
+<div class="output"><span id="calc-gauss-output">{{ charsums.gauss|safe }}</span></div>
+
+{# Jacobi sum #}
+
+<h2>
+  {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
+</h2>
+{{ place_code('jacobi') }}
+{% set jacobi_default = 1 %}
+<form> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
+  <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
+  <button id="calc-jacobi-go"> Compute </button>
+  <span class="formexample"> e.g. 1</span>
+</form>
+<div class="output"><span id="calc-jacobi-output">{{ charsums.jacobi|safe }}</span></div>
+
+{# Kloosterman sum #}
+
+<h2>
+  {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
+</h2>
+{{ place_code('kloosterman') }}
+{% set kloosterman_default_a = 1 %}
+{% set kloosterman_default_b = 2 %}
+<form> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)
+  <input id="calc-kloosterman-input" size=10 placeholder={{kloosterman_default_a}},{{kloosterman_default_b}}>
+  <button id="calc-kloosterman-go"> Compute </button>
+  <span class="formexample"> e.g. {{kloosterman_default_a}},{{kloosterman_default_b}}</span>
+</form>
+<div class="output"><span id="calc-kloosterman-output">{{ charsums.kloosterman|safe }}</span></div>
+
+{% endif %} {# charsums #}
 
 {% if values %}
 <script type="text/javascript">
@@ -191,7 +203,9 @@ function value_handler(evt) {
         renderMathInElement($("#calc-value-output").get(0), katexOpts);
      });
 }
-        {% if type=='Dirichlet' and charsums %}
+
+{% if type=='Dirichlet' and charsums %}
+
 function gauss_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-gauss-input").val();
@@ -201,6 +215,7 @@ function gauss_handler(evt) {
         renderMathInElement($("#calc-gauss-output").get(0), katexOpts);
      });
 }
+
 function jacobi_handler(evt) {
    evt.preventDefault();
    var val = $("#calc-jacobi-input").val();
@@ -220,36 +235,36 @@ function kloosterman_handler(evt) {
        renderMathInElement($("#calc-kloosterman-output").get(0), katexOpts);
      });
 }
-        {% endif %}
+
+{% endif %}
 
 $(function() {
     $("#calc-value-go").click(function(e) {value_handler(e)});
-        {% if type=='Dirichlet' %}
-    $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
-    $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
-    $("#calc-kloosterman-go").click(function(e) {kloosterman_handler(e)});
-        {% endif %}
+  {% if type=='Dirichlet' %}
+      $("#calc-gauss-go").click(function(e) {gauss_handler(e)});
+      $("#calc-jacobi-go").click(function(e) {jacobi_handler(e)});
+      $("#calc-kloosterman-go").click(function(e) {kloosterman_handler(e)});
+  {% endif %}
     $("#calc-value-input").keypress(function(e) {
         if (e.which == 13) value_handler(e);
         });
-        {% if type=='Dirichlet' %}
-    $("#calc-gauss-input").keypress(function(e) {
-        if (e.which == 13) gauss_handler(e);
-        });
-    {#$("#calc-gauss-input").ready(function(e) {
-        gauss_handler(e);
-        });#}
-    $("#calc-jacobi-input").keypress(function(e) {
-        if (e.which == 13) jacobi_handler(e);
-    });
-    $("#calc-kloosterman-input").keypress(function(e) {
-        if (e.which == 13) kloosterman_handler(e);
-    });
-    {% endif %}
+  {% if type=='Dirichlet' %}
+      $("#calc-gauss-input").keypress(function(e) {
+          if (e.which == 13) gauss_handler(e);
+          });
+      {#$("#calc-gauss-input").ready(function(e) {
+          gauss_handler(e);
+          });#}
+      $("#calc-jacobi-input").keypress(function(e) {
+          if (e.which == 13) jacobi_handler(e);
+      });
+      $("#calc-kloosterman-input").keypress(function(e) {
+          if (e.which == 13) kloosterman_handler(e);
+      });
 
+  {% endif %}
 });
 </script>
-{% endif %}
+{% endif %} {# values #}
 
 {% endblock %}
-

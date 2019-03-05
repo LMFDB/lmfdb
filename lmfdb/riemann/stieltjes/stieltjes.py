@@ -10,7 +10,7 @@ RR = RealField(63)
 dbpath = os.path.expanduser('~/data/riemann/stieltjes.db')
 
 StieltjesConstants = flask.Blueprint("stieltjes", __name__, template_folder="templates")
-#logger = lmfdb.utils.make_logger(StieltjesConstants)
+#logger = lmfdb.logger.make_logger(StieltjesConstants)
 
 @StieltjesConstants.route("/")
 def stieltjes_constants():

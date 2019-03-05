@@ -6,7 +6,7 @@ var id_delimiter = ':'; //Character(s) used to join sections of ids
 
 function Block(field, key, text, docElementId){
   //A block is a single editable field
-  //It has the field name (name of field in lmfdb collection)
+  //It has the field name (name of field in lmfdb table)
   //the key (e.g. description, type etc)
   //and both the original and new texts, plus an edited flag
   //Finally it is linked to a DOM element, by id string
@@ -21,11 +21,11 @@ function Block(field, key, text, docElementId){
   this.record = false;
 }
 
-function BlockList(db, coll){
+function BlockList(db, table){
 	//Construct block list object holding a list of blocks
   //The keys are the id's of DOM edit fields
   this.db = db;
-  this.coll = coll;
+  this.table = table;
   this.blockList = {};
   this.date = null;
   this.addBlock = addBlock;
@@ -225,12 +225,12 @@ function ResponseBlock(field, key, text){
 
 function makeDiff(editedBlocks, ids){
   //Make a diff from a list of ResponseBlocks
-  //If passing db will always want to pass collection too
+  //If passing db will always want to pass table too
   var response = pageId;
-  console.log(ids.db, ids.collection);
+  console.log(ids.db, ids.table);
   console.log(response);
   if(ids.db) response.db = ids.db;
-  if(ids.collection) response.collection = ids.collection;
+  if(ids.table) response.table = ids.table;
   console.log(response);
   response.diffs = editedBlocks;
   return  JSON.stringify(response);

@@ -3,17 +3,18 @@
 from flask import url_for
 from collections import Counter
 
-from lmfdb.utils import make_logger, encode_plot
+from lmfdb.utils import encode_plot
+from lmfdb.logger import make_logger
 
-from lmfdb.db_backend import db
-from lmfdb.base import app
+from lmfdb import db
+from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics
 
-from lmfdb.genus2_curves.web_g2c import list_to_factored_poly_otherorder
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb.utils import list_to_factored_poly_otherorder
+from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
+from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
 
 logger = make_logger("abvarfq")

@@ -8,8 +8,9 @@
 from flask import flash
 from markupsafe import Markup
 from sage.all import is_odd, is_even, ZZ, QQ, FunctionField, PowerSeriesRing
-from lmfdb.db_backend import db
-from lmfdb.search_parsing import parse_ints_to_list_flash
+
+from lmfdb import db
+from lmfdb.utils import parse_ints_to_list_flash
 
 MAXWT = 9999
 MAXWTRANGE = 100
