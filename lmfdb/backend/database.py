@@ -4570,10 +4570,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                             raise ValueError("Column %s does not exist"%(col))
                     if len(extra_order) != len(valid_extra_set):
                         raise ValueError("Must include all columns")
-                extra_columns = process_columns(extra_columns, extra_order)
+                processed_extra_columns = process_columns(extra_columns, extra_order)
                 creator = SQL('CREATE TABLE {0} ({1})')
                 creator = creator.format(Identifier(name+"_extras"),
-                                         SQL(", ").join(extra_columns))
+                                         SQL(", ").join(processed_extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
             creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
