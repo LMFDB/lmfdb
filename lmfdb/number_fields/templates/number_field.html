@@ -14,9 +14,6 @@ table.ntdata a {
    {{ place_code('field') }}
 </p>
 
-        {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
-        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
-
         <p><h2> 
         {% if nf.is_reduced() %}
           {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
@@ -298,7 +295,5 @@ table.ntdata a {
         by exponents on the *.
     </div>
     {% endif %}
-
-        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

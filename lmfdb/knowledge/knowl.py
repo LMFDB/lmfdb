@@ -13,6 +13,24 @@ import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
+url_from_knowl = {
+    re.compile(r'g2c\.(.*)'): 'Genus2Curve/Q/{0}',
+    re.compile(r'av\.fq\.(.*)'): 'Variety/Abelian/Fq/{0}',
+    re.compile(r'st_group\.(.*)'): 'SatoTateGroup/{0}',
+    re.compile(r'hecke_algebra\.(.*)'): 'ModularForm/GL2/Q/HeckeAlgebra/{0}',
+    re.compile(r'hecke_algebra_l_adic\.(.*)'): 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2',
+    re.compile(r'gal\.modl\.(.*)'): 'Representation/Galois/ModL/{0}',
+    re.compile(r'modlmf\.(.*)'): 'ModularForm/GL2/ModL/{0}',
+    re.compile(r'gg\.(.*)'): 'GaloisGroup/{0}',
+    re.compile(r'belyi\.(.*)'): 'Belyi/{0}',
+    re.compile(r'mf.siegel.family\.(.*)'):'',
+    re.compile(r'lattice\.(.*)'): 'Lattice/{0}',
+    re.compile(r'mf\.(.*)'): 'ModularForm/GL2/Q/holomorphic/{0}',
+    re.compile(r'nf\.(.*)'): 'NumberField/{0}',
+    re.compile(r'ec\.q\.(.*)'): 'EllipticCurve/Q/{0}',
+    re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'): 'EllipticCurve/{0}/{1}/{2}/{3}'
+}
+# We need to convert knowl
 link_finder_re = re.compile("""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
@@ -48,11 +66,17 @@ def extract_cat(kid):
 def extract_typ(kid):
     m = top_knowl_re.match(kid)
     if m:
-        return 1, m.group(1)
-    m = bottom_knowl_re.match(kid)
-    if m:
-        return -1, m.group(1)
-    return 0, None
+        prelabel = m.group(1)
+        typ = 1
+    else:
+        m = bottom_knowl_re.match(kid)
+        if m:
+            prelabel = m.group(1)
+            typ = -1
+        else:
+            return 0, None
+    
+    return typ, url
 
 def extract_links(content):
     return sorted(set(x[1] for x in link_finder_re.findall(content)))
@@ -94,11 +118,21 @@ class KnowlBackend(PostgresBase):
     def get_all_knowls(self, fields=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE status >= %s ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE status >= %s ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [0])
         return [{k:v for k,v in zip(fields, res)} for res in cur]
 
-    def search(self, category="", filters=[], keywords="", author=None, sort=[]):
+    def search(self, category="", filters=[], keywords="", author=None, sort=[], projection=['id', 'title']):
+        """
+        INPUT:
+
+        - ``category`` -- a knowl category such as "ec"  or "mf".
+        - ``filters`` -- a list, giving a subset of "beta", "reviewed", "in progress" and "deleted"
+        - ``keywords`` -- a string giving a space separated list of lower case keywords from the id, title and content.
+        - ``author`` -- a string or list of strings giving authors
+        - ``sort`` -- a list of strings or pairs (x, dir) where x is a column name and dir is 1 or -1.
+        - ``projection`` -- a list of column names, not including ``_keywords``
+        """
         restrictions = []
         values = []
         if category:
@@ -119,12 +153,17 @@ class KnowlBackend(PostgresBase):
             restrictions.append(SQL("authors @> %s"))
             values.append(Json(author))
         has_timestamp = any(x == 'timestamp' or isinstance(x, (list, tuple)) and x[0] == 'timestamp' for x in sort)
-        if not has_timestamp:
-            sort = sort + [('timestamp', -1)]
-        selecter = SQL("SELECT DISTINCT ON (id) id, title FROM kwl_knowls2 WHERE {0} ORDER BY {1}").format(
-            SQL(" AND ").join(restrictions), self._sort_str(sort))
+        # In order to be able to sort by arbitrary columns, we have to select everything here.
+        # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
+        fields = ['id'] + self._default_fields
+        sqlfields = SQL(", ").join(map(Identifier, fields))
+        projfields = [(col, fields.index(col)) for col in projection]
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE {1} ORDER BY id, timestamp DESC").format(sqlfields, SQL(" AND ").join(restrictions))
+        if sort:
+            selecter = SQL("SELECT {0} FROM ({1}) knowls ORDER BY {2}").format(sqlfields, selecter, self._sort_str(sort))
+        print selecter.as_string(self.conn)
         cur = self._execute(selecter, values)
-        return [{k:v for k,v in zip(["id", "title"], res)} for res in cur]
+        return [{k:res[i] for k,i in projfields} for res in cur]
 
     def save(self, knowl, who):
         """who is the ID of the user, who wants to save the knowl"""
@@ -142,7 +181,8 @@ class KnowlBackend(PostgresBase):
         cat = extract_cat(knowl.id)
         typ, source = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.quality, knowl.timestamp, knowl.title, 0, typ, links, source, Json(search_keywords))
+        # id, authors, cat, content, last_author, timestamp, title, status, type, links, source
+        values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, 0, typ, links, source, Json(search_keywords))
         with DelayCommit(self):
             insterer = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
             insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))

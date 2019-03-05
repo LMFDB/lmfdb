@@ -327,7 +327,8 @@ def render_newform_webpage(label):
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.title,
-                           friends=newform.friends)
+                           friends=newform.friends,
+                           KNOWL_ID="mf.%s"%label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
@@ -356,7 +357,8 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
-                           friends=newform.friends)
+                           friends=newform.friends,
+                           KNOWL_ID="mf.%s"%label)
 
 def render_space_webpage(label):
     try:

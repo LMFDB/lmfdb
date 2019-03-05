@@ -517,20 +517,24 @@ def index():
 
 
     filtermode = request.args.get("filtered")
-    from knowl import knowl_qualities
+    from knowl import knowl_status_code
     if request.method == 'POST':
-        qualities = [quality for quality in knowl_qualities if request.form.get(quality, "") == "on"]
+        qualities = [quality for quality in knowl_status_code if request.form.get(quality, "") == "on"]
     elif request.method == 'GET':
         qualities = request.args.getlist('qualities')
 
     if filtermode:
-        filters = [ q for q in qualities if q in knowl_qualities ]
+        filters = [ q for q in qualities if q in knowl_status_code ]
+        # If "in progress" requested, should add author = current_user.get_id()
     else:
         filters = []
 
     search = request.args.get("search", "")
+    print "cur_cat", cur_cat
+    print "filters", filters
+    print "search", search
     knowls = knowldb.search(cur_cat, filters, search.lower())
-
+    print "knowls", len(knowls)
 
     def first_char(k):
         t = k['title']
@@ -549,6 +553,11 @@ def index():
     knowls = sorted(knowls, key=knowl_sort_key)
     from itertools import groupby
     knowls = groupby(knowls, first_char)
+    knowl_qualities = ["reviewed", "beta"]
+    #if current_user.is_authenticated:
+    #    knowl_qualities.append("in progress")
+    if current_user.is_admin():
+        knowl_qualities.append("deleted")
     return render_template("knowl-index.html",
                            title="Knowledge Database",
                            bread=get_bread(),

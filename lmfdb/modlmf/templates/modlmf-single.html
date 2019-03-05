@@ -3,9 +3,6 @@
 {% block content %}
 
 
-{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 <h2> {{ KNOWL('modlmf.q_expansion', title='<i>q</i>-expansion') }} </h2>
 
 <p><form>
@@ -129,11 +126,6 @@ where $a$ satisfies ${{info.field | safe}}$.
 {% endif %}
 </p>
 
-
-
-
-{% set KNOWL_ID = "modlmf.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">
 var number_of_coefficients = 20;

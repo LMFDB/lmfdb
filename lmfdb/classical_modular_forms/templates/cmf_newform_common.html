@@ -3,9 +3,6 @@
 {% block content %}
 
 
-{% set KNOWL_ID = "mf.%s"|format(newform.label) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
-
 <!-- Hecke field and algebraic q-expansion data -->
 
 <h2> {{KNOWL('mf.elliptic.newspace',title='Newspace')}} parameters </h2>
@@ -293,9 +290,5 @@ function show_qexp(qstyle) {
 
 {% block subcontent %}
 {% endblock %}
-
-
-
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

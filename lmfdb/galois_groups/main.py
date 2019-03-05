@@ -231,7 +231,7 @@ def render_group_webpage(args):
         info.update(data)
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%info['label_raw'])
 
 
 def search_input_error(info, bread):

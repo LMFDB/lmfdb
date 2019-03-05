@@ -17,6 +17,7 @@ Back end:
 * Switch lock mechanism to use the new lock table.  Ignore old locks rather than deleting them
 
 Data:
+* Switch from jsonb to text[]
 * Fill in source column for existing annotation knowls
 
 Later:
@@ -72,10 +73,17 @@ ALTER TABLE kwl_knowls2 DROP COLUMN history;
 ALTER TABLE kwl_knowls2 DROP CONSTRAINT kwl_knowls2_pkey;
 ALTER TABLE kwl_knowls2 ALTER COLUMN title SET NOT NULL;
 ALTER TABLE kwl_knowls2 ALTER COLUMN content SET NOT NULL;
+GRANT SELECT ON kwl_knowls2 TO lmfdb;
+GRANT SELECT ON kwl_knowls2 TO webserver;
 INSERT INTO kwl_knowls2(id, cat, title, content, authors, last_author, quality, timestamp, _keywords) SELECT id, cat, title, content, authors, last_author, quality, timestamp, _keywords FROM kwl_knowls;
 WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
+
+UPDATE kwl_knowls2 SET id = 'cmf.' || substring(id from 13) WHERE id LIKE 'mf.elliptic.%';
+UPDATE kwl_knowls2 SET id = 'dq.cmf.' || substring(id from 16) WHERE id LIKE 'dq.mf.elliptic.%';
+UPDATE kwl_knowls2 SET content = regexp_replace(content, 'mf\.elliptic', 'cmf', 'g');
+
 CREATE TABLE kwl_locks (id text, timestamp timestamp, username text);
-ALTER TABLE userdb.users ADD COLUMN knowl_reviewer text;
+ALTER TABLE userdb.users ADD COLUMN knowl_reviewer boolean DEFAULT FALSE;
 
 NOTES FOR WORKSHOP
 * Remind people that they can use KNOWL_INC
