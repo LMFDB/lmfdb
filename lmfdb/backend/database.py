@@ -4717,7 +4717,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     non_existent_tables.append(tablename)
             if non_existent_tables:
                 if not adjust_schema:
-                    raise ValueError("non existent tables: {0}, use adjust_schema=True to create them".format(non_existent_tables))
+                    raise ValueError("non existent tables: {0}; use adjust_schema=True to create them".format(", ".join(non_existent_tables))
                 print "Creating mock tables for {0}".format(", ".join(non_existent_tables))
                 for tablename in non_existent_tables:
                     metafile = os.path.join(data_folder, tablename + '_meta.txt')
@@ -4732,7 +4732,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
-                    meta = zip(_meta_tables_cols, rows[0])
+                    meta = dict(zip(_meta_tables_cols, rows[0]))
                     assert meta["name"] == tablename
                     search_columns = {"bool":["basic"]}
                     extra_columns = {}
