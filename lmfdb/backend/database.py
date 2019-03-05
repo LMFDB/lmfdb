@@ -2988,15 +2988,9 @@ class PostgresTable(PostgresBase):
                 ]
 
         metadata = [
-                ("meta_indexes", "table_name",
-                    "index_name, table_name, type, columns, modifiers, storage_params",
-                    indexesfile),
-                ("meta_constraints", "table_name",
-                    "constraint_name, table_name, type, columns, check_func",
-                    constraintsfile),
-                ("meta_tables", "name",
-                    "name, sort, id_ordered, out_of_order, has_extras, label_col, total",
-                    metafile)
+                ("meta_indexes", "table_name", _meta_indexes_cols, indexesfile),
+                ("meta_constraints", "table_name", _meta_constraints_cols, constraintsfile),
+                ("meta_tables", "name", "_meta_tables_cols", metafile)
                 ]
         with DelayCommit(self, commit):
             for table, cols, addid, write_header, filename in tabledata:
@@ -3021,7 +3015,8 @@ class PostgresTable(PostgresBase):
                 if filename is None:
                     continue
                 now = time.time()
-                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, self.search_table,)
+                cols = SQL(", ").join(map(Identifier, cols))
+                select = SQL("SELECT {0} FROM %s WHERE %s = '%s'").format(cols, Literal(table), Identifier(wherecol), Literal(self.search_table))
                 self._copy_to_select(select, filename)
                 print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
