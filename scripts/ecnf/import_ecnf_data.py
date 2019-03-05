@@ -134,7 +134,7 @@ import os
 import pprint
 from lmfdb import db
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
