@@ -2990,7 +2990,7 @@ class PostgresTable(PostgresBase):
         metadata = [
                 ("meta_indexes", "table_name", _meta_indexes_cols, indexesfile),
                 ("meta_constraints", "table_name", _meta_constraints_cols, constraintsfile),
-                ("meta_tables", "name", "_meta_tables_cols", metafile)
+                ("meta_tables", "name", _meta_tables_cols, metafile)
                 ]
         with DelayCommit(self, commit):
             for table, cols, addid, write_header, filename in tabledata:
