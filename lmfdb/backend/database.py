@@ -406,7 +406,7 @@ class PostgresBase(object):
         """
         Using the copy_expert from psycopg2 exports the data from a select statement.
         """
-        copyto = SQL("COPY (%s) TO STDOUT").format(select) % (select,))
+        copyto = SQL("COPY ({0}) TO STDOUT").format(select)
         with open(filename, "w") as F:
             try:
                 cur = self.conn.cursor()
@@ -2067,7 +2067,7 @@ class PostgresTable(PostgresBase):
             place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols  + ["version"])))
             query = SQL('INSERT INTO meta_tables_hist {0} VALUES {1}').format(cols, place_holder)
             query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
-            self._execute(query, row)
+            self._execute(query, row + [version])
 
     def revert_meta(self, version = None):
         with DelayCommit(self, silence=True):
@@ -2081,7 +2081,9 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
 
             # grab the old row
-            cur = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
+            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols))
+            query = SQL("SELECT {0} FROM meta_tables_hist WHERE name = %s AND version = %s").format(cols)
+            cur = self._execute(query, [self.search_table, version])
 
             assert cur.rowcount == 1
             row = cur.fetchone()
@@ -2089,8 +2091,15 @@ class PostgresTable(PostgresBase):
             row[-1] = self.count()
 
             # insert the old row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + (currentversion + 1,))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols)))
+            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
+            self._execute(query, row)
+
+            # update hist
+            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols + ["version"]))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols  + ["version"])))
+            query = SQL('INSERT INTO meta_tables_hist {0} VALUES {1}').format(cols, place_holder)
+            self._execute(query, row + (currentversion + 1,))
 
     ##################################################################
     # Insertion and updating data                                    #
