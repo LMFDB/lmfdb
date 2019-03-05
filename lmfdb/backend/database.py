@@ -27,6 +27,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
+from glob import glob
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -104,8 +105,9 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'spgist': ['fillfactor']}
 
 
-_counts_cols = ["cols", "values", "count", "extra"]
-_stats_cols = ["cols", "stat", "value", "constraint_cols", "constraint_values", "threshold"]
+_meta_tables_cols = ("name", "sort", "id_ordered", "out_of_order", "has_extras", "label_col")
+_counts_cols = ("cols", "values", "count", "extra")
+_stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
 
 def IdentifierWrapper(name, convert = True):
     """
@@ -334,7 +336,6 @@ class PostgresBase(object):
         return cur.fetchone()[0] is not None
 
     def _constraint_exists(self, tablename, constraintname):
-        #print tablename, constraintname
         cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
         return cur.fetchone() is not None
 
@@ -380,7 +381,111 @@ class PostgresBase(object):
                 col_list.append(col)
             else:
                 has_id = True
-        return col_list, col_type, has_id,
+        return col_list, col_type, has_id
+
+    def copy_to_indexes(self, filename, search_table):
+        cols = "(index_name, table_name, type, columns, modifiers, storage_params)"
+        select = "SELECT %s FROM meta_indexes WHERE table_name = '%s'" % (cols, search_table,)
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported meta_indexes for %s in %.3f secs" % (search_table, time.time() - now)
+
+    def copy_to_constraints(self, filename, search_table):
+        cols = "(constraint_name, table_name, type, columns, check_func)"
+        select = "SELECT %s FROM meta_constraints WHERE table_name = '%s'" % (cols, search_table,)
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported meta_constraints for %s in %.3f secs" % (search_table, time.time() - now)
+
+
+    def _copy_to_select(self, select, filename):
+        """
+        Using the copy_expert from psycopg2 exports the data from a select statement.
+        """
+        copyto = SQL("COPY (%s) TO STDOUT" % (select,))
+        with open(filename, "w") as F:
+            try:
+                cur = self.conn.cursor()
+                cur.copy_expert(copyto, F)
+            except Exception:
+                self.conn.rollback()
+                raise
+
+    def _clone(self, table, tmp_table):
+        """
+        Utility function: creates a table with the same schema as the given one.
+        """
+        if self._table_exists(tmp_table):
+            raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
+        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
+        self._execute(creator)
+
+
+    def _swap(self, tables, indexes, constraints, source, target):
+        """
+        Renames tables, indexes, constraints and primary keys, for use in reload.
+
+        INPUT:
+
+        - ``tables`` -- a list of table names to reload (including suffixes like
+            ``_extra`` or ``_counts`` but not ``_tmp``).
+        - ``indexes`` -- a list of index names to reload, without suffixes.
+        - ``constraints`` -- a list of constraint names to reload, without suffixes.
+        - ``source`` -- the source suffix for the swap.
+        - ``target`` -- the target suffix for the swap.
+        """
+        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
+        rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+        with DelayCommit(self, silence=True):
+            for table in tables:
+                tablename_old = table + source
+                tablename_new = table + target
+                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
+                pkey_old = table + source + "_pkey"
+                pkey_new = table + target + "_pkey"
+                if self._constraint_exists(tablename_new, pkey_old):
+                    self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                           Identifier(pkey_old),
+                                                           Identifier(pkey_new)))
+                for constraint in constraints:
+                    if self._constraint_exists(tablename_new, constraint + source):
+                        self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                               Identifier(constraint + source),
+                                                               Identifier(constraint + target)))
+            for index in indexes:
+                if self._table_exists(index + source):
+                    self._execute(rename_index.format(Identifier(index + source),
+                                                      Identifier(index + target)))
+                else:
+                    print "Warning: index %s does not exist"%(index + source)
+
+
+    # FIXME this should be somwhere else, but not in PostgresTable
+    ##################################################################
+    # copy_from and copy_to for meta_table                           #
+    ##################################################################
+
+    def copy_to_meta(self, filename, search_table):
+        cols = SQL(", ").join(map(Identifier, _meta_tables_cols))
+        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)"
+        select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, search_table,)
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported meta_tables for %s in %.3f secs" % (search_table, time.time() - now)
+
+    def copy_from_meta(self, filename):
+        try:
+            cur = self.conn.cursor()
+            cur.copy_from(filename, "meta_tables", columns=_meta_tables_cols)
+        except Exception:
+            self.conn.rollback()
+            raise
+
+
 
 class PostgresTable(PostgresBase):
     """
@@ -1795,20 +1900,10 @@ class PostgresTable(PostgresBase):
     ##################################################################
 
     def copy_to_indexes(self, filename):
-        cols = "(index_name, table_name, type, columns, modifiers, storage_params)"
-        select = "SELECT %s FROM meta_indexes WHERE table_name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_indexes for %s in %.3f secs" % (self.search_table, time.time() - now)
+        self.copy_to_indexes(filename, self.search_table)
 
     def copy_to_constraints(self, filename):
-        cols = "(constraint_name, table_name, type, columns, check_func)"
-        select = "SELECT %s FROM meta_constraints WHERE table_name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_constraints for %s in %.3f secs" % (self.search_table, time.time() - now)
+        self.copy_to_constraints(filename, self.search_table)
 
     def _get_current_index_version(self):
         cur = self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = %s"), [self.search_table])
@@ -1927,12 +2022,7 @@ class PostgresTable(PostgresBase):
     ##################################################################
 
     def copy_to_meta(self, filename):
-        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)"
-        select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_tables for %s in %.3f secs" % (self.search_table, time.time() - now)
+        self.copy_to_meta(filename, self.search_table)
 
     def _get_current_tables_version(self):
         cur = self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = %s"), [self.search_table])
@@ -2509,27 +2599,7 @@ class PostgresTable(PostgresBase):
             self.conn.rollback()
             raise
 
-    def _copy_to_select(self, select, filename):
-        """
-        Using the copy_expert from psycopg2 exports the data from a select statement.
-        """
-        copyto = SQL("COPY (%s) TO STDOUT" % (select,))
-        with open(filename, "w") as F:
-            try:
-                cur = self.conn.cursor()
-                cur.copy_expert(copyto, F)
-            except Exception:
-                self.conn.rollback()
-                raise
 
-    def _clone(self, table, tmp_table):
-        """
-        Utility function: creates a table with the same schema as the given one.
-        """
-        if self._table_exists(tmp_table):
-            raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
-        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
-        self._execute(creator)
 
     def _next_backup_number(self):
         """
@@ -2541,44 +2611,7 @@ class PostgresTable(PostgresBase):
                 backup_number += 1
         return backup_number
 
-    def _swap(self, tables, indexes, constraints, source, target):
-        """
-        Renames tables, indexes, constraints and primary keys, for use in reload.
 
-        INPUT:
-
-        - ``tables`` -- a list of table names to reload (including suffixes like
-            ``_extra`` or ``_counts`` but not ``_tmp``).
-        - ``indexes`` -- a list of index names to reload, without suffixes.
-        - ``constraints`` -- a list of constraint names to reload, without suffixes.
-        - ``source`` -- the source suffix for the swap.
-        - ``target`` -- the target suffix for the swap.
-        """
-        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
-        rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
-        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
-        with DelayCommit(self, silence=True):
-            for table in tables:
-                tablename_old = table + source
-                tablename_new = table + target
-                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
-                pkey_old = table + source + "_pkey"
-                pkey_new = table + target + "_pkey"
-                if self._constraint_exists(tablename_new, pkey_old):
-                    self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                           Identifier(pkey_old),
-                                                           Identifier(pkey_new)))
-                for constraint in constraints:
-                    if self._constraint_exists(tablename_new, constraint + source):
-                        self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                               Identifier(constraint + source),
-                                                               Identifier(constraint + target)))
-            for index in indexes:
-                if self._table_exists(index + source):
-                    self._execute(rename_index.format(Identifier(index + source),
-                                                      Identifier(index + target)))
-                else:
-                    print "Warning: index %s does not exist"%(index + source)
 
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
@@ -4669,67 +4702,103 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         Input is as for the `reload` function.
         """
-        file_list = []
-        tablenames = []
-        for tablename in self.tablenames:
-            included = []
-
-            searchfile = os.path.join(data_folder, tablename + '.txt')
-            if not os.path.exists(searchfile):
-                continue
-            included.append(tablename)
-
-            table = self[tablename]
-
-            extrafile = os.path.join(data_folder, tablename + '_extras.txt')
-            if os.path.exists(extrafile):
-                if table.extra_table is None:
-                    raise ValueError("Unexpected file %s"%extrafile)
-                included.append(tablename + '_extras')
-            elif table.extra_table is None:
-                extrafile = None
-            else:
-                raise ValueError("Missing file %s"%extrafile)
-
-            countsfile = os.path.join(data_folder, tablename + '_counts.txt')
-            if os.path.exists(countsfile):
-                included.append(tablename + '_counts')
-            else:
-                countsfile = None
-
-            statsfile = os.path.join(data_folder, tablename + '_stats.txt')
-            if os.path.exists(statsfile):
-                included.append(tablename + '_stats')
-            else:
-                statsfile = None
-
-            indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
-            if not os.path.exists(indexesfile):
-                indexesfile = None
-
-            constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
-            if not os.path.exists(constraintsfile):
-                constraintsfile = None
-
-            metafile = os.path.join(data_folder, tablename + '_meta.txt')
-            if not os.path.exists(metafile):
-                metafile = None
-
-            file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
-            tablenames.append(tablename)
-        print "Reloading %s"%(", ".join(tablenames))
         with DelayCommit(self, commit, silence=True):
+            file_list = []
+            tablenames = []
+            non_existent_tables = []
+            possible_endings = ['_extras.txt', '_counts.txt', '_stats.txt',
+                    '_indexes.txt','_constraints.txt','_meta.txt']
+            for path in glob(os.path.join(data_folder, "*.txt")):
+                filename = os.path.basename(path)
+                if any(filename.endswith(elt) for elt in possible_endings):
+                    continue
+                tablename = filename[:-4]
+                if tablename not in self.tablenames:
+                    non_existent_tables.append(tablename)
+            if non_existent_tables:
+                if not adjust_schema:
+                    raise ValueError("non existent tables: {0}, use adjust_schema=True to create them".format(non_existent_tables))
+                print "Creating mock tables for {0}".format(", ".join(non_existent_tables))
+                for tablename in non_existent_tables:
+                    metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                    if not os.path.exists(metafile):
+                        raise ValueError("meta file missing for {0}".format(tablename))
+
+                    # read metafile
+                    rows = []
+                    with open(metafile, "r") as F:
+                        import csv
+                        rows = [line for line in csv.reader(F, delimiter = "\t")]
+
+                    if len(rows) != 1:
+                        raise RuntimeError("Expected only one row in {0}")
+                    meta = zip(_meta_tables_cols, rows[0])
+                    assert meta["name"] == tablename
+                    search_columns = {"bool":["basic"]}
+                    extra_columns = {}
+                    if meta["has_extras"] == "t":
+                        extra_columns = {"bool":["extra"]}
+                    self.create_table(tablename, search_columns, extra_columns=extra_columns)
+
+            for tablename in self.tablenames:
+                included = []
+
+                searchfile = os.path.join(data_folder, tablename + '.txt')
+                if not os.path.exists(searchfile):
+                    continue
+                included.append(tablename)
+
+
+                table = self[tablename]
+
+                extrafile = os.path.join(data_folder, tablename + '_extras.txt')
+                if os.path.exists(extrafile):
+                    if table.extra_table is None:
+                        raise ValueError("Unexpected file %s"%extrafile)
+                    included.append(tablename + '_extras')
+                elif table.extra_table is None:
+                    extrafile = None
+                else:
+                    raise ValueError("Missing file %s"%extrafile)
+
+                countsfile = os.path.join(data_folder, tablename + '_counts.txt')
+                if os.path.exists(countsfile):
+                    included.append(tablename + '_counts')
+                else:
+                    countsfile = None
+
+                statsfile = os.path.join(data_folder, tablename + '_stats.txt')
+                if os.path.exists(statsfile):
+                    included.append(tablename + '_stats')
+                else:
+                    statsfile = None
+
+                indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
+                if not os.path.exists(indexesfile):
+                    indexesfile = None
+
+                constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
+                if not os.path.exists(constraintsfile):
+                    constraintsfile = None
+
+                metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                if not os.path.exists(metafile):
+                    metafile = None
+
+                file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
+                tablenames.append(tablename)
+            print "Reloading {0}".format(", ".join(tablenames))
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, commit=False, **kwds)
+                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, **kwds)
                 except DatabaseError:
                     traceback.print_exc()
                     failures.append(table)
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex, commit=False)
+                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex)
 
         if failures:
             print "Reloaded %s"%(", ".join(tablenames))
