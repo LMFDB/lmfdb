@@ -4748,6 +4748,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
+                    print meta
                     assert meta["name"] == tablename
                     search_columns = {"boolean":["label"]}
                     extra_columns = {}
