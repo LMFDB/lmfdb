@@ -105,7 +105,9 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'spgist': ['fillfactor']}
 
 
-_meta_tables_cols = ("name", "sort", "id_ordered", "out_of_order", "has_extras", "label_col")
+_meta_tables_cols = ("name", "sort", "id_ordered", "out_of_order", "has_extras", "label_col", "total")
+_meta_indexes_cols = ("index_name", "table_name", "type", "columns", "modifiers", "storage_params")
+_meta_constraints_cols = ("constraint_name", "table_name", "type", "columns", "check_func")
 _counts_cols = ("cols", "values", "count", "extra")
 _stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
 
@@ -384,16 +386,16 @@ class PostgresBase(object):
         return col_list, col_type, has_id
 
     def copy_to_indexes(self, filename, search_table):
-        cols = "(index_name, table_name, type, columns, modifiers, storage_params)"
-        select = "SELECT %s FROM meta_indexes WHERE table_name = '%s'" % (cols, search_table,)
+        cols = ", ".join(map(Identifier, _meta_indexes_cols))
+        select = SQL("SELECT {0} FROM meta_indexes WHERE table_name = {1}").format(cols, Literal(search_table))
         now = time.time()
         with DelayCommit(self):
             self._copy_to_select(select, filename)
         print "Exported meta_indexes for %s in %.3f secs" % (search_table, time.time() - now)
 
     def copy_to_constraints(self, filename, search_table):
-        cols = "(constraint_name, table_name, type, columns, check_func)"
-        select = "SELECT %s FROM meta_constraints WHERE table_name = '%s'" % (cols, search_table,)
+        cols = ", ".join(map(Identifier, _meta_constraints_cols))
+        select = SQL("SELECT {0} FROM meta_constraints WHERE table_name = {1}").format(cols, Literal(search_table))
         now = time.time()
         with DelayCommit(self):
             self._copy_to_select(select, filename)
@@ -404,7 +406,7 @@ class PostgresBase(object):
         """
         Using the copy_expert from psycopg2 exports the data from a select statement.
         """
-        copyto = SQL("COPY (%s) TO STDOUT" % (select,))
+        copyto = SQL("COPY (%s) TO STDOUT").format(select) % (select,))
         with open(filename, "w") as F:
             try:
                 cur = self.conn.cursor()
@@ -470,7 +472,6 @@ class PostgresBase(object):
 
     def copy_to_meta(self, filename, search_table):
         cols = SQL(", ").join(map(Identifier, _meta_tables_cols))
-        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)"
         select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, search_table,)
         now = time.time()
         with DelayCommit(self):
@@ -2054,11 +2055,19 @@ class PostgresTable(PostgresBase):
             version = self._get_current_tables_version() + 1
 
             # delete current row
-            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table], commit=False)
+            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table])
 
             # insert new row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + [version,])
+            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols)))
+            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
+            self._execute(query, row)
+
+            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols + ["version"]))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols  + ["version"])))
+            query = SQL('INSERT INTO meta_tables_hist {0} VALUES {1}').format(cols, place_holder)
+            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
+            self._execute(query, row)
 
     def revert_meta(self, version = None):
         with DelayCommit(self, silence=True):
