@@ -3016,7 +3016,7 @@ class PostgresTable(PostgresBase):
                     continue
                 now = time.time()
                 cols = SQL(", ").join(map(Identifier, cols))
-                select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Literal(table), Identifier(wherecol), Literal(self.search_table))
+                select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
                 self._copy_to_select(select, filename)
                 print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
