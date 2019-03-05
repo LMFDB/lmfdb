@@ -218,6 +218,7 @@ class DelayCommit(object):
         if exc_type is None and self.obj._nocommit_stack == 0 and self.final_commit:
             self.obj.conn.commit()
         if exc_type is not None:
+            print "Transaction rolled back"
             self.obj.conn.rollback()
 
 class PostgresBase(object):
