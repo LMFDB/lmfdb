@@ -4273,6 +4273,7 @@ class PostgresDatabase(PostgresBase):
         Log a change to the database.
         """
         uid = self.login()
+        print data
         inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
         self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
 
@@ -4587,11 +4588,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.grant_insert(name+"_stats")
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
-            print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
+        print "Table %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
@@ -4765,11 +4766,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     meta = dict(zip(_meta_tables_cols, rows[0]))
                     print meta
                     assert meta["name"] == tablename
-                    search_columns = {"boolean":["label"]}
+                    search_columns = {"boolean":["None"]}
                     extra_columns = {}
                     if meta["has_extras"] == "t":
                         extra_columns = {"boolean":["extra"]}
-                    self.create_table(tablename, search_columns, "label", extra_columns=extra_columns)
+                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
 
             for tablename in self.tablenames:
                 included = []
