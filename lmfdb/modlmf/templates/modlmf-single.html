@@ -52,7 +52,7 @@ $\F_{ {{info.characteristic}} }$
 {% endif %}
     <tr><td align=right rowspan=4 valign=top>{{ KNOWL('modlmf.cuspidal_lift', title='Minimal cuspidal lift:') }}</td><td>weight: {{info.cuspidal_lift_weight}}</td></tr>
     <tr><td>{{ KNOWL('modlmf.cuspidal_lift', title='form') }}: <a HREF="/ModularForm/GL2/Q/holomorphic/?jump_to={{info.cuspidal_lift_orbit}}">{{info.cuspidal_lift_orbit}}</a></td></tr>
-    <tr><td>{{ KNOWL('mf.elliptic.coefficient_field', title='coefficient field') }}: 
+    <tr><td>{{ KNOWL('cmf.coefficient_field', title='coefficient field') }}: 
         {% if info.cuspidal_hecke_field == 1 %}
         $\Q$
         {% else %}

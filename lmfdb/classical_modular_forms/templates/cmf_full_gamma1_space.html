@@ -6,20 +6,20 @@
 
 <table>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>=</td>
     <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
     <td>=</td>
     <td>\( {{ space.weight }} \)</td>
   </tr>
   {% if space.num_spaces is not none %}
   <tr>
-    <td> Nonzero {{ KNOWL('mf.elliptic.newspace', title='newspaces') }}: </td>
+    <td> Nonzero {{ KNOWL('cmf.newspace', title='newspaces') }}: </td>
     <td></td>
     <td></td>
     <td> \( {{ space.num_spaces }} \) </td>
@@ -27,21 +27,21 @@
   {% endif %}
   {% if space.num_forms is not none %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.newform', title='Newforms') }}: </td>
+    <td> {{ KNOWL('cmf.newform', title='Newforms') }}: </td>
     <td></td>
     <td></td>
     <td> \( {{ space.num_forms }} \) </td>
   </tr>
   {% endif %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.sturm_bound_gamma1', title='Sturm bound') }}: </td>
+    <td> {{ KNOWL('cmf.sturm_bound_gamma1', title='Sturm bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.sturm_bound }}\) </td>
   </tr>
   {% if space.trace_bound is not none %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
+    <td> {{ KNOWL('cmf.trace_bound', title='Trace bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.trace_bound }}\) </td>
@@ -76,16 +76,16 @@
 
 {% if space.has_projective_image_types %}
 
-<p>The following table gives the dimensions of subspaces with specified {{KNOWL('mf.elliptic.projective_image', title='projective image type')}}.</p>
+<p>The following table gives the dimensions of subspaces with specified {{KNOWL('cmf.projective_image', title='projective image type')}}.</p>
 
 <table class="ntdata">
   <thead>
     <tr class='dark'>
       <th></th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(D_n\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_4\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(S_4\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_5\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(D_n\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(A_4\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(S_4\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(A_5\)')}}</th>
     </tr>
   </thead>
   <tbody>
@@ -113,7 +113,7 @@ function show_qexp(qstyle) {
     return elementBottom < viewportTop;
   }
 </script>
-<h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.space_trace_form', title='Trace form') }} </h2>
+<h2 id="qexp-anchor"> {{ KNOWL('cmf.space_trace_form', title='Trace form') }} </h2>
 <div id="qexp">
   <form>
     <table class="qexp-table">
@@ -132,17 +132,17 @@ function show_qexp(qstyle) {
 </div>
 {% endif %}
 
-<h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
+<h2> {{ KNOWL('cmf.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
 
 <p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.weight_parity == -1 else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( S_k^{\mathrm{new}}(N, \chi) \) we list the newforms together with their dimension.</p>
 
 <table class="mfdata">
   <thead>
     <tr class="oddrow">
-      <th>{{ KNOWL('mf.elliptic.label',title='Label') }}</th>
-      <th> {{ KNOWL('mf.elliptic.character', title='\(\chi\)') }}</th>
-      <th>{{ KNOWL('mf.elliptic.newform',title='Newforms') }}</th>
-      <th>{{ KNOWL('mf.elliptic.dimension_galois_orbit',title='Dimension')}}</th>
+      <th>{{ KNOWL('cmf.label',title='Label') }}</th>
+      <th> {{ KNOWL('cmf.character', title='\(\chi\)') }}</th>
+      <th>{{ KNOWL('cmf.newform',title='Newforms') }}</th>
+      <th>{{ KNOWL('cmf.dimension_galois_orbit',title='Dimension')}}</th>
       <th>{{ KNOWL('character.dirichlet.degree',title='\(\chi\) degree') }}</th>
     </tr>
   </thead>
@@ -172,7 +172,7 @@ function show_qexp(qstyle) {
 <!-- Definitions for coefficient fields -->
 
 {% if space.old_dim > 0 %}
-<h2> {{ KNOWL('mf.elliptic.decomposition.old.gamma1', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+<h2> {{ KNOWL('cmf.decomposition.old.gamma1', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('cmf.oldspace',title='lower level spaces')}}</h2>
 
 <div class="center">
   \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}

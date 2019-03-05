@@ -1015,7 +1015,7 @@ def space_search(info, query):
 @cmf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.extent',
+    return render_template("single.html", kid='dq.cmf.extent',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
@@ -1024,7 +1024,7 @@ def completeness_page():
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.source',
+    return render_template("single.html", kid='dq.cmf.source',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
@@ -1032,7 +1032,7 @@ def how_computed_page():
 @cmf.route("/Labels")
 def labels_page():
     t = 'Labels for classical modular forms'
-    return render_template("single.html", kid='mf.elliptic.label',
+    return render_template("single.html", kid='cmf.label',
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
@@ -1040,7 +1040,7 @@ def labels_page():
 @cmf.route("/Reliability")
 def reliability_page():
     t = 'Reliability of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.reliability',
+    return render_template("single.html", kid='dq.cmf.reliability',
                            credit=credit(), title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
@@ -1102,10 +1102,10 @@ class CMF_stats(StatsDisplay):
         self.nforms = comma(db.mf_newforms.count())
         self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
         self.ndim = comma(db.mf_hecke_cc.count())
-        #self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
-        #self.level_knowl = display_knowl('mf.elliptic.level', title='level')
-        self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        self.newspace_knowl = display_knowl('mf.elliptic.newspace', title='newspaces')
+        #self.weight_knowl = display_knowl('cmf.weight', title='weight')
+        #self.level_knowl = display_knowl('cmf.level', title='level')
+        self.newform_knowl = display_knowl('cmf.newform', title='newforms')
+        self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
     @property
@@ -1116,7 +1116,7 @@ class CMF_stats(StatsDisplay):
     def summary(self):
         return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
-    extent_knowl = 'mf.elliptic.statistics_extent'
+    extent_knowl = 'cmf.statistics_extent'
 
     table = db.mf_newforms
     baseurl_func = ".index"
@@ -1128,19 +1128,19 @@ class CMF_stats(StatsDisplay):
                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
-    knowls = {'level': 'mf.elliptic.level',
-              'weight': 'mf.elliptic.weight',
-              'dim': 'mf.elliptic.dimension',
-              'relative_dim': 'mf.elliptic.dimension',
+    knowls = {'level': 'cmf.level',
+              'weight': 'cmf.weight',
+              'dim': 'cmf.dimension',
+              'relative_dim': 'cmf.dimension',
               'char_order': 'character.dirichlet.order',
               'char_degree': 'character.dirichlet.degree',
-              'analytic_rank': 'mf.elliptic.analytic_rank',
-              'projective_image': 'mf.elliptic.projective_image',
-              'num_forms': 'mf.elliptic.galois-orbits',
-              'inner_twist_count': 'mf.elliptic.inner_twist',
-              'self_twist_type': 'mf.elliptic.self_twist',
-              'cm_discs': 'mf.elliptic.cm_form',
-              'rm_discs': 'mf.elliptic.rm_form'}
+              'analytic_rank': 'cmf.analytic_rank',
+              'projective_image': 'cmf.projective_image',
+              'num_forms': 'cmf.galois-orbits',
+              'inner_twist_count': 'cmf.inner_twist',
+              'self_twist_type': 'cmf.self_twist',
+              'cm_discs': 'cmf.cm_form',
+              'rm_discs': 'cmf.rm_form'}
     top_titles = {'dim': 'absolute dimension',
                   'relative_dim': 'relative dimension',
                   'inner_twist_count': 'inner twists',
@@ -1182,11 +1182,11 @@ class CMF_stats(StatsDisplay):
         {'cols':'analytic_rank',
          'totaler':{'avg':True}},
         {'cols':'projective_image',
-         'top_title':[('projective images', 'mf.elliptic.projective_image'),
+         'top_title':[('projective images', 'cmf.projective_image'),
                       ('for weight 1 forms', None)]},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
-         'top_title': [('number of newforms', 'mf.elliptic.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
+         'top_title': [('number of newforms', 'cmf.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
          'url_extras': 'search_type=Spaces&'},
         {'cols':'inner_twist_count'},
         {'cols':['self_twist_type', 'weight'],

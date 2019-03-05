@@ -24,7 +24,7 @@ FINAL CHECKS:
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github
 * Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
-* Delete mf.elliptic.trace-expansion, update references to use mf.elliptic.trace_expansions
+* Delete cmf.trace-expansion, update references to use cmf.trace_expansions
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -100,7 +100,7 @@ NOT CMF STUFF:
 * It would be good to have an explanation of the connections in the "related objects" links when possible
 * Complex and rational extension types for postgres
 * In create_table, make label unique and add index; port to existing tables (David)
-* Rename mf.elliptic.hecke-operator mf.elliptic.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
+* Rename cmf.hecke-operator cmf.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
 * LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
 * LMFDB-wide: equal signs consistent in terms of math-mode or not
 * LMFDB-wide: change sort order in search results
