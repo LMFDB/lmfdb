@@ -7,7 +7,6 @@ from sage.all import plot, srange, spline, line, latex, is_prime,  factor
 import tempfile
 import os
 import re
-import sqlite3
 import numpy
 
 import LfunctionPlot
@@ -762,10 +761,7 @@ def set_navi(L):
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
 def l_function_ec_plot(label):
-    try:
-        return render_plotLfunction_from_db("ecplots", "ecplots", label)
-    except KeyError:
-        return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
+    return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
 
 @l_function_page.route("/Plot/<path:args>/")
@@ -805,56 +801,6 @@ def download(args):
 ################################################################################
 #   Render functions, plotting L-function and displaying zeros
 ################################################################################
-def render_plotLfunction_from_db(db, dbTable, label):
-    print db, dbTable, label
-    data_location = os.path.expanduser(
-        "~/data/lfunction_plots/{0}.db".format(db))
-
-    if not os.path.exists(data_location):
-        # We want to raise some exception so that the calling
-        # function can catch it and fall back to normal plotting
-        # when the database does not exist or doesn't have the
-        # plot. This seems like a reasonable exception to raise.
-        print "KeyError"
-        raise KeyError
-
-    try:
-        print "try"
-        db = sqlite3.connect(data_location)
-        with db:
-            cur = db.cursor()
-            query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable)
-            cur.execute(query, (label,))
-            row = cur.fetchone()
-            print row
-
-        db.close()
-
-        start,end,values = row
-        values = numpy.frombuffer(values)
-        step = (end - start)/values.size
-
-        pairs = [ (start + x * step, values[x] )
-                  for x in range(0, values.size, 1)]
-        p = plot(spline(pairs), -30, 30, thickness = 0.4)
-        styleLfunctionPlot(p, 8)
-
-    except (sqlite3.OperationalError, TypeError):
-        # An OperationalError will happen when the database exists for some reason
-        # but it doesn't have the table. A TypeError will happen when there are no
-        # results returned, in which case row will be None and unpacking the tuple
-        # will fail. We turn both of these in KeyErrors, which can be caught by
-        # the calling function to fallback to normal plotting.
-
-        raise KeyError
-
-    fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn, dpi = 100)
-    data = file(fn).read()
-    os.remove(fn)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
 
 
 def render_plotLfunction(request, *args):
