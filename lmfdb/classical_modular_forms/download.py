@@ -27,16 +27,19 @@ class CMF_download(Downloader):
 
     def _get_traces(self, label):
         if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection='traces')
+            traces = db.mf_gamma1.lookup(label, projection=['traces'])
         elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection='traces')
+            traces = db.mf_newspaces.lookup(label, projection=['traces'])
         elif label.count('.') == 3:
-            traces = db.mf_newforms.lookup(label, projection='traces')
+            traces = db.mf_newforms.lookup(label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s"%label)
         if traces is None:
             return abort(404, "Label not found: %s"%label)
-        return [0] + traces
+        elif traces.get('traces') is None:
+            return abort(404, "We have not computed traces for: %s"%label)
+        else:
+            return [0] + traces['traces']
 
     # Sage functions to generate everything
     discrete_log_sage = [
@@ -150,7 +153,7 @@ class CMF_download(Downloader):
 
         dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
-        level, weight = label.split('.')[:2]
+        level, weight = map(int, label.split('.')[:2])
         level_data = self.assign(lang, 'level', level);
         weight_data = self.assign(lang, 'weight', weight);
 
@@ -623,8 +626,9 @@ class CMF_download(Downloader):
             out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors
-            if not isinstance(hecke_nf, dict):
-                return hecke_nf
+            # this line will never be ran if the data is correct
+            if not isinstance(hecke_nf, dict): # pragma: no cover
+                return hecke_nf  # pragma: no cover
             out += self._magma_ExtendMultiplicatively() + newlines
             out += self._magma_qexpCoeffs(newform, hecke_nf) + newlines
 

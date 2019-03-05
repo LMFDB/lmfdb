@@ -161,16 +161,20 @@ favorite_newform_labels = [[('23.1.b.a','Smallest analytic conductor'),
                             ('39.1.d.a','First D2 form'),
                             ('7.3.b.a','First CM-form with weight at least 2'),
                             ('23.2.a.a','First trivial-character non-rational form'),
-                            ('1.12.a.a','Delta')],
-                           [('124.1.i.a','First non-dihedral weight 1 form'),
+                            ('1.12.a.a','Delta'),
+                            ('124.1.i.a','First non-dihedral weight 1 form'),
                             ('148.1.f.a','First S4 form'),
+                            ],
+                            [
                             ('633.1.m.b','First A5 form'),
                             ('163.3.b.a','Best q-expansion'),
                             ('8.14.b.a','Large weight, non-self dual, analytic rank 1'),
                             ('8.21.d.b','Large coefficient ring index'),
                             ('3600.1.e.a','Many zeros in q-expansion'),
                             ('983.2.c.a','Large dimension'),
-                            ('3997.1.cz.a','Largest projective image')]]
+                            ('3997.1.cz.a','Largest projective image'),
+                            ('7524.2.l.b', 'CM-form by Q(-627) and many inner twists'),
+                            ('random','Random form')]]
 favorite_space_labels = [[('1161.1.i', 'Has A5, S4, D3 forms'),
                           ('23.10', 'Mile high 11s'),
                           ('3311.1.h', 'Most weight 1 forms'),
@@ -217,7 +221,7 @@ def index():
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
-@cmf.route("/random")
+@cmf.route("/random/")
 def random_form():
     if len(request.args) > 0:
         info = to_dict(request.args)
@@ -596,7 +600,7 @@ newform_only_fields = {
     'analytic_rank': 'Analytic rank',
     'is_self_dual': 'Is self dual',
 }
-def common_parse(info, query):
+def common_parse(info, query, na_check=False):
     parse_ints(info, query, 'level', name="Level")
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
@@ -620,7 +624,7 @@ def common_parse(info, query):
     parse_ints(info, query, 'char_order', name="Character order")
     prime_mode = info['prime_quantifier'] = info.get('prime_quantifier', '')
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=prime_mode, radical='level_radical')
-    if info.get('search_type') != 'SpaceDimensions':
+    if not na_check and info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
         else:
@@ -786,8 +790,8 @@ def trace_search(info, query):
 
 @search_wrap(template="cmf_space_trace_search_results.html",
              table=db.mf_newspaces,
-             title='Newform Space Search Results',
-             err_title='Newform Space Search Input Error',
+             title='Newspace Search Results',
+             err_title='Newspace Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_multiple_space_traces},
              projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
@@ -935,7 +939,7 @@ def dimension_form_postprocess(res, info, query):
     dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
     # Determine which entries should have an "n/a"
     na_query = {}
-    common_parse(info, na_query)
+    common_parse(info, na_query, na_check=True)
     dim_dict = {}
     for rec in db.mf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
         N = rec['level']
@@ -994,8 +998,8 @@ def dimension_space_search(info, query):
 
 @search_wrap(template="cmf_space_search_results.html",
              table=db.mf_newspaces,
-             title='Newform Space Search Results',
-             err_title='Newform Space Search Input Error',
+             title='Newspace Search Results',
+             err_title='Newspace Search Input Error',
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_spaces},
              projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],

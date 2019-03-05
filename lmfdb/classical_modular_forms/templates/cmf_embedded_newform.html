@@ -30,7 +30,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 {% set class_n = [50, 250, 1000] %}
 {% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
 {% set default_class = [50,'primes'] %}
-{% macro render_display_options() %}
+{% macro render_display_options(href) %}
 <div>
   {% for s in subsets %}
     {% set extra = 'nodisplay' %}
@@ -40,7 +40,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     <span class="noptions {{s[0]}} {{extra}}">
     Display {{s[2]}} up to:
     {% for k in class_n %}
-    <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="#coefficient_data">{{k}}</a>
+    <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="{{href}}">{{k}}</a>
     {% endfor %} {# for k in class_n #}
     </span>
     {% for n in class_n %}
@@ -53,7 +53,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
       <span class="{{s[0]}} {{n|string}} {{extra}}" >
       {% for ns in subsets %}
        {% if ns != s %}
-         (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="#coefficient_data">See {{ns[1]}}</a>)
+       (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="{{href}}">See {{ns[1]}}</a>)
        {% endif %}
       {% endfor %} {# for ns in subsets #}
       </span>
@@ -62,7 +62,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
 </div>
 {% endmacro %}
 <br><br>
-{{ render_display_options() }}
+{{ render_display_options("javascript:;") }}
 
 <form id='complex_embeddings'>
   <table>
@@ -74,6 +74,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
   </table>
 </form>
 
+{% set colspan_an = 1 if newform.one_column_display else 3 %}
 {# we need to fix the coloring #}
 <div class="table-scroll-wrapper">
   <table class="ntdata complex-cols">
@@ -82,13 +83,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
         <th>
           \(n\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center' colspan='{{colspan_an}}'>
           \(a_n\)
         </th>
-        <th class='center' colspan="3">
+          <th class='center' colspan='{{colspan_an}}'>
           \(a_n / n^{(k-1)/2}\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center' colspan='3'>
           \( \alpha_n \)
         </th>
         <th class='center'>
@@ -99,13 +100,13 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
         <th>
           \(p\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center' colspan='{{colspan_an}}'>
           \(a_p\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center' colspan='{{colspan_an}}'>
           \(a_p / p^{(k-1)/2}\)
         </th>
-        <th class='center' colspan="3">
+        <th class='center' colspan='3'>
           \( \alpha_p\)
         </th>
         <th class='center'>
@@ -161,15 +162,21 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
           </td>
           {% set an_formats = ['embed', 'analytic_embed'] %}
           {% for format in an_formats %}
-            <td rowspan="{{rowspan}}" class="nowrap real">
-              {{ newform.embedding_re(m, n, prec=info.emb_prec, format=format) | safe }}
-            </td>
-            <td rowspan="{{rowspan}}" class="op">
-              {{ newform.embedding_op(m, n, prec=info.emb_prec) | safe }}
-            </td>
-            <td rowspan="{{rowspan}}" class="nowrap imag">
-              {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
-            </td>
+            {% if newform.one_column_display %}
+              <td rowspan="{{rowspan}}" class="nowrap real">
+                {{ newform.embedding(m, n, prec=info.emb_prec, format=format) | safe }}
+              </td>
+            {% else %}
+              <td rowspan="{{rowspan}}" class="nowrap real">
+                {{ newform.embedding_re(m, n, prec=info.emb_prec, format=format) | safe }}
+              </td>
+              <td rowspan="{{rowspan}}" class="op">
+                {{ newform.embedding_op(m, n, prec=info.emb_prec) | safe }}
+              </td>
+              <td rowspan="{{rowspan}}" class="nowrap imag">
+                {{ newform.embedding_im(m, n, prec=info.emb_prec, format=format) | safe }}
+               </td>
+            {% endif %}
           {% endfor %} {# format in an_formats #}
           {% if rowspan == 2 %} {# if n is prime #}
            {% for i in [0,1] %}
@@ -182,7 +189,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
             <td class="op">
               {{ newform.satake_op(m,n,i) | safe }}
             </td>
-            <td class="imag">
+            <td class="nowrap imag">
               {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
             </td>
             <td class="nowrap right">
@@ -198,6 +205,6 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).
     </tbody>
   </table>
 </div>
-{{ render_display_options() }}
+{{ render_display_options("#coefficient_data") }}
 
 {% endblock %}

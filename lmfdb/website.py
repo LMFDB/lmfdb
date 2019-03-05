@@ -44,8 +44,6 @@ import ecnf
 assert ecnf
 import number_fields
 assert number_fields
-import lfunction_db
-assert lfunction_db
 import lfunctions
 assert lfunctions
 import genus2_curves

@@ -151,7 +151,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar531(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
         assert '/Character/Dirichlet/531/247' in W.data
-        assert '(356,235)' in W.data, "generators"
+        assert '(119,415)' in W.data, "generators"
         #assert 'Kloosterman sum' in W.data
         assert  '(\\zeta_{87})' in W.data, "field of values"
 

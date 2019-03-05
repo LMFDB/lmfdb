@@ -14,8 +14,11 @@ def kbarbar(weight):
 def analytic_conductor(level, weight):
     return level * kbarbar(weight)**2
 
-def check_analytic_conductor(level, weight, analytic_conductor_stored, threshold = 1e-12):
-    return (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
+def check_analytic_conductor(level, weight, analytic_conductor_stored, verbose=False, threshold = 1e-12):
+    success = (abs(analytic_conductor(level, weight) - analytic_conductor_stored)/analytic_conductor(level, weight)) < threshold
+    if not success and verbose:
+        print "Analytic conductor failure", analytic_conductor(level, weight), analytic_conductor_stored
+    return success
 
 @cached_function
 def level_attributes(level):
@@ -51,14 +54,26 @@ class MfChecker(TableChecker):
             query.pop(col, None)
         return query
 
-    def _check_level(self, rec):
-        # check level_* attributes (radical,primes,is_prime,...)
-        # 'level', 'level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square'
-        return [rec[elt] for elt in ['level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square']] == level_attributes(rec['level'])
+    def _check_level(self, rec, verbose=False):
+        """
+        check level_* attributes (radical,primes,is_prime,...)
+        """
+        attributes = ['level_radical', 'level_primes', 'level_is_prime', 'level_is_prime_power',  'level_is_squarefree', 'level_is_square']
+        stored = [rec[attr] for attr in attributes]
+        computed = level_attributes(rec['level'])
+        success = stored == computed
+        if not success and verbose:
+            for attr, a, b in zip(attributes, stored, computed):
+                if a != b:
+                    print attr, a, b
+        return success
 
     hecke_orbit_code = []
     @overall
     def check_hecke_orbit_code(self):
+        """
+        hecke_orbit_code is as defined
+        """
         if self.hecke_orbit_code != []:
             # test enabled
             assert len(self.hecke_orbit_code) == 2
@@ -78,17 +93,23 @@ class MfChecker(TableChecker):
 class SubspacesChecker(MfChecker):
     @overall
     def check_sub_mul_positive(self):
-        # sub_mult is positive
+        """
+        sub_mult is positive
+        """
         return self._run_query(SQL("{0} <= 0").format(Identifier('sub_mult')))
 
     @overall
     def check_sub_dim_positive(self):
-        # sub_mult is positive
+        """
+        sub_dim is positive
+        """
         return self._run_query(SQL("{0} <= 0").format(Identifier('sub_dim')))
 
     @overall
     def check_level_divides(self):
-        # check that sub_level divides level
+        """
+        check that sub_level divides level
+        """
         return self.check_divisible('level', 'sub_level')
 
 class TracesChecker(MfChecker):
@@ -97,5 +118,7 @@ class TracesChecker(MfChecker):
 
     @overall
     def check_total_count(self):
-        # check that hecke_orbit_code is present in mf_newforms
+        """
+        check that hecke_orbit_code is present in mf_newforms
+        """
         return self.check_count(1000 * self.base_table.count(self.base_constraint))

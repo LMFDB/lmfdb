@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import traceback, time, os, inspect, sys, shutil
+import traceback, time, os, inspect, sys
 from types import MethodType
 from datetime import datetime
 
@@ -42,6 +42,7 @@ class speed_decorator(object):
         self._kwds = kwds
         if f is not None:
             self.__name__ = f.__name__
+            self.__doc__ = f.__doc__
             for key, val in kwds.items():
                 setattr(self, key, val)
             if self.timeout is None:
@@ -112,7 +113,7 @@ class TableChecker(object):
     def speedtype(typ):
         if typ in ['overall', 'over']:
             return overall
-        elif typ == ['long', 'overall_long']:
+        elif typ in ['long', 'overall_long']:
             return overall_long
         elif typ == 'fast':
             return fast
@@ -140,15 +141,17 @@ class TableChecker(object):
             raise ValueError("Not a valid verification check")
         return MethodType(check, self, self.__class__), check.__class__
 
-    def get_total(self, check):
-        return int(self.table.count(check.constraint) * check.ratio)
+    def get_total(self, check, ratio):
+        if ratio is None: ratio=check.ratio
+        return int(self.table.count(check.constraint) * ratio)
 
-    def get_iter(self, check, label):
+    def get_iter(self, check, label, ratio):
+        if ratio is None: ratio = check.ratio
         projection = check.projection
         if self.label_col not in projection:
             projection = [self.label_col] + projection
         if label is None:
-            return self.table.random_sample(check.ratio, check.constraint, projection)
+            return self.table.random_sample(ratio, check.constraint, projection)
         else:
             constraint = dict(check.constraint)
             constraint[self.label_col] = label
@@ -174,7 +177,7 @@ class TableChecker(object):
             prog.write(msg)
         return 1
 
-    def _run_check(self, check, typ, label, file_handles):
+    def _run_check(self, check, typ, label, file_handles, ratio=None):
         start = time.time()
         prog, log, err = file_handles
         name = "%s.%s"%(self.__class__.__name__, check.__name__)
@@ -188,10 +191,10 @@ class TableChecker(object):
         check_timeouts = 0
         try:
             if issubclass(typ, per_row):
-                total = self.get_total(check)
+                total = self.get_total(check, ratio)
                 progress_interval = self.get_progress_interval(check, total)
                 try:
-                    search_iter = self.get_iter(check, label)
+                    search_iter = self.get_iter(check, label, ratio)
                 except Exception as error:
                     template = "An exception in {0} of type {1} occurred. Arguments:\n{2}"
                     message = template.format(name, type(error).__name__, '\n'.join(error.args))
@@ -206,7 +209,7 @@ class TableChecker(object):
                         check_success = check(rec)
                         row_time = time.time() - row_start
                         if not check_success:
-                            log.write('%s: %s\n'%(name, rec[self.label_col]))
+                            log.write('%s: %s failed test\n'%(name, rec[self.label_col]))
                             check_failures += 1
                             if check_failures >= check.max_failures:
                                 raise TooManyFailures
@@ -223,7 +226,7 @@ class TableChecker(object):
                 bad_labels = check()
                 if bad_labels:
                     for label in bad_labels:
-                        log.write('%s: %s\n'%(name, label))
+                        log.write('%s: %s failed test\n'%(name, label))
                     check_failures = len(bad_labels)
         except TimeoutError:
             check_timeouts += 1
@@ -254,9 +257,7 @@ class TableChecker(object):
         file_handles = sys.stdout, sys.stdout, sys.stdout
         start = time.time()
         checkfunc, typ = self.get_check(check)
-        if ratio is not None:
-            checkfunc.ratio = ratio
-        status = self._run_check(checkfunc, typ, label, file_handles)
+        status = self._run_check(checkfunc, typ, label, file_handles, ratio)
         reports = []
         for scount, sname in zip(status, ["failure", "error", "timeout", "abort"]):
             if scount:
@@ -267,20 +268,8 @@ class TableChecker(object):
     def run(self, typ, logdir, label=None):
         self._cur_label = label
         tname = "%s.%s" % (self.__class__.__name__, typ.shortname)
-        olddir = os.path.join(logdir, "old")
-        if not os.path.exists(olddir):
-            os.makedirs(olddir)
-        files = []
-        for suffix in ['.log', '.errors', '.progress', '.started', '.done']:
-            filename = os.path.join(logdir, tname + suffix)
-            if os.path.exists(filename):
-                n = 0
-                oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                while os.path.exists(oldfile):
-                    n += 1
-                    oldfile = os.path.join(olddir, tname + str(n) + suffix)
-                shutil.move(filename, oldfile)
-            files.append(filename)
+        files = [os.path.join(logdir, tname + suffix)
+                 for suffix in ['.log', '.errors', '.progress', '.started', '.done']]
         logfile, errfile, progfile, startfile, donefile = files
         checks = self.get_checks(typ)
         # status = failures, errors, timeouts, aborts
@@ -315,6 +304,15 @@ class TableChecker(object):
     #####################
     # Utility functions #
     #####################
+    def _test_equality(self, a, b, verbose, msg=None):
+        if a == b:
+            return True
+        if verbose:
+            if msg is None:
+                msg = "{0} != {1}"
+            print msg.format(a, b)
+        return False
+
     def _make_sql(self, s, tablename=None):
         """
         Create an SQL Composable object out of s.
@@ -655,13 +653,17 @@ class TableChecker(object):
     label_conversion = {}
     @overall
     def check_label(self):
-        # check that label matches self.label
+        """
+        check that label matches self.label
+        """
         if self.label is not None:
             return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
 
     uniqueness_constraints = []
     @overall
     def check_uniqueness_constraints(self):
-        # check that the uniqueness constraints are satisfied
+        """
+        check that the uniqueness constraints are satisfied
+        """
         constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
         return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]

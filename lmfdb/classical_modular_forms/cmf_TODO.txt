@@ -1,18 +1,11 @@
 OUTSTANDING VERIFICATIONS:
 
 Expected failures:
-+ (mf_newforms.check_analytic_rank_proved: 1158 failures)
++ (mf_newforms.check_analytic_rank_proved: 261 failures)
 
 IMPORTANT:
-* Add notes on provability/completeness to Artin image knowl (Drew)
-* rerun self twists disc
-* form 8064.2.j.g.575.9 displayin 0.0000 on qexp
-* add interesting new form with level > 4000
-* do not jump if at the top (embedded newform)
 
 FINAL CHECKS:
-* Update RCS knowls to match final data set (Drew)
-* Finalize announcement e-mail and PR (David)
 
 -------------------------- Pull Request Line -------------------------------------------------
 * Compute L-functions:
@@ -31,6 +24,7 @@ FINAL CHECKS:
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github
 * Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
+* Delete mf.elliptic.trace-expansion, update references to use mf.elliptic.trace_expansions
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
@@ -69,6 +63,7 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* if we are editing a knowl, when hitting cancel, shouldn't send you back to the search
 * on _record_count do not try to write if you don't have the permissions
 * after PR, reconvert nf_fields (as it will have new data), and do the swap
 * add to test.sh to verify '# -*- coding: utf-8 -*-
@@ -113,8 +108,11 @@ NOT CMF STUFF:
 * Saved queries for demos (cf checklist)
 * Do restats in different order (compute all counts then upload), and wipe counts if too many
 * Add indexes on counts and stats tables
+* Split up database.py into multiple files
+* Add rename_column method to database.py
 * Add regexps for labels to meta_tables and use them.
 * Switch from pyflakes to flake8
+* Fix json/array bug when deleting a knowl
 
 Style:
 * For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
