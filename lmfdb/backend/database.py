@@ -4421,8 +4421,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
     def _create_meta_constraints(self):
         with DelayCommit(self, silence=True):
             self._execute(SQL("CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"))
-            self.grant_select('meta_constraints_hist')
-        print("Table meta_constraints_hist created")
+            self.grant_select('meta_constraints')
+        print("Table meta_constraints created")
 
     def _create_meta_constraints_hist(self):
         with DelayCommit(self, silence=True):
