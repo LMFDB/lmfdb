@@ -1,32 +1,26 @@
 TASKS:
 
-Front end:
 * Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
-* Subtle indication on production site that knowls are awaiting review (at bottom)
-
-Back end:
-* Implement renaming: change the id for all instances in the table
-
-Data:
 * Switch from jsonb to text[]
+* review_recent interface (more padding between knowls, order by date?)
 
-Later:
+LATER:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
 * Delete kwl_history and kwl_deleted tables
 * For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
 * Update scripts that copy knowls to production
 
-It would be nice if:
+IT WOULD BE NICE IF:
 * Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
 * Add autosaves by updating an inprogress knowl record
 
 * When editing a knowl, use the all_defines property to find the name of a knowl that defines a particular keyword.  Maybe with a right click menu (google for context menu)
 
-* Some visual distinction between mathematical content and LMFDB-specific content
-
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
 * Add ability to search for knowls with comments
+
+* Some visual distinction between mathematical content and LMFDB-specific content
 
 * Search with wildcards (use tilde operator and a checkbox on the search; think about details)
 
@@ -34,6 +28,11 @@ Questions:
 * Confirmation when reviewing?
 * What should happen if someone tries to create a knowl with the same id as one that has been deleted?
 * Who should have permission to rename?
+* When reviewing a knowl from a page that includes it, successful reviewing will take you to the knowl show page.  Is this okay?
+* Note: if you set a knowl back to beta, you're still the reviewer, but the status is 0.
+* Is caveat on ids_referencing okay?
+* Renaming to an id that has been deleted?
+* Is the interface for renaming good (if so, delete the rename function)?
 
 SCHEMA MODIFICATIONS:
 

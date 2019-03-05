@@ -1,0 +1,21 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<table class="knowl_review">
+  {% for k in knowls %}
+  <tr>
+    <td>
+      <h2>{{ k.title or k.id }} (<code>{{ k.id }}</code>)</h2>
+      {{ k.rendered|safe }}
+    </td>
+  </tr>
+  <tr>
+    <td id="td_{{k.id}}">
+      Last edited by {{k.last_author()}} on {{ k.timestamp }} <br>
+      <a href="#" title="Mark reviewed" onclick="js_review_knowl({{k.id}}); return false;">Review</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

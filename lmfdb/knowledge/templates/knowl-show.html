@@ -33,6 +33,15 @@
 <div style="margin-top: 30px;">
   <strong>{{ 'Top' if k.type == 1 else 'Bottom' }} Knowl</strong> for <a href="/{{k.source}}">{{k.source_name}}</a>
 </div>
+{% elif k.type == 0 and k.referrers %}
+<div style="margin-top: 30px;">
+  <strong>Referred to by:</strong>
+  <ul>
+    {% for rid in k.referrers %}
+    <li>{{ KNOWL(rid, title=rid) }}</li>
+    {% endfor %}
+  </ul>
+</div>
 {% endif %}
 
 {% endblock %}

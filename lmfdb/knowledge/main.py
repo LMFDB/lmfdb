@@ -14,7 +14,7 @@
 import string
 import re
 import flask
-from lmfdb.app import app
+from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import render_template, render_template_string, request, url_for, make_response
 #from flask.ext.login import login_required, current_user
@@ -328,13 +328,13 @@ def edit(ID):
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
-    k = Knowl(ID)
+    k = Knowl(ID, showing=True)
     if k.exists():
         r = render(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
     else:
         if current_user.is_admin() and k.exists(allow_deleted=True):
-            k = Knowl(ID, allow_deleted=True)
+            k = Knowl(ID, showing=True, allow_deleted=True)
             r = render(ID, footer="0", raw=True, allow_deleted=True)
             title = (k.title or "'%s'" % k.id) + " (DELETED)"
         else:
@@ -400,6 +400,36 @@ def demote(ID):
     flask.flash("Knowl %s has been returned to beta." % ID)
     return flask.redirect(url_for(".show", ID=ID))
 
+@knowledge_page.route("/review_recent/<int:days>")
+@knowl_reviewer_required
+def review_recent(days):
+    knowls = knowldb.needs_review(days)
+    for k in knowls:
+        k.rendered = render(k.id, footer="0", raw=True, k=k)
+    b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
+    return render_template("knowl-review-recent.html",
+                           title="Reviewing %s days of knowls" % days,
+                           knowls=knowls,
+                           bread=b)
+
+@knowledge_page.route("/rename/<ID>/<NEWID>")
+@admin_required
+def rename(ID, NEWID):
+    k = Knowl(ID)
+    if not allowed_knowl_id.match(NEWID):
+        flask.flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
+        return flask.redirect(url_for(".edit", ID=ID))
+    try:
+        k.rename(NEWID)
+    except ValueError:
+        flask.flash("A knowl with id %s already exists." % NEWID, "error")
+        return flask.redirect(url_for(".edit", ID=ID))
+    else:
+        flask.flash("Knowl renamed to %s successfully." % NEWID)
+        return flask.redirect(url_for(".edit", ID=NEWID))
+
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
@@ -421,17 +451,35 @@ def save_form():
         return flask.redirect(url_for(".index"))
 
     k = Knowl(ID)
-    k.title = request.form['title']
-    k.content = request.form['content']
-    k.quality = request.form['quality']
-    k.timestamp = datetime.now()
-    k.status = 0
-    k.save(who=current_user.get_id())
+    new_title = request.form['title']
+    new_content = request.form['content']
+    if new_title != k.title or new_content != k.content:
+        k.title = new_title
+        k.content = new_content
+        k.timestamp = datetime.now()
+        k.status = 0
+        k.save(who=current_user.get_id())
+    NEWID = request.form.get('krename', '').strip()
+    if NEWID:
+        if not current_user.is_admin():
+            flask.flash("You do not have permissions to rename knowl", "error")
+        elif not allowed_knowl_id.match(NEWID):
+            flask.flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
+        else:
+            try:
+                k.rename(NEWID)
+            except ValueError:
+                flask.flash("A knowl with id %s already exists." % NEWID, "error")
+            else:
+                flask.flash("Knowl renamed to %s successfully." % NEWID)
+                ID = NEWID
     return flask.redirect(url_for(".show", ID=ID))
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
-def render(ID, footer=None, kwargs=None, raw=False, allow_deleted=False):
+def render(ID, footer=None, kwargs=None, raw=False, k=None, allow_deleted=False):
     """
     this method renders the given Knowl (ID) to insert it
     dynamically in a website. It is intended to be used
@@ -445,12 +493,13 @@ def render(ID, footer=None, kwargs=None, raw=False, allow_deleted=False):
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
     """
-    try:
-        k = Knowl(ID, allow_deleted=allow_deleted)
-    except Exception:
-        logger.critical("Failed to render knowl %s"%ID)
-        errmsg = "Sorry, the knowledge database is currently unavailable."
-        return errmsg if raw else make_response(errmsg)
+    if k is None:
+        try:
+            k = Knowl(ID, allow_deleted=allow_deleted)
+        except Exception:
+            logger.critical("Failed to render knowl %s"%ID)
+            errmsg = "Sorry, the knowledge database is currently unavailable."
+            return errmsg if raw else make_response(errmsg)
 
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
@@ -494,6 +543,7 @@ def render(ID, footer=None, kwargs=None, raw=False, allow_deleted=False):
 
     render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
 
+    review_status = ""
     if foot == "1":
         render_me += """\
   <div class="knowl-footer">
@@ -502,15 +552,21 @@ def render(ID, footer=None, kwargs=None, raw=False, allow_deleted=False):
       &middot;
       <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a>
     {%% endif %%}
+    %(review_status)s
   </div>"""
-    # """ &middot; Authors: %(authors)s """
+        # """ &middot; Authors: %(authors)s """
+        if k.status == 0 and not is_beta():
+            if current_user.is_knowl_reviewer():
+                review_status = """&middot; (<a onclick='return confirm("Mark as positively reviewed?");' href="{{ url_for('.review', ID='%(ID)s') }}">awaiting review</a>)""" % {'ID': k.id}
+            else:
+                review_status = """&middot; (awaiting review)"""
     render_me += "</div>"
     # render_me = render_me % {'content' : con, 'ID' : k.id }
     con = md_preprocess(con)
 
     # markdown enabled
-    render_me = render_me % {'content': md.convert(con), 'ID': k.id, 'kw_params': kw_params}
-                                                    #, 'authors' : authors }
+    render_me = render_me % {'content': md.convert(con), 'ID': k.id, 'review_status': review_status,
+                             'kw_params': kw_params} #, 'authors' : authors }
     # Pass the text on to markdown.  Note, backslashes need to be escaped for
     # this, but not for the javascript markdown parser
 
@@ -580,7 +636,6 @@ def index():
     #    knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
-    print knowl_type_code
     return render_template("knowl-index.html",
                            title="Knowledge Database",
                            bread=get_bread(),

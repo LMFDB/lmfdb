@@ -962,6 +962,13 @@ table.ntdata thead.dark tr {
 table.ntdata td.light {
     background: white;
 }
+
+table.knowl_review tr:nth-child(odd) {
+    background: {{color.white}};
+}
+table.knowl_review tr:nth-child(even) {
+    background: {{ color.table_ntdata_background_2 }};
+}
 table.euler {
     margin-left:auto;
     margin-right:auto;

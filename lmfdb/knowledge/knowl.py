@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 
@@ -276,12 +276,67 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls2 SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
+    def needs_review(self, days):
+        now = datetime.utcnow()
+        tdelta = timedelta(days=days)
+        time = now - tdelta
+        fields = ['id'] + self._default_fields
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s ORDER BY id, timestamp DESC) knowls WHERE status = 0").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time])
+        return [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+
+    def ids_referencing(self, knowlid, old=False):
+        """Returns all ids that reference the given one.
+
+        Note that if running on prod, and the reviewed version of a knowl doesn't
+        reference knowlid but a more recent beta version does, it will be included
+        in the results even though the displayed knowl will not include a reference.
+
+        INPUT:
+
+        - ``knowlid`` a knowl id in the database
+        - ``old`` whether to include knowls that used to reference this one, but no longer do.
+        """
+        if old:
+            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE links @> %s")
+            values = [[knowlid]]
+        else:
+            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+            values = [0, [knowlid]]
+        cur = self._execute(selecter, values)
+        return [rec[0] for rec in cur]
+
+    def rename(self, knowl, new_name):
+        # We check that there are no knowls with this name, but calling function should check that name is valid knowl name
+        if self.knowl_exists(new_name):
+            raise ValueError("%s already exists"%new_name)
+        with DelayCommit(self):
+            updator = SQL("UPDATE kwl_knowls2 SET id = %s WHERE id = %s")
+            self._execute(updator, [new_name, knowl.id])
+            referrers = self.ids_referencing(knowl.id, old=True)
+            updator = SQL("UPDATE kwl_knowls2 SET content = regexp_replace(content, %s, %s, %s) WHERE id = ANY(%s)")
+            values = [r"""['"]\s*{0}\s*['"]""".format(knowl.id.replace('.', r'\.')),
+                      "'{0}'".format(new_name), 'g', referrers] # g means replace all
+            self._execute(updator, values)
+            updator = SQL("UPDATE kwl_knowls2 SET links = array_replace(links, %s, %s) WHERE id = ANY(%s)")
+            self._execute(updator, [knowl.id, new_name, referrers])
+            if knowl.id in self.cached_titles:
+                self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
+            knowl.id = new_name
+
+    def rename_hyphens(self):
+        selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
+        bad_names = [rec[0] for rec in db._execute(selecter, ['%-%'])]
+        for kid in bad_names:
+            new_kid = kid.replace('-', '_')
+            print "Renaming %s -> %s" % (kid, new_kid)
+            self.rename(kid, new_kid)
+
     def is_locked(self, knowlid, delta_min=10):
         """
         if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
         attention, it discards all locks prior to @delta_min!
         """
-        from datetime import datetime, timedelta
         now = datetime.utcnow()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
@@ -335,20 +390,30 @@ reverse_status_code = {v:k for k,v in knowl_status_code.items()}
 knowl_type_code = {'annotations': 1, 'normal': 0}
 
 class Knowl(object):
-    def __init__(self, ID, template_kwargs=None, editing=False, allow_deleted=False):
-        """
-        template_kwars is the list of additional parameters that
+    """
+    INPUT:
+
+    - ``ID`` -- the knowl id
+    - ``template_kwars`` - the list of additional parameters that
         are passed into the knowl the point where the knowl is
         included in the template.
-        """
+    - ``data`` -- (optional) the dictionary from knowldb with the data for this knowl
+    - ``editing`` -- whether this knowl is being displayed in the edit template
+        (controls whether edit_history is computed)
+    - ``showing`` -- whether this knowl is being displayed in the show template
+        (controls whether referrers is computed)
+    - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
+    """
+    def __init__(self, ID, template_kwargs=None, data=None, editing=False, showing=False, allow_deleted=False):
         self.template_kwargs = template_kwargs or {}
 
         self.id = ID
         #given that we cache it's existence it is quicker to check for existence
-        if self.exists(allow_deleted=allow_deleted):
-            data = knowldb.get_knowl(ID, allow_deleted=allow_deleted)
-        else:
-            data = {}
+        if data is None:
+            if self.exists(allow_deleted=allow_deleted):
+                data = knowldb.get_knowl(ID, allow_deleted=allow_deleted)
+            else:
+                data = {}
         self.title = data.get('title', '')
         self.content = data.get('content', '')
         self.status = data.get('status', 0)
@@ -362,8 +427,11 @@ class Knowl(object):
         self.type = data.get('type', 0)
         self.source = data.get('source')
         self.source_name = data.get('source_name')
-        self.reviewer = data.get('reviewer')
-        self.review_timestamp = data.get('review_timestamp')
+        #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
+        #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
+
+        if showing and self.type == 0:
+            self.referrers = knowldb.ids_referencing(ID)
         if editing:
             self.edit_history = knowldb.get_edit_history(ID)
 
@@ -381,6 +449,9 @@ class Knowl(object):
     def review(self, who, set_beta=False):
         """Mark the knowl as positively reviewed."""
         knowldb.review(self, who, set_beta)
+
+    def rename(self, new_name):
+        knowldb.rename(self, new_name)
 
     def author_links(self):
         """
