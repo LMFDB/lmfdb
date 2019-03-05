@@ -806,6 +806,7 @@ def download(args):
 #   Render functions, plotting L-function and displaying zeros
 ################################################################################
 def render_plotLfunction_from_db(db, dbTable, label):
+    print db, dbTable, label
     data_location = os.path.expanduser(
         "~/data/lfunction_plots/{0}.db".format(db))
 
@@ -814,15 +815,18 @@ def render_plotLfunction_from_db(db, dbTable, label):
         # function can catch it and fall back to normal plotting
         # when the database does not exist or doesn't have the
         # plot. This seems like a reasonable exception to raise.
+        print "KeyError"
         raise KeyError
 
     try:
+        print "try"
         db = sqlite3.connect(data_location)
         with db:
             cur = db.cursor()
             query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable)
-            cur.execute(query, label)
+            cur.execute(query, (label,))
             row = cur.fetchone()
+            print row
 
         db.close()
 
