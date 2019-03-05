@@ -174,6 +174,26 @@ def nf_lookup(label):
     nf_lookup_table[label] = K
     return K
 
+def nf_lookup_all():
+    for f in nfcurves.disctinct('field_label'):
+        nf_lookup(f)
+
+def write_all_fields():
+    ffile = open("ecnf_fields",'w')
+    for f in sorted(nf_lookup_table.keys()):
+        ffile.write(" ".join([f,str(nf_lookup_table[f].defining_polynomial().list()).replace(' ','')])+"\n")
+    ffile.close()
+
+def read_all_fields(ffilename):
+    ffile = open(ffilename)
+    for line in ffile.readlines():
+        label, coeffs = line.split()
+        coeffs = [ZZ(c) for c in coeffs[1:-1].split(",")]
+        gen_name = special_names.get(label,'a')
+        K = NumberField(PolynomialRing(QQ, 'x')(coeffs), gen_name)
+        #print "The field with label %s is %s" % (label, K)
+        nf_lookup_table[label] = K
+
 from lmfdb.nfutils.psort import ideal_label
 
 the_labels = {}
