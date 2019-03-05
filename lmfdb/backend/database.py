@@ -217,6 +217,8 @@ class DelayCommit(object):
         self.obj._silenced = self._orig_silenced
         if exc_type is None and self.obj._nocommit_stack == 0 and self.final_commit:
             self.obj.conn.commit()
+        if exc_type is not None:
+            self.obj.conn.rollback()
 
 class PostgresBase(object):
     """
