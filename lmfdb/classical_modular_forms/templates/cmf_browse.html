@@ -10,15 +10,11 @@ Info was: {{info}}
 {% endif %}
 
 <div>
-{{ KNOWL_INC('dq.mf.elliptic.extent') }}
-</div>
-
-<div>
 {{ info.stats.short_summary | safe }}
 </div>
 
-<h2> Browse <a href="./stats">statistics</a> </h2>
-<h2> Browse {{ KNOWL('mf.elliptic',title='classical modular forms')}}</h2>
+<h2> Browse <a href="./stats">statistics</a> or <a href="./dynamic_stats">create your own</a> </h2>
+<h2> Browse {{ KNOWL('mf.elliptic',title='newforms')}}</h2>
 
 <p>
   By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
@@ -32,36 +28,55 @@ Info was: {{info}}
   <a href="?level={{level}}">{{level}}</a>&nbsp;
   {% endfor %}
 </p>
-<p>
-  Using a <a href="?search_type=Dimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=Dimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
-</p>
-<p>
-  As a <a href="?search_type=Spaces&dim=1-">list</a> of {{ KNOWL('mf.elliptic.newspaces', title='spaces of newforms') }}</a>
-</p>
 
+{% for sublist in info.newform_list %}
 <p>
+  {% if loop.index == 1 %}
   Some interesting newforms:
-  {% for newform in info.newform_list %}
-  <a href = "{{ newform.url }}"> {{ newform.label}} </a>&nbsp;
+  {% endif %}
+  {% for newform in sublist %}
+  <a href="{{ newform.url }}" title="{{ newform.reason }}"> {{ newform.label}} </a>&nbsp;
   {% endfor %}
 </p>
-
-<p>
-  Some interesting spaces:
-  {% for space in info.space_list %}
-  <a href = "{{ space.url }}"> {{ space.label}} </a>&nbsp;
-  {% endfor %}
-</p>
+{% endfor %}
 
 <p>
   A <a href="?search_type=Dimensions&dim=1">table</a> of newforms with rational {{ KNOWL('mf.elliptic.q-expansion', title='\(q\)-expansion') }}
 </p>
 
+<h2> Browse {{ KNOWL('mf.elliptic',title='newspaces')}}</h2>
+
 <p>
-  A <a href={{url_for('.random_form')}}>random newform</a> from the database
+  By {{ KNOWL('mf.elliptic.weight',title = "weight")}}:
+  {% for weight in info.weight_list %}
+  <a href="?search_type=Spaces&weight={{weight}}">{{weight}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{ KNOWL('mf.elliptic.level', title="level")}}:
+  {% for level in info.level_list %}
+  <a href="?search_type=Spaces&level={{level}}">{{level}}</a>&nbsp;
+  {% endfor %}
 </p>
 
-<h2> Find a specific newform or space by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
+<p>
+Create a <a href = "?search_type=Spaces">search</a> for newspaces,
+ a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
+</p>
+
+{% for sublist in info.space_list %}
+<p>
+  {% if loop.index == 1 %}
+  Some interesting newspaces:
+  {% endif %}
+  {% for space in sublist %}
+  <a href = "{{ space.url }}" title="{{ space.reason }}"> {{ space.label}} </a>&nbsp;
+  {% endfor %}
+</p>
+{% endfor %}
+
+
+<h2> Find a specific newform or newspace by {{ KNOWL('mf.elliptic.label', title='label')}} </h2>
 
 <form>
 <input type='text' name='jump' placeholder='3.6.1.a'>
@@ -76,19 +91,28 @@ Info was: {{info}}
   <table>
     <tr>
 
-      <td colspan=2>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-      <td><input type='text' style="width: 130px;" name='level' placeholder='4'></td>
+      <td>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
+      <td>
+        <select name='level_type' style="width: 105px;">
+          <option value="">unrestricted</option>
+          <option value="prime">prime</option>
+          <option value="prime_power">prime power</option>
+          <option value="square">square</option>
+          <option value="squarefree">squrefree</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='level' placeholder='4'></td>
       <td><span class="formexample"> e.g. 4, 1-20</td>
-      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
 
+      <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
       <td>
         <select class="simult_select" name="weight_parity" onchange="simult_change(event);">
-          <option></option>
+          <option value="">any parity</option>
           <option value="even">even only</option>
           <option value="odd">odd only</option>
         </select>
       </td>
-      <td><input type='text' style="width: 130px;" name='weight' placeholder='2'></td>
+      <td><input type='text' style="width: 160px;" name='weight' placeholder='2'></td>
       <td><span class="formexample"> e.g. 2, 4-8 </span></td>
     </tr>
 
@@ -97,84 +121,92 @@ Info was: {{info}}
         {{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
       </td>
       <td>
-        <select name='prime_quantifier'>
+        <select name='prime_quantifier' style="width: 105px;">
           <option value='subsets'>subset of</option>
           <option value='' selected='yes'>equal to</option>
           <option value='append'>superset of</option>
         </select>
       </td>
-      <td><input type='text' name='level_primes' example='2,3' style="width: 130px"></td>
+      <td><input type='text' name='level_primes' example='2,3' style="width: 160px"></td>
       <td><span class="formexample"> e.g. 2,3</span></td>
 
 
       <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
       <td>
         <select class="simult_select" name="char_parity" onchange="simult_change(event);">
-          <option></option>
+          <option value="">any parity</option>
           <option value="even">even only</option>
           <option value="odd">odd only</option>
         </select>
       </td>
-      <td><input type='text' style="width: 130px;" name='char_label' placeholder='20.d'></td>
+      <td><input type='text' style="width: 160px;" name='char_label' placeholder='20.d'></td>
       <td><span class="formexample"> e.g. 20.d </td>
     </tr>
 
     <tr>
       <td colspan=2>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
-      <td><input type='text' style="width: 130px;" name='char_order' placeholder='1'></td>
+      <td><input type='text' style="width: 160px;" name='char_order' placeholder='1'></td>
       <td><span class="formexample"> e.g. 1, 2-4</td>
 
       <td colspan=2>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
-      <td><input type='text' style="width: 130px;" name='prim_label' placeholder='1.a'></td>
+      <td><input type='text' style="width: 160px;" name='prim_label' placeholder='1.a'></td>
       <td><span class="formexample"> e.g. 1.a </td>
 
     </tr>
 
     <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Dimension') }}</td>
-      <td><input type='text' style="width: 130px;" name='dim' placeholder='1'></td>
+      <td colspan>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}</td>
+      <td>
+        <select name="dim_type" style="min-width: 105px;">
+          <option value="">absolute</option>
+          <option value="rel">relative</option>
+        </select>
+      </td>
+      <td><input type='text' style="width: 160px;" name='dim' placeholder='1'></td>
       <td><span class="formexample"> e.g. 2, 1-6 </span></td>
 
       <td colspan=2>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
-      <td><input type='text' style="width: 130px;" name='nf_label' placeholder='1.1.1.1'></td>
+      <td><input type='text' style="width: 160px;" name='nf_label' placeholder='1.1.1.1'></td>
       <td><span class="formexample"> e.g. 4.0.144.1, Qsqrt5 </span></td>
     </tr>
 
     <tr>
       <td colspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
-      <td><input type='text' style="width: 130px;" name='analytic_conductor' placeholder='47'></td>
-      <td><span class="formexample"> e.g. 47, 500-1000</span></td>
-      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
-      <td><input type='text' style="width: 130px;" name='analytic_rank' placeholder='1'></td>
-      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+      <td><input type='text' style="width: 160px;" name='analytic_conductor' placeholder='1-10'></td>
+      <td><span class="formexample"> e.g. 1-10</span></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
+      <td><input type='text' style="width: 160px;" name='Nk2' placeholder='40-100'></td>
+      <td><span class="formexample"> e.g. 40-100</span></td>
     </tr>
 
     <tr>
-      <td colspan=2 rowspan=2 >{{ KNOWL('mf.elliptic.self_twist', title='Has self-twist') }}</td>
-      <td rowspan=2 >
-        <select name='has_self_twist' style="width: 140px;">
-          {% set self_twist_values = [('', 'unrestricted'), ('yes', 'has self-twist'), ('cm', 'has CM'), ('rm', 'has RM'), ('cm_and_rm', 'has CM and RM'), ('no', 'no self-twists') ] %}
-          {% for val, text in self_twist_values %}
-          <option value="{{ val }}">{{ text }}</option>
-          {% endfor %}
-        </select>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='Self-twists') }}</td>
+      <td>
+        <div class="float-left">
+          <select name='cm' style="min-width: 80px;">
+            {% for val, text in [('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="float-right">
+          <select name='rm' style="min-width: 80px;">
+            {% for val, text in [('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')] %}
+            <option value="{{ val }}">{{ text }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </td>
-      <td rowspan=2>
-      </td>
-      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='cm_discs' placeholder='-3'></td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='CM/RM discriminant')}}</td>
+      <td><input type='text' style="width: 160px;" name='self_twist_discs' placeholder='-3'></td>
       <td><span class="formexample"> e.g. -3 </span></td>
-    </tr>
-    <tr>
-      <td colspan=2>{{ KNOWL('mf.elliptic.self_twist', title='RM discriminant')}}</td>
-      <td><input type='text' style="width: 130px;" name='rm_discs' placeholder='5'></td>
-      <td><span class="formexample"> e.g. 5 </span></td>
     </tr>
 
     <tr>
       {#
       <td colspan=2>{{ KNOWL('mf.elliptic.minimal', title='Twist minimal') }}</td>
-      <td><select name='is_twist_minimal' style="width: 140px;">
+      <td><select name='is_twist_minimal' style="width: 170px;">
           <option ></option>
           <option value='True'>Yes</option>
           <option value='False'>No</option>
@@ -182,21 +214,14 @@ Info was: {{info}}
       </td>
       <td></td>
       #}
-      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist', title='Has inner twist') }}</td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.inner_twist_count', title='Inner twist count*') }}</td>
       <td>
-        <select name='has_inner_twist' style="width: 140px">
-          <option value="" selected>unrestricted</option>
-          <option value="yes">yes</option>
-          <option value="not_no">yes or unknown</option>
-          <option value="unknown">unknown</option>
-          <option value="not_yes">no or unknown</option>
-          <option value="no">no</option>
-        </select>
+        <input type='text' style="width: 160px;" name='inner_twist_count' placeholder='1-'></td>
       </td>
-      <td></td>
-      <td colspan=2>{{ KNOWL('lfunction.self-dual', title='Is self dual') }}</td>
+      <td><span class="formexample"> e.g. 0, 1-, 2-3</span></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.selfdual', title='Is self-dual') }}</td>
       <td>
-        <select name='is_self_dual' style="width: 140px;">
+        <select name='is_self_dual' style="width: 170px;">
           {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
           {% for val, text in is_self_dual_values %}
           <option value="{{ val }}">{{ text }}</option>
@@ -206,17 +231,40 @@ Info was: {{info}}
     </tr>
 
     <tr>
-      <td align=left colspan=2>Newforms to display</td>
-      <td><input type='text' style="width: 130px;" name='count' value=50></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.analytic_rank',title='Analytic rank') }}</td>
+      <td><input type='text' style="width: 160px;" name='analytic_rank' placeholder='1'></td>
+      <td><span class="formexample"> e.g. 1, 2-4</span></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
+      <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15'></td>
+      <td><span class="formexample"> wt. 1 only</span></td>
+    <td>
+    <tr>
+      <td align=left colspan=2>Results to display</td>
+      <td><input type='text' style="width: 160px;" name='count' placeholder='50'></td>
+      <td></td>
+      <td colspan=2>{{ KNOWL('mf.elliptic.projective_image', title='Projective image type') }}</td>
+      <td>
+        <select name='projective_image_type' style="width: 170px;">
+          {% set projective_image_type_values = [('', 'unrestricted'), ('Dn', 'Dn'), ('A4', 'A4'), ('S4', 'S4'), ('A5','A5')] %}
+          {% for val, text in projective_image_type_values %}
+          <option value="{{ val }}"{% if info.projective_image_type == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td><span class="formexample">wt. 1 only</span></td>
     </tr>
   </table>
-  <p>
-    <button type='submit' name='search_type' value='List'>List forms</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Spaces'>List spaces</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Dimensions'>Dimension Table</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Traces'>Traces Table</button> &nbsp; &nbsp;
-    <button type='submit' name='search_type' value='Random'>Random</button>
-  </p>
+  <br>
+  <table>
+    {% for knowl, ktitle, buttons in [('mf.elliptic.newform', 'Newforms', [('List', 'List of forms'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random form')])] %}
+    <tr>
+      <td>Display: </td>
+      {% for type, desc in buttons %}
+      <td class="button"><button type='submit' name='search_type' value='{{type}}' style="width: 170px;">{{desc}}</button></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
 </form>
 
 

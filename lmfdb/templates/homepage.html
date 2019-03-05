@@ -173,7 +173,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or origins or friends or downloads or learnmore) %}
+{% if (properties2 or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -194,7 +194,7 @@
               {{c|safe}}</td></tr>
            {%- endfor %}
          {%- endif %}
-       {%- endfor %} 
+       {%- endfor %}
       </table>
       </div>
     {% endif %}
@@ -202,28 +202,14 @@
    {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Instances", Linstances) }}
    {{ rightnavig("Related objects", friends) }}
-
-   {% block more_props %}{% endblock %}
-   {% if navi %}
-       {{ neighbors("Nearby objects", navi) }}
-   {% endif %}
-
-   {% if downloads %}
-     {{ rightnavig("Downloads", downloads) }}
-   {% endif %}
-
+   {{ rightnavig("Origins of factors", factors_origins) }}
+   {{ neighbors("Nearby objects", navi) }}
+   {{ rightnavig("Downloads", downloads) }}
    {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
 
 <div id="main">
-  {# <div id="mathjax-info">
-    <img src="{{ url_for('static', filename='images/progress-green.gif') }}" />
-    <br/>
-    Loading website and processing LaTeX ...
-    <br>
-    <span id="mathjax-log"></span>
-  </div> #} 
   <div id="content">
     {% with msgs = get_flashed_messages(with_categories=true) -%}
       <div id="flashes">

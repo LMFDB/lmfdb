@@ -2,7 +2,7 @@ import lmfdb_inventory as inv
 import inventory_db_core as idc
 import datetime
 from scrape_frontend import get_scrape_progress
-from lmfdb.db_backend import db
+from lmfdb import db
 
 #Max time before scrape is considered to have failed
 DEFAULT_MAX_TIME = 6

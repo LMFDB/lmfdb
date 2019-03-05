@@ -4,7 +4,7 @@
 
 <p>
 The LMFDB consists of {{ info.ntables }} tables containing a total of {{info.nobjects}} objects.
-The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{info.indexSize}} MB is indexes.
+The total size is {{info.size}} MiB, of which {{info.dataSize}} MiB is data and {{info.indexSize}} MiB is indexes.
 </p>
 
 <form>
@@ -14,7 +14,7 @@ The total size is {{info.size}} MB, of which {{info.dataSize}} MB is data and {{
 Minimum size:&nbsp;
 <select name='minsize'>
 {% for s in info.minsizes %}
-  {% if s == info.minsize %} <option value="{{s}}" selected >{{s}} MB</option> {% else %} <option value="{{s}}">{{s}} MB</option>{% endif %}
+  {% if s == info.minsize %} <option value="{{s}}" selected >{{s}} MiB</option> {% else %} <option value="{{s}}">{{s}} MiB</option>{% endif %}
 {% endfor %}
 </select>
 </td>
@@ -40,16 +40,16 @@ Sort by:&nbsp;
 </form>
 
 <p>
-The table below lists all collections that are larger than {{info.minsize}} MB, sorted by {{info.sortby}}.
+The table below lists all collections that are larger than {{info.minsize}} MiB, sorted by {{info.sortby}}.
 </p>
 
 <table id="stats" class="ntdata" cellspacing="0" width="100%">
 <thead>
 <tr>
   <th>Table</th>
-  <th>Size (MB)</th>
-  <th>Data (MB)</th>
-  <th>Index (MB)</th>
+  <th>Size (MiB)</th>
+  <th>Data (MiB)</th>
+  <th>Index (MiB)</th>
   <th>Objects</th>
   <th>Average Size (B)</th>
 </tr>

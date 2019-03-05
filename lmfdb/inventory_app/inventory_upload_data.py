@@ -2,7 +2,7 @@ import lmfdb_inventory as inv
 import inventory_db_core as invc
 import inventory_live_data as ild
 import datetime
-from lmfdb.db_backend import db
+from lmfdb import db
 
 #TODO this should log to its own logger
 #Routines to upload data from reports scan into inventory DB

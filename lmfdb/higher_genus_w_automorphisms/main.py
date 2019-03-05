@@ -3,20 +3,18 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
-import StringIO
-import re
-import ast
-import yaml
-import os
-from lmfdb.db_backend import db
-from flask import render_template, request, url_for, redirect, send_file, abort
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
-from lmfdb.search_wrapper import search_wrap
+import ast, os, re, StringIO, yaml
 
+from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+
+from lmfdb import db
+from lmfdb.utils import (
+    flash_error,
+    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    search_wrap)
 from lmfdb.sato_tate_groups.main import sg_pretty
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
@@ -126,7 +124,7 @@ def index():
         return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = range(2,genus_max+1)
-    info = {'count': 20,
+    info = {'count': 50,
             'genus_list': genus_list,
             'stats': HGCWAstats().stats(),}
 
@@ -394,7 +392,7 @@ def higher_genus_w_automorphisms_postprocess(res, info, query):
              table=db.hgcwa_passports,
              title='Families of Higher Genus Curves with Automorphisms Search Results',
              err_title='Families of Higher Genus Curve Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':higher_genus_w_automorphisms_jump},
              longcuts={'download_magma':(lambda res, info, query: hgcwa_code_download_search(res,'magma')),
                        'download_gap':(lambda res, info, query: hgcwa_code_download_search(res,'gap'))},

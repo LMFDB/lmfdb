@@ -2,23 +2,20 @@
 r""" Functions to add ranks and generators to elliptic curves in the
 database by outputting a Magma script and parsing its output """
 
-import os.path
-import os
-import pymongo
-from lmfdb.ecnf.WebEllipticCurve import ECNF
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-C['admin'].authenticate('lmfdb', 'lmfdb')
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
+# 2019-02-27: converted to work with the postgres database (JEC)
+
+from lmfdb import db
+
 print "setting nfcurves and qcurves"
-nfcurves = C.elliptic_curves.nfcurves
-qcurves = C.elliptic_curves.curves
+nfcurves = db.ec_nfcurves
+qcurves = db.ec_curves
+
+from sage.all import EllipticCurve
+#from lmfdb.number_fields.web_number_field import WebNumberField
+from scripts.ecnf.import_ecnf_data import nf_lookup
+from scripts.ecnf.import_utils import make_curve_data_line
+from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
+#from lmfdb.backend.encoding import LmfdbRealLiteral, RealEncoder
 
 def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
     r"""
@@ -84,8 +81,7 @@ def map_points(maps, source, Plist, verbose=False):
 
     We assume that the original points are saturated; after mapping
     under a p-isogeny theimages may not be p-saturated so additional
-    p-saturation is done.  This requires Sage version 6.9 (pending) or
-    the working branch at http://trac.sagemath.org/ticket/8829.
+    p-saturation is done.
     """
     ncurves = len(maps)
     if ncurves == 1:
@@ -95,19 +91,21 @@ def map_points(maps, source, Plist, verbose=False):
     if len(Plist) == 0:
         return Qlists
     nfill = 1
-    # print("Qlists = %s" % Qlists)
+    print("Qlists = %s" % Qlists)
+
     # while True: // OK if input satisfies the conditions, but otherwise would loop for ever
     for nstep in range(ncurves):  # upper bound for number if iterations needed
         for i in range(ncurves):
             for j in range(ncurves):
                 if Qlists[i] != [] and (maps[i][j] != 0) and Qlists[j] == []:
-                    # print("Mapping from %s to %s at step %s" % (i,j,nstep))
+                    print("Mapping from %s to %s at step %s" % (i,j,nstep))
                     phi = maps[i][j]
                     p = phi.degree()  # a prime
                     Qlists[j] = [maps[i][j](P) for P in Qlists[i]]
                     # now do p-saturation (if possible)
                     try:
                         E = Qlists[j][0].curve()
+                        print("About to call E.saturation(pts, one_prime=p) with E = {}, pts = {} and p={}".format(E,Qlists[j],p))
                         pts, index, reg = E.saturation(Qlists[j], one_prime=p)
                         if index > 1:
                             Qlists[j] = E.lll_reduce(pts)[0]
@@ -118,7 +116,7 @@ def map_points(maps, source, Plist, verbose=False):
                                 print("image points on curve %s already %s-saturated" % (j, p))
                     except AttributeError:
                         print("Unable to %s-saturate, use a newer Sage version!" % p)
-                    # print("...now Qlists = %s" % Qlists)
+                    print("...now Qlists = %s" % Qlists)
                     nfill += 1
                     if nfill == ncurves:
                         return Qlists
@@ -142,10 +140,16 @@ def MWInfo_class(Cl, HeightBound=None, test_saturation=False, verbose=False):
     # adiscs = [E.discriminant().norm().abs() for E in Cl.curves]
     # print("Abs disc list: %s" % adiscs)
     ss = [len(str(E.ainvs())) for E in Cl.curves]
+    print("string lengths of curves in class: {}".format(ss))
     source = ss.index(min(ss))
+    print("source # = {}".format(source))
+    E = Cl.curves[source]
     if verbose:
-        print("Using curve %s to find points" % list(Cl.curves[source].ainvs()))
-    MWI = MWShaInfo(Cl.curves[source], HeightBound=HeightBound, test_saturation=test_saturation, verbose=verbose)[:2]  # ignore Sha part
+        print("Using curve %s to find points" % list(E.ainvs()))
+    MWI = MWShaInfo(E, HeightBound=HeightBound, test_saturation=test_saturation, verbose=verbose)[:2]  # ignore Sha part
+    if verbose:
+        print("MWShaInfo returns {}".format(MWI))
+        print("Isogeny matrix:\n{}".format(Cl.isogenies()))
     return [[MWI[0], pts] for pts in map_points(Cl.isogenies(), source, MWI[1], verbose)]
 
 
@@ -179,14 +183,17 @@ def MWInfo_curves(curves, HeightBound=None, test_saturation=False, verbose=False
 
     INPUT:
 
-    - Cl: an isogeny class
+    - curves: a list of elliptic curves in a complete isogeny class
 
     OUTPUT:
 
-    A list of pairs [rank_bounds, gens], one for each class.
+    A pair [rank_bounds, gens], with gens a list of lists of gens, one for each curve.
     """
+    print("MWInfo_curves with curves {}".format([E.ainvs() for E in curves]))
     Cl = curves[0].isogeny_class()
+    print("curves in recomputed class: {}".format([E.ainvs() for E in Cl]))
     MWI = MWInfo_class(Cl, HeightBound=HeightBound, test_saturation=test_saturation, verbose=verbose)
+    print("MWInfo_class on this class: {}".format(MWI))
     # Now we must map the points to the correct curves!
 
     n = len(Cl.curves)
@@ -203,12 +210,17 @@ def MWInfo_curves(curves, HeightBound=None, test_saturation=False, verbose=False
     return fixed_MWI
 
 
-def encode_point(P):
+def old_encode_point(P):
     r"""
-    Converts a list of points into a list of lists of 3 lists of d lists of strings
+    Converts a point [x,y,z] into a 3-list of d-lists of strings
     """
     return [[str(x) for x in list(c)] for c in list(P)]
 
+def encode_point(P):
+    r"""
+    Converts a point into a string encoding a 3-list of d-lists of rationals
+    """
+    return str([list(c) for c in list(P)]).replace(" ","")
 
 def encode_points(Plist):
     r"""
@@ -216,15 +228,21 @@ def encode_points(Plist):
     """
     return [encode_point(P) for P in Plist]
 
+def make_curve(dbCurve):
+    nf = nf_lookup(dbCurve['field_label'])
+    ainvs = parse_ainvs(nf,dbCurve['ainvs'])
+    return EllipticCurve(ainvs)
 
-def get_generators(field, iso_class, test_saturation=False, verbose=False, store=False):
-    r""" Retrieves the curves in the isogeny class from the database, finds
+def get_generators(field, iso_class, test_saturation=False, verbose=False, store=False, curve_data_file=None):
+    r"""
+    Retrieves the curves in the isogeny class from the database, finds
     their ranks (or bounds) and generators, and optionally stores the
-    result back in the database.  """
-    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
+    result back in the database and/or outputs to a curve_data file.
+    """
+    res = nfcurves.search({'field_label': field, 'short_class_label': iso_class})
     if not res:
         raise ValueError("No curves in the database ovver field %s in class %s" % (field, iso_class))
-    Es = [ECNF(e).E for e in res]
+    Es = [make_curve(e) for e in res]
     if verbose:
         print("Curves in class %s: %s" % (iso_class, [E.ainvs() for E in Es]))
     mwi = MWInfo_curves(Es, HeightBound=2, test_saturation=test_saturation, verbose=verbose)
@@ -236,27 +254,38 @@ def get_generators(field, iso_class, test_saturation=False, verbose=False, store
     # We find the curves again, since the cursor times out after 10
     # miniutes and finding the generators can take longer than that.
 
-    res = nfcurves.find({'field_label': field, 'short_class_label': iso_class})
-    for e, mw in zip(res, mwi):
+    res = nfcurves.search({'field_label': field, 'short_class_label': iso_class})
+    for e, E, mw in zip(res, Es, mwi):
+        label = e['label']
         data = {}
         data['rank_bounds'] = [int(r) for r in mw[0]]
         if mw[0][0] == mw[0][1]:
             data['rank'] = int(mw[0][0])
-        data['gens'] = encode_points(mw[1])
+        gens = mw[1]
+        data['gens'] = encode_points(gens)
+        data['heights'] = [str(P.height()) for P in gens]
+        data['reg'] = E.regulator_of_points(gens)
         if verbose:
-            print("About to update %s using data %s" % (e['label'], data))
+            print("About to update curve {} using data {}".format(label, data))
         if store:
-            nfcurves.update(e, {'$set': data}, upsert=True)
+            nfcurves.upsert({'label':label}, data)
         else:
             if verbose:
-                print("(not done, dummy run)")
+                print("(database unchanged, dummy run)")
+        if curve_data_file:
+            e.update(data)
+            line = make_curve_data_line(e)
+            if verbose:
+                print("curve_data line: {}".format(line))
+            curve_data_file.write(line + "\n")
 
-
-def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_saturation=False, verbose=False, store=False):
-    r""" Retrieves curves from the database defined over the given field,
+def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_saturation=False, verbose=False, store=False, write_curve_data=False):
+    r"""
+    Retrieves curves from the database defined over the given field,
     with conductor norm between given bounds (optional), finds their
     ranks (or bounds) and generators, and optionally stores the result
-    back in the database.  """
+    back in the database and/or outputs a curve_data file.
+    """
     query = {'field_label': field, 'number': int(1)}
     if min_cond_norm or max_cond_norm:
         query['conductor_norm'] = {}
@@ -265,17 +294,24 @@ def get_all_generators(field, min_cond_norm=None, max_cond_norm=None, test_satur
     if max_cond_norm:
         query['conductor_norm']['$lte'] = int(max_cond_norm)
 
-    res = nfcurves.find(query)
-    print("%s curves over field %s found" % (res.count(), field))
-    res.sort([('conductor_norm', pymongo.ASCENDING)])
+    res_info = {}
+    res = nfcurves.search(query, info=res_info)
+    print("{} curves over field {} found".format(res_info['number'], field))
+
+    # open curve_data output file if requested
+    curve_data_file = open('curve_data.'+field, 'w') if write_curve_data else None
+
     # extract the class labels all at the start, since otherwise the
     # cursor might timeout:
     classes = [r['short_class_label'] for r in res]
     for isoclass in classes:
-        res = nfcurves.find_one({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
-        if 'rank' in res or 'rank_bounds' in res:
-            print("Isogeny class %s already has rank data" % isoclass)
+        res = nfcurves.lucky({'field_label': field, 'short_class_label': isoclass, 'number':int(1)})
+        if False:#'rank' in res or 'rank_bounds' in res:
+            print("Isogeny class {} already has rank data".format(isoclass))
         else:
-            print("Getting generators for isogeny class %s" % isoclass)
-            get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store)
+            print("Getting generators for isogeny class {}".format(isoclass))
+            get_generators(field, isoclass, test_saturation=test_saturation, verbose=verbose, store=store, curve_data_file=curve_data_file)
+
+    if write_curve_data:
+        curve_data_file.close()
 

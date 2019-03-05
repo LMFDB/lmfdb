@@ -8,7 +8,7 @@ from inventory_live_data import get_lockout_state
 from scrape_helpers import check_scrapes_by_table_id
 from collections import defaultdict
 from lmfdb.utils import comma
-from lmfdb.db_backend import db
+from lmfdb import db
 
 #Functions to populate viewer pages
 

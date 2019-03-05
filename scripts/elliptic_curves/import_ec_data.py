@@ -914,4 +914,48 @@ def update_torsion_growth_stats(verbose=True):
     tor_gro_degs.sort()
     tor_gro_counts = dict([(str(d),curvesnew.count({'tor_degs': d})) for d in tor_gro_degs])
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
-                                                             
+
+def update_int_pts(filename, test=True, verbose=0, basepath=None):
+    if basepath==None:
+        basepath = os.environ['HOME']
+    int_pts_data = {}
+    for L in open(os.path.join(basepath,filename)):
+        lab, dat = intpts(L)
+        int_pts_data[lab] = dat
+
+    print("read {} lines of data".format(len(int_pts_data)))
+
+    for lab in int_pts_data:
+        e = curves.lucky({'label':lab})
+
+        assert e['label']==lab
+        dat = int_pts_data[lab]
+        assert e['ainvs']==parse_ainvs(dat['ainvs'])
+        db_xs = e['xcoord_integral_points']
+        if verbose>1:
+            print("{}: xs read from db:   {}".format(lab,db_xs))
+        file_xs = parse_ainvs(dat['xcoord_integral_points'])
+        if verbose>1:
+            print("{}: xs read from file: {}".format(lab,file_xs))
+        if db_xs==file_xs:
+            if verbose:
+                print("{}: data agrees".format(lab))
+        else:
+            if verbose:
+                print("{}: db has {} xs while file has {}".format(lab,len(db_xs),len(file_xs)))
+            d = [x for x in db_xs if not x in file_xs]
+            if d:
+                print("Curve {}: ****************** db has x = {} not in file!".format(lab, d))
+            d = [x for x in file_xs if not x in db_xs]
+            if d and verbose:
+                print("file has x = {} not in db".format(d))
+
+            # Update the copy of the database record:
+            e['xcoord_integral_points'] = file_xs
+            if verbose>1:
+                print("New curve record for {}: {}".format(lab, e))
+            if test:
+                print("Not changing database entry for {}".format(lab))
+            else:
+                print("Using upsert to change database entry for {}".format(lab))
+                curves.upsert({'label': lab}, e)

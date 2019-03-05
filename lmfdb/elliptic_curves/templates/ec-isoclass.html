@@ -19,7 +19,7 @@ text-align: center;
 <th>{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
 <th>{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
 <th>{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
-<th>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+<th>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
 </tr>
@@ -45,13 +45,13 @@ text-align: center;
 {% endfor %}
 </table>
 
-<h2>Rank</h2>
+<h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
 {% if info.ncurves==1 %} The elliptic curve {{info.curves[0].label}} has
 {% else %} The elliptic curves in class {{info.lmfdb_iso}} have
 {% endif %}
-rank \({{ info.rank}}\).
+{{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>
 
 <h2>
@@ -99,8 +99,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#modform_output").load("{{info.modform_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "modform_output"]);
+            {# render the output #}
+            renderMathInElement($("#modform_output").get(0), katexOpts);
         });
 }
 $(function() {

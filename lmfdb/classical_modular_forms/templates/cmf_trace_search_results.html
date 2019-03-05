@@ -5,34 +5,9 @@
 {% include 'matches.html' %}
 {% if info.number %}
 
-<p> The following table gives {{ KNOWL('mf.elliptic.trace-expansion', title='traces') }} of \(a_n\) for the search results.</p>
+<p> The following table gives {{ KNOWL('mf.elliptic.trace_form', title='traces') }} of \(a_n\) for the search results. </p>
 
-<table class="ntdata">
-  <thead>
-    <tr>
-      <th>{{ KNOWL('mf.elliptic.label', title='Label') }}</th>
-      <th>{{ KNOWL('mf.elliptic.dimension', title='Dim') }}</th>
-      {% for n in info.Tr_n %}
-      {% if n >= 1 and n <= 1000 %}
-      <th class="right"> \(a_{ {{n}} }\) </th>
-      {% endif %}
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for mf in info.results %}
-    <tr>
-      <td> <a href="{{info.mf_url(mf) }}"> {{ mf.label }} </a> </td>
-      <td class="mjx_basic right border-right"> {{ mf.dim }} </td>
-      {% for n in info.Tr_n %}
-      {% if n >= 1 and n <= 1000 %}
-      <td class="mjx_basic right"> {{ mf.tr_an[n] }} </td>
-      {% endif %}
-      {% endfor %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% include 'cmf_trace_display.html' %}
 
 {% include 'forward_back.html' %}
 {% if info.number <= 1000 %}

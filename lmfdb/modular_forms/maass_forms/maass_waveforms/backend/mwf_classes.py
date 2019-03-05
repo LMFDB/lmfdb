@@ -2,7 +2,7 @@ from lmfdb.modular_forms.backend.mf_classes import MFDataTable
 from mwf_utils import mwf_logger
 from maass_forms_db import maass_db
 from sage.all import Gamma0, CC, imag_part, real_part
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import display_complex
 
 class MaassFormTable(MFDataTable):
@@ -10,9 +10,6 @@ class MaassFormTable(MFDataTable):
     To Display one form
     """
     def __init__(self, **kwds):
-        """
-        db -- a PostgresTable from lmfdb.db_backend
-        """
         MFDataTable.__init__(self, **kwds)
         self.maass_id = kwds.get('maass_id', None)
         if not self.maass_id:

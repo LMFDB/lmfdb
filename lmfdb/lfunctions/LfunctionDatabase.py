@@ -1,6 +1,6 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 
 def get_lfunction_by_Lhash(Lhash):
@@ -10,13 +10,18 @@ def get_lfunction_by_Lhash(Lhash):
     return Ldata
 
 def get_instances_by_Lhash(Lhash):
-    return list(db.lfunc_instances.search({'Lhash': Lhash}))
+    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=[]))
 
+def get_multiples_by_Lhash(Lhash):
+    return list(db.lfunc_instances.search({'Lhash_array': {'$contains': Lhash.split(',')}}, sort=[]))
 
 
 # a temporary fix while we don't replace the old Lhash (=trace_hash)
 # there are trace hash collisions out there, we need the degree to distinguish them
 def get_instances_by_trace_hash(degree, trace_hash):
+    # this is only relevant to find L-funs for ECQ or G2C
+    if degree not in [2, 4]:
+        return []
     def ECNF_convert_old_url(oldurl):
         # EllipticCurve/2.0.4.1/[4160,64,8]/a/
         if '[' not in oldurl:
@@ -30,7 +35,7 @@ def get_instances_by_trace_hash(degree, trace_hash):
             return oldurl
 
     res = []
-    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection = 'Lhash'):
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection = 'Lhash', sort=[]):
         for elt in get_instances_by_Lhash(Lhash):
             if elt['type'] == 'ECQP':
                 continue

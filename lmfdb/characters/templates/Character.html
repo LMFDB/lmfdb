@@ -38,7 +38,10 @@
   <tr> <td colspan='3'> {{ place_code('parity') }} </td> </tr>
   <tr> <td> {{KNOWL('character.dirichlet.parity',title='Parity')}} </td> <td>=</td> <td> {{ parity }}</td> </tr>
   {% endif %}
+  {% if modulus <= 10000 %}
   <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_label',title='Orbit label')}} </td> <td>=</td> <td> {{ modulus }}.{{ orbit_label }} </td> </tr>
+  <tr> <td> {{KNOWL('character.dirichlet.galois_orbit_index',title='Orbit index')}} </td> <td>=</td> <td> {{ orbit_index }} </td></tr>
+  {% endif %}
 </table>
 
 {% if galoisorbit %}
@@ -58,14 +61,6 @@
 {% endfor %}
 </p>
 {% endif %} {# galoisorbit #}
-
-{% if orbit_label %}
-<p>
-The {{KNOWL('character.dirichlet.galois_orbit_label', title='orbit label')}} for this Galois orbit
-is {{ modulus }}.{{ orbit_label }}.
-</p>
-{% endif %}
-
 
 {# Inducing character #}
 
@@ -200,45 +195,45 @@ is {{ modulus }}.{{ orbit_label }}.
 {% if values %}
 <script type="text/javascript">
 function value_handler(evt) {
-  evt.preventDefault();
-  var val = $("#calc-value-input").val();
-  $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
-  function() {
-    {# tell mathjx to render the output #}
-    MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-value-output"]);
-  });
+    evt.preventDefault();
+    var val = $("#calc-value-input").val();
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
+     function() {
+        {# render the output #}
+        renderMathInElement($("#calc-value-output").get(0), katexOpts);
+     });
 }
 
 {% if type=='Dirichlet' and charsums %}
 
 function gauss_handler(evt) {
-  evt.preventDefault();
-  var val = $("#calc-gauss-input").val();
-  $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
-      function() {
-        {# tell mathjx to render the output #}
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-gauss-output"]);
-      });
+    evt.preventDefault();
+    var val = $("#calc-gauss-input").val();
+    $("#calc-gauss-output").load("{{ url_character(type=type, calc='gauss', modulus = modulus, number=number) }}" + "?val=" + val,
+     function() {
+        {# render the output #}
+        renderMathInElement($("#calc-gauss-output").get(0), katexOpts);
+     });
 }
 
 function jacobi_handler(evt) {
-  evt.preventDefault();
-  var val = $("#calc-jacobi-input").val();
-  $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
-      function() {
-        {# tell mathjx to render the output #}
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-jacobi-output"]);
-      });
+   evt.preventDefault();
+   var val = $("#calc-jacobi-input").val();
+   $("#calc-jacobi-output").load("{{ url_character(type=type, calc='jacobi', modulus=modulus, number=number) }}" + "?val=" + val,
+     function() {
+       {# render the output #}
+       renderMathInElement($("#calc-jacobi-output").get(0), katexOpts);
+     });
 }
 
 function kloosterman_handler(evt) {
-  evt.preventDefault();
-  var val = $("#calc-kloosterman-input").val();
-  $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
-      function() {
-        {# tell mathjx to render the output #}
-        MathJax.Hub.Queue(['Typeset', MathJax.Hub, "calc-kloosterman-output"]);
-      });
+   evt.preventDefault();
+   var val = $("#calc-kloosterman-input").val();
+   $("#calc-kloosterman-output").load("{{ url_character(type=type, calc='kloosterman', modulus=modulus,number=number) }}" + "?val=" + val,
+     function() {
+       {# render the output #}
+       renderMathInElement($("#calc-kloosterman-output").get(0), katexOpts);
+     });
 }
 
 {% endif %}

@@ -132,7 +132,7 @@ import os.path
 import re
 import os
 import pprint
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
 from sage.databases.cremona import cremona_to_lmfdb
@@ -173,6 +173,26 @@ def nf_lookup(label, verbose=False):
     if verbose: print("The field with label {} is {}".format(label, K))
     nf_lookup_table[label] = K
     return K
+
+def nf_lookup_all():
+    for f in nfcurves.disctinct('field_label'):
+        nf_lookup(f)
+
+def write_all_fields():
+    ffile = open("ecnf_fields",'w')
+    for f in sorted(nf_lookup_table.keys()):
+        ffile.write(" ".join([f,str(nf_lookup_table[f].defining_polynomial().list()).replace(' ','')])+"\n")
+    ffile.close()
+
+def read_all_fields(ffilename):
+    ffile = open(ffilename)
+    for line in ffile.readlines():
+        label, coeffs = line.split()
+        coeffs = [ZZ(c) for c in coeffs[1:-1].split(",")]
+        gen_name = special_names.get(label,'a')
+        K = NumberField(PolynomialRing(QQ, 'x')(coeffs), gen_name)
+        #print "The field with label %s is %s" % (label, K)
+        nf_lookup_table[label] = K
 
 from lmfdb.nfutils.psort import ideal_label
 
