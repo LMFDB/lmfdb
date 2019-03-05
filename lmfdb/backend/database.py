@@ -1980,8 +1980,10 @@ class PostgresTable(PostgresBase):
             version = self._get_current_constraint_version() + 1
 
             # copy the new rows to history
+            #FIXME use constants
             rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints WHERE table_name = '%s'"), [self.search_table])
             for row in rows:
+                #FIXME use constants
                 self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
 
     def revert_indexes(self, version = None):
@@ -1997,8 +1999,10 @@ class PostgresTable(PostgresBase):
             self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
 
             # copy data from history
+            #FIXME use constants
             rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
             for row in rows:
+                #FIXME use constants
                 self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
 
@@ -2012,11 +2016,14 @@ class PostgresTable(PostgresBase):
                 version = max(0, currentversion - 1)
 
             # delete current rows
+            #FIXME use constants
             self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
 
             # copy data from history
+            #FIXME use constants
             rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
             for row in rows:
+                #FIXME use constants
                 self._execute(SQL("INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s, %s)"), row)
                 self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s)"), row + (currentversion + 1,))
 
@@ -4409,6 +4416,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.grant_select('meta_indexes_hist')
 
         print("Table meta_indexes_hist created")
+
+
+    def _create_meta_constraints(self):
+        with DelayCommit(self, silence=True):
+            self._execute(SQL("CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"))
+            self.grant_select('meta_constraints_hist')
+        print("Table meta_constraints_hist created")
 
     def _create_meta_constraints_hist(self):
         with DelayCommit(self, silence=True):
