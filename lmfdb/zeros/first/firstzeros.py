@@ -71,21 +71,30 @@ def list_zeros(start=None,
 
     where_clause = 'WHERE 1=1 '
 
+    values = []
     if end is not None:
-        end = str(end)
         # fix up rounding errors, otherwise each time you resubmit the page you will lose one line
-        if('.' in end): end = end+'999'
+        if('.' in str(end)):
+            end = float(str(end)+'999')
 
     if start is None:
-        where_clause += ' AND zero <= ' + end
+        end = float(end)
+        where_clause += ' AND zero <= ?'
+        values.append(end)
     elif end is None:
         start = float(start)
-        where_clause += ' AND zero >= ' + str(start)
+        where_clause += ' AND zero >= ?'
+        values.append(start)
     else:
-        where_clause += ' AND zero >= {} AND zero <= {}'.format(start, end)
+        start = float(start)
+        end = float(end)
+        where_clause += ' AND zero >= ? AND zero <= ?'
+        values.extend([start, end])
 
     if degree is not None and degree != '':
-        where_clause += ' AND degree = ' + str(degree)
+        degree = int(degree)
+        where_clause += ' AND degree = ?'
+        values.append(degree)
 
     if end is None:
         query = 'SELECT * FROM (SELECT * FROM zeros {} ORDER BY zero ASC LIMIT {}) ORDER BY zero DESC'.format(
@@ -95,7 +104,7 @@ def list_zeros(start=None,
 
     #print query
     c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
-    c.execute(query)
+    c.execute(query, values)
 
     response = flask.Response((" ".join([str(x) for x in row]) + "\n" for row in c))
     response.headers['content-type'] = 'text/plain'
