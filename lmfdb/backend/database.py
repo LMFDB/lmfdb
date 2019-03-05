@@ -4734,10 +4734,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
                     assert meta["name"] == tablename
-                    search_columns = {"bool":["label"]}
+                    search_columns = {"boolean":["label"]}
                     extra_columns = {}
                     if meta["has_extras"] == "t":
-                        extra_columns = {"bool":["extra"]}
+                        extra_columns = {"boolean":["extra"]}
                     self.create_table(tablename, search_columns, "label", extra_columns=extra_columns)
 
             for tablename in self.tablenames:
