@@ -107,6 +107,11 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'spgist': ['fillfactor']}
 
 
+
+##################################################################
+# meta_* infrastructure                                          #
+##################################################################
+
 def jsonb_idx(cols, cols_type):
     return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsob")
 
@@ -152,6 +157,10 @@ def _meta_table_name(meta_name):
     if "name" in meta_cols:
         table_name = "name"
     return table_name
+
+##################################################################
+# counts and stats columns and their types                       #
+##################################################################
 
 _counts_cols = ("cols", "values", "count", "extra")
 _counts_types =  dict(zip(_counts_cols,
@@ -555,7 +564,7 @@ class PostgresBase(object):
                 search_table, time.time() - now)
 
     def _copy_from_meta(self, meta_name, filename):
-        meta_cols, _, _ = self._meta_cols_types_jsonb_idx(meta_name)
+        meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
         try:
             cur = self.conn.cursor()
             cur.copy_from(filename, meta_name, columns=meta_cols)
@@ -579,7 +588,7 @@ class PostgresBase(object):
 
     def _reload_meta(self, meta_name, filename, search_table):
 
-        meta_cols, _, jsonb_idx = self._meta_cols_types_jsonb_idx(meta_name)
+        meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
         # the column which will match search_table
         table_name = _meta_table_name(meta_name)
 
@@ -639,7 +648,7 @@ class PostgresBase(object):
 
 
     def _revert_meta(self, meta_name, search_table, version = None):
-        meta_cols, _, jsonb_idx = self._meta_cols_types_jsonb_idx(meta_name)
+        meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
         # the column which will match search_table
         table_name = _meta_table_name(meta_name)
 
