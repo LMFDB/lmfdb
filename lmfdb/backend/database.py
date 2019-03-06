@@ -490,6 +490,34 @@ class PostgresBase(object):
             raise
 
 
+    def _read_header_lines(self, F, sep=u"\t"):
+        """
+        Reads the header lines from a file
+        (row of column names, row of column types, blank line).
+        Returning the dictionary of columns and their types.
+
+        INPUT:
+
+        - ``F`` -- an open file handle, at the beginning of the file.
+        - ``sep`` -- a string giving the column separator.
+
+        OUTPUT:
+
+        A list of pairs where the first entry is the column and the second the
+        corresponding type
+        """
+        names = [x.strip() for x in F.readline().strip().split(sep)]
+        types = [x.strip() for x in F.readline().strip().split(sep)]
+        blank = F.readline()
+        if blank.strip():
+            raise ValueError("The third line must be blank")
+        if len(names) != len(types):
+            raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
+        return zip(names, types)
+
+
+
+
 
 class PostgresTable(PostgresBase):
     """
@@ -2482,7 +2510,9 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _read_header_lines(self, F, unordered, sep=u"\t", check=True, adjust_schema=False):
+
+
+    def _check_header_lines(self, F, columns_set, extras_table = False, sep=u"\t", adjust_schema=False):
         """
         Reads the header lines from a file
         (row of column names, row of column types, blank line).
@@ -2494,7 +2524,6 @@ class PostgresTable(PostgresBase):
         - ``F`` -- an open file handle, at the beginning of the file.
         - ``unordered`` -- a set of the columns in the table.
         - ``sep`` -- a string giving the column separator.
-        - ``check`` -- whether to validate the columns.
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
 
@@ -2503,57 +2532,56 @@ class PostgresTable(PostgresBase):
         The ordered list of columns.  The first entry may be ``"id"`` if the data
         contains an id column.
         """
-        names = [x.strip() for x in F.readline().strip().split(sep)]
-        types = [x.strip() for x in F.readline().strip().split(sep)]
-        blank = F.readline()
-        # Need to define types and blank in order to consume the lines.
-        if check:
-            if blank.strip():
-                raise ValueError("The third line must be blank")
-            if len(names) != len(types):
-                raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
-            type_dict = dict(zip(names, types))
-            name_set = set(names)
-            extra = name_set - unordered
-            if "id" in name_set and names[0] != "id":
+
+        header_cols = self._read_header_lines(F, sep=sep)
+        names = [elt[0] for elt in header_cols]
+        names_set = set(names)
+        columns_set.discard("id")
+        if "id" in names_set:
+            if names[0] != "id":
                 raise ValueError("id must be the first column")
-            extra.discard("id")
-            missing = unordered - name_set
-            if missing or extra:
-                if adjust_schema:
-                    is_extra_table = (unordered == set(self._extra_cols))
-                    for col in missing:
-                        self.drop_column(col)
-                    for col in extra:
-                        self.add_column(col, type_dict[col], extra=is_extra_table)
+            if header_cols[0][1] != "bigint":
+                raise ValueError("id must be of type bigint")
+            names_set.discard("id")
+            header_cols = header_cols[1:]
+            names = names[1:]
+
+
+        missing = columns_set - names_set
+        extra = [(name, typ) for name, typ in header_cols
+                if name not in columns_set]
+        wrong_type = [(name, typ) for name, typ in header_cols
+                if name in columns_set and self.col_type[name] != typ]
+
+        if missing or extra:
+            is_extra_table = (columns_set == set(self._extra_cols))
+            if adjust_schema:
+                for col in missing:
+                    self.drop_column(col)
+                for col, typ in extra:
+                    self.add_column(col, typ, extra=is_extra_table)
+            else:
+                err = "Invalid header: "
+                if missing:
+                    err += ", ".join(list(missing)) + " (missing)"
+                if extra:
+                    err += ", ".join(list(extra)) + " (extra)"
+                raise ValueError(err)
+        # The header names are valid, now we check the column types
+        if wrong_type:
+            if adjust_schema:
+                for col, typ in wrong_type:
+                    self.drop_column(col)
+                    self.add_column(col, typ, extra=is_extra_table)
+            else:
+                if len(wrong_type) > 1:
+                    err = "Invalid types: "
                 else:
-                    err = "Invalid header: "
-                    if missing:
-                        err += ", ".join(list(missing)) + " (missing)"
-                    if extra:
-                        err += ", ".join(list(extra)) + " (extra)"
-                    raise ValueError(err)
-            # The header names are valid, now we check the column types
-            bad = []
-            for name, typ in type_dict.items():
-                actual = self.col_type[name]
-                if actual != typ:
-                    bad.append((name, actual))
-            if bad:
-                if adjust_schema:
-                    is_extra_table = (unordered == set(self._extra_cols))
-                    for col, old in bad:
-                        self.drop_column(col)
-                        self.add_column(col, type_dict[col], extra=is_extra_table)
-                else:
-                    if len(bad) > 1:
-                        err = "Invalid types: "
-                    else:
-                        err = "Invalid type: "
-                    err += ", ".join("%s should be %s"%pair for pair in bad)
-                    raise ValueError(err)
-        elif adjust_schema:
-            raise ValueError("check must be True to adjust schema")
+                    err = "Invalid type: "
+                err += ", ".join(
+                        "%s should be %s" % (name, self.col_type[name])
+                        for name, _ in wrong_type)
+                raise ValueError(err)
         return names
 
     def _write_header_lines(self, F, cols, sep=u"\t"):
@@ -2594,14 +2622,17 @@ class PostgresTable(PostgresBase):
             with open(filename) as F:
                 if header:
                     # This consumes the first three lines
-                    columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
+                    columns = self._read_header_lines(F, set(columns), sep=sep, adjust_schema=adjust_schema)
                     addid = ('id' not in columns)
+                elif adjust_schema:
+                    raise ValueError("header must be true to adjust schema")
                 else:
                     addid = False
 
                 # We have to add quotes manually since copy_from doesn't accept
                 # psycopg2.sql.Identifiers
                 # None of our column names have double quotes in them. :-D
+                assert all('"' not in col for col in columns)
                 columns = ['"' + col + '"' for col in columns]
                 if addid:
                     # create sequence
@@ -4576,16 +4607,19 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                                          SQL(", ").join(processed_extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
+            # FIXME use global constants
             creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")
             self.grant_insert(name+"_counts")
+            # FIXME use global constants
             creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
             self.grant_select(name+"_stats")
             self.grant_insert(name+"_stats")
+            # FIXME use global constants
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
@@ -4749,27 +4783,42 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             if non_existent_tables:
                 if not adjust_schema:
                     raise ValueError("non existent tables: {0}; use adjust_schema=True to create them".format(", ".join(non_existent_tables)))
-                print "Creating mock tables: {0}".format(", ".join(non_existent_tables))
+                print "Creating tables: {0}".format(", ".join(non_existent_tables))
                 for tablename in non_existent_tables:
+                    search_table_file = os.path.join(data_folder, tablename + '.txt')
+                    extras_file = os.path.join(data_folder, tablename + '_extras.txt')
                     metafile = os.path.join(data_folder, tablename + '_meta.txt')
                     if not os.path.exists(metafile):
                         raise ValueError("meta file missing for {0}".format(tablename))
-
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
                         import csv
                         rows = [line for line in csv.reader(F, delimiter = "\t")]
-
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
                     meta = dict(zip(_meta_tables_cols, rows[0]))
-                    print meta
                     assert meta["name"] == tablename
-                    search_columns = {"boolean":["None"]}
+
+                    with open(search_table_file, "r") as F:
+                        search_columns_pairs = self._read_header_lines(F)
+
+                    search_columns = defaultdict(list)
+                    for name, typ in search_columns_pairs:
+                        if name != 'id':
+                            search_columns[typ].append(name)
+
                     extra_columns = None
                     if meta["has_extras"] == "t":
-                        extra_columns = {"boolean":["extra"]}
+                        if not os.path.exists(extras_file):
+                            raise ValueError("extras file missing for {0}".format(tablename))
+                        with open(extras_file, "r") as F:
+                            extras_columns_pairs = self._read_header_lines(F)
+                        extra_columns = defaultdict(list)
+                        for name, typ in extras_columns_pairs:
+                            if name != 'id':
+                                extra_columns[typ].append(name)
+                    # the rest of the meta arguments will be replaced on the reload_all
                     self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
 
             for tablename in self.tablenames:
