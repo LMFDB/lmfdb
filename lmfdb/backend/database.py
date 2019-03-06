@@ -629,7 +629,7 @@ class PostgresBase(object):
                 [search_table])
 
 
-            cols = meta_cols + ['version']
+            cols = meta_cols + ('version',)
             cols_sql = SQL(", ").join(map(Identifier, cols))
             place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
             query = SQL(
@@ -679,7 +679,7 @@ class PostgresBase(object):
                     "INSERT INTO {} {} VALUES {}"
                     ).format(meta_name_sql, cols_sql, place_holder)
 
-            cols = meta_cols + ['version']
+            cols = meta_cols + ('version',)
             cols_sql = SQL(", ").join(map(Identifier, cols))
             place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
             query_hist = SQL(
