@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # 2018: updated for postgres, but not used (ever?)
 

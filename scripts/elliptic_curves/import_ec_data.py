@@ -135,7 +135,7 @@ Extra data fields added May 2016 to avoid computation on the fly:
 import re, os, pprint
 from sage.all import ZZ, RR, EllipticCurve, prod, Set
 from lmfdb.utils import web_latex
-from lmfdb.db_backend import db
+from lmfdb import db
 print "setting curves"
 curves = db.ec_curves
 

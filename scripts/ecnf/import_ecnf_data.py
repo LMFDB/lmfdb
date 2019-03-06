@@ -132,7 +132,7 @@ import os.path
 import re
 import os
 import pprint
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
 from sage.databases.cremona import cremona_to_lmfdb
