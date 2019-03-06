@@ -639,7 +639,7 @@ class PostgresBase(object):
             for row in rows:
                 row = [Json(elt) if i in jsonb_idx else elt
                         for i, elt in enumerate(row)]
-                self._execute(query, row + (version,))
+                self._execute(query, row + [version])
 
 
     def _revert_meta(self, meta_name, search_table, version = None):
@@ -689,7 +689,7 @@ class PostgresBase(object):
                 row = [Json(elt) if i in jsonb_idx else elt
                         for i, elt in enumerate(row)]
                 self._execute(query, row)
-                self._execute(query_hist, row + (currentversion + 1,))
+                self._execute(query_hist, row + [currentversion + 1,])
 
 
 
