@@ -272,7 +272,7 @@ class WebNewform(object):
             res.append(('Newform ' + self.label, nf_url))
             if self.dual_label is not None and self.dual_label != self.embedding_label:
                 dlabel = self.label + '.' + self.dual_label
-                d_url = nf_url + '/' + '/'.join(self.dual_label.split('.'))
+                d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
         # then related objects
@@ -323,6 +323,14 @@ class WebNewform(object):
     @lazy_attribute
     def primes_cc_bound(self):
         return prime_pi(self.an_cc_bound)
+
+
+    @lazy_attribute
+    def one_column_display(self):
+        if self.embedding_m:
+            an = self.cc_data[self.embedding_m]['an_normalized'].values()
+            return all([x == 0 or y == 0 for x, y in an])
+
 
     def setup_cc_data(self, info):
         """
@@ -808,7 +816,7 @@ function switch_basis(btype) {
     @property
     def dual_link(self):
         dlabel = self.label + '.' + self.dual_label
-        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/')
+        d_url = '/ModularForm/GL2/Q/holomorphic/' + dlabel.replace('.','/') + '/'
         return '<a href="%s">%s</a>'%(d_url, dlabel)
 
     @property
@@ -875,6 +883,12 @@ function switch_basis(btype) {
                   th_wrap('mf.elliptic.self_twist_col', 'Type'),
                   th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
+        trivial = [elt for elt in self.inner_twists if elt[6] == 1]
+        CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],
+                key = lambda elt: elt[2])
+        other = sorted([elt for elt in self.inner_twists if elt[6] == 0],
+                key = lambda elt: (elt[2],elt[3]))
+        self.inner_twists = trivial + CMRM + other
         for proved, mult, modulus, char_orbit_index, parity, order, discriminant in self.inner_twists:
             label = '%s.%s' % (modulus, cremona_letter_code(char_orbit_index-1))
             parity = 'Even' if parity == 1 else 'Odd'
@@ -994,6 +1008,9 @@ function switch_basis(btype) {
     def conrey_from_embedding(self, m):
         # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
         return "{c}.{e}".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
+    def embedded_mf_link(self, m):
+        # Given an embedding number, return the Conrey label for the restriction of that embedding to the cyclotomic field
+        return '/ModularForm/GL2/Q/holomorphic/' + self.label.replace('.','/') + "/{c}/{e}/".format(c=self.cc_data[m]['conrey_index'], e=((m-1)%self.rel_dim)+1)
 
     def embedding_from_embedding_label(self, elabel):
         if not isinstance(elabel, basestring): # match object
@@ -1006,22 +1023,30 @@ function switch_basis(btype) {
     def embedded_title(self, m):
         return "Embedded Newform %s.%s"%(self.label, self.conrey_from_embedding(m))
 
-    def _display_re(self, x, prec, method='round'):
-        if abs(x) < 10**(-prec):
+    def _display_re(self, x, prec, method='round', extra_truncation_digits=3):
+        res = display_float(x, prec,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=False)
+        if res == "0":
             return ""
-        return r"%s"%(display_float(x, prec, method=method, try_halfinteger=False).replace('-','&minus;'))
+        else:
+            return res.replace('-','&minus;')
 
-    def _display_im(self, y, prec, method='round'):
-        if abs(y) < 10**(-prec):
+    def _display_im(self, y, prec, method='round', extra_truncation_digits=3):
+        res = display_float(y, prec,
+                method=method,
+                extra_truncation_digits=extra_truncation_digits,
+                try_halfinteger=False)
+        if res == "0":
             return ""
-        res = display_float(y, prec, method=method, try_halfinteger=False)
-        if res == '1':
-            res = ''
+        elif res == "1":
+            res = ""
         return r"%s<em>i</em>"%(res)
 
-    def _display_op(self, x, y, prec):
-        xiszero = abs(x) < 10**(-prec)
-        yiszero = abs(y) < 10**(-prec)
+    def _display_op(self, x, y, prec, extra_truncation_digits=3):
+        xiszero = abs(x) < 10**(-prec + extra_truncation_digits)
+        yiszero = abs(y) < 10**(-prec + extra_truncation_digits)
         if xiszero and yiszero:
             return r"0"
         elif yiszero or (xiszero and y > 0):
@@ -1045,7 +1070,6 @@ function switch_basis(btype) {
 
     def embedding_re(self, m, n=None, prec=6, format='embed'):
         if n is None:
-            method = 'truncate'
             x = self.cc_data[m].get('embedding_root_real', None)
             if x is None:
                 return '' # we should never see this if we have an exact qexp
@@ -1053,14 +1077,10 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 x *= self.analytic_shift[n]
-                method = 'round'
-            else:
-                method = 'truncate'
-        return self._display_re(x, prec, method=method)
+        return self._display_re(x, prec, method='round')
 
     def embedding_im(self, m, n=None, prec=6, format='embed'):
         if n is None:
-            method = 'truncate'
             y = self.cc_data[m].get('embedding_root_imag', None)
             if y is None:
                 return '' # we should never see this if we have an exact qexp
@@ -1068,12 +1088,9 @@ function switch_basis(btype) {
             x, y = self.cc_data[m]['an_normalized'][n]
             if format == 'embed':
                 y *= self.analytic_shift[n]
-                method = 'round'
-            else:
-                method = 'truncate'
-        return self._display_im(abs(y), prec, method=method) # sign is handled in embedding_op
+        return self._display_im(abs(y), prec, method='round') # sign is handled in embedding_op
 
-    def embedding_op(self, m, n=None, prec=6):
+    def embedding_op(self, m, n=None, prec=6, format='embed'):
         if n is None:
             x = self.cc_data[m].get('embedding_root_real', None)
             y = self.cc_data[m].get('embedding_root_imag', None)
@@ -1081,7 +1098,17 @@ function switch_basis(btype) {
                 return '?' # we should never see this if we have an exact qexp
         else:
             x, y = self.cc_data[m]['an_normalized'][n]
+            # we might decide to not display an operator if normalized value is too small
+            if format == 'embed':
+                x *= self.analytic_shift[n]
+                y *= self.analytic_shift[n]
         return self._display_op(x, y, prec)
+
+    def embedding(self,  m, n=None, prec=6, format='embed'):
+        return " ".join([ elt(m, n, prec, format)
+            for elt in [self.embedding_re, self.embedding_op, self.embedding_im]
+            ])
+
 
     def satake(self, m, p, i, prec=6, format='satake'):
         """
@@ -1096,8 +1123,10 @@ function switch_basis(btype) {
         - ``format`` -- either ``satake`` or ``satake_angle``.  In the second case, give the argument of the Satake parameter
         """
         if format == 'satake':
-            alpha = self._get_alpha(m, p, i)
-            return display_complex(alpha.real(), alpha.imag(), prec, method = 'round')
+            return " ".join([ elt(m, p, i, prec)
+                for elt in [self.satake_re, self.satake_op, self.satake_im]
+                ])
+
         else:
             return self.satake_angle(m, p, i, prec)
 
@@ -1107,7 +1136,7 @@ function switch_basis(btype) {
             # bad prime
             return ''
         theta = self._get_theta(m, p, i)
-        s = display_float(2*theta, prec, method='truncate')
+        s = display_float(2*theta, prec, method='round')
         if s == "1":
             s =  r'\pi'
         elif s== "-1":

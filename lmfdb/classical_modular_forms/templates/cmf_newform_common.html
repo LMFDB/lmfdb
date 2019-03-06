@@ -190,7 +190,7 @@
   <tr>
     <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
     <td>\(\chi\)</td>
-    <td>\(=\)</td>
+    <td>=</td>
     <td>{{ newform.char_conrey_link | safe}}</td>
   </tr>
 {% if newform.embedding_label != newform.dual_label %}
@@ -222,9 +222,9 @@ function show_qexp(qstyle) {
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}
       Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() | safe }}.
-      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace_form',title='trace form') }}.
       {% else %}
-      The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace-expansion',title='trace form') }} are shown below.
+      The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace_form',title='trace form') }} are shown below.
       {% endif %}
     </p>
   {% endif %}
@@ -261,7 +261,7 @@ function show_qexp(qstyle) {
 </div>
 {% else %}
 <h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
-<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('mf.elliptic.trace-expansion', title='trace expansion') }}.</p>
+<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('mf.elliptic.trace_form', title='trace expansion') }}.</p>
 
 <form id="qexp">
   <table><tr><td>

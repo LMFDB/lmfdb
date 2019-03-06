@@ -18,7 +18,7 @@
       {% if RM_col %}
       <th rowspan=2>{{ KNOWL('mf.elliptic.self_twist', title='RM') }}</th>
       {% endif %}
-      <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace-expansion', title='Traces') }}</th>
+      <th colspan=4 class="center">{{ KNOWL('mf.elliptic.trace_form', title='Traces') }}</th>
       {% if AL_signs %}
       <th rowspan=2></th>
       <th class="center" colspan={{info.results[0]['atkin_lehner_eigenvals'] | length}}> {{ KNOWL('mf.elliptic.atkinlehner', title='A-L signs') }}</th>
