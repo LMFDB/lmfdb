@@ -631,9 +631,9 @@ class PostgresBase(object):
 
             cols = meta_cols + ('version',)
             cols_sql = SQL(", ").join(map(Identifier, cols))
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
+            place_holder = SQL(", ").join(map(Placeholder, cols))
             query = SQL(
-                    "INSERT INTO {} {} VALUES {}"
+                    "INSERT INTO {} ({}) VALUES ({})"
                     ).format(meta_name_hist_sql, cols_sql, place_holder)
 
             for row in rows:
@@ -674,17 +674,16 @@ class PostgresBase(object):
                 [search_table, version])
 
 
-            place_holder = SQL("({0})").format(
-                    SQL(", ").join(map(Placeholder, meta_cols)))
+            place_holder = SQL(", ").join(map(Placeholder, meta_cols))
             query =  SQL(
-                    "INSERT INTO {} {} VALUES {}"
+                    "INSERT INTO {} ({}) VALUES ({})"
                     ).format(meta_name_sql, cols_sql, place_holder)
 
             cols = meta_cols + ('version',)
             cols_sql = SQL(", ").join(map(Identifier, cols))
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
+            place_holder = SQL(", ").join(map(Placeholder, cols))
             query_hist = SQL(
-                    "INSERT INTO {} {} VALUES {}"
+                    "INSERT INTO {} ({}) VALUES ({})"
                     ).format(meta_name_hist_sql, cols_sql, place_holder)
             for row in rows:
                 row = [Json(elt) if i in jsonb_idx else elt
