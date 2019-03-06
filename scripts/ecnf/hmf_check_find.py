@@ -6,7 +6,7 @@ Hilbert Modular Forms databases:  """
 
 import sys
 from sage.all import EllipticCurve, Magma, srange, oo
-from lmfdb.db_backend import db
+from lmfdb import db
 
 print "setting nfcurves"
 nfcurves = db.ec_nfcurves

@@ -132,7 +132,7 @@ import os.path
 import re
 import os
 import pprint
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import web_latex
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
 from sage.databases.cremona import cremona_to_lmfdb
@@ -909,43 +909,35 @@ def add_isogs_to_one(c):
     c.update(isogdata[c['label']])
     return c
 
-#
-# 3. in a call to rewrite() such as
-#
-#  db.ec_nfcurves.rewrite(add_isogs_to_one)
-
-# The following function was used in a rewrite to add local root
+# The following function can be used in a rewrite to add local root
 # numbers to all curves in the database:
 
-def add_root_number(C, verbose=False):
-    """
-    Adds local root number to an elliptic curve record, for each prime in its local_data field.
-
-    NB Requires Magma
-    """
-    ld = C['local_data']
-    # This is a list with one dict for each prime ideal dividing the
+def add_root_number_to_local_data(field_label, ainvs, ld):
+    # ld is a list with one dict for each prime ideal dividing the
     # discriminant of the stored model, which will be empty for a
     # global minimal model of a curve with everywhere good reduction.
     if len(ld)==0:
-        return C
+        return ld
     if all(['rootno' in ldp for ldp in ld]): # already have root numbers
-        return C
-    if verbose:
-        print("Adding root numbers to {}".format(C['label']))
+        if not any([ldp['rootno']=='?' for ldp in ld]):
+            return ld
 
     # test for easy case of a semistable curve (no additive primes)
     # when we do not have to construct the curve at all:
     if any([ldp['red']==0 for ldp in ld]):
-        K = nf_lookup(C['field_label'])
-        if verbose:
-            print("Field %s created, gen_name = %s" % (C['field_label'],str(K.gen())))
-        ainvsK = parse_ainvs(K,C['ainvs'])  # list of K-elements
+        K = nf_lookup(field_label)
+        ainvsK = parse_ainvs(K,ainvs)  # list of K-elements
         mE = magma(EllipticCurve(ainvsK))
+        mN = mE.Conductor() # looks redundant but without this line
+        assert mN           # the LocalRootNumber call sometimes (rarely) fails
+
     for i, ldp in enumerate(ld):
         red_type = ldp['red']
         if red_type==0:
-            eps = mE.RootNumber(ideal_from_string(K,ldp['p']))
+            P = magma(ideal_from_string(K,ldp['p']))
+            #print("Root number of {}\n   at P={}...".format(mE,P))
+            eps = mE.IntegralModel().RootNumber(P)
+            #print("... {}".format(eps))
         elif red_type==+1:
             eps = -1
         elif red_type==-1:
@@ -953,12 +945,44 @@ def add_root_number(C, verbose=False):
         else:  # good reduction
             eps = +1
         ldp['rootno'] = int(eps)
-        if verbose:
-            print("P={}, root number = {}".format(ldp['p'],eps))
         ld[i] = ldp
-    C['local_data'] = ld
+    return ld
+
+def add_root_number(C, verbose=False):
+    """
+    Adds local root number to an elliptic curve record, for each prime in its local_data field.
+
+    NB Requires Magma
+    """
+    C['local_data'] = add_root_number_to_local_data(C['field_label'], C['ainvs'], C['local_data'])
     return C
 
+the_local_data = {} # global
+
+def add_root_number_from_local_data(C, verbose=False):
+    """Adds local root number to an elliptic curve record, for each prime in its local_data field.
+
+    NB Requires global object the_local_data to be a dict with keys
+    field_labels, values dicts with keys full curve labels, values
+    local_data structure
+
+    """
+    global the_local_data
+
+    # do nothing unless this field_label is in the_local_data.
+    try:
+        data = the_local_data[C['field_label']]
+    except KeyError:
+        return C
+
+    # do nothing unless this curve is in the_local_data.
+    try:
+        new_local_data = data[C['label']]
+    except KeyError:
+        return C
+
+    C['local_data'] = new_local_data
+    return C
 
 
 ################################################################################
@@ -1288,3 +1312,120 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
     print("{} curves in the database are incorrectly labelled as being Q-curves".format(len(bad2)))
     print("{} curves in the database are incorrectly labelled as NOT being Q-curves".format(len(bad1)))
     return bad1, bad2
+
+
+def ld1p(ldp):
+    # we do not just join ldp.values() since we want to fix the order
+    ld1str = ":".join([str(ldp[k]) for k in ['p', 'normp', 'ord_cond', 'ord_disc', 'ord_den_j', 'red']])
+    ld2str = str(ldp.get('rootno', '?'))
+    ld3str = ":".join([str(ldp[k]) for k in ['kod', 'cp']])
+    # remove embedded blanks in kodaira symbols
+    ld3str = ld3str.replace(" ","")
+    return ":".join([ld1str,ld2str,ld3str])
+
+def local_data_to_string(ld):
+    return ";".join([ld1p(ldp) for ldp in ld])
+
+def ld1s(s):
+    dat = s.split(":")
+    return {'p': dat[0], # string
+            'normp': int(dat[1]),
+            'ord_cond': int(dat[2]),
+            'ord_disc': int(dat[3]),
+            'ord_den_j': int(dat[4]),
+            'red': None if dat[5]=='None' else int(dat[5]),
+            'rootno': '?' if dat[6]=='?' else int(dat[6]),
+            'kod': dat[7], # string
+            'cp': int(dat[8])}
+
+def local_data_from_string(s):
+    return [ld1s(si) for si in s.split(";")]
+
+def download_local_data(field_label, base_path=".", min_norm=0, max_norm=None):
+    r""" Extract local data for the given field for curves with conductor
+    norm in the given range, and write to an output file local_data.<field>.
+    """
+    query = {}
+    query['field_label'] = field_label
+    query['conductor_norm'] = {'$gte': int(min_norm)}
+    if max_norm:
+        query['conductor_norm']['$lte'] = int(max_norm)
+    else:
+        max_norm = 'infinity'
+
+    filename = ''.join(["local_data",".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    filename = os.path.join(base_path, filename)
+    outfile = open(filename, 'w')
+
+    res = nfcurves.search(query, sort = ['conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])
+    for ec in res:
+        # make local data output line: same as curves output line with extra fields
+        curve_line = make_curves_line(ec)
+        local_data = local_data_to_string(ec['local_data'])
+        assert not " " in local_data
+        outfile.write(" ".join([curve_line,local_data]) + "\n")
+    outfile.close()
+
+def read_local_data_file(filename, base_path="."):
+    infile = open(os.path.join(base_path,filename))
+    all_local_data = []
+    for line in infile.readlines():
+        data = split(line)
+        curve_line = " ".join(data[:13])
+        local_data = [] # default
+        try:
+            local_data = local_data_from_string(data[13])
+        except IndexError:
+            pass
+
+        field_label = data[0]       # string
+        conductor_label = data[1]   # string
+        iso_label = data[2]         # string
+        #iso_nlabel = numerify_iso_label(iso_label)         # int
+        number = int(data[3])       # int
+        short_class_label = "%s-%s" % (conductor_label, iso_label)
+        short_label = "%s%s" % (short_class_label, str(number))
+        #class_label = "%s-%s" % (field_label, short_class_label)
+        label = "%s-%s" % (field_label, short_label)
+        ainvs = ";".join(data[6:11])  # one string joining 5 NFelt strings
+
+        all_local_data.append({
+            'label': label,
+            'field_label': field_label,
+            'ainvs': ainvs,
+            'local_data': local_data,
+            'curve_line': curve_line,
+            })
+    return all_local_data
+
+def write_local_data_file(data, filename, base_path="."):
+    """data is a list of dicts with keys 'label', 'field_label', 'ainvs',
+    'local_data', 'curve_line' as for the value of the output of
+    read_local_data_file
+    """
+    outfile = open(os.path.join(base_path, filename), 'w')
+    for v in data:
+        outfile.write(" ".join([v['curve_line'],local_data_to_string(v['local_data'])]) + "\n")
+    outfile.close()
+
+
+def add_rootnos_to_local_data_file(filename, base_path=".", test=True):
+    data = read_local_data_file(filename, base_path)
+    nc = 0
+    print("{} curves to process".format(len(data)))
+    for c in data:
+        nc += 1
+        if nc%1000==0:
+            print("{}: {}".format(nc,c['label']))
+        c['local_data'] = add_root_number_to_local_data(c['field_label'], c['ainvs'], c['local_data'])
+    write_local_data_file(data, filename+".x", base_path)
+
+def make_the_local_data(filename, base_path="."):
+    global the_local_data
+    data = read_local_data_file(filename, base_path)
+    the_local_data = {}
+    for c in data:
+        field_label = c['field_label']
+        if not field_label in the_local_data:
+            the_local_data[field_label] = {}
+        the_local_data[field_label][c['label']] = c['local_data']

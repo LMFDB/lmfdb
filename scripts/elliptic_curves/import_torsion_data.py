@@ -19,7 +19,7 @@ Additional data fields for each elliptic curve over Q
 import os
 from sage.all import ZZ, PolynomialRing, QQ, NumberField
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 print "setting curves"
 curves = db.ec_curves
