@@ -29,7 +29,7 @@ import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, t
 from collections import defaultdict, Counter
 from glob import glob
 
-from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
+from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError, NotSupportedError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from sage.all import cartesian_product_iterator, binomial
@@ -362,7 +362,7 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except ProgrammingError:
+                except (ProgrammingError, NotSupportedError):
                     print query.as_string(self.conn)
                     print values
                     raise
@@ -542,11 +542,6 @@ class PostgresBase(object):
     ##################################################################
     # Exporting, importing, reloading and reverting meta_*           #
     ##################################################################
-
-
-
-
-
 
 
     def _copy_to_meta(self, meta_name, filename, search_table):
