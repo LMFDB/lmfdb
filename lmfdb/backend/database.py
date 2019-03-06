@@ -550,7 +550,7 @@ class PostgresBase(object):
         table_name_sql = Identifier(table_name)
         meta_name_sql = Identifier(meta_name)
         cols_sql = SQL(", ").join(map(Identifier, meta_cols))
-        select = "SELECT {} FROM {} WHERE {} = {}".format(
+        select = SQL("SELECT {} FROM {} WHERE {} = {}").format(
                 cols_sql, meta_name_sql, table_name_sql, Literal(search_table))
         now = time.time()
         with DelayCommit(self):
