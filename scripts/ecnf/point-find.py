@@ -10,11 +10,9 @@ print "setting nfcurves and qcurves"
 nfcurves = db.ec_nfcurves
 qcurves = db.ec_curves
 
-from sage.all import QQ, EllipticCurve
-from lmfdb.number_fields.web_number_field import WebNumberField
+from sage.all import EllipticCurve
 from scripts.ecnf.import_ecnf_data import nf_lookup
 from lmfdb.ecnf.WebEllipticCurve import parse_ainvs
-from lmfdb.backend.encoding import LmfdbRealLiteral, RealEncoder
 
 def MWShaInfo(E, HeightBound=None, test_saturation=False, verbose=False):
     r"""

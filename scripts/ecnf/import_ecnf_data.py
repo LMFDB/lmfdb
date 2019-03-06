@@ -928,7 +928,8 @@ def add_root_number_to_local_data(field_label, ainvs, ld):
         K = nf_lookup(field_label)
         ainvsK = parse_ainvs(K,ainvs)  # list of K-elements
         mE = magma(EllipticCurve(ainvsK))
-        mN = mE.Conductor() # looks redundant but without this line the LocalRootNumber call sometimes (rarely) fails
+        mN = mE.Conductor() # looks redundant but without this line
+        assert mN           # the LocalRootNumber call sometimes (rarely) fails
 
     for i, ldp in enumerate(ld):
         red_type = ldp['red']
@@ -1380,11 +1381,11 @@ def read_local_data_file(filename, base_path="."):
         field_label = data[0]       # string
         conductor_label = data[1]   # string
         iso_label = data[2]         # string
-        iso_nlabel = numerify_iso_label(iso_label)         # int
+        #iso_nlabel = numerify_iso_label(iso_label)         # int
         number = int(data[3])       # int
         short_class_label = "%s-%s" % (conductor_label, iso_label)
         short_label = "%s%s" % (short_class_label, str(number))
-        class_label = "%s-%s" % (field_label, short_class_label)
+        #class_label = "%s-%s" % (field_label, short_class_label)
         label = "%s-%s" % (field_label, short_label)
         ainvs = ";".join(data[6:11])  # one string joining 5 NFelt strings
 
