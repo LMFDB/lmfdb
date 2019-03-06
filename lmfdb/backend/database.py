@@ -2544,7 +2544,6 @@ class PostgresTable(PostgresBase):
                 raise ValueError("id must be of type bigint")
             names_set.discard("id")
             header_cols = header_cols[1:]
-            names = names[1:]
 
 
         missing = columns_set - names_set
