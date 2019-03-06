@@ -580,7 +580,7 @@ class PostgresBase(object):
         res = self._execute(SQL(
             "SELECT MAX(version) FROM {} WHERE {} = %s"
             ).format(meta_name_hist_sql, table_name_sql),
-            [self.search_table]
+            [search_table]
             ).fetchone()[0]
         if res is None:
             res = -1
@@ -613,7 +613,7 @@ class PostgresBase(object):
             self._execute(SQL(
                 "DELETE FROM {} WHERE {} = %s"
                 ).format(meta_name_sql, meta_name_sql),
-                [self.search_table])
+                [search_table])
 
             # insert new columns
             with open(filename, "r") as F:
@@ -631,7 +631,7 @@ class PostgresBase(object):
             rows = self._execute(SQL(
                 "SELECT {} FROM {} WHERE {} = %s"
                 ).format(cols_sql, table_name_sql, meta_name_sql),
-                [self.search_table])
+                [search_table])
 
 
             cols = meta_cols + ['version']
