@@ -218,7 +218,6 @@ class DelayCommit(object):
         if exc_type is None and self.obj._nocommit_stack == 0 and self.final_commit:
             self.obj.conn.commit()
         if exc_type is not None:
-            print "Transaction rolled back"
             self.obj.conn.rollback()
 
 class PostgresBase(object):
@@ -1938,18 +1937,24 @@ class PostgresTable(PostgresBase):
         self.copy_to_constraints(filename, self.search_table)
 
     def _get_current_index_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
+        res = self._execute(
+                SQL("SELECT MAX(version) FROM meta_indexes_hist WHERE table_name = %s"),
+                [self.search_table]
+                ).fetchone()[0]
+
+        if res is None:
+            res = -1
+        return res
 
     def _get_current_constraint_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_constraints_hist WHERE table_name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
+        res = self._execute(
+                SQL("SELECT MAX(version) FROM meta_constraints_hist WHERE table_name = %s"),
+                [self.search_table]
+                ).fetchone()[0]
+
+        if res is None:
+            res = -1
+        return res
 
     def reload_indexes(self, filename):
         # check that the rows have the right table name
@@ -4306,7 +4311,6 @@ class PostgresDatabase(PostgresBase):
         Log a change to the database.
         """
         uid = self.login()
-        print data
         inserter = SQL("INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) VALUES (%s, %s, %s, %s, %s)")
         self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
 
