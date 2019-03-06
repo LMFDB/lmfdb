@@ -2623,8 +2623,6 @@ class PostgresTable(PostgresBase):
                     # This consumes the first three lines
                     columns = self._check_header_lines(F, set(columns), sep=sep, adjust_schema=adjust_schema)
                     addid = ('id' not in columns)
-                elif adjust_schema:
-                    raise ValueError("header must be true to adjust schema")
                 else:
                     addid = False
 
@@ -2774,7 +2772,6 @@ class PostgresTable(PostgresBase):
                     if addedid is None:
                         addedid = addid
                     elif addedid != addid:
-                        self.conn.rollback()
                         raise ValueError("Mismatch on search and extra files containing id")
                 if resort is None and addid:
                     resort = True
