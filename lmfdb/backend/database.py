@@ -614,7 +614,7 @@ class PostgresBase(object):
             with open(filename, "r") as F:
                 try:
                     cur = self.conn.cursor()
-                    cur.copy_from(F, meta_name, columns = _meta_indexes_cols)
+                    cur.copy_from(F, meta_name, columns = meta_cols)
                 except Exception:
                     self.conn.rollback()
                     raise
@@ -639,8 +639,6 @@ class PostgresBase(object):
             for row in rows:
                 row = [Json(elt) if i in jsonb_idx else elt
                         for i, elt in enumerate(row)]
-                print row + [version]
-                print query.as_string(self.conn)
                 self._execute(query, row + [version])
 
 
