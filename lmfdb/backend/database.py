@@ -2752,6 +2752,7 @@ class PostgresTable(PostgresBase):
             restat = (countsfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
         print "Reloading %s..."%(self.search_table)
+        now_overall = time.time()
 
         tables = []
         counts = {}
@@ -2778,7 +2779,7 @@ class PostgresTable(PostgresBase):
                         raise ValueError("Mismatch on search and extra files containing id")
                 if resort is None and addid:
                     resort = True
-                print "Loaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
+                print "\tLoaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
 
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
@@ -2821,7 +2822,7 @@ class PostgresTable(PostgresBase):
 
             if log_change:
                 self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
-            print "Finished reloading %s!" % (self.search_table)
+            print "Reloaded %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
     def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
         """
@@ -3033,6 +3034,8 @@ class PostgresTable(PostgresBase):
                 ("meta_constraints", "table_name", _meta_constraints_cols, constraintsfile),
                 ("meta_tables", "name", _meta_tables_cols, metafile)
                 ]
+        print "Exporting %s..."%(self.search_table)
+        now_overall = time.time()
         with DelayCommit(self, commit):
             for table, cols, addid, write_header, filename in tabledata:
                 if filename is None:
@@ -3050,7 +3053,7 @@ class PostgresTable(PostgresBase):
                     except Exception:
                         self.conn.rollback()
                         raise
-                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+                print "\tExported %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
             for table, wherecol, cols, filename in metadata:
                 if filename is None:
@@ -3059,7 +3062,9 @@ class PostgresTable(PostgresBase):
                 cols = SQL(", ").join(map(Identifier, cols))
                 select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
                 self._copy_to_select(select, filename)
-                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+                print "\tExported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+
+            print "Exported %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
     ##################################################################
     # Updating the schema                                            #
