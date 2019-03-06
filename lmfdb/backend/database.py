@@ -639,6 +639,7 @@ class PostgresBase(object):
             for row in rows:
                 row = [Json(elt) if i in jsonb_idx else elt
                         for i, elt in enumerate(row)]
+                print row
                 self._execute(query, row + [version])
 
 
