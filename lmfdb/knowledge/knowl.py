@@ -281,9 +281,16 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s ORDER BY id, timestamp DESC) knowls WHERE status = 0").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [time])
-        return [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+        kids = [k.id for k in knowls]
+        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls2 WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [kids])
+        reviewed = {rec[0]:rec[1] for rec in cur}
+        for k in knowls:
+            k.reviewed_content = reviewed.get(k.id)
+        return knowls
 
     def ids_referencing(self, knowlid, old=False):
         """Returns all ids that reference the given one.

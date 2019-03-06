@@ -3,7 +3,7 @@ TASKS:
 * Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
 * Switch from jsonb to text[]
-* review_recent interface (more padding between knowls, order by date?)
+* review_recent interface: more padding between knowls
 * search for broken knowl links in code and knowls
 * when renaming, warn if changing category; provide helpful command to rename in code
 * In references, add code references

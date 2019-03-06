@@ -12,7 +12,8 @@
   <tr>
     <td id="td_{{k.id}}">
       Last edited by {{k.last_author()}} on {{ k.timestamp }} <br>
-      <a href="#" title="Mark reviewed" onclick="js_review_knowl({{k.id}}); return false;">Review</a>
+      <span id="to_review_{{k.id}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></span>
+      <span id="to_beta_{{k.id}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</span>
     </td>
   </tr>
   {% endfor %}

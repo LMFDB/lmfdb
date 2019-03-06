@@ -346,7 +346,7 @@ function increase_start_by_count_and_submit_form(form_id) {
 };
 
 function get_count_of_results(download_limit) {
-    var address = window.location.href
+    var address = window.location.href;
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
@@ -367,6 +367,30 @@ function get_count_callback(res, download_limit) {
         $("#download-form").show();
     }
 };
+
+function js_review_knowl(kid) {
+    var address = window.location.href;
+    $("to_review_"+kid).hide();
+    var callback = function(res) {
+        js_review_callback(res, kid);
+    }
+    $.ajax({url: address + "&review=" + kid, success: callback});
+}
+function js_review_callback(res, kid) {
+    $('#to_beta_'+kid).show();
+}
+
+function js_beta_knowl(kid) {
+    var address = window.location.href;
+    $("to_beta_"+kid).hide();
+    var callback = function(res) {
+        js_beta_callback(res, kid);
+    }
+    $.ajax({url: address + "&beta=" + kid, success: callback});
+}
+function js_review_callback(res, kid) {
+    $('#to_review_'+kid).show();
+}
 
 function simult_change(event) {
     // simultaneously change all selects to the same value

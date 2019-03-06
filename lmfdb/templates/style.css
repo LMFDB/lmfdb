@@ -963,8 +963,12 @@ table.ntdata td.light {
     background: white;
 }
 
-table.knowl_review tr:nth-child(odd) {
+table.knowl_review tr:nth-child(odd) td{
     background: {{color.white}};
+    padding-top: 30px;
+}
+table.knowl_review tr:first-child td {
+    padding-top: 0;
 }
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
