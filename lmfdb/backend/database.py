@@ -1964,7 +1964,7 @@ class PostgresTable(PostgresBase):
 
         with DelayCommit(self, silence=True):
             # delete the current columns
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
+            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [self.search_table])
 
             # insert new columns
             with open(filename, "r") as F:
@@ -1978,8 +1978,9 @@ class PostgresTable(PostgresBase):
             version = self._get_current_index_version() + 1
 
             # copy the new rows to history
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
+            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s"), [self.search_table])
             for row in rows:
+                #FIXME use const
                 self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
 
     def reload_constraints(self, filename):
@@ -2613,8 +2614,8 @@ class PostgresTable(PostgresBase):
         - ``header`` -- whether the file has header rows ordering the columns.
             This should be True for search and extra tables, False for counts and stats.
         - ``kwds`` -- passed on to psycopg2's copy_from
-        - ``adjust_schema`` -- If True, rather than raising an error if the columns
-            don't match expectations, will change the schema accordingly.
+        - ``adjust_schema`` -- If True, rather than raising an error if the header
+            doesn't match expectations, will change the schema accordingly.
         """
         sep = kwds.get("sep", u"\t")
         try:
