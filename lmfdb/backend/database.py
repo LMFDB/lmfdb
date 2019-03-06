@@ -38,6 +38,8 @@ from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_c
 from lmfdb.utils import KeyedDefaultDict
 from lmfdb.logger import make_logger
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
+#FIXME ?
+# import csv
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -105,11 +107,61 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'spgist': ['fillfactor']}
 
 
-_meta_tables_cols = ("name", "sort", "id_ordered", "out_of_order", "has_extras", "label_col", "total")
+def jsonb_idx(cols, cols_type):
+    return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsob")
+
+_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered",
+        "out_of_order", "has_extras", "stats_valid", "label_col", "total")
+_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total") # 1000, true, 0
+_meta_tables_types = dict(zip(_meta_tables_cols,
+    ("text", "jsonb", "smallint", "boolean",
+        "boolean", "boolean", "boolean", "text", "bigint")))
+_meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
+
 _meta_indexes_cols = ("index_name", "table_name", "type", "columns", "modifiers", "storage_params")
+_meta_indexes_types = dict(zip(_meta_indexes_cols,
+    ("text", "text", "text", "jsonb", "jsonb", "jsonb")))
+_meta_indexes_jsonb_idx = jsonb_idx(_meta_indexes_cols, _meta_indexes_types)
+
 _meta_constraints_cols = ("constraint_name", "table_name", "type", "columns", "check_func")
+_meta_constraints_types = dict(zip(_meta_constraints_cols,
+    ("text", "text", "text", "jsonb", "text")))
+_meta_constraints_jsonb_idx = jsonb_idx(_meta_constraints_cols, _meta_constraints_types)
+
+def _meta_cols_types_jsonb_idx(meta_name):
+    assert meta_name in ["meta_tables", "meta_indexes", "meta_constraints"]
+    if meta_name == "meta_tables":
+        meta_cols = _meta_tables_cols
+        meta_types = _meta_tables_types
+        meta_jsonb_idx = _meta_tables_jsonb_idx
+    elif meta_name == "meta_indexes":
+        meta_cols = _meta_indexes_cols
+        meta_types = _meta_indexes_types
+        meta_jsonb_idx = _meta_indexes_jsonb_idx
+    elif meta_name == "meta_constraints":
+        meta_cols = _meta_constraints_cols
+        meta_types = _meta_constraints_types
+        meta_jsonb_idx = _meta_constraints_jsonb_idx
+
+    return meta_cols, meta_types, meta_jsonb_idx
+
+def _meta_table_name(meta_name):
+    meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
+    # the column which will match search_table
+    table_name = "table_name"
+    if "name" in meta_cols:
+        table_name = "name"
+    return table_name
+
 _counts_cols = ("cols", "values", "count", "extra")
+_counts_types =  dict(zip(_counts_cols,
+    ("jsonb", "jsonb", "bigint", "boolean")))
+_counts_jsonb_idx = jsonb_idx(_counts_cols, _counts_types)
+
 _stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
+_stats_types =  dict(zip(_stats_cols,
+    ("jsonb", "text", "numeric", "jsonb", "jsonb", "integer")))
+_stats_jsonb_idx = jsonb_idx(_stats_cols, _stats_types)
 
 def IdentifierWrapper(name, convert = True):
     """
@@ -387,23 +439,6 @@ class PostgresBase(object):
                 has_id = True
         return col_list, col_type, has_id
 
-    def copy_to_indexes(self, filename, search_table):
-        cols = ", ".join(map(Identifier, _meta_indexes_cols))
-        select = SQL("SELECT {0} FROM meta_indexes WHERE table_name = {1}").format(cols, Literal(search_table))
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_indexes for %s in %.3f secs" % (search_table, time.time() - now)
-
-    def copy_to_constraints(self, filename, search_table):
-        cols = ", ".join(map(Identifier, _meta_constraints_cols))
-        select = SQL("SELECT {0} FROM meta_constraints WHERE table_name = {1}").format(cols, Literal(search_table))
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_constraints for %s in %.3f secs" % (search_table, time.time() - now)
-
-
     def _copy_to_select(self, select, filename):
         """
         Using the copy_expert from psycopg2 exports the data from a select statement.
@@ -467,26 +502,6 @@ class PostgresBase(object):
                     print "Warning: index %s does not exist"%(index + source)
 
 
-    # FIXME this should be somwhere else, but not in PostgresTable
-    ##################################################################
-    # copy_from and copy_to for meta_table                           #
-    ##################################################################
-
-    def copy_to_meta(self, filename, search_table):
-        cols = SQL(", ").join(map(Identifier, _meta_tables_cols))
-        select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_tables for %s in %.3f secs" % (search_table, time.time() - now)
-
-    def copy_from_meta(self, filename):
-        try:
-            cur = self.conn.cursor()
-            cur.copy_from(filename, "meta_tables", columns=_meta_tables_cols)
-        except Exception:
-            self.conn.rollback()
-            raise
 
 
     def _read_header_lines(self, F, sep=u"\t"):
@@ -513,6 +528,164 @@ class PostgresBase(object):
         if len(names) != len(types):
             raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
         return zip(names, types)
+
+
+    ##################################################################
+    # Exporting, importing, reloading and reverting meta_*           #
+    ##################################################################
+
+
+
+
+
+
+
+    def _copy_to_meta(self, meta_name, filename, search_table):
+        meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
+        table_name = _meta_table_name(meta_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+        select = "SELECT {} FROM {} WHERE {} = {}".format(
+                cols_sql, meta_name_sql, table_name_sql, Literal(search_table))
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported %s for %s in %.3f secs" % (meta_name,
+                search_table, time.time() - now)
+
+    def _copy_from_meta(self, meta_name, filename):
+        meta_cols, _, _ = self._meta_cols_types_jsonb_idx(meta_name)
+        try:
+            cur = self.conn.cursor()
+            cur.copy_from(filename, meta_name, columns=meta_cols)
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def _get_current_meta_version(self, meta_name, search_table):
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+        res = self._execute(SQL(
+            "SELECT MAX(version) FROM {} WHERE {} = %s"
+            ).format(meta_name_hist_sql, table_name_sql),
+            [self.search_table]
+            ).fetchone()[0]
+        if res is None:
+            res = -1
+        return res
+
+    def _reload_meta(self, meta_name, filename, search_table):
+
+        meta_cols, _, jsonb_idx = self._meta_cols_types_jsonb_idx(meta_name)
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+
+        table_name_idx = meta_cols.index(table_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+
+
+        with open(filename, "r") as F:
+            import csv
+            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            if len(lines) == 0:
+                return
+            for line in lines:
+                if line[table_name_idx] != search_table:
+                    raise RuntimeError("column %d in the file doesn't match the search table name" % table_name_idx)
+
+
+        with DelayCommit(self, silence=True):
+            # delete the current columns
+            self._execute(SQL(
+                "DELETE FROM {} WHERE {} = %s"
+                ).format(meta_name_sql, meta_name_sql),
+                [self.search_table])
+
+            # insert new columns
+            with open(filename, "r") as F:
+                try:
+                    cur = self.conn.cursor()
+                    cur.copy_from(F, meta_name, columns = _meta_indexes_cols)
+                except Exception:
+                    self.conn.rollback()
+                    raise
+
+            version = self._get_current_meta_version(meta_name, search_table) + 1
+
+            # copy the new rows to history
+            cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+            rows = self._execute(SQL(
+                "SELECT {} FROM {} WHERE {} = %s"
+                ).format(cols_sql, table_name_sql, meta_name_sql),
+                [self.search_table])
+
+
+            cols = meta_cols + ['version']
+            cols_sql = SQL(", ").join(map(Identifier, cols))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
+            query = SQL(
+                    "INSERT INTO {} {} VALUES {}"
+                    ).format(meta_name_hist_sql, cols_sql, place_holder)
+
+            for row in rows:
+                row = [Json(elt) if i in jsonb_idx else elt
+                        for i, elt in enumerate(row)]
+                self._execute(query, row + (version,))
+
+
+    def _revert_meta(self, meta_name, search_table, version = None):
+        meta_cols, _, jsonb_idx = self._meta_cols_types_jsonb_idx(meta_name)
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+
+        # by the default goes back one step
+        currentversion = self._get_current_meta_version(meta_name, search_table)
+        if currentversion == -1:
+            raise RuntimeError("No history to revert")
+        if version is None:
+            version = max(0, currentversion - 1)
+
+        with DelayCommit(self, silence=True):
+            # delete current rows
+            self._execute(SQL(
+                "DELETE FROM {} WHERE {} = %s"
+                ).format(meta_name_sql, table_name_sql),
+                [search_table])
+
+            # copy data from history
+            cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+            rows = self._execute(SQL(
+                "SELECT {} FROM {} WHERE {} = %s AND version = %s"
+                ).format(meta_name_hist_sql, cols_sql, table_name_sql),
+                [search_table, version])
+
+
+            place_holder = SQL("({0})").format(
+                    SQL(", ").join(map(Placeholder, meta_cols)))
+            query =  SQL(
+                    "INSERT INTO {} {} VALUES {}"
+                    ).format(meta_name_sql, cols_sql, place_holder)
+
+            cols = meta_cols + ['version']
+            cols_sql = SQL(", ").join(map(Identifier, cols))
+            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, cols)))
+            query_hist = SQL(
+                    "INSERT INTO {} {} VALUES {}"
+                    ).format(meta_name_hist_sql, cols_sql, place_holder)
+            for row in rows:
+                row = [Json(elt) if i in jsonb_idx else elt
+                        for i, elt in enumerate(row)]
+                self._execute(query, row)
+                self._execute(query_hist, row + (currentversion + 1,))
 
 
 
@@ -1927,221 +2100,42 @@ class PostgresTable(PostgresBase):
         return self._execute(selecter, [self.search_table] + columns, silent=True)
 
     ##################################################################
-    # Exporting, reloading and reverting indexes and constraints     #
-    ##################################################################
-
-    def copy_to_indexes(self, filename):
-        self.copy_to_indexes(filename, self.search_table)
-
-    def copy_to_constraints(self, filename):
-        self.copy_to_constraints(filename, self.search_table)
-
-    def _get_current_index_version(self):
-        res = self._execute(
-                SQL("SELECT MAX(version) FROM meta_indexes_hist WHERE table_name = %s"),
-                [self.search_table]
-                ).fetchone()[0]
-        if res is None:
-            res = -1
-        return res
-
-    def _get_current_constraint_version(self):
-        res = self._execute(
-                SQL("SELECT MAX(version) FROM meta_constraints_hist WHERE table_name = %s"),
-                [self.search_table]
-                ).fetchone()[0]
-        if res is None:
-            res = -1
-        return res
-
-    def reload_indexes(self, filename):
-        # check that the rows have the right table name
-        with open(filename, "r") as F:
-            import csv
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[1] != self.search_table:
-                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
-
-        with DelayCommit(self, silence=True):
-            # delete the current columns
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [self.search_table])
-
-            # insert new columns
-            with open(filename, "r") as F:
-                try:
-                    cur = self.conn.cursor()
-                    cur.copy_from(F, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
-                except Exception:
-                    self.conn.rollback()
-                    raise
-
-            version = self._get_current_index_version() + 1
-
-            # copy the new rows to history
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = %s"), [self.search_table])
-            for row in rows:
-                #FIXME use const
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
-
-    def reload_constraints(self, filename):
-        # check that the rows have the right table name
-        with open(filename, "r") as F:
-            import csv
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[1] != self.search_table:
-                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
-
-        with DelayCommit(self, silence=True):
-            # delete the current columns
-            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
-
-            # insert new columns
-            with open(filename, "r") as F:
-                try:
-                    cur = self.conn.cursor()
-                    cur.copy_from(F, "meta_constraints", columns = ["constraint_name", "table_name", "type", "columns", "check_func"])
-                except Exception:
-                    self.conn.rollback()
-                    raise
-
-            version = self._get_current_constraint_version() + 1
-
-            # copy the new rows to history
-            #FIXME use constants
-            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints WHERE table_name = '%s'"), [self.search_table])
-            for row in rows:
-                #FIXME use constants
-                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
-
-    def revert_indexes(self, version = None):
-        with DelayCommit(self, silence=True):
-            # by the default goes back one step
-            currentversion = self._get_current_index_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
-
-            # delete current rows
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
-
-            # copy data from history
-            #FIXME use constants
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
-            for row in rows:
-                #FIXME use constants
-                self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
-
-    def revert_constraints(self, version = None):
-        with DelayCommit(self, silence=True):
-            # by the default goes back one step
-            currentversion = self._get_current_constraint_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
-
-            # delete current rows
-            #FIXME use constants
-            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
-
-            # copy data from history
-            #FIXME use constants
-            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
-            for row in rows:
-                #FIXME use constants
-                self._execute(SQL("INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s, %s)"), row)
-                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s)"), row + (currentversion + 1,))
-
-    ##################################################################
-    # Exporting, reloading and reverting meta_table                  #
+    # Exporting, reloading and reverting meta_tables, meta_indexes and meta_constraints     #
     ##################################################################
 
     def copy_to_meta(self, filename):
-        self.copy_to_meta(filename, self.search_table)
+        self._copy_to_meta("meta_tables", filename, self.search_table)
 
-    def _get_current_tables_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
+    def copy_to_indexes(self, filename):
+        self._copy_to_meta("meta_indexes", filename, self.search_table)
 
-    def reload_meta(self, filename, final_swap=True, suffix="_tmp", commit=True):
-        """
-        Inserts a row into meta_tables
-        """
-        # load the only row
-        rows = []
-        with open(filename, "r") as F:
-            import csv
-            rows = [line for line in csv.reader(F, delimiter = "\t")]
+    def copy_to_constraints(self, filename):
+        self._copy_to_meta("meta_constraints", filename, self.search_table)
 
-        if len(rows) != 1:
-            raise RuntimeError("Expected only one row")
+    def _get_current_index_version(self):
+        return self._get_current_meta_version("meta_indexes", self.search_table)
 
-        row = list(rows[0])
+    def _get_current_constraint_version(self):
+        return self._get_current_meta_version("meta_constraints", self.search_table)
 
-        if row[0] != self.search_table:
-            raise RuntimeError("The 1st column (%s) doesn't match the search table name (%s)" % (row[0], self.search_table))
+    def reload_indexes(self, filename):
+        return self._reload_meta("meta_indexes", filename, self.search_table)
 
-        with DelayCommit(self, commit, silence=True):
-            # get the current version
-            version = self._get_current_tables_version() + 1
+    def reload_meta(self, filename):
+        return self._reload_meta("meta_tables", filename, self.search_table)
 
-            # delete current row
-            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table])
+    def reload_constraints(self, filename):
+        return self._reload_meta("meta_constraints", filename, self.search_table)
 
-            # insert new row
-            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols))
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols)))
-            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
-            self._execute(query, row)
+    def revert_indexes(self, version = None):
+        return self._revert_meta("meta_indexes", self.search_table, version)
 
-            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols + ["version"]))
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols  + ["version"])))
-            query = SQL('INSERT INTO meta_tables_hist {0} VALUES {1}').format(cols, place_holder)
-            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
-            self._execute(query, row + [version])
+    def revert_constraints(self, version = None):
+        return self._revert_meta("meta_constraints", self.search_table, version)
 
     def revert_meta(self, version = None):
-        with DelayCommit(self, silence=True):
-            currentversion = self._get_current_tables_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
+        return self._revert_meta("meta_tables", self.search_table, version)
 
-            # delete the current row
-            self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
-
-            # grab the old row
-            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols))
-            query = SQL("SELECT {0} FROM meta_tables_hist WHERE name = %s AND version = %s").format(cols)
-            cur = self._execute(query, [self.search_table, version])
-
-            assert cur.rowcount == 1
-            row = cur.fetchone()
-            # The total may be incorrect, so we grab it from the counts table.
-            row[-1] = self.count()
-
-            # insert the old row
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols)))
-            query = SQL('INSERT INTO meta_tables {0} VALUES {1}').format(cols, place_holder)
-            self._execute(query, row)
-
-            # update hist
-            cols = SQL(" ,").join(map(Identifier, _meta_tables_cols + ["version"]))
-            place_holder = SQL("({0})").format(SQL(", ").join(map(Placeholder, _meta_tables_cols  + ["version"])))
-            query = SQL('INSERT INTO meta_tables_hist {0} VALUES {1}').format(cols, place_holder)
-            self._execute(query, row + (currentversion + 1,))
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -4617,13 +4611,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self._execute(creator)
             self.grant_select(name+"_counts")
             self.grant_insert(name+"_counts")
-            # FIXME use global constants
+            # FIXME use global constants ?
             creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
             self.grant_select(name+"_stats")
             self.grant_insert(name+"_stats")
-            # FIXME use global constants
+            # FIXME use global constants ?
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
