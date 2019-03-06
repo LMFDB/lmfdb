@@ -4879,8 +4879,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 try:
                     table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, **kwds)
                 except DatabaseError:
-                    traceback.print_exc()
-                    failures.append(table)
+                    if not non_existent_tables:
+                        traceback.print_exc()
+                        failures.append(table)
+                    else:
+                        raise
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
