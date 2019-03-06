@@ -1941,7 +1941,6 @@ class PostgresTable(PostgresBase):
                 SQL("SELECT MAX(version) FROM meta_indexes_hist WHERE table_name = %s"),
                 [self.search_table]
                 ).fetchone()[0]
-
         if res is None:
             res = -1
         return res
@@ -1951,7 +1950,6 @@ class PostgresTable(PostgresBase):
                 SQL("SELECT MAX(version) FROM meta_constraints_hist WHERE table_name = %s"),
                 [self.search_table]
                 ).fetchone()[0]
-
         if res is None:
             res = -1
         return res
