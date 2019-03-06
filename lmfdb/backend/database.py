@@ -607,7 +607,7 @@ class PostgresBase(object):
             # delete the current columns
             self._execute(SQL(
                 "DELETE FROM {} WHERE {} = %s"
-                ).format(meta_name_sql, meta_name_sql),
+                ).format(meta_name_sql, table_name_sql),
                 [search_table])
 
             # insert new columns
@@ -625,7 +625,7 @@ class PostgresBase(object):
             cols_sql = SQL(", ").join(map(Identifier, meta_cols))
             rows = self._execute(SQL(
                 "SELECT {} FROM {} WHERE {} = %s"
-                ).format(cols_sql, table_name_sql, meta_name_sql),
+                ).format(cols_sql, meta_name_sql, table_name_sql),
                 [search_table])
 
 
