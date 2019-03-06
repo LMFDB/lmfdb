@@ -2512,7 +2512,7 @@ class PostgresTable(PostgresBase):
 
 
 
-    def _check_header_lines(self, F, columns_set, extras_table = False, sep=u"\t", adjust_schema=False):
+    def _check_header_lines(self, F, columns_set, sep=u"\t", adjust_schema=False):
         """
         Reads the header lines from a file
         (row of column names, row of column types, blank line).
@@ -2622,7 +2622,7 @@ class PostgresTable(PostgresBase):
             with open(filename) as F:
                 if header:
                     # This consumes the first three lines
-                    columns = self._read_header_lines(F, set(columns), sep=sep, adjust_schema=adjust_schema)
+                    columns = self._check_header_lines(F, set(columns), sep=sep, adjust_schema=adjust_schema)
                     addid = ('id' not in columns)
                 elif adjust_schema:
                     raise ValueError("header must be true to adjust schema")
