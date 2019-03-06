@@ -113,7 +113,7 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
 ##################################################################
 
 def jsonb_idx(cols, cols_type):
-    return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsob")
+    return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsonb")
 
 _meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered",
         "out_of_order", "has_extras", "stats_valid", "label_col", "total")
