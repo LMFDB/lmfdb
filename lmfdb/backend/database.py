@@ -3029,7 +3029,7 @@ class PostgresTable(PostgresBase):
             self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
-    def copy_to(self, searchfile=None, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
+    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -3048,7 +3048,7 @@ class PostgresTable(PostgresBase):
         - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
-        #self._check_file_input(searchfile, extrafile, kwds)
+        self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.get("sep", u"\t")
 
         tabledata = [
@@ -4791,7 +4791,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
 
 
-    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, **kwds):
+    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, halt_on_errors=True, **kwds):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
@@ -4907,11 +4907,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 try:
                     table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, **kwds)
                 except DatabaseError:
-                    if not non_existent_tables:
+                    if halt_on_errors or non_existent_tables:
+                        raise
+                    else:
                         traceback.print_exc()
                         failures.append(table)
-                    else:
-                        raise
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
