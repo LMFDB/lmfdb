@@ -461,6 +461,125 @@ class PostgresBase(object):
                 self.conn.rollback()
                 raise
 
+    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t", adjust_schema=False):
+        """
+        Reads the header lines from a file (row of column names, row of column
+        types, blank line), checking if these names match the columns set and
+        the types match the expected types in the table.
+        Returns a list of column names present in the header.
+
+        returning True if it includes ids and raising a ValueError if columns
+        do not match columns_set.
+
+        INPUT:
+
+        - ``F`` -- an open file handle, at the beginning of the file.
+        - ``table_name`` -- the table to compare types against
+        - ``columns_set`` -- a set of the columns expected in the table.
+        - ``sep`` -- a string giving the column separator.
+        - ``adjust_schema`` -- If True, rather than raising an error if the columns
+            don't match expectations, will change the schema accordingly.
+
+        OUTPUT:
+
+        The ordered list of columns.  The first entry may be ``"id"`` if the data
+        contains an id column.
+        """
+
+        col_type = self._column_types(table_name)
+        columns_set.discard("id")
+        if not (columns_set <= col_type.keys()):
+            raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
+        header_cols = self._read_header_lines(F, sep=sep)
+        names = [elt[0] for elt in header_cols]
+        names_set = set(names)
+        if "id" in names_set:
+            if names[0] != "id":
+                raise ValueError("id must be the first column")
+            if header_cols[0][1] != "bigint":
+                raise ValueError("id must be of type bigint")
+            names_set.discard("id")
+            header_cols = header_cols[1:]
+
+
+        missing = columns_set - names_set
+        extra = [(name, typ) for name, typ in header_cols
+                if name not in columns_set]
+        wrong_type = [(name, typ) for name, typ in header_cols
+                if name in columns_set and col_type[name] != typ]
+
+        if missing or extra or wrong_type:
+            err = ""
+            if missing or extra:
+                err += "Invalid header: "
+                if missing:
+                    err += ", ".join(list(missing)) + " (missing)"
+                if extra:
+                    err += ", ".join(list(extra)) + " (extra)"
+            if wrong_type:
+                if len(wrong_type) > 1:
+                        err += "Invalid types: "
+                else:
+                    err += "Invalid type: "
+                err += ", ".join(
+                        "%s should be %s" % (name, self.col_type[name])
+                        for name, _ in wrong_type)
+            raise ValueError(err)
+        return names
+
+
+    def _copy_from(self, filename, table, columns, header, kwds):
+        """
+        Helper function for ``copy_from`` and ``reload``.
+
+        INPUT:
+
+        - ``filename`` -- the filename to load
+        - ``table`` -- the table into which the data should be added
+        - ``columns`` -- a list of columns to load (the file may contain them in
+            a different order, specified by a header row)
+        - ``cur_count`` -- the current number of rows in the table
+        - ``header`` -- whether the file has header rows ordering the columns.
+            This should be True for search and extra tables, False for counts and stats.
+        - ``kwds`` -- passed on to psycopg2's copy_from
+        """
+        sep = kwds.get("sep", u"\t")
+
+        with DelayCommit(self, silence=True):
+            with open(filename) as F:
+                if header:
+                    # This consumes the first three lines
+                    columns = self._check_header_lines(F, table, set(columns), sep=sep)
+                    addid = ('id' not in columns)
+                else:
+                    addid = False
+
+                # We have to add quotes manually since copy_from doesn't accept
+                # psycopg2.sql.Identifiers
+                # None of our column names have double quotes in them. :-D
+                assert all('"' not in col for col in columns)
+                columns = ['"' + col + '"' for col in columns]
+                if addid:
+                    # create sequence
+                    cur_count = self.max_id(table)
+                    seq_name = table + '_seq'
+                    create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
+                    self._execute(create_seq, [cur_count+1]*2);
+                    # edit default value
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
+                    self._execute(alter_table, [seq_name])
+
+                cur = self.conn.cursor()
+                cur.copy_from(F, table, columns=columns, **kwds)
+
+                if addid:
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
+                    self._execute(alter_table)
+                    drop_seq = SQL("DROP SEQUENCE {0}").format(Identifier(seq_name))
+                    self._execute(drop_seq)
+
+                return addid, cur.rowcount
+
     def _clone(self, table, tmp_table):
         """
         Utility function: creates a table with the same schema as the given one.
@@ -469,6 +588,44 @@ class PostgresBase(object):
             raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
         creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
         self._execute(creator)
+
+    def _create_table(self, name, columns):
+        """
+        Utility function: creates a table with the schema specified by `columns`
+
+        INPUT:
+
+        - ``name`` -- the desired name
+        - ``columns`` -- list of pairs, where the first entry is the column name
+        and the second one is the corresponding type
+        """
+        #FIXME make the code use this
+        for col, typ in columns:
+            if typ not in types_whitelist:
+                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                    raise RuntimeError("%s is not a valid type"%(typ))
+
+        table_col = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in columns)
+        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
+        self._execute(creator)
+
+    def _create_table_from_header(self, filename, name, addid=True):
+        """
+        Utility function: creates a table with the schema specified in the header of the file.
+        """
+        if self._table_exists(name):
+            error_msg = "Table %s already exists." % name
+            if name.endswith("_tmp"):
+                error_msg += "Run db.%s.cleanup_from_reload() if you want to delete it and proceed." % (name[:-4])
+            raise ValueError(error_msg)
+        with open(filename, "r") as F:
+            columns = self._read_header_lines(F)
+        if addid:
+            if ('id','bigint') not in columns:
+                columns = [('id','bigint')] + columns
+
+        self._create_table(name, columns)
+
 
 
     def _swap(self, tables, indexes, constraints, source, target):
@@ -2513,77 +2670,6 @@ class PostgresTable(PostgresBase):
 
 
 
-    def _check_header_lines(self, F, columns_set, sep=u"\t", adjust_schema=False):
-        """
-        Reads the header lines from a file
-        (row of column names, row of column types, blank line).
-        returning True if it includes ids and raising a ValueError if columns
-        do not match unordered.
-
-        INPUT:
-
-        - ``F`` -- an open file handle, at the beginning of the file.
-        - ``unordered`` -- a set of the columns in the table.
-        - ``sep`` -- a string giving the column separator.
-        - ``adjust_schema`` -- If True, rather than raising an error if the columns
-            don't match expectations, will change the schema accordingly.
-
-        OUTPUT:
-
-        The ordered list of columns.  The first entry may be ``"id"`` if the data
-        contains an id column.
-        """
-
-        header_cols = self._read_header_lines(F, sep=sep)
-        names = [elt[0] for elt in header_cols]
-        names_set = set(names)
-        columns_set.discard("id")
-        if "id" in names_set:
-            if names[0] != "id":
-                raise ValueError("id must be the first column")
-            if header_cols[0][1] != "bigint":
-                raise ValueError("id must be of type bigint")
-            names_set.discard("id")
-            header_cols = header_cols[1:]
-
-
-        missing = columns_set - names_set
-        extra = [(name, typ) for name, typ in header_cols
-                if name not in columns_set]
-        wrong_type = [(name, typ) for name, typ in header_cols
-                if name in columns_set and self.col_type[name] != typ]
-
-        if missing or extra:
-            is_extra_table = (columns_set == set(self._extra_cols))
-            if adjust_schema:
-                for col in missing:
-                    self.drop_column(col)
-                for col, typ in extra:
-                    self.add_column(col, typ, extra=is_extra_table)
-            else:
-                err = "Invalid header: "
-                if missing:
-                    err += ", ".join(list(missing)) + " (missing)"
-                if extra:
-                    err += ", ".join(list(extra)) + " (extra)"
-                raise ValueError(err)
-        # The header names are valid, now we check the column types
-        if wrong_type:
-            if adjust_schema:
-                for col, typ in wrong_type:
-                    self.drop_column(col)
-                    self.add_column(col, typ, extra=is_extra_table)
-            else:
-                if len(wrong_type) > 1:
-                    err = "Invalid types: "
-                else:
-                    err = "Invalid type: "
-                err += ", ".join(
-                        "%s should be %s" % (name, self.col_type[name])
-                        for name, _ in wrong_type)
-                raise ValueError(err)
-        return names
-
     def _write_header_lines(self, F, cols, sep=u"\t"):
         """
         Writes the header lines to a file
@@ -2600,61 +2686,6 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, header, kwds, adjust_schema=False):
-        """
-        Helper function for ``copy_from`` and ``reload``.
-
-        INPUT:
-
-        - ``filename`` -- the filename to load
-        - ``table`` -- the table into which the data should be added
-        - ``columns`` -- a list of columns to load (the file may contain them in
-            a different order, specified by a header row)
-        - ``cur_count`` -- the current number of rows in the table
-        - ``header`` -- whether the file has header rows ordering the columns.
-            This should be True for search and extra tables, False for counts and stats.
-        - ``kwds`` -- passed on to psycopg2's copy_from
-        - ``adjust_schema`` -- If True, rather than raising an error if the header
-            doesn't match expectations, will change the schema accordingly.
-        """
-        sep = kwds.get("sep", u"\t")
-        try:
-            with open(filename) as F:
-                if header:
-                    # This consumes the first three lines
-                    columns = self._check_header_lines(F, set(columns), sep=sep, adjust_schema=adjust_schema)
-                    addid = ('id' not in columns)
-                else:
-                    addid = False
-
-                # We have to add quotes manually since copy_from doesn't accept
-                # psycopg2.sql.Identifiers
-                # None of our column names have double quotes in them. :-D
-                assert all('"' not in col for col in columns)
-                columns = ['"' + col + '"' for col in columns]
-                if addid:
-                    # create sequence
-                    cur_count = self.max_id(table)
-                    seq_name = table + '_seq'
-                    create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
-                    self._execute(create_seq, [cur_count+1]*2);
-                    # edit default value
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
-                    self._execute(alter_table, [seq_name])
-
-                cur = self.conn.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
-
-                if addid:
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
-                    self._execute(alter_table)
-                    drop_seq = SQL("DROP SEQUENCE {0}").format(Identifier(seq_name))
-                    self._execute(drop_seq)
-
-                return addid, cur.rowcount
-        except Exception:
-            self.conn.rollback()
-            raise
 
 
 
@@ -2736,8 +2767,9 @@ class PostgresTable(PostgresBase):
             is to refresh stats if either countsfile or statsfile is missing.
         - ``final_swap`` -- whether to perform the final swap exchanging the
             temporary table with the live one.
-        - ``adjust_schema`` -- If True, rather than raising an error if the header
-            columns don't match expectations, will change the schema accordingly.
+        - ``adjust_schema`` -- If True, it will create the new tables using the
+            header columns, otherwise expects the schema specified by the files
+            to match the current one
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
 
         .. NOTE:
@@ -2766,8 +2798,12 @@ class PostgresTable(PostgresBase):
                 tables.append(table)
                 now = time.time()
                 tmp_table = table + suffix
-                self._clone(table, tmp_table)
-                addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds, adjust_schema=adjust_schema)
+                if adjust_schema:
+                    # read the header and create the tmp_table accordingly
+                    self._create_table_from_header(filename, tmp_table)
+                else:
+                    self._clone(table, tmp_table)
+                addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds)
                 # Raise error if exactly one of search and extra contains ids
                 if header:
                     if addedid is None:
@@ -4757,6 +4793,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         # copy all the data
         source.copy_to(search_tables = search_tables, data_folder=data_folder, **kwds)
+
+
 
     def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, **kwds):
         """
