@@ -469,8 +469,8 @@ class ECNF(object):
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            ld['kod'] = ld['kod'].replace('\\\\', '\\')
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
+            while '\\\\' in ld['kod']:
+                ld['kod'] = ld['kod'].replace('\\\\', '\\')
 
         # URLs of self and related objects:
         self.urls = {}
