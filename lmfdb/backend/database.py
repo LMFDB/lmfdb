@@ -497,8 +497,7 @@ class PostgresBase(object):
 
 
         missing = columns_set - names_set
-        extra = [(name, typ) for name, typ in header_cols
-                if name not in columns_set]
+        extra = names_set - columns_set
         wrong_type = [(name, typ) for name, typ in header_cols
                 if name in columns_set and col_type[name] != typ]
 
@@ -516,8 +515,8 @@ class PostgresBase(object):
                 else:
                     err += "Invalid type: "
                 err += ", ".join(
-                        "%s should be %s" % (name, self.col_type[name])
-                        for name, _ in wrong_type)
+                        "%s should be %s instead of %s" % (name, col_type[name], typ)
+                        for name, typ in wrong_type)
             raise ValueError(err)
         return names
 
