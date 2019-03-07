@@ -2795,7 +2795,7 @@ class PostgresTable(PostgresBase):
                 tables.append(table)
                 now = time.time()
                 tmp_table = table + suffix
-                if adjust_schema:
+                if adjust_schema and header:
                     # read the header and create the tmp_table accordingly
                     cols = self._create_table_from_header(filename, tmp_table)
                 else:
