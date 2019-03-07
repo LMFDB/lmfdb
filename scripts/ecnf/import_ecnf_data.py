@@ -223,8 +223,11 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
-    prefixes = ['curve_data']
-    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    #prefixes = ['curves']
+    suffix = ''.join([".", field_label])
+    if min_norm>0 or max_norm!='infinity':
+        suffix = ''.join([suffix, ".", str(min_norm), "-", str(max_norm)])
+
     for prefix in prefixes:
         filename = os.path.join(base_path, ''.join([prefix, suffix]))
         file[prefix] = open(filename, 'w')
@@ -1152,9 +1155,8 @@ def update_stats(verbose=True):
     entry.update(field_data)
     ecdbstats.insert_one(entry)
 
-# functions below here not yet adapted for postgres
-
 # This was a one-off and can probably be deleted:
+# not adapted for postgres.
 
 def make_IQF_ideal_table(infile, insert=False):
     items = []
@@ -1229,7 +1231,7 @@ def fix1_qcurve_flag(ec, verbose=False):
     return ec
 
 def is_Q_curve(E):
-    """Test if an elliptic curve is a Q-curve.
+    """Test if an elliptic curve is a Q-curve.  This version only for quadratic fields.
     """
     jE =  E.j_invariant()
     if jE in QQ:
@@ -1237,16 +1239,35 @@ def is_Q_curve(E):
     if E.has_cm():
         return True
     K = E.base_field()
+
+    # Simple test should catch many non-Q-curves: find primes of
+    # good reduction and of the same norm and test if the
+    # traces of Frobenius are equal *up to sign*
+
+    pmax = 200
+    NN = E.conductor().norm()
+    for p in primes(pmax):
+        if p.divides(NN):
+            continue
+        Plist = [P for P in K.primes_above(p)
+                 if P.residue_class_degree() == 1]
+        if len(Plist)<2:
+            continue
+        aP0 = E.reduction(Plist[0]).trace_of_frobenius()
+        for P in Plist[1:]:
+            aP = E.reduction(P).trace_of_frobenius()
+            if aP.abs() != aP0.abs():
+                return False
+
     if K.degree()>2:
         raise NotImplementedError("Only quadratic fields implemented so far")
-    sigma = K.galois_group()[1]
-    N = E.conductor()
-    if N!=sigma(N):
-        return False
-    jEs = sigma(jE)
     C = E.isogeny_class()
+    jC = [E1.j_invariant() for E1 in C]
+    if any(j in QQ for j in jC):
+        return True
+    sigma = K.galois_group()[1]
     # check that the conjugate of j(E) is in the class:
-    return any(E1.j_invariant()==jEs for E1 in C)
+    return sigma(jE) in jC
 
 def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     """Given a (quadratic) field label test all curves E over that field for being Q-curves.
@@ -1258,7 +1279,7 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = nfcurves.search(query)
     # keep the curves and re-find them, else the cursor times out.
     curves = [ec['label'] for ec in cursor]
     ncurves = len(curves)
@@ -1272,7 +1293,7 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         count += 1
         if count%1000==0:
             print("checked {} curves ({}%)".format(count, 100.0*count/ncurves))
-        ec = nfcurves.find_one({'label':label})
+        ec = nfcurves.lucky({'label':label})
         assert label == ec['label']
         method = None
         # first check that j(E) is rational (no computation needed)
@@ -1285,20 +1306,13 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
             if verbose: print("{}: CM".format(label))
             qc = True
             method = "CM"
-        else: # construct and check the conductor
+        else: # construct and check the curve
             if verbose:
-                print("{}: checking conductor".format(label))
-            N = ideal_from_string(K.K(),ec['conductor_ideal'])
-            if sigma(N)!=N:
-                qc = False
-                method = "conductor"
-            else: # construct and check the curve
-                if verbose:
-                    print("{}: checking isogenies".format(label))
-                ainvsK = parse_ainvs(K.K(), ec['ainvs'])
-                E = EllipticCurve(ainvsK)
-                qc = is_Q_curve(E)
-                method = "isogenies"
+                print("{}: checking isogenies".format(label))
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+            E = EllipticCurve(ainvsK)
+            qc = is_Q_curve(E)
+            method = "isogenies"
         db_qc = ec['q_curve']
         if qc and not db_qc:
             print("Curve {} is a Q-curve (using {}) but database thinks not".format(label, method))
@@ -1429,3 +1443,65 @@ def make_the_local_data(filename, base_path="."):
         if not field_label in the_local_data:
             the_local_data[field_label] = {}
         the_local_data[field_label][c['label']] = c['local_data']
+
+def read_qcurve_flags(filename, base_path="."):
+    """
+    Read a curves file and return a dict with keys full curve labels
+    and values the Q-curve flag (True or False).  Conductor labels are
+    assumes already in LMFDB format (no IQF conversion).
+    """
+    qcurve_dict = {}
+    for line in open(os.path.join(base_path, filename)).readlines():
+        data = split(line)
+        if len(data) != 13:
+            print "line %s does not have 13 fields, skipping" % line
+        field_label = data[0]
+        conductor_label = data[1]
+        iso_label = data[2]
+        number = data[3]
+        short_class_label = "-".join([conductor_label, iso_label])
+        short_label = "".join([short_class_label, number])
+        label = "-".join([field_label, short_label])
+        qcurve = data[12]
+        if not qcurve in ['0','1']:
+            print("Curve {} has no Q-curve flag set: {}".format(label, qcurve))
+        else:
+            qcurve_dict[label] = (qcurve=='1')
+    return qcurve_dict
+
+def read_all_qcurve_flags():
+    QFs = nfcurves.distinct("field_label", {'degree':2})
+    IQFs = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
+    RQFs = [f for f in QFs if f[:4]=='2.2.']
+
+    # As of 2019-03-07 all IQF data is for one of the 5 Euclidean
+    # fields in the list IQFs, while the database has 8 more curves
+    # over IQFs, with everywhere good reduction, in the "sengun"
+    # directory of ecnf-data.  None of the latter are Q-curves, and
+    # they are in a single file called curves.EC_IQF_egr and not
+    # divided into fields, so for simplicity we ignore these
+    # completely here.
+    
+    qc = {}
+    base = "/home/jcremona/ecnf-data/"
+    for f in RQFs:
+        qc.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
+    for f in IQFs:
+        qc.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
+    assert len(qc)==nfcurves.count({'degree':2}) - 8
+    return qc
+
+def make_qcurve_flag_updater():
+    qc = read_quadratic_qcurve_flags()
+    def qcurve_flag_updater(C):
+        label = C['label']
+        if C['degree']>2:
+            C['q_curve'] = None
+        elif label in qc:
+            old_flag = C['q_curve']
+            new_flag = qc[label]
+            # if old_flag!=new_flag:
+            #     print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
+            C['q_curve'] = new_flag
+        return C
+    return qcurve_flag_updater
