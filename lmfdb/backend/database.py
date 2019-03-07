@@ -480,9 +480,9 @@ class PostgresBase(object):
         contains an id column.
         """
 
-        col_type = self._column_types(table_name)
+        col_list, col_type, _ = self._column_types(table_name)
         columns_set.discard("id")
-        if not (columns_set <= col_type.keys()):
+        if not (columns_set <= set(col_list)):
             raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
         header_cols = self._read_header_lines(F, sep=sep)
         names = [elt[0] for elt in header_cols]
