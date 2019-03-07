@@ -600,12 +600,12 @@ class PostgresBase(object):
 
         table_col = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in columns)
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
-        print creator.as_string(self.conn)
         self._execute(creator)
 
     def _create_table_from_header(self, filename, name, addid=True):
         """
         Utility function: creates a table with the schema specified in the header of the file.
+        Returns column names found in the header
         """
         if self._table_exists(name):
             error_msg = "Table %s already exists." % name
@@ -614,11 +614,15 @@ class PostgresBase(object):
             raise ValueError(error_msg)
         with open(filename, "r") as F:
             columns = self._read_header_lines(F)
+        col_list = [elt[0] for elt in columns]
+        addedid = False
         if addid:
             if ('id','bigint') not in columns:
+                addedid = True
                 columns = [('id','bigint')] + columns
 
         self._create_table(name, columns)
+        return col_list
 
 
 
@@ -2793,7 +2797,7 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 if adjust_schema:
                     # read the header and create the tmp_table accordingly
-                    self._create_table_from_header(filename, tmp_table)
+                    cols = self._create_table_from_header(filename, tmp_table)
                 else:
                     self._clone(table, tmp_table)
                 addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds)
