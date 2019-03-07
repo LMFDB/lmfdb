@@ -618,7 +618,6 @@ class PostgresBase(object):
         addedid = False
         if addid:
             if ('id','bigint') not in columns:
-                addedid = True
                 columns = [('id','bigint')] + columns
 
         self._create_table(name, columns)
