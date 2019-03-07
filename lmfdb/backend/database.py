@@ -461,15 +461,12 @@ class PostgresBase(object):
                 self.conn.rollback()
                 raise
 
-    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t", adjust_schema=False):
+    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t"):
         """
         Reads the header lines from a file (row of column names, row of column
         types, blank line), checking if these names match the columns set and
         the types match the expected types in the table.
         Returns a list of column names present in the header.
-
-        returning True if it includes ids and raising a ValueError if columns
-        do not match columns_set.
 
         INPUT:
 
@@ -477,8 +474,6 @@ class PostgresBase(object):
         - ``table_name`` -- the table to compare types against
         - ``columns_set`` -- a set of the columns expected in the table.
         - ``sep`` -- a string giving the column separator.
-        - ``adjust_schema`` -- If True, rather than raising an error if the columns
-            don't match expectations, will change the schema accordingly.
 
         OUTPUT:
 
