@@ -16,11 +16,12 @@ import re
 import flask
 from lmfdb.app import app, is_beta
 from datetime import datetime
-from flask import render_template, render_template_string, request, url_for, make_response
+from flask import render_template, render_template_string, request, url_for, make_response, jsonify
 #from flask.ext.login import login_required, current_user
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
+from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
 
@@ -400,9 +401,29 @@ def demote(ID):
     flask.flash("Knowl %s has been returned to beta." % ID)
     return flask.redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/review_recent/<int:days>")
+@knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
 def review_recent(days):
+    if len(request.args) > 0:
+        try:
+            info = to_dict(request.args)
+            print "Triggering", info
+            beta = None
+            ID = info.get('review')
+            if ID:
+                beta = False
+            else:
+                ID = info.get('beta')
+                if ID:
+                    beta = True
+            if beta is not None:
+                k = Knowl(ID)
+                k.review(who=current_user.get_id(), set_beta=beta)
+                return jsonify({"success":1})
+            raise ValueError
+        except Exception as err:
+            print "Erroring", err
+            return jsonify({"success":0})
     knowls = knowldb.needs_review(days)
     for k in knowls:
         k.rendered = render(k.id, footer="0", raw=True, k=k)
@@ -410,6 +431,17 @@ def review_recent(days):
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,
                            knowls=knowls,
+                           bread=b)
+
+@knowledge_page.route("/broken_links")
+def broken_links():
+    bad_knowls = knowldb.broken_links_knowls()
+    bad_code = [(code_snippet_knowl(D[0]), D[1]) for D in knowldb.broken_links_code()]
+    b = get_bread([("Broken links", url_for('.broken_links'))])
+    return render_template("knowl-broken-links.html",
+                           title="Broken knowl links",
+                           bad_knowls=bad_knowls,
+                           bad_code=bad_code,
                            bread=b)
 
 @knowledge_page.route("/rename/<ID>/<NEWID>")
@@ -450,7 +482,7 @@ def save_form():
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
 
-    k = Knowl(ID)
+    k = Knowl(ID, saving=True)
     new_title = request.form['title']
     new_content = request.form['content']
     if new_title != k.title or new_content != k.content:
@@ -474,6 +506,10 @@ def save_form():
                 flask.flash("A knowl with id %s already exists." % NEWID, "error")
             else:
                 flask.flash("Knowl renamed to %s successfully." % NEWID)
+                if k.sed_safety == 1:
+                    flask.flash("You can change code references using\n`git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g'` (Mac)\n`git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g'` (Linux)".format(ID, NEWID))
+                elif k.sed_safety == -1:
+                    flask.flash("This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed")
                 ID = NEWID
     return flask.redirect(url_for(".show", ID=ID))
 
@@ -555,11 +591,8 @@ def render(ID, footer=None, kwargs=None, raw=False, k=None, allow_deleted=False)
     %(review_status)s
   </div>"""
         # """ &middot; Authors: %(authors)s """
-        if k.status == 0 and not is_beta():
-            if current_user.is_knowl_reviewer():
-                review_status = """&middot; (<a onclick='return confirm("Mark as positively reviewed?");' href="{{ url_for('.review', ID='%(ID)s') }}">awaiting review</a>)""" % {'ID': k.id}
-            else:
-                review_status = """&middot; (awaiting review)"""
+        if k.status == 0:
+            review_status = """&middot; (awaiting review)"""
     render_me += "</div>"
     # render_me = render_me % {'content' : con, 'ID' : k.id }
     con = md_preprocess(con)

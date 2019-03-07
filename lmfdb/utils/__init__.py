@@ -10,7 +10,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template', 's
            'web_latex', 'web_latex_ideal_fact', 'web_latex_split_on', 'web_latex_split_on_pm',
            'web_latex_split_on_re', 'display_knowl', 'bigint_knowl', 'too_big', 'make_bigint',
            'bigpoly_knowl', 'factor_base_factor', 'factor_base_factorization_latex',
-           'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix',
+           'polyquo_knowl', 'web_latex_poly', 'list_to_latex_matrix', 'code_snippet_knowl',
            'Pagination',
            'debug', 'flash_error', 'cached',
            'ajax_url',
@@ -40,7 +40,7 @@ from .utilities import (
     web_latex, web_latex_ideal_fact, web_latex_split_on, web_latex_split_on_pm,
     web_latex_split_on_re, display_knowl, bigint_knowl, too_big, make_bigint,
     bigpoly_knowl, factor_base_factor, factor_base_factorization_latex,
-    polyquo_knowl, web_latex_poly, list_to_latex_matrix,
+    polyquo_knowl, web_latex_poly, list_to_latex_matrix, code_snippet_knowl,
     Pagination,
     debug, flash_error, cached,
     ajax_url, # try to eliminate?

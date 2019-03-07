@@ -51,7 +51,7 @@ $(document).ready(function()	{
        <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
      </td>
    </tr>
-   {% if user_is_admin %}
+   {% if user_is_admin and k.type == 0 %}
    <tr>
      <td>
        Rename to:
@@ -77,7 +77,7 @@ $(document).ready(function()	{
      </td>
    </tr>
   </table>
-   <button type="submit" id="knowl-edit-btn" onclick="unsaved = false;">Save</button>
+   <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
    <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
 </form>
 
@@ -157,6 +157,37 @@ window.onbeforeunload = function() {
   if(unsaved) {
     return "There are unsaved edits. Really close?";
   }
+}
+
+/* Check before saving if changing knowl category */
+function check_knowl_category() {
+  {% if user_is_admin %}
+  var newname = $("input[name='krename']").val();
+  log(newname.split(".").slice(0,-1));
+
+  if (newname) {
+    if (newname.includes(".")) {
+      var newcat = newname.split(".").slice(0,-1).join(".");
+    } else {
+      var newcat = newname;
+    }
+    if ('{{k.id}}'.includes(".")) {
+      var oldcat = '{{k.id}}'.split(".").slice(0, -1).join(".");
+    } else {
+      var oldcat = oldname;
+    }
+    if (newcat != oldcat) {
+      if (confirm("Do you really want to change the knowl category from " + oldcat + " to " + newcat)) {
+        unsaved = false;
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  {% endif %}
+  unsaved = false;
+  return true;
 }
 </script>
 

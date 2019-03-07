@@ -2,14 +2,11 @@ TASKS:
 
 * Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
+* In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
-* review_recent interface: more padding between knowls
+* Fix keywords on rename
 * search for broken knowl links in code and knowls
 * when renaming, warn if changing category; provide helpful command to rename in code
-* In references, add code references
-* In recent reviews, add diff with last positively reviewed; change "Review" to "Mark as reviewed"/"Mark as beta"
-* For (awaiting review), activate on beta, not a link
-* 1234 days of knowls doesn't work
 * When creating a new knowl, resurrect old code in history when they save
 * When editing a knowl, use the all_defines property to find the name of a knowl that defines a particular keyword.  Maybe with a right click menu (google for context menu)
 * Search with wildcards (use tilde operator and a checkbox on the search; think about details)

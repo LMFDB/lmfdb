@@ -197,6 +197,13 @@ function knowl_click_handler($el) {
     if(knowl_id == "dynamic_show") {
       log("dynamic_show: " + kwargs);
       $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+      // Support for escaping html within a div inside the knowl
+      // Used for code references in showing knowls
+      var pretext = $el.attr("pretext");
+      log("pretext: " + pretext);
+      if (typeof pretext !== typeof undefined && pretext !== false) {
+        $output.find("pre").text(pretext);
+      }
       try
       {
         renderMathInElement($output.get(0), katexOpts);
@@ -370,26 +377,43 @@ function get_count_callback(res, download_limit) {
 
 function js_review_knowl(kid) {
     var address = window.location.href;
-    $("to_review_"+kid).hide();
+    if (address.slice(-1) === "#")
+        address = address.slice(0,-1);
+    address = address + "?review=" + kid;
+    kid = kid.replace('.','');
+    $("#to_review_"+kid).hide();
+    //$("#to_review_"+kid.replace('.','')).html("HELLO");
     var callback = function(res) {
         js_review_callback(res, kid);
     }
-    $.ajax({url: address + "&review=" + kid, success: callback});
+    $.ajax({url: address, success: callback});
 }
 function js_review_callback(res, kid) {
-    $('#to_beta_'+kid).show();
+    if (res['success'] === 1) {
+        $('#to_beta_'+kid).show();
+    } else {
+        $('#error_'+kid).show();
+    }
 }
 
 function js_beta_knowl(kid) {
     var address = window.location.href;
-    $("to_beta_"+kid).hide();
+    if (address.slice(-1) === "#")
+        address = address.slice(0,-1);
+    address = address + "?beta=" + kid;
+    kid = kid.replace('.','');
+    $("#to_beta_"+kid).hide();
     var callback = function(res) {
         js_beta_callback(res, kid);
     }
-    $.ajax({url: address + "&beta=" + kid, success: callback});
+    $.ajax({url: address, success: callback});
 }
-function js_review_callback(res, kid) {
-    $('#to_review_'+kid).show();
+function js_beta_callback(res, kid) {
+    if (res['success'] === 1) {
+        $('#to_review_'+kid).show();
+    } else {
+        $('#error_'+kid).show();
+    }
 }
 
 function simult_change(event) {

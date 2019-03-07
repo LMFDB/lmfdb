@@ -25,7 +25,7 @@ from werkzeug import cached_property
 from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
 from sage.structure.element import Element
 
-from lmfdb.app import app
+from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """
@@ -772,6 +772,43 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
         else:
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
+
+def code_snippet_knowl(D, full=True):
+    r"""
+    INPUT:
+
+    - ``D`` -- a dictionary with the following keys
+      - ``filename`` -- a filename within the lmfdb repository
+      - ``code`` -- a list of code lines (without trailing \n)
+      - ``lines`` -- (optional) a list of line numbers
+    - ``full`` -- if False, display only the filename rather than the full path.
+    """
+    filename = D['filename']
+    code = D['code']
+    lines = D.get('lines')
+    code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
+    if is_debug_mode():
+        branch = "master"
+    elif is_beta():
+        branch = "beta"
+    else:
+        branch = "prod"
+    url = "%s%s/%s" % (_url_source, branch, filename)
+    link_text = "%s on Github" % (filename)
+    if not full:
+        filename = filename.split('/')[-1]
+    if lines:
+        if len(lines) == 1:
+            label = '%s (line %s)' % (filename, lines[0])
+        else:
+            lines = sorted(lines)
+            label = '%s (lines %s-%s)' % (filename, lines[0], lines[-1])
+        url += "#L%s" % lines[0]
+    else:
+        label = filename
+    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s'>%s</a></div>"
+    inner = inner % (url, link_text)
+    return r'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
