@@ -33,7 +33,6 @@ from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
-from bson.binary import Binary
 
 
 # this is a blueprint specific default for the tempate system.
@@ -175,21 +174,6 @@ def render_one_maass_waveform(maass_id, **kwds):
     else:
         return render_one_maass_waveform_wp(info)
 
-@mwf.route("/plot/<maass_id>")
-def plot_maassform(maass_id):
-    r"""
-    Render the plot of the Maass waveform as a pg-file.
-    Loads it from the database.
-    """
-    plot = maass_db.get_maassform_plot_by_id(maass_id)
-    if not plot:
-        return flask.abort(404)
-
-    response = make_response(loads(Binary(str(plot), 0)))
-    response.headers['Content-type'] = 'image/png'
-    return response
-
-
 def render_one_maass_waveform_wp(info, prec=9):
     r"""
     Render the webpage of one Maass waveform.
@@ -225,8 +209,8 @@ def render_one_maass_waveform_wp(info, prec=9):
     level = info['MF'].level
     dim = info['MF'].dim
     # numc = info['MF'].num_coeff # never used
-    if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
-        info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
+    # if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
+    #    info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']
     if dim == 1:
