@@ -36,6 +36,7 @@ url_from_knowl = [
 grep_extractor = re.compile(r'(.+)([-:])(\d+)([-:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
+define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
 defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
@@ -92,6 +93,13 @@ def extract_typ(kid):
 
 def extract_links(content):
     return sorted(set(x[1] for x in link_finder_re.findall(content)))
+
+def normalize_define(term):
+    m = define_fixer.search(term)
+    if m:
+        n = 6 if (m.group(5) is None) else 5
+        term = define_fixer.sub(r'\%s'%n, term)
+    return ' '.join(term.split())
 
 def extract_defines(content):
     return sorted(set(x[0].strip() for x in defines_finder_re.findall(content)))
@@ -156,7 +164,8 @@ class KnowlBackend(PostgresBase):
     def get_all_defines(self):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
-        return [{k:v for k,v in zip(['id', 'defines'], res)} for res in cur]
+        # This should be fixed in the data
+        return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
 
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title']):
         """
@@ -257,9 +266,9 @@ class KnowlBackend(PostgresBase):
         return [{k:v for k,v in zip(cols, res)} for res in cur]
 
     def get_edit_history(self, ID):
-        selecter = SQL("SELECT timestamp, last_author, content FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp DESC")
+        selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp")
         cur = self._execute(selecter, [0, ID])
-        return [{k:v for k,v in zip(["timestamp", "last_author", "content"], rec)} for rec in cur]
+        return [{k:v for k,v in zip(["timestamp", "last_author", "content", "status"], rec)} for rec in cur]
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -564,7 +573,24 @@ class Knowl(object):
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
         if editing:
+            self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
             self.edit_history = knowldb.get_edit_history(ID)
+            if not self.edit_history:
+                # New knowl.  This block should be edited according to the desired behavior for diffs
+                self.edit_history = [{"timestamp":datetime.utcnow(),
+                                      "last_author":"__nobody__",
+                                      "content":"",
+                                      "status":0}]
+            # We will be printing these within a javascript ` ` string, so need to escape backticks
+            for version in self.edit_history:
+                version['content'] = version['content'].replace("`", r"\`")
+            for i, version in reversed(list(enumerate(self.edit_history))):
+                if version['status'] == 1:
+                    self.edit_history_start = self.review_spot = i
+                    break
+            else:
+                self.review_spot = None
+                self.edit_history_start = len(self.edit_history) - 1
 
     def save(self, who):
         knowldb.save(self, who)

@@ -785,7 +785,7 @@ table .knowl-link {
 .knowl-bar a {
   padding: 2px 5px;
 }
-.knowl-preview-sep {
+.knowl-editmode-sep {
   padding: 5px;
   margin: 30px 0;
   border-bottom: 1px solid {{ color.knowl_thin_border }};

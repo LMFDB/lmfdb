@@ -444,24 +444,6 @@ def broken_links():
                            bad_code=bad_code,
                            bread=b)
 
-@knowledge_page.route("/rename/<ID>/<NEWID>")
-@admin_required
-def rename(ID, NEWID):
-    k = Knowl(ID)
-    if not allowed_knowl_id.match(NEWID):
-        flask.flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
-        return flask.redirect(url_for(".edit", ID=ID))
-    try:
-        k.rename(NEWID)
-    except ValueError:
-        flask.flash("A knowl with id %s already exists." % NEWID, "error")
-        return flask.redirect(url_for(".edit", ID=ID))
-    else:
-        flask.flash("Knowl renamed to %s successfully." % NEWID)
-        return flask.redirect(url_for(".edit", ID=NEWID))
-
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
@@ -505,11 +487,14 @@ def save_form():
             except ValueError:
                 flask.flash("A knowl with id %s already exists." % NEWID, "error")
             else:
-                flask.flash("Knowl renamed to %s successfully." % NEWID)
                 if k.sed_safety == 1:
-                    flask.flash("You can change code references using\n`git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g'` (Mac)\n`git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g'` (Linux)".format(ID, NEWID))
+                    flask.flash("Knowl renamed to {0} successfully. You can change code references using".format(NEWID))
+                    flask.flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
+                    flask.flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
-                    flask.flash("This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed")
+                    flask.flash("Knowl renamed to {0} successfully.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
+                else:
+                    flask.flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
     return flask.redirect(url_for(".show", ID=ID))
 

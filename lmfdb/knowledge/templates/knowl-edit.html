@@ -81,13 +81,50 @@ $(document).ready(function()	{
    <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
 </form>
 
-<div class="knowl-preview-sep">
-  Preview of Knowl '{{ k.id }}'
-   <a id="knowl-update" style="display: none; margin-left: 20px;" onclick="update();return false;" href="#">refresh preview</a>
+
+<div class="knowl-editmode-sep">
+  <table class="knowl-editmode">
+    <tr>
+      <td>
+        <a id="activate-link-suggestions" onclick="enable('link-suggestions'); return false;" href="#">Link suggestions</a>
+        <span id="inactive-link-suggestions" style="display: none;">Link suggestions</span>
+      </td>
+      <td>
+        <a id="activate-history" onclick="enable('history'); return false;" href="#">View diffs</a>
+        <span id="inactive-history" style="display: none;">View diffs</span>
+      </td>
+      <td>
+        <a id="activate-preview" onclick="enable('preview'); return false;" href="#" style="display: none;">Preview</a>
+        <span id="inactive-preview">Preview</span>
+      </td>
+      <td>
+        <a id="refresh-view" onclick="refresh_view(); return false;" style="display: none;" href="#">(Refresh)</a>
+      </td>
+    </tr>
+  </table>
 </div>
-<div id="knowl-preview" class="knowl">
+<div id="view-wrapper" class="knowl">
+  <div id="view-link-suggestions" style="display: none;">
+    <ul id="link-suggestions-ul">
+    </ul>
+  </div>
+  <div id="view-history" style="display: none;">
+    {% if (k.edit_history|length) > 1 %}
+    <input id="history-slider" type="range" list="knowl_versions" min="0" max="{{(k.edit_history|length)-1}}" step="1" value="{{k.edit_history_start}}">
+    <datalist id="knowl_versions">
+      {% for i in range((k.edit_history|length)) %}
+      <option value="{{i}}"{% if k.edit_history.status == 1 %} label="R"{% endif %}>
+      {% endfor %}
+    </datalist>
+    {% else %}
+    <input id="history-slider" type="hidden" value="0">
+    {% endif %}
+    <div id="diff-container"></div>
+  </div>
+  <div id="view-preview">
    <h1 id="knowl-title"></h1>
    <div id="knowl-content"></div>
+  </div>
 </div>
 
 <script type="text/javascript">
@@ -96,21 +133,130 @@ var $ktitle    = $("#ktitle");
 var $kcontent  = $("#kcontent");
 var $title     = $("#knowl-title");
 var $content   = $("#knowl-content");
-var $update    = $("#knowl-update");
+var $refresh   = $("#refresh-view");
+var $linkul    = $("#link-suggestions-ul");
+var $diffview  = $("#diff-container");
+var $slider    = $("#history-slider");
 /* state flags */
-var update_id     = null;
+var refresh_id    = null;
 var reparse_latex = false;
 /* parameters */
-var UPDATE_TIMEOUT = 2000;
+var all_modes = ['link-suggestions', 'history', 'preview'];
+var REFRESH_TIMEOUT = 2000;
+/* edit history */
+var edit_history = [
+{% for version in k.edit_history %}
+`{{ version['content'] }}`,
+{% endfor %}
+];
+/* all defines */
+var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
+var all_defines = {
+{% for term, definers in k.all_defines.items() %}
+'{{term}}': [
+{% for did in definers %}
+'{{did}}',
+{% endfor %}
+],
+{% endfor %}
+};
 
-function update() {
-  if (update_id) {
-    /* this case happens, when we click "refresh" while a timer is running. */
-    window.clearTimeout(update_id);
+/* Switching between edit modes */
+function enable(edit_mode) {
+  refresh_view(edit_mode);
+  for (var i = 0; i < 3; i++) {
+    mode = all_modes[i];
+    if (mode === edit_mode) {
+      $('#activate-' + mode).hide();
+      $('#inactive-' + mode).show();
+      $('#view-' + mode).show();
+    } else {
+      $('#activate-' + mode).show();
+      $('#inactive-' + mode).hide();
+      $('#view-' + mode).hide();
+    }
   }
-  //console.log("running update");
-  $title.html("updating ...");
+}
 
+function refresh_view(edit_mode='cur') {
+  if (refresh_id) {
+    /* this case happens, when we click "refresh" while a timer is running. */
+    window.clearTimeout(refresh_id);
+  }
+  if (edit_mode === 'cur') {
+    for (var mode in ['link-suggestions', 'history', 'preview']) {
+      if ($('#activate-' + mode).is(":hidden")) {
+        edit_mode = mode;
+        break;
+      }
+    }
+  }
+  if (edit_mode === 'link-suggestions') {
+    refresh_link_suggestions();
+  } else if (edit_mode === 'history') {
+    refresh_history();
+  } else {
+    refresh_preview();
+  }
+  $('#refresh-view').hide();
+}
+function refresh_link_suggestions() {
+  var present = {};
+  var content = $kcontent.val();
+  do {
+    m = knowldef.exec(content);
+    if (m) {
+      if (m[5]) {
+        present[m[5]] = true;
+      } else if (m[6]) {
+        present[m[6]] = true;
+      }
+    }
+  } while (m);
+  $linkul.empty();
+  var some_link = false;
+  for (kdef in all_defines) {
+    if (content.indexOf(kdef) != -1) {
+      found = false;
+      for (pdef in present) {
+        if (pdef.indexOf(kdef) != -1) {
+          found = true;
+          break;
+        }
+      }
+        if (!found) {
+        some_link = true;
+        // Have to construct the Knowl link by hand
+        for (var i = 0; i < all_defines[kdef].length; i++) {
+          var definer_id = all_defines[kdef][i];
+          var label = kdef+' ['+definer_id+']';
+          var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
+          var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+kdef+`'); return false;">insert</a>`;
+          $linkul.append("<li>" + klink + " - " + inserter + "</li>");
+        }
+      }
+    }
+  }
+  if (!some_link) {
+    $linkul.append("<li>No suggestions available</li>");
+  }
+// Now find the terms that are already knowled
+// And the terms that aren't but could be
+}
+{# We're writing jinja inside javascript.... #}
+{% raw %}
+  function insert_klink(kid, ktext) {
+  var content = $kcontent.val();
+  var new_link = "{{ KNOWL('" + kid + "', title='" + ktext + "') }}";
+  $kcontent.val(content.replace(ktext, new_link));
+}
+{% endraw %}
+
+function refresh_history() {
+  $diffview.text(edit_history[$slider.val()]);
+}
+
+function refresh_preview() {
   var url = "{{ url_for('.render', ID=k.id)}}";
   $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
     function(data) {
@@ -118,38 +264,39 @@ function update() {
       $content.html(data);
       renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
       renderMathInElement($content.get(0), katexOpts);
-      update_id = null;
+      refresh_id = null;
       // once rendering is done.
       // has there been a call in the meantime and we have to do this again?
       if (reparse_latex) {
           /* console.log("reparse_latex == true"); */
           reparse_latex = false;
-          update();
+          refresh_view();
       }
       /* finally, set the title and hide the refresh link */
       $title.html($ktitle.val());
-      $update.fadeOut();
+      $refresh.fadeOut();
     }).error(function() { $title.html("ERROR"); })
 }
 
-/* if nothing scheduled, update delayed
+/* if nothing scheduled, refresh delayed
    otherwise tell it to reparse the latex */
-function update_delay() {
+function refresh_delay() {
   unsaved = true;
-  $update.fadeIn();
-  if (update_id) {
+  $refresh.fadeIn();
+  if (refresh_id) {
     reparse_latex = true;
   } else {
-    update_id = window.setTimeout(update, UPDATE_TIMEOUT);
+    refresh_id = window.setTimeout(refresh_view, REFRESH_TIMEOUT);
   }
 }
 
 /* register keyhandlers */
 $(function() {
-  $ktitle.keyup(   function(evt) { update_delay(); });
-  $kcontent.keyup( function(evt) { update_delay(); });
-  update();
+  $ktitle.keyup(   function(evt) { refresh_delay(); });
+  $kcontent.keyup( function(evt) { refresh_delay(); });
+  refresh_preview();
 });
+
 
 /* prevent accidental closing of browser window */
 var unsaved = false;

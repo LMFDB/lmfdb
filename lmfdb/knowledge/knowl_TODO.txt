@@ -5,11 +5,9 @@ TASKS:
 * In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
 * Fix keywords on rename
-* search for broken knowl links in code and knowls
-* when renaming, warn if changing category; provide helpful command to rename in code
 * When creating a new knowl, resurrect old code in history when they save
-* When editing a knowl, use the all_defines property to find the name of a knowl that defines a particular keyword.  Maybe with a right click menu (google for context menu)
 * Search with wildcards (use tilde operator and a checkbox on the search; think about details)
+* Make sure no defined term in all_defines has single or double quotes
 
 LATER:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
@@ -27,9 +25,9 @@ IT WOULD BE NICE IF:
 * Some visual distinction between mathematical content and LMFDB-specific content
 
 Questions:
+* Feedback on the link suggestions
 * Is caveat on ids_referencing okay?
 * Renaming to an id that has been deleted?
-* Is the interface for renaming good (if so, delete the rename function)?
 
 SCHEMA MODIFICATIONS:
 
