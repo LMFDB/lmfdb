@@ -600,6 +600,7 @@ class PostgresBase(object):
 
         table_col = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in columns)
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
+        print creator.as_string(self.conn)
         self._execute(creator)
 
     def _create_table_from_header(self, filename, name, addid=True):
