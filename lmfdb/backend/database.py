@@ -161,9 +161,9 @@ def _meta_table_name(meta_name):
 # counts and stats columns and their types                       #
 ##################################################################
 
-_counts_cols = ("cols", "values", "count", "extra")
+_counts_cols = ("cols", "values", "count", "extra", "split")
 _counts_types =  dict(zip(_counts_cols,
-    ("jsonb", "jsonb", "bigint", "boolean")))
+    ("jsonb", "jsonb", "bigint", "boolean", "boolean")))
 _counts_jsonb_idx = jsonb_idx(_counts_cols, _counts_types)
 
 _stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
@@ -3029,7 +3029,7 @@ class PostgresTable(PostgresBase):
             self.stats._record_count({}, self.stats.total)
             self.log_db_change("copy_from", nrows=search_count)
 
-    def copy_to(self, searchfile, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
+    def copy_to(self, searchfile=None, extrafile=None, countsfile=None, statsfile=None, indexesfile=None, constraintsfile=None, metafile=None, commit=True, **kwds):
         """
         Efficiently copy data from the database to a file.
 
@@ -3048,7 +3048,7 @@ class PostgresTable(PostgresBase):
         - ``metatablesfile`` -- a string (optional), the filename to write the data into for the corresponding row of the meta_tables table.
         - ``kwds`` -- passed on to psycopg2's ``copy_to``.  Cannot include "columns".
         """
-        self._check_file_input(searchfile, extrafile, kwds)
+        #self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.get("sep", u"\t")
 
         tabledata = [
@@ -4641,13 +4641,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                                          SQL(", ").join(processed_extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
-            # FIXME use global constants
             creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
             creator = creator.format(Identifier(name+"_counts"))
             self._execute(creator)
             self.grant_select(name+"_counts")
             self.grant_insert(name+"_counts")
-            # FIXME use global constants ?
             creator = SQL('CREATE TABLE {0} (cols jsonb, stat text COLLATE "C", value numeric, constraint_cols jsonb, constraint_values jsonb, threshold integer)')
             creator = creator.format(Identifier(name + "_stats"))
             self._execute(creator)
