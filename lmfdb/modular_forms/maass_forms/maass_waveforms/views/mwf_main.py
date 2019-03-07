@@ -22,9 +22,8 @@ AUTHORS:
 """
 
 import flask
-from flask import render_template, url_for, request, make_response, send_file
+from flask import render_template, url_for, request, send_file
 import StringIO
-from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
