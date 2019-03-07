@@ -406,15 +406,17 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = self.q_curve
-        if self.qc == "?":
-            self.qc = "not determined"
-        elif self.qc == True:
-            self.qc = "yes"
-        elif self.qc == False:
-            self.qc = "no"
-        else: # just in case
-            self.qc = "not determined"
+        # See Issue #2718
+        self.qc = "not determined"
+        # self.qc = self.q_curve
+        # if self.qc == "?":
+        #     self.qc = "not determined"
+        # elif self.qc == True:
+        #     self.qc = "yes"
+        # elif self.qc == False:
+        #     self.qc = "no"
+        # else: # just in case
+        #     self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
