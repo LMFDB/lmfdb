@@ -28,6 +28,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
 from glob import glob
+import csv
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError, NotSupportedError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -38,8 +39,6 @@ from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_c
 from lmfdb.utils import KeyedDefaultDict
 from lmfdb.logger import make_logger
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
-#FIXME ?
-# import csv
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -746,7 +745,6 @@ class PostgresBase(object):
 
 
         with open(filename, "r") as F:
-            import csv
             lines = [line for line in csv.reader(F, delimiter = "\t")]
             if len(lines) == 0:
                 return
@@ -4827,7 +4825,6 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                     # read metafile
                     rows = []
                     with open(metafile, "r") as F:
-                        import csv
                         rows = [line for line in csv.reader(F, delimiter = "\t")]
                     if len(rows) != 1:
                         raise RuntimeError("Expected only one row in {0}")
