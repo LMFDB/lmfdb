@@ -21,6 +21,7 @@ from flask import render_template, render_template_string, request, url_for, mak
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
+from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
@@ -309,8 +310,6 @@ def edit(ID):
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
-    if not knowl.exists():
-        return flask.abort(404, "No knowl found with the given id")
 
     lock = None
     if request.args.get("lock", "") != 'ignore':
@@ -349,6 +348,12 @@ def show(ID):
             title = (k.title or "'%s'" % k.id) + " (DELETED)"
         else:
             return flask.abort(404, "No knowl found with the given id")
+    # Modify the comments list to add information on whether this user can delete
+    if k.type != -2:
+        for i, (cid, author, timestamp) in enumerate(k.comments):
+            can_delete = (current_user.is_admin() or current_user.get_id() == author)
+            author_name = userdb.lookup(author)["full_name"]
+            k.comments[i] = (cid, author_name, timestamp, can_delete)
     b = get_bread([('%s' % title, url_for('.show', ID=ID))])
 
     return render_template("knowl-show.html",
@@ -468,6 +473,26 @@ def broken_links():
                            bad_code=bad_code,
                            bread=b)
 
+@knowledge_page.route("/new_comment/<ID>")
+def new_comment(ID):
+    time = datetime_to_timestamp_in_ms(datetime.utcnow())
+    cid = '%s.%s.comment' % (ID, time)
+    return edit(ID=cid)
+
+@knowledge_page.route("/delete_comment/<ID>")
+def delete_comment(ID):
+    try:
+        comment = Knowl(ID)
+        if comment.type != -2:
+            raise ValueError
+        # We allow admins and the original author to delete comments.
+        if not (current_user.is_admin() or current_user.get_id() == comment.authors[0]):
+            raise ValueError
+        comment.delete()
+    except ValueError:
+        flask.flash("Only admins and the original author can delete comments", "error")
+    return flask.redirect(url_for(".show", ID=comment.source_id))
+
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
@@ -520,14 +545,17 @@ def save_form():
                 else:
                     flask.flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
-    return flask.redirect(url_for(".show", ID=ID))
+    if k.type == -2:
+        return flask.redirect(url_for(".show", ID=k.source_id))
+    else:
+        return flask.redirect(url_for(".show", ID=ID))
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
 def render(ID):
     return render_knowl(ID)
 
-def render_knowl(ID, footer=None, kwargs=None, 
+def render_knowl(ID, footer=None, kwargs=None,
         raw=False, k=None, allow_deleted=False, timestamp=None):
     """
     this method renders the given Knowl (ID) to insert it
@@ -604,7 +632,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     %(review_status)s
   </div>"""
         # """ &middot; Authors: %(authors)s """
-        if k.status == 0:
+        if k.status == 0 and k.type != -2:
             review_status = """&middot; (awaiting review)"""
     render_me += "</div>"
     # render_me = render_me % {'content' : con, 'ID' : k.id }
@@ -658,7 +686,9 @@ def index():
         types = ["normal"]
 
     search = request.args.get("search", "")
-    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=search.lower())
+    regex = (request.args.get("regex", "") == "on")
+    keywords = search if regex else search.lower()
+    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
 
     def first_char(k):
         t = k['title']
@@ -691,6 +721,7 @@ def index():
                            knowl_qualities=knowl_qualities,
                            qualities = qualities,
                            searchmode=bool(search),
+                           use_regex=regex,
                            categories = knowldb.get_categories(),
                            cur_cat = cur_cat,
                            categorymode = bool(cur_cat),

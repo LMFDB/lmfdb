@@ -15,6 +15,7 @@ from psycopg2.sql import SQL, Identifier, Placeholder
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
+comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
     (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 Curve {0}'),
@@ -69,8 +70,12 @@ def extract_cat(kid):
         return None
     return kid.split(".")[0]
 
-
 def extract_typ(kid):
+    m = comment_knowl_re.match(kid)
+    if m:
+        typ = -2
+        source = m.group(1)
+        return typ, source, None
     m = top_knowl_re.match(kid)
     if m:
         prelabel = m.group(1)
@@ -178,7 +183,7 @@ class KnowlBackend(PostgresBase):
         return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
 
     #FIXME shouldn't I be allowed to search on id? or something?
-    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title']):
+    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
         """
         INPUT:
 
@@ -186,10 +191,11 @@ class KnowlBackend(PostgresBase):
         - ``filters`` -- a list, giving a subset of "beta", "reviewed", "in progress" and "deleted".
             Knowls in the returned list will have their most recent status among the provided values.
         - ``types`` -- a list, giving a subset of ["normal", "annotations"]
-        - ``keywords`` -- a string giving a space separated list of lower case keywords from the id, title and content.
+        - ``keywords`` -- a string giving a space separated list of lower case keywords from the id, title and content.  If regex is set, will be used instead as a regular expression to match against content, title and knowl id.
         - ``author`` -- a string or list of strings giving authors
         - ``sort`` -- a list of strings or pairs (x, dir) where x is a column name and dir is 1 or -1.
         - ``projection`` -- a list of column names, not including ``_keywords``
+        - ``regex`` -- whether to use regular expressions rather than keyword search
         """
         restrictions = []
         values = []
@@ -200,10 +206,14 @@ class KnowlBackend(PostgresBase):
             restrictions.append(SQL("status != %s"))
             values.append(-1)
         if keywords:
-            keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
-            if keywords:
-                restrictions.append(SQL("_keywords @> %s"))
-                values.append(Json(keywords))
+            if regex:
+                restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
+                values.extend([keywords, keywords, keywords])
+            else:
+                keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
+                if keywords:
+                    restrictions.append(SQL("_keywords @> %s"))
+                    values.append(Json(keywords))
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
             values.append(Json(author))
@@ -280,6 +290,11 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp")
         cur = self._execute(selecter, [0, ID])
         return [{k:v for k,v in zip(["timestamp", "last_author", "content", "status"], rec)} for rec in cur]
+
+    def get_comments(self, ID):
+        selecter = SQL("SELECT id, authors, timestamp FROM (SELECT DISTINCT ON (id) id, authors, timestamp FROM kwl_knowls2 WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp DESC) knowls ORDER BY timestamp DESC")
+        cur = self._execute(selecter, [-2, ID])
+        return [(cid, authors[0], timestamp) for (cid, authors, timestamp) in cur]
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -574,15 +589,24 @@ class Knowl(object):
         self.timestamp = data.get('timestamp', datetime.utcnow())
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
-        self.type = data.get('type', 0)
+        self.type = data.get('type')
+        if self.type is None or self.type == -2:
+            match = comment_knowl_re.match(ID)
+            if match:
+                self.source_id = match.group(1)
+                self.type = -2
+            else:
+                self.type = 0
         self.source = data.get('source')
         self.source_name = data.get('source_name')
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
-        if self.type == 0 and showing:
-            self.referrers = knowldb.ids_referencing(ID)
-            self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(ID)]
+        if showing:
+            self.comments = knowldb.get_comments(ID)
+            if self.type == 0:
+                self.referrers = knowldb.ids_referencing(ID)
+                self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(ID)]
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
         if editing:
@@ -626,7 +650,7 @@ class Knowl(object):
     def author_links(self):
         """
         Basically finds all full names for all the referenced authors.
-        (lookup for all full names in just *one* query, hence the or)
+        (lookup for all full names in just *one* query)
         """
         if not self.authors:
             return []
