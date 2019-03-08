@@ -263,7 +263,7 @@ class KnowlBackend(PostgresBase):
         values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, Json(search_keywords))
         with DelayCommit(self):
             inserter = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
-            inserter = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
+            inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
 
@@ -497,9 +497,9 @@ class KnowlBackend(PostgresBase):
         """
         when a knowl is edited, a lock is created. who is the user id.
         """
-        insterer = SQL("INSERT INTO kwl_locks (id, timestamp, who) VALUES (%s, %s, %s)")
+        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, who) VALUES (%s, %s, %s)")
         now = datetime.utcnow()
-        self._execute(insterer, [knowl.id, now, who])
+        self._execute(inserter, [knowl.id, now, who])
 
     def knowl_title(self, kid):
         """

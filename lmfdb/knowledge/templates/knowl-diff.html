@@ -36,7 +36,7 @@ $(document).ready(function () {
     });
       $.ajax({
       type: 'GET', async: true, dataType: 'text',
-        url: '/knowledge/content/cmf/1551969822909892',
+        url: '/knowledge/content/cmf',
         success: function (response) {
       $('#compare').mergely('rhs', response);
     }
