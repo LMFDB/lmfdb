@@ -6,6 +6,21 @@
 
 {{ render|safe }}
 
+{% if user_is_authenticated and type != -2 %}
+<div style="margin-top: 30px;">
+  <strong>Comments:</strong>
+  <ul>
+    {% for cid, author, timestamp, can_delete in k.comments %}
+    <li>
+      {{ KNOWL(cid) }} ({{author}} on {{timestamp|fmtdatetime}})
+      {% if can_delete %} &middot; <a onclick='return confirm("Really delete comment?");'
+        href="{{ url_for('.delete_comment', ID=cid) }}">delete</a>{% endif %}
+    </li>
+    {% endfor %}
+    <li><a href="{{ url_for('.new_comment', ID=k.id) }}">New comment</a></li>
+  </ul>
+</div>
+{% endif %}
 <div style="margin-top: 30px;">
   <strong>Authors:</strong>
   <ul>
@@ -33,7 +48,7 @@
 <div style="margin-top: 30px;">
   <strong>{{ 'Top' if k.type == 1 else 'Bottom' }} Knowl</strong> for <a href="/{{k.source}}">{{k.source_name}}</a>
 </div>
-{% elif k.type == 0 and k.referrers %}
+{% elif k.type == 0 and (k.referrers or k.code_referrers) %}
 <div style="margin-top: 30px;">
   <strong>Referred to by:</strong>
   <ul>

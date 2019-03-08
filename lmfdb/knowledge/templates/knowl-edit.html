@@ -19,13 +19,17 @@
      <a href="{{ request.referrer }}">Abort</a>
     </div>
 {% else %}
-
 {% from "knowl-defs.html" import knowlbar with context %}
+
+{% if k.type == -2 %}
+{{ KNOWL_INC(k.source_id) }}
+{% else %}
 {{ knowlbar() }}
 
 <div style="margin: 10px;">
 Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
 </div>
+{% endif %}
 
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
@@ -43,42 +47,49 @@ $(document).ready(function()	{
 <form action="{{ url_for('.save_form') }}" method="POST" id=>
   <input type="hidden" name="id" value="{{ k.id }}"/>
   <table>
-   <tr>
-     <td>
-       {{KNOWL("doc.knowl.identifier",title="Identifier")}}
-     </td>
-     <td>
-       <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
-     </td>
-   </tr>
-   {% if user_is_admin and k.type == 0 %}
-   <tr>
-     <td>
-       Rename to:
-     </td>
-     <td>
-       <input size="40" name="krename" />
-     </td>
-   </tr>
-   {% endif %}
-   <tr>
-     <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
-     <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-   </tr>
-   <tr>
-     <td>Quality</td>
-     <td>
-      {{ k.quality }}
-     </td>
-   </tr>
-   <tr>
-     <td colspan="2"><textarea cols="40" rows="10"
+    {% if k.type == -2 %} {# -2 is a comment #}
+    <tr>
+      <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
+      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+    </tr>
+    {% else %}
+    <tr>
+      <td>
+        {{KNOWL("doc.knowl.identifier",title="Identifier")}}
+      </td>
+      <td>
+        <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
+      </td>
+    </tr>
+    {% if user_is_admin and k.type == 0 and k.exists() %}
+    <tr>
+      <td>
+        Rename to:
+      </td>
+      <td>
+        <input size="40" name="krename" />
+      </td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
+      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+    </tr>
+    <tr>
+      <td>Quality</td>
+      <td>
+        {{ k.quality }}
+      </td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td colspan="2"><textarea cols="40" rows="10"
           name="content" id="kcontent">{{ k.content }}</textarea>
-     </td>
-   </tr>
+      </td>
+    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
-   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.show', ID=k.id) }}">cancel</a>
+   <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source_id) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
 </form>
 
 
@@ -336,7 +347,7 @@ window.onbeforeunload = function() {
 
 /* Check before saving if changing knowl category */
 function check_knowl_category() {
-  {% if user_is_admin %}
+  {% if user_is_admin and k.type == 0 and k.exists() %}
   var newname = $("input[name='krename']").val();
   log(newname.split(".").slice(0,-1));
 

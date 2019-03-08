@@ -20,10 +20,12 @@ $(function() {
 <tr>
  <td>Search</td>
  <td>
- <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+   <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
     <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
     <button type="submit">Go</button>
+    <label for="regex">Regex: </label>
+    <input type="checkbox" name="regex" value="on" {% if use_regex %}checked="checked"{% endif %} />
   </form>
  </td>
 </tr>
