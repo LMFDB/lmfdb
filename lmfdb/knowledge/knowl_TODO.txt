@@ -11,6 +11,9 @@ BUGS:
 * Make sure no defined term in all_defines has single or double quotes
 * Insert text doesn't work in Firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1220696)
 
+Ask Farmer:
+* delete unused javascripts
+* issues against using cdn
 
 LATER:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
