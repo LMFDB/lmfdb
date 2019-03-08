@@ -2,143 +2,150 @@
 {% import 'color.css' as color %}
 {% block content %}
 
-{% if lock %}
+  {% if lock %}
     <div style="color: {{color.red}}; font-weight: bold; font-size: 200%;">Concurrent Edit!!!</div>
 
     <div>
-     The Knowl {{ k.title }} is currently or has been recently edited by 
-     <a href="{{ url_for('users.profile', userid = lock.username) }}">{{ get_username(lock.username) }}</a>
-     at {{ lock.timestamp|fmtdatetime }}. There might be a conflict!
+      The Knowl {{ k.title }} is currently or has been recently edited by 
+      <a href="{{ url_for('users.profile', userid = lock.username) }}">{{ get_username(lock.username) }}</a>
+      at {{ lock.timestamp|fmtdatetime }}. There might be a conflict!
     </div>
 
     <div style="margin-top: 30px">
-     <a href="{{ url_for('.edit', ID=k.id, lock='ignore') }}">Continue</a>
+      <a href="{{ url_for('.edit', ID=k.id, lock='ignore') }}">Continue</a>
     </div>
 
     <div style="margin-top: 30px">
-     <a href="{{ request.referrer }}">Abort</a>
+      <a href="{{ request.referrer }}">Abort</a>
     </div>
-{% else %}
-{% from "knowl-defs.html" import knowlbar with context %}
+  {% else %}
+    {% from "knowl-defs.html" import knowlbar with context %}
 
-{% if k.type == -2 %}
-{{ KNOWL_INC(k.source_id) }}
-{% else %}
-{{ knowlbar() }}
-
-<div style="margin: 10px;">
-Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
-</div>
-{% endif %}
-
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.js')}}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
-
-<script language="javascript">
-$(document).ready(function()	{
-    $('#kcontent').markItUp(myMarkdownSettings);
-});
-</script>
-
-
-
-<form action="{{ url_for('.save_form') }}" method="POST" id=>
-  <input type="hidden" name="id" value="{{ k.id }}"/>
-  <table>
-    {% if k.type == -2 %} {# -2 is a comment #}
-    <tr>
-      <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
-      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-    </tr>
+    {% if k.type == -2 %}
+      {{ KNOWL_INC(k.source_id) }}
     {% else %}
-    <tr>
-      <td>
-        {{KNOWL("doc.knowl.identifier",title="Identifier")}}
-      </td>
-      <td>
-        <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
-      </td>
-    </tr>
-    {% if user_is_admin and k.type == 0 and k.exists() %}
-    <tr>
-      <td>
-        Rename to:
-      </td>
-      <td>
-        <input size="40" name="krename" />
-      </td>
-    </tr>
+      {{ knowlbar() }}
+
+      <div style="margin: 10px;">
+        Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
+      </div>
     {% endif %}
-    <tr>
-      <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
-      <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-    </tr>
-    <tr>
-      <td>Quality</td>
-      <td>
-        {{ k.quality }}
-      </td>
-    </tr>
-    {% endif %}
-    <tr>
-      <td colspan="2"><textarea cols="40" rows="10"
-          name="content" id="kcontent">{{ k.content }}</textarea>
-      </td>
-    </tr>
-  </table>
-   <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
-   <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source_id) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
-</form>
+
+    <script type="text/javascript"
+            src="https://cdn.jsdelivr.net/gh/markitup/1.x@1.1.15/markitup/jquery.markitup.js"
+            integrity="sha256-BiawY8kuGhVgPmV3XSWamEheAvBvH9VeZbzR16BdvAM="
+            crossorigin="anonymous"></script>
+    {# depends on color #}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
+    {# settings for the editor menus and the stylesheet #}
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
+
+    <script language="javascript">
+$(document).ready(
+  function()	{
+  $('#kcontent').markItUp(myMarkdownSettings);
+}
+);
+    </script>
 
 
-<div class="knowl-editmode-sep">
-  <table class="knowl-editmode">
-    <tr>
-      <td>
-        <a id="activate-link-suggestions" onclick="enable('link-suggestions'); return false;" href="#">Link suggestions</a>
-        <span id="inactive-link-suggestions" style="display: none;">Link suggestions</span>
-      </td>
-      <td>
-        <a id="activate-history" onclick="enable('history'); return false;" href="#">View diffs</a>
-        <span id="inactive-history" style="display: none;">View diffs</span>
-      </td>
-      <td>
-        <a id="activate-preview" onclick="enable('preview'); return false;" href="#" style="display: none;">Preview</a>
-        <span id="inactive-preview">Preview</span>
-      </td>
-      <td>
-        <a id="refresh-view" onclick="refresh_view(); return false;" style="display: none;" href="#">(Refresh)</a>
-      </td>
-    </tr>
-  </table>
-</div>
-<div id="view-wrapper" class="knowl">
-  <div id="view-link-suggestions" style="display: none;">
-    <ul id="link-suggestions-ul">
-    </ul>
-  </div>
-  <div id="view-history" style="display: none;">
-    {% if (k.edit_history|length) > 1 %}
-    <input id="history-slider" type="range" list="knowl_versions" min="0" max="{{(k.edit_history|length)-1}}" step="1" value="{{k.edit_history_start}}">
-    <datalist id="knowl_versions">
-      {% for i in range((k.edit_history|length)) %}
-      <option value="{{i}}"{% if k.edit_history.status == 1 %} label="R"{% endif %}>
-      {% endfor %}
-    </datalist>
-    {% else %}
-    <input id="history-slider" type="hidden" value="0">
-    {% endif %}
-    <div id="diff-container"></div>
-  </div>
-  <div id="view-preview">
-   <h1 id="knowl-title"></h1>
-   <div id="knowl-content"></div>
-  </div>
-</div>
 
-<script type="text/javascript">
+    <form action="{{ url_for('.save_form') }}" method="POST" id=>
+      <input type="hidden" name="id" value="{{ k.id }}"/>
+      <table>
+        {% if k.type == -2 %} {# -2 is a comment #}
+          <tr>
+            <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
+            <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+          </tr>
+        {% else %}
+          <tr>
+            <td>
+              {{KNOWL("doc.knowl.identifier",title="Identifier")}}
+            </td>
+            <td>
+              <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
+            </td>
+          </tr>
+          {% if user_is_admin and k.type == 0 and k.exists() %}
+            <tr>
+              <td>
+                Rename to:
+              </td>
+              <td>
+                <input size="40" name="krename" />
+              </td>
+            </tr>
+          {% endif %}
+          <tr>
+            <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
+            <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+          </tr>
+          <tr>
+            <td>Quality</td>
+            <td>
+              {{ k.quality }}
+            </td>
+          </tr>
+        {% endif %}
+        <tr>
+          <td colspan="2"><textarea cols="40" rows="10"
+                                              name="content" id="kcontent">{{ k.content }}</textarea>
+          </td>
+        </tr>
+      </table>
+      <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
+    <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source_id) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
+    </form>
+
+
+    <div class="knowl-editmode-sep">
+      <table class="knowl-editmode">
+        <tr>
+          <td>
+            <a id="activate-link-suggestions" onclick="enable('link-suggestions'); return false;" href="#">Link suggestions</a>
+            <span id="inactive-link-suggestions" style="display: none;">Link suggestions</span>
+          </td>
+          <td>
+            <a id="activate-history" onclick="enable('history'); return false;" href="#">View diffs</a>
+            <span id="inactive-history" style="display: none;">View diffs</span>
+          </td>
+          <td>
+            <a id="activate-preview" onclick="enable('preview'); return false;" href="#" style="display: none;">Preview</a>
+            <span id="inactive-preview">Preview</span>
+          </td>
+          <td>
+            <a id="refresh-view" onclick="refresh_view(); return false;" style="display: none;" href="#">(Refresh)</a>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div id="view-wrapper" class="knowl">
+      <div id="view-link-suggestions" style="display: none;">
+        <ul id="link-suggestions-ul">
+        </ul>
+      </div>
+      <div id="view-history" style="display: none;">
+        {% if (k.edit_history|length) > 1 %}
+          <input id="history-slider" type="range" list="knowl_versions" min="0" max="{{(k.edit_history|length)-1}}" step="1" value="{{k.edit_history_start}}">
+          <datalist id="knowl_versions">
+            {% for i in range((k.edit_history|length)) %}
+              <option value="{{i}}"{% if k.edit_history.status == 1 %} label="R"{% endif %}>
+            {% endfor %}
+          </datalist>
+        {% else %}
+          <input id="history-slider" type="hidden" value="0">
+        {% endif %}
+        <div id="diff-container"></div>
+      </div>
+      <div id="view-preview">
+        <h1 id="knowl-title"></h1>
+        <div id="knowl-content"></div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
 /* the dom fields we are working with */
 var $ktitle    = $("#ktitle");
 var $kcontent  = $("#kcontent");
@@ -157,16 +164,16 @@ var REFRESH_TIMEOUT = 2000;
 /* edit history */
 var edit_history = [
 {% for version in k.edit_history %}
-`{{ version['content'] }}`,
+  `{{ version['content'] }}`,
 {% endfor %}
 ];
 /* all defines */
 var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
 var all_defines = {
 {% for term, definers in k.all_defines.items() %}
-'{{term}}': [
+  '{{term}}': [
 {% for did in definers %}
-'{{did}}',
+  '{{did}}',
 {% endfor %}
 ],
 {% endfor %}
@@ -174,208 +181,208 @@ var all_defines = {
 
 /* Switching between edit modes */
 function enable(edit_mode) {
-  refresh_view(edit_mode);
-  for (var i = 0; i < 3; i++) {
-    mode = all_modes[i];
-    if (mode === edit_mode) {
-      $('#activate-' + mode).hide();
-      $('#inactive-' + mode).show();
-      $('#view-' + mode).show();
-    } else {
-      $('#activate-' + mode).show();
-      $('#inactive-' + mode).hide();
-      $('#view-' + mode).hide();
-    }
-  }
+refresh_view(edit_mode);
+for (var i = 0; i < 3; i++) {
+mode = all_modes[i];
+if (mode === edit_mode) {
+$('#activate-' + mode).hide();
+$('#inactive-' + mode).show();
+$('#view-' + mode).show();
+} else {
+$('#activate-' + mode).show();
+$('#inactive-' + mode).hide();
+$('#view-' + mode).hide();
+}
+}
 }
 
 function refresh_view(edit_mode='cur') {
-  if (refresh_id) {
-    /* this case happens, when we click "refresh" while a timer is running. */
-    window.clearTimeout(refresh_id);
-  }
-  if (edit_mode === 'cur') {
-    for (var mode in ['link-suggestions', 'history', 'preview']) {
-      if ($('#activate-' + mode).is(":hidden")) {
-        edit_mode = mode;
-        break;
-      }
-    }
-  }
-  if (edit_mode === 'link-suggestions') {
-    refresh_link_suggestions();
-  } else if (edit_mode === 'history') {
-    refresh_history();
-  } else {
-    refresh_preview();
-  }
-  $('#refresh-view').hide();
+if (refresh_id) {
+/* this case happens, when we click "refresh" while a timer is running. */
+window.clearTimeout(refresh_id);
+}
+if (edit_mode === 'cur') {
+for (var mode in ['link-suggestions', 'history', 'preview']) {
+if ($('#activate-' + mode).is(":hidden")) {
+edit_mode = mode;
+break;
+}
+}
+}
+if (edit_mode === 'link-suggestions') {
+refresh_link_suggestions();
+} else if (edit_mode === 'history') {
+refresh_history();
+} else {
+refresh_preview();
+}
+$('#refresh-view').hide();
 }
 function refresh_link_suggestions() {
-  var present = {};
-  var content = $kcontent.val();
-  do {
-    m = knowldef.exec(content);
-    if (m) {
-      if (m[5]) {
-        present[m[5]] = true;
-      } else if (m[6]) {
-        present[m[6]] = true;
-      }
-    }
-  } while (m);
-  $linkul.empty();
-  var some_link = false;
-  var to_insert = [];
-  for (kdef in all_defines) {
-    var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'i');
-    var match = kdef_finder.exec(content);
-    if (match !== null) {
-      found = false;
-      for (pdef in present) {
-        if (pdef.indexOf(kdef) != -1) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        some_link = true;
-        // Have to construct the Knowl link by hand
-        for (var i = 0; i < all_defines[kdef].length; i++) {
-          var definer_id = all_defines[kdef][i];
-          var label = match[0]+' ['+definer_id+']';
-          var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
-          var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+match[0]+`'); return false;">insert</a>`;
-          to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
-        }
-      }
-    }
-  }
-  function sort_pairs(a, b) {
-    if (a[0] != b[0]) {
-      return a[0]-b[0];
-    } else if (a[1] < b[1]) {
-      return -1;
-    } else if (a[1] > b[1]) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-  to_insert.sort(sort_pairs);
-  for (var i = 0; i < to_insert.length; i++) {
-    $linkul.append(to_insert[i][1]);
-  }
-  if (!some_link) {
-    $linkul.append("<li>No suggestions available</li>");
-  }
+var present = {};
+var content = $kcontent.val();
+do {
+m = knowldef.exec(content);
+if (m) {
+if (m[5]) {
+present[m[5]] = true;
+} else if (m[6]) {
+present[m[6]] = true;
+}
+}
+} while (m);
+$linkul.empty();
+var some_link = false;
+var to_insert = [];
+for (kdef in all_defines) {
+var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'i');
+var match = kdef_finder.exec(content);
+if (match !== null) {
+found = false;
+for (pdef in present) {
+if (pdef.indexOf(kdef) != -1) {
+found = true;
+break;
+}
+}
+if (!found) {
+some_link = true;
+// Have to construct the Knowl link by hand
+for (var i = 0; i < all_defines[kdef].length; i++) {
+var definer_id = all_defines[kdef][i];
+var label = match[0]+' ['+definer_id+']';
+var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
+var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+match[0]+`'); return false;">insert</a>`;
+to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
+}
+}
+}
+}
+function sort_pairs(a, b) {
+if (a[0] != b[0]) {
+return a[0]-b[0];
+} else if (a[1] < b[1]) {
+return -1;
+} else if (a[1] > b[1]) {
+return 1;
+} else {
+return 0;
+}
+}
+to_insert.sort(sort_pairs);
+for (var i = 0; i < to_insert.length; i++) {
+$linkul.append(to_insert[i][1]);
+}
+if (!some_link) {
+$linkul.append("<li>No suggestions available</li>");
+}
 // Now find the terms that are already knowled
 // And the terms that aren't but could be
 }
 {# We're writing jinja inside javascript.... #}
 {% raw %}
 function insert_klink(kid, ktext) {
-  $kcontent.focus();
-  var content = $kcontent.val();
-  var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
-  var match = ktext_finder.exec(content);
-  if (match !== null) {
-    start = match.index;
-    end = start + match[0].length;
-    var new_link = "{{ KNOWL('" + kid + "', title='" + match[0] + "') }}";
-    $kcontent[0].selectionStart = start;
-    $kcontent[0].selectionEnd = end;
-    document.execCommand('insertText', false, new_link);
-  }
-  refresh_link_suggestions();
+$kcontent.focus();
+var content = $kcontent.val();
+var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
+var match = ktext_finder.exec(content);
+if (match !== null) {
+start = match.index;
+end = start + match[0].length;
+var new_link = "{{ KNOWL('" + kid + "', title='" + match[0] + "') }}";
+$kcontent[0].selectionStart = start;
+$kcontent[0].selectionEnd = end;
+document.execCommand('insertText', false, new_link);
+}
+refresh_link_suggestions();
 }
 {% endraw %}
 
 function refresh_history() {
-  $diffview.text(edit_history[$slider.val()]);
+$diffview.text(edit_history[$slider.val()]);
 }
 
 function refresh_preview() {
-  var url = "{{ url_for('.render', ID=k.id)}}";
-  $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
-    function(data) {
-      $title.html("Processing ...");
-      $content.html(data);
-      renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
-      renderMathInElement($content.get(0), katexOpts);
-      refresh_id = null;
-      // once rendering is done.
-      // has there been a call in the meantime and we have to do this again?
-      if (reparse_latex) {
-          /* console.log("reparse_latex == true"); */
-          reparse_latex = false;
-          refresh_view();
-      }
-      /* finally, set the title and hide the refresh link */
-      $title.html($ktitle.val());
-      $refresh.fadeOut();
-    }).error(function() { $title.html("ERROR"); })
+var url = "{{ url_for('.render', ID=k.id)}}";
+$.post(url, { "content" : $kcontent.val(), "footer" : "0" },
+  function(data) {
+$title.html("Processing ...");
+$content.html(data);
+renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
+renderMathInElement($content.get(0), katexOpts);
+refresh_id = null;
+// once rendering is done.
+// has there been a call in the meantime and we have to do this again?
+if (reparse_latex) {
+/* console.log("reparse_latex == true"); */
+reparse_latex = false;
+refresh_view();
+}
+/* finally, set the title and hide the refresh link */
+$title.html($ktitle.val());
+$refresh.fadeOut();
+}).fail(function() { $title.html("ERROR"); })
 }
 
 /* if nothing scheduled, refresh delayed
    otherwise tell it to reparse the latex */
 function refresh_delay() {
-  unsaved = true;
-  $refresh.fadeIn();
-  if (refresh_id) {
-    reparse_latex = true;
-  } else {
-    refresh_id = window.setTimeout(refresh_view, REFRESH_TIMEOUT);
-  }
+unsaved = true;
+$refresh.fadeIn();
+if (refresh_id) {
+reparse_latex = true;
+} else {
+refresh_id = window.setTimeout(refresh_view, REFRESH_TIMEOUT);
+}
 }
 
 /* register keyhandlers */
 $(function() {
-  $ktitle.keyup(   function(evt) { refresh_delay(); });
-  $kcontent.keyup( function(evt) { refresh_delay(); });
-  refresh_preview();
+$ktitle.keyup(   function(evt) { refresh_delay(); });
+$kcontent.keyup( function(evt) { refresh_delay(); });
+refresh_preview();
 });
 
 
 /* prevent accidental closing of browser window */
 var unsaved = false;
 window.onbeforeunload = function() {
-  if(unsaved) {
-    return "There are unsaved edits. Really close?";
-  }
+if(unsaved) {
+return "There are unsaved edits. Really close?";
+}
 }
 
 /* Check before saving if changing knowl category */
 function check_knowl_category() {
-  {% if user_is_admin and k.type == 0 and k.exists() %}
+{% if user_is_admin and k.type == 0 and k.exists() %}
   var newname = $("input[name='krename']").val();
-  log(newname.split(".").slice(0,-1));
+log(newname.split(".").slice(0,-1));
 
-  if (newname) {
-    if (newname.includes(".")) {
-      var newcat = newname.split(".").slice(0,-1).join(".");
-    } else {
-      var newcat = newname;
-    }
-    if ('{{k.id}}'.includes(".")) {
-      var oldcat = '{{k.id}}'.split(".").slice(0, -1).join(".");
-    } else {
-      var oldcat = oldname;
-    }
-    if (newcat != oldcat) {
-      if (confirm("Do you really want to change the knowl category from " + oldcat + " to " + newcat)) {
-        unsaved = false;
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }
-  {% endif %}
-  unsaved = false;
-  return true;
+if (newname) {
+if (newname.includes(".")) {
+var newcat = newname.split(".").slice(0,-1).join(".");
+} else {
+var newcat = newname;
 }
-</script>
+if ('{{k.id}}'.includes(".")) {
+var oldcat = '{{k.id}}'.split(".").slice(0, -1).join(".");
+} else {
+var oldcat = oldname;
+}
+if (newcat != oldcat) {
+if (confirm("Do you really want to change the knowl category from " + oldcat + " to " + newcat)) {
+unsaved = false;
+return true;
+} else {
+return false;
+}
+}
+}
+{% endif %}
+unsaved = false;
+return true;
+}
+    </script>
 
-{% endif %} {# concurrent edit warning at the top #}
+  {% endif %} {# concurrent edit warning at the top #}
 {% endblock %}
