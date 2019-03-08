@@ -1,0 +1,7 @@
+<ul>
+  {% for elt in k.edit_history|reverse %}
+  <li>
+    {{ KNOWL(k.id, title=((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string), timestamp=elt.ms_timestamp)}}
+  </li>
+  {% endfor %}
+</ul>
