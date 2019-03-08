@@ -4,173 +4,74 @@
 {#  {% include "mergely.html" %} #}
 {% block content %}
 
-  {#FIXME remove these from static #}
-  <script type="text/javascript" src="/static/jsdiff.js"></script>
   <script type="text/javascript" src="/static/diff_match_patch.js"></script>
   <script type="text/javascript">
-$(document).ready(function () {
-  var comp = $('#compare');
-  comp.mergely({
-  license: 'gpl-separate-notice',
-    cmsettings: {
-  readOnly: false,
-    linewrap: true,
-    viewportMargin: 500,
-},
-    lineNumbers: true,
-    wrap_lines: true,
-    width: 'auto',
-    height: 'calc(100% - 40px)',
-    ignorews: true,
-    //
-    //    lhs: function(setValue) {
-    //      setValue('the quick red fox\njumped over the hairy dog');
-    //    },
-    //    rhs: function(setValue) {
-    //      setValue('the ada quick brown fox\njumped over the lazy dog');
-    //    }
-    // 
-});
+  $(document).ready(function () {
+    var comp = $('#compare');
+    comp.mergely({
+      license: 'gpl-separate-notice',
+      cmsettings: {
+        readOnly: false,
+        linewrap: true,
+        viewportMargin: 500,
+      },
+      lineNumbers: true,
+      wrap_lines: true,
+      width: 'auto',
+      height: 'calc(100% - 40px)',
+      ignorews: true,
+    });
 
-  var lhs = null;
-  $.ajax({
-  type: 'GET', async: false, dataType: 'text',
-    url: '/knowledge/content/cmf/1545201145469776',
-    success: function (response) {
-  lhs = response;
-  comp.mergely('lhs', response);
-}
-});
-
-  var rhs = null;
-  $.ajax({
-  type: 'GET', async: false, dataType: 'text',
-    url: '/knowledge/content/cmf',
-    success: function (response) {
-  rhs = response;
-  comp.mergely('rhs', response);
-}
-});
-
-var inline = $('#compareinline');
-inline.html(
-'<pre>' +
-diffString(
-lhs,
-  rhs
-)
-+ '</pre>');
-
-
-diff_linesToWords = function(text1, text2) {
-  var lineArray = [];  // e.g. lineArray[4] == 'Hello\n'
-  var lineHash = {};   // e.g. lineHash['Hello\n'] == 4
-
-  // '\x00' is a valid character, but various debuggers don't like it.
-  // So we'll insert a junk entry to avoid generating a null character.
-  lineArray[0] = '';
-
-  /**
-   * Split a text into an array of strings.  Reduce the texts to a string of
-   * hashes where each Unicode character represents one line.
-   * Modifies linearray and linehash through being a closure.
-   * @param {string} text String to encode.
-   * @return {string} Encoded string.
-   * @private
-   */
-  function diff_linesToCharsMunge_(text) {
-    var chars = '';
-    // Walk the text, pulling out a substring for each line.
-    // text.split('\n') would would temporarily double our memory footprint.
-    // Modifying text would create many large strings to garbage collect.
-    var lineStart = 0;
-    var lineEnd = -1;
-    // Keeping our own length variable is faster than looking it up.
-    var lineArrayLength = lineArray.length;
-    while (lineEnd < text.length - 1) {
-      lineEnd = text.indexOf('\n', lineStart);
-      wordEnd = text.indexOf(' ', lineStart);
-      lineEnd = Math.min(lineEnd, wordEnd)
-      if (lineEnd == -1) {
-        lineEnd = text.length - 1;
+    var lhs = null;
+    $.ajax({
+      type: 'GET', async: true, dataType: 'text',
+      url: '/knowledge/content/cmf/1545201145469776',
+      success: function (response) {
+        lhs = response;
+        comp.mergely('lhs', response);
       }
-      var line = text.substring(lineStart, lineEnd + 1);
+    });
 
-      if (lineHash.hasOwnProperty ? lineHash.hasOwnProperty(line) :
-          (lineHash[line] !== undefined)) {
-        chars += String.fromCharCode(lineHash[line]);
-      } else {
-        if (lineArrayLength == maxLines) {
-          // Bail out at 65535 because
-          // String.fromCharCode(65536) == String.fromCharCode(0)
-          line = text.substring(lineStart);
-          lineEnd = text.length;
-        }
-        chars += String.fromCharCode(lineArrayLength);
-        lineHash[line] = lineArrayLength;
-        lineArray[lineArrayLength++] = line;
+    var rhs = null;
+    $.ajax({
+      type: 'GET', async: true, dataType: 'text',
+      url: '/knowledge/content/cmf',
+      success: function (response) {
+        rhs = response;
+        comp.mergely('rhs', response);
       }
-      lineStart = lineEnd + 1;
+    });
+
+
+    function diff(text1, text2) {
+      var dmp = new diff_match_patch();
+      dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
+      dmp.Diff_EditCost = 5;
+      var diffs = dmp.diff_main(text1, text2);
+      //dmp.diff_cleanupSemantic(d);
+      dmp.diff_cleanupEfficiency(diffs);
+      var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
+      return ds;
+    };
+    var inline = $('#compareinline');
+
+    function wait_for_text(){
+      if(lhs != null && rhs != null){
+        inline.html( '<pre>' + diff(lhs, rhs) + '</pre>');
+      }
+      else{
+        setTimeout(wait_for_text, 250);
+      }
     }
-    return chars;
-  }
-  // Allocate 2/3rds of the space for text1, the rest for text2.
-  var maxLines = 40000;
-  var chars1 = diff_linesToCharsMunge_(text1);
-  maxLines = 65535;
-  var chars2 = diff_linesToCharsMunge_(text2);
-  return {chars1: chars1, chars2: chars2, lineArray: lineArray};
-};
+        setTimeout(wait_for_text, 250);
 
-function diff_regularMode(text1, text2) {
-var dmp = new diff_match_patch();
-dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
-dmp.Diff_EditCost = 5;
-var diffs = dmp.diff_main(text1, text2);
-//dmp.diff_cleanupSemantic(d);
-dmp.diff_cleanupEfficiency(diffs);
-var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
-return ds;
-}
-function diff_lineMode(text1, text2) {
-var dmp = new diff_match_patch();
-var a = dmp.diff_linesToChars_(text1, text2);
-var lineText1 = a.chars1;
-var lineText2 = a.chars2;
-var lineArray = a.lineArray;
-var diffs = dmp.diff_main(lineText1, lineText2, false);
-dmp.diff_charsToLines_(diffs, lineArray);
-dmp.diff_cleanupEfficiency(diffs);
-var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
-return ds;
-}
-
-function diff_wordMode(text1, text2) {
-var dmp = new diff_match_patch();
-var a = diff_linesToWords(text1, text2);
-var lineText1 = a.chars1;
-var lineText2 = a.chars2;
-var lineArray = a.lineArray;
-var diffs = dmp.diff_main(lineText1, lineText2, false);
-dmp.diff_charsToLines_(diffs, lineArray);
-dmp.diff_cleanupEfficiency(diffs);
-var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
-return ds;
-}
-var inline2 = $('#compareinline2');
-var inline3 = $('#compareinline3');
-var inline4 = $('#compareinline4');
-inline2.html( '<pre>' + diff_regularMode(lhs, rhs) + '</pre>');
-inline3.html( '<pre>' + diff_lineMode(lhs, rhs) + '</pre>');
-inline4.html( '<pre>' + diff_wordMode(lhs, rhs) + '</pre>');
-
-//try
-//{
-//renderMathInElement(inline.get(0), katexOpts);
-//}
-//catch(err) {
-//log("err:" + err)
-//}
+  //try
+  //{
+  //renderMathInElement(inline.get(0), katexOpts);
+  //}
+  //catch(err) {
+  //log("err:" + err)
+  //}
 
   //jQuery.extend
   //(
@@ -196,7 +97,7 @@ inline4.html( '<pre>' + diff_wordMode(lhs, rhs) + '</pre>');
   //    }
   //);
 
-	});
+  });
 </script>
 <style>
 /* Initial height */
@@ -205,48 +106,36 @@ inline4.html( '<pre>' + diff_wordMode(lhs, rhs) + '</pre>');
   resize: vertical;
   padding: 20px;
 }
-/* Auto-height fix */
+ /* Auto-height fix */
  .mergely-column .CodeMirror {
-    height: auto;
-}
+   height: auto;
+ }
 
-.inline{
-font-family: monospace;
-}
-pre {
-    white-space: pre-wrap;       /* Since CSS 2.1 */
-    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
-    white-space: -pre-wrap;      /* Opera 4-6 */
-    white-space: -o-pre-wrap;    /* Opera 7 */
-    word-wrap: break-word;       /* Internet Explorer 5.5+ */
-}
-del {
-  background: #FFE6E6;
-}
-ins {
-  background: #E6FFE6;
-}
+ .inline{
+   font-family: monospace;
+ }
+ pre {
+   white-space: pre-wrap;       /* Since CSS 2.1 */
+   white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+   white-space: -pre-wrap;      /* Opera 4-6 */
+   white-space: -o-pre-wrap;    /* Opera 7 */
+   word-wrap: break-word;       /* Internet Explorer 5.5+ */
+ }
+ del {
+   background: #FFE6E6;
+ }
+ ins {
+   background: #E6FFE6;
+ }
 </style>
 
 <h3> Mergely </h3>
 <div class="diff">
   <div id="compare"></div>
 </div>
-<h3> simplest but broken </h3>
-<div class="inline">
-  <div id="compareinline"></div>
-</div>
 <h3> google diff js </h3>
 <div class="inline">
-  <div id="compareinline2"></div>
-</div>
-<h3> google diff js lines </h3>
-<div class="inline">
-  <div id="compareinline3"></div>
-</div>
-<h3> google diff js words</h3>
-<div class="inline">
-  <div id="compareinline4"></div>
+  <div id="compareinline"></div>
 </div>
 
 {% endblock %}
