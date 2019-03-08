@@ -22,12 +22,16 @@
     {% from "knowl-defs.html" import knowlbar with context %}
 
     {% if k.type == -2 %}
-      {{ KNOWL_INC(k.source_id) }}
+      {{ KNOWL_INC(k.source) }}
     {% else %}
       {{ knowlbar() }}
 
       <div style="margin: 10px;">
+        {% if k.type == 0 %}
         Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
+        {% else %}
+        Before editing, make sure you read the {{ KNOWL("doc.knowl.annotation_guidelines", title="Annotation Guidelines") }}.
+        {% endif %}
       </div>
     {% endif %}
 
@@ -48,8 +52,6 @@
         }
       );
     </script>
-
-
 
     <form action="{{ url_for('.save_form') }}" method="POST" id=>
       <input type="hidden" name="id" value="{{ k.id }}"/>
@@ -96,7 +98,7 @@
         </tr>
       </table>
       <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
-    <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source_id) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
+    <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
     </form>
 
 

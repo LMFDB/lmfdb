@@ -5,13 +5,7 @@ TASKS:
 * In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
 * When creating a new knowl, resurrect old code in history when they save
-* Add annotation knowl guidelines
 * Add highlighting in knowl suggestions
-* Only creator can edit comment
-* Change timestamp to original creation in comment
-* Recently commented knowls as history, change number
-* Cap the number of knowls in review recent
-* It would be nice if we could have a count of knowls in each category
 
 BUGS:
 * Fix keywords on rename
@@ -27,6 +21,7 @@ Ask Farmer:
 * issues against using cdn
 
 LATER:
+* Take away insert privleges on kwl_knowls from webserver while we mess with stuff
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
 * Delete kwl_history and kwl_deleted tables
 * For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
@@ -41,6 +36,7 @@ IT WOULD BE NICE IF:
 * Some visual distinction between mathematical content and LMFDB-specific content
 
 Questions:
+* We now have versioned knowls, but the link to the show page is still titled "permalink". Is this misleading, since the link will be to the most recent version of the knowl?
 * Renaming to an id that has been deleted?
 * Should we mark knowls with quality "reviewed" as positively reviewed?
 

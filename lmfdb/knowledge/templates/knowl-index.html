@@ -33,10 +33,10 @@ $(function() {
 <tr>
  <td>Filter</td>
  <td>Category:
-    {% for cat in categories -%}
+    {% for cat, cat_cnt in (categories.items()|sort) -%}
      <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}</a>
+      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}({{cat_cnt}})</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
@@ -91,10 +91,12 @@ $(function() {
 <tr>
  <td>More</td>
  <td>
-   {% if user_can_review_knowls %}
-    <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>, <a href="{{ url_for('.broken_links') }}">Broken links</a>
-   {% else %}
    <a href="{{ url_for('.history') }}">Recently modified Knowls</a>
+   {%- if user_is_authenticated -%}
+   , <a href="{{ url_for('.comment_history') }}">Recent comments</a>, <a href="{{ url_for('.broken_links') }}">Broken links</a>
+   {%- endif -%}
+   {%- if user_can_review_knowls -%}
+   , <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>
    {% endif %}
  </td>
 </tr>

@@ -177,7 +177,7 @@ class KnowlBackend(PostgresBase):
         return [{k:v for k,v in zip(fields, res)} for res in cur]
 
     def get_all_defines(self):
-        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
+        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
         # This should be fixed in the data
         return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
@@ -282,9 +282,18 @@ class KnowlBackend(PostgresBase):
         returns the last @limit history items
         """
         cols = ("id", "title", "timestamp", "last_author")
-        selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE status >= %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
-        cur = self._execute(selecter, [0, limit])
+        selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
+        cur = self._execute(selecter, [0, -2, limit])
         return [{k:v for k,v in zip(cols, res)} for res in cur]
+
+    def get_comment_history(self, limit=25):
+        """
+        returns the last @limit knowls that have been commented on
+        """
+        # We want to select the oldest version of each comment but the newest version of each knowl
+        selecter = SQL("WITH k AS (SELECT DISTINCT ON (id) id, title, timestamp, last_author FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC), c AS (SELECT id, timestamp, last_author, source FROM (SELECT DISTINCT ON (id) id, timestamp, last_author, source FROM kwl_knowls2 WHERE status >= %s AND type = %s ORDER BY id, timestamp) ci ORDER BY timestamp DESC LIMIT %s) SELECT k.id, k.title, k.timestamp, k.last_author, c.id, c.timestamp, c.last_author FROM k, c WHERE k.id = c.source ORDER BY c.timestamp DESC")
+        cur = self._execute(selecter, [0, -2, 0, -2, limit])
+        return [{k:v for k,v in zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)} for res in cur]
 
     def get_edit_history(self, ID):
         selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp")
@@ -292,9 +301,10 @@ class KnowlBackend(PostgresBase):
         return [{k:v for k,v in zip(["timestamp", "last_author", "content", "status"], rec)} for rec in cur]
 
     def get_comments(self, ID):
-        selecter = SQL("SELECT id, authors, timestamp FROM (SELECT DISTINCT ON (id) id, authors, timestamp FROM kwl_knowls2 WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp DESC) knowls ORDER BY timestamp DESC")
+        # Note that the subselect is sorted in ascending order by timestamp
+        selecter = SQL("SELECT id, last_author, timestamp FROM (SELECT DISTINCT ON (id) id, last_author, timestamp FROM kwl_knowls2 WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp) knowls ORDER BY timestamp DESC")
         cur = self._execute(selecter, [-2, ID])
-        return [(cid, authors[0], timestamp) for (cid, authors, timestamp) in cur]
+        return list(cur)
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -313,13 +323,13 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls2 SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
-    def needs_review(self, days):
+    def needs_review(self, days, cap=100):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s AND status >= 0 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time])
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0, -2, cap])
         knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
 
         kids = [k.id for k in knowls]
@@ -327,8 +337,8 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, [kids])
         reviewed = {rec[0]:rec[1] for rec in cur}
 
-        selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE links && %s")
-        cur = self._execute(selecter, [kids])
+        selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links && %s")
+        cur = self._execute(selecter, [0, -2, kids])
         referrers = {k.id: [] for k in knowls}
         for refid, links in cur:
             for kid in links:
@@ -357,8 +367,8 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE links @> %s")
             values = [[knowlid]]
         else:
-            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
-            values = [0, [knowlid]]
+            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+            values = [0, -2, [knowlid]]
         cur = self._execute(selecter, values)
         return [rec[0] for rec in cur]
 
@@ -535,9 +545,12 @@ class KnowlBackend(PostgresBase):
         return False
 
     def get_categories(self):
-        selecter = SQL("SELECT DISTINCT cat FROM kwl_knowls2")
-        cur = self._execute(selecter)
-        return sorted([res[0] for res in cur])
+        """
+        Returns a dictionary giving the count of knowls within each category.
+        """
+        selecter = SQL("SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls2 WHERE type = %s) knowls GROUP BY cat")
+        cur = self._execute(selecter, [0])
+        return {res[0]: res[1] for res in cur}
 
 knowldb = KnowlBackend()
 
@@ -589,16 +602,17 @@ class Knowl(object):
         self.timestamp = data.get('timestamp', datetime.utcnow())
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
+        self.source = data.get('source')
+        self.source_name = data.get('source_name')
         self.type = data.get('type')
-        if self.type is None or self.type == -2:
+        # We need to have the source available on comments being created
+        if self.type is None:
             match = comment_knowl_re.match(ID)
             if match:
-                self.source_id = match.group(1)
+                self.source = match.group(1)
                 self.type = -2
             else:
                 self.type = 0
-        self.source = data.get('source')
-        self.source_name = data.get('source_name')
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
