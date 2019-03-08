@@ -78,7 +78,7 @@ $(document).ready(function()	{
    </tr>
   </table>
    <button type="submit" id="knowl-edit-btn" onclick="return check_knowl_category();">Save</button>
-   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.index') }}">cancel</a>
+   <a style="margin-left: 30px" onclick="unsaved = false;" href="{{ url_for('.show', ID=k.id) }}">cancel</a>
 </form>
 
 
@@ -215,8 +215,11 @@ function refresh_link_suggestions() {
   } while (m);
   $linkul.empty();
   var some_link = false;
+  var to_insert = [];
   for (kdef in all_defines) {
-    if (content.indexOf(kdef) != -1) {
+    var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'i');
+    var match = kdef_finder.exec(content);
+    if (match !== null) {
       found = false;
       for (pdef in present) {
         if (pdef.indexOf(kdef) != -1) {
@@ -224,18 +227,33 @@ function refresh_link_suggestions() {
           break;
         }
       }
-        if (!found) {
+      if (!found) {
         some_link = true;
         // Have to construct the Knowl link by hand
         for (var i = 0; i < all_defines[kdef].length; i++) {
           var definer_id = all_defines[kdef][i];
-          var label = kdef+' ['+definer_id+']';
+          var label = match[0]+' ['+definer_id+']';
           var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
-          var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+kdef+`'); return false;">insert</a>`;
-          $linkul.append("<li>" + klink + " - " + inserter + "</li>");
+          var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+match[0]+`'); return false;">insert</a>`;
+          to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
         }
       }
     }
+  }
+  function sort_pairs(a, b) {
+    if (a[0] != b[0]) {
+      return a[0]-b[0];
+    } else if (a[1] < b[1]) {
+      return -1;
+    } else if (a[1] > b[1]) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+  to_insert.sort(sort_pairs);
+  for (var i = 0; i < to_insert.length; i++) {
+    $linkul.append(to_insert[i][1]);
   }
   if (!some_link) {
     $linkul.append("<li>No suggestions available</li>");
@@ -245,10 +263,20 @@ function refresh_link_suggestions() {
 }
 {# We're writing jinja inside javascript.... #}
 {% raw %}
-  function insert_klink(kid, ktext) {
+function insert_klink(kid, ktext) {
+  $kcontent.focus();
   var content = $kcontent.val();
-  var new_link = "{{ KNOWL('" + kid + "', title='" + ktext + "') }}";
-  $kcontent.val(content.replace(ktext, new_link));
+  var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
+  var match = ktext_finder.exec(content);
+  if (match !== null) {
+    start = match.index;
+    end = start + match[0].length;
+    var new_link = "{{ KNOWL('" + kid + "', title='" + match[0] + "') }}";
+    $kcontent[0].selectionStart = start;
+    $kcontent[0].selectionEnd = end;
+    document.execCommand('insertText', false, new_link);
+  }
+  refresh_link_suggestions();
 }
 {% endraw %}
 
