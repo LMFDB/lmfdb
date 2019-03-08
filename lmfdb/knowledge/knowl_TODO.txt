@@ -20,8 +20,11 @@ BUGS:
 * Change beta to dev, prod to web in code links
 * Link suggestions: suppress knowls that already exist (no knowl twice), none for terms defining in this knowl
 * Won't go back to preview
-
 * Try to figure out how to fix ids_referencing caveat.
+
+Ask Farmer:
+* delete unused javascripts
+* issues against using cdn
 
 LATER:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
