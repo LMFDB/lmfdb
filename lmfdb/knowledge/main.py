@@ -32,6 +32,7 @@ except:
     logger.fatal("You need to update the markdown python utility: sage -sh -> easy_install -U markdown flask-markdown")
     exit()
 
+_cache_time = 120
 
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.utcfromtimestamp(0)
@@ -40,7 +41,6 @@ def datetime_to_timestamp_in_ms(dt):
 
 def timestamp_in_ms_to_datetime(ts):
     return datetime.utcfromtimestamp(float(int(ts)/1000000.0))
-
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
@@ -357,21 +357,29 @@ def show(ID):
                            render=r,
                            bread=b)
 
-
-@knowledge_page.route("/raw/<ID>/<int:timestamp>")
-def raw(ID, timestamp=None):
+@knowledge_page.route("/content/<ID>/<int:timestamp>")
+def content(ID, timestamp):
     if timestamp is not None:
         timestamp = timestamp_in_ms_to_datetime(timestamp)
-    data = render_knowl(ID, footer="0", raw=True, timestamp=timestamp)
+    data = Knowl(ID, timestamp=timestamp).content
     resp = make_response(data)
-    # cache 2 minutes and allow CORS
-    resp.headers['Cache-Control'] = 'max-age=%s, public' % (2 * 60)
+    # cache and allow CORS
+    resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+@knowledge_page.route("/content/<ID>")
+def raw_without_timestamp(ID):
+    return content(ID, timestamp=None)
+
+@knowledge_page.route("/raw/<ID>/<int:timestamp>")
+def raw(ID):
+    data = render_knowl(ID, footer="0", raw=True)
+    resp = make_response(data)
+    # cache  and allow CORS
+    resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
-@knowledge_page.route("/raw/<ID>")
-def raw_without_timestamp(ID):
-    return raw(ID, timestamp=None)
 
 
 @knowledge_page.route("/history")
@@ -619,9 +627,9 @@ def render_knowl(ID, footer=None, kwargs=None,
             # doesn't exist right now and will wrap this into a make_reponse!
             return data
         resp = make_response(data)
-        # cache 2 minutes if it is a usual GET
+        # cache if it is a usual GET
         if request.method == 'GET':
-            resp.headers['Cache-Control'] = 'max-age=%s, public' % (2 * 60)
+            resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
     except Exception, e:

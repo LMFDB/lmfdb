@@ -1,0 +1,53 @@
+{% extends "homepage.html" %}
+
+  {% include "mergely.html" %}
+
+{% block content %}
+
+<script type="text/javascript">
+$(document).ready(function () {
+      var comp = $('#compare');
+			comp.mergely({
+				width: 'calc(30% - 25px)',
+        height: '500px',
+        license: 'gpl-separate-notice',
+				cmsettings: {
+					readOnly: true,
+          linewrap: true,
+				},
+        lineNumbers: true,
+        wrap_lines: true,
+        /*
+				lhs: function(setValue) {
+					setValue('the quick red fox\njumped over the hairy dog');
+				},
+				rhs: function(setValue) {
+					setValue('the ada quick brown fox\njumped over the lazy dog');
+        }
+        */
+			});
+      $.ajax({
+      type: 'GET', async: true, dataType: 'text',
+        url: '/knowledge/content/cmf/1545201145469776',
+        success: function (response) {
+      $('#compare').mergely('lhs', response);
+    }
+    });
+      $.ajax({
+      type: 'GET', async: true, dataType: 'text',
+        url: '/knowledge/content/cmf/1551969822909892',
+        success: function (response) {
+      $('#compare').mergely('rhs', response);
+    }
+    });
+	});
+</script>
+
+
+   <div id="diff" style="overflow: hidden">
+  <div id="compare"></div>
+  </div>
+
+{% endblock %}
+
+
