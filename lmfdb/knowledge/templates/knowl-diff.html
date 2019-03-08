@@ -8,15 +8,16 @@
 $(document).ready(function () {
       var comp = $('#compare');
 			comp.mergely({
-				width: 'calc(30% - 25px)',
-        height: '500px',
         license: 'gpl-separate-notice',
 				cmsettings: {
-					readOnly: true,
+					readOnly: false,
           linewrap: true,
+          viewportMargin: 500,
 				},
         lineNumbers: true,
         wrap_lines: true,
+        width: 'auto',
+        height: 'calc(100% - 40px)'
         /*
 				lhs: function(setValue) {
 					setValue('the quick red fox\njumped over the hairy dog');
@@ -42,11 +43,24 @@ $(document).ready(function () {
     });
 	});
 </script>
+<style>
+/* Initial height */
+.diff {
+  overflow: hidden;
+  resize: vertical;
+  padding: 20px;
+  height: 500px;
+}
+/* Auto-height fix */
+ .mergely-column .CodeMirror {
+    height: auto;
+}
+</style>
 
 
-   <div id="diff" style="overflow: hidden">
+<div class="diff">
   <div id="compare"></div>
-  </div>
+</div>
 
 {% endblock %}
 
