@@ -310,6 +310,11 @@ def edit(ID):
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
+    author = knowl._last_author
+    # Existing comments can only be edited by admins and the author
+    if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
+        flask.flash("You can only edit your own comments", "error")
+        return flask.redirect(url_for(".show", ID=knowl.source))
 
     lock = None
     if request.args.get("lock", "") != 'ignore':
@@ -388,14 +393,26 @@ def raw(ID):
 
 
 @knowledge_page.route("/history")
-def history():
-    h_items = knowldb.get_history()
-    bread = get_bread([("History", url_for('.history'))])
+@knowledge_page.route("/history/<int:limit>")
+def history(limit=25):
+    h_items = knowldb.get_history(limit)
+    bread = get_bread([("History", url_for('.history', limit=limit))])
     return render_template("knowl-history.html",
                            title="Knowledge History",
                            bread=bread,
                            history=h_items)
 
+@knowledge_page.route("/comment_history")
+@knowledge_page.route("/comment_history/<int:limit>")
+@login_required
+def comment_history(limit=25):
+    h_items = knowldb.get_comment_history(limit)
+    bread = get_bread([("Comment History", url_for('.comment_history', limit=limit))])
+    return render_template("knowl-comment-history.html",
+                           title="Comment History",
+                           bread=bread,
+                           history=h_items,
+                           limit=limit)
 
 @knowledge_page.route("/delete/<ID>")
 @admin_required
@@ -491,7 +508,7 @@ def delete_comment(ID):
         comment.delete()
     except ValueError:
         flask.flash("Only admins and the original author can delete comments", "error")
-    return flask.redirect(url_for(".show", ID=comment.source_id))
+    return flask.redirect(url_for(".show", ID=comment.source))
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
@@ -546,7 +563,7 @@ def save_form():
                     flask.flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
     if k.type == -2:
-        return flask.redirect(url_for(".show", ID=k.source_id))
+        return flask.redirect(url_for(".show", ID=k.source))
     else:
         return flask.redirect(url_for(".show", ID=ID))
 
