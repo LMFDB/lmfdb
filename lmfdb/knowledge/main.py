@@ -25,6 +25,7 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
+from lmfdb.utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 
 # just for those, who still use an older markdown
 try:
@@ -35,13 +36,7 @@ except:
 
 _cache_time = 120
 
-# conversion tools between timestamp different kinds of timestamp
-epoch = datetime.utcfromtimestamp(0)
-def datetime_to_timestamp_in_ms(dt):
-    return int((dt - epoch).total_seconds() * 1000000)
 
-def timestamp_in_ms_to_datetime(ts):
-    return datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 

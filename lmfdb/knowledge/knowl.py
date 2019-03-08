@@ -11,6 +11,7 @@ from lmfdb.app import is_beta, is_debug_mode, _url_source
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -574,9 +575,9 @@ class Knowl(object):
         are passed into the knowl when the knowl is included in the template.
     - ``data`` -- (optional) the dictionary from knowldb with the data for this knowl
     - ``editing`` -- whether this knowl is being displayed in the edit template
-        (controls whether edit_history is computed)
+        (controls whether all_defines and edit_history are computed)
     - ``showing`` -- whether this knowl is being displayed in the show template
-        (controls whether referrers is computed)
+        (controls whether referrers and edit_history are computed)
     - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
     - ``timestamp`` -- desired version of knowl at the given timestamp
     """
@@ -625,6 +626,9 @@ class Knowl(object):
             self.sed_safety = knowldb.check_sed_safety(ID)
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
+
+
+        if showing or editing:
             self.edit_history = knowldb.get_edit_history(ID)
             #if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
@@ -632,16 +636,17 @@ class Knowl(object):
             #                          "last_author":"__nobody__",
             #                          "content":"",
             #                          "status":0}]
-            # We will be printing these within a javascript ` ` string, so need to escape backticks
-            for version in self.edit_history:
-                version['content'] = version['content'].replace("`", r"\`")
-            for i, version in reversed(list(enumerate(self.edit_history))):
-                if version['status'] == 1:
+            uids = [ elt['last_author'] for elt in self.edit_history]
+            full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
+            self.review_spot = None
+            self.edit_history_start = len(self.edit_history) - 1
+            for i, elt in enumerate(self.edit_history):
+                elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
+                elt['author_full_name'] = full_names.get(elt['last_author'], "")
+                # We will be printing these within a javascript ` ` string, so need to escape backticks
+                elt['content'] = elt['content'].replace("`", r"\`")
+                if elt['status'] == 1:
                     self.edit_history_start = self.review_spot = i
-                    break
-            else:
-                self.review_spot = None
-                self.edit_history_start = len(self.edit_history) - 1
 
     def save(self, who):
         knowldb.save(self, who)

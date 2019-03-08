@@ -45,7 +45,8 @@ from .utilities import (
     debug, flash_error, cached,
     ajax_url, # try to eliminate?
     image_callback, encode_plot,
-    KeyedDefaultDict, range_formatter)
+    KeyedDefaultDict, range_formatter,
+    datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
     parse_ints, parse_signed_ints, parse_floats, parse_rational, parse_rats,
