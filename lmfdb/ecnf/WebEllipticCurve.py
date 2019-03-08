@@ -502,8 +502,10 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            if sig[0] <= 2:
-                self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if sig[0] <= 2 and db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
             elif self.abs_disc ** 2 * self.conductor_norm < 70000:
                 # we shouldn't trust the Lfun computed on the fly for large conductor
                 self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
@@ -511,7 +513,10 @@ class ECNF(object):
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
