@@ -651,7 +651,7 @@ class Knowl(object):
         knowldb.delete(self)
 
     def resurrect(self):
-        """Brings the knowl back from being deleted by setting status to beta.  Admin only."""
+        """Brings the knowl back from being deleted by setting status to beta."""
         knowldb.resurrect(self)
 
     def review(self, who, set_beta=False):

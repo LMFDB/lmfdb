@@ -535,6 +535,10 @@ def save_form():
     new_title = request.form['title']
     new_content = request.form['content']
     if new_title != k.title or new_content != k.content:
+        if not k.content and not k.title and k.exists(allow_deleted=True):
+            # Creating a new knowl with the same id as one that had previously been deleted
+            k.resurrect()
+            flask.flash("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored.")
         k.title = new_title
         k.content = new_content
         k.timestamp = datetime.now()

@@ -4,7 +4,6 @@ TASKS:
 * Add ability to view diffs against old versions when editing knowl
 * In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
-* When creating a new knowl, resurrect old code in history when they save
 * Add highlighting in knowl suggestions
 
 BUGS:
@@ -85,6 +84,8 @@ ALTER TABLE kwl_knowls2 ALTER COLUMN timestamp SET NOT NULL;
 GRANT SELECT ON kwl_knowls2 TO lmfdb;
 GRANT SELECT ON kwl_knowls2 TO webserver;
 INSERT INTO kwl_knowls2(id, cat, title, content, authors, last_author, quality, timestamp, _keywords) SELECT id, cat, title, content, authors, last_author, quality, timestamp, _keywords FROM kwl_knowls;
+UPDATE kwl_knowls2 SET status = 1 WHERE quality = 'reviewed';
+ALTER TABLE kwl_knowls2 DROP COLUMN quality;
 
 WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
 UPDATE kwl_knowls2 SET links = '{}' WHERE links IS NULL;
