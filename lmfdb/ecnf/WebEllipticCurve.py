@@ -406,15 +406,17 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = self.q_curve
-        if self.qc == "?":
-            self.qc = "not determined"
-        elif self.qc == True:
-            self.qc = "yes"
-        elif self.qc == False:
-            self.qc = "no"
-        else: # just in case
-            self.qc = "not determined"
+        # See Issue #2718
+        self.qc = "not determined"
+        # self.qc = self.q_curve
+        # if self.qc == "?":
+        #     self.qc = "not determined"
+        # elif self.qc == True:
+        #     self.qc = "yes"
+        # elif self.qc == False:
+        #     self.qc = "no"
+        # else: # just in case
+        #     self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -469,8 +471,8 @@ class ECNF(object):
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            ld['kod'] = ld['kod'].replace('\\\\', '\\')
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
+            while '\\\\' in ld['kod']:
+                ld['kod'] = ld['kod'].replace('\\\\', '\\')
 
         # URLs of self and related objects:
         self.urls = {}
