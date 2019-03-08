@@ -32,6 +32,15 @@ except:
     logger.fatal("You need to update the markdown python utility: sage -sh -> easy_install -U markdown flask-markdown")
     exit()
 
+
+# conversion tools between timestamp different kinds of timestamp
+epoch = datetime.utcfromtimestamp(0)
+def datetime_to_timestamp_in_ms(dt):
+    return int((dt - epoch).total_seconds() * 1000000)
+
+def timestamp_in_ms_to_datetime(ts):
+    return datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
@@ -331,12 +340,12 @@ def edit(ID):
 def show(ID):
     k = Knowl(ID, showing=True)
     if k.exists():
-        r = render(ID, footer="0", raw=True)
+        r = render_knowl(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
     else:
         if current_user.is_admin() and k.exists(allow_deleted=True):
             k = Knowl(ID, showing=True, allow_deleted=True)
-            r = render(ID, footer="0", raw=True, allow_deleted=True)
+            r = render_knowl(ID, footer="0", raw=True, allow_deleted=True)
             title = (k.title or "'%s'" % k.id) + " (DELETED)"
         else:
             return flask.abort(404, "No knowl found with the given id")
@@ -348,14 +357,21 @@ def show(ID):
                            render=r,
                            bread=b)
 
-@knowledge_page.route("/raw/<ID>")
-def raw(ID):
-    data = render(ID, footer="0", raw=True)
+
+@knowledge_page.route("/raw/<ID>/<int:timestamp>")
+def raw(ID, timestamp=None):
+    if timestamp is not None:
+        timestamp = timestamp_in_ms_to_datetime(timestamp)
+    data = render_knowl(ID, footer="0", raw=True, timestamp=timestamp)
     resp = make_response(data)
     # cache 2 minutes and allow CORS
     resp.headers['Cache-Control'] = 'max-age=%s, public' % (2 * 60)
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
+
+@knowledge_page.route("/raw/<ID>")
+def raw_without_timestamp(ID):
+    return raw(ID, timestamp=None)
 
 
 @knowledge_page.route("/history")
@@ -426,7 +442,7 @@ def review_recent(days):
             return jsonify({"success":0})
     knowls = knowldb.needs_review(days)
     for k in knowls:
-        k.rendered = render(k.id, footer="0", raw=True, k=k)
+        k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
     b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,
@@ -500,7 +516,11 @@ def save_form():
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
-def render(ID, footer=None, kwargs=None, raw=False, k=None, allow_deleted=False):
+def render(ID):
+    return render_knowl(ID)
+
+def render_knowl(ID, footer=None, kwargs=None, 
+        raw=False, k=None, allow_deleted=False, timestamp=None):
     """
     this method renders the given Knowl (ID) to insert it
     dynamically in a website. It is intended to be used
@@ -516,7 +536,7 @@ def render(ID, footer=None, kwargs=None, raw=False, k=None, allow_deleted=False)
     """
     if k is None:
         try:
-            k = Knowl(ID, allow_deleted=allow_deleted)
+            k = Knowl(ID, allow_deleted=allow_deleted, timestamp=timestamp)
         except Exception:
             logger.critical("Failed to render knowl %s"%ID)
             errmsg = "Sorry, the knowledge database is currently unavailable."
@@ -669,3 +689,14 @@ def index():
                            filtermode = filtermode,
                            knowl_types=knowl_type_code.keys(),
                            types=types)
+
+
+
+@knowledge_page.route("/diff", methods=['GET', 'POST'])
+def diff_sample():
+    return render_template("knowl-diff.html",
+                           title="Knowledge Diff")
+
+
+
+

@@ -69,6 +69,7 @@ def extract_cat(kid):
         return None
     return kid.split(".")[0]
 
+
 def extract_typ(kid):
     m = top_knowl_re.match(kid)
     if m:
@@ -140,9 +141,18 @@ class KnowlBackend(PostgresBase):
     def can_read_write_knowls(self):
         return self._rw_knowldb
 
-    def get_knowl(self, ID, fields=None, beta=None, allow_deleted=False):
+    def get_knowl(self, ID,
+            fields=None, beta=None, allow_deleted=False, timestamp=None):
         if fields is None:
             fields = ['id'] + self._default_fields
+        if timestamp is not None:
+            selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+            cur = self._execute(selecter, [ID, timestamp])
+            if cur.rowcount > 0:
+                return {k:v for k,v in zip(fields, cur.fetchone())}
+            else:
+                return None
+
         if beta is None:
             beta = is_beta()
         selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
@@ -167,6 +177,7 @@ class KnowlBackend(PostgresBase):
         # This should be fixed in the data
         return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
 
+    #FIXME shouldn't I be allowed to search on id? or something?
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title']):
         """
         INPUT:
@@ -251,9 +262,9 @@ class KnowlBackend(PostgresBase):
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
         values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, Json(search_keywords))
         with DelayCommit(self):
-            insterer = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
-            insterer = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
-            self._execute(insterer, values)
+            inserter = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
+            inserter = insterer.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
+            self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
 
     def get_history(self, limit=25):
@@ -531,24 +542,26 @@ class Knowl(object):
     INPUT:
 
     - ``ID`` -- the knowl id
-    - ``template_kwars`` - the list of additional parameters that
-        are passed into the knowl the point where the knowl is
-        included in the template.
+    - ``template_kwargs`` - the list of additional parameters that
+        are passed into the knowl when the knowl is included in the template.
     - ``data`` -- (optional) the dictionary from knowldb with the data for this knowl
     - ``editing`` -- whether this knowl is being displayed in the edit template
         (controls whether edit_history is computed)
     - ``showing`` -- whether this knowl is being displayed in the show template
         (controls whether referrers is computed)
     - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
+    - ``timestamp`` -- desired version of knowl at the given timestamp
     """
-    def __init__(self, ID, template_kwargs=None, data=None, editing=False, showing=False, saving=False, allow_deleted=False):
+    def __init__(self, ID, template_kwargs=None, data=None, editing=False, saving=False,
+            showing=False, allow_deleted=False, timestamp=None):
         self.template_kwargs = template_kwargs or {}
 
         self.id = ID
         #given that we cache it's existence it is quicker to check for existence
         if data is None:
             if self.exists(allow_deleted=allow_deleted):
-                data = knowldb.get_knowl(ID, allow_deleted=allow_deleted)
+                data = knowldb.get_knowl(ID,
+                        allow_deleted=allow_deleted, timestamp=timestamp)
             else:
                 data = {}
         self.title = data.get('title', '')
