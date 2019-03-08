@@ -5,14 +5,32 @@
   {% for k in knowls %}
   <tr>
     <td>
-      <h2>{{ k.title or k.id }} (<code>{{ k.id }}</code>)</h2>
+      <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
       {{ k.rendered|safe }}
     </td>
   </tr>
   <tr>
     <td id="td_{{k.id}}">
-      Last edited by {{k.last_author()}} on {{ k.timestamp }} <br>
-      <a href="#" title="Mark reviewed" onclick="js_review_knowl({{k.id}}); return false;">Review</a>
+      Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
+      {% if k.referrers or k.code_referrers %}
+      <table class="knowl_references">
+        <tr>
+          <td>Referred to by:</td>
+          {% for rid in k.referrers %}
+          <td>{{ KNOWL(rid, title=rid) }}</td>
+          {% endfor %}
+          {% for coderef in k.code_referrers %}
+          <td>{{ coderef | safe }}</td>
+          {% endfor %}
+        </tr>
+      </table>
+      {% else %}
+      No referrers <br>
+      {% endif %}
+      {% set kid = k.id.replace('.','') %}
+      <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
+      <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
+      <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
     </td>
   </tr>
   {% endfor %}

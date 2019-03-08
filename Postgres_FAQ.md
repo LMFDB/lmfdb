@@ -150,10 +150,48 @@ Database Interface
    complicated queries, such as containment, inequalities and
    disjunctions.
 
-   The `_execute` method allows you access to raw SQL if necessary,
-   though use of the public methods described above is preferred.  If
-   you do use `_execute` you will need to use the psycopg2.sql module
-   in order to reduce the risk of SQL injection attacks.
+1. How can I execute other kinds of SQL commands?
+
+   You have three options: use the `_execute` method of the `db` object,
+   run commands from a `psql` prompt, or use the `pgAdmin4` interface
+   (not yet supported).
+
+   If use `db._execute`, make sure to wrap your statements in the SQL
+   class from `psycopg2.sql` (you can also import it from
+   `lmfdb.backend.database`). You can see lots of examples of this
+   paradigm in `lmfdb/backend/database.py`.
+
+   ```python
+   sage: from lmfdb.backend.database import db, SQL
+   sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
+   sage: cur.rowcount
+   2
+   sage: list(cur)
+   [(u'95.1.d.a', 1, [-19, -95], [5]), (u'171.1.c.a', 1, [-3, -19], [57])]
+   ```
+
+   If you do this within lmfdb code (rather than just at the command line),
+   make sure you properly escpae literals and identifiers to prevent
+   SQL injection attacks.  This means wrapping any table or column
+   name that might have come from an untrusted source in `Identifier`,
+   and using either the %s construction shown above or the `Literal`
+   or `Placeholder` objects when passing constants into your query.
+   More documentation on these constructions can be found in the
+   `psycopg2.sql` module.
+
+   If you want to use SQL from a command prompt, you should log into
+   `legendre.mit.edu` (ask Edgar Costa or David Roe if you need an account)
+   and then run the following from bash:
+
+   `psql -d lmfdb` and then give the lmfdb password. This will give you
+   read-only access to the database.
+
+   If you want write access, type `psql -U editor -d lmfdb` and then give
+   the editor password.
+
+   Either way, you will get a prompt where you can type SQL commands.
+   Don't forget ending semicolons, which are not required when executing
+   commands from python.
 
 Developer configuration
 -----------------------

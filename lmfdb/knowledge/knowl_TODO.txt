@@ -2,8 +2,13 @@ TASKS:
 
 * Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
+* In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
-* review_recent interface (more padding between knowls, order by date?)
+* Fix keywords on rename
+* When creating a new knowl, resurrect old code in history when they save
+* Search with wildcards (use tilde operator and a checkbox on the search; think about details)
+* Make sure no defined term in all_defines has single or double quotes
+* Insert text doesn't work in Firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1220696)
 
 LATER:
 * Redo creation of kwl_knowls2 and swap in for kwl_knowls when new knowl code goes live
@@ -12,27 +17,18 @@ LATER:
 * Update scripts that copy knowls to production
 
 IT WOULD BE NICE IF:
-* Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
-* Add autosaves by updating an inprogress knowl record
-
-* When editing a knowl, use the all_defines property to find the name of a knowl that defines a particular keyword.  Maybe with a right click menu (google for context menu)
-
 * Comments knowl, id given by appending `.comments`, versioned as a normal know.  Will only show up if logged in.  Editable from the page for main knowl
 * Add ability to search for knowls with comments
 
+* Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
+* Add autosaves by updating an inprogress knowl record
+
 * Some visual distinction between mathematical content and LMFDB-specific content
 
-* Search with wildcards (use tilde operator and a checkbox on the search; think about details)
-
 Questions:
-* Confirmation when reviewing?
-* What should happen if someone tries to create a knowl with the same id as one that has been deleted?
-* Who should have permission to rename?
-* When reviewing a knowl from a page that includes it, successful reviewing will take you to the knowl show page.  Is this okay?
-* Note: if you set a knowl back to beta, you're still the reviewer, but the status is 0.
+* Feedback on the link suggestions
 * Is caveat on ids_referencing okay?
 * Renaming to an id that has been deleted?
-* Is the interface for renaming good (if so, delete the rename function)?
 
 SCHEMA MODIFICATIONS:
 

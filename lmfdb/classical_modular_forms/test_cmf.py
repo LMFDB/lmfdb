@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest2, socket
 
 from . import cmf_logger
 cmf_logger.setLevel(100)
@@ -85,13 +85,14 @@ class CmfTest(LmfdbTest):
         from lmfdb.classical_modular_forms.main import favorite_newform_labels, favorite_space_labels
         for l in favorite_newform_labels:
             for elt, desc in l:
-                elt in main_page
-                desc in main_page
-                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
-                assert ("Newform %s" % elt) in page.data
-                # redirect to the same page
-                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
-                assert ("Newform %s" % elt) in page.data
+                if elt != 'random':
+                    elt in main_page
+                    desc in main_page
+                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                    assert ("Newform %s" % elt) in page.data
+                    # redirect to the same page
+                    page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                    assert ("Newform %s" % elt) in page.data
         for l in favorite_space_labels:
             for elt, desc in l:
                 elt in main_page
@@ -610,50 +611,53 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/23.1.b.a.z')
         assert 'Label not found' in page.data
 
-        from sage.all import magma_free
-        # test MakeNewformModFrm
-        for label, expected in [
-                ['11.2.a.a',
-                    'q - 2*q^2 - q^3 + 2*q^4 + q^5 + 2*q^6 - 2*q^7 - 2*q^9 - 2*q^10 + q^11 + O(q^12)'],
-                ['21.2.g.a',
-                    'q + (-nu - 1)*q^3 + (2*nu - 2)*q^4 + (-3*nu + 2)*q^7 + 3*nu*q^9 + O(q^12)'],
-                ['59.2.a.a',
-                    'q + (-nu^4 + 7*nu^2 + 3*nu - 5)*q^2 + (nu^4 - nu^3 - 6*nu^2 + 2*nu + 3)*q^3 + (nu^3 - nu^2 - 4*nu + 3)*q^4 + (nu^4 - 6*nu^2 - 4*nu + 3)*q^5 + (-3*nu^4 + 2*nu^3 + 17*nu^2 - 3*nu - 7)*q^6 + (-nu^2 + 3)*q^7 + (3*nu^4 - 2*nu^3 - 17*nu^2 + 3*nu + 5)*q^8 + (2*nu^4 - 13*nu^2 - 4*nu + 8)*q^9 + (3*nu^4 - 2*nu^3 - 17*nu^2 + nu + 5)*q^10 + (-4*nu^4 + 2*nu^3 + 24*nu^2 + 2*nu - 12)*q^11 + O(q^12)'],
-                ['13.2.e.a',
-                    'q + (-nu - 1)*q^2 + (2*nu - 2)*q^3 + nu*q^4 + (-2*nu + 1)*q^5 + (-2*nu + 4)*q^6 + (2*nu - 1)*q^8 - nu*q^9 + (3*nu - 3)*q^10 + O(q^12)'],
-                ['340.1.ba.b',
-                    'q + zeta_8*q^2 + zeta_8^2*q^4 - zeta_8^3*q^5 + zeta_8^3*q^8 - zeta_8*q^9 + q^10 + O(q^12)'],
-                ['24.3.h.a',
-                    'q - 2*q^2 + 3*q^3 + 4*q^4 + 2*q^5 - 6*q^6 - 10*q^7 - 8*q^8 + 9*q^9 - 4*q^10 - 10*q^11 + O(q^12)'],
-                ['24.3.h.c',
-                    'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + nu^2*q^4 + (nu^3 + 2*nu)*q^5 + (-nu^3 + nu^2 - 3*nu + 4)*q^6 + 4*q^7 + nu^3*q^8 + 1/2*(-nu^3 - 10*nu - 10)*q^9 + (-4*nu^2 - 16)*q^10 + 1/2*(-3*nu^3 - 6*nu)*q^11 + O(q^12)'],
-                ]:
-            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
-            makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.data
-            magma_code = page.data + '\n' + '%s();\n' % makenewform
-            assert expected == magma_free(magma_code)
+        try:
+            from sage.all import magma_free
+            # test MakeNewformModFrm
+            for label, expected in [
+                    ['11.2.a.a',
+                        'q - 2*q^2 - q^3 + 2*q^4 + q^5 + 2*q^6 - 2*q^7 - 2*q^9 - 2*q^10 + q^11 + O(q^12)'],
+                    ['21.2.g.a',
+                        'q + (-nu - 1)*q^3 + (2*nu - 2)*q^4 + (-3*nu + 2)*q^7 + 3*nu*q^9 + O(q^12)'],
+                    ['59.2.a.a',
+                        'q + (-nu^4 + 7*nu^2 + 3*nu - 5)*q^2 + (nu^4 - nu^3 - 6*nu^2 + 2*nu + 3)*q^3 + (nu^3 - nu^2 - 4*nu + 3)*q^4 + (nu^4 - 6*nu^2 - 4*nu + 3)*q^5 + (-3*nu^4 + 2*nu^3 + 17*nu^2 - 3*nu - 7)*q^6 + (-nu^2 + 3)*q^7 + (3*nu^4 - 2*nu^3 - 17*nu^2 + 3*nu + 5)*q^8 + (2*nu^4 - 13*nu^2 - 4*nu + 8)*q^9 + (3*nu^4 - 2*nu^3 - 17*nu^2 + nu + 5)*q^10 + (-4*nu^4 + 2*nu^3 + 24*nu^2 + 2*nu - 12)*q^11 + O(q^12)'],
+                    ['13.2.e.a',
+                        'q + (-nu - 1)*q^2 + (2*nu - 2)*q^3 + nu*q^4 + (-2*nu + 1)*q^5 + (-2*nu + 4)*q^6 + (2*nu - 1)*q^8 - nu*q^9 + (3*nu - 3)*q^10 + O(q^12)'],
+                    ['340.1.ba.b',
+                        'q + zeta_8*q^2 + zeta_8^2*q^4 - zeta_8^3*q^5 + zeta_8^3*q^8 - zeta_8*q^9 + q^10 + O(q^12)'],
+                    ['24.3.h.a',
+                        'q - 2*q^2 + 3*q^3 + 4*q^4 + 2*q^5 - 6*q^6 - 10*q^7 - 8*q^8 + 9*q^9 - 4*q^10 - 10*q^11 + O(q^12)'],
+                    ['24.3.h.c',
+                        'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + nu^2*q^4 + (nu^3 + 2*nu)*q^5 + (-nu^3 + nu^2 - 3*nu + 4)*q^6 + 4*q^7 + nu^3*q^8 + 1/2*(-nu^3 - 10*nu - 10)*q^9 + (-4*nu^2 - 16)*q^10 + 1/2*(-3*nu^3 - 6*nu)*q^11 + O(q^12)'],
+                    ]:
+                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
+                makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
+                assert makenewform  in page.data
+                magma_code = page.data + '\n' + '%s();\n' % makenewform
+                assert expected == magma_free(magma_code)
 
-        for label, expected in [['24.3.h.a',
-                    'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 1 over Rational Field'],
-                ['24.3.h.c',
-                    'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 4 over Rational Field'],
-                ['54.2.e.a',
-                    'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 1 over Cyclotomic Field of order 9 and degree 6'],
-                ['54.2.e.b',
-                    'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
-                    ],
-                ['212.2.k.a',
-                    'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
-                    ]
-                ]:
-            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
-            makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
-            assert makenewform  in page.data
-            magma_code = page.data + '\n' + '%s();\n' % makenewform
-            assert expected == magma_free(magma_code)
+            for label, expected in [['24.3.h.a',
+                        'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 1 over Rational Field'],
+                    ['24.3.h.c',
+                        'Modular symbols space of level 24, weight 3, character Kronecker character -24, and dimension 4 over Rational Field'],
+                    ['54.2.e.a',
+                        'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 1 over Cyclotomic Field of order 9 and degree 6'],
+                    ['54.2.e.b',
+                        'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
+                        ],
+                    ['212.2.k.a',
+                        'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
+                        ]
+                    ]:
+                page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
+                makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
+                assert makenewform  in page.data
+                magma_code = page.data + '\n' + '%s();\n' % makenewform
+                assert expected == magma_free(magma_code)
 
-
+        except socket.timeout as err:
+            print "Connecting with magma.maths.usyd.edu.au timed out"
+            print err
 
 
 
@@ -665,7 +669,7 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27level_radical%27%3A+5%2C+%27dim%27%3A+%7B%27%24lte%27%3A+10%2C+%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+10%7D&search_type=List', follow_redirects = True)
         assert '5.10.a.a' in page.data
-        assert '5, 10, 1, 2.57517918082, [0, 1], 1.1.1.1, [], [], [-8, -114, -625, 4242]' in page.data
+        assert '5, 10, 1, 2.57517918082, [0, 1], "1.1.1.1", [], [], [-8, -114, -625, 4242]' in page.data
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:

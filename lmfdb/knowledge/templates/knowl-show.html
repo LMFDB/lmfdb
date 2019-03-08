@@ -26,7 +26,7 @@
       {% endif %}
       {% endif %}
     </li>
-    <li>Last edited by {{k.last_author()}} on {{ k.timestamp }}</li>
+    <li>Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime }}</li>
   </ul>
 </div>
 {% if k.source %}
@@ -39,6 +39,9 @@
   <ul>
     {% for rid in k.referrers %}
     <li>{{ KNOWL(rid, title=rid) }}</li>
+    {% endfor %}
+    {% for coderef in k.code_referrers %}
+    <li>{{ coderef | safe }}</li>
     {% endfor %}
   </ul>
 </div>

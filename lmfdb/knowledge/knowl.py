@@ -3,11 +3,12 @@
 from lmfdb.knowledge import logger
 from datetime import datetime, timedelta
 from collections import defaultdict
-import time
+import time, subprocess
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
 from lmfdb.backend.encoding import Json
-from lmfdb.app import is_beta
+from lmfdb.app import is_beta, is_debug_mode, _url_source
+from lmfdb.utils import code_snippet_knowl
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 
@@ -32,8 +33,10 @@ url_from_knowl = [
     (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
     (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
 ]
+grep_extractor = re.compile(r'(.+)([-:])(\d+)([-:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
+define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
 defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
@@ -91,6 +94,13 @@ def extract_typ(kid):
 
 def extract_links(content):
     return sorted(set(x[1] for x in link_finder_re.findall(content)))
+
+def normalize_define(term):
+    m = define_fixer.search(term)
+    if m:
+        n = 6 if (m.group(5) is None) else 5
+        term = define_fixer.sub(r'\%s'%n, term)
+    return ' '.join(term.split())
 
 def extract_defines(content):
     return sorted(set(x[0].strip() for x in defines_finder_re.findall(content)))
@@ -164,7 +174,8 @@ class KnowlBackend(PostgresBase):
     def get_all_defines(self):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
-        return [{k:v for k,v in zip(['id', 'defines'], res)} for res in cur]
+        # This should be fixed in the data
+        return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
 
     #FIXME shouldn't I be allowed to search on id? or something?
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title']):
@@ -266,9 +277,9 @@ class KnowlBackend(PostgresBase):
         return [{k:v for k,v in zip(cols, res)} for res in cur]
 
     def get_edit_history(self, ID):
-        selecter = SQL("SELECT timestamp, last_author, content FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp DESC")
+        selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls2 WHERE status >= %s AND id = %s ORDER BY timestamp")
         cur = self._execute(selecter, [0, ID])
-        return [{k:v for k,v in zip(["timestamp", "last_author", "content"], rec)} for rec in cur]
+        return [{k:v for k,v in zip(["timestamp", "last_author", "content", "status"], rec)} for rec in cur]
 
     def delete(self, knowl):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
@@ -292,9 +303,28 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s ORDER BY id, timestamp DESC) knowls WHERE status = 0").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s AND status >= 0 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
         cur = self._execute(selecter, [time])
-        return [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+        knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
+
+        kids = [k.id for k in knowls]
+        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls2 WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
+        cur = self._execute(selecter, [kids])
+        reviewed = {rec[0]:rec[1] for rec in cur}
+
+        selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE links && %s")
+        cur = self._execute(selecter, [kids])
+        referrers = {k.id: [] for k in knowls}
+        for refid, links in cur:
+            for kid in links:
+                if kid in referrers:
+                    referrers[kid].append(refid)
+
+        for k in knowls:
+            k.reviewed_content = reviewed.get(k.id)
+            k.referrers = referrers[k.id]
+            k.code_referrers = [code_snippet_knowl(D, full=False) for D in self.code_references(k.id)]
+        return knowls
 
     def ids_referencing(self, knowlid, old=False):
         """Returns all ids that reference the given one.
@@ -317,13 +347,74 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, values)
         return [rec[0] for rec in cur]
 
+    @staticmethod
+    def _process_git_grep(match):
+        line_numbers = []
+        filename = None
+        code = []
+        for line in match.split('\n'):
+            if not line.strip():
+                continue
+            m = grep_extractor.match(line)
+            if not m:
+                raise ValueError("Unexpected grep output (no match)")
+            F, con1, n, con2, codeline = m.groups()
+            if filename is None:
+                filename = F
+            if con1 != con2:
+                raise ValueError("Unexpected grep output (context marker)")
+            if filename != F:
+                raise ValueError("Unexpected grep output (mismatched filename)")
+            if con1 == ':':
+                # If multiple lines match close by, we may have multiple line numbers.
+                # This should be rare, so we just show the last one
+                line_numbers.append(int(n))
+            code.append(codeline)
+        return {'filename': filename, 'lines': line_numbers, 'code': code}
+
+    def code_references(self, knowlid):
+        """
+        INPUT:
+
+        - ``knowlid`` -- a string, the knowl id
+
+        OUTPUT:
+
+        A list of dictionaries, with keys
+        - 'filename' -- full filename from LMFDB root
+        - 'line' -- line number of match
+        - 'code' -- a list of strings giving two lines of context around the match.
+        """
+        try:
+            matches = subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n--\n')
+        except subprocess.CalledProcessError: # no matches
+            return []
+        return [self._process_git_grep(match) for match in matches]
+
+    def check_sed_safety(self, knowlid):
+        """
+        OUTPUT:
+
+        - 0 if the knowl is not referenced in lmfdb code
+        - 1 if the knowl is referenced and can be safely replaced using sed
+            (does not occur without surrounding quotes)
+        - -1 if the knowl is referenced but cannot be safely replaced.
+        """
+        try:
+            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n')
+        except subprocess.CalledProcessError: # no matches
+            return 0
+        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')]).split('\n')
+        return 1 if (len(matches) == len(easy_matches)) else -1
+
     def rename(self, knowl, new_name):
         # We check that there are no knowls with this name, but calling function should check that name is valid knowl name
         if self.knowl_exists(new_name):
             raise ValueError("%s already exists"%new_name)
         with DelayCommit(self):
-            updator = SQL("UPDATE kwl_knowls2 SET id = %s WHERE id = %s")
-            self._execute(updator, [new_name, knowl.id])
+            new_cat = extract_cat(new_name)
+            updator = SQL("UPDATE kwl_knowls2 SET (id, cat) = (%s, %s) WHERE id = %s")
+            self._execute(updator, [new_name, new_cat, knowl.id])
             referrers = self.ids_referencing(knowl.id, old=True)
             updator = SQL("UPDATE kwl_knowls2 SET content = regexp_replace(content, %s, %s, %s) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(knowl.id.replace('.', r'\.')),
@@ -342,6 +433,52 @@ class KnowlBackend(PostgresBase):
             new_kid = kid.replace('-', '_')
             print "Renaming %s -> %s" % (kid, new_kid)
             self.rename(kid, new_kid)
+
+    def broken_links_knowls(self):
+        """
+        A list of knowl ids that have broken links.
+
+        OUTPUT:
+
+        A list of pairs ``kid``, ``links``, where ``links`` is a list of broken links on the knowl with id ``kid``.
+        """
+        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls2 ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls2 kw WHERE kw.id = link) = 0")
+        results = defaultdict(list)
+        for kid, link in self._execute(selecter):
+            results[kid].append(link)
+        return [(kid, results[kid]) for kid in sorted(results)]
+
+    def broken_links_code(self):
+        """
+        A list of code locations that have broken links.
+
+        OUTPUT:
+
+        A list of pairs ``D``, ``links``, where ``D`` is a dictionary with keys
+        as in ``code_references``, and ``links`` is a list of purported knowl
+        ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
+        """
+        all_kids = set(k['id'] for k in self.get_all_knowls(['id']))
+        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', r"""KNOWL(_INC)?[(]\s*['"]"""]).split('\n--\n')
+        results = []
+        for match in matches:
+            lines = match.split('\n')
+            bad_kids = []
+            bad_lines = []
+            for line in lines:
+                m = grep_extractor.match(line)
+                if m and m.group(2) == ':': # active match rather than context
+                    bad_kids.extend([kid for kid in extract_links(line) if kid not in all_kids])
+                    bad_lines.append(int(m.group(3)))
+            if bad_kids:
+                # make unique in order preserving way
+                seen = set()
+                bad_kids = [kid for kid in bad_kids if not (kid in seen or seen.add(kid))]
+                processed = self._process_git_grep(match)
+                # override the default line numbers, which just test which lines matched the grep
+                processed['lines'] = sorted(bad_lines)
+                results.append((processed, bad_kids))
+        return results
 
     def is_locked(self, knowlid, delta_min=10):
         """
@@ -415,8 +552,8 @@ class Knowl(object):
     - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
     - ``timestamp`` -- desired version of knowl at the given timestamp
     """
-    def __init__(self, ID, template_kwargs=None, data=None, editing=False,
-            showing=False, allow_deleted=False, timestamp=None):
+    def __init__(self, ID, template_kwargs=None, data=None, editing=False, 
+            showing=False, saving=False, allow_deleted=False, timestamp=None):
         self.template_kwargs = template_kwargs or {}
 
         self.id = ID
@@ -443,10 +580,30 @@ class Knowl(object):
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
         #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
-        if showing and self.type == 0:
+        if self.type == 0 and showing:
             self.referrers = knowldb.ids_referencing(ID)
+            self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(ID)]
+        if saving:
+            self.sed_safety = knowldb.check_sed_safety(ID)
         if editing:
+            self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
             self.edit_history = knowldb.get_edit_history(ID)
+            if not self.edit_history:
+                # New knowl.  This block should be edited according to the desired behavior for diffs
+                self.edit_history = [{"timestamp":datetime.utcnow(),
+                                      "last_author":"__nobody__",
+                                      "content":"",
+                                      "status":0}]
+            # We will be printing these within a javascript ` ` string, so need to escape backticks
+            for version in self.edit_history:
+                version['content'] = version['content'].replace("`", r"\`")
+            for i, version in reversed(list(enumerate(self.edit_history))):
+                if version['status'] == 1:
+                    self.edit_history_start = self.review_spot = i
+                    break
+            else:
+                self.review_spot = None
+                self.edit_history_start = len(self.edit_history) - 1
 
     def save(self, who):
         knowldb.save(self, who)

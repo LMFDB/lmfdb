@@ -333,7 +333,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
     def is_admin(self):
         return False
 
-    def is_reviewer(self):
+    def is_knowl_reviewer(self):
         return False
 
     def name(self):

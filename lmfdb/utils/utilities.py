@@ -22,10 +22,10 @@ from flask import request, make_response, flash, url_for, current_app
 from markupsafe import Markup
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
-from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RIF, ZZ, QQ, latex, valuation, prime_range
+from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
 from sage.structure.element import Element
 
-from lmfdb.app import app
+from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """
@@ -661,7 +661,7 @@ def display_knowl(kid, title=None, kwargs={}):
         else:
             return ''
 
-def bigint_knowl(n, cutoff=16, max_width=100, sides=2):
+def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     if abs(n) >= 10**cutoff:
         short = str(n)
         short = short[:sides] + r'\!\cdots\!' + short[-sides:]
@@ -694,7 +694,7 @@ def too_big(L, threshold):
         return any(too_big(x, threshold) for x in L)
     return L >= threshold
 
-def make_bigint(s, cutoff=12, max_width=100):
+def make_bigint(s, cutoff=20, max_width=70):
     r"""
     INPUT:
 
@@ -715,7 +715,7 @@ def make_bigint(s, cutoff=12, max_width=100):
 def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
     lng = web_latex_split_on_pm(coeff_to_poly(f, var))
     if bigint_cutoff:
-        lng = make_bigint(lng, bigint_cutoff, max_width=80).replace('"',"'")
+        lng = make_bigint(lng, bigint_cutoff, max_width=70).replace('"',"'")
     if len([c for c in f if c != 0]) > nterms_cutoff:
         short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
         i = len(f) - 2
@@ -765,7 +765,7 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
     short = r'\mathbb{Q}[x]/(%s)'%(quo)
     long = r'Defining polynomial: %s' % (web_latex_split_on_pm(coeff_to_poly(f)))
     if cutoff:
-        long = make_bigint(long, cutoff, max_width=80).replace('"',"'")
+        long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
     if disc is not None:
         if isinstance(disc, list):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
@@ -773,7 +773,44 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
-def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
+def code_snippet_knowl(D, full=True):
+    r"""
+    INPUT:
+
+    - ``D`` -- a dictionary with the following keys
+      - ``filename`` -- a filename within the lmfdb repository
+      - ``code`` -- a list of code lines (without trailing \n)
+      - ``lines`` -- (optional) a list of line numbers
+    - ``full`` -- if False, display only the filename rather than the full path.
+    """
+    filename = D['filename']
+    code = D['code']
+    lines = D.get('lines')
+    code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
+    if is_debug_mode():
+        branch = "master"
+    elif is_beta():
+        branch = "beta"
+    else:
+        branch = "prod"
+    url = "%s%s/%s" % (_url_source, branch, filename)
+    link_text = "%s on Github" % (filename)
+    if not full:
+        filename = filename.split('/')[-1]
+    if lines:
+        if len(lines) == 1:
+            label = '%s (line %s)' % (filename, lines[0])
+        else:
+            lines = sorted(lines)
+            label = '%s (lines %s-%s)' % (filename, lines[0], lines[-1])
+        url += "#L%s" % lines[0]
+    else:
+        label = filename
+    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s'>%s</a></div>"
+    inner = inner % (url, link_text)
+    return r'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+
+def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
     Generate a web latex string for a given integral polynomial, or a linear combination
     (using subscripts instead of exponents).  In either case, the constant term is printed
@@ -784,7 +821,8 @@ def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
     - ``coeffs`` -- a list of integers
     - ``var`` -- a variable name
     - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
-    - ``cutoff`` -- the string length above which a knowl is used for a coefficient
+    - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
+    - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
     """
     plus = r"\mathstrut +\mathstrut \) "
     minus = r"\mathstrut -\mathstrut \) "
@@ -794,6 +832,19 @@ def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
     if m == 0:
         return r"\(0\)"
     s = ""
+    # we will have under/overflows if we try to use floats
+    def cutout_digits(elt):
+        digits = 1 if elt == 0 else floor(RR(abs(elt)).log(10)) + 1
+        if digits > bigint_cutoff:
+            # a large number would be replaced by ab...cd
+            return digits - 7
+        else:
+            return 0
+
+    if sum(cutout_digits(elt) for elt in coeffs) < bigint_overallmin:
+        # this effectively disables the bigint
+        bigint_cutoff = bigint_overallmin + 7
+
     for n in reversed(xrange(m)):
         c = coeffs[n]
         if n == 1:
@@ -808,9 +859,9 @@ def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
                 varpow = r"\(%s_{%s}"%(var, n)
         else:
             if c > 0:
-                s += plus + bigint_knowl(c, cutoff)
+                s += plus + bigint_knowl(c, bigint_cutoff)
             elif c < 0:
-                s += minus + bigint_knowl(-c, cutoff)
+                s += minus + bigint_knowl(-c, bigint_cutoff)
             break
         if c > 0:
             s += plus
@@ -819,7 +870,7 @@ def web_latex_poly(coeffs, var='x', superscript=True, cutoff=8):
         else:
             continue
         if abs(c) != 1:
-            s += bigint_knowl(abs(c), cutoff) + " "
+            s += bigint_knowl(abs(c), bigint_cutoff) + " "
         s += varpow
     if coeffs[0] == 0:
         s += r"\)"

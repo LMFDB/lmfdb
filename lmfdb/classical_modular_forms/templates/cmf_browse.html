@@ -60,7 +60,8 @@ Info was: {{info}}
 </p>
 
 <p>
-  Using a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('cmf.character',title='character') }}
+Create a <a href = "?search_type=Spaces">search</a> for newspaces,
+ a <a href="?search_type=SpaceDimensions">table of dimensions for \(\Gamma_1(N)\)</a>, or a <a href="?search_type=SpaceDimensions&char_order=1">table for \(\Gamma_0(N)\)</a> with trivial {{ KNOWL('mf.elliptic.character',title='character') }}
 </p>
 
 {% for sublist in info.space_list %}
@@ -74,7 +75,6 @@ Info was: {{info}}
 </p>
 {% endfor %}
 
-<a href = "?search_type=Spaces">Create a search</a> for newspaces.
 
 <h2> Find a specific newform or newspace by {{ KNOWL('cmf.label', title='label')}} </h2>
 
@@ -98,7 +98,7 @@ Info was: {{info}}
           <option value="prime">prime</option>
           <option value="prime_power">prime power</option>
           <option value="square">square</option>
-          <option value="squarefree">squrefree</option>
+          <option value="squarefree">squarefree</option>
         </select>
       </td>
       <td><input type='text' style="width: 160px;" name='level' placeholder='4'></td>
