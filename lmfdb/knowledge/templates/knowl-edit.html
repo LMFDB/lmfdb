@@ -109,21 +109,21 @@
             <a id="activate-link-suggestions" onclick="enable('link-suggestions'); return false;" href="#">Link suggestions</a>
             <span id="inactive-link-suggestions" style="display: none;">Link suggestions</span>
           </td>
-          {% if k.edit_history|length) > 1 %}
+          {% if (k.edit_history|length) > 1 %}
             <td>
               <a id="activate-history" onclick="enable('history'); return false;" href="#">View history</a>
               <span id="inactive-history" style="display: none;">View history</span>
             </td>
             <td>
-              <a id="activate-diff" onclick="enable('diff'); return false;" href="#">View diff</a>
-              <span id="inactive-diff" style="display: none;">View diff</span>
+              <a id="activate-diffs" onclick="enable('diffs'); return false;" href="#">View diff</a>
+              <span id="inactive-diffs" style="display: none;">View diffs</span>
             </td>
           {% else %}
             <td>
               <span id="inactive-history" style="display: none;">View history</span>
             </td>
             <td>
-              <span id="inactive-history">View history</span>
+              <span id="inactive-diffs">View diffs</span>
             </td>
           {% endif %}
           <td>
