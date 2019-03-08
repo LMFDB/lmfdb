@@ -10,7 +10,6 @@ BUGS:
 * Fix keywords on rename
 * Make sure no defined term in all_defines has single or double quotes
 * Insert text doesn't work in Firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1220696).  Sacrifice undo
-* Change beta to dev, prod to web in code links
 * Link suggestions: suppress knowls that already exist (no knowl twice), none for terms defining in this knowl
 * Won't go back to preview
 * Try to figure out how to fix ids_referencing caveat.
@@ -27,8 +26,6 @@ LATER:
 * Update scripts that copy knowls to production
 
 IT WOULD BE NICE IF:
-* Add ability to search for knowls with comments
-
 * Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
 * Add autosaves by updating an inprogress knowl record
 

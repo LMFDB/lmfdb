@@ -790,9 +790,9 @@ def code_snippet_knowl(D, full=True):
     if is_debug_mode():
         branch = "master"
     elif is_beta():
-        branch = "beta"
+        branch = "dev"
     else:
-        branch = "prod"
+        branch = "web"
     url = "%s%s/%s" % (_url_source, branch, filename)
     link_text = "%s on Github" % (filename)
     if not full:

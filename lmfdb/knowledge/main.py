@@ -333,8 +333,15 @@ def edit(ID):
             logger.info("Oops, failed to set the lock. Error: %s" %e)
 
     b = get_bread([("Edit '%s'" % ID, url_for('.edit', ID=ID))])
+    if knowl.type == -2:
+        title = "Comment on '%s'" % knowl.source
+    elif knowl.type == 0:
+        title = "Edit Knowl '%s'" % ID
+    else:
+        ann_type = 'Top' if knowl.type == 1 else 'Bottom'
+        title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
     return render_template("knowl-edit.html",
-                           title="Edit Knowl '%s'" % ID,
+                           title=title,
                            k=knowl,
                            bread=b,
                            lock=lock)
