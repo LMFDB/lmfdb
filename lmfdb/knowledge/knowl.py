@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -the-
+# -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
 from lmfdb.knowledge import logger
 from datetime import datetime, timedelta
