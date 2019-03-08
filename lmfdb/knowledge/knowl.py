@@ -177,7 +177,7 @@ class KnowlBackend(PostgresBase):
         return [{k:v for k,v in zip(fields, res)} for res in cur]
 
     def get_all_defines(self):
-        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
+        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls2 WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         cur = self._execute(selecter)
         # This should be fixed in the data
         return [{k:(v if k == 'id' else map(normalize_define, v)) for k,v in zip(['id', 'defines'], res)} for res in cur]
@@ -282,8 +282,8 @@ class KnowlBackend(PostgresBase):
         returns the last @limit history items
         """
         cols = ("id", "title", "timestamp", "last_author")
-        selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE status >= %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
-        cur = self._execute(selecter, [0, limit])
+        selecter = SQL("SELECT {0} FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
+        cur = self._execute(selecter, [0, -2, limit])
         return [{k:v for k,v in zip(cols, res)} for res in cur]
 
     def get_comment_history(self, limit=25):
@@ -328,8 +328,8 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s AND status >= 0 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time])
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls2 WHERE timestamp >= %s AND status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        cur = self._execute(selecter, [time, 0, -2])
         knowls = [Knowl(rec[0], data={k:v for k,v in zip(fields, rec)}) for rec in cur]
 
         kids = [k.id for k in knowls]
@@ -337,8 +337,8 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, [kids])
         reviewed = {rec[0]:rec[1] for rec in cur}
 
-        selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE links && %s")
-        cur = self._execute(selecter, [kids])
+        selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links && %s")
+        cur = self._execute(selecter, [0, -2, kids])
         referrers = {k.id: [] for k in knowls}
         for refid, links in cur:
             for kid in links:
@@ -367,8 +367,8 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE links @> %s")
             values = [[knowlid]]
         else:
-            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
-            values = [0, [knowlid]]
+            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+            values = [0, -2, [knowlid]]
         cur = self._execute(selecter, values)
         return [rec[0] for rec in cur]
 

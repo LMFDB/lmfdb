@@ -400,7 +400,8 @@ def history(limit=25):
     return render_template("knowl-history.html",
                            title="Knowledge History",
                            bread=bread,
-                           history=h_items)
+                           history=h_items,
+                           limit=limit)
 
 @knowledge_page.route("/comment_history")
 @knowledge_page.route("/comment_history/<int:limit>")

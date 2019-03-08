@@ -20,11 +20,7 @@
    <td>{{ h.comment_timestamp|fmtdatetime }}</td>
    <td>{{ h.comment_author }}</td>
    <td>{{ KNOWL(h.comment_id) }}</td>
-   <td>
-     <a href="{{url_for('.show', ID=h['knowl_id'])}}">
-       {% if h.knowl_title -%}{{ h.knowl_title|safe }}{%- else -%}{{ h['knowl_id'] }}{%- endif %}
-     </a>
-   </td>
+   <td>{{ KNOWL(h.knowl_id) }}</td>
    <td>{{ h.knowl_author }}</td>
    <td>{{ h.knowl_timestamp|fmtdatetime }}</td>
   </tr>
