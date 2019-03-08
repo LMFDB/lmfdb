@@ -626,12 +626,12 @@ class Knowl(object):
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
             self.edit_history = knowldb.get_edit_history(ID)
-            if not self.edit_history:
-                # New knowl.  This block should be edited according to the desired behavior for diffs
-                self.edit_history = [{"timestamp":datetime.utcnow(),
-                                      "last_author":"__nobody__",
-                                      "content":"",
-                                      "status":0}]
+            #if not self.edit_history:
+            #    # New knowl.  This block should be edited according to the desired behavior for diffs
+            #    self.edit_history = [{"timestamp":datetime.utcnow(),
+            #                          "last_author":"__nobody__",
+            #                          "content":"",
+            #                          "status":0}]
             # We will be printing these within a javascript ` ` string, so need to escape backticks
             for version in self.edit_history:
                 version['content'] = version['content'].replace("`", r"\`")
