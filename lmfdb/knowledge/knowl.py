@@ -7,7 +7,6 @@ import time, subprocess
 import json
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
-from lmfdb.backend.encoding import Json
 from lmfdb.app import is_beta, is_debug_mode, _url_source
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.users.pwdmanager import userdb
@@ -215,10 +214,10 @@ class KnowlBackend(PostgresBase):
                 keywords = filter(lambda _: len(_) >= 3, keywords.split(" "))
                 if keywords:
                     restrictions.append(SQL("_keywords @> %s"))
-                    values.append(Json(keywords))
+                    values.append(keywords)
         if author is not None:
             restrictions.append(SQL("authors @> %s"))
-            values.append(Json(author))
+            values.append([author])
         # In order to be able to sort by arbitrary columns, we have to select everything here.
         # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
         fields = ['id'] + self._default_fields
@@ -272,7 +271,7 @@ class KnowlBackend(PostgresBase):
         links = extract_links(knowl.content)
         defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
-        values = (knowl.id, Json(authors), cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, Json(search_keywords))
+        values = (knowl.id, authors, cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, search_keywords)
         with DelayCommit(self):
             inserter = SQL("INSERT INTO kwl_knowls2 (id, {0}, _keywords) VALUES ({1})")
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
