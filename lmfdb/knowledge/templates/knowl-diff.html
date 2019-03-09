@@ -1,7 +1,17 @@
 
-  <script type="text/javascript" src="/static/diff_match_patch.js"></script>
-  <script type="text/javascript">
+<script type="text/javascript" src="/static/diff_match_patch.js"></script>
+<script type="text/javascript">
 
+  function diff(text1, text2) {
+    var dmp = new diff_match_patch();
+    dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
+    dmp.Diff_EditCost = 5;
+    var diffs = dmp.diff_main(text1, text2);
+    //dmp.diff_cleanupSemantic(d);
+    dmp.diff_cleanupEfficiency(diffs);
+    var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
+    return ds;
+  };
 
 var content_history = [
   {% for elt in k.edit_history|reverse %}
@@ -10,40 +20,23 @@ var content_history = [
 ]
 
 function new_text(version) {
+  console.log(version);
   if( version == -1) {
     return $('#kcontent').val();
   }
-  else {
+  else if ( version >= 0 && version < content_history.length ) {
     return content_history[version];
   }
+  else {
+    return '';
+  }
 };
-
-
-
-$("body").on("change", '#lhsselect', function() {
-  $('#compare').mergely('lhs', new_text(parseInt($('#lhsselect').val())));
-  $('#compare').mergely('resize');
-}
-);
-
-
-$("body").on("change", '#rhsselect', function() {
-  $('#compare').mergely('rhs', new_text(parseInt($('#rhsselect').val())));
-  $('#compare').trigger('resize');
-}
-);
-
-$("body").on("keyup", '#kcontent', function() {
-  $('#lhsselect').trigger("change");
-  $('#rhsselect').trigger("change");
-}
-);
-
 
 $(document).ready(function () {
   var lhsselect = $('#lhsselect');
   var rhsselect = $('#rhsselect');
   var comp = $('#compare');
+  var mode='sidebyside';
   comp.mergely({
     license: 'gpl-separate-notice',
     cmsettings: {
@@ -57,91 +50,81 @@ $(document).ready(function () {
     height: 'calc(100vh - 200px)',
     ignorews: true,
   });
+
+  lhsselect.change( function() {
+    lhs = new_text(parseInt(lhsselect.val()));
+    if (mode == 'sidebyside') {
+      $('#compare').mergely('lhs', lhs);
+      $('#compare').mergely('resize');
+    } else {
+      rhs = new_text(parseInt(rhsselect.val()));
+      $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
+    }
+  });
+
+
+  rhsselect.change( function() {
+    rhs = new_text(parseInt($('#rhsselect').val()));
+    if (mode == 'sidebyside') {
+      $('#compare').mergely('rhs', rhs);
+      $('#compare').trigger('resize');
+    } else {
+      lhs = new_text(parseInt($('#lhsselect').val()));
+      $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
+    }
+  });
+
   // in editing mode?
   if(typeof $kcontent !== 'undefined') {
     // insert edition as an option
+
     lhsselect.prepend($("<option></option>")
-      .attr("value","-1")
-      .text("editing")
-      .prop('selected', true)
-    );
+                      .attr("value","-1")
+                      .text("editing")
+                      .prop('selected', true)
+                      );
+
     if(content_history.length > 0) {
       lhsselect.val("0").change();
     }
     rhsselect.prepend($("<option></option>")
-      .attr("value","-1")
-      .text("editing")
-      .prop('selected', true)
-    );
+                      .attr("value","-1")
+                      .text("editing")
+                      .prop('selected', true)
+                      );
+
     lhsselect.trigger("change");
     rhsselect.trigger("change");
     comp.trigger('resize');
 
+    $kcontent.keyup( function() {
+      lhsselect.trigger("change");
+      rhsselect.trigger("change");
+    });
     }// end if editing
+
+    $('#inline_button').click( function(evt){
+      evt.preventDefault();
+      mode = 'inline';
+      $(".sidebyside").hide();
+      lhsselect.trigger("change");
+      $(".inline").show();
+    });
+    $('#sidebyside_button').click( function(evt){
+      evt.preventDefault();
+      mode = 'sidebyside';
+      $(".inline").hide();
+      lhsselect.trigger("change");
+      rhsselect.trigger("change");
+      $(".sidebyside").show();
+      comp.trigger('resize');
+    });
   });
-
-
-
-
-/*
-    function diff(text1, text2) {
-      var dmp = new diff_match_patch();
-      dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
-      dmp.Diff_EditCost = 5;
-      var diffs = dmp.diff_main(text1, text2);
-      //dmp.diff_cleanupSemantic(d);
-      dmp.diff_cleanupEfficiency(diffs);
-      var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
-      return ds;
-    };
-    var inline = $('#compareinline');
-
-    function wait_for_text(){
-      if(lhs != null && rhs != null){
-        inline.html( '<pre>' + diff(lhs, rhs) + '</pre>');
-      }
-      else{
-        setTimeout(wait_for_text, 250);
-      }
-    }
-    setTimeout(wait_for_text, 250);
-*/
-  //try
-  //{
-  //renderMathInElement(inline.get(0), katexOpts);
-  //}
-  //catch(err) {
-  //log("err:" + err)
-  //}
-
-  //jQuery.extend
-  //(
-  //    {
-  //        getValues: function(url, type) 
-  //        {
-  //            var result = null;
-  //            $.ajax(
-  //                {
-  //                    url: url,
-  //                    type: 'get',
-  //                    dataType: 'html',
-  //                    async: false,
-  //                    cache: false,
-  //                    success: function(data) 
-  //                    {
-  //                        result = data;
-  //                    }
-  //                }
-  //            );
-  //           return result;
-  //        }
-  //    }
-  //);
 
 </script>
 <style>
 /* Initial height */
-.diff {
+.sidebyside_wrapper {
   overflow: auto;
   resize: vertical;
   padding: 20px;
@@ -152,9 +135,19 @@ $(document).ready(function () {
  }
 
  .inline{
-   font-family: monospace;
+   font-family: 12px 'Courier New', Courier, monospace;
+   z-index: auto;
+   position: relative;
+   line-height: 18px;
+   transition: none 0s ease 0s;
+   background: transparent !important;
+   background-color: white;
+   overflow-wrap: break-word;
+   padding: 2px;
  }
  pre {
+   -webkit-rtl-ordering: logical;
+   -webkit-appearance: textarea;
    white-space: pre-wrap;       /* Since CSS 2.1 */
    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
    white-space: -pre-wrap;      /* Opera 4-6 */
@@ -170,13 +163,13 @@ $(document).ready(function () {
 </style>
 
 <div id='diffselector'>
-<table style="width: 100%">
-  <!--
-  <tr>
-    <th> Left hand side</th>
-    <th> Right hand side</th>
-    </tr>
-  -->
+  <table style="width: 100%">
+    <!--
+      <tr>
+      <th> Left hand side</th>
+      <th> Right hand side</th>
+      </tr>
+    -->
     <tr>
       <td align="center">
         <form>
@@ -207,12 +200,19 @@ $(document).ready(function () {
         </form>
       </td>
     </tr>
-</table>
+  </table>
 </div>
-<div class="diff">
-  <div id="compare"></div>
+<div class="sidebyside">
+  <strong> Side by side </strong>
+  <a href="#" id="inline_button">(inline)</a>
+  <div class="sidebyside_wrapper">
+    <div id="compare"></div>
+  </div>
 </div>
-<div class="inline">
+
+<div class="inline" style="display: none;" sytle>
+  <strong> Inline </strong>
+  <a href="#" id="sidebyside_button">(syde by side)</a>
   <div id="compareinline"></div>
 </div>
 

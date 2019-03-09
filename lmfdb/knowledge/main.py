@@ -596,6 +596,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     """
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
+    # logger.debug("kwargs: %s" , kwargs)
     if timestamp is None:
         # fetch and convert the ms timestamp to datetime
         try:
@@ -603,8 +604,6 @@ def render_knowl(ID, footer=None, kwargs=None,
         except KeyError:
             pass
 
-    # logger.debug("kwargs: %s" , kwargs)
-    print kwargs
     if k is None:
         try:
             k = Knowl(ID, allow_deleted=allow_deleted, timestamp=timestamp)
