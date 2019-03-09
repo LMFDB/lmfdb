@@ -64,4 +64,23 @@
 
 {% include "knowl-knowl-history.html" %}
 
+
+{% if (k.edit_history | length) > 1 %}
+<script>
+$(function() {
+  $("body").on("click", ".diff_button", function (evt) {
+    evt.preventDefault();
+    $('#differences').toggle('slow');
+    $('#compare').resize();
+  });
+});
+
+</script>
+<strong>Differences</strong>
+<a href="#" class="diff_button">(show/hide)</a>
+<div id="differences" style="display: none">
+  {%include "knowl-diff.html"%}
+</div>
+{% endif %}
+
 {% endblock %}
