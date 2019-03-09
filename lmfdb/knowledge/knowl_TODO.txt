@@ -4,14 +4,10 @@ TASKS:
 * Add ability to view diffs against old versions when editing knowl
 * In recent reviews, add diff with last positively reviewed
 * Switch from jsonb to text[]
-* Add highlighting in knowl suggestions
+* When hovering over the "insert" button in link suggestions, change the color of the word that will be replaced.
 
 BUGS:
 * Fix keywords on rename
-* Make sure no defined term in all_defines has single or double quotes
-* Insert text doesn't work in Firefox (https://bugzilla.mozilla.org/show_bug.cgi?id=1220696).  Sacrifice undo
-* Link suggestions: suppress knowls that already exist (no knowl twice), none for terms defining in this knowl
-* Won't go back to preview
 * Try to figure out how to fix ids_referencing caveat.
 
 Ask Farmer:
@@ -33,8 +29,6 @@ IT WOULD BE NICE IF:
 
 Questions:
 * We now have versioned knowls, but the link to the show page is still titled "permalink". Is this misleading, since the link will be to the most recent version of the knowl?
-* Renaming to an id that has been deleted?
-* Should we mark knowls with quality "reviewed" as positively reviewed?
 
 SCHEMA MODIFICATIONS:
 
@@ -86,7 +80,7 @@ ALTER TABLE kwl_knowls2 DROP COLUMN quality;
 
 WITH matches AS (SELECT id, regexp_matches(content, 'KNOWL(_INC)?\([''""]([^''""]+)', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT matches.list[2] ORDER BY matches.list[2]) AS links FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET links = agged.links FROM agged WHERE kwl_knowls2.id = agged.id;
 UPDATE kwl_knowls2 SET links = '{}' WHERE links IS NULL;
-WITH matches AS (SELECT id, regexp_matches(content, '\*\*([^\*]+)\*\*', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT trim(matches.list[1]) ORDER BY trim(matches.list[1])) AS defines FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET defines = agged.defines FROM agged WHERE kwl_knowls2.id = agged.id;
+WITH matches AS (SELECT id, regexp_matches(content, '\*\*([^\*]+)\*\*', 'g') AS list FROM kwl_knowls2), agged AS (SELECT matches.id AS id, array_agg(DISTINCT trim(lower(regexp_replace(regexp_replace(matches.list[1], '\s+', ' ', 'g'), '[\'"]', '', 'g'))) ORDER BY trim(matches.list[1])) AS defines FROM matches GROUP BY matches.id) UPDATE kwl_knowls2 SET defines = agged.defines FROM agged WHERE kwl_knowls2.id = agged.id;
 UPDATE kwl_knowls2 SET defines = '{}' WHERE defines IS NULL;
 
 UPDATE kwl_knowls2 SET id = 'cmf' || substring(id from 12) WHERE id LIKE 'mf.elliptic%';
