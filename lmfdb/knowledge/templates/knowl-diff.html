@@ -1,4 +1,29 @@
+<!-- CodeMirror -->
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
+      integrity="sha384-FI6pF4jT5OLWJXc3EzvnyZEFcAwREFlPw81bB9gbkmyesoJHMq9TxE/CA0PZ7nF6"
+      crossorigin="anonymous"></script>
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/addon/search/searchcursor.min.js"
+      integrity="sha384-ytTGJfQEcykPzyWakPMXw3UUCtFeMOeMu43uMWb/0EQoW3F5zzg+06D8pDJDtbd5"
+      crossorigin="anonymous"></script>
+<link type="text/css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css"
+      integrity="sha384-qHr0tRKUJCVvDPBkv5JnUcctfAqzS0Qo1NrKtq8O0YNp/0zygS/9JepLTiPLVQkG"
+      crossorigin="anonymous"/>
 
+<!-- Mergely  -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.css"
+      integrity="sha384-N8G4oBuDTLxH6t1v7bNdCcv56sJDJH6JArcx9uKz4vSMFvNjyXDjOyKBsSQy1o5K"
+      crossorigin="anonymous">
+<script defer
+      src="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.js"
+      integrity="sha384-VN5LSIgtGg3krjINbmlVY/4hG2PyALw4wy5wpCC8gxJ+VrpZsyUxlvNwcQq7CDGQ"
+      crossorigin="anonymous"></script>
 <script type="text/javascript" src="/static/diff_match_patch.js"></script>
 <script type="text/javascript">
 
@@ -32,10 +57,10 @@ function new_text(version) {
 };
 
 $(document).ready(function () {
+  var diffmode='sidebyside';
   var lhsselect = $('#lhsselect');
   var rhsselect = $('#rhsselect');
   var comp = $('#compare');
-  var mode='sidebyside';
   comp.mergely({
     license: 'gpl-separate-notice',
     cmsettings: {
@@ -47,12 +72,12 @@ $(document).ready(function () {
     wrap_lines: true,
     width: 'auto',
     height: 'calc(100vh - 200px)',
-    ignorews: true,
+    ignorews: false,
   });
 
   lhsselect.change( function() {
     lhs = new_text(parseInt(lhsselect.val()));
-    if (mode == 'sidebyside') {
+    if (diffmode == 'sidebyside') {
       $('#compare').mergely('lhs', lhs);
       $('#compare').mergely('resize');
     } else {
@@ -64,7 +89,7 @@ $(document).ready(function () {
 
   rhsselect.change( function() {
     rhs = new_text(parseInt($('#rhsselect').val()));
-    if (mode == 'sidebyside') {
+    if (diffmode == 'sidebyside') {
       $('#compare').mergely('rhs', rhs);
       $('#compare').trigger('resize');
     } else {
@@ -73,10 +98,9 @@ $(document).ready(function () {
     }
   });
 
-  // in editing mode?
-  if(typeof $kcontent !== 'undefined') {
+  {# in editing mode? #}
+  {% if k.editing %}
     // insert edition as an option
-
     lhsselect.prepend($("<option></option>")
                       .attr("value","-1")
                       .text("editing")
@@ -94,30 +118,38 @@ $(document).ready(function () {
 
     lhsselect.trigger("change");
     rhsselect.trigger("change");
-    comp.trigger('resize');
 
     $kcontent.keyup( function() {
       lhsselect.trigger("change");
       rhsselect.trigger("change");
     });
-    }// end if editing
+  {% else %}
+    rhsselect.val("0").change();
+    {% if k.previous_review_spot %}
+      {# we have reversed the indexes #}
+      lhsselect.val("{{(k.edit_history|length) - 1 - k.previous_review_spot}}").change();
+    {% else %}
+      lhsselect.val("1").change();
+    {% endif %}
+  {% endif %} {# end if editing #}
+  comp.trigger('resize');
 
-    $('#inline_button').click( function(evt){
-      evt.preventDefault();
-      mode = 'inline';
-      $(".sidebyside").hide();
-      lhsselect.trigger("change");
-      $(".inline").show();
-    });
-    $('#sidebyside_button').click( function(evt){
-      evt.preventDefault();
-      mode = 'sidebyside';
-      $(".inline").hide();
-      lhsselect.trigger("change");
-      rhsselect.trigger("change");
-      $(".sidebyside").show();
-      comp.trigger('resize');
-    });
+  $('#inline_button').click( function(evt){
+    evt.preventDefault();
+    diffmode = 'inline';
+    lhsselect.trigger("change");
+    $(".sidebyside").hide('fast');
+    $(".inline").show('fast');
+  });
+  $('#sidebyside_button').click( function(evt){
+    evt.preventDefault();
+    diffmode = 'sidebyside';
+    lhsselect.trigger("change");
+    rhsselect.trigger("change");
+    comp.trigger('resize');
+    $(".inline").hide('fast');
+    $(".sidebyside").show('fast');
+  });
   });
 
 </script>

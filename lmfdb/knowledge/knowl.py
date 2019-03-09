@@ -607,6 +607,7 @@ class Knowl(object):
         self.source = data.get('source')
         self.source_name = data.get('source_name')
         self.type = data.get('type')
+        self.editing = editing
         # We need to have the source available on comments being created
         if self.type is None:
             match = comment_knowl_re.match(ID)
@@ -642,15 +643,15 @@ class Knowl(object):
                 full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
             else:
                 full_names = dict({})
-            self.review_spot = None
+            self.previous_review_spot = None
             self.edit_history_start = len(self.edit_history) - 1
             for i, elt in enumerate(self.edit_history):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 # We will be printing these within a javascript ` ` string, so need to escape backticks
                 elt['content'] = json.dumps(elt['content']) # .replace("`", r"\`")
-                if elt['status'] == 1:
-                    self.edit_history_start = self.review_spot = i
+                if elt['status'] == 1 and i != len(self.edit_history) - 1:
+                    self.edit_history_start = self.previous_review_spot = i
 
     def save(self, who):
         knowldb.save(self, who)

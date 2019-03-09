@@ -369,6 +369,8 @@ def show(ID):
                            render=r,
                            bread=b)
 
+
+
 @knowledge_page.route("/content/<ID>/<int:timestamp>")
 def content(ID, timestamp):
     if timestamp is not None:
@@ -759,13 +761,6 @@ def index():
                            filtermode = filtermode,
                            knowl_types=knowl_type_code.keys(),
                            types=types)
-
-
-
-@knowledge_page.route("/diff", methods=['GET', 'POST'])
-def diff_sample():
-    return render_template("knowl-diff.html",
-                           title="Knowledge Diff")
 
 
 
