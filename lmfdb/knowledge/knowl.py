@@ -4,6 +4,7 @@ from lmfdb.knowledge import logger
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time, subprocess
+import json
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
 from lmfdb.backend.encoding import Json
@@ -645,7 +646,7 @@ class Knowl(object):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 # We will be printing these within a javascript ` ` string, so need to escape backticks
-                elt['content'] = elt['content'].replace("`", r"\`")
+                elt['content'] = json.dumps(elt['content']) # .replace("`", r"\`")
                 if elt['status'] == 1:
                     self.edit_history_start = self.review_spot = i
 
