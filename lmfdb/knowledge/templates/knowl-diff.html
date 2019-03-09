@@ -1,48 +1,89 @@
-{% extends "homepage.html" %}
-
-
-{#  {% include "mergely.html" %} #}
-{% block content %}
 
   <script type="text/javascript" src="/static/diff_match_patch.js"></script>
   <script type="text/javascript">
-  $(document).ready(function () {
-    var comp = $('#compare');
-    comp.mergely({
-      license: 'gpl-separate-notice',
-      cmsettings: {
-        readOnly: false,
-        linewrap: true,
-        viewportMargin: 500,
-      },
-      lineNumbers: true,
-      wrap_lines: true,
-      width: 'auto',
-      height: 'calc(100% - 40px)',
-      ignorews: true,
-    });
-
-    var lhs = null;
-    $.ajax({
-      type: 'GET', async: true, dataType: 'text',
-      url: '/knowledge/content/cmf/1545201145469776',
-      success: function (response) {
-        lhs = response;
-        comp.mergely('lhs', response);
-      }
-    });
-
-    var rhs = null;
-    $.ajax({
-      type: 'GET', async: true, dataType: 'text',
-      url: '/knowledge/content/cmf',
-      success: function (response) {
-        rhs = response;
-        comp.mergely('rhs', response);
-      }
-    });
 
 
+var content_history = [
+  {% for elt in k.edit_history|reverse %}
+    {{ elt.content|string|safe }},
+  {%endfor%}
+]
+
+function new_text(version) {
+  if( version == -1) {
+    return $('#kcontent').val();
+  }
+  else {
+    return content_history[version];
+  }
+};
+
+
+
+$("body").on("change", '#lhsselect', function() {
+  $('#compare').mergely('lhs', new_text(parseInt($('#lhsselect').val())));
+  $('#compare').mergely('resize');
+}
+);
+
+
+$("body").on("change", '#rhsselect', function() {
+  $('#compare').mergely('rhs', new_text(parseInt($('#rhsselect').val())));
+  $('#compare').trigger('resize');
+}
+);
+
+$("body").on("keyup", '#kcontent', function() {
+  $('#lhsselect').trigger("change");
+  $('#rhsselect').trigger("change");
+}
+);
+
+
+$(document).ready(function () {
+  var lhsselect = $('#lhsselect');
+  var rhsselect = $('#rhsselect');
+  var comp = $('#compare');
+  comp.mergely({
+    license: 'gpl-separate-notice',
+    cmsettings: {
+      readOnly: true,
+      linewrap: true,
+      viewportMargin: 50,
+    },
+    lineNumbers: true,
+    wrap_lines: true,
+    width: 'auto',
+    height: 'calc(100vh - 200px)',
+    ignorews: true,
+  });
+  // in editing mode?
+  if(typeof $kcontent !== 'undefined') {
+    // insert edition as an option
+    lhsselect.prepend($("<option></option>")
+      .attr("value","-1")
+      .text("editing")
+      .prop('selected', true)
+    );
+    if(content_history.length > 0) {
+      lhsselect.val("0").change();
+    }
+    rhsselect.prepend($("<option></option>")
+      .attr("value","-1")
+      .text("editing")
+      .prop('selected', true)
+    );
+    lhsselect.trigger("change");
+    rhsselect.trigger("change");
+    comp.trigger('resize');
+
+    }// end if editing
+  });
+
+
+
+
+/*
     function diff(text1, text2) {
       var dmp = new diff_match_patch();
       dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
@@ -63,8 +104,8 @@
         setTimeout(wait_for_text, 250);
       }
     }
-        setTimeout(wait_for_text, 250);
-
+    setTimeout(wait_for_text, 250);
+*/
   //try
   //{
   //renderMathInElement(inline.get(0), katexOpts);
@@ -97,7 +138,6 @@
   //    }
   //);
 
-  });
 </script>
 <style>
 /* Initial height */
@@ -129,15 +169,52 @@
  }
 </style>
 
-<h3> Mergely </h3>
+<div id='diffselector'>
+<table style="width: 100%">
+  <!--
+  <tr>
+    <th> Left hand side</th>
+    <th> Right hand side</th>
+    </tr>
+  -->
+    <tr>
+      <td align="center">
+        <form>
+          <select id='lhsselect' size="4">
+            {% for elt in k.edit_history|reverse %}
+              <option value='{{loop.index0}}'>
+              {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
+              {% if elt.status == 1 %}
+                (Reviewed)
+              {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+      <td align="center">
+        <form>
+          <select id='rhsselect' size="4">
+            {% for elt in k.edit_history|reverse %}
+              <option value='{{loop.index0}}'>
+              {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
+              {% if elt.status == 1 %}
+                (Reviewed)
+              {% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </td>
+    </tr>
+</table>
+</div>
 <div class="diff">
   <div id="compare"></div>
 </div>
-<h3> google diff js </h3>
 <div class="inline">
   <div id="compareinline"></div>
 </div>
 
-{% endblock %}
 
 
