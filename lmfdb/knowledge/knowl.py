@@ -639,7 +639,10 @@ class Knowl(object):
             #                          "content":"",
             #                          "status":0}]
             uids = [ elt['last_author'] for elt in self.edit_history]
-            full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
+            if uids:
+                full_names = dict([ (elt['username'], elt['full_name']) for elt in userdb.full_names(uids)])
+            else:
+                full_names = dict({})
             self.review_spot = None
             self.edit_history_start = len(self.edit_history) - 1
             for i, elt in enumerate(self.edit_history):

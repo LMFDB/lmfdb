@@ -1,11 +1,11 @@
 <script>
-  $("body").on("fakeclick", "[knowl]", knowl_handle);
+$("body").on("fakeclick", "[knowl]", knowl_handle);
   function clickall(evt) {
   evt.preventDefault();
   $('.history').find('[knowl=cmf]').not('.active').trigger("fakeclick");
   $('.expand_button').switchClass('expand_button', 'hide_button')
 };
-  function hideall(evt) {
+function hideall(evt) {
   evt.preventDefault();
   $('.history').find('.knowl-output*').slideUp("fast");
   $('.history').find('[knowl=cmf]').removeClass('active');
@@ -17,7 +17,7 @@ function showall(evt) {
   $('.history').find('[knowl=cmf]').addClass('active');
   $('.show_button').switchClass('show_button', 'hide_button')
 };
-  $(function() {
+$(function() {
   $("body").on("click", ".expand_button", clickall);
 });
 $(function() {
@@ -27,11 +27,15 @@ $(function() {
   $("body").on("click", ".show_button", showall);
 });
 </script>
+
 <strong>History:</strong> <a href="#" class="expand_button">(expand/hide all)</a>
 <ul class="history">
   {% for elt in k.edit_history|reverse %}
     <li>
       {{ KNOWL(k.id, title=((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string), timestamp=elt.ms_timestamp)}}
+      {% if elt.status == 1 %}
+        (Reviewed)
+      {% endif %}
     </li>
   {% endfor %}
 </ul>
