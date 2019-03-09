@@ -1,7 +1,5 @@
 <script>
-$(function() {
   $("body").on("fakeclick", "[knowl]", knowl_handle);
-});
   function clickall(evt) {
   evt.preventDefault();
   $('.history').find('[knowl=cmf]').not('.active').trigger("fakeclick");
@@ -37,3 +35,6 @@ $(function() {
     </li>
   {% endfor %}
 </ul>
+
+
+
