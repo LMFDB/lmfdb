@@ -96,7 +96,7 @@ white-space: pre in order to keep line breaks! #}
     {%endif %}
 
     {% if data.mw.tor_order!=1 %}
-    <h2> {{ KNOWL('ec.torsion_generators', title='Torsion generators') }}</h2>
+    <h2> {{ KNOWL('ec.torsion_subgroup', title='Torsion generators') }}</h2>
       {{ place_code('tors') }}
     <p> {{ data.mw.tor_gens }} </p>
     {%endif %}
@@ -115,7 +115,7 @@ white-space: pre in order to keep line breaks! #}
     <div> None </div>
     {%endif %}
 
-    <h2> {{ KNOWL('ec.q.invariants', title='Invariants') }}  </h2>
+    <h2> Invariants </h2>
         <table>
 
         <tr>
@@ -124,8 +124,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td>\( N \) </td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.q.conductor', title='Conductor') }}:</td>
         <td>{{ data.data.cond_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.cond_factor }}\)</td>
@@ -137,8 +136,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td> \(\Delta\) </td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.discriminant', title='Discriminant') }}:</td>
         <td>\({{ data.data.disc }} \)</td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.disc_factor }} \)</td>
@@ -150,26 +148,23 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td> \(j \)</td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.j_invariant', title='j-invariant') }}:</td>
         <td>{{ data.data.j_inv_latex }}</td>
         <td>&nbsp;=&nbsp;</td>
         <td>\({{ data.data.j_inv_factor }}\)</td>
         </tr>
 
         <tr>
-        <td> \( \text{End} (E) \)</td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
         <td>{{ data.data.EndE }}</td>
         <td>&nbsp;</td>
         <td>({%if not data.data.CMD %}no {%endif %}
-{{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
+	  {{ KNOWL('ec.complex_multiplication', title='Complex Multiplication') }})
         </td>
         </tr>
 
         <tr>
-        <td> \( \text{ST} (E) \)</td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('st_group.definition', title='Sato-Tate Group') }}:</td>
         <td>{{ data.data.ST|safe }}</td>
         </tr>
 
@@ -186,8 +181,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td> \( r \)</td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.rank', title='Rank') }}:</td>
         <td> \({{ data.rank }}\)
         </td>
         </tr>
@@ -199,11 +193,11 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td>\( \text{Reg} \) </td>
+        <td>{{ KNOWL('ec.regulator', title='Regulator') }}:</td>
         {% if data.rank==0 %}
-        <td>&nbsp;=&nbsp;</td><td> \(1\)</td>
+        <td> \(1\)</td>
         {% else %}
-        <td>&nbsp;&approx;&nbsp;</td><td> \({{ data.bsd.reg }}\)</td>
+        <td> \({{ data.bsd.reg }}\)</td>
         {% endif %}
         </tr>
 
@@ -213,7 +207,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td>\( \Omega \) </td><td>&nbsp;&approx;&nbsp;</td>
+        <td>{{ KNOWL('ec.q.real_period', title='Real period') }}:</td>
         <td> \({{ data.bsd.omega }}\)</td>
         </tr>
 
@@ -223,8 +217,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td>\( \prod_p c_p \)</td>
-        <td>&nbsp;=&nbsp;</td>
+        <td>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product and numbers') }}:</td>
         <td>\( {{ data.bsd.tamagawa_product }} \)
           {% if data.bsd.tamagawa_factors %}
           &nbsp;=&nbsp;\( {{ data.bsd.tamagawa_factors }} \)
@@ -238,8 +231,8 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td> \( \#E_{\text{tor}} \)</td>
-        <td>&nbsp;=&nbsp;</td><td>\({{ data.mw.tor_order }}\)</td>
+        <td>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
+        <td>\({{ data.mw.tor_order }}\)</td>
         </tr>
 
         <tr>
@@ -248,10 +241,7 @@ white-space: pre in order to keep line breaks! #}
         </td>
         </tr>
         <tr>
-        <td> &#1064;\(_{\text{an}} \) </td>
-        <td>&nbsp;
-          {%- if data.rank > 1 -%}&approx;{% else %}={% endif %}
-        &nbsp;</td>
+        <td>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}:</td>
         <td>\({{data.bsd.sha }}\)
           {% if data.rank > 1 %}
           ({{ KNOWL('ec.q.analytic_sha_value',title="rounded") }})
@@ -267,13 +257,13 @@ white-space: pre in order to keep line breaks! #}
 {# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 
     <h2> {{KNOWL('ec.q.modular_parametrization', title='Modular invariants')}}</h2>
-    <h3> {{KNOWL('ec.q.modular_form', title='Modular form')}}
+    <h4> {{KNOWL('ec.q.modular_form', title='Modular form')}}
 {% if data.newform_exists_in_db %}
 <a href="{{data.newform_link}}">{{ data.newform_label }}</a>
 {% else %}
 {{ data.newform_label }}
 {% endif %}
-</h3>
+</h4>
     {{ place_code('qexp') }}
     <p>
 {#
@@ -288,23 +278,23 @@ white-space: pre in order to keep line breaks! #}
       For more coefficients, see the Downloads section to the right.
     </p>
 
-    <h3> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
-      and {{ KNOWL('ec.q.optimal', title='optimality') }}</h3>
+    <h4> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
+      and {{ KNOWL('ec.q.optimal', title='optimality') }}</h4>
     {{ place_code('moddeg') }}
       {% if data.data.degree==0 %}
       Not available
       {% else %}
       {{ data.data.degree }}
       {% endif %}
-      : curve is
+      . This curve is
       {% if not data.data.Gamma0optimal %}
-      not
+      <i>not</i>
       {% endif %}
-      \( \Gamma_0(N) \)-optimal
+      \( \Gamma_0(N) \)-optimal.
     </p>
 
     <p>
-      <h3> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} attached to the curve </h3>
+      <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>
     {{ place_code('L1') }}
     <p>
         \( {{ data.bsd.lder_name }} \) &approx; \( {{ data.bsd.lder }} \)
