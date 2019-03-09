@@ -25,8 +25,9 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
+from lmfdb.utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 
-# just for those, who still use an older markdown
+#ejust for those, who still use an older markdown
 try:
     markdown.util.etree
 except:
@@ -35,13 +36,7 @@ except:
 
 _cache_time = 120
 
-# conversion tools between timestamp different kinds of timestamp
-epoch = datetime.utcfromtimestamp(0)
-def datetime_to_timestamp_in_ms(dt):
-    return int((dt - epoch).total_seconds() * 1000000)
 
-def timestamp_in_ms_to_datetime(ts):
-    return datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 
@@ -599,6 +594,17 @@ def render_knowl(ID, footer=None, kwargs=None,
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
     """
+    # logger.debug("kwargs: %s", request.args)
+    kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
+    if timestamp is None:
+        # fetch and convert the ms timestamp to datetime
+        try:
+            timestamp = timestamp_in_ms_to_datetime(int(kwargs['timestamp']))
+        except KeyError:
+            pass
+
+    # logger.debug("kwargs: %s" , kwargs)
+    print kwargs
     if k is None:
         try:
             k = Knowl(ID, allow_deleted=allow_deleted, timestamp=timestamp)
@@ -607,9 +613,6 @@ def render_knowl(ID, footer=None, kwargs=None,
             errmsg = "Sorry, the knowledge database is currently unavailable."
             return errmsg if raw else make_response(errmsg)
 
-    # logger.debug("kwargs: %s", request.args)
-    kwargs = kwargs or dict(((k, v) for k, v in request.args.iteritems()))
-    # logger.debug("kwargs: %s" , kwargs)
 
     # kw_params is inserted *verbatim* into the url_for(...) function inside the template
     # the idea is to pass the keyword arguments of the knowl further along the chain

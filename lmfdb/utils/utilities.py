@@ -6,6 +6,7 @@
 
 import cmath
 import math
+import datetime
 import os
 import random
 import re
@@ -1207,3 +1208,13 @@ def range_formatter(x):
         else:
             return "{0}-{1}".format(a,b)
     return str(x)
+
+
+
+# conversion tools between timestamp different kinds of timestamp
+epoch = datetime.datetime.utcfromtimestamp(0)
+def datetime_to_timestamp_in_ms(dt):
+    return int((dt - epoch).total_seconds() * 1000000)
+
+def timestamp_in_ms_to_datetime(ts):
+    return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))

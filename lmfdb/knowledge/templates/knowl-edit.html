@@ -109,7 +109,7 @@
             <a id="activate-link-suggestions" onclick="enable('link-suggestions'); return false;" href="#">Link suggestions</a>
             <span id="inactive-link-suggestions" style="display: none;">Link suggestions</span>
           </td>
-          {% if (k.edit_history|length) > 1 %}
+          {% if (k.edit_history|length) > 0 %}
             <td>
               <a id="activate-history" onclick="enable('history'); return false;" href="#">View history</a>
               <span id="inactive-history" style="display: none;">View history</span>
@@ -120,10 +120,10 @@
             </td>
           {% else %}
             <td>
-              <span id="inactive-history" style="display: none;">View history</span>
+              <span id="history">View history</span>
             </td>
             <td>
-              <span id="inactive-diffs">View diffs</span>
+              <span id="diffs">View diffs</span>
             </td>
           {% endif %}
           <td>
@@ -142,17 +142,9 @@
         </ul>
       </div>
       <div id="view-history" style="display: none;">
-        {% if (k.edit_history|length) > 1 %}
-          <input id="history-slider" type="range" list="knowl_versions" min="0" max="{{(k.edit_history|length)-1}}" step="1" value="{{k.edit_history_start}}">
-          <datalist id="knowl_versions">
-            {% for i in range((k.edit_history|length)) %}
-              <option value="{{i}}"{% if k.edit_history.status == 1 %} label="R"{% endif %}>
-            {% endfor %}
-          </datalist>
-        {% else %}
-          <input id="history-slider" type="hidden" value="0">
-        {% endif %}
-        <div id="diff-container"></div>
+        {% include "knowl-knowl-history.html" %}
+      </div>
+      <div id="diff-container"></div>
       </div>
       <div id="view-preview">
         <h1 id="knowl-title"></h1>
