@@ -175,7 +175,6 @@ var edit_history = [
 {% endfor %}
 ];
 /* all defines */
-var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
 var all_defines = {
   {% for term, definers in k.all_defines.items() %}
     '{{term}}': [
@@ -225,17 +224,38 @@ function refresh_view(edit_mode='cur') {
   }
   $('#refresh-view').hide();
 }
+
+function normalize_define(s) {
+  // Removes quotes and extra spaces.  Should match normalize_define in know.py
+  return s.replace(/\s+/g, ' ').replace('"', '').replace("'", "").toLowerCase();
+}
+
+
 function refresh_link_suggestions() {
-  var present = {};
+  var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
+  var wedef = /\*\*([^\*]+)\*\*/g;
+  var text_present = {};
+  var kid_present = {};
+  var we_define = {};
   var content = $kcontent.val();
+  do {
+    m = wedef.exec(content);
+    if (m) {
+      we_define[normalize_define(m[1])] = true;
+    }
+  } while (m);
+  log(we_define);
   do {
     m = knowldef.exec(content);
     if (m) {
+      var thisdef = null;
       if (m[5]) {
-        present[m[5]] = true;
+        thisdef = normalize_define(m[5]);
       } else if (m[6]) {
-        present[m[6]] = true;
+        thisdef = normalize_define(m[6]);
       }
+      text_present[thisdef] = true;
+      kid_present[m[2]] = true;
     }
   } while (m);
   $linkul.empty();
@@ -245,8 +265,11 @@ function refresh_link_suggestions() {
     var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'i');
     var match = kdef_finder.exec(content);
     if (match !== null) {
+      if (normalize_define(kdef) in we_define) {
+        continue;
+      }
       found = false;
-      for (pdef in present) {
+      for (pdef in text_present) {
         if (pdef.indexOf(kdef) != -1) {
           found = true;
           break;
@@ -257,10 +280,12 @@ function refresh_link_suggestions() {
         // Have to construct the Knowl link by hand
         for (var i = 0; i < all_defines[kdef].length; i++) {
           var definer_id = all_defines[kdef][i];
-          var label = match[0]+' ['+definer_id+']';
-          var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
-          var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+match[0]+`'); return false;">insert</a>`;
-          to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
+          if (!(definer_id in kid_present)) {
+            var label = match[0]+' ['+definer_id+']';
+            var klink = '<a title="'+label+'" knowl="'+definer_id+'" kwargs="">'+label+'</a>';
+            var inserter = `<a href="#" onclick="insert_klink('`+definer_id+`', '`+match[0]+`'); return false;">insert</a>`;
+            to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
+          }
         }
       }
     }
@@ -289,7 +314,6 @@ function refresh_link_suggestions() {
 {# We're writing jinja inside javascript.... #}
 {% raw %}
 function insert_klink(kid, ktext) {
-  $kcontent.focus();
   var content = $kcontent.val();
   var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
   var match = ktext_finder.exec(content);
@@ -297,9 +321,18 @@ function insert_klink(kid, ktext) {
     start = match.index;
     end = start + match[0].length;
     var new_link = "{{ KNOWL('" + kid + "', title='" + match[0] + "') }}";
-    $kcontent[0].selectionStart = start;
-    $kcontent[0].selectionEnd = end;
-    document.execCommand('insertText', false, new_link);
+    var isFirefox = typeof InstallTrigger !== 'undefined';
+    if (isFirefox) {
+      // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
+      var new_content = content.substring(0,start) + new_link + content.substring(end);
+      $kcontent.val(new_content);
+    } else {
+      $kcontent.focus();
+      $kcontent[0].selectionStart = start;
+      $kcontent[0].selectionEnd = end;
+      document.execCommand('insertText', false, new_link);
+    }
   }
   refresh_link_suggestions();
 }

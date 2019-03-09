@@ -106,7 +106,7 @@ def normalize_define(term):
     if m:
         n = 6 if (m.group(5) is None) else 5
         term = define_fixer.sub(r'\%s'%n, term)
-    return ' '.join(term.split())
+    return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
 def extract_defines(content):
     return sorted(set(x[0].strip() for x in defines_finder_re.findall(content)))
@@ -352,7 +352,7 @@ class KnowlBackend(PostgresBase):
             k.code_referrers = [code_snippet_knowl(D, full=False) for D in self.code_references(k.id)]
         return knowls
 
-    def ids_referencing(self, knowlid, old=False):
+    def ids_referencing(self, knowlid, old=False, beta=None):
         """Returns all ids that reference the given one.
 
         Note that if running on prod, and the reviewed version of a knowl doesn't
@@ -361,8 +361,9 @@ class KnowlBackend(PostgresBase):
 
         INPUT:
 
-        - ``knowlid`` a knowl id in the database
-        - ``old`` whether to include knowls that used to reference this one, but no longer do.
+        - ``knowlid`` -- a knowl id in the database
+        - ``old`` -- whether to include knowls that used to reference this one, but no longer do.
+        - ``beta`` -- if False, use the most recent positively reviewed knowl, rather than the most recent.
         """
         if old:
             selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE links @> %s")
