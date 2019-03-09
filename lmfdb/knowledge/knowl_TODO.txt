@@ -3,12 +3,11 @@ TASKS:
 * Add ability to view history and revert to old version (knowl.edit_history available)
 * Add ability to view diffs against old versions when editing knowl
 * In recent reviews, add diff with last positively reviewed
-* Switch from jsonb to text[]
 * When hovering over the "insert" button in link suggestions, change the color of the word that will be replaced.
 
 BUGS:
 * Fix keywords on rename
-* Try to figure out how to fix ids_referencing caveat.
+* Test ids_referencing on prod.
 
 Ask Farmer:
 * delete unused javascripts

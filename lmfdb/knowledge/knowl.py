@@ -365,14 +365,29 @@ class KnowlBackend(PostgresBase):
         - ``old`` -- whether to include knowls that used to reference this one, but no longer do.
         - ``beta`` -- if False, use the most recent positively reviewed knowl, rather than the most recent.
         """
+        values = [0, -2, [knowlid]]
         if old:
-            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE links @> %s")
-            values = [[knowlid]]
+            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls2 WHERE status >= %s AND type != %s links @> %s")
         else:
+            if beta is None:
+                beta = is_beta()
+            if not beta:
+                # Have to make sure we do display references where the the most recent positively reviewed knowl does reference this, but the most recent beta does not.
+                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+                cur = self._execute(selecter, values)
+                good_ids = [rec[0] for rec in cur]
+                # Have to make sure that we don't display knowls as referencing this one when the most recent positively reviewed knowl doesn't but the most recent beta knowl does.
+                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)")
+                cur = self._execute(selecter, values)
+                bad_ids = [rec[0] for rec in cur]
+            # We also need new knowls that have never been reviewed
             selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
-            values = [0, -2, [knowlid]]
         cur = self._execute(selecter, values)
-        return [rec[0] for rec in cur]
+        if not beta and not old:
+            new_ids = [rec[0] for rec in cur if rec not in bad_ids]
+            return sorted(set(new_ids + good_ids))
+        else:
+            return [rec[0] for rec in cur]
 
     @staticmethod
     def _process_git_grep(match):
