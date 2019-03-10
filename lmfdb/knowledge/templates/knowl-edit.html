@@ -170,11 +170,11 @@ var reparse_latex = false;
 var all_modes = ['link-suggestions', 'history', 'diffs', 'preview'];
 var REFRESH_TIMEOUT = 2000;
 /* edit history */
-var edit_history = [
+var edit_history = {
   {% for version in k.edit_history %}
-    `{{ version['content'] }}`,
+    {{version['ms_timestamp']}}: `{{ version['ucontent'] }}`,
 {% endfor %}
-];
+};
 /* all defines */
 var all_defines = {
   {% for term, definers in k.all_defines.items() %}
@@ -324,6 +324,22 @@ insert_klink($(this).attr("definer_id"), $(this).attr("match"));
 }
 );
 
+function update_content(start, end, new_text) {
+  // Update the content area, replacing the selection from start to end with new_text.
+  var isFirefox = typeof InstallTrigger !== 'undefined';
+  if (isFirefox) {
+    // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
+    var new_content = content.substring(0,start) + new_text + content.substring(end);
+    $kcontent.val(new_content);
+  } else {
+    $kcontent.focus();
+    $kcontent[0].selectionStart = start;
+    $kcontent[0].selectionEnd = end;
+    document.execCommand('insertText', false, new_text);
+  }
+}
+
 {# We're writing jinja inside javascript.... #}
 {% raw %}
 function insert_klink(kid, ktext) {
@@ -334,18 +350,7 @@ function insert_klink(kid, ktext) {
     start = match.index;
     end = start + match[0].length;
     var new_link = "{{ KNOWL('" + kid + "', title='" + match[0] + "') }}";
-    var isFirefox = typeof InstallTrigger !== 'undefined';
-    if (isFirefox) {
-      // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
-      var new_content = content.substring(0,start) + new_link + content.substring(end);
-      $kcontent.val(new_content);
-    } else {
-      $kcontent.focus();
-      $kcontent[0].selectionStart = start;
-      $kcontent[0].selectionEnd = end;
-      document.execCommand('insertText', false, new_link);
-    }
+    update_content(start, end, new_link);
   }
   refresh_link_suggestions();
   $kcontent.keyup();

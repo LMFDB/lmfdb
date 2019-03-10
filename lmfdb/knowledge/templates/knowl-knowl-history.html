@@ -26,6 +26,10 @@ $(function() {
 $(function() {
   $("body").on("click", ".show_button", showall);
 });
+function revert_to_version(timestamp) {
+  log($kcontent.val().length);
+  update_content(0, $kcontent.val().length, edit_history[timestamp]);
+}
 </script>
 
 <strong>History:</strong>
@@ -36,6 +40,9 @@ $(function() {
       {{ KNOWL(k.id, title=((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string), timestamp=elt.ms_timestamp)}}
       {% if elt.status == 1 %}
         (Reviewed)
+      {% endif %}
+      {% if k.editing %}
+      &middot; <a href="#" onclick="revert_to_version({{elt.ms_timestamp}}); return false;">Revert</a>
       {% endif %}
     </li>
   {% endfor %}
