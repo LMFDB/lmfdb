@@ -664,9 +664,11 @@ class Knowl(object):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 # We will be printing these within a javascript ` ` string, so need to escape backticks
+                elt['ucontent'] = elt['content'].replace("`", r"\`")
                 elt['content'] = json.dumps(elt['content']) # .replace("`", r"\`")
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                     self.edit_history_start = self.previous_review_spot = i
+            print self.edit_history
 
     def save(self, who):
         knowldb.save(self, who)
