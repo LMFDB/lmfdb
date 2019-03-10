@@ -172,7 +172,7 @@ var REFRESH_TIMEOUT = 2000;
 /* edit history */
 var edit_history = {
   {% for version in k.edit_history %}
-    {{version['ms_timestamp']}}: `{{ version['ucontent'] }}`,
+    {{version['ms_timestamp']}}: `{{ version['ucontent'] | safe}}`,
 {% endfor %}
 };
 /* all defines */
