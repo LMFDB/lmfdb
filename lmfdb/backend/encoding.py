@@ -225,7 +225,7 @@ class Json(pgJson):
                     'data': data}
         elif escape_backslashes and isinstance(obj, basestring):
             # For use in copy_dumps below
-            return obj.replace('\\','\\\\\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
+            return obj.replace('\\','\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
         elif obj is None:
             return None
         elif isinstance(obj, datetime.date):
