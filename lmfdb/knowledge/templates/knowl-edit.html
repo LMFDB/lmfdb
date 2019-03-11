@@ -155,7 +155,7 @@
 
     <script type="text/javascript">
       /* the dom fields we are working with */
-      var $ktitle    = $("#ktitle");
+var $ktitle    = $("#ktitle");
 var $kcontent  = $("#kcontent");
 var $title     = $("#knowl-title");
 var $content   = $("#knowl-content");
@@ -307,7 +307,8 @@ function refresh_link_suggestions() {
   }
   to_insert.sort(sort_pairs);
   for (var i = 0; i < to_insert.length; i++) {
-    $linkul.append(to_insert[i][1]);
+    var $new_item = $(to_insert[i][1]);
+    $linkul.append($new_item);
   }
   if (!some_link) {
     $linkul.append("<li>No suggestions available</li>");
@@ -318,11 +319,10 @@ function refresh_link_suggestions() {
 
 $("body").on("click", ".insert_klink",
 function(evt) {
-console.log($(this).attr("definer_id"));
-evt.preventDefault();
-insert_klink($(this).attr("definer_id"), $(this).attr("match"));
-}
-);
+  console.log($(this).attr("definer_id"));
+  evt.preventDefault();
+  insert_klink($(this).attr("definer_id"), $(this).attr("match"));
+});
 
 function update_content(start, end, new_text) {
   // Update the content area, replacing the selection from start to end with new_text.

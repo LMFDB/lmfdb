@@ -5,7 +5,7 @@
 var content_history = [
   {% for elt in k.edit_history|reverse %}
     {{ elt.content|string|safe }},
-  {%endfor%}
+  {% endfor %}
 ]
 
 function new_text(version) {
