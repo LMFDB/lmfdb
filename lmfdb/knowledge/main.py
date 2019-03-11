@@ -14,6 +14,7 @@
 import string
 import re
 import flask
+import json
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import render_template, render_template_string, request, url_for, make_response, jsonify
@@ -478,6 +479,8 @@ def review_recent(days):
     knowls = knowldb.needs_review(days)
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
+        k.reviewed_content = json.dumps(k.reviewed_content)
+        k.content = json.dumps(k.content)
     b = get_bread([("Reviewing Recent", url_for('.review_recent', days=days))])
     return render_template("knowl-review-recent.html",
                            title="Reviewing %s days of knowls" % days,

@@ -1,47 +1,74 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<!-- CodeMirror -->
-<script defer
-      type="text/javascript"
-      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
-      integrity="sha384-FI6pF4jT5OLWJXc3EzvnyZEFcAwREFlPw81bB9gbkmyesoJHMq9TxE/CA0PZ7nF6"
-      crossorigin="anonymous"></script>
-<script defer
-      type="text/javascript"
-      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/addon/search/searchcursor.min.js"
-      integrity="sha384-ytTGJfQEcykPzyWakPMXw3UUCtFeMOeMu43uMWb/0EQoW3F5zzg+06D8pDJDtbd5"
-      crossorigin="anonymous"></script>
-<link type="text/css"
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css"
-      integrity="sha384-qHr0tRKUJCVvDPBkv5JnUcctfAqzS0Qo1NrKtq8O0YNp/0zygS/9JepLTiPLVQkG"
-      crossorigin="anonymous"/>
 
-<!-- Mergely  -->
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.css"
-      integrity="sha384-N8G4oBuDTLxH6t1v7bNdCcv56sJDJH6JArcx9uKz4vSMFvNjyXDjOyKBsSQy1o5K"
-      crossorigin="anonymous">
-<script defer
-      src="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.js"
-      integrity="sha384-VN5LSIgtGg3krjINbmlVY/4hG2PyALw4wy5wpCC8gxJ+VrpZsyUxlvNwcQq7CDGQ"
-      crossorigin="anonymous"></script>
-<script type="text/javascript" src="/static/diff_match_patch.js"></script>
-<script type="text/javascript">
+  {% include "knowl-diff-core.html" %}
+  <script>
+var reviewed_content = {};
+var content = {};
+{% for k in knowls %}
+  {% if k.reviewed_content != "null"%}
+    {% set kid = k.id.replace('.','') %}
+reviewed_content["{{kid}}"] = {{k.reviewed_content | safe}};
+content["{{kid}}"] = {{k.content | safe}};
+  {% endif %}
+{% endfor %}
 
-  function diff(text1, text2) {
-    var dmp = new diff_match_patch();
-    dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
-    dmp.Diff_EditCost = 5;
-    var diffs = dmp.diff_main(text1, text2);
-    //dmp.diff_cleanupSemantic(d);
-    dmp.diff_cleanupEfficiency(diffs);
-    var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
-    return ds;
-  };
-</script>
 
+
+$(document).ready(function () {
+$('.diff_button').click(
+  function (evt) {
+    evt.preventDefault();
+    var kid = evt.target.getAttribute("kid");
+    var type = evt.target.getAttribute("type");
+    if (type == "sidebyside") {
+      var othertype = "inline";
+    } else {
+      var othertype = "sidebyside";
+    }
+    var output_id = '#' + type + "[kid=" + kid + "]";
+    var output = $(output_id);
+    var otheroutput = $('#' + othertype + "[kid=" + kid + "]");
+    if (otheroutput.length > 0) {
+      otheroutput.parent().parent().hide("fast");
+    }
+    if (output.length == 0) {
+      var pp = $("." + type + "[kid=" + kid + "]");
+      console.log("." + type + "[kid=" + kid + "]");
+      console.log(pp);
+      var comp = $("<div></div>").attr("id", type).attr("kid",kid);
+      pp.append(($("<div></div>").attr("class", "diff_wrapper")).append(comp));
+      lhs = reviewed_content[kid];
+      rhs = content[kid];
+      if (type == "sidebyside") {
+        comp.mergely({
+          license: 'gpl-separate-notice',
+          cmsettings: {
+            readOnly: true,
+            linewrap: true,
+            viewportMargin: 50,
+          },
+          lineNumbers: true,
+          wrap_lines: true,
+          width: 'auto',
+          height: 'calc(100vh - 200px)',
+          ignorews: false,
+          lhs: function(setValue) { setValue(lhs); },
+          rhs: function(setValue) { setValue(rhs); },
+        });
+        comp.trigger('resize');
+      } else {
+        comp.html('<pre>' + diff(lhs, rhs) + '</pre>');
+      }
+      output = $(output_id);
+    }
+    output.parent().parent().slideToggle("fast");
+    return false;
+  });
+});
+
+  </script>
   <div>
     <table class="knowl_review" >
       {% for k in knowls %}
@@ -54,26 +81,32 @@
         <tr>
           <td id="td_{{k.id}}">
             Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
-          {% if k.referrers or k.code_referrers %}
-                Referred to by:
-                  <ul class="horizontal-list">
-                    {% for rid in k.referrers %}
-                      <li>{{ KNOWL(rid, title=rid) }}</li>
-                    {% endfor %}
-                    {% for coderef in k.code_referrers %}
-                      <li>{{ coderef | safe }}</li>
-                    {% endfor %}
-                  </ul>
-          {% else %}
-            No referrers <br>
-          {% endif %}
-          {% if k.reviewed_content %}
-            View differences: <a>side by side</a> <a>inline</a> <br>
-          {% endif %}
-          {% set kid = k.id.replace('.','') %}
-          <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
-          <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
-          <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
+            {% if k.referrers or k.code_referrers %}
+              Referred to by:
+              <ul class="horizontal-list">
+                {% for rid in k.referrers %}
+                  <li>{{ KNOWL(rid, title=rid) }}</li>
+                {% endfor %}
+                {% for coderef in k.code_referrers %}
+                  <li>{{ coderef | safe }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              No referrers <br>
+            {% endif %}
+            {% set kid = k.id.replace('.','') %}
+            {% if k.reviewed_content != "null" %}
+              <div class="{{kid}}">
+                View differences:
+                <a href="#" class="diff_button" type="sidebyside" kid={{kid}}>side by side</a>
+                <a href="#" class="diff_button" type="inline" kid={{kid}}>inline</a>
+                <div class="sidebyside" kid={{kid}} style="display: none;"> </div>
+                <div class="inline" kid={{kid}} style="display: none;" sytle> </div>
+              </div>
+            {% endif %}
+            <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
+            <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
+            <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
           </td>
         </tr>
       {% endfor %}

@@ -349,7 +349,9 @@ class KnowlBackend(PostgresBase):
         for k in knowls:
             k.reviewed_content = reviewed.get(k.id)
             k.referrers = referrers[k.id]
-            k.code_referrers = [code_snippet_knowl(D, full=False) for D in self.code_references(k.id)]
+            k.code_referrers = [
+                    code_snippet_knowl(D, full=False)
+                    for D in self.code_references(k.id)]
         return knowls
 
     def ids_referencing(self, knowlid, old=False, beta=None):
