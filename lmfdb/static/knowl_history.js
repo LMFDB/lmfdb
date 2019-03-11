@@ -28,6 +28,7 @@ function revert_to_version(evt) {
   // edit_history is defined in knowl-edit.html
   if (!unsaved || confirm('Do you really want to revert to this version and overwrite your changes?')) {
     update_content(0, $kcontent.val().length, edit_history[timestamp]);
+    $kcontent.trigger("keyup");
   }
   return false;
 }
