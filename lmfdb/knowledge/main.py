@@ -535,7 +535,8 @@ def save_form():
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
 
-    k = Knowl(ID, saving=True)
+    NEWID = request.form.get('krename', '').strip()
+    k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
     if new_title != k.title or new_content != k.content:
@@ -548,7 +549,6 @@ def save_form():
         k.timestamp = datetime.now()
         k.status = 0
         k.save(who=current_user.get_id())
-    NEWID = request.form.get('krename', '').strip()
     if NEWID:
         if not current_user.is_admin():
             flask.flash("You do not have permissions to rename knowl", "error")

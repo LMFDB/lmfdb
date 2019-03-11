@@ -457,13 +457,16 @@ class KnowlBackend(PostgresBase):
             new_cat = extract_cat(new_name)
             updator = SQL("UPDATE kwl_knowls2 SET (id, cat) = (%s, %s) WHERE id = %s")
             self._execute(updator, [new_name, new_cat, knowl.id])
+            # Only have to update keywords for most recent version and most recent reviewed version
+            updator = SQL("UPDATE kwl_knowls2 SET _keywords = %s WHERE id = %s AND timestamp = %s")
+            self._execute(updator, [make_keywords(knowl.content, new_name, knowl.title), new_name, knowl.timestamp])
+            if knowl.reviewed_timestamp and knowl.reviewed_timestamp != knowl.timestamp:
+                self._execute(updator, [make_keywords(knowl.reviewed_content, new_name, knowl.reviewed_title), new_name, knowl.reviewed_timestamp])
             referrers = self.ids_referencing(knowl.id, old=True)
-            updator = SQL("UPDATE kwl_knowls2 SET content = regexp_replace(content, %s, %s, %s) WHERE id = ANY(%s)")
+            updator = SQL("UPDATE kwl_knowls2 SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(knowl.id.replace('.', r'\.')),
-                      "'{0}'".format(new_name), 'g', referrers] # g means replace all
+                      "'{0}'".format(new_name), 'g', knowl.id, new_name, referrers] # g means replace all
             self._execute(updator, values)
-            updator = SQL("UPDATE kwl_knowls2 SET links = array_replace(links, %s, %s) WHERE id = ANY(%s)")
-            self._execute(updator, [knowl.id, new_name, referrers])
             if knowl.id in self.cached_titles:
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
             knowl.id = new_name
@@ -597,8 +600,8 @@ class Knowl(object):
     - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
     - ``timestamp`` -- desired version of knowl at the given timestamp
     """
-    def __init__(self, ID, template_kwargs=None, data=None, editing=False, 
-            showing=False, saving=False, allow_deleted=False, timestamp=None):
+    def __init__(self, ID, template_kwargs=None, data=None, editing=False, showing=False,
+                 saving=False, renaming=False, allow_deleted=False, timestamp=None):
         self.template_kwargs = template_kwargs or {}
 
         self.id = ID
@@ -641,6 +644,14 @@ class Knowl(object):
                 self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(ID)]
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
+        self.reviewed_content = self.reviewed_title = self.reviewed_timestamp = None
+        if renaming:
+            # This should only occur on beta, so we get the most recent reviewed version
+            reviewed_data = knowldb.get_knowl(ID, ['content', 'title', 'timestamp', 'status'], beta=False)
+            if reviewed_data and reviewed_data['status'] == 1:
+                self.reviewed_content = reviewed_data['content']
+                self.reviewed_title = reviewed_data['title']
+                self.reviewed_timestamp = reviewed_data['timestamp']
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
 
