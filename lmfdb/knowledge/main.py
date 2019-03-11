@@ -306,6 +306,10 @@ def edit(ID):
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return flask.redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
+    for elt in knowl.edit_history:
+        # We will be printing these within a javascript ` ` string
+        # so need to escape backticks
+        elt['content'] = json.dumps(elt['content'])
     author = knowl._last_author
     # Existing comments can only be edited by admins and the author
     if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
@@ -364,7 +368,7 @@ def show(ID):
             k.comments[i] = (cid, author_name, timestamp, can_delete)
     b = get_bread([('%s' % title, url_for('.show', ID=ID))])
 
-    return render_template("knowl-show.html",
+    return render_template(u"knowl-show.html",
                            title=title,
                            k=k,
                            render=r,

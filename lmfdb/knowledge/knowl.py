@@ -4,7 +4,6 @@ from lmfdb.knowledge import logger
 from datetime import datetime, timedelta
 from collections import defaultdict
 import time, subprocess
-import json
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
 from lmfdb.app import is_beta, is_debug_mode, _url_source
@@ -430,7 +429,7 @@ class KnowlBackend(PostgresBase):
         - 'code' -- a list of strings giving two lines of context around the match.
         """
         try:
-            matches = subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).split('\n--\n')
+            matches = subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n')
         except subprocess.CalledProcessError: # no matches
             return []
         return [self._process_git_grep(match) for match in matches]
@@ -625,6 +624,7 @@ class Knowl(object):
         self.category = data.get('cat', extract_cat(ID))
         self._last_author = data.get('last_author', '')
         self.timestamp = data.get('timestamp', datetime.utcnow())
+        self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
         self.source = data.get('source')
@@ -675,15 +675,11 @@ class Knowl(object):
             else:
                 full_names = dict({})
             self.previous_review_spot = None
-            self.edit_history_start = len(self.edit_history) - 1
             for i, elt in enumerate(self.edit_history):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
-                # We will be printing these within a javascript ` ` string, so need to escape backticks
-                elt['ucontent'] = elt['content'].replace("`", r"\`")
-                elt['content'] = json.dumps(elt['content'])
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
-                    self.edit_history_start = self.previous_review_spot = i
+                     self.previous_review_spot = elt['ms_timestamp']
 
     def save(self, who):
         knowldb.save(self, who)
