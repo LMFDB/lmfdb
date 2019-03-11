@@ -10,7 +10,7 @@ $(document).ready(function () {
   {# in editing mode? #}
   {% if k.editing %}
     add_editing_to_selects("{{k.ms_timestamp}}");
-    $('#kcontent').keyup(content_change);
+    //$('#kcontent').keyup(content_change);
   {% else %}
     $rhsselect.val("0").change();
     {% if k.previous_review_spot %}

@@ -113,7 +113,7 @@
             <span id="inactive-preview">Preview</span>
           </td>
           <td>
-            <a id="refresh-view" onclick="refresh_view(); return false;" style="display: none;" href="#">(Refresh)</a>
+            <a id="refresh-view" onclick="dispatch_refresh(); return false;" style="display: none;" href="#">(Refresh)</a>
           </td>
         </tr>
       </table>
@@ -169,8 +169,8 @@ $("body").on("click", ".insert_klink", insert_klink);
 
 /* register keyhandlers */
 $(function() {
-  $("#ktitle").keyup(refresh_delay);
-  $("#kcontent").keyup(refresh_delay);
+  $("#ktitle").keyup(dispatch_refresh);
+  $("#kcontent").keyup(dispatch_refresh);
   refresh_preview();
 });
 

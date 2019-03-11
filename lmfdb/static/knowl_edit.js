@@ -46,36 +46,9 @@ function knowl_link(kid, label, title=null) {
   return '<a title="'+title+'" knowl="'+kid+'" kwargs="">'+label+'</a>';
 }
 
-function refresh_view(edit_mode='cur') {
-  if (refresh_id) {
-    /* this case happens, when we click "refresh" while a timer is running. */
-    window.clearTimeout(refresh_id);
-  }
-  if (edit_mode === 'cur') {
-    for (var i = 0; i < all_modes.length; i++) {
-      mode = all_modes[i];
-      if ($('#activate-' + mode).is(":hidden")) {
-        edit_mode = mode;
-        break;
-      }
-    }
-  }
-  if (edit_mode === 'link-suggestions') {
-    refresh_link_suggestions();
-  } else if (edit_mode === 'history') {
-    refresh_history();
-  } else if (edit_mode === 'diffs') {
-    refresh_diffs();
-  } else {
-    refresh_preview();
-  }
-  $('#refresh-view').hide();
-}
-
-
 /* Switching between edit modes */
 function enable(edit_mode) {
-  refresh_view(edit_mode);
+  view_refresh(edit_mode);
   for (var i = 0; i < all_modes.length; i++) {
     mode = all_modes[i];
     if (mode === edit_mode) {
@@ -90,14 +63,21 @@ function enable(edit_mode) {
   }
 }
 
+function contained_in_bad_interval(
+
 function refresh_link_suggestions() {
   var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
   var wedef = /\*\*([^\*]+)\*\*/g;
   var $kcontent = $("#kcontent");
   var $linkul    = $("#link-suggestions-ul");
+  // text_present is a set of knowl labels already present in the content
   var text_present = {};
+  // kid_present is a set of knowl ids already present in the content
   var kid_present = {};
+  // we_define is a set of the definitions in the content (wrapped in **   **)
   var we_define = {};
+  // bad_intervals is a list of intervals that should be excluded from suggestions: KNOWLS and mathmode
+  var bad_intervals = [];
   var content = $kcontent.val();
   do {
     m = wedef.exec(content);
@@ -117,40 +97,23 @@ function refresh_link_suggestions() {
       }
       text_present[thisdef] = true;
       kid_present[m[2]] = true;
+      bad_locations.push([m.index, m.index+m[0].length]);
     }
   } while (m);
-  $linkul.empty();
-  var some_link = false;
-  var to_insert = [];
-  for (kdef in all_defines) {
-    var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'i');
-    var match = kdef_finder.exec(content);
-    if (match !== null) {
-      if (normalize_define(kdef) in we_define) {
-        continue;
+  // Add mathmode intervals to bad_locations
+  var math_res = [/(?<!\$)\$.+?\$/g, // We assume people aren't using \$ in their mathmode expressions
+                  /\$\$[^$]+\$\$/g,
+                  /\\\(.*?(?<=\\)\)/g,
+                  /\\\[.*?(?<=\\)\]/g];
+  for (i = 0; i < math_res.length; i++) {
+    do {
+      m = math_res[i].exec(content);
+      if (m) {
+        bad_locations.push([m.index, m.index+m[0].length]);
       }
-      found = false;
-      for (pdef in text_present) {
-        if (pdef.indexOf(kdef) != -1) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        some_link = true;
-        // Have to construct the Knowl link by hand
-        for (var i = 0; i < all_defines[kdef].length; i++) {
-          var definer_id = all_defines[kdef][i];
-          if (!(definer_id in kid_present)) {
-            var label = match[0]+' ['+definer_id+']';
-            var klink = knowl_link(definer_id, label, label);
-            var inserter = `<a href="#" class="insert_klink" definer_id=`+definer_id+` match=`+match[0]+`>insert</a>`;
-            to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
-          }
-        }
-      }
-    }
+    } while (m);
   }
+  // Sort bad_locations and deal with overlaps (true overlaps shouldn't occur, but nesting might)
   function sort_pairs(a, b) {
     if (a[0] != b[0]) {
       return a[0]-b[0];
@@ -161,6 +124,69 @@ function refresh_link_suggestions() {
     } else {
       return 0;
     }
+  }
+  bad_locations.sort(sort_pairs);
+  i = 0;
+  while (i < bad_locations.length-1) {
+    cur = bad_locations[i];
+    next = bad_locations[i+1];
+    if (cur[1] >= next[0]) {
+      cur[1] = next[1];
+      bad_locations.splice(i+1, 1); // remove next
+    } else {
+      i++;
+    }
+  }
+  function is_bad(pos, i0=0, i1=bad_locations.length) {
+    // We can just use pos as the start of the string, because kdef_finder is delimited at word boundaries
+    if (bad_locations.length == 0) {
+      return false;
+    }
+    if (i1 <= i0+1) {
+      return (bad_locations[i0][0] <= pos) && (pos < bad_locations[i1][1]);
+    }
+    mid = Math.floor((i0+i1)/2);
+    if (pos < bad_locations[mid][0]) {
+      return is_bad(pos, i0, mid);
+    } else {
+      return is_bad(pos, mid, i1);
+    }
+  }
+
+  $linkul.empty();
+  var some_link = false;
+  var to_insert = [];
+  for (kdef in all_defines) {
+    if (normalize_define(kdef) in we_define) {
+      continue;
+    }
+    found = false;
+    for (pdef in text_present) {
+      if (pdef.indexOf(kdef) != -1) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      continue;
+    }
+    var kdef_finder = new RegExp('\\b'+kdef+'\\b', 'ig');
+    do {
+      var match = kdef_finder.exec(content);
+      if (match !== null && !is_bad(match.index)) {
+        some_link = true;
+        // Have to construct the Knowl link by hand
+        for (var i = 0; i < all_defines[kdef].length; i++) {
+          var definer_id = all_defines[kdef][i];
+          if (!(definer_id in kid_present)) {
+            var label = match[0]+' ['+definer_id+']';
+            var klink = knowl_link(definer_id, label, label);
+            var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+(match.index+match[0].length)+` match=`+match[0]+`>insert</a>`;
+            to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
+          }
+        }
+      }
+    } while (match !== null);
   }
   to_insert.sort(sort_pairs);
   for (var i = 0; i < to_insert.length; i++) {
@@ -179,16 +205,20 @@ function insert_klink(evt) {
   evt.preventDefault();
   var kid = $(this).attr("definer_id");
   var ktext = $(this).attr("match");
-  var content = $kcontent.val();
-  var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
-  var match = ktext_finder.exec(content);
-  if (match !== null) {
-    start = match.index;
-    end = start + match[0].length;
-    var new_link = knowl_link(kid, match[0]);
-    update_content(start, end, new_link);
-  }
-  refresh_link_suggestions();
+  var kstart = $(this).attr("start");
+  var kend = $(this).attr("end");
+  var new_link = knowl_link(kid, ktext);
+  update_content(start, end, new_link);
+  //var content = $kcontent.val();
+  //var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
+  //var match = ktext_finder.exec(content);
+  //if (match !== null) {
+  //  start = match.index;
+  //  end = start + match[0].length;
+  //  var new_link = knowl_link(kid, match[0]);
+  //  update_content(start, end, new_link);
+  //}
+  //refresh_link_suggestions();
   $kcontent.keyup();
 }
 
@@ -226,7 +256,7 @@ function refresh_preview() {
       if (reparse_latex) {
         /* console.log("reparse_latex == true"); */
         reparse_latex = false;
-        refresh_view();
+        view_refresh();
       }
       /* finally, set the title and hide the refresh link */
       $title.html($("#ktitle").val());
@@ -237,19 +267,60 @@ function refresh_preview() {
 function refresh_history() {
 }
 function refresh_diffs() {
-  $('#compare').trigger('resize');
+  content_change();
+  //$('#compare').trigger('resize');
+}
+
+function find_current_edit_mode() {
+  for (var i = 0; i < all_modes.length; i++) {
+    mode = all_modes[i];
+    if ($('#activate-' + mode).is(":hidden")) {
+      return mode;
+    }
+  }
+}
+
+
+function dispatch_refresh() {
+  // Some edit modes want a timer, others don't.  This is the function that's called by the keyup event on content.
+  edit_mode = find_current_edit_mode();
+  if (edit_mode == 'preview') {
+    delay_refresh();
+  } else {
+    view_refresh(edit_mode);
+  }
 }
 
 /* if nothing scheduled, refresh delayed
    otherwise tell it to reparse the latex */
-function refresh_delay() {
+function delay_refresh() {
   unsaved = true;
   $("#refresh-view").fadeIn();
   if (refresh_id) {
     reparse_latex = true;
   } else {
-    refresh_id = window.setTimeout(refresh_view, REFRESH_TIMEOUT);
+    refresh_id = window.setTimeout(view_refresh, REFRESH_TIMEOUT);
   }
+}
+
+function view_refresh(edit_mode='cur') {
+  if (refresh_id) {
+    /* this case happens, when we click "refresh" while a timer is running. */
+    window.clearTimeout(refresh_id);
+  }
+  if (edit_mode === 'cur') {
+    edit_mode = find_current_edit_mode();
+  }
+  if (edit_mode === 'link-suggestions') {
+    refresh_link_suggestions();
+  } else if (edit_mode === 'history') {
+    refresh_history();
+  } else if (edit_mode === 'diffs') {
+    refresh_diffs();
+  } else {
+    refresh_preview();
+  }
+  $('#refresh-view').hide();
 }
 
 /* Check before saving if changing knowl category */
