@@ -1,39 +1,83 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<table class="knowl_review">
-  {% for k in knowls %}
-  <tr>
-    <td>
-      <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
-      {{ k.rendered|safe }}
-    </td>
-  </tr>
-  <tr>
-    <td id="td_{{k.id}}">
-      Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
-      {% if k.referrers or k.code_referrers %}
-      <table class="knowl_references">
+<!-- CodeMirror -->
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
+      integrity="sha384-FI6pF4jT5OLWJXc3EzvnyZEFcAwREFlPw81bB9gbkmyesoJHMq9TxE/CA0PZ7nF6"
+      crossorigin="anonymous"></script>
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/addon/search/searchcursor.min.js"
+      integrity="sha384-ytTGJfQEcykPzyWakPMXw3UUCtFeMOeMu43uMWb/0EQoW3F5zzg+06D8pDJDtbd5"
+      crossorigin="anonymous"></script>
+<link type="text/css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css"
+      integrity="sha384-qHr0tRKUJCVvDPBkv5JnUcctfAqzS0Qo1NrKtq8O0YNp/0zygS/9JepLTiPLVQkG"
+      crossorigin="anonymous"/>
+
+<!-- Mergely  -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.css"
+      integrity="sha384-N8G4oBuDTLxH6t1v7bNdCcv56sJDJH6JArcx9uKz4vSMFvNjyXDjOyKBsSQy1o5K"
+      crossorigin="anonymous">
+<script defer
+      src="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.js"
+      integrity="sha384-VN5LSIgtGg3krjINbmlVY/4hG2PyALw4wy5wpCC8gxJ+VrpZsyUxlvNwcQq7CDGQ"
+      crossorigin="anonymous"></script>
+<script type="text/javascript" src="/static/diff_match_patch.js"></script>
+<script type="text/javascript">
+
+  function diff(text1, text2) {
+    var dmp = new diff_match_patch();
+    dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
+    dmp.Diff_EditCost = 5;
+    var diffs = dmp.diff_main(text1, text2);
+    //dmp.diff_cleanupSemantic(d);
+    dmp.diff_cleanupEfficiency(diffs);
+    var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
+    return ds;
+  };
+</script>
+
+  <div>
+    <table class="knowl_review" >
+      {% for k in knowls %}
         <tr>
-          <td>Referred to by:</td>
-          {% for rid in k.referrers %}
-          <td>{{ KNOWL(rid, title=rid) }}</td>
-          {% endfor %}
-          {% for coderef in k.code_referrers %}
-          <td>{{ coderef | safe }}</td>
-          {% endfor %}
+          <td>
+            <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
+            {{ k.rendered|safe }}
+          </td>
         </tr>
-      </table>
-      {% else %}
-      No referrers <br>
-      {% endif %}
-      {% set kid = k.id.replace('.','') %}
-      <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
-      <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
-      <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+        <tr>
+          <td id="td_{{k.id}}">
+            Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
+          {% if k.referrers or k.code_referrers %}
+                Referred to by:
+                  <ul class="horizontal-list">
+                    {% for rid in k.referrers %}
+                      <li>{{ KNOWL(rid, title=rid) }}</li>
+                    {% endfor %}
+                    {% for coderef in k.code_referrers %}
+                      <li>{{ coderef | safe }}</li>
+                    {% endfor %}
+                  </ul>
+          {% else %}
+            No referrers <br>
+          {% endif %}
+          {% if k.reviewed_content %}
+            View differences: <a>side by side</a> <a>inline</a> <br>
+          {% endif %}
+          {% set kid = k.id.replace('.','') %}
+          <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
+          <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
+          <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
 
 {% endblock %}

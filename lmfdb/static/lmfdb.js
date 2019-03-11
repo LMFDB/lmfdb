@@ -381,7 +381,7 @@ function js_review_knowl(kid) {
         address = address.slice(0,-1);
     address = address + "?review=" + kid;
     kid = kid.replace('.','');
-    $("#to_review_"+kid).hide();
+    $("#to_review_"+kid).hide("fast");
     //$("#to_review_"+kid.replace('.','')).html("HELLO");
     var callback = function(res) {
         js_review_callback(res, kid);
@@ -390,9 +390,9 @@ function js_review_knowl(kid) {
 }
 function js_review_callback(res, kid) {
     if (res['success'] === 1) {
-        $('#to_beta_'+kid).show();
+        $('#to_beta_'+kid).show("fast");
     } else {
-        $('#error_'+kid).show();
+        $('#error_'+kid).show("fast");
     }
 }
 
@@ -402,7 +402,7 @@ function js_beta_knowl(kid) {
         address = address.slice(0,-1);
     address = address + "?beta=" + kid;
     kid = kid.replace('.','');
-    $("#to_beta_"+kid).hide();
+    $("#to_beta_"+kid).hide("fast");
     var callback = function(res) {
         js_beta_callback(res, kid);
     }
@@ -410,9 +410,9 @@ function js_beta_knowl(kid) {
 }
 function js_beta_callback(res, kid) {
     if (res['success'] === 1) {
-        $('#to_review_'+kid).show();
+        $('#to_review_'+kid).show("fast");
     } else {
-        $('#error_'+kid).show();
+        $('#error_'+kid).show("fast");
     }
 }
 

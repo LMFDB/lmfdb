@@ -1,6 +1,5 @@
 TASKS:
 
-* Add ability to view history and revert to old version (knowl.edit_history available)
 * In recent reviews, add diff with last positively reviewed
 * When hovering over the "insert" button in link suggestions, change the color of the word that will be replaced.
 
