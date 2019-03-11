@@ -145,8 +145,9 @@
 <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
 
-<script type="text/javascript" src="{{ url_for('static', filename='knowl.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='knowl_edit.js') }}"></script>
 <script type="text/javascript">
+var render_url = "{{ url_for('.render', ID=k.id)}}";
 /* edit history */
 var edit_history = {
   {% for version in k.edit_history %}

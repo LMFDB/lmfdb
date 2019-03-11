@@ -52,7 +52,7 @@ function sidebyside_handler(evt) {
 }
 
 function lhs_change() {
-  lhs = new_text(parseInt($lhsselect.val()));
+  var lhs = new_text(parseInt($lhsselect.val()));
   if (diffmode == 'sidebyside') {
     var scroll = $('html').scrollTop();
     $compare.mergely('lhs', lhs);
@@ -60,14 +60,14 @@ function lhs_change() {
     // there is a timeout somewhere of 150..
     setTimeout( function() { $('html').scrollTop(scroll);}, 151);
   } else {
-    rhs = new_text(parseInt($rhsselect.val()));
+    var rhs = new_text(parseInt($rhsselect.val()));
     $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
   }
   return false;
 }
 
 function rhs_change() {
-  rhs = new_text(parseInt(rhsselect.val()));
+  var rhs = new_text(parseInt($rhsselect.val()));
   if (diffmode == 'sidebyside') {
     var scroll = $('html').scrollTop();
     console.log(scroll);
@@ -76,7 +76,7 @@ function rhs_change() {
     // there is a timeout somewhere of 150..
     setTimeout( function() { $('html').scrollTop(scroll);}, 151);
   } else {
-    lhs = new_text(parseInt($lhsselect.val()));
+    var lhs = new_text(parseInt($lhsselect.val()));
     $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
   }
   return false;

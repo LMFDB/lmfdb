@@ -210,12 +210,11 @@ function update_content(start, end, new_text) {
 }
 
 function refresh_preview() {
-  var url = "{{ url_for('.render', ID=k.id)}}";
   var $title = $("#knowl-title");
   var $kcontent = $("#kcontent");
   var $content = $("#knowl-content");
   var $refresh = $("#refresh-view");
-  $.post(url, { "content" : $kcontent.val(), "footer" : "0" },
+  $.post(render_url, { "content" : $kcontent.val(), "footer" : "0" },
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
