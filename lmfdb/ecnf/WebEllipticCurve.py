@@ -360,6 +360,11 @@ class ECNF(object):
         # store the factorization of the denominator of j and display
         # that, which is the most interesting part.
 
+        # The equation is stored in the database as a latex string.
+        # Some of these have extraneous double quotes at beginning and
+        # end, shich we fix here:
+        self.equation = self.equation.replace('"','')
+
         # Images of Galois representations
 
         if not hasattr(self,'galois_images'):
@@ -406,17 +411,16 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        # See Issue #2718
-        self.qc = "not determined"
-        # self.qc = self.q_curve
-        # if self.qc == "?":
-        #     self.qc = "not determined"
-        # elif self.qc == True:
-        #     self.qc = "yes"
-        # elif self.qc == False:
-        #     self.qc = "no"
-        # else: # just in case
-        #     self.qc = "not determined"
+        try:
+            qc = self.q_curve
+            if qc == True:
+                self.qc = "yes"
+            elif qc == False:
+                self.qc = "no"
+            else: # just in case
+                self.qc = "not determined"
+        except AttributeError:
+            self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
