@@ -324,7 +324,7 @@ class KnowlBackend(PostgresBase):
         updator = SQL("UPDATE kwl_knowls2 SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
         self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
 
-    def needs_review(self, days, cap=100):
+    def needs_review(self, days, cap=50):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)
         time = now - tdelta
@@ -349,7 +349,9 @@ class KnowlBackend(PostgresBase):
         for k in knowls:
             k.reviewed_content = reviewed.get(k.id)
             k.referrers = referrers[k.id]
-            k.code_referrers = [code_snippet_knowl(D, full=False) for D in self.code_references(k.id)]
+            k.code_referrers = [
+                    code_snippet_knowl(D, full=False)
+                    for D in self.code_references(k.id)]
         return knowls
 
     def ids_referencing(self, knowlid, old=False, beta=None):
@@ -608,6 +610,9 @@ class Knowl(object):
         #given that we cache it's existence it is quicker to check for existence
         if data is None:
             if self.exists(allow_deleted=allow_deleted):
+                if editing:
+                    # as we want to make edits on the most recent version
+                    timestamp=None
                 data = knowldb.get_knowl(ID,
                         allow_deleted=allow_deleted, timestamp=timestamp)
             else:
@@ -676,10 +681,9 @@ class Knowl(object):
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
                 # We will be printing these within a javascript ` ` string, so need to escape backticks
                 elt['ucontent'] = elt['content'].replace("`", r"\`")
-                elt['content'] = json.dumps(elt['content']) # .replace("`", r"\`")
+                elt['content'] = json.dumps(elt['content'])
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                     self.edit_history_start = self.previous_review_spot = i
-            print self.edit_history
 
     def save(self, who):
         knowldb.save(self, who)

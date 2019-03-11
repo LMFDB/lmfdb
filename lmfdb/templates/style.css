@@ -973,10 +973,6 @@ table.knowl_review tr:first-child td {
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
 }
-table.knowl_review table.knowl_references tr td {
-    background: {{ color.table_ntdata_background_2 }};
-    padding-left: 0;
-}
 table.euler {
     margin-left:auto;
     margin-right:auto;
@@ -1121,6 +1117,7 @@ h2 > .knowl-qm {
   margin-top: 10px;
   margin-bottom: 15px;
   margin-right: 10px;
+  text-align: left;
 }
 .knowl-output .knowl-output,
 .knowl-output .knowl-output.loading {
@@ -2237,4 +2234,22 @@ input::-webkit-input-placeholder {
   transform: rotate(180deg);
   writing-mode: vertical-lr;
   white-space: nowrap;
+}
+
+/* an horizonal list with bullet points */
+ul.horizontal-list {
+  display:inline-block;
+  padding:0;
+  margin: 0.5em;
+  text-align:center
+}
+ul.horizontal-list li {
+  display: inline;
+  white-space: nowrap;
+}
+ul.horizontal-list li:after {
+
+  content:" ";
+  letter-spacing:1em;
+  background: center center no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xMkMEa+wAAAAnSURBVBhXY/Dz89MA4sNA/B9Ka4AEYQIwfBgkiCwAxjhVopnppwEApxQqhnyQ+VkAAAAASUVORK5CYII=);
 }

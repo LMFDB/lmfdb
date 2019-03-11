@@ -1,39 +1,116 @@
 {% extends "homepage.html" %}
 
 {% block content %}
-<table class="knowl_review">
-  {% for k in knowls %}
-  <tr>
-    <td>
-      <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
-      {{ k.rendered|safe }}
-    </td>
-  </tr>
-  <tr>
-    <td id="td_{{k.id}}">
-      Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
-      {% if k.referrers or k.code_referrers %}
-      <table class="knowl_references">
+
+  {% include "knowl-diff-core.html" %}
+  <script>
+var reviewed_content = {};
+var content = {};
+{% for k in knowls %}
+  {% if k.reviewed_content != "null"%}
+    {% set kid = k.id.replace('.','') %}
+reviewed_content["{{kid}}"] = {{k.reviewed_content | safe}};
+content["{{kid}}"] = {{k.content | safe}};
+  {% endif %}
+{% endfor %}
+
+
+
+$(document).ready(function () {
+$('.diff_button').click(
+  function (evt) {
+    evt.preventDefault();
+    var kid = evt.target.getAttribute("kid");
+    var type = evt.target.getAttribute("type");
+    if (type == "sidebyside") {
+      var othertype = "inline";
+    } else {
+      var othertype = "sidebyside";
+    }
+    var output_id = '#' + type + "[kid=" + kid + "]";
+    var output = $(output_id);
+    var otheroutput = $('#' + othertype + "[kid=" + kid + "]");
+    if (otheroutput.length > 0) {
+      otheroutput.parent().parent().hide("fast");
+    }
+    if (output.length == 0) {
+      var pp = $("." + type + "[kid=" + kid + "]");
+      console.log("." + type + "[kid=" + kid + "]");
+      console.log(pp);
+      var comp = $("<div></div>").attr("id", type).attr("kid",kid);
+      pp.append(($("<div></div>").attr("class", "diff_wrapper")).append(comp));
+      lhs = reviewed_content[kid];
+      rhs = content[kid];
+      if (type == "sidebyside") {
+        comp.mergely({
+          license: 'gpl-separate-notice',
+          cmsettings: {
+            readOnly: true,
+            linewrap: true,
+            viewportMargin: 50,
+          },
+          lineNumbers: true,
+          wrap_lines: true,
+          width: 'auto',
+          height: 'calc(100vh - 200px)',
+          ignorews: false,
+          lhs: function(setValue) { setValue(lhs); },
+          rhs: function(setValue) { setValue(rhs); },
+        });
+        comp.trigger('resize');
+      } else {
+        comp.html('<pre>' + diff(lhs, rhs) + '</pre>');
+      }
+      output = $(output_id);
+    }
+    output.parent().parent().slideToggle("fast");
+    return false;
+  });
+});
+
+  </script>
+  <div>
+    <table class="knowl_review" >
+      {% for k in knowls %}
         <tr>
-          <td>Referred to by:</td>
-          {% for rid in k.referrers %}
-          <td>{{ KNOWL(rid, title=rid) }}</td>
-          {% endfor %}
-          {% for coderef in k.code_referrers %}
-          <td>{{ coderef | safe }}</td>
-          {% endfor %}
+          <td>
+            <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
+            {{ k.rendered|safe }}
+          </td>
         </tr>
-      </table>
-      {% else %}
-      No referrers <br>
-      {% endif %}
-      {% set kid = k.id.replace('.','') %}
-      <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
-      <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
-      <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
-    </td>
-  </tr>
-  {% endfor %}
-</table>
+        <tr>
+          <td id="td_{{k.id}}">
+            Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
+            {% if k.referrers or k.code_referrers %}
+              Referred to by:
+              <ul class="horizontal-list">
+                {% for rid in k.referrers %}
+                  <li>{{ KNOWL(rid, title=rid) }}</li>
+                {% endfor %}
+                {% for coderef in k.code_referrers %}
+                  <li>{{ coderef | safe }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              No referrers <br>
+            {% endif %}
+            {% set kid = k.id.replace('.','') %}
+            {% if k.reviewed_content != "null" %}
+              <div class="{{kid}}">
+                View differences:
+                <a href="#" class="diff_button" type="sidebyside" kid={{kid}}>side by side</a>
+                <a href="#" class="diff_button" type="inline" kid={{kid}}>inline</a>
+                <div class="sidebyside" kid={{kid}} style="display: none;"> </div>
+                <div class="inline" kid={{kid}} style="display: none;" sytle> </div>
+              </div>
+            {% endif %}
+            <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
+            <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
+            <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
 
 {% endblock %}
