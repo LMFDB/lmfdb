@@ -134,7 +134,7 @@ import os
 import pprint
 from lmfdb import db
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
@@ -339,8 +339,8 @@ def curves(line, verbose=False):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if True:  # q_curve: now we have not precomputed Q-curve status
-              # but still want to test for base change!
+    if q_curve!=0:  # q_curve (definitely or possibly, if we have not precomputed Q-curve status)
+        # but still want to test for base change!
         if verbose:
             print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
@@ -1285,7 +1285,6 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
     ncurves = len(curves)
     print("Checking {} curves over field {}".format(ncurves,field_label))
     K = FIELD(field_label)
-    sigma = K.K().galois_group()[1]
     bad1 = []
     bad2 = []
     count = 0
@@ -1469,39 +1468,89 @@ def read_qcurve_flags(filename, base_path="."):
             qcurve_dict[label] = (qcurve=='1')
     return qcurve_dict
 
-def read_all_qcurve_flags():
+def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
     QFs = nfcurves.distinct("field_label", {'degree':2})
     IQFs = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
     RQFs = [f for f in QFs if f[:4]=='2.2.']
+    cubics = nfcurves.distinct("field_label", {'degree':3})
+    quartics = nfcurves.distinct("field_label", {'degree':4})
+    quintics = nfcurves.distinct("field_label", {'degree':5})
+    sextics = nfcurves.distinct("field_label", {'degree':6})
 
-    # As of 2019-03-07 all IQF data is for one of the 5 Euclidean
-    # fields in the list IQFs, while the database has 8 more curves
-    # over IQFs, with everywhere good reduction, in the "sengun"
-    # directory of ecnf-data.  None of the latter are Q-curves, and
-    # they are in a single file called curves.EC_IQF_egr and not
-    # divided into fields, so for simplicity we ignore these
-    # completely here.
-    
     qc = {}
     base = "/home/jcremona/ecnf-data/"
-    for f in RQFs:
-        qc.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
-    for f in IQFs:
-        qc.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
-    assert len(qc)==nfcurves.count({'degree':2}) - 8
+
+    if 2 in degrees:
+        qc2 = {}
+        for f in RQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
+        for f in IQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
+        assert len(qc2)==nfcurves.count({'degree':2}) - 8
+        qc.update(qc2)
+        
+    if 3 in degrees:
+        qc3 = {}
+        for f in cubics:
+            if f == '3.1.23.1':
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "gunnells/"))
+            else:
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "cubics/"))
+        assert len(qc3)==nfcurves.count({'degree':3})
+        qc.update(qc3)
+
+    if 4 in degrees:
+        qc4 = {}
+        for f in quartics:
+            qc4.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quartics/"))
+        assert len(qc4)==nfcurves.count({'degree':4})
+        qc.update(qc4)
+
+    if 5 in degrees:
+        qc5 = {}
+        for f in quintics:
+            qc5.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quintics/"))
+        assert len(qc5)==nfcurves.count({'degree':5})
+        qc.update(qc5)
+
+    if 6 in degrees:
+        qc6 = {}
+        for f in sextics:
+            qc6.update(read_qcurve_flags(filename="curves."+f, base_path=base + "sextics/"))
+        assert len(qc6)==nfcurves.count({'degree':6})
+        qc.update(qc6)
+
     return qc
 
-def make_qcurve_flag_updater():
-    qc = read_quadratic_qcurve_flags()
+def make_qcurve_flag_updater(degrees=[2,3,4,5,6], filename=None, basepath="."):
+    if filename:
+        qc = read_qcurve_flags(filename, basepath)
+    else:
+        qc = read_all_qcurve_flags(degrees)
+    print("Updating Q-curve flag for {} curves".format(len(qc)))
     def qcurve_flag_updater(C):
         label = C['label']
-        if C['degree']>2:
-            C['q_curve'] = None
-        elif label in qc:
-            old_flag = C['q_curve']
+        degree = C['degree']
+        if degree in degrees and label in qc:
+            # else leave C alone
+            old_flag = C.get('q_curve', None)
             new_flag = qc[label]
-            # if old_flag!=new_flag:
-            #     print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
+            if old_flag!=new_flag:
+                pass
+                #print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
             C['q_curve'] = new_flag
+    
+        for ld in C['local_data']:
+            ld['kod'] = kod_fixer(ld['kod'])
+    
         return C
     return qcurve_flag_updater
+
+def kod_fixer(kod):
+    """
+    Remove extraneous "\\\\" from one kodaira symbol
+    """
+    newkod = kod
+    while '\\\\' in newkod:
+        newkod = newkod.replace('\\\\', '\\')
+    return newkod
