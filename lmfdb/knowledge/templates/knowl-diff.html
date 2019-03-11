@@ -35,7 +35,7 @@ $(document).ready(function () {
     lineNumbers: true,
     wrap_lines: true,
     width: 'auto',
-    height: 'calc(100vh - 200px)',
+    height: '100%',
     ignorews: false,
   });
 
@@ -43,7 +43,7 @@ $(document).ready(function () {
     lhs = new_text(parseInt(lhsselect.val()));
     if (diffmode == 'sidebyside') {
       $('#compare').mergely('lhs', lhs);
-      $('#compare').mergely('resize');
+      //$('#compare').mergely('resize');
     } else {
       rhs = new_text(parseInt(rhsselect.val()));
       $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
@@ -56,7 +56,7 @@ $(document).ready(function () {
     rhs = new_text(parseInt($('#rhsselect').val()));
     if (diffmode == 'sidebyside') {
       $('#compare').mergely('rhs', rhs);
-      $('#compare').trigger('resize');
+      //$('#compare').trigger('resize');
     } else {
       lhs = new_text(parseInt($('#lhsselect').val()));
       $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
