@@ -1,6 +1,5 @@
 TASKS:
 
-* In recent reviews, add diff with last positively reviewed
 * When hovering over the "insert" button in link suggestions, change the color of the word that will be replaced.
 * Think about security exploits from creation of dynamic lists (append)
 * Insert needs to skip text that is within a knowl definition

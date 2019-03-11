@@ -67,10 +67,21 @@
 
 {% if (k.edit_history | length) > 1 %}
 <script type="text/javascript">
+
+/* edit history */
+var edit_history = {
+  {% for version in k.edit_history %}
+    {{version['ms_timestamp']}}: {{ version['content'] | safe}},
+{% endfor %}
+};
+
 $(function() {
   $("body").on("click", ".diff_button", function (evt) {
     evt.preventDefault();
     $('#differences').toggle('slow');
+    var topselect = $('#lhsselect').offset().top
+    var topoption = $('#lhsselect').find("option[value="+$('#lhsselect').val() +"]").offset().top;
+    $('#lhsselect').scrollTop(topoption - topselect - 10);
     $('#compare').resize();
   });
 });

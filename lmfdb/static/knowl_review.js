@@ -19,9 +19,8 @@ function click_diff(evt) {
     otheroutput.parent().parent().hide("fast");
   }
   if (output.length == 0) {
+    var scroll = $('html').scrollTop();
     var pp = $("." + type + "[kid=" + kid + "]");
-    console.log("." + type + "[kid=" + kid + "]");
-    console.log(pp);
     var comp = $("<div></div>").attr("id", type).attr("kid",kid);
     pp.append(($("<div></div>").attr("class", "diff_wrapper")).append(comp));
     lhs = reviewed_content[kid];
@@ -43,6 +42,8 @@ function click_diff(evt) {
         rhs: function(setValue) { setValue(rhs); },
       });
       comp.trigger('resize');
+      // there is a timeout somewhere of 150..
+      setTimeout( function() { $('html').scrollTop(scroll);}, 151);
     } else {
       comp.html('<pre>' + diff(lhs, rhs) + '</pre>');
     }
