@@ -43,7 +43,7 @@ function knowl_link(kid, label, title=null) {
   if (title === null) {
     title = label + ' [' + kid + ']';
   }
-  return '<a title="'+title+'" knowl="'kid+'" kwargs="">'+label+'</a>';
+  return '<a title="'+title+'" knowl="'+kid+'" kwargs="">'+label+'</a>';
 }
 
 function refresh_view(edit_mode='cur') {
