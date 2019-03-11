@@ -2,12 +2,6 @@
 
 <script>
 
-var content_history = [
-  {% for elt in k.edit_history|reverse %}
-    {{ elt.content|string|safe }},
-  {% endfor %}
-]
-
 function new_text(timestamp) {
   if( timestamp == -1) {
     return $('#kcontent').val();
@@ -19,7 +13,6 @@ function new_text(timestamp) {
     return '';
   }
 };
-
 $(document).ready(function () {
   var diffmode='sidebyside';
   var lhsselect = $('#lhsselect');
@@ -39,17 +32,15 @@ $(document).ready(function () {
     ignorews: false,
   });
 
+
   lhsselect.change( function() {
     lhs = new_text(parseInt(lhsselect.val()));
     if (diffmode == 'sidebyside') {
       var scroll = $('html').scrollTop();
-      console.log(scroll);
       $('#compare').mergely('lhs', lhs);
       $('#compare').mergely('resize');
-      $('#compare').mergely('update');
-      $('html').scrollTop(scroll);
-      console.log($('html').scrollTop());
-      $('html').scrollTop(scroll).delay(1000);
+      // there is a timeout somewhere of 150..
+      setTimeout( function() { $('html').scrollTop(scroll);}, 151);
     } else {
       rhs = new_text(parseInt(rhsselect.val()));
       $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
@@ -64,8 +55,9 @@ $(document).ready(function () {
       var scroll = $('html').scrollTop();
       console.log(scroll);
       $('#compare').mergely('rhs', rhs);
-      $('html').scrollTop(scroll);
       $('#compare').trigger('resize');
+      // there is a timeout somewhere of 150..
+      setTimeout( function() { $('html').scrollTop(scroll);}, 151);
     } else {
       lhs = new_text(parseInt($('#lhsselect').val()));
       $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
@@ -82,8 +74,8 @@ $(document).ready(function () {
                       .prop('selected', true)
                       );
 
-    if(content_history.length > 0) {
-    lhsselect.val("{{k.ms_timestamp}}").change();
+    if(Object.keys(edit_history).length > 0) {
+      lhsselect.val("{{k.ms_timestamp}}").change();
     }
     rhsselect.prepend($("<option></option>")
                       .attr("value","-1")
