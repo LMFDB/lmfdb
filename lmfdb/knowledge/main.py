@@ -360,6 +360,10 @@ def show(ID):
             title = (k.title or "'%s'" % k.id) + " (DELETED)"
         else:
             return flask.abort(404, "No knowl found with the given id")
+    for elt in k.edit_history:
+        # We will be printing these within a javascript ` ` string
+        # so need to escape backticks
+        elt['content'] = json.dumps(elt['content'])
     # Modify the comments list to add information on whether this user can delete
     if k.type != -2:
         for i, (cid, author, timestamp) in enumerate(k.comments):

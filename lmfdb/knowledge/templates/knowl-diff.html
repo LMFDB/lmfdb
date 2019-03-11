@@ -12,12 +12,12 @@ $(document).ready(function () {
     add_editing_to_selects("{{k.ms_timestamp}}");
     //$('#kcontent').keyup(content_change);
   {% else %}
-    $rhsselect.val("0").change();
+    $('#rhsselect').val("{{k.ms_timestamp}}").change();
     {% if k.previous_review_spot %}
       {# we have reversed the indexes #}
-      $lhsselect.val("{{k.previous_review_spot}}").change();
+      $('#lhsselect').val("{{k.previous_review_spot}}").change();
     {% else %}
-      $lhsselect.val("{{k.ms_timestamp}}").change();
+      $('#lhsselect').val("{{k.edit_history[-2].ms_timestamp}}").change();
     {% endif %}
   {% endif %} {# k.editing #}
   $('#compare').trigger('resize');
@@ -25,6 +25,7 @@ $(document).ready(function () {
   $('#inline_button').click(inline_handler);
   $('#sidebyside_button').click(sidebyside_handler);
 });
+
 
 </script>
 
