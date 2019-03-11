@@ -1,4 +1,4 @@
-/* These functions are used for viewing and editing knowls.  Note that the functions for showing knowls on normal lmfdb pages are still in lmfdb.js */
+/* These functions are used for editing knowls.  Note that the functions for showing knowls on normal lmfdb pages are still in lmfdb.js */
 
 /* We need various global variables set and html elements present to function
 
