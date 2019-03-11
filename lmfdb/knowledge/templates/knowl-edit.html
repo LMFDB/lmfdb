@@ -35,24 +35,6 @@
       </div>
     {% endif %}
 
-    <script type="text/javascript"
-            src="https://cdn.jsdelivr.net/gh/markitup/1.x@1.1.15/markitup/jquery.markitup.js"
-            integrity="sha256-BiawY8kuGhVgPmV3XSWamEheAvBvH9VeZbzR16BdvAM="
-            crossorigin="anonymous"></script>
-    {# depends on color #}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
-    {# settings for the editor menus and the stylesheet #}
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
-
-    <script language="javascript">
-      $(document).ready(
-        function()	{
-          $('#kcontent').markItUp(myMarkdownSettings);
-        }
-      );
-    </script>
-
     <form action="{{ url_for('.save_form') }}" method="POST" id=>
       <input type="hidden" name="id" value="{{ k.id }}"/>
       <table>
@@ -153,6 +135,16 @@
       </div>
     </div>
 
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/markitup/1.x@1.1.15/markitup/jquery.markitup.js"
+        integrity="sha256-BiawY8kuGhVgPmV3XSWamEheAvBvH9VeZbzR16BdvAM="
+        crossorigin="anonymous"></script>
+{# depends on color #}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markitup.css')}}" />
+{# settings for the editor menus and the stylesheet #}
+<script type="text/javascript" src="{{ url_for('static', filename='jquery.markitup.markdown.js')}}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='markdown.css')}}" />
+
 <script type="text/javascript" src="{{ url_for('static', filename='knowl.js') }}"></script>
 <script type="text/javascript">
 /* edit history */
@@ -187,6 +179,11 @@ window.onbeforeunload = function() {
     return "There are unsaved edits. Really close?";
   }
 }
+
+$(document).ready(
+function() {
+  $('#kcontent').markItUp(myMarkdownSettings);
+});
 </script>
 
   {% endif %} {# concurrent edit warning at the top #}
