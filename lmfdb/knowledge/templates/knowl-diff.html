@@ -8,12 +8,12 @@ var content_history = [
   {% endfor %}
 ]
 
-function new_text(version) {
-  if( version == -1) {
+function new_text(timestamp) {
+  if( timestamp == -1) {
     return $('#kcontent').val();
   }
-  else if ( version >= 0 && version < content_history.length ) {
-    return content_history[version];
+  else if ( timestamp >= 0 ) {
+    return edit_history[timestamp];
   }
   else {
     return '';
@@ -35,15 +35,21 @@ $(document).ready(function () {
     lineNumbers: true,
     wrap_lines: true,
     width: 'auto',
-    height: 'calc(100vh - 200px)',
+    height: '100%',
     ignorews: false,
   });
 
   lhsselect.change( function() {
     lhs = new_text(parseInt(lhsselect.val()));
     if (diffmode == 'sidebyside') {
+      var scroll = $('html').scrollTop();
+      console.log(scroll);
       $('#compare').mergely('lhs', lhs);
       $('#compare').mergely('resize');
+      $('#compare').mergely('update');
+      $('html').scrollTop(scroll);
+      console.log($('html').scrollTop());
+      $('html').scrollTop(scroll).delay(1000);
     } else {
       rhs = new_text(parseInt(rhsselect.val()));
       $('#compareinline').html('<pre>' + diff(lhs, rhs) + '</pre>');
@@ -53,9 +59,12 @@ $(document).ready(function () {
 
 
   rhsselect.change( function() {
-    rhs = new_text(parseInt($('#rhsselect').val()));
+    rhs = new_text(parseInt(rhsselect.val()));
     if (diffmode == 'sidebyside') {
+      var scroll = $('html').scrollTop();
+      console.log(scroll);
       $('#compare').mergely('rhs', rhs);
+      $('html').scrollTop(scroll);
       $('#compare').trigger('resize');
     } else {
       lhs = new_text(parseInt($('#lhsselect').val()));
@@ -74,7 +83,7 @@ $(document).ready(function () {
                       );
 
     if(content_history.length > 0) {
-      lhsselect.val("0").change();
+    lhsselect.val("{{k.ms_timestamp}}").change();
     }
     rhsselect.prepend($("<option></option>")
                       .attr("value","-1")
@@ -94,9 +103,9 @@ $(document).ready(function () {
     rhsselect.val("0").change();
     {% if k.previous_review_spot %}
       {# we have reversed the indexes #}
-      lhsselect.val("{{(k.edit_history|length) - 1 - k.previous_review_spot}}").change();
+      lhsselect.val("{{k.previous_review_spot}}").change();
     {% else %}
-      lhsselect.val("1").change();
+      lhsselect.val("{{k.ms_timestamp}}").change();
     {% endif %}
   {% endif %} {# end if editing #}
   comp.trigger('resize');
@@ -137,7 +146,7 @@ $(document).ready(function () {
         <form>
           <select id='lhsselect' size="4">
             {% for elt in k.edit_history|reverse %}
-              <option value='{{loop.index0}}'>
+              <option value='{{elt.ms_timestamp}}'>
               {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
               {% if elt.status == 1 %}
                 (Reviewed)
@@ -151,7 +160,7 @@ $(document).ready(function () {
         <form>
           <select id='rhsselect' size="4">
             {% for elt in k.edit_history|reverse %}
-              <option value='{{loop.index0}}'>
+              <option value='{{elt.ms_timestamp}}'>
               {{((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string)}}
               {% if elt.status == 1 %}
                 (Reviewed)

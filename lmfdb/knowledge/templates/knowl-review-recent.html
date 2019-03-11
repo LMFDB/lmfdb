@@ -52,7 +52,7 @@ $('.diff_button').click(
           lineNumbers: true,
           wrap_lines: true,
           width: 'auto',
-          height: 'calc(100vh - 200px)',
+          height: '100%',
           ignorews: false,
           lhs: function(setValue) { setValue(lhs); },
           rhs: function(setValue) { setValue(rhs); },
@@ -82,8 +82,8 @@ $('.diff_button').click(
           <td id="td_{{k.id}}">
             Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
             {% if k.referrers or k.code_referrers %}
-              Referred to by:
-              <ul class="horizontal-list">
+              <span style="vertical-align: top"> Referred to by: </span>
+              <ul class="horizontal-list" style="width: calc(100% - 131px)" >
                 {% for rid in k.referrers %}
                   <li>{{ KNOWL(rid, title=rid) }}</li>
                 {% endfor %}

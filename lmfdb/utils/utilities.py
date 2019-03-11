@@ -807,9 +807,9 @@ def code_snippet_knowl(D, full=True):
         url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s'>%s</a></div>"
+    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s'>%s</a></div>"
     inner = inner % (url, link_text)
-    return r'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
 
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
