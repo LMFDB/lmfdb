@@ -44,7 +44,7 @@
     <li>Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime }}</li>
   </ul>
 </div>
-{% if k.source %}
+{% if k.type|abs == 1 and k.source %}
 <div style="margin-top: 30px;">
   <strong>{{ 'Top' if k.type == 1 else 'Bottom' }} Knowl</strong> for <a href="/{{k.source}}">{{k.source_name}}</a>
 </div>
