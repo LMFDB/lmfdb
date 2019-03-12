@@ -2,11 +2,11 @@ TASKS:
 
 * Think about security exploits from creation of dynamic lists (append)
 * should the Knowl object have an attribute saying if it is or not the most recent knowl?
-* Links to github open to new tab
 * Regex replace title=
 * cmf.newform expand/hide all doesn't work
 * Delete jquery code in repo
 * Change horizontal spacing on history arrow
+* On prod, history permalinks display the wrong knowl
 
 BUGS:
 * Test ids_referencing on prod.
