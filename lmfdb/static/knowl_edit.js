@@ -63,8 +63,6 @@ function enable(edit_mode) {
   }
 }
 
-function contained_in_bad_interval(
-
 function refresh_link_suggestions() {
   var knowldef = /\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}/g;
   var wedef = /\*\*([^\*]+)\*\*/g;
@@ -97,10 +95,10 @@ function refresh_link_suggestions() {
       }
       text_present[thisdef] = true;
       kid_present[m[2]] = true;
-      bad_locations.push([m.index, m.index+m[0].length]);
+      bad_intervals.push([m.index, m.index+m[0].length]);
     }
   } while (m);
-  // Add mathmode intervals to bad_locations
+  // Add mathmode intervals to bad_intervals
   var math_res = [/(?<!\$)\$.+?\$/g, // We assume people aren't using \$ in their mathmode expressions
                   /\$\$[^$]+\$\$/g,
                   /\\\(.*?(?<=\\)\)/g,
@@ -109,11 +107,11 @@ function refresh_link_suggestions() {
     do {
       m = math_res[i].exec(content);
       if (m) {
-        bad_locations.push([m.index, m.index+m[0].length]);
+        bad_intervals.push([m.index, m.index+m[0].length]);
       }
     } while (m);
   }
-  // Sort bad_locations and deal with overlaps (true overlaps shouldn't occur, but nesting might)
+  // Sort bad_intervals and deal with overlaps (true overlaps shouldn't occur, but nesting might)
   function sort_pairs(a, b) {
     if (a[0] != b[0]) {
       return a[0]-b[0];
@@ -125,34 +123,33 @@ function refresh_link_suggestions() {
       return 0;
     }
   }
-  bad_locations.sort(sort_pairs);
+  bad_intervals.sort(sort_pairs);
   i = 0;
-  while (i < bad_locations.length-1) {
-    cur = bad_locations[i];
-    next = bad_locations[i+1];
+  while (i < bad_intervals.length-1) {
+    cur = bad_intervals[i];
+    next = bad_intervals[i+1];
     if (cur[1] >= next[0]) {
       cur[1] = next[1];
-      bad_locations.splice(i+1, 1); // remove next
+      bad_intervals.splice(i+1, 1); // remove next
     } else {
       i++;
     }
   }
-  function is_bad(pos, i0=0, i1=bad_locations.length) {
+  function is_bad(pos, i0=0, i1=bad_intervals.length) {
     // We can just use pos as the start of the string, because kdef_finder is delimited at word boundaries
-    if (bad_locations.length == 0) {
+    if (bad_intervals.length == 0) {
       return false;
     }
     if (i1 <= i0+1) {
-      return (bad_locations[i0][0] <= pos) && (pos < bad_locations[i1][1]);
+      return (bad_intervals[i0][0] <= pos) && (pos < bad_intervals[i0][1]);
     }
     mid = Math.floor((i0+i1)/2);
-    if (pos < bad_locations[mid][0]) {
+    if (pos < bad_intervals[mid][0]) {
       return is_bad(pos, i0, mid);
     } else {
       return is_bad(pos, mid, i1);
     }
   }
-
   $linkul.empty();
   var some_link = false;
   var to_insert = [];
@@ -185,6 +182,7 @@ function refresh_link_suggestions() {
             to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
           }
         }
+        break;
       }
     } while (match !== null);
   }
@@ -201,13 +199,14 @@ function refresh_link_suggestions() {
 }
 
 function insert_klink(evt) {
-  var $kcontent = $("#kcontent");
   evt.preventDefault();
+  var $kcontent = $("#kcontent");
   var kid = $(this).attr("definer_id");
   var ktext = $(this).attr("match");
-  var kstart = $(this).attr("start");
-  var kend = $(this).attr("end");
-  var new_link = knowl_link(kid, ktext);
+  var start = $(this).attr("start");
+  var end = $(this).attr("end");
+  // This knowl link is showing up in the content, so we can use jinja. :-)
+  var new_link = "{{ KNOWL('"+kid+"', title='"+ktext+"') }}"
   update_content(start, end, new_link);
   //var content = $kcontent.val();
   //var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');
@@ -220,6 +219,23 @@ function insert_klink(evt) {
   //}
   //refresh_link_suggestions();
   $kcontent.keyup();
+}
+
+function hover_klink(evt) {
+  evt.preventDefault();
+  var $kcontent = $("#kcontent");
+  var start = $(this).attr("start");
+  var end = $(this).attr("end");
+  log("Hovering " + $(this).attr("definer_id") + " " + start + " " + end);
+  // There's no good way to scroll a textarea to
+  var content = $kcontent.val();
+  var pretext = content.substr(0, start);
+  $kcontent.blur();
+  $kcontent.val(pretext);
+  $kcontent.focus();
+  $kcontent.val(content);
+  $kcontent[0].selectionStart = start;
+  $kcontent[0].selectionEnd = end;
 }
 
 function update_content(start, end, new_text) {
