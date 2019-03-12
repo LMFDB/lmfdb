@@ -807,7 +807,7 @@ def code_snippet_knowl(D, full=True):
         url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s'>%s</a></div>"
+    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
     return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
 

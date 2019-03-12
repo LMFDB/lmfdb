@@ -353,6 +353,11 @@ def show(ID):
     if k.exists():
         r = render_knowl(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
+        if not is_beta():
+            if k.status == 0:
+                title += " (awaiting review)"
+            else:
+                title += " (reviewed)"
     else:
         if current_user.is_admin() and k.exists(allow_deleted=True):
             k = Knowl(ID, showing=True, allow_deleted=True)

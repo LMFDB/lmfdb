@@ -14,7 +14,12 @@ $(function() {
 <a href="#" class="expand_button">(expand/hide all)</a>
 <ul class="history">
   {% for elt in k.edit_history|reverse %}
-    <li>
+    {%- if elt.ms_timestamp == k.ms_timestamp -%}
+    <li style="list-style: none; text-indent: -1em;">
+      ➡
+      {% else %}
+      <li>
+      {% endif %}
       {{ KNOWL(k.id, title=((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string), timestamp=elt.ms_timestamp)}}
       {% if elt.status == 1 %}
         (Reviewed)

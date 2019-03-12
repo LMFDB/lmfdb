@@ -5,7 +5,8 @@ TASKS:
 * Links to github open to new tab
 * Regex replace title=
 * cmf.newform expand/hide all doesn't work
-* Link suggestions inserted Dirichlet not "Dirichlet character"
+* Delete jquery code in repo
+* Change horizontal spacing on history arrow
 
 BUGS:
 * Test ids_referencing on prod.
@@ -30,10 +31,8 @@ IT WOULD BE NICE IF:
 * Some visual distinction between mathematical content and LMFDB-specific content
 
 Questions:
-* We now have versioned knowls, but the link to the show page is still titled "permalink". Is this misleading, since the link will be to the most recent version of the knowl?
 * Should we have a warning on prod show if not-reviewed/not-most-recent?
 * Security exploits?
-* Use CDN for jquery and delete code in repo?
 
 SCHEMA MODIFICATIONS:
 
