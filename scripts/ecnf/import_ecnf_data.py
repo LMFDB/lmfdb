@@ -134,6 +134,7 @@ import os
 import pprint
 from lmfdb import db
 from lmfdb.utils import web_latex
+from lmfdb.backend.encoding import Json
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
@@ -388,7 +389,7 @@ def curves(line, verbose=False):
     edata = {
         'field_label': field_label,
         'degree': deg,
-        'signature': sig,
+        'signature': Json(sig),
         'abs_disc': abs_disc,
         'class_label': class_label,
         'short_class_label': short_class_label,
@@ -409,7 +410,7 @@ def curves(line, verbose=False):
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
         'equation': web_latex(E),
-        'local_data': local_data,
+        'local_data': Json(local_data),
         'minD': minD,
         'non_min_p': non_minimal_primes,
     }
@@ -504,12 +505,12 @@ def read1isogmats(base_path, filename_suffix):
         for n in range(ncurves):
             isogdegs = allisogdegs[n+1]
             label = class_label+str(n+1)
-            data[label] = {'isogeny_degrees': isogdegs,
+            data[label] = {'isogeny_degrees': Json(isogdegs),
                            'class_size': ncurves,
                            'class_deg': maxdeg}
             if n==0:
                 #print("adding isogmat = {} to {}".format(isogmat,label))
-                data[label]['isogeny_matrix'] = isogmat
+                data[label]['isogeny_matrix'] = Json(isogmat)
 
     return data
 
@@ -523,7 +524,7 @@ def split_galois_image_code(s):
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non_surjective_primes', a list of
+    dict containing two fields: 'non-surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
     surjective (cut off at p=37 for CM curves for which this would
     otherwise contain all primes), 'galois_images', a list of strings
@@ -558,7 +559,7 @@ def galrep(line):
 #    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
     return label, {
-        'non_surjective_primes': pr,
+        'non-surjective_primes': pr,
         'galois_images': image_codes,
     }
 
@@ -830,7 +831,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 #   fields the curves are still being found and uploaded, o we ignore
 #   these keys over degree 6 fields for now.
 #
-    galrep_keys = ['galois_images', 'non_surjective_primes']
+    galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
