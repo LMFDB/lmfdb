@@ -178,7 +178,7 @@ function refresh_link_suggestions() {
           if (!(definer_id in kid_present)) {
             var label = match[0]+' ['+definer_id+']';
             var klink = knowl_link(definer_id, label, label);
-            var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+(match.index+match[0].length)+` match=`+match[0]+`>insert</a>`;
+            var inserter = `<a href="#" class="insert_klink" definer_id="`+definer_id+`" start=`+match.index+` end=`+(match.index+match[0].length)+` match="`+match[0]+`">insert</a>`;
             to_insert.push([match.index, "<li>" + klink + " - " + inserter + "</li>"]);
           }
         }
@@ -206,7 +206,7 @@ function insert_klink(evt) {
   var start = $(this).attr("start");
   var end = $(this).attr("end");
   // This knowl link is showing up in the content, so we can use jinja. :-)
-  var new_link = "{{ KNOWL('"+kid+"', title='"+ktext+"') }}"
+  var new_link = "{{KNOWL('"+kid+"', '"+ktext+"')}}"
   update_content(start, end, new_link);
   //var content = $kcontent.val();
   //var ktext_finder = new RegExp('\\b'+ktext+'\\b', 'i');

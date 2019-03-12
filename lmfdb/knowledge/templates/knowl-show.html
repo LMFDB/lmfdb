@@ -13,7 +13,7 @@
     {% for cid, author, timestamp, can_delete in k.comments %}
     <li>
       {{ KNOWL(cid) }} ({{author}} on {{timestamp|fmtdatetime}})
-      {% if can_delete %} &middot; <a onclick='return confirm("Really delete comment?");'
+      {% if can_delete %} &middot; <a onclick='return confirm("Really delete comment?  This cannot be undone.");'
         href="{{ url_for('.delete_comment', ID=cid) }}">delete</a>{% endif %}
     </li>
     {% endfor %}
