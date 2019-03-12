@@ -34,7 +34,7 @@ url_from_knowl = [
     (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
     (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
 ]
-grep_extractor = re.compile(r'(.+)([-:])(\d+)([-:])(.*)')
+grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
