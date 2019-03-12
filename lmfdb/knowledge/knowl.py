@@ -539,13 +539,13 @@ class KnowlBackend(PostgresBase):
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["username", "timestamp"], cur.fetchone())}
 
-    def set_locked(self, knowl, who):
+    def set_locked(self, knowl, username):
         """
-        when a knowl is edited, a lock is created. who is the user id.
+        when a knowl is edited, a lock is created. username is the user id.
         """
-        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, who) VALUES (%s, %s, %s)")
+        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
         now = datetime.utcnow()
-        self._execute(inserter, [knowl.id, now, who])
+        self._execute(inserter, [knowl.id, now, username])
 
     def knowl_title(self, kid):
         """

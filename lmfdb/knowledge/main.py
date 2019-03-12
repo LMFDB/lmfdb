@@ -625,8 +625,9 @@ def render_knowl(ID, footer=None, kwargs=None,
             errmsg = "Sorry, the knowledge database is currently unavailable."
             return errmsg if raw else make_response(errmsg)
 
-        # FIXME, should we only do this if it is not the most recent?
-        if timestamp is None and not is_beta():
+        # If we are rendering a reviewed knowl on nonbeta,
+        # we always include the timestamp
+        if timestamp is None and k.status == 1 and not is_beta():
             kwargs['timestamp'] = k.ms_timestamp;
 
 
