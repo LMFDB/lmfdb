@@ -34,7 +34,7 @@ url_from_knowl = [
     (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois Representation {0}'),
     (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l Modular Form {0}'),
 ]
-grep_extractor = re.compile(r'(.+)([-:])(\d+)([-:])(.*)')
+grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""KNOWL(_INC)?\(\s*['"]([^'"]+)['"]""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
@@ -539,13 +539,13 @@ class KnowlBackend(PostgresBase):
         if cur.rowcount > 0:
             return {k:v for k,v in zip(["username", "timestamp"], cur.fetchone())}
 
-    def set_locked(self, knowl, who):
+    def set_locked(self, knowl, username):
         """
-        when a knowl is edited, a lock is created. who is the user id.
+        when a knowl is edited, a lock is created. username is the user id.
         """
-        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, who) VALUES (%s, %s, %s)")
+        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
         now = datetime.utcnow()
-        self._execute(inserter, [knowl.id, now, who])
+        self._execute(inserter, [knowl.id, now, username])
 
     def knowl_title(self, kid):
         """

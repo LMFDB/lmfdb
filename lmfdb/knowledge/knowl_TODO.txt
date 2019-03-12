@@ -1,9 +1,12 @@
 TASKS:
 
 * Think about security exploits from creation of dynamic lists (append)
+* should the Knowl object have an attribute saying if it is or not the most recent knowl?
 
 BUGS:
 * Test ids_referencing on prod.
+* INFO:knowledge@2019-03-11 19:52:10,110: Oops, failed to set the lock. Error: column "who" of relation "kwl_locks" does not exist
+LINE 1: INSERT INTO kwl_locks (id, timestamp, who) VALUES ('cmf', '2...
 
 Ask Farmer:
 * delete unused javascripts

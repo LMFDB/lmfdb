@@ -3,6 +3,8 @@ r""" Import L-function data (as computed from Cremona tables by Andy Booker).
 
 Initial version (Bristol March 2016)
 
+NB This script has NOT been adapted to work with postgres
+
 For the format of the collections Lfunctions and Instances in the
 database Lfunctions, see
 https://github.com/LMFDB/lmfdb-inventory/blob/master/db-Lfunctions.md.
