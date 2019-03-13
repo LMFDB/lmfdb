@@ -111,8 +111,13 @@
    {% endif %}
    {% if user_is_admin %}
      &middot;
-     <a onclick='return confirm("Really delete Knowl {{ k.id }}? There is no way back!");'
-            href="{{ url_for('.delete', ID=k.id) }}">delete</a>
+     {% if k.status == -2 %}
+     <a onclick='return confirm("Really resurrect Knowl {{ k.id }}?");'
+        href="{{ url_for('.resurrect', ID=k.id) }}">resurrect</a>
+     {% else %}
+     <a onclick='return confirm("Really delete Knowl {{ k.id }}?");'
+        href="{{ url_for('.delete', ID=k.id) }}">delete</a>
+     {% endif %}
    {% endif %}
    {% if show_kid %}
    &middot; <code>{{ k.id }}</code>

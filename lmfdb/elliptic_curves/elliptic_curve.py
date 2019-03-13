@@ -419,15 +419,16 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
     T =  render_template("ec-curve.html",
-                           properties2=data.properties,
-                           credit=ec_credit(),
-                           data=data,
-                           # set default show names but actually code snippets are filled in only when needed
-                           code=code,
-                           bread=data.bread, title=data.title,
-                           friends=data.friends,
-                           downloads=data.downloads,
-                           learnmore=learnmore_list())
+                         properties2=data.properties,
+                         credit=ec_credit(),
+                         data=data,
+                         # set default show names but actually code snippets are filled in only when needed
+                         code=code,
+                         bread=data.bread, title=data.title,
+                         friends=data.friends,
+                         downloads=data.downloads,
+                         KNOWL_ID="ec.q.%s"%label,
+                         learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
     return T

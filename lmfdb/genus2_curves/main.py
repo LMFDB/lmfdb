@@ -180,7 +180,8 @@ def render_curve_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def render_isogeny_class_webpage(label):
     try:
@@ -194,7 +195,8 @@ def render_isogeny_class_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def url_for_curve_label(label):
     slabel = label.split(".")

@@ -14,28 +14,28 @@
 
 <table>
   <tr>
-    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}
+    <td>{{ KNOWL('cmf.level', title='Level') }}
       <div class="float-right">
         <select name='level_type'>
           <option value="">unrestricted</option>
           <option value="prime"{% if info.level_type == 'prime' %} selected='yes'{% endif %}>prime</option>
           <option value="prime_power"{% if info.level_type == 'prime_power' %} selected='yes'{% endif %}>prime power</option>
           <option value="square"{% if info.level_type == 'square' %} selected='yes'{% endif %}>square</option>
-          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squrefree</option>
+          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squarefree</option>
         </select>
       </div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
+    <td>{{ KNOWL('cmf.weight', title='Weight') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
         <option value="">any parity</option>
         <option value="even"{{ "selected" if info.weight_parity == 'even'}}>even</option>
         <option value="odd"{{ "selected" if info.weight_parity == 'odd'}}>odd</option>
       </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='\(Nk^2\)') }}</td>
     {% if info.search_type != 'SpaceDimensions' %}
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}
+    <td>{{ KNOWL('cmf.dimension', title='Dim.') }}
       <div class="float-right"><select name="dim_type" style="min-width: 105px;">
           <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
           <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
@@ -54,7 +54,7 @@
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
+    <td>{{ KNOWL('cmf.bad_prime',title='Bad \(p\)') }}
       <div class="float-right">
         <select name='prime_quantifier'>
           <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
@@ -63,7 +63,7 @@
         </select>
       </div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Char.') }}
+    <td>{{ KNOWL('cmf.character', title='Char.') }}
       <div class="float-right">
         <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
           <option value="">any parity</option>
@@ -75,7 +75,7 @@
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
     {% if info.search_type != 'SpaceDimensions' %}
-    <td>Num. {{ KNOWL('mf.elliptic.newform', title='newforms') }}</td>
+    <td>Num. {{ KNOWL('cmf.newform', title='newforms') }}</td>
     {% endif %}
   </tr>
 
@@ -91,7 +91,7 @@
   <tr style="height: 20px;"></tr>
   {% if info.search_type != 'SpaceDimensions' %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.include_all_spaces', title='Scope') }}
+    <td>{{ KNOWL('cmf.include_all_spaces', title='Scope') }}
       <div class="float-right">
         <select name='all_spaces'>
           <option value=""{{ "selected" if info.all_spaces == ''}}>split spaces</option>
@@ -104,7 +104,7 @@
     <td></td>
     {% endif %}
     {% endfor %}
-    <td>{{ KNOWL('mf.elliptic.sort_order', title='Sort order') }}</td>
+    <td>{{ KNOWL('cmf.sort_order', title='Sort order') }}</td>
   </tr>
   {% else %}
   <tr style="height: 22px;"></tr>

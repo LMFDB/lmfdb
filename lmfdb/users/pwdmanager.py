@@ -234,8 +234,6 @@ userdb = PostgresUserTable()
 class LmfdbUser(UserMixin):
     """
     The User Object
-
-    It is backed by MongoDB.
     """
     properties = ('full_name', 'url', 'about')
 
@@ -306,6 +304,9 @@ class LmfdbUser(UserMixin):
         """true, iff has attribute admin set to True"""
         return self._data.get("admin", False)
 
+    def is_knowl_reviewer(self):
+        return self._data.get("knowl_reviewer", False)
+
     def authenticate(self, pwd):
         """
         checks if the given password for the user is valid.
@@ -330,6 +331,9 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
     and probably others.
     """
     def is_admin(self):
+        return False
+
+    def is_knowl_reviewer(self):
         return False
 
     def name(self):
