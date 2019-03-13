@@ -7,11 +7,10 @@ TASKS:
 * Delete jquery code in repo
 * Change horizontal spacing on history arrow
 * On prod, history permalinks display the wrong knowl
+* Don't show review link on non-current versions of a knowl?
 
 BUGS:
 * Test ids_referencing on prod.
-* INFO:knowledge@2019-03-11 19:52:10,110: Oops, failed to set the lock. Error: column "who" of relation "kwl_locks" does not exist
-LINE 1: INSERT INTO kwl_locks (id, timestamp, who) VALUES ('cmf', '2...
 
 Ask Farmer:
 * delete unused javascripts
