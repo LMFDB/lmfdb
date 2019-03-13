@@ -26,18 +26,32 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
+
+@cached_function
 def learnmore_list():
+    """
+    Return the learnmore list
+    """
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Classical modular form labels', url_for(".labels_page"))]
 
-# Return the learnmore list with the matchstring entry removed
+
 def learnmore_list_remove(matchstring):
+    """
+    Return the learnmore list with the matchstring entry removed
+    """
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
+
+@cached_function
 def credit():
+    """
+    Return the credit string
+    """
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
