@@ -1,7 +1,5 @@
 TASKS:
 
-* cmf.newform expand/hide all doesn't work (Edgar)
-* Delete jquery code in repo (Edgar)
 
 LATER:
 * Take away insert privleges on kwl_knowls from webserver while we mess with stuff
