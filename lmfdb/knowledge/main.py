@@ -13,12 +13,12 @@
 # author: Harald Schilly <harald.schilly@univie.ac.at>
 import string
 import re
-import flask
 import json
 from lmfdb.app import app, is_beta
 from datetime import datetime
-from flask import render_template, render_template_string, request, url_for, make_response, jsonify
-#from flask.ext.login import login_required, current_user
+from flask import abort, flash, jsonify, make_response,\
+                  redirect, render_template, render_template_string,\
+                  request, url_for
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
@@ -26,13 +26,15 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
-from lmfdb.utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb.utils import datetime_to_timestamp_in_ms,\
+                        timestamp_in_ms_to_datetime
 
 #ejust for those, who still use an older markdown
 try:
     markdown.util.etree
 except:
-    logger.fatal("You need to update the markdown python utility: sage -sh -> easy_install -U markdown flask-markdown")
+    logger.fatal("You need to update the markdown python utility:" +
+                 "sage -sh -> easy_install -U markdown flask-markdown")
     exit()
 
 _cache_time = 120
@@ -301,10 +303,10 @@ def test():
 def edit(ID):
     from psycopg2 import DatabaseError
     if not allowed_knowl_id.match(ID):
-        flask.flash("""Oops, knowl id '%s' is not allowed.
+        flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
-        return flask.redirect(url_for(".index"))
+        return redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
     for elt in knowl.edit_history:
         # We will be printing these within a javascript ` ` string
@@ -313,8 +315,8 @@ def edit(ID):
     author = knowl._last_author
     # Existing comments can only be edited by admins and the author
     if knowl.type == -2 and author and not (current_user.is_admin() or current_user.get_id() == author):
-        flask.flash("You can only edit your own comments", "error")
-        return flask.redirect(url_for(".show", ID=knowl.source))
+        flash("You can only edit your own comments", "error")
+        return redirect(url_for(".show", ID=knowl.source))
 
     lock = None
     if request.args.get("lock", "") != 'ignore':
@@ -367,7 +369,7 @@ def show(ID):
             r = render_knowl(ID, footer="0", raw=True, allow_deleted=True)
             title = (k.title or "'%s'" % k.id) + " (DELETED)"
         else:
-            return flask.abort(404, "No knowl found with the given id")
+            return abort(404, "No knowl found with the given id")
     for elt in k.edit_history:
         # We will be printing these within a javascript ` ` string
         # so need to escape backticks
@@ -441,8 +443,8 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flask.flash("Knowl %s has been deleted." % ID)
-    return flask.redirect(url_for(".index"))
+    flash("Knowl %s has been deleted." % ID)
+    return redirect(url_for(".index"))
 
 
 @knowledge_page.route("/resurrect/<ID>")
@@ -450,17 +452,17 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flask.flash("Knowl %s has been resurrected." % ID)
-    return flask.redirect(url_for(".show", ID=ID))
+    flash("Knowl %s has been resurrected." % ID)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/review/<ID>/<int:timestamp>")
 @knowl_reviewer_required
-def review(ID):
+def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flask.flash("Knowl %s has been positively reviewed." % ID)
-    return flask.redirect(url_for(".show", ID=ID))
+    flash("Knowl %s has been positively reviewed." % ID)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/demote/<ID>/<int:timestamp>")
 @knowl_reviewer_required
@@ -468,8 +470,8 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flask.flash("Knowl %s has been returned to beta." % ID)
-    return flask.redirect(url_for(".show", ID=ID))
+    flash("Knowl %s has been returned to beta." % ID)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/review_recent/<int:days>/")
 @knowl_reviewer_required
@@ -488,10 +490,10 @@ def review_recent(days):
             if beta is not None:
                 k = Knowl(ID)
                 k.review(who=current_user.get_id(), set_beta=beta)
-                return jsonify({"success":1})
+                return jsonify({"success": 1})
             raise ValueError
-        except Exception as err:
-            return jsonify({"success":0})
+        except Exception:
+            return jsonify({"success": 0})
     knowls = knowldb.needs_review(days)
     for k in knowls:
         k.rendered = render_knowl(k.id, footer="0", raw=True, k=k)
@@ -531,14 +533,14 @@ def delete_comment(ID):
             raise ValueError
         comment.delete()
     except ValueError:
-        flask.flash("Only admins and the original author can delete comments", "error")
-    return flask.redirect(url_for(".show", ID=comment.source))
+        flash("Only admins and the original author can delete comments", "error")
+    return redirect(url_for(".show", ID=comment.source))
 
 @knowledge_page.route("/edit", methods=["POST"])
 @login_required
 def edit_form():
     ID = request.form['id']
-    return flask.redirect(url_for(".edit", ID=ID))
+    return redirect(url_for(".edit", ID=ID))
 
 
 @knowledge_page.route("/save", methods=["POST"])
@@ -549,10 +551,10 @@ def save_form():
         raise Exception("no id")
 
     if not allowed_knowl_id.match(ID):
-        flask.flash("""Oops, knowl id '%s' is not allowed.
+        flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lower/uppercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
-        return flask.redirect(url_for(".index"))
+        return redirect(url_for(".index"))
 
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
@@ -562,7 +564,7 @@ def save_form():
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
             k.resurrect()
-            flask.flash("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored.")
+            flash("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored.")
         k.title = new_title
         k.content = new_content
         k.timestamp = datetime.now()
@@ -570,30 +572,30 @@ def save_form():
         k.save(who=current_user.get_id())
     if NEWID:
         if not current_user.is_admin():
-            flask.flash("You do not have permissions to rename knowl", "error")
+            flash("You do not have permissions to rename knowl", "error")
         elif not allowed_knowl_id.match(NEWID):
-            flask.flash("""Oops, knowl id '%s' is not allowed.
+            flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
         else:
             try:
                 k.rename(NEWID)
             except ValueError:
-                flask.flash("A knowl with id %s already exists." % NEWID, "error")
+                flash("A knowl with id %s already exists." % NEWID, "error")
             else:
                 if k.sed_safety == 1:
-                    flask.flash("Knowl renamed to {0} successfully. You can change code references using".format(NEWID))
-                    flask.flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
-                    flask.flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
+                    flash("Knowl renamed to {0} successfully. You can change code references using".format(NEWID))
+                    flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
+                    flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
-                    flask.flash("Knowl renamed to {0} successfully.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
+                    flash("Knowl renamed to {0} successfully.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
                 else:
-                    flask.flash("Knowl renamed to {0} successfully.".format(NEWID))
+                    flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
     if k.type == -2:
-        return flask.redirect(url_for(".show", ID=k.source))
+        return redirect(url_for(".show", ID=k.source))
     else:
-        return flask.redirect(url_for(".show", ID=ID))
+        return redirect(url_for(".show", ID=ID))
 
 
 @knowledge_page.route("/render/<ID>", methods=["GET", "POST"])

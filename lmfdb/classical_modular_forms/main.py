@@ -4,13 +4,14 @@ import re
 
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
-from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range, prod
+from sage.all import ZZ, next_prime, cartesian_product_iterator,\
+                     cached_function, prime_range, prod
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string, parse_noop,
-    parse_equality_constraints, integer_options, parse_subset,
+    parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
+    parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     StatsDisplay, proportioners, totaler)
@@ -329,22 +330,24 @@ def render_newform_webpage(label):
                            learnmore=learnmore_list(),
                            title=newform.title,
                            friends=newform.friends,
-                           KNOWL_ID="mf.%s"%label)
+                           KNOWL_ID="mf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
-        newform = WebNewform.by_label(newform_label, embedding_label = embedding_label)
+        label = newform_label + "." + embedding_label
+        newform = WebNewform.by_label(newform_label,
+                                      embedding_label=embedding_label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    #errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
+    # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
         return abort(404, err.args)
     info['CC_m'] = [m]
-    info['CC_n'] = [0,1000]
-    #errs.extend(parse_prec(info))
+    info['CC_n'] = [0, 1000]
+    # errs.extend(parse_prec(info))
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
@@ -359,7 +362,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
-                           KNOWL_ID="mf.%s"%label)
+                           KNOWL_ID="mf.%s" % label)
 
 def render_space_webpage(label):
     try:
