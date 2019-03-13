@@ -1,20 +1,8 @@
 TASKS:
 
-* Think about security exploits from creation of dynamic lists (append)
-* should the Knowl object have an attribute saying if it is or not the most recent knowl?
-* Regex replace title=
-* cmf.newform expand/hide all doesn't work
-* Delete jquery code in repo
-* Change horizontal spacing on history arrow
-* On prod, history permalinks display the wrong knowl
-* Don't show review link on non-current versions of a knowl?
-
-BUGS:
-* Test ids_referencing on prod.
-
-Ask Farmer:
-* delete unused javascripts
-* issues against using cdn
+* cmf.newform expand/hide all doesn't work (Edgar)
+* Delete jquery code in repo (Edgar)
+* Change horizontal spacing on history arrow (Edgar)
 
 LATER:
 * Take away insert privleges on kwl_knowls from webserver while we mess with stuff
@@ -23,15 +11,13 @@ LATER:
 * For knowls that have quality 'reviewed' or 'ok', check to see which should have status 1.  Then delete quality column.
 * Update scripts that copy knowls to production
 
+* Create issue for security exploits
+
 IT WOULD BE NICE IF:
 * Add a list of locks at the top of the knowl browse page which show your locks and give you links to delete the lock or start editing again
 * Add autosaves by updating an inprogress knowl record
 
 * Some visual distinction between mathematical content and LMFDB-specific content
-
-Questions:
-* Should we have a warning on prod show if not-reviewed/not-most-recent?
-* Security exploits?
 
 SCHEMA MODIFICATIONS:
 
@@ -96,6 +82,7 @@ UPDATE kwl_knowls2 SET defines = '{}' WHERE defines IS NULL;
 UPDATE kwl_knowls2 SET id = 'cmf' || substring(id from 12) WHERE id LIKE 'mf.elliptic%';
 UPDATE kwl_knowls2 SET id = 'dq.cmf.' || substring(id from 16) WHERE id LIKE 'dq.mf.elliptic.%';
 UPDATE kwl_knowls2 SET content = regexp_replace(content, 'mf\.elliptic', 'cmf', 'g');
+UPDATE kwl_knowls2 SET content = regexp_replace(content, '(\{\{\s*KNOWL(_INC)?\(\s*[''"][^''"]+[''"],)\s*title\s*=', '\1 ', 'g');
 
 UPDATE kwl_knowls2 SET type = 1 WHERE id LIKE '%.top';
 UPDATE kwl_knowls2 SET type = -1 WHERE id LIKE '%.bottom';

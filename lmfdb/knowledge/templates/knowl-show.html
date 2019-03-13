@@ -34,10 +34,10 @@
   <ul>
     <li>Review status: {{ k.quality }}
       {% if user_can_review_knowls %}
-      {% if k.status == 0 %}
-      (<a onclick='return confirm("Mark as positively reviewed?");' href="{{ url_for('.review', ID=k.id) }}">Review</a>)
+      {% if k.status == 0 and k.most_recent %}
+      (<a onclick='return confirm("Mark as positively reviewed?");' href="{{ url_for('.review', ID=k.id, timestamp=k.ms_timestamp) }}">Review</a>)
       {% elif k.status == 1 %}
-      (<a onclick='return confirm("Return to beta?");' href="{{ url_for('.demote', ID=k.id) }}">Back to beta</a>)
+      (<a onclick='return confirm("Return to beta?{% if not k.most_recent %}  If you need to undo this, navigate to /knowledge/review/{{k.ms_timestamp}}{% endif %}");' href="{{ url_for('.demote', ID=k.id, timestamp=k.ms_timestamp) }}">Back to beta</a>)
       {% endif %}
       {% endif %}
     </li>

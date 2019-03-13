@@ -385,7 +385,7 @@ class KnowlBackend(PostgresBase):
             selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls2 WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
         cur = self._execute(selecter, values)
         if not beta and not old:
-            new_ids = [rec[0] for rec in cur if rec not in bad_ids]
+            new_ids = [rec[0] for rec in cur if rec[0] not in bad_ids]
             return sorted(set(new_ids + good_ids))
         else:
             return [rec[0] for rec in cur]
@@ -472,13 +472,16 @@ class KnowlBackend(PostgresBase):
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
             knowl.id = new_name
 
-    def rename_hyphens(self):
+    def rename_hyphens(self, execute=False):
         selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
         bad_names = [rec[0] for rec in db._execute(selecter, ['%-%'])]
-        for kid in bad_names:
-            new_kid = kid.replace('-', '_')
-            print "Renaming %s -> %s" % (kid, new_kid)
-            self.rename(kid, new_kid)
+        if execute:
+            for kid in bad_names:
+                new_kid = kid.replace('-', '_')
+                print "Renaming %s -> %s" % (kid, new_kid)
+                self.rename(kid, new_kid)
+        else:
+            print bad_names
 
     def broken_links_knowls(self):
         """
@@ -663,6 +666,8 @@ class Knowl(object):
 
         if showing or editing:
             self.edit_history = knowldb.get_edit_history(ID)
+            # Use to determine whether this is the most recent version of this knowl.
+            self.most_recent = not self.edit_history or self.edit_history[-1]['timestamp'] == self.timestamp
             #if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
             #    self.edit_history = [{"timestamp":datetime.utcnow(),
@@ -694,7 +699,7 @@ class Knowl(object):
 
     def review(self, who, set_beta=False):
         """Mark the knowl as positively reviewed."""
-        knowldb.review(self, who, set_beta)
+        knowldb.review(self, who, set_beta=set_beta)
 
     def rename(self, new_name):
         knowldb.rename(self, new_name)

@@ -349,7 +349,10 @@ def edit(ID):
 
 @knowledge_page.route("/show/<ID>")
 def show(ID):
-    k = Knowl(ID, showing=True)
+    timestamp = request.args.get('timestamp')
+    if timestamp is not None:
+        timestamp = timestamp_in_ms_to_datetime(timestamp)
+    k = Knowl(ID, timestamp=timestamp, showing=True)
     if k.exists():
         r = render_knowl(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
@@ -450,18 +453,20 @@ def resurrect(ID):
     flask.flash("Knowl %s has been resurrected." % ID)
     return flask.redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/review/<ID>")
+@knowledge_page.route("/review/<ID>/<int:timestamp>")
 @knowl_reviewer_required
 def review(ID):
-    k = Knowl(ID)
+    timestamp = timestamp_in_ms_to_datetime(timestamp)
+    k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
     flask.flash("Knowl %s has been positively reviewed." % ID)
     return flask.redirect(url_for(".show", ID=ID))
 
-@knowledge_page.route("/demote/<ID>")
+@knowledge_page.route("/demote/<ID>/<int:timestamp>")
 @knowl_reviewer_required
-def demote(ID):
-    k = Knowl(ID)
+def demote(ID, timestamp):
+    timestamp = timestamp_in_ms_to_datetime(timestamp)
+    k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
     flask.flash("Knowl %s has been returned to beta." % ID)
     return flask.redirect(url_for(".show", ID=ID))
@@ -472,7 +477,6 @@ def review_recent(days):
     if len(request.args) > 0:
         try:
             info = to_dict(request.args)
-            print "Triggering", info
             beta = None
             ID = info.get('review')
             if ID:
@@ -487,7 +491,6 @@ def review_recent(days):
                 return jsonify({"success":1})
             raise ValueError
         except Exception as err:
-            print "Erroring", err
             return jsonify({"success":0})
     knowls = knowldb.needs_review(days)
     for k in knowls:
