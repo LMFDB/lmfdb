@@ -96,7 +96,7 @@ var svg = {
             "description":"<b>Shimura varieties</b><br>Both Hecke operators and Galois groups act on the cohomology of Shimura varieties, giving a direct connection between parts of the automorphic and motivic worlds.",
             "list": "modular curves (Eichler-Shimura), unitary Shimura varieties, Hilbert modular varieties",
             "list_link": "",
-            "url": "http://www.lmfdb.org/knowledge/show/mf.elliptic.shimura_correspondence"},
+            "url": "http://www.lmfdb.org/knowledge/show/cmf.shimura_correspondence"},
         {"name": "Transfer",
             "id":"#textPath3211",
             "opaque_id":"#textPath3211",

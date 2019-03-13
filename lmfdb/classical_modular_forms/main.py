@@ -4,13 +4,14 @@ import re
 
 from flask import render_template, url_for, redirect, abort, request, flash
 from markupsafe import Markup
-from sage.all import ZZ, next_prime, cartesian_product_iterator, cached_function, prime_range, prod
+from sage.all import ZZ, next_prime, cartesian_product_iterator,\
+                     cached_function, prime_range, prod
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
 from lmfdb.utils import (
-    parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string, parse_noop,
-    parse_equality_constraints, integer_options, parse_subset,
+    parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
+    parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap,
     flash_error, to_dict, comma, display_knowl, bigint_knowl,
     StatsDisplay, proportioners, totaler)
@@ -25,18 +26,32 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
+
+@cached_function
 def learnmore_list():
+    """
+    Return the learnmore list
+    """
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Classical modular form labels', url_for(".labels_page"))]
 
-# Return the learnmore list with the matchstring entry removed
+
 def learnmore_list_remove(matchstring):
+    """
+    Return the learnmore list with the matchstring entry removed
+    """
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
+
+@cached_function
 def credit():
+    """
+    Return the credit string
+    """
     return "Alex J Best, Jonathan Bober, Andrew Booker, Edgar Costa, John Cremona, David Roe, Andrew Sutherland, John Voight"
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -328,22 +343,25 @@ def render_newform_webpage(label):
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.title,
-                           friends=newform.friends)
+                           friends=newform.friends,
+                           KNOWL_ID="mf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
-        newform = WebNewform.by_label(newform_label, embedding_label = embedding_label)
+        label = newform_label + "." + embedding_label
+        newform = WebNewform.by_label(newform_label,
+                                      embedding_label=embedding_label)
     except (KeyError,ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
-    #errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
+    # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
     except ValueError as err:
         return abort(404, err.args)
     info['CC_m'] = [m]
-    info['CC_n'] = [0,1000]
-    #errs.extend(parse_prec(info))
+    info['CC_n'] = [0, 1000]
+    # errs.extend(parse_prec(info))
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
@@ -357,7 +375,8 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
                            bread=newform.bread,
                            learnmore=learnmore_list(),
                            title=newform.embedded_title(m),
-                           friends=newform.friends)
+                           friends=newform.friends,
+                           KNOWL_ID="mf.%s" % label)
 
 def render_space_webpage(label):
     try:
@@ -1014,7 +1033,7 @@ def space_search(info, query):
 @cmf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.extent',
+    return render_template("single.html", kid='dq.cmf.extent',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
@@ -1023,7 +1042,7 @@ def completeness_page():
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.source',
+    return render_template("single.html", kid='dq.cmf.source',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
@@ -1031,7 +1050,7 @@ def how_computed_page():
 @cmf.route("/Labels")
 def labels_page():
     t = 'Labels for classical modular forms'
-    return render_template("single.html", kid='mf.elliptic.label',
+    return render_template("single.html", kid='cmf.label',
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
@@ -1039,7 +1058,7 @@ def labels_page():
 @cmf.route("/Reliability")
 def reliability_page():
     t = 'Reliability of classical modular form data'
-    return render_template("single.html", kid='dq.mf.elliptic.reliability',
+    return render_template("single.html", kid='dq.cmf.reliability',
                            credit=credit(), title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
@@ -1101,10 +1120,10 @@ class CMF_stats(StatsDisplay):
         self.nforms = comma(db.mf_newforms.count())
         self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
         self.ndim = comma(db.mf_hecke_cc.count())
-        #self.weight_knowl = display_knowl('mf.elliptic.weight', title='weight')
-        #self.level_knowl = display_knowl('mf.elliptic.level', title='level')
-        self.newform_knowl = display_knowl('mf.elliptic.newform', title='newforms')
-        self.newspace_knowl = display_knowl('mf.elliptic.newspace', title='newspaces')
+        #self.weight_knowl = display_knowl('cmf.weight', title='weight')
+        #self.level_knowl = display_knowl('cmf.level', title='level')
+        self.newform_knowl = display_knowl('cmf.newform', title='newforms')
+        self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
     @property
@@ -1115,7 +1134,7 @@ class CMF_stats(StatsDisplay):
     def summary(self):
         return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
 
-    extent_knowl = 'mf.elliptic.statistics_extent'
+    extent_knowl = 'cmf.statistics_extent'
 
     table = db.mf_newforms
     baseurl_func = ".index"
@@ -1127,19 +1146,19 @@ class CMF_stats(StatsDisplay):
                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
-    knowls = {'level': 'mf.elliptic.level',
-              'weight': 'mf.elliptic.weight',
-              'dim': 'mf.elliptic.dimension',
-              'relative_dim': 'mf.elliptic.dimension',
+    knowls = {'level': 'cmf.level',
+              'weight': 'cmf.weight',
+              'dim': 'cmf.dimension',
+              'relative_dim': 'cmf.dimension',
               'char_order': 'character.dirichlet.order',
               'char_degree': 'character.dirichlet.degree',
-              'analytic_rank': 'mf.elliptic.analytic_rank',
-              'projective_image': 'mf.elliptic.projective_image',
-              'num_forms': 'mf.elliptic.galois-orbits',
-              'inner_twist_count': 'mf.elliptic.inner_twist',
-              'self_twist_type': 'mf.elliptic.self_twist',
-              'cm_discs': 'mf.elliptic.cm_form',
-              'rm_discs': 'mf.elliptic.rm_form'}
+              'analytic_rank': 'cmf.analytic_rank',
+              'projective_image': 'cmf.projective_image',
+              'num_forms': 'cmf.galois-orbits',
+              'inner_twist_count': 'cmf.inner_twist',
+              'self_twist_type': 'cmf.self_twist',
+              'cm_discs': 'cmf.cm_form',
+              'rm_discs': 'cmf.rm_form'}
     top_titles = {'dim': 'absolute dimension',
                   'relative_dim': 'relative dimension',
                   'inner_twist_count': 'inner twists',
@@ -1181,11 +1200,11 @@ class CMF_stats(StatsDisplay):
         {'cols':'analytic_rank',
          'totaler':{'avg':True}},
         {'cols':'projective_image',
-         'top_title':[('projective images', 'mf.elliptic.projective_image'),
+         'top_title':[('projective images', 'cmf.projective_image'),
                       ('for weight 1 forms', None)]},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
-         'top_title': [('number of newforms', 'mf.elliptic.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
+         'top_title': [('number of newforms', 'cmf.galois-orbits'), (r'in \(S_k(N, \chi)\)', None)],
          'url_extras': 'search_type=Spaces&'},
         {'cols':'inner_twist_count'},
         {'cols':['self_twist_type', 'weight'],

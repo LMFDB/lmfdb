@@ -86,7 +86,7 @@ def ALdim_table(al_dims, level, weight):
     for p, ev in first_row:
         header.append(r'<th>\(%s\)</th>'%p)
     if len(first_row) > 1:
-        header.append(r"<th class='right'>%s</th>"%(display_knowl('mf.elliptic.fricke', title='Fricke').replace('"',"'")))
+        header.append(r"<th class='right'>%s</th>"%(display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
     header.append('<th>Dim.</th>')
     rows = []
     fricke = {1:0,-1:0}
@@ -117,9 +117,9 @@ def ALdim_table(al_dims, level, weight):
             tr = "<tr>"
         rows.append(tr + ''.join(row) + '</tr>')
     if num_primes > 1:
-        plus_knowl = display_knowl('mf.elliptic.plus_space',title='Plus space').replace('"',"'")
+        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
         plus_link = newform_search_link(r'\(%s\)'%fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=1)
-        minus_knowl = display_knowl('mf.elliptic.minus_space',title='Minus space').replace('"',"'")
+        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
         minus_link = newform_search_link(r'\(%s\)'%fricke[-1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(+\)</td><td>%s</td></tr>"%(num_primes, plus_knowl, plus_link))
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='right'>\(-\)</td><td>%s</td></tr>"%(num_primes, minus_knowl, minus_link))

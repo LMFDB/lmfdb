@@ -570,7 +570,7 @@ class WebNewform(object):
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
-        knowl = display_knowl('mf.elliptic.hecke_cutter', title=title)
+        knowl = display_knowl('cmf.hecke_cutter', title=title)
         desc = "<p>This newform can be constructed as the "
         if len(polynomials) > 1:
             desc += "intersection of the kernels of the following %s acting on %s:</p>\n<table>"
@@ -879,9 +879,9 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.galois_orbit_label', 'Char. orbit'),
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   #th_wrap('character.dirichlet.order', 'Order'),
-                  th_wrap('mf.elliptic.inner_twist_multiplicity', 'Mult.'),
-                  th_wrap('mf.elliptic.self_twist_col', 'Type'),
-                  th_wrap('mf.elliptic.inner_twist_proved', 'Proved'),
+                  th_wrap('cmf.inner_twist_multiplicity', 'Mult.'),
+                  th_wrap('cmf.self_twist_col', 'Type'),
+                  th_wrap('cmf.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
         trivial = [elt for elt in self.inner_twists if elt[6] == 1]
         CMRM = sorted([elt for elt in self.inner_twists if elt[6] not in [0,1]],

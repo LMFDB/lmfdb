@@ -41,7 +41,7 @@ function properties_collapser(evt) {
   var $ph = $(".properties-header");
   var pb_h = $pb.height();
   $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
-    { 
+    {
       duration: 50 + 100 * Math.log(100 + $pb.height()),
       step: function() { 
        /* synchronize icon rotation effect */
@@ -54,7 +54,7 @@ function properties_collapser(evt) {
         if ($pb.css("display") == "none") {
           $pc.rotate(180);
           $ph.round_bl(10);
-        } else { 
+        } else {
           $pc.rotate(0);
         }
       }
@@ -137,13 +137,13 @@ function knowl_click_handler($el) {
     $el.toggleClass("active");
 
   // otherwise download it or get it from the cache
-  } else { 
+  } else {
     $el.addClass("active");
-    // create the element for the content, insert it after the one where the 
+    // create the element for the content, insert it after the one where the
     // knowl element is included (e.g. inside a <h1> tag) (sibling in DOM)
     var idtag = "id='"+output_id.substring(1) + "'";
 
-    // behave a bit differently, if the knowl is inside a td or th in a table. 
+    // behave a bit differently, if the knowl is inside a td or th in a table.
     // otherwise assume its sitting inside a <div> or <p>
     if(table_mode) {
       // assume we are in a td or th tag, go 2 levels up
@@ -197,6 +197,13 @@ function knowl_click_handler($el) {
     if(knowl_id == "dynamic_show") {
       log("dynamic_show: " + kwargs);
       $output.html('<div class="knowl"><div><div class="knowl-content">' + kwargs + '</div></div></div>');
+      // Support for escaping html within a div inside the knowl
+      // Used for code references in showing knowls
+      var pretext = $el.attr("pretext");
+      log("pretext: " + pretext);
+      if (typeof pretext !== typeof undefined && pretext !== false) {
+        $output.find("pre").text(pretext);
+      }
       try
       {
         renderMathInElement($output.get(0), katexOpts);
@@ -232,7 +239,7 @@ function knowl_click_handler($el) {
       $output.show();
       log("downloading knowl: " + knowl_id + " /w kwargs: " + kwargs);
       $output.load('/knowledge/render/' + knowl_id + "?" + kwargs,
-       function(response, status, xhr) { 
+       function(response, status, xhr) {
         $output.removeClass("loading");
         if (status == "error") {
           $el.removeClass("active");
@@ -346,7 +353,7 @@ function increase_start_by_count_and_submit_form(form_id) {
 };
 
 function get_count_of_results(download_limit) {
-    var address = window.location.href
+    var address = window.location.href;
     $("#result-count").html("computing...");
     $("#download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
@@ -367,6 +374,47 @@ function get_count_callback(res, download_limit) {
         $("#download-form").show();
     }
 };
+
+function js_review_knowl(kid) {
+    var address = window.location.href;
+    if (address.slice(-1) === "#")
+        address = address.slice(0,-1);
+    address = address + "?review=" + kid;
+    kid = kid.replace('.','');
+    $("#to_review_"+kid).hide("fast");
+    //$("#to_review_"+kid.replace('.','')).html("HELLO");
+    var callback = function(res) {
+        js_review_callback(res, kid);
+    }
+    $.ajax({url: address, success: callback});
+}
+function js_review_callback(res, kid) {
+    if (res['success'] === 1) {
+        $('#to_beta_'+kid).show("fast");
+    } else {
+        $('#error_'+kid).show("fast");
+    }
+}
+
+function js_beta_knowl(kid) {
+    var address = window.location.href;
+    if (address.slice(-1) === "#")
+        address = address.slice(0,-1);
+    address = address + "?beta=" + kid;
+    kid = kid.replace('.','');
+    $("#to_beta_"+kid).hide("fast");
+    var callback = function(res) {
+        js_beta_callback(res, kid);
+    }
+    $.ajax({url: address, success: callback});
+}
+function js_beta_callback(res, kid) {
+    if (res['success'] === 1) {
+        $('#to_review_'+kid).show("fast");
+    } else {
+        $('#error_'+kid).show("fast");
+    }
+}
 
 function simult_change(event) {
     // simultaneously change all selects to the same value
