@@ -244,9 +244,15 @@
             {% endfor %}
         </div>
     {% endif %}
+    {% if KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+    {% endif %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}
+    {% if KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
+    {% endif %}
   </div>
 </div>
 

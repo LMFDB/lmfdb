@@ -104,7 +104,8 @@ def abelian_varieties_by_gqi(g, q, iso):
                            title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
                            bread=bread,
                            cl=cl,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list(),
+                           KNOWL_ID='av.fq.%s'%label)
 
 def download_search(info):
     dltype = info['Submit']

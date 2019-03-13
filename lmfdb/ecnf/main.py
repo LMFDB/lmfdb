@@ -365,6 +365,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
+                           KNOWL_ID="ec.%s"%label,
                            learnmore=learnmore_list())
 
 def download_search(info):
@@ -489,11 +490,11 @@ def elliptic_curve_search(info, query):
     else:
         info['include_base_change'] = "on"
 
-    # if 'include_Q_curves' in info:
-    #     if info['include_Q_curves'] == 'exclude':
-    #         query['q_curve'] = False
-    #     elif info['include_Q_curves'] == 'only':
-    #         query['q_curve'] = True
+    if 'include_Q_curves' in info:
+        if info['include_Q_curves'] == 'exclude':
+            query['q_curve'] = False
+        elif info['include_Q_curves'] == 'only':
+            query['q_curve'] = True
 
     if 'include_cm' in info:
         if info['include_cm'] == 'exclude':

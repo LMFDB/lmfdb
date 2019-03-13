@@ -134,7 +134,8 @@ import os
 import pprint
 from lmfdb import db
 from lmfdb.utils import web_latex
-from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma
+from lmfdb.backend.encoding import Json
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
@@ -223,8 +224,11 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
 
     file = {}
     prefixes = ['curves', 'curve_data', 'isoclass']
-    prefixes = ['curve_data']
-    suffix = ''.join([".", field_label, ".", str(min_norm), "-", str(max_norm)])
+    #prefixes = ['curves']
+    suffix = ''.join([".", field_label])
+    if min_norm>0 or max_norm!='infinity':
+        suffix = ''.join([suffix, ".", str(min_norm), "-", str(max_norm)])
+
     for prefix in prefixes:
         filename = os.path.join(base_path, ''.join([prefix, suffix]))
         file[prefix] = open(filename, 'w')
@@ -336,8 +340,8 @@ def curves(line, verbose=False):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if True:  # q_curve: now we have not precomputed Q-curve status
-              # but still want to test for base change!
+    if q_curve!=0:  # q_curve (definitely or possibly, if we have not precomputed Q-curve status)
+        # but still want to test for base change!
         if verbose:
             print("testing {} for base-change...".format(label))
         E1list = E.descend_to(QQ)
@@ -385,7 +389,7 @@ def curves(line, verbose=False):
     edata = {
         'field_label': field_label,
         'degree': deg,
-        'signature': sig,
+        'signature': Json(sig),
         'abs_disc': abs_disc,
         'class_label': class_label,
         'short_class_label': short_class_label,
@@ -406,7 +410,7 @@ def curves(line, verbose=False):
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
         'equation': web_latex(E),
-        'local_data': local_data,
+        'local_data': Json(local_data),
         'minD': minD,
         'non_min_p': non_minimal_primes,
     }
@@ -501,12 +505,12 @@ def read1isogmats(base_path, filename_suffix):
         for n in range(ncurves):
             isogdegs = allisogdegs[n+1]
             label = class_label+str(n+1)
-            data[label] = {'isogeny_degrees': isogdegs,
+            data[label] = {'isogeny_degrees': Json(isogdegs),
                            'class_size': ncurves,
                            'class_deg': maxdeg}
             if n==0:
                 #print("adding isogmat = {} to {}".format(isogmat,label))
-                data[label]['isogeny_matrix'] = isogmat
+                data[label]['isogeny_matrix'] = Json(isogmat)
 
     return data
 
@@ -520,7 +524,7 @@ def split_galois_image_code(s):
 
 def galrep(line):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non_surjective_primes', a list of
+    dict containing two fields: 'non-surjective_primes', a list of
     primes p for which the Galois representation modulo p is not
     surjective (cut off at p=37 for CM curves for which this would
     otherwise contain all primes), 'galois_images', a list of strings
@@ -555,7 +559,7 @@ def galrep(line):
 #    pr = [ int(s[:2]) if s[1].isdigit() else int(s[:1]) for s in image_codes]
     pr = [ int(split_galois_image_code(s)[0]) for s in image_codes]
     return label, {
-        'non_surjective_primes': pr,
+        'non-surjective_primes': pr,
         'galois_images': image_codes,
     }
 
@@ -827,7 +831,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 #   fields the curves are still being found and uploaded, o we ignore
 #   these keys over degree 6 fields for now.
 #
-    galrep_keys = ['galois_images', 'non_surjective_primes']
+    galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
     query = {}
@@ -1152,9 +1156,8 @@ def update_stats(verbose=True):
     entry.update(field_data)
     ecdbstats.insert_one(entry)
 
-# functions below here not yet adapted for postgres
-
 # This was a one-off and can probably be deleted:
+# not adapted for postgres.
 
 def make_IQF_ideal_table(infile, insert=False):
     items = []
@@ -1229,7 +1232,7 @@ def fix1_qcurve_flag(ec, verbose=False):
     return ec
 
 def is_Q_curve(E):
-    """Test if an elliptic curve is a Q-curve.
+    """Test if an elliptic curve is a Q-curve.  This version only for quadratic fields.
     """
     jE =  E.j_invariant()
     if jE in QQ:
@@ -1237,16 +1240,35 @@ def is_Q_curve(E):
     if E.has_cm():
         return True
     K = E.base_field()
+
+    # Simple test should catch many non-Q-curves: find primes of
+    # good reduction and of the same norm and test if the
+    # traces of Frobenius are equal *up to sign*
+
+    pmax = 200
+    NN = E.conductor().norm()
+    for p in primes(pmax):
+        if p.divides(NN):
+            continue
+        Plist = [P for P in K.primes_above(p)
+                 if P.residue_class_degree() == 1]
+        if len(Plist)<2:
+            continue
+        aP0 = E.reduction(Plist[0]).trace_of_frobenius()
+        for P in Plist[1:]:
+            aP = E.reduction(P).trace_of_frobenius()
+            if aP.abs() != aP0.abs():
+                return False
+
     if K.degree()>2:
         raise NotImplementedError("Only quadratic fields implemented so far")
-    sigma = K.galois_group()[1]
-    N = E.conductor()
-    if N!=sigma(N):
-        return False
-    jEs = sigma(jE)
     C = E.isogeny_class()
+    jC = [E1.j_invariant() for E1 in C]
+    if any(j in QQ for j in jC):
+        return True
+    sigma = K.galois_group()[1]
     # check that the conjugate of j(E) is in the class:
-    return any(E1.j_invariant()==jEs for E1 in C)
+    return sigma(jE) in jC
 
 def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, verbose=False):
     """Given a (quadratic) field label test all curves E over that field for being Q-curves.
@@ -1258,13 +1280,12 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         query['conductor_norm']['$lte'] = int(max_norm)
     else:
         max_norm = 'infinity'
-    cursor = nfcurves.find(query)
+    cursor = nfcurves.search(query)
     # keep the curves and re-find them, else the cursor times out.
     curves = [ec['label'] for ec in cursor]
     ncurves = len(curves)
     print("Checking {} curves over field {}".format(ncurves,field_label))
     K = FIELD(field_label)
-    sigma = K.K().galois_group()[1]
     bad1 = []
     bad2 = []
     count = 0
@@ -1272,7 +1293,7 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
         count += 1
         if count%1000==0:
             print("checked {} curves ({}%)".format(count, 100.0*count/ncurves))
-        ec = nfcurves.find_one({'label':label})
+        ec = nfcurves.lucky({'label':label})
         assert label == ec['label']
         method = None
         # first check that j(E) is rational (no computation needed)
@@ -1285,20 +1306,13 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
             if verbose: print("{}: CM".format(label))
             qc = True
             method = "CM"
-        else: # construct and check the conductor
+        else: # construct and check the curve
             if verbose:
-                print("{}: checking conductor".format(label))
-            N = ideal_from_string(K.K(),ec['conductor_ideal'])
-            if sigma(N)!=N:
-                qc = False
-                method = "conductor"
-            else: # construct and check the curve
-                if verbose:
-                    print("{}: checking isogenies".format(label))
-                ainvsK = parse_ainvs(K.K(), ec['ainvs'])
-                E = EllipticCurve(ainvsK)
-                qc = is_Q_curve(E)
-                method = "isogenies"
+                print("{}: checking isogenies".format(label))
+            ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+            E = EllipticCurve(ainvsK)
+            qc = is_Q_curve(E)
+            method = "isogenies"
         db_qc = ec['q_curve']
         if qc and not db_qc:
             print("Curve {} is a Q-curve (using {}) but database thinks not".format(label, method))
@@ -1429,3 +1443,115 @@ def make_the_local_data(filename, base_path="."):
         if not field_label in the_local_data:
             the_local_data[field_label] = {}
         the_local_data[field_label][c['label']] = c['local_data']
+
+def read_qcurve_flags(filename, base_path="."):
+    """
+    Read a curves file and return a dict with keys full curve labels
+    and values the Q-curve flag (True or False).  Conductor labels are
+    assumes already in LMFDB format (no IQF conversion).
+    """
+    qcurve_dict = {}
+    for line in open(os.path.join(base_path, filename)).readlines():
+        data = split(line)
+        if len(data) != 13:
+            print "line %s does not have 13 fields, skipping" % line
+        field_label = data[0]
+        conductor_label = data[1]
+        iso_label = data[2]
+        number = data[3]
+        short_class_label = "-".join([conductor_label, iso_label])
+        short_label = "".join([short_class_label, number])
+        label = "-".join([field_label, short_label])
+        qcurve = data[12]
+        if not qcurve in ['0','1']:
+            print("Curve {} has no Q-curve flag set: {}".format(label, qcurve))
+        else:
+            qcurve_dict[label] = (qcurve=='1')
+    return qcurve_dict
+
+def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
+    QFs = nfcurves.distinct("field_label", {'degree':2})
+    IQFs = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
+    RQFs = [f for f in QFs if f[:4]=='2.2.']
+    cubics = nfcurves.distinct("field_label", {'degree':3})
+    quartics = nfcurves.distinct("field_label", {'degree':4})
+    quintics = nfcurves.distinct("field_label", {'degree':5})
+    sextics = nfcurves.distinct("field_label", {'degree':6})
+
+    qc = {}
+    base = "/home/jcremona/ecnf-data/"
+
+    if 2 in degrees:
+        qc2 = {}
+        for f in RQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
+        for f in IQFs:
+            qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
+        assert len(qc2)==nfcurves.count({'degree':2}) - 8
+        qc.update(qc2)
+        
+    if 3 in degrees:
+        qc3 = {}
+        for f in cubics:
+            if f == '3.1.23.1':
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "gunnells/"))
+            else:
+                qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "cubics/"))
+        assert len(qc3)==nfcurves.count({'degree':3})
+        qc.update(qc3)
+
+    if 4 in degrees:
+        qc4 = {}
+        for f in quartics:
+            qc4.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quartics/"))
+        assert len(qc4)==nfcurves.count({'degree':4})
+        qc.update(qc4)
+
+    if 5 in degrees:
+        qc5 = {}
+        for f in quintics:
+            qc5.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quintics/"))
+        assert len(qc5)==nfcurves.count({'degree':5})
+        qc.update(qc5)
+
+    if 6 in degrees:
+        qc6 = {}
+        for f in sextics:
+            qc6.update(read_qcurve_flags(filename="curves."+f, base_path=base + "sextics/"))
+        assert len(qc6)==nfcurves.count({'degree':6})
+        qc.update(qc6)
+
+    return qc
+
+def make_qcurve_flag_updater(degrees=[2,3,4,5,6], filename=None, basepath="."):
+    if filename:
+        qc = read_qcurve_flags(filename, basepath)
+    else:
+        qc = read_all_qcurve_flags(degrees)
+    print("Updating Q-curve flag for {} curves".format(len(qc)))
+    def qcurve_flag_updater(C):
+        label = C['label']
+        degree = C['degree']
+        if degree in degrees and label in qc:
+            # else leave C alone
+            old_flag = C.get('q_curve', None)
+            new_flag = qc[label]
+            if old_flag!=new_flag:
+                pass
+                #print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
+            C['q_curve'] = new_flag
+    
+        for ld in C['local_data']:
+            ld['kod'] = kod_fixer(ld['kod'])
+    
+        return C
+    return qcurve_flag_updater
+
+def kod_fixer(kod):
+    """
+    Remove extraneous "\\\\" from one kodaira symbol
+    """
+    newkod = kod
+    while '\\\\' in newkod:
+        newkod = newkod.replace('\\\\', '\\')
+    return newkod

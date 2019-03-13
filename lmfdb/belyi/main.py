@@ -141,7 +141,8 @@ def render_belyi_galmap_webpage(label):
                            bread=belyi_galmap.bread,
                            learnmore=learnmore_list(),
                            title=belyi_galmap.title,
-                           friends=belyi_galmap.friends)
+                           friends=belyi_galmap.friends,
+                           KNOWL_ID="belyi.%s"%label)
 
 def render_belyi_passport_webpage(label):
     try:
@@ -155,7 +156,8 @@ def render_belyi_passport_webpage(label):
                            bread=belyi_passport.bread,
                            learnmore=learnmore_list(),
                            title=belyi_passport.title,
-                           friends=belyi_passport.friends)
+                           friends=belyi_passport.friends,
+                           KNOWL_ID="belyi.%s"%label)
 
 def url_for_belyi_galmap_label(label):
     slabel = label.split("-")
