@@ -489,11 +489,11 @@ def elliptic_curve_search(info, query):
     else:
         info['include_base_change'] = "on"
 
-    # if 'include_Q_curves' in info:
-    #     if info['include_Q_curves'] == 'exclude':
-    #         query['q_curve'] = False
-    #     elif info['include_Q_curves'] == 'only':
-    #         query['q_curve'] = True
+    if 'include_Q_curves' in info:
+        if info['include_Q_curves'] == 'exclude':
+            query['q_curve'] = False
+        elif info['include_Q_curves'] == 'only':
+            query['q_curve'] = True
 
     if 'include_cm' in info:
         if info['include_cm'] == 'exclude':
