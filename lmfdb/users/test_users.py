@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # testing users blueprint
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 from main import login_page
 from lmfdb.users.main import userdb
 

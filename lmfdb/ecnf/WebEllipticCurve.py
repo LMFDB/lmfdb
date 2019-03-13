@@ -3,11 +3,10 @@ import yaml
 from flask import url_for
 from urllib import quote
 from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
-from lmfdb.WebNumberField import WebNumberField
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.bianchi_modular_forms.web_BMF import is_bmf_in_db
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -407,15 +406,17 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = self.q_curve
-        if self.qc == "?":
-            self.qc = "not determined"
-        elif self.qc == True:
-            self.qc = "yes"
-        elif self.qc == False:
-            self.qc = "no"
-        else: # just in case
-            self.qc = "not determined"
+        # See Issue #2718
+        self.qc = "not determined"
+        # self.qc = self.q_curve
+        # if self.qc == "?":
+        #     self.qc = "not determined"
+        # elif self.qc == True:
+        #     self.qc = "yes"
+        # elif self.qc == False:
+        #     self.qc = "no"
+        # else: # just in case
+        #     self.qc = "not determined"
 
         # Torsion
         self.ntors = web_latex(self.torsion_order)
@@ -470,8 +471,8 @@ class ECNF(object):
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            ld['kod'] = ld['kod'].replace('\\\\', '\\')
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
+            while '\\\\' in ld['kod']:
+                ld['kod'] = ld['kod'].replace('\\\\', '\\')
 
         # URLs of self and related objects:
         self.urls = {}
@@ -501,8 +502,10 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            if sig[0] <= 2:
-                self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if sig[0] <= 2 and db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
             elif self.abs_disc ** 2 * self.conductor_norm < 70000:
                 # we shouldn't trust the Lfun computed on the fly for large conductor
                 self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
@@ -510,7 +513,10 @@ class ECNF(object):
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
 
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
@@ -522,10 +528,10 @@ class ECNF(object):
             if "CM" in self.label:
                 self.friends += [('Bianchi Modular Form is not cuspidal', '')]
             else:
-                if is_bmf_in_db(self.bmf_label):
+                if db.bmf_forms.label_exists(self.bmf_label):
                     self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi Modular Form %s)' % self.bmf_label, '')]
 
         if 'Lfunction' in self.urls:
             self.friends += [('L-function', self.urls['Lfunction'])]

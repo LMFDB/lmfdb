@@ -1,0 +1,17 @@
+{% extends info.stats.dynamic_parent_page %}
+{% block show_results %}
+
+{% set d = info.d %}
+{% if d.extent_knowl %}
+<p>
+{{ KNOWL_INC(d.extent_knowl) }}
+</p>
+{% endif %}
+{% if (d.attribute.cols | length) == 1 %}
+{% include 'stat_1d.html' %}
+{% elif (d.attribute.cols | length) == 2 %}
+{% include 'stat_2d.html' %}
+{% endif %}
+
+
+{% endblock %}

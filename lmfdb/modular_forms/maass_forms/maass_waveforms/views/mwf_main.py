@@ -22,9 +22,8 @@ AUTHORS:
 """
 
 import flask
-from flask import render_template, url_for, request, make_response, send_file
+from flask import render_template, url_for, request, send_file
 import StringIO
-from sage.all import loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
@@ -33,7 +32,6 @@ from mwf_plot import paintSvgMaass
 logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
-from bson.binary import Binary
 
 
 # this is a blueprint specific default for the tempate system.
@@ -41,6 +39,15 @@ from bson.binary import Binary
 @mwf.context_processor
 def body_class():
     return {'body_class': MWF}
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".cande")),
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 met = ['GET', 'POST']
 maxNumberOfResultsToShow = 500
@@ -55,7 +62,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
 
     info["credit"] = ""
-    info["learnmore"] = []
+    info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
     mwf_logger.debug("method=%s" % request.method)
     mwf_logger.debug("req.form=%s" % request.form)
@@ -123,6 +130,7 @@ def render_maass_browse_graph(min_level, max_level, min_R, max_R):
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Maass Waveforms', url_for('.render_maass_waveforms'))]
     info['bread'] = bread
+    info['learnmore'] = learnmore_list()
 
     return render_template("mwf_browse_graph.html", title='Browsing Graph of Maass Forms', **info)
 
@@ -136,6 +144,7 @@ def render_one_maass_waveform(maass_id, **kwds):
     """
     info = get_args_mwf(**kwds)
     info['maass_id'] = maass_id
+    info['learnmore'] = learnmore_list()
     mwf_logger.debug("in_render_one_maass_form: info={0}".format(info))
     if (info.get('download', '') == 'coefficients'  or
         info.get('download', '') == 'all'):
@@ -163,21 +172,6 @@ def render_one_maass_waveform(maass_id, **kwds):
 
     else:
         return render_one_maass_waveform_wp(info)
-
-@mwf.route("/plot/<maass_id>")
-def plot_maassform(maass_id):
-    r"""
-    Render the plot of the Maass waveform as a pg-file.
-    Loads it from the database.
-    """
-    plot = maass_db.get_maassform_plot_by_id(maass_id)
-    if not plot:
-        return flask.abort(404)
-
-    response = make_response(loads(Binary(str(plot), 0)))
-    response.headers['Content-type'] = 'image/png'
-    return response
-
 
 def render_one_maass_waveform_wp(info, prec=9):
     r"""
@@ -214,8 +208,8 @@ def render_one_maass_waveform_wp(info, prec=9):
     level = info['MF'].level
     dim = info['MF'].dim
     # numc = info['MF'].num_coeff # never used
-    if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
-        info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
+    # if info['MF'].has_plot(): # and level == 1: # Bara level = 1 har rätt format för tillfället //Lemurell
+    #    info['plotlink'] = url_for('mwf.plot_maassform', maass_id=maass_id)
     # Create the link to the L-function (put in '/L' at the beginning and '/' before '?'
     Llink = "/L" + url_for('mwf.render_one_maass_waveform', maass_id=maass_id)  # + '/?db=' + info['db']
     if dim == 1:
@@ -481,6 +475,37 @@ def get_table():
     mwf_logger.debug("totalrecords:{0}".format(evs['totalrecords']))
     # print "res=",res
     return res
+
+@mwf.route("/Source")
+def source():
+    t = 'Source of Maass forms data'
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Source", '')]
+    learnmore = learnmore_list_remove('Source')
+    return render_template("single.html", kid='rcs.source.maass',
+                           title=t, bread=bread,
+                           learnmore=learnmore)
+
+@mwf.route("/Reliability")
+def reliability():
+    t = 'Reliability of Maass forms data'
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Reliability", '')]
+    learnmore = learnmore_list_remove('Reliability')
+    return render_template("single.html", kid='rcs.rigor.maass',
+                           title=t, bread=bread,
+                           learnmore=learnmore)
+
+@mwf.route("/Completeness")
+def cande():
+    t = 'Completeness of Maass forms data'
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+                     ('Maass Waveforms', url_for('.render_maass_waveforms')), ("Completeness", '')]
+    learnmore = learnmore_list_remove('Completeness')
+    return render_template("single.html", kid='rcs.cande.maass',
+                           title=t, bread=bread,
+                           learnmore=learnmore)
+
 
 def conrey_character_name(N, chi):
     return "\chi_{" + str(N) + "}(" + str(chi.number()) + ",\cdot)"

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # testing users blueprint
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 from lmfdb.knowledge.knowl import knowldb
 
 class KnowlTestCase(LmfdbTest):

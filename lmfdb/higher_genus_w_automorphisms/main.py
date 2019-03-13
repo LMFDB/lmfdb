@@ -3,21 +3,19 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
-import StringIO
-import re
-import ast
-import yaml
-import os
-from lmfdb.db_backend import db
-from flask import render_template, request, url_for, redirect, send_file, abort
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
-from lmfdb.search_wrapper import search_wrap
+import ast, os, re, StringIO, yaml
 
+from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+
+from lmfdb import db
+from lmfdb.utils import (
+    flash_error,
+    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    search_wrap)
 from lmfdb.sato_tate_groups.main import sg_pretty
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_hgcwa_stats
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
 # Determining what kind of label
@@ -126,9 +124,9 @@ def index():
         return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = range(2,genus_max+1)
-    info = {'count': 20,
+    info = {'count': 50,
             'genus_list': genus_list,
-            'stats': get_stats_object().stats(),}
+            'stats': HGCWAstats().stats(),}
 
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page")),
@@ -139,13 +137,13 @@ def index():
 
 @higher_genus_w_automorphisms_page.route("/random")
 def random_passport():
-    label = db.hgcwa_passports.random('passport_label')
+    label = db.hgcwa_passports.random(projection='passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': get_stats_object().stats(),
+        'stats': HGCWAstats().stats(),
     }
     title = 'Families of Higher Genus Curves with Automorphisms: Statistics'
     bread = get_bread([('Statistics', ' ')])
@@ -153,7 +151,7 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    group_stats = db_hgcwa_stats().find_one({'_id':'bygenus/' + genus + '/group'})
+    group_stats = db.hgcwa_passports.stats.get_oldstat('bygenus/' + genus + '/group')
 
     # Redirect to 404 if statistic is not found
     if not group_stats:
@@ -394,7 +392,7 @@ def higher_genus_w_automorphisms_postprocess(res, info, query):
              table=db.hgcwa_passports,
              title='Families of Higher Genus Curves with Automorphisms Search Results',
              err_title='Families of Higher Genus Curve Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':higher_genus_w_automorphisms_jump},
              longcuts={'download_magma':(lambda res, info, query: hgcwa_code_download_search(res,'magma')),
                        'download_gap':(lambda res, info, query: hgcwa_code_download_search(res,'gap'))},
