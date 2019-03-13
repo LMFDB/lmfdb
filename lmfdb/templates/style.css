@@ -1119,6 +1119,18 @@ h2 > .knowl-qm {
   margin-right: 10px;
   text-align: left;
 }
+ 
+
+.knowl-output ol ol ul, .knowl-output ol ul ul, .knowl-output ul ol ul, .knowl-output ul ul ul {
+    list-style-type: square;
+}
+.knowl-output ul ul, .knowl-output ol ul {
+    list-style-type: circle;
+}
+.knowl-output ul {
+    list-style-type: disc;
+}
+
 .knowl-output .knowl-output,
 .knowl-output .knowl-output.loading {
  margin-left: 0;
