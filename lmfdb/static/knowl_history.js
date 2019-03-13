@@ -1,24 +1,23 @@
 /* Event handlers for lmfdb/knowledge/templates/knowl-knowl-history.html */
 /* The fakeclick handler is set there */
-
-function clickall(evt) {
+function escapeSelector(s){
+    return s.replace( /(:|\.|\[|\])/g, "\\$1" );
+}
+function escapeId(s){
+    return s.replace( /(:|\.|\[|\])/g, "\\\\$1" );
+}
+function showall(evt) {
   evt.preventDefault();
-  $('.history').find('[knowl=cmf]').not('.active').trigger("fakeclick");
-  $('.expand_button').switchClass('expand_button', 'hide_button')
+  var kid = $(this).attr('kid');
+  $('.history').find('a[knowl='+escapeSelector(kid)+']').not('.active').trigger("fakeclick");
+  $('.show_button').switchClass('show_button', 'hide_button')
   return false;
 };
 function hideall(evt) {
   evt.preventDefault();
-  $('.history').find('.knowl-output*').slideUp("fast");
-  $('.history').find('[knowl=cmf]').removeClass('active');
+  var kid = $(this).attr('kid');
+  $('.history').find('a.active[knowl='+escapeSelector(kid)+']').trigger("fakeclick");
   $('.hide_button').switchClass('hide_button', 'show_button')
-  return false;
-};
-function showall(evt) {
-  evt.preventDefault();
-  $('.history').find('.knowl-output*').slideDown("fast");
-  $('.history').find('[knowl=cmf]').addClass('active');
-  $('.show_button').switchClass('show_button', 'hide_button')
   return false;
 };
 
@@ -32,3 +31,10 @@ function revert_to_version(evt) {
   }
   return false;
 }
+
+$(document).ready(function () {
+  $("body").on("fakeclick", "[knowl]", knowl_handle);
+  $("body").on("click", ".hide_button", hideall);
+  $("body").on("click", ".show_button", showall);
+  $("body").on("click", ".revert_button", revert_to_version);
+});
