@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # the basic knowlege object, with database awareness, …
-from lmfdb.knowledge import logger
 from datetime import datetime, timedelta
 from collections import defaultdict
-import time, subprocess
+import time
+import subprocess
 
 from lmfdb.backend.database import db, PostgresBase, DelayCommit
-from lmfdb.app import is_beta, is_debug_mode, _url_source
+from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.users.pwdmanager import userdb
+from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
-from lmfdb.utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 
 import re
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -92,7 +92,7 @@ def extract_typ(kid):
     for matcher, url_pattern, name_pattern in url_from_knowl:
         m = matcher.match(prelabel)
         if m:
-            url = pattern.format(*m.groups())
+            url = url_pattern.format(*m.groups())
             name = name_pattern.format(*m.groups())
             break
     return typ, url, name
