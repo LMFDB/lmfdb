@@ -1218,3 +1218,48 @@ def datetime_to_timestamp_in_ms(dt):
 
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+
+# copied here from hilbert_modular_forms.hilbert_modular_form as it
+# started to cause circular imports:
+
+def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    if not isinstance(pol_str, basestring):
+        pol_str = str(pol_str)
+    o_str = pol_str.replace('*', '')
+    ind_mid = o_str.find('/')
+    while ind_mid != -1:
+        ind_start = ind_mid - 1
+        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_start -= 1
+        ind_end = ind_mid + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
+            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_mid = o_str.find('/')
+
+    ind_start = o_str.find('^')
+    while ind_start != -1:
+        ind_end = ind_start + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_start = o_str.find('^', ind_end)
+
+    return o_str
+
+def add_space_if_positive(texified_pol):
+    """
+    Add a space if texified_pol is positive to match alignment of positive and
+    negative coefficients.
+
+    Examples:
+    >>> add_space_if_positive('1')
+    '\phantom{-}1'
+    >>> add_space_if_positive('-1')
+    '-1'
+    """
+    if texified_pol[0] == '-':
+        return texified_pol
+    return "\phantom{-}" + texified_pol
+

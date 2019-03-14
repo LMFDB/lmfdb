@@ -2357,7 +2357,7 @@ class PostgresTable(PostgresBase):
 
         - ``F`` -- an open file handle, at the beginning of the file.
         - ``unordered`` -- a set of the columns in the table.
-        - ``sep`` -- a string giving the column separator.
+        - ``sep`` -- a string giving the column separator.  You should not use comma.
         - ``check`` -- whether to validate the columns.
         - ``adjust_schema`` -- If True, rather than raising an error if the columns
             don't match expectations, will change the schema accordingly.
@@ -2429,7 +2429,7 @@ class PostgresTable(PostgresBase):
 
         - ``F`` -- a writable open file handle, at the beginning of the file.
         - ``cols`` -- a list of columns to write (either self._search_cols or self._extra_cols)
-        - ``sep`` -- a string giving the column separator.
+        - ``sep`` -- a string giving the column separator.  You should not use comma.
         """
         if cols and cols[0] != "id":
             cols = ["id"] + cols
@@ -4502,6 +4502,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
             table = self[name]
+            table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
                 self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
