@@ -4502,6 +4502,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
             table = self[name]
+            table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
                 self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
