@@ -4733,7 +4733,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 table = self[tablename]
                 table.cleanup_from_reload()
 
-    def verify(self, speedtype="all", logdir=None, parallel=8, follow=0.1, debug=False):
+    def verify(self, speedtype="all", logdir=None, parallel=8, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
         """
         Run verification tests on all tables (if defined in the lmfdb/verify folder).
         For more granular control, see the ``verify`` function on a particular table.
@@ -4786,7 +4786,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if follow:
             from lmfdb.verify.follower import Follower
             try:
-                Follower(logdir, tabletypes, follow).follow()
+                Follower(logdir, tabletypes, follow, poll_interval).follow()
             finally:
                 # kill the subprocess
                 # From the man page, the following will terminate child processes
