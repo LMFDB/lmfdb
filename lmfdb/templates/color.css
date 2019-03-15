@@ -29,32 +29,32 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 
 {% elif color_template == 15 %}
@@ -79,32 +79,32 @@
     {% set body_background = '#FAFBFA' %}  
     {% set body_text = black%} 
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#00695C' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#00695C' %} /*P1-800*/
-	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#004D40'%} /*P1-900*/
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#00695C' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#00695C' %} /*P1-800*/
+    {% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#004D40'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
    {% elif color_template == 16 %}
     /*nice green*/
@@ -129,32 +129,32 @@
     {% set body_background = '#FAFBFA' %}  /*P1-?*/
     {% set body_text = black%} 
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#2E7D32' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#2E7D32' %} /*P1-800*/
-	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#1B5E20'%} /*P1-900*/
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#2E7D32' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#2E7D32' %} /*P1-800*/
+    {% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#1B5E20'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %} 
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %} 
 
    {% elif color_template == 17 %}
     /*john blue*/
@@ -181,32 +181,32 @@
     {% set body_background = '#FAFBFA' %}  /*P1-?*/
     {% set body_text = black%} 
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#1565C0' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#1565C0' %} /*P1-800*/
-	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#0D47A1'%} /*P1-900*/
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#1565C0' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#1565C0' %} /*P1-800*/
+    {% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#0D47A1'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %} 
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %} 
 
 
    {% elif color_template == 18 %}
@@ -232,32 +232,32 @@
     {% set body_background = '#FAFBFA' %}  /*P1-?*/
     {% set body_text = black%} 
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#283593' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#283593' %} /*P1-800*/
-	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#1A237E'%} /*P1-900*/
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#283593' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#283593' %} /*P1-800*/
+    {% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#1A237E'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}  
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}  
 
 
    {% elif color_template == 19 %}
@@ -283,32 +283,32 @@
     {% set body_background = 'white' %}  /*P1-?*/
     {% set body_text = black%} 
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#C62828' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#C62828' %} /*P1-800*/
-	{% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#B71C1C'%} /*P1-900*/
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FFF59D' %} /* P2-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#C62828' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#C62828' %} /*P1-800*/
+    {% set knowl_hover_text = 'black' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#B71C1C'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}  
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}  
 
 
 {% elif color_template == 14 %}
@@ -326,32 +326,32 @@
     {% set body_background = '#FAFBFA' %}
     {% set body_text = black%}
  
-  	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#FFF59D' %} /*P2-200*/
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#FF8A80' %} /* A-100*/ 
-	{% set knowl_background = '#FFFDE7' %} /*P2-50*/
-	{% set knowl_hyper_text = '#00695C' %} /*P1-800*/
-	{% set knowl_title_text = 'black' %} /**/
-	{% set knowl_underline = '#FF1744' %} /*A-400*/
-	{% set knowl_hover_text = '#FF1744' %} /*?A-400*/ /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#004D40'%} /*P1-900*/
+      /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#FFF59D' %} /*P2-200*/
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#FF8A80' %} /* A-100*/ 
+    {% set knowl_background = '#FFFDE7' %} /*P2-50*/
+    {% set knowl_hyper_text = '#00695C' %} /*P1-800*/
+    {% set knowl_title_text = 'black' %} /**/
+    {% set knowl_underline = '#FF1744' %} /*A-400*/
+    {% set knowl_hover_text = '#FF1744' %} /*?A-400*/ /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#FFEE58' %} /*P2-400*/ /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#004D40'%} /*P1-900*/
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 
 
@@ -370,32 +370,32 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 2 %}
   /*Ruddy Browns*/
@@ -414,32 +414,32 @@
   {% set body_text = black %}
   {% set box_tab_text = black %}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
     
 {% elif color_template == 3 %}
     /*Green 2*/
@@ -456,32 +456,32 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 4 %}
   /*Tans*/
@@ -500,32 +500,32 @@
   {% set body_text = black %}
   {% set box_tab_text = black %}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
     
 {% elif color_template == 5 %}
     /*Pink.  Because*/
@@ -542,32 +542,32 @@
     {% set body_background = white %}
     {% set body_text = black %}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 6 %}
   /*Blues*/
@@ -586,32 +586,32 @@
   {% set body_text = black %}
   {% set box_tab_text = '#eaf0ff' %}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
     
 {% elif color_template == 7 %}
     /*Mint.*/
@@ -628,32 +628,32 @@
     {% set body_background = white %}
     {% set body_text = black%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 8 %}
   /*Teal+Orange*/
@@ -672,32 +672,32 @@
   {% set body_text = '#512809' %}
   {% set box_tab_text = '#e2ddd9' %}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 9 %}
     /*??*/
@@ -714,32 +714,32 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#444444'%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 10 %}
     /*Grey and Green*/
@@ -756,32 +756,32 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#444444'%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 11 %}
     /*Blue and Orange.*/
@@ -798,32 +798,32 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
 
-	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+    /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% elif color_template == 12 %}
     /*Blue.*/
@@ -840,32 +840,32 @@
     {% set body_background = '#ffffff' %}
     {% set body_text = '#555555'%}
  
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
     
 {% elif color_template == 13 %}
     /*Mint.*/
@@ -882,32 +882,32 @@
     {% set body_background = '#2b2d30' %}
     {% set body_text = '#d10a92'%}
 
- 	/* Knowl colors */
-	{% set knowl_error = 'purple' %}
-	{% set knowl_border = '#DDF' %}
-	{% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
-	{% set knowl_hover = '#DDF' %}
-	{% set knowl_background = '#EEF' %}
-	{% set knowl_hyper_text = '#006' %}
-	{% set knowl_title_text = '#004' %}
-	{% set knowl_underline = '#aaf' %}
-	{% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
-	{% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
-	{% set knowl_shadow = '#88b'%}
+     /* Knowl colors */
+    {% set knowl_error = 'purple' %}
+    {% set knowl_border = '#DDF' %}
+    {% set knowl_header_background = col_main_ld%} /*This sets the header of the knowl page to green.*/
+    {% set knowl_hover = '#DDF' %}
+    {% set knowl_background = '#EEF' %}
+    {% set knowl_hyper_text = '#006' %}
+    {% set knowl_title_text = '#004' %}
+    {% set knowl_underline = '#aaf' %}
+    {% set knowl_hover_text = '#88f' %} /* Text color when hovering on link in header/footer */
+    {% set knowl_thin_border = '#88f' %} /* Darker border at base of top knowl bar */
+    {% set knowl_shadow = '#88b'%}
 
-	{% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
-	{% set knowl_db  = '#66d' %} /*knowl-qm.active*/
-	/* td.sorting */
-	{% set knowl_ld_1 = '#c4c4ff'%}
-	{% set knowl_l_1 = '#D3D6FF' %}
-	{% set knowl_l_2 = '#DADCFF' %}
-	{% set knowl_l_3 = '#E0E2FF' %}
-	{% set knowl_l_4 = '#EAEBFF' %}
-	{% set knowl_l_5 = '#F2F3FF' %}
-	{% set knowl_l_6 = '#F9F9FF' %}
-	{% set knowl_l_7 = '#d1d1ff' %}
-	{% set knowl_l_8 = '#d5d5ff' %}
-	{% set knowl_l_9 = '#eef'    %}
+    {% set knowl_1   = '#99B3FF' %}/*paging_full_numbers span.paginate_button*/
+    {% set knowl_db  = '#66d' %} /*knowl-qm.active*/
+    /* td.sorting */
+    {% set knowl_ld_1 = '#c4c4ff'%}
+    {% set knowl_l_1 = '#D3D6FF' %}
+    {% set knowl_l_2 = '#DADCFF' %}
+    {% set knowl_l_3 = '#E0E2FF' %}
+    {% set knowl_l_4 = '#EAEBFF' %}
+    {% set knowl_l_5 = '#F2F3FF' %}
+    {% set knowl_l_6 = '#F9F9FF' %}
+    {% set knowl_l_7 = '#d1d1ff' %}
+    {% set knowl_l_8 = '#d5d5ff' %}
+    {% set knowl_l_9 = '#eef'    %}
 
 {% endif %}
 
@@ -1038,7 +1038,7 @@
 {% set sidebar_background_li = col_main_ll %}
 {% set sidebar_background_h2_hover = col_main_2 %}
 {% set sidebar_bkg_highlight = col_main_l %}
-{% set sidebar_bkg_highlight_knowl = col_knowl_d %}
+{% set sidebar_bkg_highlight_knowl = knowl_db %}
 {% set sidebar_text_future = 'grey' %}
 {% set sidebar_text_beta = 'purple' %}
 {% set sidebar_background_off = white %}

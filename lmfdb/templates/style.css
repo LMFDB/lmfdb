@@ -1,5 +1,5 @@
 {# template defs #}
-{% import 'color.css' as color with context %}
+{# {% import 'color.css' as color with context %} #}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -2253,4 +2253,8 @@ ul.horizontal-list li:after {
   content:" ";
   letter-spacing:1em;
   background: center center no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xMkMEa+wAAAAnSURBVBhXY/Dz89MA4sNA/B9Ka4AEYQIwfBgkiCwAxjhVopnppwEApxQqhnyQ+VkAAAAASUVORK5CYII=);
+}
+
+input.color_selecter {
+    margin: 10px;
 }
