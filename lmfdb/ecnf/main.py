@@ -365,6 +365,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
+                           KNOWL_ID="ec.%s"%label,
                            learnmore=learnmore_list())
 
 def download_search(info):

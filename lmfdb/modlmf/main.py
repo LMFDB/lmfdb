@@ -211,7 +211,7 @@ def render_modlmf_webpage(**args):
         ('Field degree', '%s' %info['deg']),
         ('Level', '%s' %info['level']),
         ('Weight grading', '%s' %info['weight_grading'])]
-    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
 
 
 

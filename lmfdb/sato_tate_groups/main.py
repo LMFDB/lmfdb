@@ -534,7 +534,8 @@ def render_st_group(info, portrait=None):
                            info=info,
                            bread=bread,
                            learnmore=learnmore_list(),
-                           title=title)
+                           title=title,
+                           KNOWL_ID='st_group.%s'%(info['label']))
 
 @st_page.route('/Completeness')
 def completeness_page():

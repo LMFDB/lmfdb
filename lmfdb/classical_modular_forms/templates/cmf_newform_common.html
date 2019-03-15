@@ -3,22 +3,19 @@
 {% block content %}
 
 
-{% set KNOWL_ID = "mf.%s"|format(newform.label) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
-
 <!-- Hecke field and algebraic q-expansion data -->
 
-<h2> {{KNOWL('mf.elliptic.newspace',title='Newspace')}} parameters </h2>
+<h2> {{KNOWL('cmf.newspace',title='Newspace')}} parameters </h2>
 
 <table>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>=</td>
     <td>\( {{ newform.level }}{{ newform.factored_level }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
     <td>=</td>
     <td>\( {{ newform.weight }} \)</td>
@@ -37,132 +34,96 @@
   {% if newform.is_self_dual is not none %}
   <tr>
     <td> {{ KNOWL('lfunction.self-dual', title='Self dual') }}: </td>
-    <td> </td>
-    <td> </td>
     <td>{% if newform.is_self_dual %}Yes{% else %}No{% endif %}</td>
   </tr>
   {% endif %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic Conductor') }} </td>
-    <td> \(A\) </td>
-    <td>=</td>
+    <td> {{ KNOWL('cmf.analytic_conductor', title='Analytic Conductor') }} </td>
     <td>\({{ newform.analytic_conductor }}\)</td>
   </tr>
   {% if newform.has_analytic_rank %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.analytic_rank', title='Analytic rank') }}: </td>
     <td>\({{ newform.analytic_rank }}\){% if not newform.analytic_rank_proved %}\(^*\){% endif %}</td>
   </tr>
   {% endif %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.dimension', title='Dimension') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.dimension', title='Dimension') }}: </td>
     <td>\({{ newform.dim }}\)</td>
   </tr>
   {% if newform.char_degree > 1 and newform.rel_dim > 1 %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.relative_dimension', title='Relative dimension') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.relative_dimension', title='Relative dimension') }}: </td>
     <td>\({{ newform.rel_dim }}\) over {{ newform.cyc_display() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.field_poly and newform.dim > 1 %}
   <!-- Coefficient code depends on existence of form -->
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
-    <td> {{ newform.Qnu() }} </td>
-    <td> {{ newform.Qeq() }} </td>
+    <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
     <td> {{ newform.field_display() | safe }}</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> {{ newform.ring_display() | safe }}</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
   {% elif newform.dim == 1 %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_field',title='Coefficient field') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.coefficient_field',title='Coefficient field') }}: </td>
     <td> \(\mathbb{Q}\)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring') }}: </td>
     <td> \(\mathbb{Z}\)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.coefficient_ring',title='Coefficient ring index') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.coefficient_ring',title='Coefficient ring index') }}: </td>
     <td> {{ newform.ring_index_display() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.char_order == 1 %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.fricke', title='Fricke sign') }}: </td>
-    <td> </td>
-    <td> </td>
+    <td> {{ KNOWL('cmf.fricke', title='Fricke sign') }}: </td>
     <td>\({{ newform.fricke_eigenval }}\)</td>
   </tr>
   {% endif %}
   {% if newform.projective_image %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
-    <td> </td>
-    <td> </td>
+    <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
     <td>\({{ newform.projective_image_latex }}\)</td>
   </tr>
   {% endif %}
   {% if newform.projective_field %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.projective_field', title='Projective field')}}</td>
-    <td> </td>
-    <td> </td>
+    <td>{{ KNOWL('cmf.projective_field', title='Projective field')}}</td>
     <td>Galois closure of {{ newform.projective_field_display | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.artin_degree %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size') }}</td>
-    <td> </td>
-    <td> </td>
+    <td>{{ KNOWL('cmf.artin_image', title='Artin image size') }}</td>
     <td>\({{ newform.artin_degree }}\)</td>
   </tr>
   {% endif %}
   {% if newform.artin_image %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image') }}</td>
-    <td> </td>
-    <td> </td>
+    <td>{{ KNOWL('cmf.artin_image', title='Artin image') }}</td>
     <td>{{ newform.artin_image_knowl() | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.artin_field %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.artin_field', title='Artin field')}}</td>
-    <td> </td>
-    <td> </td>
+    <td>{{ KNOWL('cmf.artin_field', title='Artin field')}}</td>
     <td>Galois closure of {{ newform.artin_field_display | safe }}</td>
   </tr>
   {% endif %}
   {% if newform.weight > 1 %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.sato_tate', title='Sato-Tate group') }}</td>
-    <td>\(\operatorname{ST}(f)\)</td>
-    <td>\(=\)</td>
+    <td>{{ KNOWL('cmf.sato_tate', title='Sato-Tate group') }}: </td>
     <td>{{ newform.sato_tate_display() | safe }}</td>
   </tr>
   {% endif %}
@@ -174,7 +135,7 @@
 
 <table>
   <tr>
-    <td>{{ KNOWL('mf.elliptic.embedding_label', title='Embedding label') }}</td>
+    <td>{{ KNOWL('cmf.embedding_label', title='Embedding label') }}</td>
     <td></td>
     <td></td>
     <td> {{newform.embedding_label}}</td>
@@ -188,14 +149,14 @@
   </tr>
   {% endif %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.character', title='Character') }}</td>
+    <td>{{ KNOWL('cmf.character', title='Character') }}</td>
     <td>\(\chi\)</td>
     <td>=</td>
     <td>{{ newform.char_conrey_link | safe}}</td>
   </tr>
 {% if newform.embedding_label != newform.dual_label %}
   <tr>
-    <td>{{ KNOWL('mf.elliptic.dualform', 'Dual form') }}</td>
+    <td>{{ KNOWL('cmf.dualform', 'Dual form') }}</td>
     <td></td>
     <td></td>
     <td> {{ newform.dual_link | safe }} </td>
@@ -216,15 +177,15 @@ function show_qexp(qstyle) {
 </script>
 {% if newform.has_exact_qexp or (newform.embedding_label and newform.has_complex_qexp) %}
 
-<h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
+<h2 id="qexp-anchor"> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
 <div id="qexp">
   {% if newform.dim > 1  and not newform.embedding_label %}
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}
       Coefficients of the \(q\)-expansion are expressed in terms of {{ newform.order_gen() | safe }}.
-      We also show the integral \(q\)-expansion of the {{ KNOWL('mf.elliptic.trace_form',title='trace form') }}.
+      We also show the integral \(q\)-expansion of the {{ KNOWL('cmf.trace_form',title='trace form') }}.
       {% else %}
-      The \(q\)-expansion and {{ KNOWL('mf.elliptic.trace_form',title='trace form') }} are shown below.
+      The \(q\)-expansion and {{ KNOWL('cmf.trace_form',title='trace form') }} are shown below.
       {% endif %}
     </p>
   {% endif %}
@@ -255,13 +216,13 @@ function show_qexp(qstyle) {
   </form>
 
   {% if newform.dim > 2 and (newform.hecke_ring_cyclotomic_generator is none or newform.hecke_ring_cyclotomic_generator == 0) and not newform.hecke_ring_power_basis %}
-    <p class="short"> Basis of {{ KNOWL('mf.elliptic.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
+    <p class="short"> Basis of {{ KNOWL('cmf.coefficient_ring',title='coefficient ring') }}{{ newform.order_gen_below() | safe }}:</p>
     {{ newform.order_basis() | safe}}
   {% endif %}
 </div>
 {% else %}
-<h2> {{ KNOWL('mf.elliptic.q-expansion',title='$q$-expansion')}}</h2>
-<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('mf.elliptic.trace_form', title='trace expansion') }}.</p>
+<h2> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
+<p>The dimension is sufficiently large that we do not compute an algebraic \(q\)-expansion, but we have computed the {{ KNOWL('cmf.trace_form', title='trace expansion') }}.</p>
 
 <form id="qexp">
   <table><tr><td>
@@ -293,9 +254,5 @@ function show_qexp(qstyle) {
 
 {% block subcontent %}
 {% endblock %}
-
-
-
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

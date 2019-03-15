@@ -1,0 +1,68 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% include "knowl-diff-core.html" %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='knowl_review.js') }}"></script>
+<script type="text/javascript">
+var reviewed_content = {};
+var content = {};
+{% for k in knowls %}
+  {% if k.reviewed_content != "null"%}
+    {% set kid = k.id.replace('.','') %}
+reviewed_content["{{kid}}"] = {{k.reviewed_content | safe}};
+content["{{kid}}"] = {{k.content | safe}};
+  {% endif %}
+{% endfor %}
+
+$(document).ready(function () {
+  $('.diff_button').click(click_diff);
+});
+</script>
+
+  <div>
+    <table class="knowl_review" >
+      {% for k in knowls %}
+        <tr>
+          <td>
+            <h2>{{ k.title or k.id }} (<a href="{{ url_for('.show', ID=k.id) }}"><code>{{ k.id }}</code></a>)</h2>
+            {{ k.rendered|safe }}
+          </td>
+        </tr>
+        <tr>
+          <td id="td_{{k.id}}">
+            Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime}} <br>
+            {% if k.referrers or k.code_referrers %}
+              <span style="vertical-align: top"> Referred to by: </span>
+              <ul class="horizontal-list" style="width: calc(100% - 131px)" >
+                {% for rid in k.referrers %}
+                  <li>{{ KNOWL(rid, title=rid) }}</li>
+                {% endfor %}
+                {% for coderef in k.code_referrers %}
+                  <li>{{ coderef | safe }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              No referrers <br>
+            {% endif %}
+            {% set kid = k.id.replace('.','') %}
+            {% if k.reviewed_content != "null" %}
+              <div class="{{kid}}">
+                View differences:
+                <a href="#" class="diff_button" type="sidebyside" kid={{kid}}>side by side</a>
+                <a href="#" class="diff_button" type="inline" kid={{kid}}>inline</a>
+                <div class="sidebyside" kid={{kid}} style="display: none;"> </div>
+                <div class="inline" kid={{kid}} style="display: none;" sytle> </div>
+              </div>
+            {% endif %}
+            <div id="to_review_{{kid}}"><a href="#" title="Mark reviewed" onclick="js_review_knowl('{{k.id}}'); return false;">Mark reviewed</a></div>
+            <div id="to_beta_{{kid}}" class="nodisplay">Positively reviewed! (<a href="#" title="Mark beta" onclick="js_beta_knowl('{{k.id}}'); return false;">Back to beta</a>)</div>
+            <div id="error_{{kid}}" class="nodisplay">There was an error.  Try reviewing <a href="{{ url_for('.show', ID=k.id) }}">here</a> instead.</div>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>
+ <table class="ntdata">
+ <thead>
+   <tr>
+    <th>Timestamp</th>
+    <th>Commenter</th>
+    <th>Comment</th>
+    <th>Knowl</th>
+    <th>Author</th>
+    <th>Updated</th>
+   </tr>
+  </thead>
+
+  {% for h in history %}
+  <tr>
+   <td>{{ h.comment_timestamp|fmtdatetime }}</td>
+   <td>{{ h.comment_author }}</td>
+   <td>{{ KNOWL(h.comment_id) }}</td>
+   <td>{{ KNOWL(h.knowl_id) }}</td>
+   <td>{{ h.knowl_author }}</td>
+   <td>{{ h.knowl_timestamp|fmtdatetime }}</td>
+  </tr>
+  {% endfor %}
+ </table>
+ {% if (history|length) == limit %}
+ <a href="{{url_for('.comment_history', limit=limit+25)}}">See more comments</a>
+ {% endif %}
+</div>
+
+{% endblock %}

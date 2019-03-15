@@ -55,6 +55,7 @@ def ctx_proc_userdata():
         userdata['username'] = 'Anonymous'
         userdata['user_is_admin'] = False
         userdata['user_is_authenticated'] = False
+        userdata['user_can_review_knowls'] = False
         userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
     else:
@@ -67,6 +68,7 @@ def ctx_proc_userdata():
             userdata['user_is_authenticated'] = current_user.is_authenticated()
 
         userdata['user_is_admin'] = current_user.is_admin()
+        userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
         userdata['get_username'] = get_username # this is a function
     return userdata
 
@@ -176,6 +178,18 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return decorated_view
 
+def knowl_reviewer_required(fn):
+    """
+    wrap this around those entry points where you need to be a knowl reviewer.
+    """
+    @wraps(fn)
+    @login_required
+    def decorated_view(*args, **kwargs):
+        logger.info("reviewer access attempt by %s" % current_user.get_id())
+        if not current_user.is_knowl_reviewer():
+            return flask.abort(403)  # acess denied
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def housekeeping(fn):
     """
