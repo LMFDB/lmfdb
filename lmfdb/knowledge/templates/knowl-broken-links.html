@@ -1,0 +1,12 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+<ul>
+  {% for kid, links in bad_knowls %}
+  <li>{{ KNOWL(kid, title=kid) }}: {{', '.join(links)}}</li>
+  {% endfor %}
+  {% for coderef, links in bad_code %}
+  <li>{{ coderef | safe }}: {{', '.join(links)}}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

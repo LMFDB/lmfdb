@@ -1,0 +1,39 @@
+<script type="text/javascript" src="{{ url_for('static', filename='knowl_history.js') }}"></script>
+<style>
+.history > li {
+  list-style: none;
+  text-indent: -1.5em;
+}
+.history > li::before {
+  content: "●";
+  padding-right: 0.6em;
+  padding-left: 0.1em;
+}
+.history > li#here::before {
+  content: "➤";
+  padding-right: 0.4em;
+  padding-left: 0;
+}
+</style>
+
+<strong>History:</strong>
+<a href="#" kid="{{k.id}}" class="show_button">(expand/hide all)</a>
+<ul class="history">
+  {% for elt in k.edit_history|reverse %}
+    {%- if elt.ms_timestamp == k.ms_timestamp -%}
+      <li id="here">
+      {% else %}
+    <li>
+      {% endif %}
+      {{ KNOWL(k.id, title=((elt.timestamp|fmtdatetime)|string) + " by " + (elt.author_full_name|string), timestamp=elt.ms_timestamp)}}
+      {% if elt.status == 1 %}
+        (Reviewed)
+      {% endif %}
+      {% if k.editing %}
+        &middot; <a href="#" class="revert_button" ms_timestamp="{{elt.ms_timestamp}}">Revert</a>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+

@@ -6,6 +6,7 @@
 
 import cmath
 import math
+import datetime
 import os
 import random
 import re
@@ -25,7 +26,7 @@ from werkzeug import cached_property
 from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
 from sage.structure.element import Element
 
-from lmfdb.app import app
+from lmfdb.app import app, is_beta, is_debug_mode, _url_source
 
 def list_to_factored_poly_otherorder(s, galois=False, vari = 'T', p = None):
     """
@@ -773,6 +774,43 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
     return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
+def code_snippet_knowl(D, full=True):
+    r"""
+    INPUT:
+
+    - ``D`` -- a dictionary with the following keys
+      - ``filename`` -- a filename within the lmfdb repository
+      - ``code`` -- a list of code lines (without trailing \n)
+      - ``lines`` -- (optional) a list of line numbers
+    - ``full`` -- if False, display only the filename rather than the full path.
+    """
+    filename = D['filename']
+    code = D['code']
+    lines = D.get('lines')
+    code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
+    if is_debug_mode():
+        branch = "master"
+    elif is_beta():
+        branch = "dev"
+    else:
+        branch = "web"
+    url = "%s%s/%s" % (_url_source, branch, filename)
+    link_text = "%s on Github" % (filename)
+    if not full:
+        filename = filename.split('/')[-1]
+    if lines:
+        if len(lines) == 1:
+            label = '%s (line %s)' % (filename, lines[0])
+        else:
+            lines = sorted(lines)
+            label = '%s (lines %s-%s)' % (filename, lines[0], lines[-1])
+        url += "#L%s" % lines[0]
+    else:
+        label = filename
+    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
+    inner = inner % (url, link_text)
+    return ur'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>'%(code, inner, label)
+
 def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
     """
     Generate a web latex string for a given integral polynomial, or a linear combination
@@ -1170,3 +1208,58 @@ def range_formatter(x):
         else:
             return "{0}-{1}".format(a,b)
     return str(x)
+
+
+
+# conversion tools between timestamp different kinds of timestamp
+epoch = datetime.datetime.utcfromtimestamp(0)
+def datetime_to_timestamp_in_ms(dt):
+    return int((dt - epoch).total_seconds() * 1000000)
+
+def timestamp_in_ms_to_datetime(ts):
+    return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+
+# copied here from hilbert_modular_forms.hilbert_modular_form as it
+# started to cause circular imports:
+
+def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+    if not isinstance(pol_str, basestring):
+        pol_str = str(pol_str)
+    o_str = pol_str.replace('*', '')
+    ind_mid = o_str.find('/')
+    while ind_mid != -1:
+        ind_start = ind_mid - 1
+        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_start -= 1
+        ind_end = ind_mid + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
+            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_mid = o_str.find('/')
+
+    ind_start = o_str.find('^')
+    while ind_start != -1:
+        ind_end = ind_start + 1
+        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+            ind_end += 1
+        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
+        ind_start = o_str.find('^', ind_end)
+
+    return o_str
+
+def add_space_if_positive(texified_pol):
+    """
+    Add a space if texified_pol is positive to match alignment of positive and
+    negative coefficients.
+
+    Examples:
+    >>> add_space_if_positive('1')
+    '\phantom{-}1'
+    >>> add_space_if_positive('-1')
+    '-1'
+    """
+    if texified_pol[0] == '-':
+        return texified_pol
+    return "\phantom{-}" + texified_pol
+

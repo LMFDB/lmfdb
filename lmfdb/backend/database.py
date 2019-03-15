@@ -2675,7 +2675,7 @@ class PostgresTable(PostgresBase):
 
         - ``F`` -- a writable open file handle, at the beginning of the file.
         - ``cols`` -- a list of columns to write (either self._search_cols or self._extra_cols)
-        - ``sep`` -- a string giving the column separator.
+        - ``sep`` -- a string giving the column separator.  You should not use comma.
         """
         if cols and cols[0] != "id":
             cols = ["id"] + cols
@@ -4662,6 +4662,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
             table = self[name]
+            table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
                 self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = %s"), [name])
@@ -4948,7 +4949,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 table = self[tablename]
                 table.cleanup_from_reload()
 
-    def verify(self, speedtype="all", logdir=None, parallel=8, follow=0.1, debug=False):
+    def verify(self, speedtype="all", logdir=None, parallel=8, follow=['errors', 'log', 'progress'], poll_interval=0.1, debug=False):
         """
         Run verification tests on all tables (if defined in the lmfdb/verify folder).
         For more granular control, see the ``verify`` function on a particular table.
@@ -5001,7 +5002,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if follow:
             from lmfdb.verify.follower import Follower
             try:
-                Follower(logdir, tabletypes, follow).follow()
+                Follower(logdir, tabletypes, follow, poll_interval).follow()
             finally:
                 # kill the subprocess
                 # From the man page, the following will terminate child processes

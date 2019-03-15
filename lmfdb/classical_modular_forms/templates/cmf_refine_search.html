@@ -28,18 +28,18 @@ function set_buckets(col_selecter, bucket_id) {
 
 <table>
   <tr>
-    <td>{{ KNOWL('mf.elliptic.level', title='Level') }}
+    <td>{{ KNOWL('cmf.level', title='Level') }}
       <div class="float-right">
         <select name='level_type'>
           <option value="">unrestricted</option>
           <option value="prime"{% if info.level_type == 'prime' %} selected='yes'{% endif %}>prime</option>
           <option value="prime_power"{% if info.level_type == 'prime_power' %} selected='yes'{% endif %}>prime power</option>
           <option value="square"{% if info.level_type == 'square' %} selected='yes'{% endif %}>square</option>
-          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squrefree</option>
+          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squarefree</option>
         </select>
       </div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.weight', title='Weight') }}
+    <td>{{ KNOWL('cmf.weight', title='Weight') }}
       <div class="float-right">
         <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
           <option value="">any parity</option>
@@ -48,9 +48,9 @@ function set_buckets(col_selecter, bucket_id) {
         </select>
       </div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='Analytic conductor') }}</td>
-    <td>{{ KNOWL('mf.elliptic.analytic_conductor', title='\(Nk^2\)') }}</td>
-    <td>{{ KNOWL('mf.elliptic.dimension', title='Dim.') }}
+    <td>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='\(Nk^2\)') }}</td>
+    <td>{{ KNOWL('cmf.dimension', title='Dim.') }}
       <div class="float-right"><select name="dim_type" style="min-width: 105px;">
         <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
         <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
@@ -67,14 +67,14 @@ function set_buckets(col_selecter, bucket_id) {
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.bad_prime',title='Bad \(p\)') }}
+    <td>{{ KNOWL('cmf.bad_prime',title='Bad \(p\)') }}
       <div class="float-right"><select name='prime_quantifier'>
           <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
           <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
           <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
         </select></div>
     </td>
-    <td>{{ KNOWL('mf.elliptic.character', title='Char.') }}
+    <td>{{ KNOWL('cmf.character', title='Char.') }}
       <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
           <option value="">any parity</option>
           <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
@@ -83,7 +83,7 @@ function set_buckets(col_selecter, bucket_id) {
     </td>
     <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
     <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
-    <td>{{ KNOWL('mf.elliptic.coefficient_field', title='Coefficient field') }}</td>
+    <td>{{ KNOWL('cmf.coefficient_field', title='Coefficient field') }}</td>
   </tr>
 
   <tr>
@@ -95,11 +95,11 @@ function set_buckets(col_selecter, bucket_id) {
   </tr>
 
   <tr>
-    <td>{{ KNOWL('mf.elliptic.self_twist', title='Self-twists') }}</td>
-    <td>{{ KNOWL('mf.elliptic.self_twist', title='CM/RM discriminant')}}</td>
-    <td>{{ KNOWL('mf.elliptic.inner_twist_count', title='Inner twist count*') }}</td>
-    <td>{{ KNOWL('mf.elliptic.selfdual', title='Is self-dual?') }}</td>
-    <td>{{ KNOWL('mf.elliptic.analytic_rank', title='Analytic rank') }}</td>
+    <td>{{ KNOWL('cmf.self_twist', title='Self-twists') }}</td>
+    <td>{{ KNOWL('cmf.self_twist', title='CM/RM discriminant')}}</td>
+    <td>{{ KNOWL('cmf.inner_twist_count', title='Inner twist count*') }}</td>
+    <td>{{ KNOWL('cmf.selfdual', title='Is self-dual?') }}</td>
+    <td>{{ KNOWL('cmf.analytic_rank', title='Analytic rank') }}</td>
   </tr>
 
   <tr>
@@ -139,9 +139,9 @@ function set_buckets(col_selecter, bucket_id) {
     <td rowspan="2">
       Only for weight 1:
     </td>
-    <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image')}}</td>
-    <td>{{ KNOWL('mf.elliptic.projective_image', title='Projective image type') }}</td>
-    {# <td>{{ KNOWL('mf.elliptic.artin_image', title='Artin image size*') }}</td> #}
+    <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
+    <td>{{ KNOWL('cmf.projective_image', title='Projective image type') }}</td>
+    {# <td>{{ KNOWL('cmf.artin_image', title='Artin image size*') }}</td> #}
   </tr>
   <tr>
     <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
@@ -170,7 +170,7 @@ function set_buckets(col_selecter, bucket_id) {
     <td></td>
     {% endif %}
     {% endfor %}
-    <td>{{ KNOWL('mf.elliptic.sort_order', title='Sort order') }}</td>
+    <td>{{ KNOWL('cmf.sort_order', title='Sort order') }}</td>
   </tr>
   {% else %}
   <tr style="height: 22px;"></tr>
@@ -202,7 +202,7 @@ function set_buckets(col_selecter, bucket_id) {
 </table>
 </form>
 {% if info.search_type == 'DynStats' %}
-<p>Note that the newforms in the database may not be {{ KNOWL('dq.mf.elliptic.extent', title='representative') }}.</p>
+<p>Note that the newforms in the database may not be {{ KNOWL('dq.cmf.extent', title='representative') }}.</p>
 {% endif %}
 
 {% block show_results %}{% endblock %}

@@ -1,9 +1,6 @@
 {% extends "homepage.html" %}
 {% block content %}
 
-{% set KNOWL_ID = "st_group.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 <h2> {{ KNOWL('st_group.invariants', title='Invariants') }} </h2>
 <table>
     <tr><td>{{ KNOWL('st_group.weight', title='Weight') }}:</td><td>${{info['weight']}}$</td></tr>
