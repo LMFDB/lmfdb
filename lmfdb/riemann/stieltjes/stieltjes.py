@@ -55,7 +55,7 @@ def list_constants(start=None,
 def stieltjes_list(start, limit):
     db = sqlite3.connect(dbpath)
     c = db.cursor()
-    query = 'SELECT n, smallmantissa, smallexponent' +\
+    query = 'SELECT n, smallmantissa, smallexponent ' +\
             'FROM stieltjes WHERE n >= ? LIMIT ?'
     c.execute(query, (start, limit))
     L = []
@@ -75,7 +75,7 @@ def getone(n=None, digits=None, plain=False):
         digits = request.args.get('digits', 50, int)
     db = sqlite3.connect(dbpath)
     c = db.cursor()
-    query = 'SELECT error_mantissa, error_exponent, mantissa, exponent' +\
+    query = 'SELECT error_mantissa, error_exponent, mantissa, exponent ' +\
             'FROM stieltjes WHERE n = ? LIMIT 1'
     c.execute(query, (n,))
     em, ee, mantissa, exponent = c.fetchone()
