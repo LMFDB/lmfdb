@@ -38,7 +38,7 @@ def list_constants(start=None,
         limit = 1000
     if start < 0:
         start = 0
-
+    print start, limit
     s_constants = stieltjes_list(start, limit)
 
     if fmt == 'plain':
