@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # AUTHOR: Jonathan Bober <jwbober@gmail.com>
 #
