@@ -615,7 +615,6 @@ class PostgresBase(object):
         with open(filename, "r") as F:
             columns = self._read_header_lines(F)
         col_list = [elt[0] for elt in columns]
-        addedid = False
         if addid:
             if ('id','bigint') not in columns:
                 columns = [('id','bigint')] + columns
