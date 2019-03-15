@@ -12,4 +12,5 @@ pytest
 pytest-cov
 pytest-xdist
 pyyaml
+timeout_decorator
 unittest2

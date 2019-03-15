@@ -27,8 +27,10 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
+from glob import glob
+import csv
 
-from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError
+from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError, NotSupportedError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from sage.all import cartesian_product_iterator, binomial
@@ -102,6 +104,72 @@ _valid_storage_params = {'brin':   ['pages_per_range', 'autosummarize'],
                          'gist':   ['fillfactor', 'buffering'],
                          'hash':   ['fillfactor'],
                          'spgist': ['fillfactor']}
+
+
+
+##################################################################
+# meta_* infrastructure                                          #
+##################################################################
+
+def jsonb_idx(cols, cols_type):
+    return tuple(i for i, elt in enumerate(cols) if cols_type[elt] == "jsonb")
+
+_meta_tables_cols = ("name", "sort", "count_cutoff", "id_ordered",
+        "out_of_order", "has_extras", "stats_valid", "label_col", "total")
+_meta_tables_cols_notrequired = ("count_cutoff", "stats_valid", "total") # 1000, true, 0
+_meta_tables_types = dict(zip(_meta_tables_cols,
+    ("text", "jsonb", "smallint", "boolean",
+        "boolean", "boolean", "boolean", "text", "bigint")))
+_meta_tables_jsonb_idx = jsonb_idx(_meta_tables_cols, _meta_tables_types)
+
+_meta_indexes_cols = ("index_name", "table_name", "type", "columns", "modifiers", "storage_params")
+_meta_indexes_types = dict(zip(_meta_indexes_cols,
+    ("text", "text", "text", "jsonb", "jsonb", "jsonb")))
+_meta_indexes_jsonb_idx = jsonb_idx(_meta_indexes_cols, _meta_indexes_types)
+
+_meta_constraints_cols = ("constraint_name", "table_name", "type", "columns", "check_func")
+_meta_constraints_types = dict(zip(_meta_constraints_cols,
+    ("text", "text", "text", "jsonb", "text")))
+_meta_constraints_jsonb_idx = jsonb_idx(_meta_constraints_cols, _meta_constraints_types)
+
+def _meta_cols_types_jsonb_idx(meta_name):
+    assert meta_name in ["meta_tables", "meta_indexes", "meta_constraints"]
+    if meta_name == "meta_tables":
+        meta_cols = _meta_tables_cols
+        meta_types = _meta_tables_types
+        meta_jsonb_idx = _meta_tables_jsonb_idx
+    elif meta_name == "meta_indexes":
+        meta_cols = _meta_indexes_cols
+        meta_types = _meta_indexes_types
+        meta_jsonb_idx = _meta_indexes_jsonb_idx
+    elif meta_name == "meta_constraints":
+        meta_cols = _meta_constraints_cols
+        meta_types = _meta_constraints_types
+        meta_jsonb_idx = _meta_constraints_jsonb_idx
+
+    return meta_cols, meta_types, meta_jsonb_idx
+
+def _meta_table_name(meta_name):
+    meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
+    # the column which will match search_table
+    table_name = "table_name"
+    if "name" in meta_cols:
+        table_name = "name"
+    return table_name
+
+##################################################################
+# counts and stats columns and their types                       #
+##################################################################
+
+_counts_cols = ("cols", "values", "count", "extra", "split")
+_counts_types =  dict(zip(_counts_cols,
+    ("jsonb", "jsonb", "bigint", "boolean", "boolean")))
+_counts_jsonb_idx = jsonb_idx(_counts_cols, _counts_types)
+
+_stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
+_stats_types =  dict(zip(_stats_cols,
+    ("jsonb", "text", "numeric", "jsonb", "jsonb", "integer")))
+_stats_jsonb_idx = jsonb_idx(_stats_cols, _stats_types)
 
 def IdentifierWrapper(name, convert = True):
     """
@@ -209,6 +277,8 @@ class DelayCommit(object):
         self.obj._silenced = self._orig_silenced
         if exc_type is None and self.obj._nocommit_stack == 0 and self.final_commit:
             self.obj.conn.commit()
+        if exc_type is not None:
+            self.obj.conn.rollback()
 
 class PostgresBase(object):
     """
@@ -291,7 +361,7 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except ProgrammingError:
+                except (ProgrammingError, NotSupportedError):
                     print query.as_string(self.conn)
                     print values
                     raise
@@ -330,7 +400,6 @@ class PostgresBase(object):
         return cur.fetchone()[0] is not None
 
     def _constraint_exists(self, tablename, constraintname):
-        #print tablename, constraintname
         cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
         return cur.fetchone() is not None
 
@@ -357,6 +426,426 @@ class PostgresBase(object):
                 L.append(SQL("{0} DESC").format(Identifier(col[0])))
         return SQL(", ").join(L)
 
+    def _column_types(self, table_name, data_types=None):
+        """
+        Returns the column list, column types (as a dict), and has_id for a given table_name
+        """
+        has_id = False
+        col_list = []
+        col_type = {}
+        if data_types is None or table_name not in data_types:
+            # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+            cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
+        else:
+            cur = data_types[table_name]
+        for rec in cur:
+            col = rec[0]
+            col_type[col] = rec[1]
+            if col != 'id':
+                col_list.append(col)
+            else:
+                has_id = True
+        return col_list, col_type, has_id
+
+    def _copy_to_select(self, select, filename):
+        """
+        Using the copy_expert from psycopg2 exports the data from a select statement.
+        """
+        copyto = SQL("COPY ({0}) TO STDOUT").format(select)
+        with open(filename, "w") as F:
+            try:
+                cur = self.conn.cursor()
+                cur.copy_expert(copyto, F)
+            except Exception:
+                self.conn.rollback()
+                raise
+
+    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t"):
+        """
+        Reads the header lines from a file (row of column names, row of column
+        types, blank line), checking if these names match the columns set and
+        the types match the expected types in the table.
+        Returns a list of column names present in the header.
+
+        INPUT:
+
+        - ``F`` -- an open file handle, at the beginning of the file.
+        - ``table_name`` -- the table to compare types against
+        - ``columns_set`` -- a set of the columns expected in the table.
+        - ``sep`` -- a string giving the column separator.
+
+        OUTPUT:
+
+        The ordered list of columns.  The first entry may be ``"id"`` if the data
+        contains an id column.
+        """
+
+        col_list, col_type, _ = self._column_types(table_name)
+        columns_set.discard("id")
+        if not (columns_set <= set(col_list)):
+            raise ValueError("{} is not a subset of {}".format(columns_set, col_type.keys()))
+        header_cols = self._read_header_lines(F, sep=sep)
+        names = [elt[0] for elt in header_cols]
+        names_set = set(names)
+        if "id" in names_set:
+            if names[0] != "id":
+                raise ValueError("id must be the first column")
+            if header_cols[0][1] != "bigint":
+                raise ValueError("id must be of type bigint")
+            names_set.discard("id")
+            header_cols = header_cols[1:]
+
+
+        missing = columns_set - names_set
+        extra = names_set - columns_set
+        wrong_type = [(name, typ) for name, typ in header_cols
+                if name in columns_set and col_type[name] != typ]
+
+        if missing or extra or wrong_type:
+            err = ""
+            if missing or extra:
+                err += "Invalid header: "
+                if missing:
+                    err += ", ".join(list(missing)) + " (missing)"
+                if extra:
+                    err += ", ".join(list(extra)) + " (extra)"
+            if wrong_type:
+                if len(wrong_type) > 1:
+                        err += "Invalid types: "
+                else:
+                    err += "Invalid type: "
+                err += ", ".join(
+                        "%s should be %s instead of %s" % (name, col_type[name], typ)
+                        for name, typ in wrong_type)
+            raise ValueError(err)
+        return names
+
+
+    def _copy_from(self, filename, table, columns, header, kwds):
+        """
+        Helper function for ``copy_from`` and ``reload``.
+
+        INPUT:
+
+        - ``filename`` -- the filename to load
+        - ``table`` -- the table into which the data should be added
+        - ``columns`` -- a list of columns to load (the file may contain them in
+            a different order, specified by a header row)
+        - ``cur_count`` -- the current number of rows in the table
+        - ``header`` -- whether the file has header rows ordering the columns.
+            This should be True for search and extra tables, False for counts and stats.
+        - ``kwds`` -- passed on to psycopg2's copy_from
+        """
+        sep = kwds.get("sep", u"\t")
+
+        with DelayCommit(self, silence=True):
+            with open(filename) as F:
+                if header:
+                    # This consumes the first three lines
+                    columns = self._check_header_lines(F, table, set(columns), sep=sep)
+                    addid = ('id' not in columns)
+                else:
+                    addid = False
+
+                # We have to add quotes manually since copy_from doesn't accept
+                # psycopg2.sql.Identifiers
+                # None of our column names have double quotes in them. :-D
+                assert all('"' not in col for col in columns)
+                columns = ['"' + col + '"' for col in columns]
+                if addid:
+                    # create sequence
+                    cur_count = self.max_id(table)
+                    seq_name = table + '_seq'
+                    create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
+                    self._execute(create_seq, [cur_count+1]*2);
+                    # edit default value
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
+                    self._execute(alter_table, [seq_name])
+
+                cur = self.conn.cursor()
+                cur.copy_from(F, table, columns=columns, **kwds)
+
+                if addid:
+                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
+                    self._execute(alter_table)
+                    drop_seq = SQL("DROP SEQUENCE {0}").format(Identifier(seq_name))
+                    self._execute(drop_seq)
+
+                return addid, cur.rowcount
+
+    def _clone(self, table, tmp_table):
+        """
+        Utility function: creates a table with the same schema as the given one.
+        """
+        if self._table_exists(tmp_table):
+            raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
+        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
+        self._execute(creator)
+
+    def _create_table(self, name, columns):
+        """
+        Utility function: creates a table with the schema specified by `columns`
+
+        INPUT:
+
+        - ``name`` -- the desired name
+        - ``columns`` -- list of pairs, where the first entry is the column name
+        and the second one is the corresponding type
+        """
+        #FIXME make the code use this
+        for col, typ in columns:
+            if typ not in types_whitelist:
+                if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
+                    raise RuntimeError("%s is not a valid type"%(typ))
+
+        table_col = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in columns)
+        creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
+        self._execute(creator)
+
+    def _create_table_from_header(self, filename, name, addid=True):
+        """
+        Utility function: creates a table with the schema specified in the header of the file.
+        Returns column names found in the header
+        """
+        if self._table_exists(name):
+            error_msg = "Table %s already exists." % name
+            if name.endswith("_tmp"):
+                error_msg += "Run db.%s.cleanup_from_reload() if you want to delete it and proceed." % (name[:-4])
+            raise ValueError(error_msg)
+        with open(filename, "r") as F:
+            columns = self._read_header_lines(F)
+        col_list = [elt[0] for elt in columns]
+        if addid:
+            if ('id','bigint') not in columns:
+                columns = [('id','bigint')] + columns
+
+        self._create_table(name, columns)
+        return col_list
+
+
+
+    def _swap(self, tables, indexes, constraints, source, target):
+        """
+        Renames tables, indexes, constraints and primary keys, for use in reload.
+
+        INPUT:
+
+        - ``tables`` -- a list of table names to reload (including suffixes like
+            ``_extra`` or ``_counts`` but not ``_tmp``).
+        - ``indexes`` -- a list of index names to reload, without suffixes.
+        - ``constraints`` -- a list of constraint names to reload, without suffixes.
+        - ``source`` -- the source suffix for the swap.
+        - ``target`` -- the target suffix for the swap.
+        """
+        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
+        rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
+        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+        with DelayCommit(self, silence=True):
+            for table in tables:
+                tablename_old = table + source
+                tablename_new = table + target
+                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
+                pkey_old = table + source + "_pkey"
+                pkey_new = table + target + "_pkey"
+                if self._constraint_exists(tablename_new, pkey_old):
+                    self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                           Identifier(pkey_old),
+                                                           Identifier(pkey_new)))
+                for constraint in constraints:
+                    if self._constraint_exists(tablename_new, constraint + source):
+                        self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                               Identifier(constraint + source),
+                                                               Identifier(constraint + target)))
+            for index in indexes:
+                if self._table_exists(index + source):
+                    self._execute(rename_index.format(Identifier(index + source),
+                                                      Identifier(index + target)))
+                else:
+                    print "Warning: index %s does not exist"%(index + source)
+
+
+
+
+    def _read_header_lines(self, F, sep=u"\t"):
+        """
+        Reads the header lines from a file
+        (row of column names, row of column types, blank line).
+        Returning the dictionary of columns and their types.
+
+        INPUT:
+
+        - ``F`` -- an open file handle, at the beginning of the file.
+        - ``sep`` -- a string giving the column separator.
+
+        OUTPUT:
+
+        A list of pairs where the first entry is the column and the second the
+        corresponding type
+        """
+        names = [x.strip() for x in F.readline().strip().split(sep)]
+        types = [x.strip() for x in F.readline().strip().split(sep)]
+        blank = F.readline()
+        if blank.strip():
+            raise ValueError("The third line must be blank")
+        if len(names) != len(types):
+            raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
+        return zip(names, types)
+
+
+    ##################################################################
+    # Exporting, importing, reloading and reverting meta_*           #
+    ##################################################################
+
+
+    def _copy_to_meta(self, meta_name, filename, search_table):
+        meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
+        table_name = _meta_table_name(meta_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+        select = SQL("SELECT {} FROM {} WHERE {} = {}").format(
+                cols_sql, meta_name_sql, table_name_sql, Literal(search_table))
+        now = time.time()
+        with DelayCommit(self):
+            self._copy_to_select(select, filename)
+        print "Exported %s for %s in %.3f secs" % (meta_name,
+                search_table, time.time() - now)
+
+    def _copy_from_meta(self, meta_name, filename):
+        meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
+        try:
+            cur = self.conn.cursor()
+            cur.copy_from(filename, meta_name, columns=meta_cols)
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def _get_current_meta_version(self, meta_name, search_table):
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+        res = self._execute(SQL(
+            "SELECT MAX(version) FROM {} WHERE {} = %s"
+            ).format(meta_name_hist_sql, table_name_sql),
+            [search_table]
+            ).fetchone()[0]
+        if res is None:
+            res = -1
+        return res
+
+    def _reload_meta(self, meta_name, filename, search_table):
+
+        meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+
+        table_name_idx = meta_cols.index(table_name)
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+
+
+        with open(filename, "r") as F:
+            lines = [line for line in csv.reader(F, delimiter = "\t")]
+            if len(lines) == 0:
+                return
+            for line in lines:
+                if line[table_name_idx] != search_table:
+                    raise RuntimeError("column %d in the file doesn't match the search table name" % table_name_idx)
+
+
+        with DelayCommit(self, silence=True):
+            # delete the current columns
+            self._execute(SQL(
+                "DELETE FROM {} WHERE {} = %s"
+                ).format(meta_name_sql, table_name_sql),
+                [search_table])
+
+            # insert new columns
+            with open(filename, "r") as F:
+                try:
+                    cur = self.conn.cursor()
+                    cur.copy_from(F, meta_name, columns = meta_cols)
+                except Exception:
+                    self.conn.rollback()
+                    raise
+
+            version = self._get_current_meta_version(meta_name, search_table) + 1
+
+            # copy the new rows to history
+            cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+            rows = self._execute(SQL(
+                "SELECT {} FROM {} WHERE {} = %s"
+                ).format(cols_sql, meta_name_sql, table_name_sql),
+                [search_table])
+
+
+            cols = meta_cols + ('version',)
+            cols_sql = SQL(", ").join(map(Identifier, cols))
+            place_holder = SQL(", ").join(Placeholder() * len(cols))
+            query = SQL(
+                    "INSERT INTO {} ({}) VALUES ({})"
+                    ).format(meta_name_hist_sql, cols_sql, place_holder)
+
+            for row in rows:
+                row = [Json(elt) if i in jsonb_idx else elt
+                        for i, elt in enumerate(row)]
+                self._execute(query, row + [version])
+
+
+    def _revert_meta(self, meta_name, search_table, version = None):
+        meta_cols, _, jsonb_idx = _meta_cols_types_jsonb_idx(meta_name)
+        # the column which will match search_table
+        table_name = _meta_table_name(meta_name)
+
+        table_name_sql = Identifier(table_name)
+        meta_name_sql = Identifier(meta_name)
+        meta_name_hist_sql = Identifier(meta_name + "_hist")
+
+        # by the default goes back one step
+        currentversion = self._get_current_meta_version(meta_name, search_table)
+        if currentversion == -1:
+            raise RuntimeError("No history to revert")
+        if version is None:
+            version = max(0, currentversion - 1)
+
+        with DelayCommit(self, silence=True):
+            # delete current rows
+            self._execute(SQL(
+                "DELETE FROM {} WHERE {} = %s"
+                ).format(meta_name_sql, table_name_sql),
+                [search_table])
+
+            # copy data from history
+            cols_sql = SQL(", ").join(map(Identifier, meta_cols))
+            rows = self._execute(SQL(
+                "SELECT {} FROM {} WHERE {} = %s AND version = %s"
+                ).format(meta_name_hist_sql, cols_sql, table_name_sql),
+                [search_table, version])
+
+
+            place_holder = SQL(", ").join(Placeholder() * len(meta_cols))
+            query =  SQL(
+                    "INSERT INTO {} ({}) VALUES ({})"
+                    ).format(meta_name_sql, cols_sql, place_holder)
+
+            cols = meta_cols + ('version',)
+            cols_sql = SQL(", ").join(map(Identifier, cols))
+            place_holder = SQL(", ").join(Placeholder() * len(cols))
+            query_hist = SQL(
+                    "INSERT INTO {} ({}) VALUES ({})"
+                    ).format(meta_name_hist_sql, cols_sql, place_holder)
+            for row in rows:
+                row = [Json(elt) if i in jsonb_idx else elt
+                        for i, elt in enumerate(row)]
+                self._execute(query, row)
+                self._execute(query_hist, row + [currentversion + 1,])
+
+
+
+
+
 class PostgresTable(PostgresBase):
     """
     This class is used to abstract a table in the LMFDB database
@@ -372,7 +861,7 @@ class PostgresTable(PostgresBase):
     - ``sort`` -- a list giving the default sort order on the table, or None.  If None, sorts that can return more than one result must explicitly specify a sort order.  Note that the id column is sometimes used for sorting; see the ``search`` method for more details.
     - ``count_cutoff`` -- an integer parameter (default 1000) which determines the threshold at which searches will no longer report the exact number of results.
     """
-    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types = None):
+    def __init__(self, db, search_table, label_col, sort=None, count_cutoff=1000, id_ordered=False, out_of_order=False, has_extras=False, stats_valid=True, total=None, data_types=None):
         self.search_table = search_table
         self._label_col = label_col
         self._count_cutoff = count_cutoff
@@ -382,31 +871,24 @@ class PostgresTable(PostgresBase):
         PostgresBase.__init__(self, search_table, db)
         self.col_type = {}
         self.has_id = False
-        def set_column_info(col_list, table_name):
-            if data_types is None or table_name not in data_types:
-                # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
-                cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
-            else:
-                cur = data_types[table_name]
-            for rec in cur:
-                col = rec[0]
-                self.col_type[col] = rec[1]
-                if col != 'id':
-                    col_list.append(col)
-                else:
-                    self.has_id = True
         self._search_cols = []
         if has_extras:
             self.extra_table = search_table + "_extras"
-            self._extra_cols = []
-            set_column_info(self._extra_cols, self.extra_table)
+            self._extra_cols, self.col_type, _ = self._column_types(
+                                                        self.extra_table,
+                                                        data_types=data_types)
         else:
             self.extra_table = None
             self._extra_cols = []
-        set_column_info(self._search_cols, search_table)
+
+        self._search_cols, extend_coltype, self.has_id = self._column_types(
+                                                        search_table,
+                                                        data_types=data_types)
+        self.col_type.update(extend_coltype)
         self._set_sort(sort)
         self.stats = PostgresStatsTable(self, total)
         self._verifier = None # set when importing lmfdb.verify
+
 
     def _set_sort(self, sort):
         """
@@ -1773,207 +2255,42 @@ class PostgresTable(PostgresBase):
         return self._execute(selecter, [self.search_table] + columns, silent=True)
 
     ##################################################################
-    # Exporting, reloading and reverting indexes and constraints     #
-    ##################################################################
-
-    def copy_to_indexes(self, filename):
-        cols = "(index_name, table_name, type, columns, modifiers, storage_params)"
-        select = "SELECT %s FROM meta_indexes WHERE table_name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_indexes for %s in %.3f secs" % (self.search_table, time.time() - now)
-
-    def copy_to_constraints(self, filename):
-        cols = "(constraint_name, table_name, type, columns, check_func)"
-        select = "SELECT %s FROM meta_constraints WHERE table_name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_constraints for %s in %.3f secs" % (self.search_table, time.time() - now)
-
-    def _get_current_index_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_indexes_hist WHERE table_name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
-
-    def _get_current_constraint_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_constraints_hist WHERE table_name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
-
-    def reload_indexes(self, filename):
-        # check that the rows have the right table name
-        with open(filename, "r") as F:
-            import csv
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[1] != self.search_table:
-                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
-
-        with DelayCommit(self, silence=True):
-            # delete the current columns
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
-
-            # insert new columns
-            with open(filename, "r") as F:
-                try:
-                    cur = self.conn.cursor()
-                    cur.copy_from(F, "meta_indexes", columns = ["index_name", "table_name", "type", "columns", "modifiers", "storage_params"])
-                except Exception:
-                    self.conn.rollback()
-                    raise
-
-            version = self._get_current_index_version() + 1
-
-            # copy the new rows to history
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes WHERE table_name = '%s'"), [self.search_table])
-            for row in rows:
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s, %s)"), row + (version,))
-
-    def reload_constraints(self, filename):
-        # check that the rows have the right table name
-        with open(filename, "r") as F:
-            import csv
-            lines = [line for line in csv.reader(F, delimiter = "\t")]
-            if len(lines) == 0:
-                return
-            for line in lines:
-                if line[1] != self.search_table:
-                    raise RuntimeError("the 2nd column in the file doesn't match the search table name")
-
-        with DelayCommit(self, silence=True):
-            # delete the current columns
-            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
-
-            # insert new columns
-            with open(filename, "r") as F:
-                try:
-                    cur = self.conn.cursor()
-                    cur.copy_from(F, "meta_constraints", columns = ["constraint_name", "table_name", "type", "columns", "check_func"])
-                except Exception:
-                    self.conn.rollback()
-                    raise
-
-            version = self._get_current_constraint_version() + 1
-
-            # copy the new rows to history
-            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints WHERE table_name = '%s'"), [self.search_table])
-            for row in rows:
-                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (version,))
-
-    def revert_indexes(self, version = None):
-        with DelayCommit(self, silence=True):
-            # by the default goes back one step
-            currentversion = self._get_current_index_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
-
-            # delete current rows
-            self._execute(SQL("DELETE FROM meta_indexes WHERE table_name = '%'"), [self.search_table])
-
-            # copy data from history
-            rows = self._execute(SQL("SELECT index_name, table_name, type, columns, modifiers, storage_params FROM meta_indexes_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
-            for row in rows:
-                self._execute(SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)"), row)
-                self._execute(SQL("INSERT INTO meta_indexes_hist (index_name, table_name, type, columns, modifiers, storage_params, version) VALUES (%s, %s, %s, %s, %s, %s)"), row + (currentversion + 1,))
-
-    def revert_constraints(self, version = None):
-        with DelayCommit(self, silence=True):
-            # by the default goes back one step
-            currentversion = self._get_current_constraint_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
-
-            # delete current rows
-            self._execute(SQL("DELETE FROM meta_constraints WHERE table_name = '%'"), [self.search_table])
-
-            # copy data from history
-            rows = self._execute(SQL("SELECT constraint_name, table_name, type, columns, check_func FROM meta_constraints_hist WHERE table_name = '%s' AND version = '%s'"), [self.search_table, version])
-            for row in rows:
-                self._execute(SQL("INSERT INTO meta_constraints (constraint_name, table_name, type, columns, check_func) VALUES (%s, %s, %s, %s, %s, %s)"), row)
-                self._execute(SQL("INSERT INTO meta_constraints_hist (constraint_name, table_name, type, columns, check_func, version) VALUES (%s, %s, %s, %s, %s)"), row + (currentversion + 1,))
-
-    ##################################################################
-    # Exporting, reloading and reverting meta_table                  #
+    # Exporting, reloading and reverting meta_tables, meta_indexes and meta_constraints     #
     ##################################################################
 
     def copy_to_meta(self, filename):
-        cols = "(name, sort, id_ordered, out_of_order, has_extras, label_col)"
-        select = "SELECT %s FROM meta_tables WHERE name = '%s'" % (cols, self.search_table,)
-        now = time.time()
-        with DelayCommit(self):
-            self._copy_to_select(select, filename)
-        print "Exported meta_tables for %s in %.3f secs" % (self.search_table, time.time() - now)
+        self._copy_to_meta("meta_tables", filename, self.search_table)
 
-    def _get_current_tables_version(self):
-        cur = self._execute(SQL("SELECT max(version) FROM meta_tables_hist WHERE name = %s"), [self.search_table])
-        if cur.rowcount == 0:
-            return -1
-        else:
-            return cur.fetchone()[0]
+    def copy_to_indexes(self, filename):
+        self._copy_to_meta("meta_indexes", filename, self.search_table)
 
-    def reload_meta(self, filename, final_swap=True, suffix="_tmp", commit=True):
-        """
-        Inserts a row into meta_tables
-        """
-        # load the only row
-        rows = []
-        with open(filename, "r") as F:
-            import csv
-            rows = [line for line in csv.reader(F, delimiter = "\t")]
+    def copy_to_constraints(self, filename):
+        self._copy_to_meta("meta_constraints", filename, self.search_table)
 
-        if len(rows) != 1:
-            raise RuntimeError("Expected only one row")
+    def _get_current_index_version(self):
+        return self._get_current_meta_version("meta_indexes", self.search_table)
 
-        row = list(rows[0])
+    def _get_current_constraint_version(self):
+        return self._get_current_meta_version("meta_constraints", self.search_table)
 
-        if row[0] != self.search_table:
-            raise RuntimeError("The 1st column (%s) doesn't match the search table name (%s)" % (row[0], self.search_table))
+    def reload_indexes(self, filename):
+        return self._reload_meta("meta_indexes", filename, self.search_table)
 
-        with DelayCommit(self, commit, silence=True):
-            # get the current version
-            version = self._get_current_tables_version() + 1
+    def reload_meta(self, filename):
+        return self._reload_meta("meta_tables", filename, self.search_table)
 
-            # delete current row
-            self._execute(SQL("DELETE FROM meta_tables WHERE name = %s" ), [self.search_table], commit=False)
+    def reload_constraints(self, filename):
+        return self._reload_meta("meta_constraints", filename, self.search_table)
 
-            # insert new row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + [version,])
+    def revert_indexes(self, version = None):
+        return self._revert_meta("meta_indexes", self.search_table, version)
+
+    def revert_constraints(self, version = None):
+        return self._revert_meta("meta_constraints", self.search_table, version)
 
     def revert_meta(self, version = None):
-        with DelayCommit(self, silence=True):
-            currentversion = self._get_current_tables_version()
-            if currentversion == -1:
-                raise RuntimeError("No history to revert")
-            if version is None:
-                version = max(0, currentversion - 1)
+        return self._revert_meta("meta_tables", self.search_table, version)
 
-            # delete the current row
-            self._execute(SQL("DELETE FROM meta_tables WHERE name = '%s'"), [self.search_table])
-
-            # grab the old row
-            cur = self._execute(SQL("SELECT name, sort, id_ordered, out_of_order, has_extras, label_col, total FROM meta_tables_hist WHERE name = %s AND version = %s"), [self.search_table, version])
-
-            assert cur.rowcount == 1
-            row = cur.fetchone()
-            # The total may be incorrect, so we grab it from the counts table.
-            row[-1] = self.count()
-
-            # insert the old row
-            self._execute(SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col, total) VALUES (%s, %s, %s, %s, %s, %s, %s)'), row)
-            self._execute(SQL('INSERT INTO meta_tables_hist (name, sort, id_ordered, out_of_order, has_extras, label_col, total, version) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)'), row + (currentversion + 1,))
 
     ##################################################################
     # Insertion and updating data                                    #
@@ -2346,79 +2663,7 @@ class PostgresTable(PostgresBase):
         self._execute(updater, [self.search_table])
         self._out_of_order = False
 
-    def _read_header_lines(self, F, unordered, sep=u"\t", check=True, adjust_schema=False):
-        """
-        Reads the header lines from a file
-        (row of column names, row of column types, blank line).
-        returning True if it includes ids and raising a ValueError if columns
-        do not match unordered.
 
-        INPUT:
-
-        - ``F`` -- an open file handle, at the beginning of the file.
-        - ``unordered`` -- a set of the columns in the table.
-        - ``sep`` -- a string giving the column separator.  You should not use comma.
-        - ``check`` -- whether to validate the columns.
-        - ``adjust_schema`` -- If True, rather than raising an error if the columns
-            don't match expectations, will change the schema accordingly.
-
-        OUTPUT:
-
-        The ordered list of columns.  The first entry may be ``"id"`` if the data
-        contains an id column.
-        """
-        names = [x.strip() for x in F.readline().strip().split(sep)]
-        types = [x.strip() for x in F.readline().strip().split(sep)]
-        blank = F.readline()
-        # Need to define types and blank in order to consume the lines.
-        if check:
-            if blank.strip():
-                raise ValueError("The third line must be blank")
-            if len(names) != len(types):
-                raise ValueError("The first line specifies %s columns, while the second specifies %s"%(len(names), len(types)))
-            type_dict = dict(zip(names, types))
-            name_set = set(names)
-            extra = name_set - unordered
-            if "id" in name_set and names[0] != "id":
-                raise ValueError("id must be the first column")
-            extra.discard("id")
-            missing = unordered - name_set
-            if missing or extra:
-                if adjust_schema:
-                    is_extra_table = (unordered == set(self._extra_cols))
-                    for col in missing:
-                        self.drop_column(col)
-                    for col in extra:
-                        self.add_column(col, type_dict[col], extra=is_extra_table)
-                else:
-                    err = "Invalid header: "
-                    if missing:
-                        err += ", ".join(list(missing)) + " (missing)"
-                    if extra:
-                        err += ", ".join(list(extra)) + " (extra)"
-                    raise ValueError(err)
-            # The header names are valid, now we check the column types
-            bad = []
-            for name, typ in type_dict.items():
-                actual = self.col_type[name]
-                if actual != typ:
-                    bad.append((name, actual))
-            if bad:
-                if adjust_schema:
-                    is_extra_table = (unordered == set(self._extra_cols))
-                    for col, old in bad:
-                        self.drop_column(col)
-                        self.add_column(col, type_dict[col], extra=is_extra_table)
-                else:
-                    if len(bad) > 1:
-                        err = "Invalid types: "
-                    else:
-                        err = "Invalid type: "
-                    err += ", ".join("%s should be %s"%pair for pair in bad)
-                    raise ValueError(err)
-        elif adjust_schema:
-            raise ValueError("check must be True to adjust schema")
-        return names
 
     def _write_header_lines(self, F, cols, sep=u"\t"):
         """
@@ -2436,82 +2681,8 @@ class PostgresTable(PostgresBase):
         types = [self.col_type[col] for col in cols]
         F.write("%s\n%s\n\n"%(sep.join(cols), sep.join(types)))
 
-    def _copy_from(self, filename, table, columns, header, kwds, adjust_schema=False):
-        """
-        Helper function for ``copy_from`` and ``reload``.
 
-        INPUT:
 
-        - ``filename`` -- the filename to load
-        - ``table`` -- the table into which the data should be added
-        - ``columns`` -- a list of columns to load (the file may contain them in
-            a different order, specified by a header row)
-        - ``cur_count`` -- the current number of rows in the table
-        - ``header`` -- whether the file has header rows ordering the columns.
-            This should be True for search and extra tables, False for counts and stats.
-        - ``kwds`` -- passed on to psycopg2's copy_from
-        - ``adjust_schema`` -- If True, rather than raising an error if the columns
-            don't match expectations, will change the schema accordingly.
-        """
-        sep = kwds.get("sep", u"\t")
-        try:
-            with open(filename) as F:
-                if header:
-                    # This consumes the first three lines
-                    columns = self._read_header_lines(F, set(columns), sep=sep, check=True, adjust_schema=adjust_schema)
-                    addid = ('id' not in columns)
-                else:
-                    addid = False
-
-                # We have to add quotes manually since copy_from doesn't accept
-                # psycopg2.sql.Identifiers
-                # None of our column names have double quotes in them. :-D
-                columns = ['"' + col + '"' for col in columns]
-                if addid:
-                    # create sequence
-                    cur_count = self.max_id(table)
-                    seq_name = table + '_seq'
-                    create_seq = SQL("CREATE SEQUENCE {0} START WITH %s MINVALUE %s CACHE 10000").format(Identifier(seq_name))
-                    self._execute(create_seq, [cur_count+1]*2);
-                    # edit default value
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
-                    self._execute(alter_table, [seq_name])
-
-                cur = self.conn.cursor()
-                cur.copy_from(F, table, columns=columns, **kwds)
-
-                if addid:
-                    alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} DROP DEFAULT").format(Identifier(table), Identifier('id'))
-                    self._execute(alter_table)
-                    drop_seq = SQL("DROP SEQUENCE {0}").format(Identifier(seq_name))
-                    self._execute(drop_seq)
-
-                return addid, cur.rowcount
-        except Exception:
-            self.conn.rollback()
-            raise
-
-    def _copy_to_select(self, select, filename):
-        """
-        Using the copy_expert from psycopg2 exports the data from a select statement.
-        """
-        copyto = SQL("COPY (%s) TO STDOUT" % (select,))
-        with open(filename, "w") as F:
-            try:
-                cur = self.conn.cursor()
-                cur.copy_expert(copyto, F)
-            except Exception:
-                self.conn.rollback()
-                raise
-
-    def _clone(self, table, tmp_table):
-        """
-        Utility function: creates a table with the same schema as the given one.
-        """
-        if self._table_exists(tmp_table):
-            raise ValueError("Temporary table %s already exists.  Run db.%s.cleanup_from_reload() if you want to delete it and proceed."%(tmp_table, table))
-        creator = SQL("CREATE TABLE {0} (LIKE {1})").format(Identifier(tmp_table), Identifier(table))
-        self._execute(creator)
 
     def _next_backup_number(self):
         """
@@ -2523,44 +2694,7 @@ class PostgresTable(PostgresBase):
                 backup_number += 1
         return backup_number
 
-    def _swap(self, tables, indexes, constraints, source, target):
-        """
-        Renames tables, indexes, constraints and primary keys, for use in reload.
 
-        INPUT:
-
-        - ``tables`` -- a list of table names to reload (including suffixes like
-            ``_extra`` or ``_counts`` but not ``_tmp``).
-        - ``indexes`` -- a list of index names to reload, without suffixes.
-        - ``constraints`` -- a list of constraint names to reload, without suffixes.
-        - ``source`` -- the source suffix for the swap.
-        - ``target`` -- the target suffix for the swap.
-        """
-        rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
-        rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
-        rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
-        with DelayCommit(self, silence=True):
-            for table in tables:
-                tablename_old = table + source
-                tablename_new = table + target
-                self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
-                pkey_old = table + source + "_pkey"
-                pkey_new = table + target + "_pkey"
-                if self._constraint_exists(tablename_new, pkey_old):
-                    self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                           Identifier(pkey_old),
-                                                           Identifier(pkey_new)))
-                for constraint in constraints:
-                    if self._constraint_exists(tablename_new, constraint + source):
-                        self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                               Identifier(constraint + source),
-                                                               Identifier(constraint + target)))
-            for index in indexes:
-                if self._table_exists(index + source):
-                    self._execute(rename_index.format(Identifier(index + source),
-                                                      Identifier(index + target)))
-                else:
-                    print "Warning: index %s does not exist"%(index + source)
 
     def _swap_in_tmp(self, tables, indexed, commit=True):
         """
@@ -2628,8 +2762,9 @@ class PostgresTable(PostgresBase):
             is to refresh stats if either countsfile or statsfile is missing.
         - ``final_swap`` -- whether to perform the final swap exchanging the
             temporary table with the live one.
-        - ``adjust_schema`` -- If True, rather than raising an error if the header
-            columns don't match expectations, will change the schema accordingly.
+        - ``adjust_schema`` -- If True, it will create the new tables using the
+            header columns, otherwise expects the schema specified by the files
+            to match the current one
         - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
 
         .. NOTE:
@@ -2642,14 +2777,14 @@ class PostgresTable(PostgresBase):
             restat = (countsfile is None or statsfile is None)
         self._check_file_input(searchfile, extrafile, kwds)
         print "Reloading %s..."%(self.search_table)
+        now_overall = time.time()
 
         tables = []
         counts = {}
         tabledata = [(self.search_table, self._search_cols, True, searchfile),
                      (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
-                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
-                                         "constraint_values", "threshold"], False, statsfile)]
+                     (self.stats.counts, _counts_cols, False, countsfile),
+                     (self.stats.stats, _stats_cols, False, statsfile)]
         addedid = None
         with DelayCommit(self, commit, silence=True):
             for table, cols, header, filename in tabledata:
@@ -2658,18 +2793,21 @@ class PostgresTable(PostgresBase):
                 tables.append(table)
                 now = time.time()
                 tmp_table = table + suffix
-                self._clone(table, tmp_table)
-                addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds, adjust_schema=adjust_schema)
+                if adjust_schema and header:
+                    # read the header and create the tmp_table accordingly
+                    cols = self._create_table_from_header(filename, tmp_table)
+                else:
+                    self._clone(table, tmp_table)
+                addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds)
                 # Raise error if exactly one of search and extra contains ids
                 if header:
                     if addedid is None:
                         addedid = addid
                     elif addedid != addid:
-                        self.conn.rollback()
                         raise ValueError("Mismatch on search and extra files containing id")
                 if resort is None and addid:
                     resort = True
-                print "Loaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
+                print "\tLoaded data into %s in %.3f secs from %s" % (table, time.time() - now, filename)
 
             if extrafile is not None and counts[self.search_table] != counts[self.extra_table]:
                 self.conn.rollback()
@@ -2712,7 +2850,7 @@ class PostgresTable(PostgresBase):
 
             if log_change:
                 self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
-            print "Finished reloading %s!" % (self.search_table)
+            print "Reloaded %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
     def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
         """
@@ -2911,17 +3049,23 @@ class PostgresTable(PostgresBase):
         self._check_file_input(searchfile, extrafile, kwds)
         sep = kwds.get("sep", u"\t")
 
-        tabledata = [(self.search_table, self._search_cols, True, searchfile),
-                     (self.extra_table, self._extra_cols, True, extrafile),
-                     (self.stats.counts, ["cols", "values", "count", "extra"],False, countsfile),
-                     (self.stats.stats, ["cols", "stat", "value", "constraint_cols",
-                                         "constraint_values", "threshold"], False, statsfile)]
-        metadata = [("meta_indexes", "table_name", "index_name, table_name, type, columns, modifiers, storage_params", indexesfile),
-                    ("meta_constraints", "table_name", "constraint_name, table_name, type, columns, check_func", constraintsfile),
-                    ("meta_tables", "name", "name, sort, id_ordered, out_of_order, has_extras, label_col, total", metafile)
-                    ]
+        tabledata = [
+                # tablename, cols, addid, write_header, filename
+                (self.search_table, self._search_cols, True, True, searchfile),
+                (self.extra_table, self._extra_cols, True, True, extrafile),
+                (self.stats.counts, _counts_cols, False, False, countsfile),
+                (self.stats.stats, _stats_cols, False, False, statsfile)
+                ]
+
+        metadata = [
+                ("meta_indexes", "table_name", _meta_indexes_cols, indexesfile),
+                ("meta_constraints", "table_name", _meta_constraints_cols, constraintsfile),
+                ("meta_tables", "name", _meta_tables_cols, metafile)
+                ]
+        print "Exporting %s..."%(self.search_table)
+        now_overall = time.time()
         with DelayCommit(self, commit):
-            for table, cols, addid, filename in tabledata:
+            for table, cols, addid, write_header, filename in tabledata:
                 if filename is None:
                     continue
                 now = time.time()
@@ -2931,20 +3075,24 @@ class PostgresTable(PostgresBase):
                 cur = self.conn.cursor()
                 with open(filename, "w") as F:
                     try:
-                        self._write_header_lines(F, cols, sep=sep)
+                        if write_header:
+                            self._write_header_lines(F, cols, sep=sep)
                         cur.copy_to(F, table, columns=cols_wquotes, **kwds)
                     except Exception:
                         self.conn.rollback()
                         raise
-                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+                print "\tExported %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
             for table, wherecol, cols, filename in metadata:
                 if filename is None:
                     continue
                 now = time.time()
-                select = "SELECT %s FROM %s WHERE %s = '%s'" % (cols, table, wherecol, self.search_table,)
+                cols = SQL(", ").join(map(Identifier, cols))
+                select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
                 self._copy_to_select(select, filename)
-                print "Exported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+                print "\tExported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
+
+            print "Exported %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
     ##################################################################
     # Updating the schema                                            #
@@ -4159,6 +4307,9 @@ class PostgresDatabase(PostgresBase):
     def __repr__(self):
         return "Interface to Postgres database"
 
+
+
+
     def login(self):
         """
         Identify an editor by their lmfdb username.
@@ -4331,6 +4482,13 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_indexes_hist created")
 
+
+    def _create_meta_constraints(self):
+        with DelayCommit(self, silence=True):
+            self._execute(SQL("CREATE TABLE meta_constraints (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb)"))
+            self.grant_select('meta_constraints')
+        print("Table meta_constraints created")
+
     def _create_meta_constraints_hist(self):
         with DelayCommit(self, silence=True):
             self._execute(SQL("CREATE TABLE meta_constraints_hist (constraint_name text, table_name text, type text, columns jsonb, check_func jsonb, version integer)"))
@@ -4475,10 +4633,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                             raise ValueError("Column %s does not exist"%(col))
                     if len(extra_order) != len(valid_extra_set):
                         raise ValueError("Must include all columns")
-                extra_columns = process_columns(extra_columns, extra_order)
+                processed_extra_columns = process_columns(extra_columns, extra_order)
                 creator = SQL('CREATE TABLE {0} ({1})')
                 creator = creator.format(Identifier(name+"_extras"),
-                                         SQL(", ").join(extra_columns))
+                                         SQL(", ").join(processed_extra_columns))
                 self._execute(creator)
                 self.grant_select(name+"_extras")
             creator = SQL('CREATE TABLE {0} (cols jsonb, values jsonb, count bigint, extra boolean, split boolean DEFAULT FALSE)')
@@ -4491,13 +4649,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self._execute(creator)
             self.grant_select(name+"_stats")
             self.grant_insert(name+"_stats")
+            # FIXME use global constants ?
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
             self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
-            print "Table %s created in %.3f secs"%(name, time.time()-now)
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
+        print "Table %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_table(self, name, commit=True):
         with DelayCommit(self, commit, silence=True):
@@ -4629,7 +4788,9 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         # copy all the data
         source.copy_to(search_tables = search_tables, data_folder=data_folder, **kwds)
 
-    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, **kwds):
+
+
+    def reload_all(self, data_folder, resort=None, reindex=True, restat=None, adjust_schema=False, commit=True, halt_on_errors=True, **kwds):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
@@ -4639,67 +4800,121 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         Input is as for the `reload` function.
         """
-        file_list = []
-        tablenames = []
-        for tablename in self.tablenames:
-            included = []
-
-            searchfile = os.path.join(data_folder, tablename + '.txt')
-            if not os.path.exists(searchfile):
-                continue
-            included.append(tablename)
-
-            table = self[tablename]
-
-            extrafile = os.path.join(data_folder, tablename + '_extras.txt')
-            if os.path.exists(extrafile):
-                if table.extra_table is None:
-                    raise ValueError("Unexpected file %s"%extrafile)
-                included.append(tablename + '_extras')
-            elif table.extra_table is None:
-                extrafile = None
-            else:
-                raise ValueError("Missing file %s"%extrafile)
-
-            countsfile = os.path.join(data_folder, tablename + '_counts.txt')
-            if os.path.exists(countsfile):
-                included.append(tablename + '_counts')
-            else:
-                countsfile = None
-
-            statsfile = os.path.join(data_folder, tablename + '_stats.txt')
-            if os.path.exists(statsfile):
-                included.append(tablename + '_stats')
-            else:
-                statsfile = None
-
-            indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
-            if not os.path.exists(indexesfile):
-                indexesfile = None
-
-            constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
-            if not os.path.exists(constraintsfile):
-                constraintsfile = None
-
-            metafile = os.path.join(data_folder, tablename + '_meta.txt')
-            if not os.path.exists(metafile):
-                metafile = None
-
-            file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
-            tablenames.append(tablename)
-        print "Reloading %s"%(", ".join(tablenames))
         with DelayCommit(self, commit, silence=True):
+            file_list = []
+            tablenames = []
+            non_existent_tables = []
+            possible_endings = ['_extras.txt', '_counts.txt', '_stats.txt',
+                    '_indexes.txt','_constraints.txt','_meta.txt']
+            for path in glob(os.path.join(data_folder, "*.txt")):
+                filename = os.path.basename(path)
+                if any(filename.endswith(elt) for elt in possible_endings):
+                    continue
+                tablename = filename[:-4]
+                if tablename not in self.tablenames:
+                    non_existent_tables.append(tablename)
+            if non_existent_tables:
+                if not adjust_schema:
+                    raise ValueError("non existent tables: {0}; use adjust_schema=True to create them".format(", ".join(non_existent_tables)))
+                print "Creating tables: {0}".format(", ".join(non_existent_tables))
+                for tablename in non_existent_tables:
+                    search_table_file = os.path.join(data_folder, tablename + '.txt')
+                    extras_file = os.path.join(data_folder, tablename + '_extras.txt')
+                    metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                    if not os.path.exists(metafile):
+                        raise ValueError("meta file missing for {0}".format(tablename))
+                    # read metafile
+                    rows = []
+                    with open(metafile, "r") as F:
+                        rows = [line for line in csv.reader(F, delimiter = "\t")]
+                    if len(rows) != 1:
+                        raise RuntimeError("Expected only one row in {0}")
+                    meta = dict(zip(_meta_tables_cols, rows[0]))
+                    assert meta["name"] == tablename
+
+                    with open(search_table_file, "r") as F:
+                        search_columns_pairs = self._read_header_lines(F)
+
+                    search_columns = defaultdict(list)
+                    for name, typ in search_columns_pairs:
+                        if name != 'id':
+                            search_columns[typ].append(name)
+
+                    extra_columns = None
+                    if meta["has_extras"] == "t":
+                        if not os.path.exists(extras_file):
+                            raise ValueError("extras file missing for {0}".format(tablename))
+                        with open(extras_file, "r") as F:
+                            extras_columns_pairs = self._read_header_lines(F)
+                        extra_columns = defaultdict(list)
+                        for name, typ in extras_columns_pairs:
+                            if name != 'id':
+                                extra_columns[typ].append(name)
+                    # the rest of the meta arguments will be replaced on the reload_all
+                    self.create_table(tablename, search_columns, None, extra_columns=extra_columns)
+
+            for tablename in self.tablenames:
+                included = []
+
+                searchfile = os.path.join(data_folder, tablename + '.txt')
+                if not os.path.exists(searchfile):
+                    continue
+                included.append(tablename)
+
+
+                table = self[tablename]
+
+                extrafile = os.path.join(data_folder, tablename + '_extras.txt')
+                if os.path.exists(extrafile):
+                    if table.extra_table is None:
+                        raise ValueError("Unexpected file %s"%extrafile)
+                    included.append(tablename + '_extras')
+                elif table.extra_table is None:
+                    extrafile = None
+                else:
+                    raise ValueError("Missing file %s"%extrafile)
+
+                countsfile = os.path.join(data_folder, tablename + '_counts.txt')
+                if os.path.exists(countsfile):
+                    included.append(tablename + '_counts')
+                else:
+                    countsfile = None
+
+                statsfile = os.path.join(data_folder, tablename + '_stats.txt')
+                if os.path.exists(statsfile):
+                    included.append(tablename + '_stats')
+                else:
+                    statsfile = None
+
+                indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
+                if not os.path.exists(indexesfile):
+                    indexesfile = None
+
+                constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
+                if not os.path.exists(constraintsfile):
+                    constraintsfile = None
+
+                metafile = os.path.join(data_folder, tablename + '_meta.txt')
+                if not os.path.exists(metafile):
+                    metafile = None
+
+                file_list.append((table, (searchfile, extrafile, countsfile, statsfile, indexesfile, constraintsfile, metafile), included))
+                tablenames.append(tablename)
+            print "Reloading {0}".format(", ".join(tablenames))
             failures = []
             for table, filedata, included in file_list:
                 try:
-                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, commit=False, **kwds)
+                    table.reload(*filedata, resort=resort, reindex=reindex, restat=restat, final_swap=False, silence_meta=True, adjust_schema=adjust_schema, **kwds)
                 except DatabaseError:
-                    traceback.print_exc()
-                    failures.append(table)
+                    if halt_on_errors or non_existent_tables:
+                        raise
+                    else:
+                        traceback.print_exc()
+                        failures.append(table)
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex, commit=False)
+                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex)
 
         if failures:
             print "Reloaded %s"%(", ".join(tablenames))
