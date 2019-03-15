@@ -99,7 +99,11 @@ def lattice_by_label_or_name(lab):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
-        label = db.lat_lattices.lucky({'$or':[{'label': l}, {'name': l}]}, 'label')
+        label = db.lat_lattices.lucky(
+                {'$or':
+                    [{'label': l},
+                     {'name': {'$contains': [l]}}]},
+                    'label')
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
