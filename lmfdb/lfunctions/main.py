@@ -2,12 +2,11 @@
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import plot, srange, spline, line, latex, is_prime,  factor
+from sage.all import srange, spline, line, latex, is_prime,  factor
 
 import tempfile
 import os
 import re
-import numpy
 
 import LfunctionPlot
 
@@ -15,7 +14,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q,
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
