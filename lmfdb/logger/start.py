@@ -44,7 +44,10 @@ def start_logging():
     ch.setFormatter(formatter)
     root_logger.addHandler(ch)
 
-    info("Configuration = %s" % config.get_all())
+    cfg = config.get_all()
+    if "postgresql_options" and "password" in cfg["postgresql_options"]:
+        cfg["postgresql_options"]["password"] = "****"
+    info("Configuration = {}".format(cfg) )
     check_sage_version()
 
 

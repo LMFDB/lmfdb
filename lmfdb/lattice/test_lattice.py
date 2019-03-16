@@ -102,3 +102,19 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/4.5.5.1.1/download/gp/genus_reps").data
         assert ']~)' in L 
 
+
+    def test_favorite(self):
+        for elt in ['A2', 'Z2', 'D3', 'D3*', '3.1942.3884.56.1', 'A5',
+                    'E8', 'A14', 'Leech']:
+            L = self.tc.get(
+                    "/Lattice/?label={}".format(elt),
+                    follow_redirects=True)
+            assert elt in L.data
+            L = self.tc.get(
+                    "/Lattice/{}".format(elt),
+                    follow_redirects=True)
+            assert elt in L.data
+
+
+
+
