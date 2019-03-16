@@ -22,6 +22,10 @@ class Downloader(object):
       a string (indicating a single column),
       or a dictionary with keys language names and values the appropriate columns.
       In all cases, exclude the label column, which is prepended automatically.
+    - a ``column_wrappers`` attribute, which is a dictionary with column names
+      as keys and unary functions f as values; data for for the named columns
+      be mapped through f when being added to the download data (column names
+      that do not appear in columns will be ignored)
     - a ``data_format`` attribute, which is a list of strings
       (defaulting to the names of the columns), not including the label
     - a ``data_description`` attribute (optional), which is a list of strings
@@ -193,6 +197,12 @@ class Downloader(object):
         assert len(data_format) == len(proj)
         if label_col:
             proj = [label_col] + proj
+        # set up column wrappers
+        cw = self.get('column_wrappers',{})
+        id = lambda x: x
+        for col in wo_label:
+            if not col in cw:
+                cw[col] = id
         # reissue query here
         try:
             query = literal_eval(info.get('query','{}'))
@@ -200,9 +210,9 @@ class Downloader(object):
             if label_col:
                 label_list = [res[label_col] for res in data]
             if onecol:
-                res_list = [res.get(wo_label[0]) for res in data]
+                res_list = [cw[wo_label[0]](res.get(wo_label[0])) for res in data]
             else:
-                res_list = [[res.get(col) for col in wo_label]  for res in data]
+                res_list = [[cw[col](res.get(col)) for col in wo_label]  for res in data]
         except Exception as err:
             return abort(404, "Unable to parse query: %s"%err)
         c = self.comment_prefix[lang]
