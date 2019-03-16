@@ -220,13 +220,10 @@ def not_found_503(error):
 
 @app.before_request
 def get_menu_cookie():
-    g.show_menu = request.cookies.get('showmenu') != "False"
-
-@app.after_request
-def set_menu_cookie(response):
-    if hasattr(g, 'show_menu'):
-        response.set_cookie("showmenu", str(g.show_menu))
-    return response
+    """
+    sets cookie for show/hide sidebar
+    """
+    g.show_menu = str(request.cookies.get('showmenu')) != "False"
 
 ##############################
 #       Top-level pages      #
@@ -427,12 +424,6 @@ def css():
     else:
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
-
-@app.route('/_menutoggle/<show>')
-def menutoggle(show):
-    g.show_menu = show != "False"
-    url = request.referrer or url_for('index')
-    return redirect(url)
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():

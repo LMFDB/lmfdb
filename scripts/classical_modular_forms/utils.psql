@@ -44,7 +44,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-//we could have only one function, but then we would play heavily for the if statement
+//we could have only one function, but then we would pay heavily for the if statement
 CREATE OR REPLACE FUNCTION from_newspace_label_to_hecke_orbit_code(IN s varchar) RETURNS bigint AS $$
 DECLARE
     v text[];
