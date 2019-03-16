@@ -241,7 +241,7 @@ class G2C_download(Downloader):
     data_format = ['[[f coeffs],[h coeffs]]']
     data_description = 'defining the hyperelliptic curve y^2+h(x)y=f(x).'
     function_body = {'magma':['R<x>:=PolynomialRing(Rationals());',
-                              'return [HyperellipticCurve(R!r[1],R!r[2]):r in data];'],
+                              'return [HyperellipticCurve(R![c:c in r[1]],R![c:c in r[2]]):r in data];'],
                      'sage':['R.<x>=PolynomialRing(QQ)',
                              'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
                      'gp':['[apply(Polrev,c)|c<-data];']}
