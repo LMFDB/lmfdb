@@ -191,13 +191,13 @@ def render_one_maass_waveform_wp(info, prec=9):
     info['title'] = "Maass Form"
     info['bread'] = [('Modular Forms', url_for('mf.modular_form_main_page')),
                      ('Maass Waveforms', url_for('.render_maass_waveforms'))]
-    if hasattr(MF,'level'):
-        info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
-        info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
-        if hasattr(MF, 'R') and MF.R:
-            info['title'] += " with \(R=%s\)" % info['MF'].R
+    info['bread'].append(('Level {0}'.format(MF.level), url_for('.render_maass_waveforms', level=MF.level)))
+    info['title'] += " on \(\Gamma_{0}( %s )\)" % info['MF'].level
+    if MF.R:
+        info['title'] += " with \(R=%s\)" % info['MF'].R
 
     # make sure all the expected attributes of a WebMaassForm are actually present
+    # This will never fail!  These attributes are always set in the __init__ method
     missing = [attr for attr in ['level', 'dim', 'num_coeff', 'R', 'character'] if not hasattr(MF, attr)]
     if missing:
         mwf_logger.critical("Unable to render Maass form {0}; required attributes {1} missing from database record.".format(maass_id,missing))
