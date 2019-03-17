@@ -4757,7 +4757,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def copy_to(self, search_tables, data_folder, make_folder=False, **kwds):
         if make_folder:
-            if os.path.isdir(data_folder):
+            if not os.path.isdir(data_folder):
                 os.makedirs(data_folder)
         failures = []
         for tablename in search_tables:
