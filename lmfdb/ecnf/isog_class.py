@@ -59,15 +59,15 @@ class ECNF_isoclass(object):
              'iso_nlabel': self.iso_nlabel}))
 
         # Rank or bounds
-        try:
-            self.rk = web_latex(self.db_curves[0]['rank'])
-        except KeyError:
+        if self.db_curves[0]['rank'] is None:
             self.rk = "?"
-        try:
-            self.rk_bnds = "%s...%s" % tuple(self.db_curves[0]['rank_bounds'])
-        except KeyError:
+        else:
+            self.rk = web_latex(self.db_curves[0]['rank'])
+        if self.db_curves[0]['rank_bounds'] is None:
             self.rank_bounds = [0, Infinity]
             self.rk_bnds = "not recorded"
+        else:
+            self.rk_bnds = "%s...%s" % tuple(self.db_curves[0]['rank_bounds'])
 
 
         # Extract the isogeny degree matrix from the database
