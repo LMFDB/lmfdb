@@ -71,7 +71,7 @@ class ECNF_isoclass(object):
 
 
         # Extract the isogeny degree matrix from the database
-        if not hasattr(self, 'isogeny_matrix'):
+        if self.isogeny_matrix is None:
             # this would happen if the class is initiated with a curve
             # which is not #1 in its class:
             self.isogeny_matrix = self.db_curves[0].isogeny_matrix

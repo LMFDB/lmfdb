@@ -73,6 +73,11 @@ param_types_whitelist = [
 ]
 param_types_whitelist = [re.compile(s) for s in param_types_whitelist]
 
+def _check_datatype(datatype):
+    if datatype.lower() not in types_whitelist:
+        if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
+            raise ValueError("%s is not a valid type"%(datatype))
+
 # The following is used in bucketing for statistics
 pg_to_py = {}
 for typ in ["int2", "smallint", "smallserial", "serial2",
@@ -865,14 +870,13 @@ class PostgresTable(PostgresBase):
             if projection == 0 or isinstance(projection, basestring) and not extra_cols:
                 yield rec[0]
             else:
-                D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:]) if v is not None}
+                D = {k:v for k,v in zip(search_cols[id_offset:], rec[id_offset:])}
                 if extra_cols:
                     selecter = SQL("SELECT {0} FROM {1} WHERE id = %s").format(SQL(", ").join(map(IdentifierWrapper, extra_cols)), Identifier(self.extra_table))
                     extra_cur = self._execute(selecter, [rec[0]])
                     extra_rec = extra_cur.fetchone()
                     for k,v in zip(extra_cols, extra_rec):
-                        if v is not None:
-                            D[k] = v
+                        D[k] = v
                 if isinstance(projection, basestring):
                     yield D[projection]
                 else:
@@ -2974,14 +2978,15 @@ class PostgresTable(PostgresBase):
                 self.create_index(sort)
             self.log_db_change("set_sort", sort=sort)
 
-    def add_column(self, name, datatype, extra=False):
+    def _check_colname(self, name):
         if name in self._search_cols:
             raise ValueError("%s already has column %s"%(self.search_table, name))
         if name in self._extra_cols:
             raise ValueError("%s already has column %s"%(self.extra_table, name))
-        if datatype.lower() not in types_whitelist:
-            if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
-                raise ValueError("%s is not a valid type"%(datatype))
+
+    def add_column(self, name, datatype, extra=False):
+        self._check_colname(name)
+        _check_datatype(datatype)
         self.col_type[name] = datatype
         if extra:
             if self.extra_table is None:
@@ -3068,9 +3073,7 @@ class PostgresTable(PostgresBase):
                 if col in self._sort_keys:
                     raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before moving column to extra table"%(self.search_table, col))
                 typ = self.col_type[col]
-                if typ not in types_whitelist:
-                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                        raise RuntimeError("%s is not a valid type"%(typ))
+                _check_datatype(typ)
                 vars.append((col, typ))
             self._extra_cols = []
             vars = SQL(", ").join(SQL("{0} %s"%typ).format(Identifier(col)) for col, typ in vars)
@@ -4440,9 +4443,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             hasid = False
             dictorder = []
             for typ, cols in coldict.items():
-                if typ.lower() not in types_whitelist:
-                    if not any(regexp.match(typ.lower()) for regexp in param_types_whitelist):
-                        raise ValueError("%s is not a valid type"%(typ))
+                _check_datatype(typ)
                 if isinstance(cols, basestring):
                     cols = [cols]
                 for col in cols:

@@ -367,7 +367,7 @@ class ECNF(object):
 
         # Images of Galois representations
 
-        if not hasattr(self,'galois_images'):
+        if self.galois_images is None:
             #print "No Galois image data"
             self.galois_images = "?"
             self.non_surjective_primes = "?"
