@@ -404,8 +404,6 @@ class RiemannZeta(Lfunction):
         self.coefficient_period = 0
         self.poles = [0, 1]
         self.residues = [-1, 1]
-        self.poles_L = [1]  # poles of L(s), used by createLcalcfile_ver2
-        self.residues_L = [1]  # residues of L(s) createLcalcfile_ver2
         self.langlands = True
         self.primitive = True
         self.degree = 1
@@ -1547,9 +1545,6 @@ class DedekindZeta(Lfunction):
         else:
             self.res = RR(2 ** self.signature[0] * self.h * self.R) / self.w
             self.residues = [self.res, -self.res]
-        self.poles_L = [1]  # poles of L(s) used by createLcalcfile_ver2
-        self.residues_L = [1234] # residues of L(s) used by createLcalcfile_ver2,
-                                 # TODO: needs to be set
         self.langlands = True
         self.primitive = False
         self.degree = self.NF.degree()
