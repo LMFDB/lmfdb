@@ -575,14 +575,14 @@ def render_passport(args):
         for i in range (0, min(numgenvecs,numb)):
             dat= dataz[i]
             x1=dat['total_label']
-            if 'full_auto' in dat:
+            if dat['full_auto'] is not None:
                 x2='No'
                 if dat['full_label'] not in Lfriends:
                     Lfriends.append(dat['full_label'])
             else:
                 x2='Yes'
 
-            if 'hyperelliptic' in dat:
+            if dat['hyperelliptic'] is not None:
                 x3=tfTOyn(dat['hyperelliptic'])
                 HypColumn= True
             else:
@@ -602,40 +602,40 @@ def render_passport(args):
 
         info.update({'passport_cc': cc_display(ast.literal_eval(data['con']))})
 
-        if 'eqn' in data:
+        if data['eqn'] is not None:
             info.update({'eqns': data['eqn']})
 
-        if 'ndim' in data:
+        if data['ndim'] is not None:
             info.update({'Ndim': data['ndim']})
 
         other_data = False
 
-        if 'hyperelliptic' in data:
+        if data['hyperelliptic'] is not None:
             info.update({'ishyp':  tfTOyn(data['hyperelliptic'])})
             other_data = True
 
-        if 'hyp_involution' in data:
+        if data['hyp_involution'] is not None:
             inv=Permutation(data['hyp_involution']).cycle_string()
             info.update({'hypinv': sep.join(split_perm(inv))})
 
 
-        if 'cyclic_trigonal' in data:
+        if data['cyclic_trigonal'] is not None:
             info.update({'iscyctrig':  tfTOyn(data['cyclic_trigonal'])})
             other_data = True
 
-        if 'jacobian_decomp' in data:
+        if data['jacobian_decomp'] is not None:
             jcLatex, corrChar = decjac_format(data['jacobian_decomp'])
             info.update({'corrChar': corrChar, 'jacobian_decomp': jcLatex})
 
 
-        if 'cinv' in data:
+        if data['cinv'] is not None:
             cinv=Permutation(data['cinv']).cycle_string()
             info.update({'cinv': sep.join(split_perm(cinv))})
 
         info.update({'other_data': other_data})
 
 
-        if 'full_auto' in data:
+        if data['full_auto'] is not None:
             full_G=ast.literal_eval(data['full_auto'])
             full_gn = full_G[0]
             full_gt = full_G[1]
