@@ -1096,7 +1096,8 @@ class Lfunction_genus2_Q(Lfunction_from_db):
                     for factor_Lhash in  elt.split(","):
                         trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
                         if trace_hash is not None:
-                            instancesf = get_instances_by_trace_hash(str(trace_hash))
+                            instancesf = get_instances_by_trace_hash(
+                                                            2, str(trace_hash))
                         else:
                             instancesf = get_instances_by_Lhash(factor_Lhash)
                         instances.extend(instancesf)
