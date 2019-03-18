@@ -640,6 +640,10 @@ class Knowl(object):
             if match:
                 self.source = match.group(1)
                 self.type = -2
+            elif top_knowl_re.match(ID):
+                self.type = 1
+            elif bottom_knowl_re.match(ID):
+                self.type = -1
             else:
                 self.type = 0
         #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
