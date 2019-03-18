@@ -877,18 +877,22 @@ def getLfunctionPlot(request, *args):
         F = p2sage(pythonL.plotpoints)
         #  F[0][0] is the lowest t-coordinated that we have a value for L
         #  F[-1][0] is the highest t-coordinated that we have a value for L
-        plotrange = min(plotrange, -F[0][0], F[-1][0]) 
+        plotrange = min(plotrange, -F[0][0], F[-1][0])
         # aim to display at most 25 axis crossings
-        if hasattr(pythonL, 'positive_zeros'):
+        # if the L-function is nonprimitive
+        if (hasattr(pythonL, 'positive_zeros') and
+            hasattr(pythonL, 'primitive') and
+            not pythonL.primitive):
             # we stored them ready to display
             zeros = map(float, pythonL.positive_zeros.split(","))
             if len(zeros) >= 25:
                 zero_range = zeros[24]
             else:
                 zero_range = zeros[-1]*25/len(zeros)
+            zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
     else:
-     # obsolete, because lfunc_data comes from DB?
+    # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None
