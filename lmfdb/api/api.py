@@ -102,6 +102,8 @@ def stats():
                 link = tablename
             else:
                 link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if not sizes['toast_bytes']:
+                sizes['toast_bytes'] = 0 
             if sizes['nrows']:
                 avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
             else:

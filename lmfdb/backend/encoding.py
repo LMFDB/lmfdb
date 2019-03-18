@@ -225,7 +225,7 @@ class Json(pgJson):
                     'data': data}
         elif escape_backslashes and isinstance(obj, basestring):
             # For use in copy_dumps below
-            return obj.replace('\\','\\\\\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
+            return obj.replace('\\','\\\\').replace("\r", r"\r").replace("\n", r"\n").replace("\t", r"\t").replace('"',r'\"')
         elif obj is None:
             return None
         elif isinstance(obj, datetime.date):
@@ -310,7 +310,7 @@ class Json(pgJson):
                 return datetime.datetime.strptime(obj['data'], "%Y-%m-%d %H:%M:%S.%f")
         return obj
 
-def copy_dumps(inp, typ):
+def copy_dumps(inp, typ, recursing=False):
     """
     Output a string formatted as needed for loading by Postgres' COPY FROM.
 
@@ -324,12 +324,37 @@ def copy_dumps(inp, typ):
     elif typ in ('text', 'char', 'varchar'):
         if not isinstance(inp, basestring):
             inp = str(inp)
-        return inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
+        inp = inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
+        if recursing and '{' in inp or '}' in inp:
+            inp = '"' + inp + '"'
+        return inp
     elif typ in ('json','jsonb'):
         return json.dumps(Json.prep(inp, escape_backslashes=True))
+    elif typ[-2:] == '[]':
+        if not isinstance(inp, (list, tuple)):
+            raise TypeError("You must use list or tuple for array columns")
+        if not inp:
+            return '{}'
+        subtyp = None
+        sublen = None
+        for x in inp:
+            if isinstance(x, (list, tuple)):
+                if subtyp is None:
+                    subtyp = typ
+                elif subtyp != typ:
+                    raise ValueError("Array dimensions must be uniform")
+                if sublen is None:
+                    sublen = len(x)
+                elif sublen != len(x):
+                    raise ValueError("Array dimensions must be uniform")
+            elif subtyp is None:
+                subtyp = typ[:-2]
+            elif subtyp != typ[:-2]:
+                raise ValueError("Array dimensions must be uniform")
+        return '{' + ",".join(copy_dumps(x, subtyp, recursing=True) for x in inp) + '}'
     elif isinstance(inp, RealLiteral):
         return inp.literal
-    elif isinstance(inp, (int, long, Integer, float)):
+    elif isinstance(inp, (int, long, Integer, float, RealNumber)):
         return str(inp).replace('L','')
     elif typ=='boolean':
         return 't' if inp else 'f'
