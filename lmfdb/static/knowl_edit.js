@@ -99,15 +99,20 @@ function refresh_link_suggestions() {
     }
   } while (m);
   // Add mathmode intervals to bad_intervals
-  var math_res = [/(?<!\$)\$.+?\$/g, // We assume people aren't using \$ in their mathmode expressions
-                  /\$\$[^$]+\$\$/g,
-                  /\\\(.*?(?<=\\)\)/g,
-                  /\\\[.*?(?<=\\)\]/g];
+  var math_res = [/[^\$]\$.+?\$/g, // We assume people aren't using \$ in their mathmode expressions
+                  /\$\$.+?\$\$/g,
+                  /\\\(.*?\\\)/g,
+                  /\\\[.*?\\\]/g];
+  var re_offset = [1, 0, 0, 0];
+  // We don't want to include the first character of the first regex in the bad interval.
+  // We could do this with a negative lookbehind, but that's not supported on Firefox.
   for (i = 0; i < math_res.length; i++) {
     do {
       m = math_res[i].exec(content);
       if (m) {
-        bad_intervals.push([m.index, m.index+m[0].length]);
+        // We need to add one to the index in order to ignore the starting character
+        // which was necessary to include in order to make the first regex work
+        bad_intervals.push([m.index + re_offset[i], m.index+m[0].length]);
       }
     } while (m);
   }
