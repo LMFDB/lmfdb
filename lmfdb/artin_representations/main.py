@@ -2,26 +2,38 @@
 # This Blueprint is about Artin representations
 # Author: Paul-Olivier Dehaye, John Jones
 
-from lmfdb.db_backend import db
+import re, random
+
 from flask import render_template, request, url_for, flash, redirect
 from markupsafe import Markup
-
-from lmfdb.artin_representations import artin_representations_page
-from lmfdb.search_parsing import parse_primes, parse_restricted, parse_element_of, parse_galgrp, parse_ints, parse_container, clean_input
-from lmfdb.search_wrapper import search_wrap
-
-from math_classes import ArtinRepresentation
-from lmfdb.transitive_group import group_display_knowl
-
 from sage.all import ZZ
 
-import re, random
+from lmfdb import db
+from lmfdb.utils import (
+    parse_primes, parse_restricted, parse_element_of, parse_galgrp,
+    parse_ints, parse_container, clean_input,
+    search_wrap)
+from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.artin_representations import artin_representations_page
+from lmfdb.artin_representations.math_classes import ArtinRepresentation
+
+LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
     for b in breads:
         bc.append(b)
     return bc
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".cande")),
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
+            ('Artin representations labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def make_cond_key(D):
     D1=ZZ(D)
@@ -31,7 +43,7 @@ def make_cond_key(D):
 
 def parse_artin_label(label):
     label = clean_input(label)
-    if re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$').match(label):
+    if LABEL_RE.match(label):
         return label
     else:
         raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
@@ -42,16 +54,12 @@ def index():
     args = request.args
     bread = get_bread()
     if len(args) == 0:
-        learnmore = [#('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
-                ('Artin representations labels', url_for(".labels_page"))]
-        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore)
+        return render_template("artin-representation-index.html", title="Artin Representations", bread=bread, learnmore=learnmore_list())
     else:
         return artin_representation_search(args)
 
 def artin_representation_jump(info):
     label = info['natural']
-    # test if it is ok
     try:
         label = parse_artin_label(label)
     except ValueError as err:
@@ -64,7 +72,8 @@ def artin_representation_jump(info):
              table=db.artin_reps,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
-             per_page=10,
+             per_page=50,
+             learnmore=learnmore_list,
              shortcuts={'natural':artin_representation_jump},
              bread=lambda:[('Artin Representations', url_for(".index")), ('Search Results', ' ')],
              initfunc=lambda:ArtinRepresentation)
@@ -88,7 +97,7 @@ def search_input_error(info, bread):
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
-    return artin_representation_search(**{'dimension': dim, 'conductor': conductor})
+    return artin_representation_search({'dimension': dim, 'conductor': conductor})
 
 
 # credit information should be moved to the databases themselves, not at the display level. that's too late.
@@ -128,7 +137,6 @@ def render_artin_representation_webpage(label):
     properties = [("Label", label),
                   ("Dimension", str(the_rep.dimension())),
                   ("Group", the_rep.group()),
-                  #("Conductor", str(the_rep.conductor())),
                   ("Conductor", "$" + the_rep.factored_conductor_latex() + "$"),
                   #("Bad primes", str(the_rep.bad_primes())),
                   ("Root number", processed_root_number),
@@ -169,16 +177,8 @@ def render_artin_representation_webpage(label):
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
     info={}
-    #mychar = the_rep.central_char()
-    #info['pol2']= str([((j+1),mychar(j+1, 2*the_rep.character_field())) for j in range(50)])
-    #info['pol3']=str(the_rep.central_character())
-    #info['pol3']=str(the_rep.central_char(3))
-    #info['pol5']=str(the_rep.central_char(5))
-    #info['pol7']=str(the_rep.central_char(7))
-    #info['pol11']=str(the_rep.central_char(11))
-    learnmore=[('Artin representations labels', url_for(".labels_page"))]
 
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore)
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():
@@ -187,33 +187,36 @@ def random_representation():
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-
-@artin_representations_page.route("/Completeness")
-def completeness_page():
-    t = 'Completeness of Artin Representation Data'
-    bread = get_bread([("Completeness", )])
-    learnmore = [('Source of the data', url_for(".how_computed_page")),
-                ('Artin representation labels', url_for(".labels_page"))]
-    return render_template("single.html", kid='dq.artin.extent',
-                           credit=tim_credit, title=t, bread=bread, 
-                           learnmore=learnmore)
-
 @artin_representations_page.route("/Labels")
 def labels_page():
     t = 'Labels for Artin Representations'
     bread = get_bread([("Labels", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page"))]
+    learnmore = learnmore_list_remove('labels')
     return render_template("single.html", kid='artin.label',learnmore=learnmore, credit=tim_credit, title=t, bread=bread)
 
 @artin_representations_page.route("/Source")
-def how_computed_page():
+def source():
     t = 'Source of Artin Representation Data'
     bread = get_bread([("Source", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                #('Source of the data', url_for(".how_computed_page")),
-                ('Artin representation labels', url_for(".labels_page"))]
-    return render_template("single.html", kid='dq.artin.source',
+    learnmore = learnmore_list_remove('Source')
+    return render_template("single.html", kid='rcs.source.artin',
                            credit=tim_credit, title=t, bread=bread, 
                            learnmore=learnmore)
 
+@artin_representations_page.route("/Reliability")
+def reliability():
+    t = 'Reliability of Artin Representation Data'
+    bread = get_bread([("Reliability", '')])
+    learnmore = learnmore_list_remove('Reliability')
+    return render_template("single.html", kid='rcs.rigor.artin',
+                           credit=tim_credit, title=t, bread=bread, 
+                           learnmore=learnmore)
+
+@artin_representations_page.route("/Completeness")
+def cande():
+    t = 'Completeness of Artin Representation Data'
+    bread = get_bread([("Completeness", '')])
+    learnmore = learnmore_list_remove('Completeness')
+    return render_template("single.html", kid='rcs.cande.artin',
+                           credit=tim_credit, title=t, bread=bread, 
+                           learnmore=learnmore)

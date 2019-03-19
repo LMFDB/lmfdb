@@ -2,14 +2,23 @@
 # This Blueprint is about Galois Groups
 # Author: John Jones
 
-from lmfdb.base import app
-from flask import render_template, request, url_for, redirect
-from lmfdb.utils import list_to_latex_matrix
-from lmfdb.search_parsing import clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted
-from lmfdb.search_wrapper import search_wrap
 import re
-from lmfdb.galois_groups import galois_groups_page, logger
+
+from flask import render_template, request, url_for, redirect
 from sage.all import ZZ, latex, gap
+
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.utils import (
+    list_to_latex_matrix,
+    clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,
+    search_wrap)
+from lmfdb.number_fields.web_number_field import modules2string
+from lmfdb.galois_groups import galois_groups_page, logger
+from .transitive_group import (
+    group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
+    subfield_display, resolve_display, conjclasses, generators, chartable,
+    group_alias_table, WebGaloisGroup)
 
 # Test to see if this gap installation knows about transitive groups
 # logger = make_logger("GG")
@@ -18,11 +27,6 @@ try:
     G = gap.TransitiveGroup(9, 2)
 except:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
-
-from lmfdb.transitive_group import group_display_pretty, small_group_display_knowl, galois_module_knowl_guts, subfield_display, resolve_display, conjclasses, generators, chartable, group_alias_table, WebGaloisGroup
-
-from lmfdb.WebNumberField import modules2string
-from lmfdb.db_backend import db
 
 GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 
@@ -57,9 +61,7 @@ def ctx_galois_groups():
     return {'group_alias_table': group_alias_table,
             'galois_module_data': galois_module_knowl_guts}
 
-
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
@@ -229,7 +231,7 @@ def render_group_webpage(args):
         info.update(data)
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends)
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%info['label_raw'])
 
 
 def search_input_error(info, bread):

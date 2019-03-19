@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
 from flask import render_template, url_for, request, redirect, make_response, flash
+from markupsafe import Markup
 
-from lmfdb.db_backend import db
+from lmfdb import db
+from lmfdb.utils import (
+    web_latex_split_on_pm,
+    parse_nf_string, parse_ints, parse_hmf_weight,
+    teXify_pol, add_space_if_positive,
+    search_wrap)
+from lmfdb.ecnf.main import split_class_label
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
-
-from lmfdb.ecnf.main import split_class_label
-
-from lmfdb.WebNumberField import WebNumberField
-
-from markupsafe import Markup
-from lmfdb.utils import web_latex_split_on_pm
-from lmfdb.search_parsing import parse_nf_string, parse_ints, parse_hmf_weight
-from lmfdb.search_wrapper import search_wrap
 
 
 def get_hmf(label):
@@ -44,47 +43,6 @@ hmf_credit =  'John Cremona, Lassina Dembele, Steve Donnelly, Aurel Page and <A 
 @hmf_page.route("/random")
 def random_hmf():    # Random Hilbert modular form
     return hilbert_modular_form_by_label(db.hmf_forms.random())
-
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, basestring):
-        pol_str = str(pol_str)
-    o_str = pol_str.replace('*', '')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
-
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
-
-    return o_str
-
-def add_space_if_positive(texified_pol):
-    """
-    Add a space if texified_pol is positive to match alignment of positive and
-    negative coefficients.
-
-    Examples:
-    >>> add_space_if_positive('1')
-    '\phantom{-}1'
-    >>> add_space_if_positive('-1')
-    '-1'
-    """
-    if texified_pol[0] == '-':
-        return texified_pol
-    return "\phantom{-}" + texified_pol
 
 @hmf_page.route("/")
 def hilbert_modular_form_render_webpage():
@@ -151,7 +109,7 @@ def hilbert_modular_form_jump(info):
              table=db.hmf_forms,
              title='Hilbert Modular Form Search Results',
              err_title='Hilbert Modular Form Search Error',
-             per_page=100,
+             per_page=50,
              shortcuts={'label':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
@@ -314,7 +272,7 @@ def render_hmf_webpage(**args):
     try:
         info['count'] = args['count']
     except KeyError:
-        info['count'] = 10
+        info['count'] = 50
 
     hmf_field = get_hmf_field(data['field_label'])
     gen_name = findvar(hmf_field['ideals'])
@@ -477,7 +435,7 @@ def statistics_by_degree(d):
     info = {}
     if not str(d) in counts['degrees']:
         if d==1:
-            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('emf.render_elliptic_modular_forms')
+            info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
         d = 'bad'

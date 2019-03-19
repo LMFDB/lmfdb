@@ -3,12 +3,12 @@ import re
 import os
 import yaml
 from flask import url_for
-from lmfdb.db_backend import db
-from lmfdb.utils import make_logger, web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
-from lmfdb.modular_forms.elliptic_modular_forms.backend.emf_utils import newform_label, is_newform_in_db
+from lmfdb import db
+from lmfdb.utils import web_latex, encode_plot, coeff_to_poly, web_latex_split_on_pm
+from lmfdb.logger import make_logger
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl, string2list
+from lmfdb.number_fields.web_number_field import nf_display_knowl, string2list
 
 from sage.all import EllipticCurve, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range
 
@@ -126,10 +126,10 @@ class WebEC(object):
         self.mod_p_images = dbdata['modp_images']
 
         # Next lines because the python identifiers cannot start with 2
-        self.twoadic_index = dbdata.get('index_2adic')
-        self.twoadic_log_level = dbdata.get('log_level_2adic')
-        self.twoadic_gens = dbdata.get('gens_2adic')
-        self.twoadic_label = dbdata.get('label_2adic')
+        self.twoadic_index = dbdata.get('2adic_index')
+        self.twoadic_log_level = dbdata.get('2adic_log_level')
+        self.twoadic_gens = dbdata.get('2adic_gens')
+        self.twoadic_label = dbdata.get('2adic_label')
         # All other fields are handled here
         self.make_curve()
 
@@ -184,6 +184,8 @@ class WebEC(object):
         data['equation'] = self.equation
         local_data = self.local_data
         D = self.signD * prod([ld['p']**ld['ord_disc'] for ld in local_data])
+        for ld in local_data:
+            ld['kod'] = ld['kod'].replace("\\\\","\\")
         data['disc'] = D
         Nfac = Factorization([(ZZ(ld['p']),ld['ord_cond']) for ld in local_data])
         Dfac = Factorization([(ZZ(ld['p']),ld['ord_disc']) for ld in local_data], unit=ZZ(self.signD))
@@ -284,9 +286,9 @@ class WebEC(object):
         self.make_torsion_growth()
 
         data['newform'] =  web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True))
-        data['newform_label'] = self.newform_label = newform_label(cond,2,1,iso)
-        self.newform_link = url_for("emf.render_elliptic_modular_forms", level=cond, weight=2, character=1, label=iso)
-        self.newform_exists_in_db = is_newform_in_db(self.newform_label)
+        data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
+        self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
+        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         self._code = None
 
         self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
@@ -304,7 +306,7 @@ class WebEC(object):
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
-        self.downloads = [('Download coefficients of q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
+        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
                           ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
                           ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
                           ('Download SageMath code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),

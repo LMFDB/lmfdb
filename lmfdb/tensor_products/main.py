@@ -2,15 +2,15 @@
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from flask import render_template, request, url_for
 from lmfdb.tensor_products import tensor_products_page 
 
 from galois_reps import GaloisRepresentation
 from sage.all import ZZ, EllipticCurve
 from lmfdb.artin_representations.main import ArtinRepresentation
-from lmfdb.WebCharacter import WebDirichletCharacter
-from lmfdb.modular_forms.elliptic_modular_forms.backend import WebNewForm
+from lmfdb.characters.web_character import WebDirichletCharacter
+from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey, WebNewform
 from lmfdb.lfunctions.Lfunctionutilities import lfuncDShtml, lfuncEPtex, lfuncFEtex, specialValueString
 from lmfdb.lfunctions.main import render_lfunction_exception
 
@@ -144,12 +144,13 @@ def galois_rep_from_path(p):
         return GaloisRepresentation(chi)
  
     elif (p[0]=='ModularForm'):
-        N = int(p[4])
-        k = int(p[5])
-        chi = p[6] # this should be zero; TODO check this is the case
-        label = p[7] # this is a, b, c, etc.; chooses the galois orbit
+        level = int(p[4])
+        weight = int(p[5])
+        conrey_label = p[6] # this should be zero; TODO check this is the case
+        hecke_orbit = p[7] # this is a, b, c, etc.; chooses the galois orbit
         embedding = p[8] # this is the embedding of that galois orbit
-        form = WebNewForm(N, k, chi=chi, label=label) 
+        label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
+        form = WebNewform(label)
         return GaloisRepresentation([form, ZZ(embedding)])
 
     elif (p[0]=='ArtinRepresentation'):

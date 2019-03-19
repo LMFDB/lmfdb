@@ -2,10 +2,6 @@
 
 {% block content %}
 
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
-
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
@@ -111,10 +107,6 @@
 {% endif %}
 {% endif %}
 
-
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
-
 <script type="text/javascript">
 var number_of_coefficients = 20;
 function more_handler(evt) {
@@ -122,8 +114,8 @@ function more_handler(evt) {
     evt.preventDefault();
     $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
         function() {
-            {# tell mathjx to render the output #}
-            MathJax.Hub.Queue(['Typeset', MathJax.Hub, "theta_output"]);
+            {# render the output #}
+            renderMathInElement($("#theta_output").get(0), katexOpts);
         });
 }
 $(function() {

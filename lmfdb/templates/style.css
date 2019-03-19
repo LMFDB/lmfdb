@@ -1,5 +1,5 @@
 {# template defs #}
-{% import 'color.css' as color %}
+{% import 'color.css' as color with context %}
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
@@ -26,17 +26,8 @@ td.title {
 h2.link > a {
     color: {{color.box_tab_text}};
 }
-#mathjax-info {
-  display: none;
-  position: absolute;
-  z-index: 99;
-  width: 600px;
-  height: 600px;
-  padding-top: 150px;
-  line-height: 20px;
-  text-align: center;
-  font-size: small;
-  color: {{color.grey}};
+.katex {
+    font-size: 1em !important;
 }
 /* TODO: where is content?*/
 #content > h1
@@ -50,7 +41,7 @@ h2.link > a {
 }
 #content > h1:first-child,
 #content > h2:first-child {
-  margin-top: 0px;
+    margin-top: 0px;
 }
 
 #content > h2
@@ -64,7 +55,7 @@ h2.link > a {
     padding: 5px 0 5px 0;
     margin: 15px 0 10px 0;
 }
-#content > h3 {
+#content > h3, td.table_h2 {
     font-family: sans-serif;
     text-decoration: none;
     font-size: 110%;
@@ -99,15 +90,15 @@ h2.link > a {
 }
 
 #content > ul {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
     color: {{color.col_link}};
-  text-decoration: none;
-  font-family: sans-serif;
+    text-decoration: none;
+    font-family: sans-serif;
 }
 
 a[knowl] {
@@ -171,6 +162,10 @@ body.checklist {
  font-size: 70%;
 }
 
+span.disable-links {
+  pointer-events: none;
+}
+
 a:visited { color: {{color.a_text_visited}}; }
 a:hover {
     color: {{color.a_text_hover}};
@@ -182,54 +177,47 @@ a:hover {
 }
 
 #header {
-  min-height: 120px;
   background: {{color.header_background}};
-  -moz-box-shadow:     0px 5px 5px {{color.header_shadow}};
-  -webkit-box-shadow:  0px 5px 5px {{color.header_shadow}};
   box-shadow:          0px 5px 5px {{color.header_shadow}};
 }
 
 body.knowl #header {
   background: {{ color.knowl_l }};
-  -moz-box-shadow:     0px 5px 5px {{color.knowl_shadow}};
-  -webkit-box-shadow:  0px 5px 5px {{color.knowl_shadow}};
   box-shadow:          0px 5px 5px {{color.knowl_shadow}};
 }
 
 #header #logo {
-    float: left;
-    height: 120px;
-    width: 200px;
+    display: inline-block;
     margin: 0px;
+    padding-top: 8px;
+    padding-left: 40px;
+}
+#header #logo img {
+    max-height: 70px;
 }
 #header .right {
-  margin-left: 210px;
-  margin-top: 0px;
-  position: relative;
+    margin-top: 0px;
+    display: inline-block;
+    padding-left: 48px;
+    vertical-align: top;
+    width: calc(100% - 210px);
 }
 #header #title {
-    /* border: 1px solid green; */
     font-size: 180%;
     font-weight: bold;
     font-family: sans-serif;
-    min-height: 82px;
-    position: relative;
+    padding-top: 25px;
     color: {{color.header_text_title}};
 }
 
-#header #title .MathJax{
+#header #title .katex{
     font-weight: bold !important;
-}
-
-#header #title-content {
-  position: absolute;
-  bottom: 4px;
 }
 
 #header .bread {
     font-family: sans-serif;
-    min-height: 18px;
     font-size: 90%;
+    display: inline-block;
 }
 
 #header .bread a:first-child {
@@ -239,15 +227,14 @@ body.knowl #header {
 #header .topright {
   text-align: right;
   white-space:nowrap;
-  color: {{color.header_text_topright}};
   font-family: sans-serif;
-  min-height: 18px;
   font-size: 90%;
-  padding-top: 5px;
+  padding-top: 8px;
   padding-right: 5px;
-  position: absolute;
-  top: 0px;
-  right: 0px;
+  display: inline-block;
+  float: right;
+  clear: both;
+  color: {{color.header_text_topright}};
 }
 #header .topright a {
     color: {{color.header_text_topright}};
@@ -259,14 +246,15 @@ body.knowl #header {
 #header .undertopright {
   text-align: right;
   white-space:nowrap;
-  color: {{color.header_text_topright}};
   font-family: sans-serif;
-  min-height: 18px;
-  font-size: 90%;
-  padding-right: 5px;
+  float: right;
+  color: {{color.header_text_topright}};
 }
 #header .undertopright a {
     color: {{color.header_text_topright}};
+}
+#header .undertopright:first-child {
+      margin-top: 0;
 }
 
 #header #navi {
@@ -392,6 +380,8 @@ body > .debug {
   min-width: 200px;
   border-bottom-left-radius: 10px;
   -moz-border-radius-bottomleft: 10px;
+  max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
+  overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
   border-top-left-radius: 10px;
@@ -660,12 +650,17 @@ table a[knowl] {
   padding: 0;
 }
 
-
 table.ntdata a {
   display: block;
 }
+table.chardata a {
+  display: inline;
+}
 table td.top {
   vertical-align:top;
+}
+table.ntdata td {
+  white-space: nowrap;
 }
 
 table a:hover {
@@ -687,26 +682,37 @@ table.ntdata thead tr {
   background: {{ color.table_ntdata_background }};
   border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
-table.ntdata tr {
-}
 
 table.ntdata th {
   text-align: left;
 }
 
-table.ntdata tr.odd,
-table.ntdata tr:nth-child(odd),
-table.ntdata tr:first-child {
+table.ntdata > tr.odd,
+table.ntdata > tbody > tr.odd,
+table.ntdata > thead > tr.odd,
+table.ntdata > tr:nth-child(odd),
+table.ntdata > tbody > tr:nth-child(odd),
+table.ntdata > thead > tr:nth-child(odd),
+table.ntdata > tr:first-child
+table.ntdata > tbody > tr:first-child
+table.ntdata > thead > tr:first-child {
     background: {{color.table_ntdata_background_c1}};
 }
 
-table.ntdata tr.even,
-table.ntdata tr:nth-child(even) {
+table.ntdata > tr.even,
+table.ntdata > tbody > tr.even,
+table.ntdata > thead > tr.even,
+table.ntdata > tr:nth-child(even),
+table.ntdata > tbody > tr:nth-child(even),
+table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
 }
 
 table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
+}
+table.ntdata tr.endsection {
+    border-bottom: 1px solid {{color.table_ntdata_border}};
 }
 
 table.right_align_table td {
@@ -779,7 +785,7 @@ table .knowl-link {
 .knowl-bar a {
   padding: 2px 5px;
 }
-.knowl-preview-sep {
+.knowl-editmode-sep {
   padding: 5px;
   margin: 30px 0;
   border-bottom: 1px solid {{ color.knowl_thin_border }};
@@ -857,6 +863,41 @@ body.knowl table.ntdata tr:nth-child(even) {
     background: {{color.white}};
 }
 
+
+table.mfdata {
+  width: auto;
+  border: 0;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+table.mfdata thead tr {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+
+table.mfdata td {
+    vertical-align: middle;
+}
+
+table.mfdata tr.oddrow {
+    background: {{color.table_ntdata_background_2}};
+}
+table.mfdata tr.evenrow {
+    background: {{color.white}};
+}
+
+table.dimgrid thead tr {
+    background: {{color.table_ntdata_background_2}};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.dimgrid thead tr th.blank {
+    background: {{color.white}};
+    border-bottom: 2px solid {{color.table_ntdata_background_2}} ;
+}
+table.dimgrid tbody tr th.left {
+    border-right: 2px solid {{ color.table_ntdata_border }};
+    background: {{color.table_ntdata_background_2}};
+}
+
 table.ntdata th.left {
     border-right: 2px solid {{color.table_ntdata_border}};
     background: {{color.table_ntdata_background_2}};
@@ -888,8 +929,49 @@ table.ntdata tr.first {
 table.ntdata .border-right {
   border-right: 2px solid {{ color.table_ntdata_border }};
 }
-table.ntdata td.center {
+table.ntdata .border-bottom {
+  border-bottom: 2px solid {{ color.table_ntdata_border }};
+}
+table.ntdata .center {
     text-align: center;
+}
+div.center {
+    text-align: center;
+}
+table.ntdata .right {
+    text-align: right;
+}
+td.right {
+    text-align: right;
+}
+table.ntdata .middle {
+    vertical-align: middle;
+}
+table.ntdata tr.dark td {
+    background: {{color.table_ntdata_background_2}};
+}
+table.ntdata tr.light td {
+    background: white;
+}
+table.ntdata td.dark {
+    background: {{color.table_ntdata_background_2}};
+}
+table.ntdata thead.dark tr {
+    background: {{color.table_ntdata_background_2}};
+}
+table.ntdata td.light {
+    background: white;
+}
+
+table.knowl_review tr:nth-child(odd) td {
+    background: {{color.white}};
+    padding-top: 30px;
+}
+table.knowl_review tr:first-child td {
+    padding-top: 0;
+}
+table.knowl_review tr:nth-child(even) {
+    background: {{ color.table_ntdata_background_2 }};
 }
 table.euler {
     margin-left:auto;
@@ -897,7 +979,28 @@ table.euler {
 }
 
 table.euler tr .galois {
-    padding-left: 25px;
+    text-align: center;
+}
+
+table.statgrid td {
+    text-align: right;
+}
+
+table.statgrid th.rhead {
+    border: 1px solid #ccc;
+    border-right: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid th.chead {
+    border: 1px solid #ccc;
+    border-bottom: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid td.prop {
+    border-bottom: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}
+
+table.statgrid td.cnt {
+    border-right: 1px solid #ccc;
 }
 
 .knowl-content {
@@ -1014,7 +1117,9 @@ h2 > .knowl-qm {
   margin-top: 10px;
   margin-bottom: 15px;
   margin-right: 10px;
+  text-align: left;
 }
+
 .knowl-output .knowl-output,
 .knowl-output .knowl-output.loading {
  margin-left: 0;
@@ -1072,7 +1177,7 @@ div.limit-height {
 
 /* end knowl */
 
-/*** Dirichlet series, displayed in HTML instead of MathJax ***/
+/*** Dirichlet series, displayed in HTML ***/
 
 .dirichletseries {
   font-family:"Times New Roman", Times, serif;
@@ -1796,15 +1901,15 @@ div.maassformplot img {
 
 }
 #sidebar h2 {
-      margin: 10px 0px 0px;}
+      margin: 5px 0px 0px;}
 
 p.rotation  {
-             -moz-transform: rotate(270deg);
-             -webkit-transform: rotate(270deg);
-             -o-transform: rotate(270deg);
-             -ms-transform: rotate(270deg);
              transform: rotate(270deg); }
 
+/* temporary over-side for GL(2) on beta */
+body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
+    transform: rotate(0deg)
+}
 
 #sidebar table th, #sidebar table td {
 	text-align: left;
@@ -1953,3 +2058,199 @@ table.box td.content ul.list {
 }
 
 /*End table boxes front page*/
+
+p.short {
+  margin: 0px;
+}
+
+.table-scroll-wrapper {
+    overflow-y:auto;
+}
+
+.table-scroll-wrapper table {
+    margin-right: 1px;
+    margin-bottom: 1px;
+    border-collapse: collapse;
+}
+.table-scroll-wrapper th {
+    position: -webkit-sticky; top: 0;
+    position: sticky; top: 0;
+    z-index:1;
+    background:{{color.table_ntdata_background_2}};
+    background-clip: padding-box;
+}
+.cmf-dim-table th.level {
+    padding-left: 80px;
+}
+th.weight-label {
+    padding-left: 5px;
+    padding-right: 0px;
+}
+
+div.table-scroll-wrapper thead tr {
+    border-bottom: 0;
+}
+div.table-scroll-wrapper thead > tr:last-child > th {
+    border-bottom: 2px solid {{ color.table_ntdata_border}};
+}
+
+.table-scroll-wrapper td.border-right, .table-scroll-wrapper th.border-right {
+    border-right: 0; /* We need to put the border on td:after for scrolling */
+}
+.table-scroll-wrapper .border-right:after {
+    content:'';
+    position:absolute;
+    right: 0;
+    top: 0;
+    height:100%;
+    border-right: 2px solid {{ color.table_ntdata_border}};
+}
+.table-scroll-wrapper .sticky-col {
+    position: -webkit-sticky; left: 0;
+    position: sticky; left: 0;
+    z-index:2;
+    background-clip: padding-box;
+}
+.table-scroll-wrapper th.sticky-head {
+    position: -webkit-sticky; left: 0; top: 0;
+    position: sticky; left: 0; top: 0;
+    z-index:3;
+}
+td.nowrap {
+    white-space:nowrap;
+}
+table.ntdata td.nowrap a {
+    display: inline;
+}
+
+.float-right {
+    float:right;
+}
+.float-left {
+    float:left;
+}
+
+#complex_embeddings {
+    padding-top: 10px;
+}
+
+table.coeff_ring_basis td {
+    vertical-align: top;
+}
+
+table.coeff_ring_basis td.LHS {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+}
+table.coeff_ring_basis td.eq {
+    text-align: center;
+    margin-right: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    padding-left: 2px;
+}
+table.coeff_ring_basis td.RHS {
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+table.complex-cols td.real {
+    font-family: MJX_Math;
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+}
+table.complex-cols td.imag {
+    font-family: MJX_Math;
+    text-align: left;
+    margin-left: 0;
+    padding-left: 0;
+}
+td.op {
+    font-family: MJX_Math;
+    text-align: center;
+    margin-right: 0;
+    padding-right: 2px;
+    margin-left: 0;
+    padding-left: 2px;
+}
+
+table.ntdata td.embedding-wrap {
+    margin: 0;
+    padding: 0;
+}
+.table-scroll-wrapper table.sticky-embeddings {
+    margin: 0;
+    padding: 0;
+    min-width: 55px;
+}
+table.sticky-embeddings td.vstrut {
+    margin-left: 0;
+    padding-left: 0;
+    margin-right: 0;
+    padding-right: 0;
+}
+
+table.qexp-table td.fdef {
+    text-align: right;
+    margin-right: 0;
+    padding-right: 0;
+    vertical-align: top;
+}
+table.qexp-table td.op {
+    vertical-align: top;
+}
+
+td.topspace {
+    padding-top: 15px;
+}
+table.qexp-table td.output {
+    margin-left: 0;
+    padding-left: 0;
+    vertical-align: top;
+}
+
+.mjx_basic {
+    font-family: MJX_Math;
+}
+
+input::-webkit-input-placeholder {
+    color: #cccccc;
+}
+
+.table_rotate {
+  /* FF3.5+ */
+  -moz-transform: rotate(180deg);
+  /* Opera 10.5 */
+  -o-transform: rotate(180deg);
+  /* Saf3.1+, Chrome */
+  -webkit-transform: rotate(180deg);
+  /* IE6,IE7 */
+  filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=0.166);
+  /* IE8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.166)";
+  /* Standard */
+  transform: rotate(180deg);
+  writing-mode: vertical-lr;
+  white-space: nowrap;
+}
+
+/* an horizonal list with bullet points */
+ul.horizontal-list {
+  display:inline-block;
+  padding:0;
+  margin: 0.5em;
+  margin-block-start: 0;
+}
+ul.horizontal-list li {
+  display: inline;
+  white-space: nowrap;
+}
+ul.horizontal-list li:after {
+
+  content:" ";
+  letter-spacing:1em;
+  background: center center no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xMkMEa+wAAAAnSURBVBhXY/Dz89MA4sNA/B9Ka4AEYQIwfBgkiCwAxjhVopnppwEApxQqhnyQ+VkAAAAASUVORK5CYII=);
+}

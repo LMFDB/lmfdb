@@ -26,8 +26,8 @@ L(s)=
 \prod_{p\nmid N} \left(1-a_p\, p^{-s}+\chi(p) \, \overline{a_p} \, p^{-2s} -\chi(p) \, p^{-3s}\right)^{-1}.
 \]
 Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, and $\chi$, known as the central character,
-is a primitive Dirichlet character of conductor dividing&nbsp;$N$.
-The parameters $\nu$ and $\delta$ are integers or half-integers, the parameters
+is a {{ KNOWL('character.dirichlet', title='Dirichlet character') }} mod&nbsp;$N$.
+The parameter $\nu$ is an integer or half-integer, the parameters
 $\mu_j$ and $\mu$ are real, and
 $\delta_j$ is 0 or 1.
 If the central character is even (or odd) then either $2\nu + 1 + \delta$
@@ -45,11 +45,12 @@ search a more complete <a href="/zeros/first/?limit=100&start=0&end=30&degree=3"
 degree 3</a> L-functions, or
 -->
 browse
-by {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
+by {{ KNOWL('lfunction.signature', title='signature') }} 
+or {{ KNOWL('lfunction.underlying_object', title='underlying object:') }}
 </div>
 
 <p>
-<a href="{{url_for('l_functions.l_function_maass_gln_browse_page', degree = 'degree3')}}">Maass&nbsp;form&nbsp;for&nbsp;$\GL(3)$</a>
+<a href="{{url_for('l_functions.l_function_browse_page', degree='degree3', gammasignature='r0r0r0')}}">Signature (0,0,0;)</a>
 &nbsp;&nbsp;&nbsp;
 <a href="{{url_for('l_functions.l_function_ec_sym2_browse_page')}}">Symmetric&nbsp;square&nbsp;of&nbsp;of&nbsp;an&nbsp;elliptic&nbsp;curve</a>
 &nbsp;&nbsp;&nbsp;

@@ -9,8 +9,8 @@
 # NEVER EVER change the fixed_salt!
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-from lmfdb.db_backend import PostgresBase, db
-from lmfdb.db_encoding import Array
+from lmfdb.backend.database import PostgresBase, db
+from lmfdb.backend.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
@@ -107,7 +107,7 @@ class PostgresUserTable(PostgresBase):
         if self._rw_userdb:
             bcpass = self.bchash(newpwd)
             #TODO: use identifiers
-            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+            updater = SQL("UPDATE userdb.users SET bcpassword = %s WHERE username = %s")
             self._execute(updater, [bcpass, uid])
             logger.info("password for %s changed!" % uid)
         else:
@@ -150,7 +150,7 @@ class PostgresUserTable(PostgresBase):
                         logger.info("user " + uid  +  " logged in with old style password, trying to update")
                         try:
                             #TODO: use identifiers
-                            updater = SQL("UPDATE userdb.users SET (bcpassword) VALUES (%s) WHERE username = %s")
+                            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
                             self._execute(updater, [bcpass, uid])
                             logger.info("password update for " + uid + " succeeded")
                         except Exception:
@@ -177,7 +177,7 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updater = SQL("UPDATE userdb.users SET ({0}) VALUES ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), Placeholder() * len(values))
+        updater = SQL("UPDATE userdb.users SET ({0}) = ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
         self._execute(updater, list(values) + [uid])
 
     def lookup(self, uid):
@@ -234,8 +234,6 @@ userdb = PostgresUserTable()
 class LmfdbUser(UserMixin):
     """
     The User Object
-
-    It is backed by MongoDB.
     """
     properties = ('full_name', 'url', 'about')
 
@@ -306,6 +304,9 @@ class LmfdbUser(UserMixin):
         """true, iff has attribute admin set to True"""
         return self._data.get("admin", False)
 
+    def is_knowl_reviewer(self):
+        return self._data.get("knowl_reviewer", False)
+
     def authenticate(self, pwd):
         """
         checks if the given password for the user is valid.
@@ -330,6 +331,9 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
     and probably others.
     """
     def is_admin(self):
+        return False
+
+    def is_knowl_reviewer(self):
         return False
 
     def name(self):

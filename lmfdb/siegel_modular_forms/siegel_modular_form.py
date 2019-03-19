@@ -2,17 +2,21 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
+import StringIO
+
 from flask import render_template, url_for, request, send_file, flash, redirect
 from markupsafe import Markup
-import StringIO
-import dimensions, sample
-from lmfdb.db_backend import db
-from family import get_smf_family, get_smf_families
 from sage.all import latex, Set
+
+from lmfdb import db
+from lmfdb.utils import (
+    parse_ints, parse_ints_to_list_flash,
+    to_dict, flash_error)
 from lmfdb.number_fields.number_field import poly_to_field_label, field_pretty
 from lmfdb.siegel_modular_forms import smf_page
-from lmfdb.search_parsing import parse_ints, parse_ints_to_list_flash
-from lmfdb.utils import to_dict, flash_error
+from lmfdb.siegel_modular_forms.family import get_smf_family, get_smf_families
+import dimensions
+import sample
 
 ###############################################################################
 # Utitlity functions

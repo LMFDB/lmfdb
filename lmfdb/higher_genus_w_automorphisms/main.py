@@ -3,22 +3,20 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Albert Ford, Ngi Nho
 # (initial code copied from John Jones Local Fields)
 
+import ast, os, re, StringIO, yaml
 
-import StringIO
-import re
-import ast
-import yaml
-import os
-from lmfdb.db_backend import db
+
 from flask import render_template, request, url_for, redirect, send_file, abort
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
-from lmfdb.search_wrapper import search_wrap
-
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+
+from lmfdb import db
+from lmfdb.utils import (
+    flash_error,
+    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    search_wrap)
 from lmfdb.sato_tate_groups.main import sg_pretty
-from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import get_stats_object, db_hgcwa_stats
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
 # Determining what kind of label
@@ -137,9 +135,9 @@ def index():
         return higher_genus_w_automorphisms_search(request.args)
     genus_max = db.hgcwa_passports.max('genus')
     genus_list = range(2,genus_max+1)
-    info = {'count': 20,
+    info = {'count': 50,
             'genus_list': genus_list,
-            'stats': get_stats_object().stats(),}
+            'stats': HGCWAstats().stats(),}
 
     learnmore = [('Source of the data', url_for(".how_computed_page")),
                 ('Labeling convention', url_for(".labels_page")),
@@ -150,13 +148,13 @@ def index():
 
 @higher_genus_w_automorphisms_page.route("/random")
 def random_passport():
-    label = db.hgcwa_passports.random('passport_label')
+    label = db.hgcwa_passports.random(projection='passport_label')
     return redirect(url_for(".by_passport_label", passport_label=label))
 
 @higher_genus_w_automorphisms_page.route("/stats")
 def statistics():
     info = {
-        'stats': get_stats_object().stats(),
+        'stats': HGCWAstats().stats(),
     }
     title = 'Families of Higher Genus Curves with Automorphisms: statistics'
     bread = get_bread([('Statistics', ' ')])
@@ -164,8 +162,7 @@ def statistics():
 
 @higher_genus_w_automorphisms_page.route("/stats/groups_per_genus/<genus>")
 def groups_per_genus(genus):
-    #JEN NOT SURE ABOUT LUCKY
-    group_stats = db_hgcwa_stats().lucky({'_id':'bygenus/' + genus + '/group'})
+    group_stats = db.hgcwa_passports.stats.get_oldstat('bygenus/' + genus + '/group')
 
     # Redirect to 404 if statistic is not found
     if not group_stats:
@@ -462,7 +459,7 @@ def higher_genus_w_automorphisms_postprocess(res, info, query):
              table=db.hgcwa_passports,
              title='Families of Higher Genus Curves with Automorphisms Search Results',
              err_title='Families of Higher Genus Curve Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to':higher_genus_w_automorphisms_jump},
              longcuts={'download_magma':(lambda res, info, query: hgcwa_code_download_search(res,'magma')),
                        'download_gap':(lambda res, info, query: hgcwa_code_download_search(res,'gap'))},
@@ -500,7 +497,7 @@ def higher_genus_w_automorphisms_search(info, query):
         err, result = add_group_order_range(query, info['groupsize'])
         if err is not None:
             flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
-#<<<<<<< HEAD JEN ISSUE 8/18???
+
     res = db.hgcwa_poassports.search(query).sort([
         ('genus', ASC), ('g0', ASC), ('dim', ASC), ('group_order', ASC), ('cc.0', ASC)])
 
@@ -518,13 +515,10 @@ def higher_genus_w_automorphisms_search(info, query):
         L.append(field)
 
     if 'download_magma' in info:
-        return hgcwa_code_download_search(L,'magma')  #OR RES??????
-#=======
-#>>>>>>> bbdd49134d833fea95c6c6d85de20634111677e3
+        return hgcwa_code_download_search(L,'magma') 
 
     info['group_display'] = sg_pretty
     info['sign_display'] = sign_display
-#<<<<<<< HEAD  JEN ISSUE 8/18???
     info['start'] = start
     if nres == 1:
         info['report'] = 'unique match'
@@ -536,9 +530,6 @@ def higher_genus_w_automorphisms_search(info, query):
             info['report'] = 'displaying all %s matches' % nres
 
     return render_template("hgcwa-search.html", info=info, title="Families of Higher Genus Curves with Automorphisms Search Result", credit=credit, bread=bread)
-
-#=======
-#>>>>>>> bbdd49134d833fea95c6c6d85de20634111677e3
 
 def render_family(args):
     info = {}
@@ -586,7 +577,7 @@ def render_family(args):
 
         Lcc=[]
         Lall=[]
-#<<<<<<< HEAD JEN 8/18
+
         Ltopo_rep=[] #List of topological representatives
 
      #   i=1
@@ -913,7 +904,7 @@ def hgcwa_code_download(**args):
     code +=code_list['top_matter'][lang] + '\n' +'\n'
     code +="data:=[];" + '\n' +'\n'
 
-#<<<<<<< HEAD  ISSUE WITH C. BELOW
+
     #Search data
     if label_is_one_vector(label):
         fam, cc_1, cc_2 = split_vector_label(label)
@@ -989,7 +980,7 @@ def hgcwa_code_download(**args):
     cyctrigfmt += code_list['add_to_total_cyc_trig'][lang] + '\n'
     nhypcycstr = code_list['hyp'][lang] + code_list['fal'][lang] + ';\n'
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
-#<<<<<<< HEAD
+
    
     #Action for all vectors and action for just representatives
     if lang == args['download_type'] or args['download_type']=='rep_magma' or args['download_type']=='rep_gap':

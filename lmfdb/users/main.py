@@ -5,18 +5,18 @@
 
 import flask
 from functools import wraps
-from lmfdb.base import app
+from lmfdb.app import app
+from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
-from lmfdb.db_backend import db
+from lmfdb import db
 assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-import lmfdb.utils
-logger = lmfdb.utils.make_logger(login_page)
+logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
@@ -55,6 +55,7 @@ def ctx_proc_userdata():
         userdata['username'] = 'Anonymous'
         userdata['user_is_admin'] = False
         userdata['user_is_authenticated'] = False
+        userdata['user_can_review_knowls'] = False
         userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
     else:
@@ -67,6 +68,7 @@ def ctx_proc_userdata():
             userdata['user_is_authenticated'] = current_user.is_authenticated()
 
         userdata['user_is_admin'] = current_user.is_admin()
+        userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
         userdata['get_username'] = get_username # this is a function
     return userdata
 
@@ -176,6 +178,18 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return decorated_view
 
+def knowl_reviewer_required(fn):
+    """
+    wrap this around those entry points where you need to be a knowl reviewer.
+    """
+    @wraps(fn)
+    @login_required
+    def decorated_view(*args, **kwargs):
+        logger.info("reviewer access attempt by %s" % current_user.get_id())
+        if not current_user.is_knowl_reviewer():
+            return flask.abort(403)  # acess denied
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def housekeeping(fn):
     """
@@ -191,6 +205,10 @@ def housekeeping(fn):
     return decorated_view
 
 
+@login_page.route("/register")
+def register_new():
+    return ""
+
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
 @admin_required
@@ -203,6 +221,7 @@ def register(N=10):
     resp = make_response('\n'.join(urls))
     resp.headers['Content-type'] = 'text/plain'
     return resp
+
 
 @login_page.route("/register/<token>", methods=['GET', 'POST'])
 def register_token(token):
@@ -233,21 +252,21 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
-        next = request.form["next"]
+        #next = request.form["next"]
 
         if userdb.user_exists(name):
             flask.flash("Sorry, user ID '%s' already exists!" % name, "error")
             return flask.redirect(url_for(".register_new"))
 
-        newuser = userdb.new_user(name, pw1)
-        newuser.full_name = full_name
-        newuser.save()
+        newuser = userdb.new_user(name, pwd=pw1,  full_name=full_name)
+        userdb.delete_token(token)
+        #newuser.full_name = full_name
+        #newuser.save()
         login_user(newuser, remember=True)
         flask.flash("Hello %s! Congratulations, you are a new user!" % newuser.name)
-        userdb.delete_token(token)
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
-        return flask.redirect(next or url_for(".info"))
+        return flask.redirect(url_for(".info"))
 
 
 @login_page.route("/change_password", methods=['POST'])

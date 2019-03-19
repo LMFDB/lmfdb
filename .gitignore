@@ -9,9 +9,9 @@ config.ini
 *.swp
 *~
 
-static/MathJax
 
 flasklog
+slow_queries.log
 
 # Testing files
 htmlcov
@@ -30,3 +30,5 @@ local.sh
 .idea/
 LMFDBinventory.log
 LMFDBtransactions_inv.log
+
+

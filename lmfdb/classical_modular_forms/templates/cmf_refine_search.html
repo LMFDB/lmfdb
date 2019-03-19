@@ -1,0 +1,211 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+
+{% if info.search_type == 'DynStats' %}
+<script>
+var default_buckets = {};
+{% for col, buckets in info.stats._default_buckets %}
+default_buckets['{{col}}'] = '{{buckets}}';
+{% endfor %}
+function set_buckets(col_selecter, bucket_id) {
+  if (col_selecter.value in default_buckets) {
+    $('#' + bucket_id).val(default_buckets[col_selecter.value]);
+  }
+}
+</script>
+
+<h2>Constraints </h2>
+{% else %}
+<h2>Refine search </h2>
+{% endif %}
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+<input type="hidden" name="hst" value="{{info.search_type}}"/>
+
+<table>
+  <tr>
+    <td>{{ KNOWL('cmf.level', title='Level') }}
+      <div class="float-right">
+        <select name='level_type'>
+          <option value="">unrestricted</option>
+          <option value="prime"{% if info.level_type == 'prime' %} selected='yes'{% endif %}>prime</option>
+          <option value="prime_power"{% if info.level_type == 'prime_power' %} selected='yes'{% endif %}>prime power</option>
+          <option value="square"{% if info.level_type == 'square' %} selected='yes'{% endif %}>square</option>
+          <option value="squarefree"{% if info.level_type == 'squarefree' %} selected='yes'{% endif %}>squarefree</option>
+        </select>
+      </div>
+    </td>
+    <td>{{ KNOWL('cmf.weight', title='Weight') }}
+      <div class="float-right">
+        <select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even"{% if info.weight_parity == 'even' %} selected='yes'{% endif %}>even</option>
+          <option value="odd"{% if info.weight_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
+        </select>
+      </div>
+    </td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
+    <td>{{ KNOWL('cmf.analytic_conductor', title='\(Nk^2\)') }}</td>
+    <td>{{ KNOWL('cmf.dimension', title='Dim.') }}
+      <div class="float-right"><select name="dim_type" style="min-width: 105px;">
+        <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
+        <option value="rel"{% if info.dim_type == 'rel' %} selected='yes'{% endif %}>relative</option>
+      </select></div>
+    </td>
+  </tr>
+
+  <tr>
+    <td><input type='text' style="width: 160px;" name='level'               placeholder='4' value='{{info.level}}'></td>
+    <td><input type='text' style="width: 160px;" name='weight'              placeholder='2' value='{{info.weight}}'></td>
+    <td><input type='text' style="width: 160px;" name='analytic_conductor'  placeholder='1-10' value='{{info.analytic_conductor}}'></td>
+    <td><input type='text' style="width: 160px;" name='Nk2'                 placeholder='40-100' value='{{info.Nk2}}'></td>
+    <td><input type='text' style="width: 160px;" name='dim'                 placeholder='1' value='{{info.dim}}'></td>
+  </tr>
+
+  <tr>
+    <td>{{ KNOWL('cmf.bad_prime',title='Bad \(p\)') }}
+      <div class="float-right"><select name='prime_quantifier'>
+          <option value='subsets'{% if info.prime_quantifier == 'subsets' %} selected='yes'{% endif %}>subset of</option>
+          <option value=''{% if info.prime_quantifier == '' %} selected='yes'{% endif %}>equal to</option>
+          <option value='append'{% if info.prime_quantifier == 'append' %} selected='yes'{% endif %}>superset of</option>
+        </select></div>
+    </td>
+    <td>{{ KNOWL('cmf.character', title='Char.') }}
+      <div class="float-right"><select name="weight_parity" class="simult_select" onchange="simult_change(event);">
+          <option value="">any parity</option>
+          <option value="even"{% if info.char_parity == 'even' %} selected='yes'{% endif %}>even</option>
+          <option value="odd"{% if info.char_parity == 'odd' %} selected='yes'{% endif %}>odd</option>
+        </select></div>
+    </td>
+    <td>{{ KNOWL('character.dirichlet.primitive', title='Primitive character') }}</td>
+    <td>{{ KNOWL('character.dirichlet.order', title='Character order') }}</td>
+    <td>{{ KNOWL('cmf.coefficient_field', title='Coefficient field') }}</td>
+  </tr>
+
+  <tr>
+    <td><input type='text' style="width: 160px;" name='level_primes'  placeholder='2,3'  value="{{info.level_primes}}"></td>
+    <td><input type='text' style="width: 160px;" name='char_label'    placeholder='20.d' value='{{info.char_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='prim_label'    placeholder='1.a' value='{{info.prim_label}}'></td>
+    <td><input type='text' style="width: 160px;" name='char_order'    placeholder='1' value='{{info.char_order}}'></td>
+    <td><input type='text' style="width: 160px;" name='nf_label'            placeholder='1.1.1.1' value='{{info.nf_label}}'></td>
+  </tr>
+
+  <tr>
+    <td>{{ KNOWL('cmf.self_twist', title='Self-twists') }}</td>
+    <td>{{ KNOWL('cmf.self_twist', title='CM/RM discriminant')}}</td>
+    <td>{{ KNOWL('cmf.inner_twist_count', title='Inner twist count*') }}</td>
+    <td>{{ KNOWL('cmf.selfdual', title='Is self-dual?') }}</td>
+    <td>{{ KNOWL('cmf.analytic_rank', title='Analytic rank') }}</td>
+  </tr>
+
+  <tr>
+    <td>
+      <div class="float-left">
+        <select name='cm' style="min-width: 80px;">
+          {% for val, text in [('', 'any CM'), ('yes', 'has CM'), ('no', 'no CM')] %}
+          <option value="{{ val }}"{% if info.cm == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="float-right">
+        <select name='rm' style="min-width: 80px;">
+          {% for val, text in [('', 'any RM'), ('yes', 'has RM'), ('no', 'no RM')] %}
+          <option value="{{ val }}"{% if info.rm == val %} selected='yes'{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </td>
+    <td><input type='text' style="width: 160px;" name='self_twist_discs' placeholder='-3' value='{{info.self_twist_discs}}'></td>
+    <td>
+      <input type='text' style="width: 160px;" name='inner_twist_count' placeholder='1-' value='{{info.inner_twist_count}}'>
+    </td>
+    <td>
+      <select name='is_self_dual' style="width: 170px;">
+        {% set is_self_dual_values = [('', 'unrestricted'), ('yes', 'yes'), ('no', 'no') ] %}
+        {% for val, text in is_self_dual_values %}
+        <option value="{{ val }}"{% if info.is_self_dual == val %} selected='yes'{% endif %}>{{ text }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td><input type='text' style="width: 160px;" name='analytic_rank' placeholder='1' value='{{info.analytic_rank}}'></td>
+  </tr>
+  <tr>
+  </tr>
+  <tr>
+    <td rowspan="2">
+      Only for weight 1:
+    </td>
+    <td>{{ KNOWL('cmf.projective_image', title='Projective image')}}</td>
+    <td>{{ KNOWL('cmf.projective_image', title='Projective image type') }}</td>
+    {# <td>{{ KNOWL('cmf.artin_image', title='Artin image size*') }}</td> #}
+  </tr>
+  <tr>
+    <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
+    <td>
+      <select name='projective_image_type' style="width: 170px;">
+        {% set projective_image_type_values = [('', 'unrestricted'), ('Dn', 'Dn'), ('A4', 'A4'), ('S4', 'S4'), ('A5','A5')] %}
+        {% for val, text in projective_image_type_values %}
+        <option value="{{ val }}"{% if info.projective_image_type == val %} selected='yes'{% endif %}>{{ text }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    {# <td><input type='text' style="width: 160px" name='artin_degree' placeholder='4' value='{{info.artin_degree}}'></td> #}
+  </tr>
+  <tr>
+  </tr>
+  {% if info.search_type == 'DynStats' %}
+  {% include 'dynamic_stats_input.html' %}
+  {% else %}
+  {% set search_types = [('List', 'List'), ('Dimensions', 'Dimension Table'), ('Traces', 'Traces Table'), ('Random', 'Random')] %}
+  <tr style="height: 20px;"></tr>
+  {% if info.search_type != 'Dimensions' %}
+  <tr>
+    <td></td>
+    {% for type, desc in search_types %}
+    {% if info.search_type != type %}
+    <td></td>
+    {% endif %}
+    {% endfor %}
+    <td>{{ KNOWL('cmf.sort_order', title='Sort order') }}</td>
+  </tr>
+  {% else %}
+  <tr style="height: 22px;"></tr>
+  {% endif %}
+  <tr>
+    <td><button type='submit' name='search_type' value='{{info.search_type}}' style="width: 170px;" onclick='resetStart()'>Search again</button></td>
+    {% for type, desc in search_types %}
+    {% if info.search_type != type %}
+    <td><button type='submit' name='search_type' value='{{ type }}' style="width: 170px;">{{ desc }}</button></td>
+    {% endif %}
+    {% endfor %}
+    {% if info.search_type != 'Dimensions' %}
+    <td>
+      <select name='sort_order' style="width: 170px;">
+        <option value=''{% if info.sort_order=='' %} selected{% endif %}>analytic conductor</option>
+        <option value='Nk2'{% if info.sort_order=='Nk2' %} selected{% endif %}>Nk^2</option>
+        <option value='dim'{% if info.sort_order=='dim' %} selected{% endif %}>dimension</option>
+        <option value='reldim'{% if info.sort_order=='reldim' %} selected{% endif %}>relative dimension</option>
+        <option value='N'{% if info.sort_order=='N' %} selected{% endif %}>level</option>
+        <option value='k'{% if info.sort_order=='k' %} selected{% endif %}>weight</option>
+      </select>
+    </td>
+    {% endif %}
+  </tr>
+  {% endif %}
+  {% if info.search_type == 'Traces' %}
+  {% include 'cmf_trace_search_options.html' %}
+  {% endif %}
+</table>
+</form>
+{% if info.search_type == 'DynStats' %}
+<p>Note that the newforms in the database may not be {{ KNOWL('dq.cmf.extent', title='representative') }}.</p>
+{% endif %}
+
+{% block show_results %}{% endblock %}
+{% include 'debug_info.html' %}
+
+{% endblock %}

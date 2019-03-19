@@ -1,0 +1,160 @@
+OUTSTANDING VERIFICATIONS:
+
+Expected failures:
++ (mf_newforms.check_analytic_rank_proved: 261 failures)
+
+IMPORTANT:
+
+FINAL CHECKS:
+
+-------------------------- Pull Request Line -------------------------------------------------
+* Compute L-functions:
+  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
+* Prove all analytic ranks (Drew)
+* Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
+* code snippets for form and space pages in Sage and Pari.
+* Lift projective reps for weight one forms to artin reps whereever possible (Drew)
+* add L-functions instances for Artin rep (Edgar)
+* Speed up Dirichlet character search (currently doing a ton of lookup and lucky calls rather than using search() (David LD)
+* Compute completions at global fields (primes dividing level), compute decomposition groups, p-adic embeddings (David)
+* Add completeness table and metadata in order to make claims about provability
+* Reduce clutter in the url: count, start, hidden_search_type (David)
+* Prevent all=1 in cleanSubmit when no arguments from browse page.
+* q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
+* Add related objects from Artin representations back to weight 1 forms
+* Remove Future Plans page and port everything to github
+* Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
+* Delete cmf.trace-expansion, update references to use cmf.trace_expansions
+
+CRITICAL DB:
+* on a delete, if restat fails on a delete command it still commits the delete command
+
+COLLABORATION SUGGESTIONS:
+* Forms that have no zeros except at the cusps
+
+GOOD:
+* Create links to dynamics stats from each entry in the curated stats
+* figure out the sort order for lfunc_lfunctions
+* merge L-function data of G2C, EC, ECNF with CMF using trace_hash
+* knowls: make sure top and bottom knowls, explicit formulas are ported over
+* knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
+
+IT WOULD BE NICE IF:
+* add inner twist data for all newforms (compute using embedding data)
+* add inner twist group structures
+* use linear hecke kernels (potentially much faster than our current hecke cutters)
+* search on character degree?
+* if hecke field is cyclotomic don't use \zeta_3 (why not?)
+* show AL dimensions for old forms as well as new
+* identify (if possible?) a more precise description of the twisting characters
+* form pages: provide downloads for pari
+* In the link back from an L-function to a modular form, preserve the L-function URL
+
+FUTURE WORK:
+* data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
+* data: compute much more using pari
+* Review editorial review of CMFs to make sure issues have been addressed
+* data: add trace hash for ECNF L-fun
+* data: make friends with base changes of HMFs and BMFs
+* Add more data, in particular for weight 2 and trivial character
+* data: add data for is_twist_minimal
+* Improve modular form plots, consider plotting images using arb
+
+NOT CMF STUFF:
+* if we are editing a knowl, when hitting cancel, shouldn't send you back to the search
+* on _record_count do not try to write if you don't have the permissions
+* after PR, reconvert nf_fields (as it will have new data), and do the swap
+* add to test.sh to verify '# -*- coding: utf-8 -*-
+* move names_and_urls to somewhere else? fix the circular import in utils
+* add documentation for set_sort
+* list the analytic conductor on the L-function pages
+* remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
+* convert 1.1 projection to 1 in _parse_projection?
+* cache queries on gps_transitive?
+* rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
+* convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
+* copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
+* have the call method on a table to do just a search
+* reset start with javascript
+* generalize search_types
+* hidden != search clean hidden
+* add utf8 check to pyflakes
+* pick columns and sort order on search results
+* add UIs to pick random objects with contraints
+* bread for maass forms looks dumb http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer
+* http://127.0.0.1:37777/L/ModularForm/GSp4/Q/Maass/1/1/12.46875_4.720951/1.34260324/#footer should explain why it is the grand canyon l-function, there is a knowl for this but after some renaming of maass forms it doesn't show on the page!
+* fix hmf and bmf l-functions
+* Shrink the sidebar with a button analogous to the properties shrinker
+* Related fields for dirichlet characters that are Kronecker symbols
+* Change color of input/select elements if they're actively constraining a search (easy to forget that you've constrained something)
+* col_type is cached, add to FAQ
+* Work on spacing between coefficients and variables in web_latex_poly: lmfdb/utils.py
+* avoid access exclusive lock with the alter table when using copy from
+* checklist is broken
+* Add validate_header function for copy_from, reload, etc (David)
+* Add replace_from, copy_to+copy_from (with sort order) function to db_backend (David)
+* In debug_info.html, queries with dollar signs aren't escaped, and katex tries to parse them.
+* No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
+* Move data from US Central to US East Coast
+* It would be good to have an explanation of the connections in the "related objects" links when possible
+* Complex and rational extension types for postgres
+* In create_table, make label unique and add index; port to existing tables (David)
+* Rename cmf.hecke-operator cmf.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
+* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* LMFDB-wide: equal signs consistent in terms of math-mode or not
+* LMFDB-wide: change sort order in search results
+* Saved queries for demos (cf checklist)
+* Do restats in different order (compute all counts then upload), and wipe counts if too many
+* Add indexes on counts and stats tables
+* Split up database.py into multiple files
+* Add rename_column method to database.py
+* Add regexps for labels to meta_tables and use them.
+* Switch from pyflakes to flake8
+* Fix json/array bug when deleting a knowl
+
+Style:
+* For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
+* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/ . This is not a CMF issue
+
+TO THINK ABOUT:
+* Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
+
+ISSUES todo:
+Ask David Farmer if he wants to reopen #59
+
+ISSUES already addressed:
+- Weight 1 cusp forms #437
+- L-functions for modular forms should be in database #439
+- Data quality for classical modular forms #460
+- Dual L-function #617
+- Make user adjust Fourier coefficient embeddings #653
+- Make pretty coefficients #654
+- Create separate page for each embedding of a newform #659
+- Table options for old/new/CM #674
+- Determine planned extent of classical modular forms #873
+- Source and extent of data for classical modular forms #1224
+- For imprimitive genus 2 L-functions, give links to factors #1227
+- Fix errors in classical modular form data and verify its correctness #1248
+- Tests for lcalc files #1257
+- Modular form history #1282 (we decided not to link it)
+- Search by analytic rank #1362
+- Plots of modular forms #1408
+- Random modular form #1434
+- Product L-functions for modular forms #1443
+- Sever error on classical modular form pages #1533
+- Resource intensive L-function zeros pages for classical modular forms #1680
+- Classical modular forms Gamma1(49) weight 3 #1991
+- Add Bober's modular form data #2196
+- no data for level = 100, k 7, chi = 99 #2340
+- Request for documentation on modular form web pages #2630
+- Hecke operators, cosets in subset not subgroup #2631
+- Debounce knowl clicking #2687 (this is a PR, that we closed)
+
+Some progress on:
+- David Platt's L-function zeros #557 (this issue is a bit too vague to understand when is going to be closed)
+- L-functions and modularity #2032
+- Search on a_pp #2134
+- Galois conjugate objects: Hilbert, Bianchi, EC #2262
+- Display the L-function factors #2269
+

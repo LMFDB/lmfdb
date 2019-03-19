@@ -1,15 +1,50 @@
 # Functions for fetching L-function data from databases
 
-from lmfdb.db_backend import db
+from lmfdb import db
+from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 
 def get_lfunction_by_Lhash(Lhash):
     Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
-    return fix_Ldata(Ldata);
+    return Ldata
 
 def get_instances_by_Lhash(Lhash):
-    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=["url"]))
+    return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=[]))
+
+def get_multiples_by_Lhash(Lhash):
+    return list(db.lfunc_instances.search({'Lhash_array': {'$contains': Lhash.split(',')}}, sort=[]))
+
+
+# a temporary fix while we don't replace the old Lhash (=trace_hash)
+# there are trace hash collisions out there, we need the degree to distinguish them
+def get_instances_by_trace_hash(degree, trace_hash):
+    # this is only relevant to find L-funs for ECQ or G2C
+    if degree not in [2, 4]:
+        return []
+    def ECNF_convert_old_url(oldurl):
+        # EllipticCurve/2.0.4.1/[4160,64,8]/a/
+        if '[' not in oldurl:
+            return oldurl
+        ec, fld, cond, iso =  oldurl.rstrip('/').split('/')
+        assert ec == 'EllipticCurve'
+        if cond[0] == '[' and cond[-1] == ']':
+            cond = convert_IQF_label(fld, cond)
+            return '/'.join([ec, fld, cond, iso])
+        else:
+            return oldurl
+
+    res = []
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection = 'Lhash', sort=[]):
+        for elt in get_instances_by_Lhash(Lhash):
+            if elt['type'] == 'ECQP':
+                continue
+            if elt['type'] == 'ECNF':
+                elt['url'] = ECNF_convert_old_url(elt['url'])
+            if elt not in res:
+                res.append(elt)
+    return res
+
 
 def get_instance_by_url(url):
     return db.lfunc_instances.lucky({'url': url})
@@ -25,16 +60,7 @@ def get_lfunction_by_url(url):
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
 
-def fix_Ldata(Ldata):
-    if Ldata['order_of_vanishing'] or 'leading_term' not in Ldata.keys():
-        central_value = [0.5 + 0.5*Ldata['motivic_weight'], 0]
-    else:
-        central_value = [0.5 + 0.5*Ldata['motivic_weight'], Ldata['leading_term']]
-    if 'values' not in Ldata:
-        Ldata['values'] = [ central_value ]
-    else:
-        Ldata['values'] += [ central_value ]
-    return Ldata
+
 
 def getEllipticCurveData(label):
     return db.ec_curves.lucky({'lmfdb_label': label})

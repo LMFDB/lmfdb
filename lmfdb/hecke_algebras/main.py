@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+import ast, re, StringIO, time
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-
-from lmfdb.db_backend import db
-
+from markupsafe import Markup
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
+from lmfdb import db
+from lmfdb.utils import parse_ints, clean_input, search_wrap
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
-from lmfdb.search_parsing import parse_ints, clean_input
-from lmfdb.search_wrapper import search_wrap
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 l_range=[ell for ell in prime_range(14)]
@@ -252,8 +244,8 @@ def render_hecke_algebras_webpage(**args):
                 for key in ['Zbasis','discriminant','disc_fac','Qbasis','Qalg_gen']:
                     del v[key]
             else:
-                v['Zbasis'] = [[int(i) for i in j] for j in v['Zbasis']] # getDBConnection grep make ints in database
-                v['disc_fac'] = [[int(i) for i in j] for j in v['disc_fac']] # make ints in database
+                v['Zbasis'] = [[int(i) for i in j] for j in v['Zbasis']]
+                v['disc_fac'] = [[int(i) for i in j] for j in v['disc_fac']]
                 if dim > 4:
                     v['gen_display'] = []
                 elif dim == 1:
@@ -271,11 +263,11 @@ def render_hecke_algebras_webpage(**args):
         ('Level', '%s' %info['level']),
         ('Weight', '%s' %info['weight'])]
     if info['num_orbits']!=0:
-        info['friends'] = [('Newforms space ' + info['label'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+        info['friends'] = [('Newforms space ' + info['label'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
     else:
         info['friends'] = []
     t = "Hecke Algebra %s" % info['label']
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
 
@@ -368,10 +360,10 @@ def render_hecke_algebras_webpage_l_adic(**args):
         ('Weight', '%s' %info['weight']),
         ('Characteristic', '%s' %info['ell']),
         ('Orbit label', '%s' %info['orbit_label'])]
-    info['friends'] = [('Modular form ' + info['base_lab'], url_for("emf.render_elliptic_modular_forms", level=info['level'], weight=info['weight'], character=1))]
+    info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
 
     t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
-    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
 
 
 
