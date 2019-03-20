@@ -21,15 +21,18 @@
   {% else %}
     {% from "knowl-defs.html" import knowlbar with context %}
 
+    {% set renamable = (k.type == 0 and k.exists() and user_is_admin and k.source is none) %}
+    {% set renaming_other_to_this = (k.type == 0 and k.source is not none and k.id != k.source) %}
+    {% set renaming_this_to_other = (k.type == 0 and k.id == k.source) %}
     {% if k.type == -2 %}
       {{ KNOWL_INC(k.source) }}
     {% else %}
       {{ knowlbar() }}
 
       <div style="margin: 10px;">
-        {% if k.type == 0 %}
+        {% if k.type == 0 and not renaming_this_to_other %}
         Before editing, make sure you read the {{ KNOWL("doc.knowl.guidelines", title="Knowl Edit Guidelines") }}.
-        {% else %}
+        {% elif k.type != 0 %}
         Before editing, make sure you read the {{ KNOWL("doc.knowl.annotation_guidelines", title="Annotation Guidelines") }}.
         {% endif %}
       </div>
@@ -43,7 +46,20 @@
             <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
             <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
           </tr>
+        </table>
+        <button type="submit" id="knowl-edit-btn" onclick="return set_saved();">Save</button>
         {% else %}
+          {% if renaming_this_to_other %}
+            <tr>
+              <td colspan="2" style="padding:10px;">
+                This knowl is in the process of being {{KNOWL("doc.knowl.rename", "renamed")}} to {{ KNOWL(k.source_name, k.source_name) }} and is not editable.
+              </td>
+            </tr>
+          </table>
+          <input type="hidden" name="finish_rename" value="finish">
+          <button type="submit" style="margin:10px;" onclick="return true;">Finish Renaming</button>
+          <button type="submit" style="margin:10px;" onclick=`$('input[name="finish_rename"]').val('undo'); return true;`>Undo Renaming</button>
+          {% else %}
           <tr>
             <td>
               {{KNOWL("doc.knowl.identifier",title="Identifier")}}
@@ -52,16 +68,20 @@
               <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
             </td>
           </tr>
-          {% if user_is_admin and k.type == 0 and k.exists() %}
+          {% if renamable %}
             <tr>
               <td>
-                Rename to:
+                {{KNOWL("doc.knowl.rename",title="Rename to")}}:
               </td>
               <td>
                 <input size="40" name="krename" />
               </td>
             </tr>
-          {% endif %}
+          {% elif renaming_other_to_this %}
+            <tr>
+              <td colspan="2">
+                This knowl is in the process of being {{ KNOWL("doc.knowl.rename", "renamed")}} from {{ KNOWL(k.source, k.source) }}
+          {% endif %} {# renamable #}
           <tr>
             <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
             <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
@@ -72,18 +92,22 @@
               {{ k.quality }}
             </td>
           </tr>
-        {% endif %}
-        <tr>
-          <td colspan="2"><textarea cols="40" rows="10"
-                                              name="content" id="kcontent">{{ k.content }}</textarea>
-          </td>
-        </tr>
-      </table>
-      <button type="submit" id="knowl-edit-btn" onclick="return {% if user_is_admin and k.type == 0 and k.exists() %}check_knowl_category();{% else %}set_saved();{% endif %}">Save</button>
-    <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
-    </form>
+          <tr>
+            <td colspan="2"><textarea cols="40" rows="10"
+                                                name="content" id="kcontent">{{ k.content }}</textarea>
+            </td>
+          </tr>
+        </table>
+        <button type="submit" id="knowl-edit-btn" onclick="return {% if renamable %}check_knowl_category();{% else %}set_saved();{% endif %}">Save</button>
+        {% endif %} {# renaming_this_to_other #}
+      {% endif %} {# k.type == -2 #}
 
-
+      <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
+      </form>
+    {% if renaming_this_to_other %}
+      <br><br><br>
+      {{ KNOWL_INC(k.id) }}
+    {% else %}
     <div class="knowl-editmode-sep">
       <table class="knowl-editmode">
         <tr>
@@ -134,6 +158,7 @@
         <div id="knowl-content"></div>
       </div>
     </div>
+    {% endif %}
 
 <script type="text/javascript"
         src="https://cdn.jsdelivr.net/gh/markitup/1.x@1.1.15/markitup/jquery.markitup.js"

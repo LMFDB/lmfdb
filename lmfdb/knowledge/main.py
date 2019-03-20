@@ -14,6 +14,7 @@
 import string
 import re
 import json
+import time
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
@@ -557,9 +558,11 @@ def save_form():
         return redirect(url_for(".index"))
 
     NEWID = request.form.get('krename', '').strip()
+    FINISH_RENAME = request.form.get('finish_rename', '')
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
+    who = current_user.get_id()
     if new_title != k.title or new_content != k.content:
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
@@ -569,7 +572,7 @@ def save_form():
         k.content = new_content
         k.timestamp = datetime.now()
         k.status = 0
-        k.save(who=current_user.get_id())
+        k.save(who=who)
     if NEWID:
         if not current_user.is_admin():
             flash("You do not have permissions to rename knowl", "error")
@@ -579,7 +582,7 @@ def save_form():
                   no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
         else:
             try:
-                k.rename(NEWID)
+                k.start_rename(NEWID, who)
             except ValueError:
                 flash("A knowl with id %s already exists." % NEWID, "error")
             else:
@@ -592,6 +595,13 @@ def save_form():
                 else:
                     flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
+    elif FINISH_RENAME:
+        # We need to sleep briefly so that we don't have two identical timestamps
+        time.sleep(0.01)
+        if FINISH_RENAME == 'finish':
+            k.actually_rename()
+        elif FINISH_RENAME == 'undo':
+            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:

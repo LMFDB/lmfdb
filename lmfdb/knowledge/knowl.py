@@ -450,10 +450,37 @@ class KnowlBackend(PostgresBase):
         easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')]).split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
-    def rename(self, knowl, new_name):
-        # We check that there are no knowls with this name, but calling function should check that name is valid knowl name
+    def start_rename(self, knowl, new_name, who):
+        """
+        Create a copy of knowl in the database with the new name.  Raises a ValueError if
+        * the knowl is a comment or annotation
+        * there is a renaming that already includes this knowl
+        * the new name already exists
+
+        The calling function should check that new_name is an acceptable knowl id.
+        """
+        if knowl.type != 0:
+            raise ValueError("Only normal knowls can be renamed")
+        if knowl.source is not None or knowl.source_name is not None:
+            raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead")
         if self.knowl_exists(new_name):
             raise ValueError("%s already exists"%new_name)
+        updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
+        with DelayCommit(self):
+            self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
+            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
+            new_knowl.save()
+
+    def undo_rename(self, knowl):
+        if knowl.source is None:
+            raise ValueError("Knowl renaming has not been started")
+        self.actually_rename(self, knowl, knowl.source)
+
+    def actually_rename(self, knowl, new_name=None):
+        if new_name is None:
+            new_name = knowl.source_name
+            if new_name is None:
+                raise ValueError("You must either call start_rename or provide the new name")
         with DelayCommit(self):
             new_cat = extract_cat(new_name)
             updator = SQL("UPDATE kwl_knowls SET (id, cat) = (%s, %s) WHERE id = %s")
@@ -624,8 +651,9 @@ class Knowl(object):
         self.status = data.get('status', 0)
         self.quality = reverse_status_code.get(self.status)
         self.authors = data.get('authors', [])
+        # Because category is different from cat, the category will be recomputed when copying knowls.
         self.category = data.get('cat', extract_cat(ID))
-        self._last_author = data.get('last_author', '')
+        self._last_author = data.get('last_author', data.get('_last_author', ''))
         self.timestamp = data.get('timestamp', datetime.utcnow())
         self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
@@ -701,8 +729,14 @@ class Knowl(object):
         """Mark the knowl as positively reviewed."""
         knowldb.review(self, who, set_beta=set_beta)
 
-    def rename(self, new_name):
-        knowldb.rename(self, new_name)
+    def start_rename(self, new_name, who):
+        knowldb.start_rename(self, new_name, who)
+
+    def undo_rename(self):
+        knowldb.undo_rename(self)
+
+    def actually_rename(self, new_name=None):
+        knowldb.actually_rename(self, new_name)
 
     def author_links(self):
         """
@@ -744,3 +778,27 @@ class Knowl(object):
 
     def __unicode__(self):
         return "title: %s, content: %s" % (self.title, self.content)
+
+    def copy(self, **kwds):
+        """
+        Copy this knowl, with changes described by keyword arguments.
+
+        You can specify a new ID in the keyword arguments, or any of the standard arguments
+        available in the data dictionary passed in to the knowl constructor, or any of the
+        keyword arguments for the knowl constructor.
+
+        Note that the resulting knowl will not necessarily have all of the same attributes
+        set as this one (for example, if you created the knowl with editing=True but
+        did not pass editing=True into this method, the result will not have ``all_defines`` set.
+
+        Because of the way the Knowl constructor works, the category will be recomputed from the ID.
+        """
+        ID = kwds.pop('ID', self.id)
+        if 'data' in kwds:
+            data = kwds.pop('data')
+        else:
+            data = dict(self.__dict__)
+            for key in data:
+                if key in kwds:
+                    data[key] = kwds.pop(key)
+        return Knowl(ID, data=data, **kwds)
