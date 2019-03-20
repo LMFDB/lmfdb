@@ -5,13 +5,13 @@ import ast, os, re, StringIO, time
 import flask
 from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 from markupsafe import Markup
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
+from sage.all import ZZ, QQ, RR, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
-    clean_input, nf_string_to_label, parse_galgrp, parse_ints,
+    clean_input, nf_string_to_label, parse_galgrp, parse_ints, display_float,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     search_wrap)
 from lmfdb.local_fields.main import show_slope_content
@@ -384,6 +384,7 @@ def render_field_webpage(args):
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
     data['frob_data'], data['seeram'] = frobs(nf)
+    data['rd'] = display_float(RR(D.abs()).nth_root(data['degree']), 5)
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
