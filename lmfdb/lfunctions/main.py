@@ -114,7 +114,7 @@ def l_function_maass_browse_page():
     info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     info["colorminus1"] = rgbtohex(signtocolour(-1))
     info["colorplus1"] = rgbtohex(signtocolour(1))
-    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of weight 0', **info)
+    return render_template("MaassformGL2.html", title='L-functions of GL(2) Maass Forms of Weight 0', **info)
 
 
 # L-function of elliptic curves browsing page ##############################################
@@ -150,7 +150,7 @@ def l_function_ec_sym2_browse_page():
     info["representation"] = 'Symmetric square'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 26, 2)]
     return render_template("ellipticcurve.html",
-                           title='Symmetric square L-functions of Elliptic Curves', **info)
+                           title='Symmetric Square L-functions of Elliptic Curves', **info)
 
 
 # L-function of symmetric cube of elliptic curves browsing page ################
@@ -160,7 +160,7 @@ def l_function_ec_sym3_browse_page():
     info["representation"] = 'Symmetric cube'
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
-                           title='Symmetric cube L-functions of Elliptic Curves', **info)
+                           title='Symmetric Cube L-functions of Elliptic Curves', **info)
 
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
@@ -195,8 +195,9 @@ def set_info_for_start_page():
     ''' Sets the properties of the top L-function page.
     '''
 
-    tt = [[{'title': 'Riemann zeta function', 'link': url_for('.l_function_riemann_page')},
+    tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
+
           [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
            {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
