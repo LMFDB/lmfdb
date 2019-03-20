@@ -6,23 +6,24 @@
 
 
 
-<h2> Family Information</h2>
+
+<p><h2> Family Information</h2>
 
   <table>
       <tr><td> {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
       <tr><td>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family:')}}</td><td> {{info.dim}} </td></tr>
     </table>
-
+</p>
 
 
 <h2>Cover</h2><table>
       <tr><td> {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient genus')}}: </td> <td>{{info.g0}}</td></tr>
       <tr><td> Number of {{ KNOWL('curve.highergenus.aut.branchpoints', title='branch points') }}: </td> <td>{{info.r}}</td></tr>
       <tr><td> {{ KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
-      </table>
+      </table> 
 
 
-<h2>Group </h2>
+<p> <h2>Group </h2>
   <table>
    {% if info.specialname %}
    <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Name')}}:</td> <td>${{info.group}}$</td></tr>
@@ -30,112 +31,29 @@
      <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Identifier')}}:</td><td>{{info.gpid}}</td></tr>
     </table>
 
+</p>
 
-<h2>{{KNOWL('curve.highergenus.aut.refinedpassport', title ='Refined Passport')}} in the Family</h2>
-<style>
-.tab button {
-transition: 0.3s;
-}
 
-.tab button.active {
-    background-color: #efe; <!-- col_main_ll -->
-}
+<p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
 
-.tab button:hover {
-    background-color: #bfb; <!-- col_main_l -->
-}
-
-.tabcontent {
-    display: none;
-    animation: fadeEffect 1s;
-}
-
-/* Fade in tabs */
-@keyframes fadeEffect {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-</style>
-<!-- add in style.css -->
-{% if info.topological_num == 0 %}
 <table>
   <tr>
-    <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-    <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
-  </tr>
-  
-  {% for itm in info.passport %}
-  <tr>
-    <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
-    <td class="center">{{itm[0]}}</td>
-  </tr>
-  {% endfor %}
+     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+ 
+</tr>
+{% for itm in info.passport %}
+<tr>
+  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+  <td class="center">{{itm[0]}}</td>
+
+</tr>
+{% endfor %}
 </table>
-
-{% else %}
-<div class="tab">
-  <button type="submit" class="tablinks"
-          onclick="openData(event,'representative')"id="defaultOpen">
-    Topological equivalence representatives</button>
-  <button type="submit" class="tablinks" onclick="openData(event, 'passports')">
-    By conjugacy class</button>
-</div>
-{% endif %}
-
-<div id="passports" class="tabcontent">
-  <p>
-    <table>
-      <tr>
-        <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
-        <th>Conjugacy Classes</th>
-      </tr>
-
-      {% for itm in info.passport %}
-      <tr>
-        <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</a></td>
-        <td class="center">{{itm[0]}}</td>
-      </tr>
-      {% endfor %}
-      
-    </table>
-  </p>
-</div>
-
-<div id="representative" class="tabcontent">
-  {% if info.topological_num == 1%}
-  <p>Displaying the representative for the unique action up to topological equivalence.</p>
-  {% else %}
-  <p>Displaying representatives for {{info.topological_num}} topologically
-    inequivalent actions.</p>
-  {% endif %}
   
-  {% for topo_rep in info.topological_rep %}
-  <a href={{url_for('.topological_action',fam=topo_rep[2], cc=topo_rep[3])}}>{{topo_rep[0]}}</a><br>
-  <table>{% for perm in topo_rep[1] %}
-    <tr><td align="center"> &nbsp; </td><td>{{perm}}</td></tr>
-    {% endfor %}
-  </table> <br>
-  {% endfor %}
-</div>
 
+</p>
 
-<script>
-function openData(evt, dataType) {
-    var i, tabcontent, tablinks;
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-    document.getElementById(dataType).style.display = "block";
-    evt.currentTarget.className += " active";
-}
-
-document.getElementById("defaultOpen").click();
-</script>
 
   
 {% endblock %}
