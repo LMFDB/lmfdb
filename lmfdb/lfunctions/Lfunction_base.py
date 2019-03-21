@@ -197,6 +197,10 @@ class Lfunction(object):
             info['rank'] = self.order_of_vanishing
             info['motivic_weight'] = r'\(%d\)' % self.motivic_weight
 
+        elif self.Ltype() == "riemann":
+            info['sv_edge'] = r"\[\zeta(1) \approx $\infty$\]"
+            info['sv_critical'] = r"\[\zeta(1/2) \approx -1.460354508\]"
+
         elif self.Ltype() != "artin" or (self.Ltype() == "artin" and self.sign != 0):
             try:
                 info['sv_edge'] = specialValueString(self, 1, '1')
