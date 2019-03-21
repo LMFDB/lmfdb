@@ -3563,6 +3563,71 @@ class PostgresStatsTable(PostgresBase):
             nres = self._slow_count(query, record=record)
         return int(nres)
 
+    def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
+        """
+        Returns all of the counts for a given column or set of columns.
+
+        INPUT:
+
+        - ``cols`` -- a string or list of strings giving column names.
+        - ``constraint`` -- only rows satisfying this constraint will be considered.
+            It should take the form of a dictionary of the form used in search queries.
+        - ``threshold`` -- an integer or None.  If specified, only values with
+            counts above the threshold are returned.
+        - ``split_list`` -- see the documentation for add_stats.
+
+        OUTPUT:
+
+        A dictionary with keys the values taken on by the columns in the database,
+        and value the count of rows taking on those values.  If threshold is provided,
+        only counts at least the threshold will be included.
+
+        If cols is a string, then the keys of the dictionary will be just the values
+        taken on by that column.  If cols is a list of strings, then the keys will
+        be tuples of values taken on by the dictionary.
+
+        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).
+        """
+        if isinstance(cols, basestring):
+            cols = [cols]
+            one_col = True
+        else:
+            one_col = False
+            cols = sorted(cols)
+        if constraint is None:
+            ccols, cvals, allcols = None, None, cols
+        else:
+            ccols, cvals = self._split_dict(constraint)
+            allcols = sorted(list(set(cols + constraint.keys())))
+            # Ideally we would include the constraint in the query, but it's not easy to do that
+            # So we check the results in Python
+        jcols = Json(cols)
+        if not self._has_stats(jcols, ccols, cvals, threshold=threshold, split_list=split_list, threshold_inequality=True):
+            self.add_stats(cols, constraint, threshold, split_list)
+        jallcols = Json(allcols)
+        if threshold is None:
+            thresh = SQL("")
+        else:
+            thresh = SQL(" AND count >= {0}").format(Literal(threshold))
+        selecter = SQL("SELECT values, count FROM {0} WHERE cols = %s AND split = %s{1}").format(Identifier(self.counts), thresh)
+        cur = self._execute(selecter, [jallcols, split_list])
+        def make_tuple(val, top_level=True):
+            if one_col and top_level:
+                return make_tuple(val[0], top_level=False)
+            elif isinstance(val, (list, tuple)):
+                return tuple(make_tuple(x, top_level=False) for x in val)
+            elif isinstance(val, dict):
+                return tuple((make_tuple(a, top_level=False), make_tuple(b, top_level=False)) for a,b in val.items())
+            else:
+                return val
+        if constraint is None:
+            return {make_tuple(rec[0]): rec[1] for rec in cur}
+        else:
+            constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
+            def satisfies_constraint(val):
+                return all(val[i] == c for i,c in constraint_list)
+            return {make_tuple(rec[0]): rec[1] for rec in cur if satisfies_constraint(rec[0])}
+
     def _quick_max(self, col, ccols, cvals):
         if ccols is None:
             constraint = SQL("constraint_cols IS NULL")
