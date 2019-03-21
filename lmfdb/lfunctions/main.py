@@ -598,9 +598,7 @@ def set_bread_and_friends(info, L, request):
                 info['friends'] = [('Dual L-function', L.dual_link)]
 
             info['bread'] = get_bread(L.degree,
-                                      [('Maass Form', url_for('.l_function_maass_gln_browse_page',
-                                                              degree='degree' + str(L.degree))),
-                                       (L.maass_id.partition('/')[2], request.path)])
+                                      [(L.maass_id.partition('/')[2], request.path)])
 
 
     elif L.Ltype() == 'hilbertmodularform':
