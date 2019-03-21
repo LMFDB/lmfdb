@@ -108,7 +108,7 @@ def normalize_define(term):
     return ' '.join(term.lower().replace('"', '').replace("'", "").split())
 
 def extract_defines(content):
-    return sorted(set(x[0].strip() for x in defines_finder_re.findall(content)))
+    return sorted(set(x.strip() for x in defines_finder_re.findall(content)))
 
 # We don't use the PostgresTable from lmfdb.backend.database
 # since it's aimed at constructing queries for mathematical objects
@@ -118,10 +118,10 @@ class KnowlBackend(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._rw_knowldb = db.can_read_write_knowls()
-        #FIXME this should be moved to the config file
+        # we cache knowl titles for 10s
         self.caching_time = 10
-        self.cached_titles_timestamp = 0;
-        self.cached_defines_timestamp = 0;
+        self.cached_titles_timestamp = 0
+        self.cached_defines_timestamp = 0
         self.cached_titles = {}
 
     @property
