@@ -423,7 +423,7 @@ def labels_page():
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Labels', '')]
     return render_template("single.html", kid='mf.hilbert.label',
-                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
 @hmf_page.route("/browse/")
 def browse():
