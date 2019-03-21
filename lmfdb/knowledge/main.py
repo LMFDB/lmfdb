@@ -46,7 +46,8 @@ allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
 def allowed_id(ID):
     if ID.startswith('belyi') and\
             (ID.endswith('top') or ID.endswith('bottom')):
-        ID = ID.remove('[').remove(']')
+        for c in "[],T":
+            ID = ID.replace(c,'')
     if not allowed_knowl_id.match(ID):
         flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
