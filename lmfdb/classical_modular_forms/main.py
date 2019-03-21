@@ -1032,7 +1032,7 @@ def space_search(info, query):
 
 @cmf.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of classical modular form data'
+    t = 'Completeness of Classical Modular Form Data'
     return render_template("single.html", kid='dq.cmf.extent',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
@@ -1041,7 +1041,7 @@ def completeness_page():
 
 @cmf.route("/Source")
 def how_computed_page():
-    t = 'Source of classical modular form data'
+    t = 'Source of Classical Modular Form Data'
     return render_template("single.html", kid='dq.cmf.source',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
@@ -1049,7 +1049,7 @@ def how_computed_page():
 
 @cmf.route("/Labels")
 def labels_page():
-    t = 'Labels for classical modular forms'
+    t = 'Labels for Classical Modular Forms'
     return render_template("single.html", kid='cmf.label',
                            credit=credit(), title=t,
                            bread=get_bread(other='Labels'),
@@ -1057,7 +1057,7 @@ def labels_page():
 
 @cmf.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of classical modular form data'
+    t = 'Reliability of Classical Modular Form Data'
     return render_template("single.html", kid='dq.cmf.reliability',
                            credit=credit(), title=t,
                            bread=get_bread(other='Reliability'),
