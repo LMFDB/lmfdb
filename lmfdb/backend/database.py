@@ -3512,17 +3512,17 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres, suffix, extra)
+            self._record_count(query, nres, split_list, suffix, extra)
         return nres
 
-    def _record_count(self, query, count, suffix='', extra=True):
+    def _record_count(self, query, count, split_list=False, suffix='', extra=True):
         cols, vals = self._split_dict(query)
-        data = [count, cols, vals]
+        data = [count, cols, vals, split_list]
         if self.quick_count(query) is None:
-            updater = SQL("INSERT INTO {0} (count, cols, values, extra) VALUES (%s, %s, %s, %s)")
+            updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
+            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
