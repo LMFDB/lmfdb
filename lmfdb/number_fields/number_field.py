@@ -190,35 +190,6 @@ def class_group_request_error(info, bread):
     t = 'Class Groups of Quadratic Imaginary Fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
-class NF_stats(StatsDisplay):
-    """
-    Class for creating and displaying statistics for classical modular forms
-    """
-    def __init__(self):
-        self.nfields = comma(db.nf_fields.count())
-        self.classnourl = url_for('number_fields.render_class_group_data')
-        #self.newform_knowl = display_knowl('cmf.newform', title='newforms')
-        #self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
-        #stats_url = url_for(".statistics")
-
-    @property
-    def short_summary(self):
-        return r'The database contains %s number fields of degree $n\leq %d$.  Here are some further statistics. In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' % (self.nfields, max_deg, self.classnourl)
-
-    @property
-    def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
-
-    extent_knowl = 'dq.nf.extent'
-    table = db.nf_fields
-    baseurl_func = ".index"
-    buckets = {'r2': ['0','1','2','3','4','5','6','7','8','9','10','11'],
-               'n': [j+1 for j in range(23)],
-               'h': ['1','2-10','11-100','$101-10^4$','1001-10000']
-              }
-    stat_list = [
-        {'cols': 
-
 # Helper for stats page
 # Input is 3 parallel lists
 # li has list of values for a fixed Galois group, each n
@@ -231,13 +202,15 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    t = 'Global Number Field Statistics'
+    fields = db.nf_fields
+    title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
-    n = db.nf_fields.stats.get_oldstat('degree')['counts']
-    nsig = db.nf_fields.stats.get_oldstat('nsig')['counts']
+    ntrans=[0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
+    n = [fields.count({'degree': n+1}) for n in range(23)]
+    nsig = [[fields.count({'degree': deg+1, 'r2': s}) for s in range((deg+3)/2)] for deg in range(23)]
     # Galois groups
-    nt_all = db.nf_fields.stats.get_oldstat('nt')['counts']
+    nt_all = [[fields.count({'degree': deg+1, 'galt': t+1}) for t in range(ntrans[deg+1])] for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
@@ -247,10 +220,10 @@ def statistics():
     dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
     dn = galstatdict(db.nf_fields.stats.get_oldstat('dn')['counts'], n, dn_tlist)
 
-    h = db.nf_fields.stats.get_oldstat('h_range')['counts']
-    has_h = db.nf_fields.stats.get_oldstat('has_h')['val']
-    hdeg = db.nf_fields.stats.get_oldstat('hdeg')['counts']
-    has_hdeg = db.nf_fields.stats.get_oldstat('has_hdeg')['counts']
+    h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)]
+    has_h = fields.count({'class_number': {'$exists': True}})
+    hdeg = [[fields.count({'degree': deg+1, 'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)] for deg in range(23)]
+    has_hdeg = [fields.count({'degree': deg+1, 'class_number': {'$exists': True}}) for deg in range(23)]
     hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
@@ -303,7 +276,7 @@ def statistics():
             'maxt': maxt,
             'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
             'maxdeg': max_deg}
-    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=title, bread=bread)
 
 @nf_page.route("/")
 def number_field_render_webpage():
