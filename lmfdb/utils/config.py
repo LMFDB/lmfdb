@@ -43,7 +43,7 @@ class Configuration(object):
             '--color',
             dest = 'core_color',
             metavar = "COLOR",
-            help = 'color template (see templates/color.css)',
+            help = 'color template (see lmfdb/utils/color.py)',
             default = 0,
             type = int)
 

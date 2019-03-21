@@ -110,6 +110,13 @@ def list():
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
 
+@login_page.route("/change_colors/<int:scheme>")
+@login_required
+def change_colors(scheme):
+    userid = current_user.get_id()
+    userdb.change_colors(userid, scheme)
+    flask.flash("Color scheme successfully changed")
+    return flask.redirect(url_for(".info"))
 
 @login_page.route("/myself")
 def info():
@@ -118,7 +125,9 @@ def info():
     info['logout'] = url_for(".logout")
     info['user'] = current_user
     info['next'] = request.referrer
+    from lmfdb.utils.color import all_color_schemes
     return render_template("user-info.html",
+                           all_colors = all_color_schemes.values(),
                            info=info, title="Userinfo",
                            bread=base_bread() + [("Myself", url_for(".info"))])
 
