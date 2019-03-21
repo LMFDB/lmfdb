@@ -313,9 +313,6 @@ def test():
 def edit(ID):
     from psycopg2 import DatabaseError
     if not allowed_id(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
     for elt in knowl.edit_history:
@@ -561,9 +558,6 @@ def save_form():
         raise Exception("no id")
 
     if not allowed_id(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lower/uppercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
         return redirect(url_for(".index"))
 
     NEWID = request.form.get('krename', '').strip()
@@ -584,9 +578,7 @@ def save_form():
         if not current_user.is_admin():
             flash("You do not have permissions to rename knowl", "error")
         elif not allowed_id(NEWID):
-            flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
+            pass
         else:
             try:
                 k.rename(NEWID)
