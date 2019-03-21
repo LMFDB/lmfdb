@@ -36,7 +36,7 @@ class RootTest(LmfdbTest):
         css = self.tc.get("/style.css").data
         # def for knowls:
         assert '*[knowl]' in css
-        assert 'border-bottom: 1px dotted grey;' in css
+        assert 'border-bottom: 1px dotted' in css
 
     @unittest2.skip("Tests all url_maps, but fails at the moment because of other errors")
     def test_url_map(self):
