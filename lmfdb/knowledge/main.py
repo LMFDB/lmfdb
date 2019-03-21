@@ -583,16 +583,18 @@ def save_form():
         else:
             try:
                 k.start_rename(NEWID, who)
-            except ValueError:
-                flash("A knowl with id %s already exists." % NEWID, "error")
+            except ValueError as err:
+                flash(str(err))
             else:
                 if k.sed_safety == 1:
-                    flash("Knowl renamed to {0} successfully. You can change code references using".format(NEWID))
+                    flash("Knowl rename process started. You can change code references using".format(NEWID))
                     flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
                     flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
-                    flash("Knowl renamed to {0} successfully.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
+                    flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
                 else:
+                    time.sleep(0.01)
+                    k.actually_rename()
                     flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
     elif FINISH_RENAME:

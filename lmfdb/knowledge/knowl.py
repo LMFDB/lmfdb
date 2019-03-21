@@ -266,7 +266,11 @@ class KnowlBackend(PostgresBase):
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
         cat = extract_cat(knowl.id)
-        typ, source, name = extract_typ(knowl.id)
+        # When renaming, source is set explicitly on the knowl
+        if knowl.type == 0 and knowl.source is not None:
+            typ, source, name = 0, knowl.source, knowl.source_name
+        else:
+            typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
         defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
@@ -350,7 +354,7 @@ class KnowlBackend(PostgresBase):
             k.referrers = referrers[k.id]
             k.code_referrers = [
                     code_snippet_knowl(D, full=False)
-                    for D in self.code_references(k.id)]
+                    for D in self.code_references(k)]
         return knowls
 
     def ids_referencing(self, knowlid, old=False, beta=None):
@@ -415,11 +419,11 @@ class KnowlBackend(PostgresBase):
             code.append(codeline)
         return {'filename': filename, 'lines': line_numbers, 'code': code}
 
-    def code_references(self, knowlid):
+    def code_references(self, knowl):
         """
         INPUT:
 
-        - ``knowlid`` -- a string, the knowl id
+        - ``knowl`` -- a knowl_object
 
         OUTPUT:
 
@@ -428,10 +432,16 @@ class KnowlBackend(PostgresBase):
         - 'line' -- line number of match
         - 'code' -- a list of strings giving two lines of context around the match.
         """
-        try:
-            matches = subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(knowlid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n')
-        except subprocess.CalledProcessError: # no matches
-            return []
+        kids = [knowl.id]
+        if knowl.type == 0 and knowl.source is not None and knowl.source != knowl.id:
+            # Currently renaming from another name
+            kids.append(knowl.source)
+        matches = []
+        for kid in kids:
+            try:
+                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]"""%(kid.replace('.',r'\.'))]).decode('utf-8').split(u'\n--\n'))
+            except subprocess.CalledProcessError: # no matches
+                pass
         return [self._process_git_grep(match) for match in matches]
 
     def check_sed_safety(self, knowlid):
@@ -460,16 +470,17 @@ class KnowlBackend(PostgresBase):
         The calling function should check that new_name is an acceptable knowl id.
         """
         if knowl.type != 0:
-            raise ValueError("Only normal knowls can be renamed")
+            raise ValueError("Only normal knowls can be renamed.")
         if knowl.source is not None or knowl.source_name is not None:
-            raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead")
+            raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
         if self.knowl_exists(new_name):
-            raise ValueError("%s already exists"%new_name)
+            raise ValueError("A knowl with id %s already exists."%new_name)
         updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
+        old_name = knowl.id
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
             new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
-            new_knowl.save()
+            new_knowl.save(who)
 
     def undo_rename(self, knowl):
         if knowl.source is None:
@@ -677,7 +688,7 @@ class Knowl(object):
             self.comments = knowldb.get_comments(ID)
             if self.type == 0:
                 self.referrers = knowldb.ids_referencing(ID)
-                self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(ID)]
+                self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(self)]
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
         self.reviewed_content = self.reviewed_title = self.reviewed_timestamp = None

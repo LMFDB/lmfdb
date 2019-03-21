@@ -341,6 +341,7 @@ function view_refresh(edit_mode='cur') {
 
 /* Check before saving if changing knowl category */
 function check_knowl_category() {
+  var curname = $("input[name='id']").val();
   var newname = $("input[name='krename']").val();
 
   if (newname) {
@@ -349,8 +350,8 @@ function check_knowl_category() {
     } else {
       var newcat = newname;
     }
-    if ('{{k.id}}'.includes(".")) {
-      var oldcat = '{{k.id}}'.split(".").slice(0, -1).join(".");
+    if (curname.includes(".")) {
+      var oldcat = curname.split(".").slice(0, -1).join(".");
     } else {
       var oldcat = oldname;
     }

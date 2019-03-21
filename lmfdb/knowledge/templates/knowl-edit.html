@@ -41,66 +41,66 @@
     <form action="{{ url_for('.save_form') }}" method="POST" id=>
       <input type="hidden" name="id" value="{{ k.id }}"/>
       <table>
-        {% if k.type == -2 %} {# -2 is a comment #}
-          <tr>
-            <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
-            <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-          </tr>
-        </table>
-        <button type="submit" id="knowl-edit-btn" onclick="return set_saved();">Save</button>
+        {% if renaming_this_to_other %}
+        <tr>
+          <td colspan="2" style="padding:10px;">
+            This knowl is in the process of being {{KNOWL("doc.knowl.rename", "renamed")}} to {{ KNOWL(k.source_name, k.source_name) }} and is not editable.
+          </td>
+        </tr>
+      </table>
+      <input type="hidden" name="finish_rename" value="finish">
+      <button type="submit" style="margin:10px;" onclick="return true;">Finish Renaming</button>
+      <button type="submit" style="margin:10px;" onclick=`$('input[name="finish_rename"]').val('undo'); return true;`>Undo Renaming</button>
         {% else %}
-          {% if renaming_this_to_other %}
-            <tr>
-              <td colspan="2" style="padding:10px;">
-                This knowl is in the process of being {{KNOWL("doc.knowl.rename", "renamed")}} to {{ KNOWL(k.source_name, k.source_name) }} and is not editable.
-              </td>
-            </tr>
-          </table>
-          <input type="hidden" name="finish_rename" value="finish">
-          <button type="submit" style="margin:10px;" onclick="return true;">Finish Renaming</button>
-          <button type="submit" style="margin:10px;" onclick=`$('input[name="finish_rename"]').val('undo'); return true;`>Undo Renaming</button>
-          {% else %}
-          <tr>
-            <td>
-              {{KNOWL("doc.knowl.identifier",title="Identifier")}}
-            </td>
-            <td>
-              <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
-            </td>
-          </tr>
-          {% if renamable %}
-            <tr>
-              <td>
-                {{KNOWL("doc.knowl.rename",title="Rename to")}}:
-              </td>
-              <td>
-                <input size="40" name="krename" />
-              </td>
-            </tr>
-          {% elif renaming_other_to_this %}
-            <tr>
-              <td colspan="2">
-                This knowl is in the process of being {{ KNOWL("doc.knowl.rename", "renamed")}} from {{ KNOWL(k.source, k.source) }}
-          {% endif %} {# renamable #}
-          <tr>
-            <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
-            <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
-          </tr>
-          <tr>
-            <td>Quality</td>
-            <td>
-              {{ k.quality }}
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2"><textarea cols="40" rows="10"
-                                                name="content" id="kcontent">{{ k.content }}</textarea>
-            </td>
-          </tr>
-        </table>
-        <button type="submit" id="knowl-edit-btn" onclick="return {% if renamable %}check_knowl_category();{% else %}set_saved();{% endif %}">Save</button>
-        {% endif %} {# renaming_this_to_other #}
+        {% if k.type == -2 %} {# -2 is a comment #}
+        <tr>
+          <td>{{KNOWL("doc.knowl.comment_title",title="Comment Title")}}</td>
+          <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td>
+            {{KNOWL("doc.knowl.identifier",title="Identifier")}}
+          </td>
+          <td>
+            <a href="{{ url_for('.render', ID = k.id) }}">{{ k.id }}</a>
+          </td>
+        </tr>
+        {% if renamable %}
+        <tr>
+          <td>
+            {{KNOWL("doc.knowl.rename",title="Rename to")}}:
+          </td>
+          <td>
+            <input size="40" name="krename" />
+          </td>
+        </tr>
+        {% elif renaming_other_to_this %}
+        <tr>
+          <td colspan="2">
+            This knowl is in the process of being {{ KNOWL("doc.knowl.rename", "renamed")}} from {{ KNOWL(k.source, k.source) }}
+          </td>
+        </tr>
+        {% endif %} {# renamable #}
+        <tr>
+          <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
+          <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
+        </tr>
+        <tr>
+          <td>Quality</td>
+          <td>
+            {{ k.quality }}
+          </td>
+        </tr>
       {% endif %} {# k.type == -2 #}
+        <tr>
+          <td colspan="2"><textarea cols="40" rows="10"
+                                    name="content" id="kcontent">{{ k.content }}</textarea>
+          </td>
+        </tr>
+      </table>
+      <button type="submit" id="knowl-edit-btn" onclick="return {% if renamable %}check_knowl_category();{% else %}set_saved();{% endif %}">Save</button>
+      {% endif %} {# renaming_this_to_other #}
 
       <a style="margin-left: 30px" onclick="unsaved = false;" href="{% if k.type == -2 %}{{ url_for('.show', ID=k.source) }}{% elif k.exists() %}{{ url_for('.show', ID=k.id) }}{% else %}{{ url_for('.index') }}{% endif %}">cancel</a>
       </form>
