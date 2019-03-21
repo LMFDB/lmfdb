@@ -36,7 +36,7 @@ function get_all_embeddings(num_embeddings) {
     <tr>
       <th class="sticky-head dark" style="min-width: 40px;">{{ KNOWL('cmf.embedding_label', title='Label')}}</th>
       {% if newform.has_exact_qexp %}
-      <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\alpha)\)</th>
+      <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\nu)\)</th>
       {% endif %}
       {% for n in info.CC_n %}
       <th class="center dark" colspan="{{1 if single_columns else 3}}">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
