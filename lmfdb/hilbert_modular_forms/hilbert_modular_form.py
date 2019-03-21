@@ -54,7 +54,7 @@ def hilbert_modular_form_render_webpage():
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_counts()
-        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+        return render_template("hilbert_modular_form_all.html", info=info, credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return hilbert_modular_form_search(args)
 
@@ -90,7 +90,8 @@ def hilbert_modular_form_by_label(lab):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
-            ('Labels for Hilbert Modular Forms', url_for(".labels_page"))]
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Hilbert modular form labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -408,6 +409,14 @@ def how_computed_page():
     return render_template("single.html", kid='dq.mf.hilbert.source',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
+@hmf_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Hilbert Modular Forms Data'
+    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+             ('Reliability', '')]
+    return render_template("single.html", kid='dq.mf.hilbert.reliability',
+                           credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
 @hmf_page.route("/Labels")
 def labels_page():
     t = 'Label of an Hilbert Modular Form'
@@ -466,5 +475,6 @@ def statistics_by_degree(d):
         t = 'Hilbert Modular Forms'
         bread = bread[:-1]
 
-    return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove("Completeness"))
+    return render_template("hmf_by_degree.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
 
