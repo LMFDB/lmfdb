@@ -362,8 +362,7 @@ class PostgresBase(object):
                 try:
                     cur.execute(query, values)
                 except (ProgrammingError, NotSupportedError):
-                    print query.as_string(self.conn)
-                    print values
+                    print cur.mogrify(query, values)
                     raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
