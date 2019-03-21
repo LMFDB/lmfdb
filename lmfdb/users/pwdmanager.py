@@ -229,6 +229,10 @@ class PostgresUserTable(PostgresBase):
         deletor = SQL("DELETE FROM userdb.tokens WHERE id = %s")
         self._execute(deletor, [token])
 
+    def change_colors(self, uid, new_color):
+        updator = SQL("UPDATE userdb.users SET color_scheme = %s WHERE username = %s")
+        self._execute(updator, [new_color, uid])
+
 userdb = PostgresUserTable()
 
 class LmfdbUser(UserMixin):

@@ -416,11 +416,30 @@ def robots_txt():
 def humans_txt():
     return render_template("acknowledgment.html", title="Acknowledgments")
 
+@app.context_processor
+def add_colors():
+    from lmfdb.utils.color import all_color_schemes
+    color = request.args.get('color')
+    if color and color.isdigit():
+        color = int(color)
+    if color not in all_color_schemes:
+        color = None
+    if color is None:
+        from flask_login import current_user
+        userid = current_user.get_id()
+        if userid is not None:
+            from lmfdb.users.pwdmanager import userdb
+            color = userdb.lookup(userid).get('color_scheme')
+        if color not in all_color_schemes:
+            color = None
+        if color is None:
+            from lmfdb.utils.config import Configuration
+            color = Configuration().get_color()
+    return dict(color=all_color_schemes[color].dict())
+
 @app.route("/style.css")
 def css():
-    from lmfdb.utils.config import Configuration
-    color = Configuration().get_color()
-    response = make_response(render_template("style.css", color_template=color))
+    response = make_response(render_template("style.css"))
     response.headers['Content-type'] = 'text/css'
     # don't cache css file, if in debug mode.
     if current_app.debug:

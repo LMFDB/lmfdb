@@ -5,7 +5,7 @@ import ast, os, re, StringIO, time
 import flask
 from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 from markupsafe import Markup
-from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari
+from sage.all import ZZ, QQ, RealField, PolynomialRing, NumberField, latex, primes, pari
 
 from lmfdb import db
 from lmfdb.app import app
@@ -58,6 +58,12 @@ def number_field_data(label):
 #def na_text():
 #    return "Not computed"
 
+# fixed precision display of float
+def fixed_prec(r, digs=3):
+  n = RealField(200)(r)*(10**digs)
+  n = str(n.trunc())
+  return n[:-digs]+'.'+n[-digs:]
+
 
 @app.context_processor
 def ctx_galois_groups():
@@ -85,11 +91,6 @@ def learnmore_list():
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
-
-#def group_display_shortC(C):
-#    def gds(nt):
-#        return group_display_short(nt['n'], nt['t'], C)
-#    return gds
 
 def poly_to_field_label(pol):
     try:
@@ -201,13 +202,15 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    t = 'Global Number Field Statistics'
+    fields = db.nf_fields
+    title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
-    n = db.nf_fields.stats.get_oldstat('degree')['counts']
-    nsig = db.nf_fields.stats.get_oldstat('nsig')['counts']
+    ntrans=[0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
+    n = [fields.count({'degree': n+1}) for n in range(23)]
+    nsig = [[fields.count({'degree': deg+1, 'r2': s}) for s in range((deg+3)/2)] for deg in range(23)]
     # Galois groups
-    nt_all = db.nf_fields.stats.get_oldstat('nt')['counts']
+    nt_all = [[fields.count({'degree': deg+1, 'galt': t+1}) for t in range(ntrans[deg+1])] for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
@@ -217,10 +220,10 @@ def statistics():
     dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
     dn = galstatdict(db.nf_fields.stats.get_oldstat('dn')['counts'], n, dn_tlist)
 
-    h = db.nf_fields.stats.get_oldstat('h_range')['counts']
-    has_h = db.nf_fields.stats.get_oldstat('has_h')['val']
-    hdeg = db.nf_fields.stats.get_oldstat('hdeg')['counts']
-    has_hdeg = db.nf_fields.stats.get_oldstat('has_hdeg')['counts']
+    h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)]
+    has_h = fields.count({'class_number': {'$exists': True}})
+    hdeg = [[fields.count({'degree': deg+1, 'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)] for deg in range(23)]
+    has_hdeg = [fields.count({'degree': deg+1, 'class_number': {'$exists': True}}) for deg in range(23)]
     hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
@@ -273,7 +276,7 @@ def statistics():
             'maxt': maxt,
             'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
             'maxdeg': max_deg}
-    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=t, bread=bread)
+    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=title, bread=bread)
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -384,6 +387,7 @@ def render_field_webpage(args):
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
     data['frob_data'], data['seeram'] = frobs(nf)
+    data['rd'] = fixed_prec(RealField(300)(D.abs()).nth_root(data['degree']))
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -536,6 +540,7 @@ def render_field_webpage(args):
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
+                   ('Root discriminant', '$%s$' % data['rd']),
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
