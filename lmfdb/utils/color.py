@@ -60,7 +60,7 @@ class ColorScheme(object):
         'col_sidebar_text': 'col_main', # Sidebar text in body and header, under Dat, gets over-written for the rest.
         'col_sidebar_links': 'col_main', # Sidebar link text
         'col_sidebar_header_links': 'col_main', # Sidebar header links
-        'col_search_border': 'col_main',
+        #'col_search_border': 'col_main',
         'col_main_2': None, # Main link hovers
         'col_main_l': None, # Tabs
         'col_main_b': 'col_main_l', # Buttons -- not defined in non-original color schemes
@@ -133,9 +133,19 @@ class ColorScheme(object):
         # hr': 'horizontal rule
         'hr_border': 'col_main_l',
 
-        # Upper right hand corner searchbox
-        'search_border': 'col_search_border',
-        'search_background': 'col_main_ld',
+        # Upper right hand corner searchbox, which has been disabled
+        # 'search_border': 'col_search_border',
+        # 'search_background': 'col_main_ld',
+        # # Search
+        # 'search_background': c.white,
+        # 'serach_border': c.white,
+        # 'gsa_inactive': 'light_grey_9',
+        # 'gsa_active': 'orange_1',
+        # 'gs_text_webResult': 'black',
+        # 'gs_text': 'col_main',
+        # 'gs_border': 'blue_2',
+
+
 
         # Header colors
         'header_background': 'col_main_ld', #Color of the banner at the top
@@ -205,23 +215,13 @@ class ColorScheme(object):
         'maas_table_bkg_hl': 'col_main_l',
         'maas_coff_bkg': c.white,
 
-        # Search
-        'search_background': c.white,
-        'serach_border': c.white,
-        'gsa_inactive': 'light_grey_9',
-        'gsa_active': 'orange_1',
-        'gs_text_webResult': 'black',
-        'gs_text': 'col_main',
-        'gs_border': 'blue_2',
-
         # Chi tables
         'chitable_imprimitive': c.blue,
         'chitable_primitive': 'col_main',
         'chi_background': 'col_main_2',
-        'chi_table_background': 'col_main_ll',
         'chi_table_background_off': c.white,
         'chi_border': 'col_main_lg',
-        'chi_table_background': 'col_main_ld',
+        'chi_table_background': 'col_main_ld', # This was specified twice in color.css; could also be col_main_ll
         'chi_table_border': 'col_main_dl',
 
         # acknowledgements
@@ -311,7 +311,7 @@ class CarribeanSea(YellowKnowls):
     col_sidebar_text = c.black
     col_sidebar_links = '#00695C' # P1-800
     col_sidebar_header_links = '#004D40' # P1-900
-    col_search_border = '#004D40' # P1-900
+    #col_search_border = '#004D40' # P1-900
     col_main_2  = '#FFF59D' # A2-100
     col_main_l  = '#80CBC4' # P1-200
     col_main_lg = '#004D40' # P1-900
@@ -330,7 +330,7 @@ class NiceGreen(YellowKnowls):
     col_sidebar_text = c.black
     col_sidebar_links = '#2E7D32' # P1-800
     col_sidebar_header_links = '#1B5E20' # P1-900
-    col_search_border = '#1B5E20' # P1-900
+    #col_search_border = '#1B5E20' # P1-900
     col_main_2  = '#FFF59D' # A2-100
     col_main_l  = '#A5D6A7' # P1-200
     col_main_lg = '#1B5E20' # P1-900
@@ -351,7 +351,7 @@ class JohnBlue(YellowKnowls):
     col_sidebar_text = c.black
     col_sidebar_links = '#1565C0' # P1-800
     col_sidebar_header_links = '#0D47A1' # P1-900
-    col_search_border = '#0D47A1' # P1-900
+    #col_search_border = '#0D47A1' # P1-900
     col_main_2  = '#FFF59D' # A2-100
     col_main_l  = '#90CAF9' # P1-200
     col_main_lg = '#0D47A1' # P1-900
@@ -370,7 +370,7 @@ class IndigoHair(YellowKnowls):
     col_sidebar_text = c.black
     col_sidebar_links = '#283593' # P1-800
     col_sidebar_header_links = '#1A237E' # P1-900
-    col_search_border = '#1A237E' # P1-900
+    #col_search_border = '#1A237E' # P1-900
     col_main_2  = '#FFF59D' # A2-100
     col_main_l  = '#9FA8DA' # P1-200
     col_main_lg = '#1A237E' # P1-900

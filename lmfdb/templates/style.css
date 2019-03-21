@@ -139,6 +139,7 @@ table tbody tr.trivial a:hover {
     background: {{color.content_background_red}};
 }
 
+/*
 #search-topright {
   display: inline;
 }
@@ -150,6 +151,7 @@ table tbody tr.trivial a:hover {
   position: relative;
   top: -1px;
 }
+*/
 
 /* icon in front of external links */
 #content a[target="_blank"]:before {
