@@ -430,13 +430,13 @@ class RiemannZeta(Lfunction):
         self.texnamecompleted1ms = "\\xi(1-s)"
         self.credit = 'Sage'
 
+        # Generate a function to do computations
+        self.sageLfunction = lc.Lfunction_Zeta()
+
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "riemann"
         self.info['title'] = "Riemann Zeta-function: $\\zeta(s)$"
-
-        # Generate a function to do computations
-        self.sageLfunction = lc.Lfunction_Zeta()
 
 #############################################################################
 

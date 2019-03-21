@@ -1,4 +1,6 @@
 # based on /lmfdb/elliptic_curves/ec_stats.py
+# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus
+
 
 import re
 from lmfdb import db

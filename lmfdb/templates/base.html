@@ -9,7 +9,7 @@
     {% else %}
       <title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}  </title>
     {% endif %}
-    <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
+    <link id="style_css" href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
     <!-- jQuery -->
     <script type="text/javascript"
