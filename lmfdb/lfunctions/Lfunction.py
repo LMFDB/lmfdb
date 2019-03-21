@@ -1234,11 +1234,15 @@ class Lfunction_Maass(Lfunction):
         # Initiate the dictionary info that contains the data for the webpage
         self.info = self.general_webpagedata()
         self.info['knowltype'] = "mf.maass"
-        R_commas = "(" + self.R.replace("_", ", ") + ")"
-        self.info['title'] = ("L-function of degree %s, " % (self.degree)
+        if self.degree > 2:
+            R_commas = "(" + self.R.replace("_", ", ") + ")"
+            self.info['title'] = ("L-function of degree %s, " % (self.degree)
                       + "conductor %s, and " % (self.level)
                       + "spectral parameters %s" % (R_commas)
                       + title_end)
+        else:
+            self.info['title'] = ("$L(s,f)$, where $f$ is a Maass cusp form with "
+                      + "level %s" % (self.level)) + title_end
 
 #############################################################################
 
