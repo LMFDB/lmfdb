@@ -190,6 +190,35 @@ def class_group_request_error(info, bread):
     t = 'Class Groups of Quadratic Imaginary Fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
+class NF_stats(StatsDisplay):
+    """
+    Class for creating and displaying statistics for classical modular forms
+    """
+    def __init__(self):
+        self.nfields = comma(db.nf_fields.count())
+        self.classnourl = url_for('number_fields.render_class_group_data')
+        #self.newform_knowl = display_knowl('cmf.newform', title='newforms')
+        #self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
+        #stats_url = url_for(".statistics")
+
+    @property
+    def short_summary(self):
+        return r'The database contains %s number fields of degree $n\leq %d$.  Here are some further statistics. In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' % (self.nfields, max_deg, self.classnourl)
+
+    @property
+    def summary(self):
+        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+
+    extent_knowl = 'dq.nf.extent'
+    table = db.nf_fields
+    baseurl_func = ".index"
+    buckets = {'r2': ['0','1','2','3','4','5','6','7','8','9','10','11'],
+               'n': [j+1 for j in range(23)],
+               'h': ['1','2-10','11-100','$101-10^4$','1001-10000']
+              }
+    stat_list = [
+        {'cols': 
+
 # Helper for stats page
 # Input is 3 parallel lists
 # li has list of values for a fixed Galois group, each n
