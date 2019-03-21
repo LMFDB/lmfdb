@@ -42,6 +42,16 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+def allowed_id(ID):
+    if ID.startswith('belyi') and\
+            (ID.endswith('top') or ID.endswith('bottom')):
+        ID = ID.remove('[').remove(']')
+    if not allowed_knowl_id.match(ID):
+        flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+        return False
+    return True
 
 # Tell markdown to not escape or format inside a given block
 
@@ -302,7 +312,7 @@ def test():
 @login_required
 def edit(ID):
     from psycopg2 import DatabaseError
-    if not allowed_knowl_id.match(ID):
+    if not allowed_id(ID):
         flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
@@ -550,7 +560,7 @@ def save_form():
     if not ID:
         raise Exception("no id")
 
-    if not allowed_knowl_id.match(ID):
+    if not allowed_id(ID):
         flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lower/uppercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
@@ -573,7 +583,7 @@ def save_form():
     if NEWID:
         if not current_user.is_admin():
             flash("You do not have permissions to rename knowl", "error")
-        elif not allowed_knowl_id.match(NEWID):
+        elif not allowed_id(NEWID):
             flash("""Oops, knowl id '%s' is not allowed.
                   It must consist of lowercase characters,
                   no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
