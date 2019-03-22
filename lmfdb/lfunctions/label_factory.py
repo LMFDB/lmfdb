@@ -81,7 +81,7 @@ def break_label(label):
             G = GR
         else:
             G = GC
-        G.append(CC(elt[1:]))
+        G.append(CC(elt[1:])/2)
 
     if spectral == '0':
         L['algebraic'] = True
