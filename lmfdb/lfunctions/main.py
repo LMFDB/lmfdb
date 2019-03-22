@@ -4,8 +4,6 @@ from flask import render_template, url_for, request, make_response
 
 from sage.all import srange, spline, line, latex, is_prime,  factor
 
-from labels import make_label
-
 import tempfile
 import os
 import re
@@ -528,8 +526,7 @@ def set_gaga_properties(L):
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
-    label_components = {'conductor':L.level, 'degree':L.degree,'central_character':L.central_character,'gamma_factors':L.gamma_factors,'algebraic':L.algebraic}
-    ans.append(('Label', make_label(label_components)))
+
     primitive =  getattr(L, 'primitive', None)
     if primitive is not None:
         txt = 'yes' if primitive else 'no'
