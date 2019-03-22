@@ -6,7 +6,8 @@
 # DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
 # Lfunction_genus2_Q
 
-import math, re
+import math
+import re
 
 from flask import url_for, request
 from sage.all import (
@@ -300,6 +301,7 @@ def makeLfromdata(L):
     L.types = data.get('types', None)
 
     L.fromDB = True
+
 
 
 
@@ -1681,6 +1683,8 @@ class ArtinLfunction(Lfunction):
         self.quasidegree = len(self.mu_fe) + len(self.nu_fe)
         self.algebraic = True
         self.motivic_weight = 0
+        cc = self.artin.central_character()
+        self.charactermodulus, self.characternumber = cc.modulus, cc.number
 
         # Compute Dirichlet coefficients and period ########################
         if self.degree == 1:

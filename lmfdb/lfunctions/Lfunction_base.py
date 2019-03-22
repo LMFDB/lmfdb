@@ -1,8 +1,10 @@
 from flask import url_for
-from sage.all import ZZ, is_prime, latex, imag_part
+from sage.all import ZZ, is_prime, latex, imag_part, lazy_attribute, sqrt
 from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
                                 styleTheSign, specialValueString,
                                 specialValueTriple)
+from math import pi
+from label_factory import make_label
 
 
 #############################################################################
@@ -12,7 +14,8 @@ from Lfunctionutilities import (lfuncDShtml, lfuncEPtex, lfuncFEtex,
 #############################################################################
 
 class Lfunction(object):
-    """Class representing a general L-function
+    """
+    Class representing a general L-function
     """
 
     def Ltype(self):
@@ -33,10 +36,7 @@ class Lfunction(object):
         """ Computes some kappa, lambda and Q from mu, nu, which might not be optimal for computational purposes
         """
         try:
-	    from sage.functions.other import sqrt 
-            from sage.rings.all import Integer
-            from math import pi
-            self.Q_fe = float(sqrt(Integer(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
+            self.Q_fe = float(sqrt(ZZ(self.level))/2.**len(self.nu_fe)/pi**(len(self.mu_fe)/2.+len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe] 
             self.lambda_fe = [m/2. for m in self.mu_fe] + [n for n in self.nu_fe]
         except Exception as e:
@@ -209,7 +209,20 @@ class Lfunction(object):
                 info['sv_critical'] = "L(1/2): not computed"
                 info['sv_edge'] = "L(1): not computed"
 
+        info['label'] = self.lfun_label
         return info
+
+    @lazy_attribute
+    def lfun_label(self):
+        data = {
+                'algebraic': self.algebraic,
+                'central_character': '%d.%d' % (self.charactermodulus, self.characternumber),
+                'conductor': self.level,
+                'degree': self.degree,
+                'gamma_factors': [self.mu_fe, self.nu_fe]
+                }
+        return make_label(data)
+
 
 
 
