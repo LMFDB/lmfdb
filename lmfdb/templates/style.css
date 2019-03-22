@@ -225,6 +225,10 @@ body.knowl #header {
     font-size: 150%;
 }
 
+#header .bread a {
+    color: {{color.bread_links}};
+}
+
 #header .topright {
   text-align: right;
   white-space:nowrap;

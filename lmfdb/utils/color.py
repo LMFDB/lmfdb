@@ -154,6 +154,7 @@ class ColorScheme(object):
         'header_text_topright': 'col_main_dl',
         # Header navi colors
         'header_navi_text': 'col_main_dl',
+        'bread_links': 'col_main_dl',
 
         # flashes
         'flashes_border': c.col_light_red_1,
@@ -359,6 +360,9 @@ class JohnBlue(YellowKnowls):
     col_main_d  = c.black # ?00
     knowl_hyper_text = '#1565C0' # P1-800
     knowl_shadow = '#0D47A1' # P1-900
+    sidebar_background_hover = c.white # '#CCE6FC'
+    a_background_hover = '#E3F2FD'
+    knowl_hover = '#FFF8C1' # lighter than knowl border
 
 class IndigoHair(YellowKnowls):
     code = 18
