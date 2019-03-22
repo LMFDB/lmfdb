@@ -70,7 +70,8 @@ geom_aut_grp_dict = {
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+            ('Source of the data', url_for(".source_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Genus 2 curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -403,11 +404,18 @@ def completeness_page():
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
-def how_computed_page():
+def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
     return render_template("single.html", kid='dq.g2c.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@g2c_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of Genus 2 Curve Data over $\Q$'
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
+    return render_template("single.html", kid='dq.g2c.reliability',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Labels")
 def labels_page():
