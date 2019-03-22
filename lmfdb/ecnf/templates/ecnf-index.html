@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-{{ KNOWL_INC('dq.ecnf.extent') }}
+  {{ ecnf_summary()|safe}}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
