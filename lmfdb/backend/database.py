@@ -3632,9 +3632,12 @@ class PostgresStatsTable(PostgresBase):
             return {make_tuple(rec[0]): rec[1] for rec in cur}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
+            column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
             def satisfies_constraint(val):
                 return all(val[i] == c for i,c in constraint_list)
-            return {make_tuple(rec[0]): rec[1] for rec in cur if satisfies_constraint(rec[0])}
+            def remove_constraint(val):
+                return [val[i] for i in column_indexes]
+            return {make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
 
     def _quick_max(self, col, ccols, cvals):
         if ccols is None:
