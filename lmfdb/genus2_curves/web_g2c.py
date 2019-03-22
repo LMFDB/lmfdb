@@ -639,7 +639,7 @@ class WebG2C(object):
             print "potential cmf friend", cmf_friend
             # be selective, only cmfs of the right dimension and conductor get to be our friends
             if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
-                add_friend (friends, ("Modular form " + friend_label, url_for_cmf(cmf_friend["label"])))
+                add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
