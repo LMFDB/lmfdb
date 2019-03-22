@@ -136,7 +136,8 @@ def st_link_by_name(weight,degree,name):
 
 def learnmore_list():
     return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.how_computed_page')),
+            ('Source of the data', url_for('.source_page')),
+            ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -158,7 +159,7 @@ def index():
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
-    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @st_page.route('/random')
 def random():
@@ -541,15 +542,22 @@ def render_st_group(info, portrait=None):
 def completeness_page():
     t = 'Completeness of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
-    return render_template('single.html', kid='dq.st.extent',
+    return render_template('single.html', kid='dq.st_group.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
-def how_computed_page():
+def source_page():
     t = 'Source of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
-    return render_template('single.html', kid='dq.st.source',
+    return render_template('single.html', kid='dq.st_group.source',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@st_page.route('/Reliability')
+def reliability_page():
+    t = 'Reliability of Sato-Tate Group Data'
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
+    return render_template('single.html', kid='dq.st_group.reliability',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
 def labels_page():

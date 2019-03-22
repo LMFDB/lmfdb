@@ -32,6 +32,11 @@
 <div style="margin-top: 30px;">
   <strong>Knowl status:</strong>
   <ul>
+    {% if k.type == 0 and k.source == k.id %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} to {{KNOWL(k.source_name, k.source_name)}}</li>
+    {% elif k.type == 0 and k.source is not none %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} from {{KNOWL(k.source, k.source)}}</li>
+    {% endif %}
     <li>Review status: {{ k.quality }}
       {% if user_can_review_knowls %}
       {% if k.status == 0 and k.most_recent %}
@@ -44,21 +49,25 @@
     <li>Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime }}</li>
   </ul>
 </div>
-{% if k.type|abs == 1 and k.source %}
+{% if k.type|abs == 1 and k.source %} {# 1 or -1 are annotations #}
 <div style="margin-top: 30px;">
   <strong>{{ 'Top' if k.type == 1 else 'Bottom' }} Knowl</strong> for <a href="/{{k.source}}">{{k.source_name}}</a>
 </div>
-{% elif k.type == 0 and (k.referrers or k.code_referrers) %}
-<div style="margin-top: 30px;">
-  <strong>Referred to by:</strong>
-  <ul>
-    {% for rid in k.referrers %}
-    <li>{{ KNOWL(rid, title=rid) }}</li>
-    {% endfor %}
-    {% for coderef in k.code_referrers %}
-    <li>{{ coderef | safe }}</li>
-    {% endfor %}
-  </ul>
+{% elif k.type == 0 %}
+  <div style="margin-top: 30px;">
+    <strong>Referred to by:</strong>
+  {% if (k.referrers or k.code_referrers) %}
+      <ul>
+        {% for rid in k.referrers %}
+        <li>{{ KNOWL(rid, title=rid) }}</li>
+        {% endfor %}
+        {% for coderef in k.code_referrers %}
+        <li>{{ coderef | safe }}</li>
+        {% endfor %}
+      </ul>
+  {% else %}
+    <p style="text-indent: 1em">Not referenced anywhere at the moment.</p>
+  {% endif %}
 </div>
 {% endif %}
 

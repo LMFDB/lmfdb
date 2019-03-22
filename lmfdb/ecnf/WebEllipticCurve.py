@@ -362,8 +362,9 @@ class ECNF(object):
 
         # The equation is stored in the database as a latex string.
         # Some of these have extraneous double quotes at beginning and
-        # end, shich we fix here:
-        self.equation = self.equation.replace('"','')
+        # end, shich we fix here.  We also strip out initial \( and \)
+        # (if present) which are added in the template.
+        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','')
 
         # Images of Galois representations
 
@@ -472,11 +473,22 @@ class ECNF(object):
                 pass
 
         # Local data
+
+        # Fix for Kodaira symbols, which in the database start and end
+        # with \( and \) and may have multiple backslashes.  Note that
+        # to put a single backslash into a python string you have to
+        # use '\\' which will display as '\\' but only counts as one
+        # character in the string.  which are added in the template.
+        def tidy_kod(kod):
+            while '\\\\' in kod:
+                kod = kod.replace('\\\\', '\\')
+            kod = kod.replace('\\(','').replace('\\)','')
+            return kod
+
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            while '\\\\' in ld['kod']:
-                ld['kod'] = ld['kod'].replace('\\\\', '\\')
+            ld['kod'] = tidy_kod(ld['kod'])
 
         # URLs of self and related objects:
         self.urls = {}

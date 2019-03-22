@@ -133,9 +133,8 @@ import re
 import os
 import pprint
 from lmfdb import db
-from lmfdb.utils import web_latex
 from lmfdb.backend.encoding import Json
-from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes
+from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
@@ -379,7 +378,7 @@ def curves(line, verbose=False):
                    'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
                    'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
                    'rootno': local_root_number(ld),
-                   'kod': web_latex(ld.kodaira_symbol()).replace('$',''),
+                   'kod': str(latex(ld.kodaira_symbol())),
                    'cp': int(ld.tamagawa_number())}
                   for ld in E.local_data()]
 
@@ -409,7 +408,7 @@ def curves(line, verbose=False):
         'torsion_order': ntors,
         'torsion_structure': torstruct,
         'torsion_gens': torgens,
-        'equation': web_latex(E),
+        'equation': str(latex(E)), # no "\(", "\)"
         'local_data': Json(local_data),
         'minD': minD,
         'non_min_p': non_minimal_primes,
@@ -1549,9 +1548,24 @@ def make_qcurve_flag_updater(degrees=[2,3,4,5,6], filename=None, basepath="."):
 
 def kod_fixer(kod):
     """
-    Remove extraneous "\\\\" from one kodaira symbol
+    Remove extraneous "\\\\" and "\\(", "\\)" from one kodaira symbol
     """
-    newkod = kod
-    while '\\\\' in newkod:
-        newkod = newkod.replace('\\\\', '\\')
-    return newkod
+    while '\\\\' in kod:
+        kod = kod.replace('\\\\', '\\')
+    kod = kod.replace('\\(','').replace('\\)','')
+    return kod
+
+def eqn_fixer(eqn):
+    """
+    Remove extraneous "\\\\" and "\\(", "\\)" and '"' from latex equation
+    """
+    while '\\\\' in eqn:
+        eqn = eqn.replace('\\\\', '\\')
+    eqn = eqn.replace('"','').replace('\\(','').replace('\\)','')
+    return eqn
+
+def kod_eqn_updater(C):
+    C['equation'] = eqn_fixer(C['equation'])
+    for ld in C['local_data']:
+        ld['kod'] = kod_fixer(ld['kod'])
+    return C

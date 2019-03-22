@@ -193,7 +193,7 @@ class mf_newspaces(MfChecker):
         If AL_dims is set, check that AL_dims sum to dim
         """
         # TIME 0.3 s
-        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim !=( SELECT  SUM(s.d) FROM (SELECT ((jsonb_array_elements("AL_dims"))->>1)::int d FROM mf_newspaces t2 WHERE t2.label = t1.label) s ) AND  "AL_dims" is not NULL LIMIT 1')
+        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim !=( SELECT  SUM(s.d) FROM (SELECT ((jsonb_array_elements("AL_dims"))->>1)::int d FROM mf_newspaces t2 WHERE t2.label = t1.label) s ) AND  "AL_dims" is not NULL')
         return self._run_query(query=query)
 
     @overall

@@ -650,7 +650,7 @@ Data Validation
    updated, so if they are complicated it will impose a speed penalty
    when changing data.
 
-1. What if I don't want to use a constraint, or if I want to add
+1. What if I do not want to use a constraint, or if I want to add
    checks that cross multiple tables?
 
    You can use the `lmfdb.verify` module.  Create a python file in the
@@ -661,7 +661,7 @@ Data Validation
    `lmfdb.verify.verification`.
 
    The fastest option is to write an SQL query that searches for
-   violations of your condition.  The `TableChecker class has various
+   violations of your condition.  The `TableChecker` class has various
    utilities for writing such queries, such as `check_values`,
    `check_iff`, `check_count`.  You can also write the query directly
    and use `_run_query`.  If you want to run queries that check

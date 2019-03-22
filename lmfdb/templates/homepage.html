@@ -78,11 +78,13 @@
           <div class="undertopright">
             <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
               &middot;
-            {% if g.show_menu %}
-               <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
+            <a href="#" id="menutoggle">
+            {%- if g.show_menu -%}
+               Hide Menu
             {% else %}
-               <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
+               Show Menu
             {% endif %}
+            </a>
           </div>
         </div>
 {# deleting the confusing prev/next character links, 
@@ -113,26 +115,15 @@
 
 {% block sidebar -%}
 {% if g.show_menu %}
-{#  This macro is not used! #}
- {% macro entry(title, entries) -%}
-   {% if entries %}
-    <h2>{{ title }}</h2>
-    <ul class="subnav">
-        {% for text,url in entries %}
-           <li><a href="{{ url }}">{{ text }}</a></li>
-        {% endfor %}
-    </ul>
-   {% endif %}
- {%- endmacro %}
-
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 </div>
-
-
 {% else %}
+<div id="sidebar" style="display: none; witdh=0">
+{%- include "sidebar.html" -%}
+</div>
 <style type="text/css">
-#main { margin: 0; }
+#main { margin-left: 0; }
 </style>
 {% endif %} {# of g.show_menu #}
 {%- endblock sidebar %}

@@ -123,14 +123,17 @@ def git_infos():
         git_date_cmd = '''git show --format="%ci" -s HEAD'''
         git_contains_cmd = '''git branch --contains HEAD'''
         git_reflog_cmd = '''git reflog -n5'''
+        git_graphlog_cmd = '''git log --graph  -n 10'''
         rev = Popen([git_rev_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
         date = Popen([git_date_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
         contains = Popen([git_contains_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
         reflog = Popen([git_reflog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
+        graphlog = Popen([git_graphlog_cmd], shell=True, stdout=PIPE, cwd=cwd).communicate()[0]
         pairs = [[git_rev_cmd, rev],
                 [git_date_cmd, date],
                 [git_contains_cmd, contains],
-                [git_reflog_cmd, reflog]]
+                [git_reflog_cmd, reflog],
+                [git_graphlog_cmd, graphlog]]
         summary = "\n".join([ "$ %s\n%s" % (c,o) for c, o in pairs] )
         cmd_output = rev, date,  summary
     except Exception:
@@ -220,13 +223,10 @@ def not_found_503(error):
 
 @app.before_request
 def get_menu_cookie():
-    g.show_menu = request.cookies.get('showmenu') != "False"
-
-@app.after_request
-def set_menu_cookie(response):
-    if hasattr(g, 'show_menu'):
-        response.set_cookie("showmenu", str(g.show_menu))
-    return response
+    """
+    sets cookie for show/hide sidebar
+    """
+    g.show_menu = str(request.cookies.get('showmenu')) != "False"
 
 ##############################
 #       Top-level pages      #
@@ -256,23 +256,24 @@ def alive():
 
 @app.route("/info")
 def info():
-    from base import git_infos
     from socket import gethostname
-    output = "HOSTNAME = %s\n\n" % gethostname()
-    output += "# GIT info\n";
-    output += git_infos()[-1]
-    output += "\n\n";
+    output = ""
+    output += "HOSTNAME = %s\n\n" % gethostname()
+    output += "# PostgreSQL info\n";
     from lmfdb import db
     if not db.is_alive():
-        output += "offline\n"
-        return output
-    output += "# PostgreSQL info\n";
-    conn_str = "%s" % db.conn
-    output += "Connection: %s\n" % conn_str.replace("<","").replace(">","")
-    output += "User: %s\n" % db._user
-    output += "Read only: %s\n" % db._read_only
-    output += "Read/write to userdb: %s\n" % db._read_and_write_userdb
-    output += "Read/write to knowls: %s\n" % db._read_and_write_knowls
+        output += "db is offline\n"
+    else:
+        conn_str = "%s" % db.conn
+        output += "Connection: %s\n" % conn_str.replace("<","").replace(">","")
+        output += "User: %s\n" % db._user
+        output += "Read only: %s\n" % db._read_only
+        output += "Read and write to userdb: %s\n" % db._read_and_write_userdb
+        output += "Read and write to knowls: %s\n" % db._read_and_write_knowls
+    output += "\n# GIT info\n";
+    output += git_infos()[-1]
+    output += "\n\n";
+    
     return output.replace("\n", "<br>")
 
 @app.route("/acknowledgment")
@@ -446,12 +447,6 @@ def css():
     else:
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
-
-@app.route('/_menutoggle/<show>')
-def menutoggle(show):
-    g.show_menu = show != "False"
-    url = request.referrer or url_for('index')
-    return redirect(url)
 
 @app.route("/not_yet_implemented")
 def not_yet_implemented():

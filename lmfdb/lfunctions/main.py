@@ -2,13 +2,11 @@
 import flask
 from flask import render_template, url_for, request, make_response
 
-from sage.all import plot, srange, spline, line, latex, is_prime,  factor
+from sage.all import srange, spline, line, latex, is_prime,  factor
 
 import tempfile
 import os
 import re
-import sqlite3
-import numpy
 
 import LfunctionPlot
 
@@ -16,7 +14,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q, 
+                       HypergeometricMotiveLfunction, Lfunction_genus2_Q,
                        Lfunction_from_db)
 from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
@@ -600,9 +598,7 @@ def set_bread_and_friends(info, L, request):
                 info['friends'] = [('Dual L-function', L.dual_link)]
 
             info['bread'] = get_bread(L.degree,
-                                      [('Maass Form', url_for('.l_function_maass_gln_browse_page',
-                                                              degree='degree' + str(L.degree))),
-                                       (L.maass_id.partition('/')[2], request.path)])
+                                      [(L.maass_id.partition('/')[2], request.path)])
 
 
     elif L.Ltype() == 'hilbertmodularform':
@@ -762,10 +758,7 @@ def set_navi(L):
 # L-function of Elliptic curve #################################################
 @l_function_page.route("/Plot/EllipticCurve/Q/<label>/")
 def l_function_ec_plot(label):
-    try:
-        return render_plotLfunction_from_db("ecplots", "ecplots", label)
-    except KeyError:
-        return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
+    return render_plotLfunction(request, 'EllipticCurve', 'Q', label, None, None, None,
                                     None, None, None)
 
 @l_function_page.route("/Plot/<path:args>/")
@@ -805,52 +798,6 @@ def download(args):
 ################################################################################
 #   Render functions, plotting L-function and displaying zeros
 ################################################################################
-def render_plotLfunction_from_db(db, dbTable, label):
-    data_location = os.path.expanduser(
-        "~/data/lfunction_plots/{0}.db".format(db))
-
-    if not os.path.exists(data_location):
-        # We want to raise some exception so that the calling
-        # function can catch it and fall back to normal plotting
-        # when the database does not exist or doesn't have the
-        # plot. This seems like a reasonable exception to raise.
-        raise KeyError
-
-    try:
-        db = sqlite3.connect(data_location)
-        with db:
-            cur = db.cursor()
-            query = "SELECT start,end,points FROM {0} WHERE label = ? LIMIT 1".format(dbTable)
-            cur.execute(query, label)
-            row = cur.fetchone()
-
-        db.close()
-
-        start,end,values = row
-        values = numpy.frombuffer(values)
-        step = (end - start)/values.size
-
-        pairs = [ (start + x * step, values[x] )
-                  for x in range(0, values.size, 1)]
-        p = plot(spline(pairs), -30, 30, thickness = 0.4)
-        styleLfunctionPlot(p, 8)
-
-    except (sqlite3.OperationalError, TypeError):
-        # An OperationalError will happen when the database exists for some reason
-        # but it doesn't have the table. A TypeError will happen when there are no
-        # results returned, in which case row will be None and unpacking the tuple
-        # will fail. We turn both of these in KeyErrors, which can be caught by
-        # the calling function to fallback to normal plotting.
-
-        raise KeyError
-
-    fn = tempfile.mktemp(suffix=".png")
-    p.save(filename=fn, dpi = 100)
-    data = file(fn).read()
-    os.remove(fn)
-    response = make_response(data)
-    response.headers['Content-type'] = 'image/png'
-    return response
 
 
 def render_plotLfunction(request, *args):
@@ -877,18 +824,22 @@ def getLfunctionPlot(request, *args):
         F = p2sage(pythonL.plotpoints)
         #  F[0][0] is the lowest t-coordinated that we have a value for L
         #  F[-1][0] is the highest t-coordinated that we have a value for L
-        plotrange = min(plotrange, -F[0][0], F[-1][0]) 
+        plotrange = min(plotrange, -F[0][0], F[-1][0])
         # aim to display at most 25 axis crossings
-        if hasattr(pythonL, 'positive_zeros'):
+        # if the L-function is nonprimitive
+        if (hasattr(pythonL, 'positive_zeros') and
+            hasattr(pythonL, 'primitive') and
+            not pythonL.primitive):
             # we stored them ready to display
             zeros = map(float, pythonL.positive_zeros.split(","))
             if len(zeros) >= 25:
                 zero_range = zeros[24]
             else:
                 zero_range = zeros[-1]*25/len(zeros)
+            zero_range *= 1.2
             plotrange = min(plotrange, zero_range)
     else:
-     # obsolete, because lfunc_data comes from DB?
+    # obsolete, because lfunc_data comes from DB?
         L = pythonL.sageLfunction
         if not hasattr(L, "hardy_z_function"):
             return None

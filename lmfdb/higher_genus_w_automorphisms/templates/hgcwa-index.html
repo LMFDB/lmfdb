@@ -22,10 +22,6 @@ text-align:right;
   </p>
 </div>
 
-<!-- <div>
-{{ KNOWL_INC('dq.curve.highergenus.aut.extent') }}
-</div> -->
-
 
       <h2>Browse {{KNOWL('g2c.aut_grp', title="automorphisms")}} of higher genus curves</h2>
 
@@ -92,7 +88,8 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
         <tr>
             <td align=right>
  {{KNOWL('group.order',title='Group order(s)')}}:
-            </td><td><input type="text" name="groupsize" placeholder="2..5"></td>
+            </td>
+	    <td><input type="text" name="group_order" placeholder="2..5" ></td>
             <td><span class="formexample">e.g. 12, or a range like 10..20, or you may include the variable g for genus like 84(g-1)</span></td>
         </tr>
 

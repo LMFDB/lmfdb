@@ -10,10 +10,9 @@ from lmfdb import db
 from lmfdb.utils import (
     to_dict, web_latex_ideal_fact,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
-    search_wrap)
+    teXify_pol, search_wrap)
 from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
 from lmfdb.nfutils.psort import ideal_from_label
-from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
 

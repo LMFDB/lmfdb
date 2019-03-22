@@ -560,3 +560,29 @@ function show_stats_rows(hsh, to_show) {
   return elementBottom < viewportTop;
 };
 
+/* Show/hide sidebar */
+$(document).ready(function () {
+  console.log("ready");
+  console.log(document.cookie);
+  $('#menutoggle').click(
+    function (evt) {
+      evt.preventDefault();
+      var sidebar = $('#sidebar');
+      var main = $('#main');
+      if( sidebar.is(":visible") )
+      {
+        $('#main').css( { "margin-left" : "0px", "transition": "margin 0.2s"} );
+        sidebar.hide();
+        document.cookie = 'showmenu=False;path=/';
+        $('#menutoggle').text('Show Menu');
+        console.log(document.cookie);
+      } else {
+        main.css( { "margin-left" : "200px", "transition": "margin 0.2s"} );
+        sidebar.show("fast");
+        document.cookie = 'showmenu=True;path=/';
+        $('#menutoggle').text('Hide Menu');
+        console.log(document.cookie);
+      }
+      return false;
+    });
+});

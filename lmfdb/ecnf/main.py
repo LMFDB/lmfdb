@@ -249,7 +249,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random")
 def random_curve():
