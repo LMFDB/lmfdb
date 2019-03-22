@@ -528,7 +528,8 @@ def set_gaga_properties(L):
     if L.algebraic:
         ans.append(('Motivic weight', str(L.motivic_weight)))
 
-    ans.append(('Label', make_label(L)))
+    label_components = {'conductor':L.level, 'degree':L.degree,'central_character':L.central_character,'gamma_factors':L.gamma_factors,'algebraic':L.algebraic}
+    ans.append(('Label', make_label(label_components)))
     primitive =  getattr(L, 'primitive', None)
     if primitive is not None:
         txt = 'yes' if primitive else 'no'
