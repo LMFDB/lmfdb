@@ -15,7 +15,7 @@ from math import log
 import mpmath
 mpmath.mp.prec = 300
 
-zeta_folder =  os.path.expanduser('home/lmfdb/data/zeros/zeta/')
+zeta_folder =  os.path.expanduser('/home/lmfdb/data/zeros/zeta/')
 data_location = os.path.join(zeta_folder, 'data/')
 db_location = os.path.join(zeta_folder,'index.db')
 
