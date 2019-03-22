@@ -159,7 +159,7 @@ def index():
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
-    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @st_page.route('/random')
 def random():
