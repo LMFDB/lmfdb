@@ -90,6 +90,7 @@ class ColorScheme(object):
         'knowl_db': '#66d', # knowl-qm.active
         'knowl_border_links': 'knowl_hyper_text',
         'knowl_border_hover': 'knowl_hyper_text',
+        'knowl_border_text' : c.grey,
         # td.sorting
         'knowl_ld_1': '#c4c4ff',
         'knowl_l_1': '#D3D6FF',
@@ -295,11 +296,11 @@ class YellowKnowls(ColorScheme):
 
 class GreyKnowls(ColorScheme):
     # Subclasses need to set knowl_hyper_text and knowl_shadow
-    knowl_border = '#ADADAD'
-    knowl_background = '#EDEDED'
+    knowl_border = '#CDCDCD'
+    knowl_background = '#F5F5F5'
     knowl_title_text = c.black
     knowl_hover_text = c.black
-    knowl_thin_border = '#ADADAD'
+    knowl_thin_border = '#CDCDCD'
     body_background = c.almost_white
     def __init__(self):
         self.knowl_underline = self.knowl_hyper_text
@@ -402,7 +403,10 @@ class SteelBlue(GreyKnowls):
     knowl_border_links = c.black
     knowl_border_hover = c.black
     sidebar_h2_hover = c.white
-    sidebar_background_h2_hover = '#555555'
+    sidebar_background_h2_hover = '#0D47A1'
+    knowl_border_text = '#333'
+    sidebar_text_beta = '#006d05'
+    knowl_error = '#006d05'
 
 class IndigoHair(YellowKnowls):
     code = 18
