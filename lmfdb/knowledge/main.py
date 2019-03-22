@@ -14,6 +14,7 @@
 import string
 import re
 import json
+import time
 from lmfdb.app import app, is_beta
 from datetime import datetime
 from flask import abort, flash, jsonify, make_response,\
@@ -42,6 +43,17 @@ _cache_time = 120
 
 # know IDs are restricted by this regex
 allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+def allowed_id(ID):
+    if ID.startswith('belyi') and\
+            (ID.endswith('top') or ID.endswith('bottom')):
+        for c in "[],T":
+            ID = ID.replace(c,'')
+    if not allowed_knowl_id.match(ID):
+        flash("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+        return False
+    return True
 
 # Tell markdown to not escape or format inside a given block
 
@@ -302,10 +314,7 @@ def test():
 @login_required
 def edit(ID):
     from psycopg2 import DatabaseError
-    if not allowed_knowl_id.match(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+    if not allowed_id(ID):
         return redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
     for elt in knowl.edit_history:
@@ -550,16 +559,15 @@ def save_form():
     if not ID:
         raise Exception("no id")
 
-    if not allowed_knowl_id.match(ID):
-        flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lower/uppercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % ID, "error")
+    if not allowed_id(ID):
         return redirect(url_for(".index"))
 
     NEWID = request.form.get('krename', '').strip()
+    FINISH_RENAME = request.form.get('finish_rename', '')
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
+    who = current_user.get_id()
     if new_title != k.title or new_content != k.content:
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
@@ -569,29 +577,36 @@ def save_form():
         k.content = new_content
         k.timestamp = datetime.now()
         k.status = 0
-        k.save(who=current_user.get_id())
+        k.save(who=who)
     if NEWID:
         if not current_user.is_admin():
             flash("You do not have permissions to rename knowl", "error")
-        elif not allowed_knowl_id.match(NEWID):
-            flash("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""" % NEWID, "error")
+        elif not allowed_id(NEWID):
+            pass
         else:
             try:
-                k.rename(NEWID)
-            except ValueError:
-                flash("A knowl with id %s already exists." % NEWID, "error")
+                k.start_rename(NEWID, who)
+            except ValueError as err:
+                flash(str(err))
             else:
                 if k.sed_safety == 1:
-                    flash("Knowl renamed to {0} successfully. You can change code references using".format(NEWID))
+                    flash("Knowl rename process started. You can change code references using".format(NEWID))
                     flash("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID))
                     flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
-                    flash("Knowl renamed to {0} successfully.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
+                    flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
                 else:
+                    time.sleep(0.01)
+                    k.actually_rename()
                     flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
+    elif FINISH_RENAME:
+        # We need to sleep briefly so that we don't have two identical timestamps
+        time.sleep(0.01)
+        if FINISH_RENAME == 'finish':
+            k.actually_rename()
+        elif FINISH_RENAME == 'undo':
+            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:

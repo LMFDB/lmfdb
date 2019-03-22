@@ -37,13 +37,13 @@ class CmfTest(LmfdbTest):
 
     def test_sidebar(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Labels").data
-        assert 'Labels for classical modular forms' in data
+        assert 'Labels for Classical Modular Forms' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Completeness").data
-        assert "Completeness of classical modular form data" in data
+        assert "Completeness of Classical Modular Form Data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Reliability").data
-        assert "Reliability of classical modular form data" in data
+        assert "Reliability of Classical Modular Form Data" in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/Source").data
-        assert "Source of classical modular form data" in data
+        assert "Source of Classical Modular Form Data" in data
 
     def test_badp(self):
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level_primes=7&count=50&search_type=List").data

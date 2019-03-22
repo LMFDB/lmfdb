@@ -47,7 +47,8 @@ def getAllMaassGraphHtml(degree, signature=""):
     if signature == 'r0r0r0':
         ans += getGroupHtml(signature)
         ans += getOneGraphHtml(["GL3", 1])
-        ans += getOneGraphHtml(["GL3", 4])
+# hiding this because there are missing conjugates for the  eps = +1 non-self dual functions
+#        ans += getOneGraphHtml(["GL3", 4])
     elif signature == 'r0r0r0r0':
         ans += getGroupHtml(signature + 'selfdual')
         ans += getOneGraphHtml(["GSp4", 1])

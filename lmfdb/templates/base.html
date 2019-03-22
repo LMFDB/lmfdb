@@ -9,7 +9,7 @@
     {% else %}
       <title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}  </title>
     {% endif %}
-    <link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
+    <link id="style_css" href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
     <!-- jQuery -->
     <script type="text/javascript"
@@ -94,6 +94,8 @@ katexOpts = {
   renderMathInElement(document.body, katexOpts);
 });
     </script>
+    <link href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/copy-tex.css" rel="stylesheet" type="text/css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/copy-tex.min.js" integrity="sha384-XhWAe6BtVcvEdS3FFKT7Mcft4HJjPqMQvi5V4YhzH9Qxw497jC13TupOEvjoIPy7" crossorigin="anonymous"></script>
 
     {#- the defs for the knowls, needed to be after mathjax, before analytics, but we do not use mathjax any more -#}
     {%- include "knowl-defs.html" -%}

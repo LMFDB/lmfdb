@@ -32,6 +32,11 @@
 <div style="margin-top: 30px;">
   <strong>Knowl status:</strong>
   <ul>
+    {% if k.type == 0 and k.source == k.id %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} to {{KNOWL(k.source_name, k.source_name)}}</li>
+    {% elif k.type == 0 and k.source is not none %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} from {{KNOWL(k.source, k.source)}}</li>
+    {% endif %}
     <li>Review status: {{ k.quality }}
       {% if user_can_review_knowls %}
       {% if k.status == 0 and k.most_recent %}
