@@ -362,17 +362,24 @@ class PostgresBase(object):
                 try:
                     cur.execute(query, values)
                 except (ProgrammingError, NotSupportedError):
-                    print query.as_string(self.conn)
-                    print values
+                    try:
+                        print cur.mogrify(query, values)
+                    except Exception:
+                        print "Error executing %s with values %s" % (query, values)
                     raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > self.slow_cutoff:
-                    query = query.as_string(self.conn)
                     if values_list:
-                        query = query.replace('%s','VALUES_LIST')
+                        query = query.as_string(self.conn).replace('%s','VALUES_LIST')
                     elif values:
-                        query = query % (tuple(values))
+                        try:
+                            query = cur.mogrify(query, values)
+                        except Exception:
+                            # This shouldn't happen since the execution above was successful
+                            query = query + str(values)
+                    else:
+                        query = query.as_string(self.conn)
                     self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
@@ -1837,7 +1844,8 @@ class PostgresTable(PostgresBase):
             analyzer = SQL("EXPLAIN {0}").format(selecter)
         else:
             analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
-        print selecter.as_string(self.conn)%tuple(values)
+        cur = self.conn.cursor()
+        print cur.mogrify(selecter, values)
         cur = self._execute(analyzer, values, silent=True)
         for line in cur:
             print line[0]
@@ -3512,17 +3520,17 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres, suffix, extra)
+            self._record_count(query, nres, split_list, suffix, extra)
         return nres
 
-    def _record_count(self, query, count, suffix='', extra=True):
+    def _record_count(self, query, count, split_list=False, suffix='', extra=True):
         cols, vals = self._split_dict(query)
-        data = [count, cols, vals]
+        data = [count, cols, vals, split_list]
         if self.quick_count(query) is None:
-            updater = SQL("INSERT INTO {0} (count, cols, values, extra) VALUES (%s, %s, %s, %s)")
+            updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
+            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
