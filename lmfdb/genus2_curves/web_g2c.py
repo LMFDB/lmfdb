@@ -634,8 +634,10 @@ class WebG2C(object):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
                 add_friend (friends, lfunction_friend_from_url(friend_url))
-        for friend_label in db.mf_newforms.search({'trace_hash':data['Lhash']},"label"):
-            add_friend (friends, ("Modular form " + friend_label, url_for_cmf(friend_label)))
+        for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
+            # be selective, only cmfs of the right dimension and conductor get to be our friends
+            if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
+                add_friend (friends, ("Modular form " + friend_label, url_for_cmf(friend_label)))
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
