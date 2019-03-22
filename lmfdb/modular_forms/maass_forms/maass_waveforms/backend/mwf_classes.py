@@ -166,12 +166,13 @@ class WebMaassForm(object):
                 mwf_logger.debug("|coeff.keys()|:{0}".format(n1))
                 if n1 != self.dim:
                     mwf_logger.warning("Got coefficient dict of wrong format!:dim={0} and len(c.keys())={1}".format(self.dim, n1))
-                if n1 > 0:
-                    for j in range(self.dim):
-                        n2 = len(self.coeffs.get(j, {}).keys())
-                        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
-                        if n2 != nc:
-                            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
+                # silence these (apparently benign) warnings, per issue 1517
+                #if n1 > 0:
+                #    for j in range(self.dim):
+                #        n2 = len(self.coeffs.get(j, {}).keys())
+                #        mwf_logger.debug("|coeff[{0}].keys()|:{1}".format(j, n2))
+                #        if n2 != nc:
+                #            mwf_logger.warning("Got coefficient dict of wrong format!:num cusps={0} and len(c[0].keys())={1}".format(nc, n2))
 
         self.nc = 1  # len(self.coeffs.keys())
         if not self._get_dirichlet_c_only:
