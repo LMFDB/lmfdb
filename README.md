@@ -15,14 +15,14 @@ Development
 * [Getting Started](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md) -- cheat sheet for setting up lmfdb
 * [Development Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md) -- organizing development
 
-The design of the LMFDB is guided by the following principles
--------------------------------------------------------------
+Guidelines
+----------
 
-1. Each mathematical object has its own home page.  Home pages
+1. Each mathematical object should have its own home page.  Home pages
 summarize basic invariants at the top, progressing to more advanced
-information at the bottom.
-2. Each home page lives at a mathematically meaningful, permanent URL.
-3. Each mathematical object has a label which is mathematically
+information at the bottom, with mathematical terms defined by knowls.
+2. Each home page should have a mathematically meaningful, permanent URL.
+3. Each mathematical object should be given a label that is mathematically
 meaningful, and to the extent possible, human-readable and concise.
 The translation between an object's label and its URL should be
 relatively straightforward.
@@ -34,10 +34,9 @@ below.  It should be possible to browse to the home page of an
 object without having detailed knowledge about the underlying
 mathematics.  The search form should be (at least partially) visible
 in a browser without scrolling the browse-and-search page.
-6. Home pages and browse-and-search pages are developed through an
-iterative process involving feedback from both experts and non-experts
-in the subject, in order to ensure that the pages are useful to a
-broad mathematical audience.
+6. Home pages and browse-and-search pages should address the needs
+of both experts and non-experts in the subject, in order to ensure
+that the pages are useful to a broad mathematical audience.
 
 [logo]: https://github.com/LMFDB/lmfdb/raw/master/lmfdb/static/images/lmfdb-logo.png "LMFDB"
 
