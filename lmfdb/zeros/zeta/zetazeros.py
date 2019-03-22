@@ -1,5 +1,5 @@
 import flask
-from mpmath import nstr, inf
+from mpmath import nstr, inf, floor, log
 from lmfdb.logger import make_logger
 from flask import render_template, request, url_for
 
