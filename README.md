@@ -22,9 +22,8 @@ Guidelines
 summarize basic invariants at the top, progressing to more advanced
 information at the bottom, with mathematical terms defined by knowls.
 The right hand side of each home page should include a properties box
-with key invariants including the liable, a "learn more about" box
-with links to completeness, source, and reliability knowls, and when
-applicable, a list of related objects.
+that summarizes key invariants, links to completeness, source, and
+reliability knowls, and when applicable, a list of related objects.
 2. Each home page should have a mathematically meaningful, permanent URL.
 3. Each mathematical object should be given a label that is mathematically
 meaningful, and to the extent possible, human-readable and concise.
