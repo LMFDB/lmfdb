@@ -634,9 +634,7 @@ class WebG2C(object):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
                 add_friend (friends, lfunction_friend_from_url(friend_url))
-        print "checking cmf friends with trace hash", data['Lhash']
         for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
-            print "potential cmf friend", cmf_friend
             # be selective, only cmfs of the right dimension and conductor get to be our friends
             if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
                 add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
