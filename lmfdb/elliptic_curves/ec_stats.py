@@ -17,8 +17,7 @@ def get_stats():
 
 def elliptic_curve_summary():
     counts = get_stats().counts()
-    ecstaturl = url_for('ec.statistics')
-    return r'The database currently contains the Cremona database of all %s <a title="Elliptic curves [ec]" knowl="ec" kwargs="">elliptic curves</a> defined over $\Q$ with <a title="Conductor of an elliptic curve over $\Q$ [ec.q.conductor]" knowl="ec.q.conductor" kwargs="">conductor</a> at most %s, all of which have <a title="Rank of an elliptic curve over $\mathbb{Q}$ [ec.rank]" knowl="ec.rank" kwargs="">rank</a> $\leq %s$.   Here are some <a href="%s">further statistics</a>.' % (str(counts['ncurves_c']), str(counts['max_N_c']), str(counts['max_rank']), ecstaturl)
+    return r'The database currently contains the complete Cremona database.  This contains all %s <a title="Elliptic curves [ec]" knowl="ec" kwargs="">elliptic curves</a> defined over $\Q$ with <a title="Conductor of an elliptic curve over $\Q$ [ec.q.conductor]" knowl="ec.q.conductor" kwargs="">conductor</a> at most %s.' % (str(counts['ncurves_c']), str(counts['max_N_c']))
 
 
 @app.context_processor
