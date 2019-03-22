@@ -496,6 +496,15 @@ def initLfunction(L, args, request):
     info = L.info
     info['args'] = args
     info['properties2'] = set_gaga_properties(L)
+    info['learnmore'] = [('Everyone loves number fields', url_for('number_fields.number_field_render_webpage'))]
+    if L.fromDB:
+        if L._Ltype == 'dirichlet':
+            myltype='dirichlet'
+        else:
+            myltype='otherindb'
+    else:
+        myltype='onthefly'
+    info['learnmore'] = [('Reliability of the data', url_for('.reliability',ltype=myltype))]
 
     set_bread_and_friends(info, L, request)
 
@@ -1204,3 +1213,13 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 
     s += '</table>\n'
     return s
+
+@l_function_page.route("/Reliability/<ltype>")
+def reliability(ltype):
+    t = 'Reliability of L-function Data'
+    bread = get_bread([("Reliability", '')])
+    knowlist = {'onthefly': 'rcs.rigor.lfunction.onthefly'}
+    knowl = knowlist[ltype]
+    return render_template("single.html", kid=knowl, title=t, bread=bread)
+
+
