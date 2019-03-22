@@ -509,7 +509,8 @@ body > .debug {
     padding: 5px;
 }
 #sidebar h2 a:hover {
-  background: {{ color.sidebar_background_h2_hover }};
+    background: {{ color.sidebar_background_h2_hover }};
+    color: {{ color.sidebar_h2_hover }};
 }
 #sidebar h2.link {
   padding: 0px;
@@ -1172,12 +1173,12 @@ div.limit-height {
 }
 .knowl-header a,
 .knowl-footer a {
-  color: {{ color.knowl_hyper_text }};
+    color: {{ color.knowl_border_links }};
 }
 .knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
-  color: {{ color.knowl_hover_text }};
+  color: {{ color.knowl_border_hover }};
 }
 
 /* end knowl */
