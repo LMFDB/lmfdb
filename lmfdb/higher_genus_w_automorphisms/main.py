@@ -53,15 +53,18 @@ def tfTOyn(bool):
     else:
         return "No"
 
-
 def sign_display(L):
     sizeL = len(L)
-    signL = "[ " + str(L[0]) + "; "
-    for i in range(1,sizeL-1):
-        signL= signL + str(L[i]) + ", "
+    if sizeL == 1:
+        signL = "[ " + str(L[0]) + "; -]"
+    else:    
+        signL = "[ " + str(L[0]) + "; "
+        for i in range(1,sizeL-1):
+            signL= signL + str(L[i]) + ", "
 
-    signL=signL + str(L[sizeL-1]) + " ]"
+        signL=signL + str(L[sizeL-1]) + " ]"
     return signL
+
 
 def cc_display(L):
     sizeL = len(L)
@@ -353,6 +356,7 @@ def higher_genus_w_automorphisms_search(info, query):
         if query.get('signature'):
             query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
     parse_gap_id(info,query,'group',name='Group',qfield='group')
+    parse_ints(info,query,'g0',name='Quotient Genus')
     parse_ints(info,query,'genus',name='Genus')
     parse_ints(info,query,'dim',name='Dimension of the family')
     parse_ints(info,query,'group_order', name='Group orders')
@@ -507,7 +511,8 @@ def render_passport(args):
                      'group': pretty_group,
                      'gpid': smallgroup,
                      'numb':numb,
-                     'disp_numb':min(numb,numgenvecs)
+                     'disp_numb':min(numb,numgenvecs),
+                     'g0': data['g0']   #ADDED JP
                    })
 
         if spname:
@@ -533,11 +538,19 @@ def render_passport(args):
                 x3=' '
 
             x4=[]
-            for perm in dat['gen_vectors']:
-                cycperm=Permutation(perm).cycle_string()
+            if dat['g0'] == 0:
+                for perm in dat['gen_vectors']:
+                    cycperm=Permutation(perm).cycle_string()
 
-                x4.append(sep.join(split_perm(cycperm)))
+                    x4.append(sep.join(split_perm(cycperm)))
 
+            elif dat['g0'] > 0:
+                for perm in dat['gen_vectors']:
+                    cycperm =Permutation(perm).cycle_string()
+                    if display_perm == '()':
+                        x4.append('Id(G)')
+                    else:
+                        x4.append(sep.join(split_perm(cycperm))) 
             Ldata.append([x1,x2,x3,x4])
 
 
