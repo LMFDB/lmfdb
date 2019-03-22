@@ -495,18 +495,28 @@ def initLfunction(L, args, request):
     '''
     info = L.info
     info['args'] = args
+    prepath = request.path
+    prepath = re.sub(r'^/L/','',prepath)
+    prepath = re.sub(r'/$','',prepath)
     info['properties2'] = set_gaga_properties(L)
+
+    set_bread_and_friends(info, L, request)
+
     info['learnmore'] = [('Everyone loves number fields', url_for('number_fields.number_field_render_webpage'))]
     if L.fromDB:
         if L._Ltype == 'dirichlet':
             myltype='dirichlet'
+        elif L._Ltype == 'ellipticcurve':
+            myltype='ec'
         else:
             myltype='otherindb'
     else:
-        myltype='onthefly'
-    info['learnmore'] = [('Reliability of the data', url_for('.reliability',ltype=myltype))]
-
-    set_bread_and_friends(info, L, request)
+        if L._Ltype == 'maass':
+            myltype='maass'
+        else:
+            myltype='onthefly'
+    info['learnmore'] = [('Reliability of the data', 
+        url_for('.reliability', prepath=prepath, ltype=myltype))]
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -1214,12 +1224,17 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
-@l_function_page.route("/Reliability/<ltype>")
-def reliability(ltype):
+@l_function_page.route("/<path:prepath>/Reliability/<ltype>")
+def reliability(prepath,ltype):
     t = 'Reliability of L-function Data'
-    bread = get_bread([("Reliability", '')])
-    knowlist = {'onthefly': 'rcs.rigor.lfunction.onthefly'}
-    knowl = knowlist[ltype]
+    bread = get_bread(1, [("Reliability", '')])
+    knowlist = {'onthefly': 'rcs.rigor.lfunction.onthefly',
+                'maass': 'rcs.rigor.lfunction.maass',
+                'ec': 'rcs.rigor.lfunction.ec'}
+    if ltype in knowlist.keys():
+        knowl = knowlist[ltype]
+    else:
+        knowl = 'rcs.rigor.lfunction.onthefly'
     return render_template("single.html", kid=knowl, title=t, bread=bread)
 
 
