@@ -1,4 +1,4 @@
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class HomePageTest(LmfdbTest):
 
@@ -55,7 +55,7 @@ class HomePageTest(LmfdbTest):
         t = "?conductor=100-999"
         assert t in homepage
         self.check_args("/EllipticCurve/Q/%s" % t,
-                        '[1, 0, 1, 2, 0]')
+                        '[1, 0, 0, 1, 1]')
         t = "?rank=4"
         assert t in homepage
         self.check_args("/EllipticCurve/Q/%s" % t,
@@ -75,9 +75,9 @@ class HomePageTest(LmfdbTest):
                         r'\( y^2 + y = x^{3} -  x^{2} - 10 x - 20  \)')
         self.check_args("/EllipticCurve/Q/?label=389.a&jump=curve+or+isogeny+class+label",
                         'Elliptic curves in class 389.a')
-        self.check_args("/EllipticCurve/Q/?label=%5B0%2C1%2C1%2C-2%2C0%5D&jump=curve+or+isogeny+class+label", 'smallest conductor among those of rank 2')
+        self.check_args("/EllipticCurve/Q/?label=%5B0%2C1%2C1%2C-2%2C0%5D&jump=curve+or+isogeny+class+label", '\\(\\Z^2\\)')
         self.check_args("/EllipticCurve/Q/?label=%5B-3024%2C+46224%5D+&jump=curve+or+isogeny+class+label",
-                        'smallest conductor among those of rank 2')
+                        '\\(\\Z^2\\)')
 
     #
     # Various search combinations

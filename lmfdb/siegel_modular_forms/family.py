@@ -6,7 +6,7 @@
 
 from sage.structure.sage_object import SageObject
 from sage.misc.latex import Latex
-from lmfdb.db_backend import db
+from lmfdb import db
 import importlib, inspect
 from sample import Samples
 

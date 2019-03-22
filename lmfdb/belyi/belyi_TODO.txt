@@ -23,4 +23,5 @@ It would be nice if:
 - factorization of phi (or divisor)
 - tripleredabs?
 - display info about group
+- computed Galois group over K(t)
 - download curve/map in magma then in sage and/or pari

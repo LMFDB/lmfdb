@@ -2,30 +2,26 @@
 # This Blueprint is about Elliptic Curves over Number Fields
 # Authors: Harald Schilly and John Cremona
 
-import re
-import time
-import ast
-import StringIO
+import ast, re, StringIO, time
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
-from lmfdb.base import app
+
 from flask import render_template, request, url_for, redirect, flash, send_file, make_response
-from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
+from markupsafe import Markup
+
+from lmfdb import db
+from lmfdb.backend.encoding import Json
+from lmfdb.app import app
+from lmfdb.utils import (
+    to_dict,
+    parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints,
+    search_wrap)
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
-from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
-
-from markupsafe import Markup
-
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -253,7 +249,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random")
 def random_curve():
@@ -369,6 +365,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
+                           KNOWL_ID="ec.%s"%label,
                            learnmore=learnmore_list())
 
 def download_search(info):
@@ -485,8 +482,11 @@ def elliptic_curve_search(info, query):
         info['number'] = 1
         query['number'] = 1
 
-    if 'include_base_change' in info and info['include_base_change'] == 'off':
-        query['base_change'] = []
+    if 'include_base_change' in info:
+        if info['include_base_change'] == 'off':
+            query['base_change'] = []
+        if info['include_base_change'] == 'only':
+            query['base_change'] = {'$ne':[]}
     else:
         info['include_base_change'] = "on"
 

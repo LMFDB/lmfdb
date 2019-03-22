@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import app
-from lmfdb.utils import make_logger
+from lmfdb.app import app
+from lmfdb.logger import make_logger
 from flask import Blueprint
 
 smf_page = Blueprint('smf', __name__,

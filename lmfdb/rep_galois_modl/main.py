@@ -1,32 +1,21 @@
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
 
-#from flask import render_template, render_template_string, request, abort, Blueprint, url_for, make_response, Flask, session, g, redirect, make_response, flash,  send_file
+
+import ast, re, StringIO, time
+
 from flask import flash, make_response, send_file, request, render_template, redirect, url_for
-
-from lmfdb.db_backend import db
-
+from markupsafe import Markup
 from sage.all import ZZ, conway_polynomial
 
-from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
-from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
-from lmfdb.search_parsing import parse_ints, parse_list
-from lmfdb.search_wrapper import search_wrap
-
+from lmfdb import db
+from lmfdb.utils import parse_ints, parse_list, search_wrap
 #should these functions be defined in lattices or somewhere else?
 from lmfdb.lattice.main import vect_to_sym, vect_to_matrix
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
+from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
+from lmfdb.rep_galois_modl.rep_galois_modl_stats import get_stats
 
 rep_galois_modl_credit = 'Samuele Anni, Anna Medvedovsky, Bartosz Naskrecki, David Roberts'
 
-
-
-# utilitary functions for displays 
+# utilitary functions for displays
 
 def my_latex(s):
     ss = ""
@@ -141,7 +130,7 @@ def download_search(info):
              table=db.modlgal_reps,
              title='Mod &#x2113; Galois representations Search Results',
              err_title='Mod &#x2113; Galois representations Search Results Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'download':download_search,
                         'label':lambda info:rep_galois_modl_by_label_or_name(info.get('label'))},
              projection=['label','dim','det','level','gram'],
@@ -231,7 +220,7 @@ def render_rep_galois_modl_webpage(**args):
         ('Dimension', '%s' %info['dim']),
         ('Field characteristic', '%s' %info['field_char']),
         ('Conductor', '%s' %info['conductor']),]
-    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='gal.modl.%s'%info['label'])
 #friends=friends
 
 

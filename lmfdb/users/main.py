@@ -5,18 +5,18 @@
 
 import flask
 from functools import wraps
-from lmfdb.base import app
+from lmfdb.app import app
+from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
 from distutils.version import StrictVersion
 
-from lmfdb.db_backend import db
+from lmfdb import db
 assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-import lmfdb.utils
-logger = lmfdb.utils.make_logger(login_page)
+logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
@@ -55,6 +55,7 @@ def ctx_proc_userdata():
         userdata['username'] = 'Anonymous'
         userdata['user_is_admin'] = False
         userdata['user_is_authenticated'] = False
+        userdata['user_can_review_knowls'] = False
         userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
 
     else:
@@ -67,6 +68,7 @@ def ctx_proc_userdata():
             userdata['user_is_authenticated'] = current_user.is_authenticated()
 
         userdata['user_is_admin'] = current_user.is_admin()
+        userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
         userdata['get_username'] = get_username # this is a function
     return userdata
 
@@ -108,6 +110,13 @@ def list():
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
 
+@login_page.route("/change_colors/<int:scheme>")
+@login_required
+def change_colors(scheme):
+    userid = current_user.get_id()
+    userdb.change_colors(userid, scheme)
+    flask.flash("Color scheme successfully changed")
+    return flask.redirect(url_for(".info"))
 
 @login_page.route("/myself")
 def info():
@@ -116,7 +125,9 @@ def info():
     info['logout'] = url_for(".logout")
     info['user'] = current_user
     info['next'] = request.referrer
+    from lmfdb.utils.color import all_color_schemes
     return render_template("user-info.html",
+                           all_colors = all_color_schemes.values(),
                            info=info, title="Userinfo",
                            bread=base_bread() + [("Myself", url_for(".info"))])
 
@@ -176,6 +187,18 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return decorated_view
 
+def knowl_reviewer_required(fn):
+    """
+    wrap this around those entry points where you need to be a knowl reviewer.
+    """
+    @wraps(fn)
+    @login_required
+    def decorated_view(*args, **kwargs):
+        logger.info("reviewer access attempt by %s" % current_user.get_id())
+        if not current_user.is_knowl_reviewer():
+            return flask.abort(403)  # acess denied
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def housekeeping(fn):
     """

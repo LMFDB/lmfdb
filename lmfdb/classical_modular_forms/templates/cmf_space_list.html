@@ -1,0 +1,33 @@
+{%- from "knowl-defs.html" import KNOWL with context -%}
+{% set show_AL = info.show_ALdims_col(info.results) %}
+
+<table class="ntdata">
+  <thead class="dark">
+    <tr class="middle">
+      <th>{{ KNOWL('cmf.label', title='Label') }}</th>
+      <th>{{ KNOWL('cmf.analytic_conductor', title='\(A\)') }}</th>
+      <th>{{ KNOWL('cmf.character', title='\(\chi\)') }}</th>
+      <th class="center">{{ KNOWL('character.dirichlet.order', title='\(\operatorname{ord}(\chi)\)') }}</th>
+      <th class="center">{{ KNOWL('cmf.display_dim', title='Dim.') }}</th>
+      <th class="center">{{ KNOWL('cmf.dim_decomposition', title='Decomp.') }}</th>
+      {% if show_AL %}
+      <th class="center">{{ KNOWL('cmf.atkin_lehner_dims', title='AL-dims.') }}</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for space in info.results %}
+    <tr>
+      <td> <a href="{{info.mf_url(space) }}"> {{ space.label }} </a> </td>
+      <td> \({{ space.analytic_conductor }}\) </td>
+      <td> <a href="{{ url_for('characters.render_Dirichletwebpage', modulus=space['level'], number=space['conrey_indexes'][0]) }}"> \( \chi_{ {{space.level}} }({{space.conrey_indexes[0]}}, \cdot) \)</a> </td>
+      <td class="center"> \({{ space.char_order }}\) </td>
+      <td class="center"> \({{ space.dim }}\) </td>
+      <td class="nowrap center">{{ info.display_decomp(space) | safe}}</td>
+      {% if show_AL %}
+      <td class="nowrap center">{{ info.display_ALdims(space) | safe}}</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

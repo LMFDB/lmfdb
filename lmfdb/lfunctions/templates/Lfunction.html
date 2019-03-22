@@ -1,32 +1,31 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
 
 <script>
-function show_normalization(normstyle) {
+  function show_normalization(normstyle) {
     $('.analytic').hide();
     $('.arithmetic').hide();
     $('.'+normstyle).show();
     $('button.analytic').show();
     $('button.arithmetic').show();
     if (normstyle == 'analytic') {
-       $('button.analytic').css('background', '{{color.lf_an_button_bkg}}');
-       $('button.analytic').css('border', '2px solid {{color.lf_an_button_brd}}');
-       $('button.arithmetic').css('background', '{{color.lf_ar_button_bkg}}');
-       $('button.arithmetic').css('border', '1px solid {{color.lf_ar_button_brd}}');
+      $('button.analytic').css('background', '{{color.lf_an_button_bkg}}');
+      $('button.analytic').css('border', '2px solid {{color.lf_an_button_brd}}');
+      $('button.arithmetic').css('background', '{{color.lf_ar_button_bkg}}');
+      $('button.arithmetic').css('border', '1px solid {{color.lf_ar_button_brd}}');
     }
     if (normstyle == 'arithmetic') {
-       $('button.arithmetic').css('background', '{{color.lf_an_button_bkg}}');
-       $('button.arithmetic').css('border', '2px solid {{color.lf_an_button_brd}}');
-       $('button.analytic').css('background', '{{color.lf_ar_button_bkg}}');
-       $('button.analytic').css('border', '1px solid {{color.lf_ar_button_brd}}');
+      $('button.arithmetic').css('background', '{{color.lf_an_button_bkg}}');
+      $('button.arithmetic').css('border', '2px solid {{color.lf_an_button_brd}}');
+      $('button.analytic').css('background', '{{color.lf_ar_button_bkg}}');
+      $('button.analytic').css('border', '1px solid {{color.lf_ar_button_brd}}');
     }
   }
 
 function show_moreless(ml) {
-    $('.more').hide();
-    $('.less').hide();
-    $('.'+ml).show();
+  $('.more').hide();
+  $('.less').hide();
+  $('.'+ml).show();
 }
 </script>
 
@@ -35,30 +34,30 @@ table.ntdata tr.toggle { font-size: 80%; text-align: right; }
 table.ntdata tr.toggle:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
 table.ntdata tr.toggle a:hover { background: {{color.table_ntdata_background_c1}}; }
 /*
-table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
-table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
-*/
+   table.ntdata tr.more:last-child { font-size: 80%; text-align: right; }
+   table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background_c1}}; }
+ */
 </style>
 
 {% if dirichlet_arithmetic -%}
- <div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
-<button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
+<div align='center'>{{ KNOWL('lfunction.normalization', title='Normalization') }}: &nbsp;  <button class='arithmetic active' onclick="show_normalization('arithmetic'); return false">arithmetic</button>
+  <button class='analytic inactive' onclick="show_normalization('analytic'); return false">analytic</button></div>
 
 {% elif Ltype=="riemann" %}
 
 {% elif algebraic %}
 <div align='center'><div style="display: inline-block; vertical-align:top;">{{ KNOWL('lfunction.normalization', title='Normalization') }}:  &nbsp; 
-</div>
-<div style="display: inline-block; vertical-align:top;">
-<button class='active'>analytic</button>
-</div>
-<div style="display: inline-block; align:left;">
-<button class='inactive'>arithmetic</button>
-<br>
-<span style="font-size: 80%;">
-(not yet available)
-</span>
-</div>
+  </div>
+  <div style="display: inline-block; vertical-align:top;">
+    <button class='active'>analytic</button>
+  </div>
+  <div style="display: inline-block; align:left;">
+    <button class='inactive'>arithmetic</button>
+    <br>
+    <span style="font-size: 80%;">
+      (not yet available)
+    </span>
+  </div>
 </div>
 {% endif %}
 
@@ -67,220 +66,222 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2> 
 {% endif %}
 
- <h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
+<h2> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
 {% if dirichlet_arithmetic -%}
- <div class="arithmetic">{{ dirichlet_arithmetic|safe }}</div>
- <div class="analytic nodisplay">{{ dirichlet|safe }}</div>
+<div class="arithmetic">{{ dirichlet_arithmetic|safe }}</div>
+<div class="analytic nodisplay">{{ dirichlet|safe }}</div>
 {% else %}
- <div>{{ dirichlet|safe }}</div>
+<div>{{ dirichlet|safe }}</div>
 {% endif %}
 
 
- <h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
+<h2>{{ KNOWL('lfunction.functional_equation',title='Functional equation') }}</h2>
 {% if dirichlet_arithmetic -%}
- <div id="functionalEqText" class="arithmetic">\[{{ functionalequation_arithmetic }}\]</div>
- <div id="functionalEqText" class="analytic nodisplay">\[{{ functionalequation }}\]</div>
+<div id="functionalEqText" class="arithmetic">\[{{ functionalequation_arithmetic }}\]</div>
+<div id="functionalEqText" class="analytic nodisplay">\[{{ functionalequation }}\]</div>
 {% else %}
- <div id="functionalEqText">\[{{ functionalequation }}\]</div>
+<div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
 
 <h2> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
 
-  <table>
+<table>
 
-        <tr>
-        <td> {{ KNOWL('lfunction.degree', title="\( d \)") }} </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> \({{ degree }}\)
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.degree', title="\( d \)") }} </td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> \({{ degree }}\)
+    </td>
+  </tr>
 
-        <tr>
-        <td> {{ KNOWL('lfunction.level', title="\( N \)") }} </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> \({{ conductor }}\)
-{% if conductor_factored -%}
-     &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
-{% endif %}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.level', title="\( N \)") }} </td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> \({{ conductor }}\)
+      {% if conductor_factored -%}
+      &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
+      {% endif %}
+    </td>
+  </tr>
 
-        <tr>
-        <td> {{ KNOWL('lfunction.sign', title="\( \\varepsilon \)") }}</td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> {{ sign }}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.sign', title="\( \\varepsilon \)") }}</td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> {{ sign }}
+    </td>
+  </tr>
 
-{% if motivic_weight %}
-        <tr>
-        <td> {{ KNOWL('lfunction.motivic_weight', title="weight") }} </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> {{ motivic_weight }}
-        </td>
-        </tr>
+  {% if motivic_weight %}
+  <tr>
+    <td> {{ KNOWL('lfunction.motivic_weight', title="motivic weight") }} </td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> {{ motivic_weight }}
+    </td>
+  </tr>
 
-{% endif %}
+  {% endif %}
 
-{% if chi %}
-        <tr>
-        <td> {{ KNOWL('lfunction.central_character', title="character") }} </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ chi | safe}}
-        </td>
-        </tr>
+  {% if chi %}
+  <tr>
+    <td> {{ KNOWL('lfunction.central_character', title="character") }} </td>
+    <td>&nbsp;:&nbsp;</td>
+    <td> {{ chi | safe}}
+    </td>
+  </tr>
 
-{% endif %}
+  {% endif %}
 
-{% if st_group -%}
+  {% if st_group -%}
 
-        <tr>
-        <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ st_link | safe}}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('g2c.st_group', title="Sato-Tate") }} </td>
+    <td>&nbsp;:&nbsp;</td>
+    <td> {{ st_link | safe}}
+    </td>
+  </tr>
 
-{% endif %}
+  {% endif %}
 
-        <tr>
-        <td> {{ KNOWL('lfunction.primitive', title="primitive") }}  </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ primitive }}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.primitive', title="primitive") }}  </td>
+    <td>&nbsp;:&nbsp;</td>
+    <td> {{ primitive }}
+    </td>
+  </tr>
 
-        <tr>
-        <td> {{ KNOWL('lfunction.self-dual', title="self-dual") }} </td>
-        <td>&nbsp;:&nbsp;</td>
-        <td> {{ selfdual }}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.self-dual', title="self-dual") }} </td>
+    <td>&nbsp;:&nbsp;</td>
+    <td> {{ selfdual }}
+    </td>
+  </tr>
 
-{% if rank is defined -%}
+  {% if rank is defined -%}
 
-        <tr>
-        <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> {{ rank }}
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.analytic_rank', title="analytic rank") }} </td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> {{ rank }}
+    </td>
+  </tr>
 
-{% endif %}
+  {% endif %}
 
-        <tr>
-        <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
-        <td>&nbsp;=&nbsp;</td>
-        <td> ${{ functionalequationSelberg }}$
-        </td>
-        </tr>
+  <tr>
+    <td> {{ KNOWL('lfunction.selbergdata', title="Selberg data") }} </td>
+    <td>&nbsp;=&nbsp;</td>
+    <td> ${{ functionalequationSelberg }}$
+    </td>
+  </tr>
 
-{% if dirichlet_arithmetic -%}
+  {% if dirichlet_arithmetic -%}
 
   {% if sv_critical_arithmetic %}
-        <tr class="arithmetic">
-        <td> ${{ sv_critical_arithmetic[0] }}$ </td>
-  {% if sv_critical_arithmetic[1] == "0" %}
-        <td>&nbsp;$=$&nbsp;</td>
-  {% else %}
-        <td>&nbsp;$\approx$&nbsp;</td>
-  {% endif %}
-        <td> ${{ sv_critical_arithmetic[1] }}$ </td>
-        </tr>
-        <tr class="analytic nodisplay">
-        <td> ${{ sv_critical_analytic[0] }}$ </td>
-  {% if sv_critical_analytic[1] == "0" %}
-        <td>&nbsp;$=$&nbsp;</td>
-  {% else %}
-        <td>&nbsp;$\approx$&nbsp;</td>
-  {% endif %}
+  <tr class="arithmetic">
+    <td> ${{ sv_critical_arithmetic[0] }}$ </td>
+    {% if sv_critical_arithmetic[1] == "0" %}
+    <td>&nbsp;$=$&nbsp;</td>
+    {% else %}
+    <td>&nbsp;$\approx$&nbsp;</td>
+    {% endif %}
+    <td> ${{ sv_critical_arithmetic[1] }}$ </td>
+  </tr>
+  <tr class="analytic nodisplay">
+    <td> ${{ sv_critical_analytic[0] }}$ </td>
+    {% if sv_critical_analytic[1] == "0" %}
+    <td>&nbsp;$=$&nbsp;</td>
+    {% else %}
+    <td>&nbsp;$\approx$&nbsp;</td>
+    {% endif %}
 
-        <td> ${{ sv_critical_analytic[1] }}$ </td>
-        </tr>
+    <td> ${{ sv_critical_analytic[1] }}$ </td>
+  </tr>
   {% endif %}
 
   {% if sv_edge_arithmetic %}
-        <tr class="arithmetic">
-        <td> ${{ sv_edge_arithmetic[0] }}$ </td>
-        {% if sv_edge_arithmetic[1] == 'not computed' %}
-        <td>&nbsp;</td>
-        <td> not available </td>
-        {% else %}
-        <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_arithmetic[1] }}$ </td>
-        {% endif %}
-        </tr>
-        <tr class="analytic nodisplay">
-        <td> ${{ sv_edge_analytic[0] }}$ </td>
-        {% if sv_edge_analytic[1] == 'not computed' %}
-        <td>&nbsp;</td>
-        <td> not available </td>
-        {% else %}
-        <td>&nbsp;$\approx$&nbsp;</td>
-        <td> ${{ sv_edge_analytic[1] }}$ </td>
-        {% endif %}
-        </tr>
+  <tr class="arithmetic">
+    <td> ${{ sv_edge_arithmetic[0] }}$ </td>
+    {% if sv_edge_arithmetic[1] == 'not computed' %}
+    <td>&nbsp;</td>
+    <td> not available </td>
+    {% else %}
+    <td>&nbsp;$\approx$&nbsp;</td>
+    <td> {{ sv_edge_arithmetic[1] }}</td>
+    {% endif %}
+  </tr>
+  <tr class="analytic nodisplay">
+    <td> ${{ sv_edge_analytic[0] }}$ </td>
+    {% if sv_edge_analytic[1] == 'not computed' %}
+    <td>&nbsp;</td>
+    <td> not available </td>
+    {% else %}
+    <td>&nbsp;$\approx$&nbsp;</td>
+    <td> {{ sv_edge_analytic[1] }} </td>
+    {% endif %}
+  </tr>
   {% endif %}
 
-{% endif %}
-  </table>
+  {% endif %}
+</table>
 
- <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
+<h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
- <div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
- <div class="analytic nodisplay">{{ eulerproduct }}</div>
+<div class="arithmetic">{{ eulerproduct_arithmetic|safe }}</div>
+<div class="analytic nodisplay">{{ eulerproduct }}</div>
 {% else %}
- <div>{{ eulerproduct }}</div>
+<div>{{ eulerproduct }}</div>
 {% endif %}
 
- {% if factorization is defined %}
- <h2>Factorization</h2>
-  <div align="center">
-    {{ factorization|safe }} 
-  </div>
- {% endif %}
+{% if factorization is defined %}
+<h2>Factorization</h2>
+<div align="center">
+  {{ factorization|safe }} 
+</div>
+{% endif %}
 
 {% if not dirichlet_arithmetic and algebraic %}
 <h2>Particular Values</h2>
-   {% if sv_critical or sv_edge %}
-      <div>
-      {% if sv_critical %}
-          {{ sv_critical }}
-      {% endif %}
-      {% if sv_edge %}
-          {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
-              <div align="center">Pole at \(s=1\)</div>
-          {% else %}
-              {{ sv_edge }}
-          {% endif %}
-      {% endif %}
-     </div>
-   {% else %}
-      <div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
-   {% endif %}
+{% if sv_critical or sv_edge %}
+<div>
+  {% if sv_critical %}
+  {{ sv_critical }}
+  {% endif %}
+  {% if sv_edge %}
+  {% if Ltype=="riemann" or Ltype=="dedekindzeta" %}
+  <div align="center">Pole at \(s=1\)</div>
+  {% else %}
+  {{ sv_edge }}
+  {% endif %}
+  {% endif %}
+</div>
+{% else %}
+<div>Not enough information (Dirichlet series coefficients/sign of the functional equation) to compute special values.</div>
+{% endif %}
 {% endif %}
 
- <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
+<h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
 
- {% if positive_zeros %}
-     <span class='redhighlight'>{{negative_zeros | safe}}</span>
-     <span class='positivezero'>{{positive_zeros | safe}}</span>
- {% elif zeroslink %}
-     <div><span id="zeros"></span></div>
- {% elif tpzeroslink %}
-     {{zeroswarning}}.
-     <div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
- {% else %}
-     <div>Zeros not available.</div>
- {% endif %}
+{% if positive_zeros %}
+<span class='redhighlight'>{{negative_zeros | safe}}</span>
+<span class='positivezero'>{{positive_zeros | safe}}</span>
+{% elif zeroslink %}
+<div><span id="zeros"></span></div>
+{% elif tpzeroslink %}
+{{zeroswarning}}.
+<div><span id="tpzeros">{{tpzeroslink|safe}}</span></div>
+{% else %}
+<div>Zeros not available.</div>
+{% endif %}
 
-    <h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
+<h2> Graph of the {{ KNOWL('lfunction.zfunction', title='$Z$-function') }} along the {{ KNOWL('lfunction.critical_line', title='critical line') }} </h2>
 
- {% if plotlink %}
-    <img src="{{ plotlink|safe }}" >
- {% else %}
-    <div>Plot not available.</div>
- {% endif %}
+{% if degree > 10 %}
+<div>Plot not available for L-functions of degree greater than 10.</div>
+{% elif plotlink   %}
+<img src="{{ plotlink|safe }}" >
+{% else %}
+<div>Plot not available.</div>
+{% endif %}
 
 {% if knowltype and label %}
 <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom',title='') }}</h2>
@@ -289,35 +290,12 @@ table.ntdata tr.more:nth-child(2n) { background: {{color.table_ntdata_background
 
 <script type="text/javascript">
   $(function() {
-      $("#zeros").load("{{ zeroslink|safe }}");
+    $("#zeros").load("{{ zeroslink|safe }}");
   });
-  
+
 </script>
 
 {% endblock %}
 
 
-{# FIXME: this is copied directly from homepage.html #}
-{% macro rightnavig(title, entries) -%}
- {% if entries %}
-  <h1 class="properties-header">{{ title }}</h1>
-  <div class="properties-body">
-  <ul>
-      {% for text,url in entries %}
-      {% if url %}
-         <li><a href="{{ url }}">{{ text }}</a></li>
-      {% else %}
-         <li>{{ text|safe }}</li>
-      {% endif %}
-      {% endfor %}
-  </ul>
-</div>
- {% endif %}
-{%- endmacro %}
 
-{# This block is rendered in the properties box #}
-{% block more_props %}
-
-{{ rightnavig("Factors", factors) }}
-
-{% endblock %}

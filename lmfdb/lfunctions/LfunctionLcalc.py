@@ -3,9 +3,11 @@
 import math
 import time  # for printing the date on an lcalc file
 import socket  # for printing the machine used to generate the lcalc file
-from sage.all import Infinity, imag_part, real_part
-from Lfunctionutilities import splitcoeff, pair2complex, string2number
 
+from sage.all import Infinity, imag_part, real_part
+
+from lmfdb.utils import splitcoeff, pair2complex
+from Lfunctionutilities import string2number
 
 def parse_complex_number(z):
     """convert a string representing a complex number to another string looking like "(x,y)"

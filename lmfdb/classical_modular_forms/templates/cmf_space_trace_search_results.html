@@ -1,0 +1,18 @@
+{% extends 'cmf_space_refine_search.html' %}
+
+{% block show_results %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<p> The following table gives {{ KNOWL('cmf.space_trace_form', title='traces') }} of \(a_n\) for the search results. </p>
+
+{% include 'cmf_trace_display.html' %}
+
+{% include 'forward_back.html' %}
+{% if info.download_spaces(info.results) %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% endif %}
+
+{% endblock %}

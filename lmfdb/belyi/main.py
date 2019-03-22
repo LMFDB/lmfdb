@@ -1,32 +1,22 @@
 # -*- coding: utf-8 -*-
 
-import StringIO
 from ast import literal_eval
-import re
-import time
+import re, StringIO, time
+
 from flask import render_template, url_for, request, redirect, send_file, abort
 from sage.misc.cachefunc import cached_function
-from sage.misc.cachefunc import cached_method
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, comma, flash_error
-from lmfdb.search_parsing import parse_ints, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay)
 from lmfdb.belyi import belyi_page
 from lmfdb.belyi.web_belyi import WebBelyiGalmap, WebBelyiPassport #, belyi_db_galmaps, belyi_db_passports
 
 credit_string = "Michael Musty, Sam Schiavone, and John Voight"
-
-###############################################################################
-# global database connection and stats objects
-###############################################################################
-
-the_belyistats = None
-def belyistats():
-    global the_belyistats
-    if the_belyistats is None:
-        the_belyistats = belyi_stats()
-    return the_belyistats
 
 ###############################################################################
 # List and dictionaries needed routing and searching
@@ -53,7 +43,7 @@ def learnmore_list_remove(matchstring):
 def index():
     if len(request.args) > 0:
         return belyi_search(to_dict(request.args))
-    info = {'counts' : belyistats().counts()}
+    info = {'stats' : Belyi_stats()}
     info["stats_url"] = url_for(".statistics")
     info["belyi_galmap_url"] =  lambda label: url_for_belyi_galmap_label(label)
     belyi_galmap_labels = ('7T6-[7,4,4]-7-421-421-g1-b','7T7-[7,12,12]-7-43-43-g2-d', '7T5-[7,7,3]-7-7-331-g2-a', '6T15-[5,5,5]-51-51-51-g1-a', '7T7-[6,6,6]-61-61-322-g1-a')
@@ -72,13 +62,6 @@ def index():
 def random_belyi_galmap():
     label = db.belyi_galmaps.random()
     return redirect(url_for_belyi_galmap_label(label), 307)
-
-@belyi_page.route("/stats")
-def statistics():
-    info = { 'counts': belyistats().counts(), 'stats': belyistats().stats() }
-    title = 'Belyi maps: statistics'
-    bread = (('Belyi Maps', url_for(".index")), ('Statistics', ' '))
-    return render_template("belyi_stats.html", info=info, credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 ###############################################################################
 # Galmaps, passports, triples and groups routes
@@ -102,7 +85,7 @@ def by_url_belyi_search_group_triple(group, abc):
     if len(request.args) > 0:
         # if group or abc changed, fall back to a general search
         if 'group' in request.args and (request.args['group'] != str(group) or request.args['abc_list'] != str(abc)):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' search results'
         info['bread'].append(('search results',''))
     info['group'] = group
@@ -158,7 +141,8 @@ def render_belyi_galmap_webpage(label):
                            bread=belyi_galmap.bread,
                            learnmore=learnmore_list(),
                            title=belyi_galmap.title,
-                           friends=belyi_galmap.friends)
+                           friends=belyi_galmap.friends,
+                           KNOWL_ID="belyi.%s"%label)
 
 def render_belyi_passport_webpage(label):
     try:
@@ -172,7 +156,8 @@ def render_belyi_passport_webpage(label):
                            bread=belyi_passport.bread,
                            learnmore=learnmore_list(),
                            title=belyi_passport.title,
-                           friends=belyi_passport.friends)
+                           friends=belyi_passport.friends,
+                           KNOWL_ID="belyi.%s"%label)
 
 def url_for_belyi_galmap_label(label):
     slabel = label.split("-")
@@ -253,6 +238,17 @@ def belyi_jump(info):
     flash_error (errmsg, jump)
     return redirect(url_for(".index"))
 
+class Belyi_download(Downloader):
+    table = db.belyi_galmaps
+    title = 'Belyi maps'
+    columns = 'triples'
+    data_format = ['permutation_triples']
+    data_description = ['where the permutation triples are in one line notation']
+    function_body = {'magma':['deg := #(data[1][1][1]);',
+                              'return [[[Sym(deg) ! t: t in s]: s in triples]: triples in data];'],
+                     'sage':['deg = len(data[0][0][0])',
+                             'return [[map(SymmetricGroup(deg), s) for s in triples] for triples in data]']}
+
 def download_search(info):
     download_comment_prefix = {'magma':'//','sage':'#','gp':'\\\\','text':'#'}
     download_assignment_defn = {'magma':':=','sage':' = ','gp':' = ' ,'text':'='}
@@ -322,7 +318,7 @@ def download_search(info):
              title='Belyi map search results',
              err_title='Belyi Maps Search Input Error',
              shortcuts={'jump':belyi_jump,
-                        'download':download_search},
+                        'download':Belyi_download()},
              projection=['label', 'group', 'deg', 'g', 'orbit_size', 'geomtype'],
              cleaners={'geomtype': lambda v:geometry_types_dict[v['geomtype']]},
              bread=lambda:[('Belyi Maps', url_for(".index")), ('Search Results', '.')],
@@ -371,82 +367,38 @@ def belyi_search(info, query):
 # Statistics
 ################################################################################
 
-def boolean_format(value):
-    return 'True' if value else 'False'
-
-stats_attribute_list = [
-    {'name':'deg','top_title':'Degree','row_title':'deg','knowl':'belyi.degree','avg':True},
-    {'name':'orbit_size','top_title':'Galois orbit size','row_title':'size','knowl':'belyi.orbit_size','avg':True},
-    {'name':'g','top_title':'Genus','row_title':'genus','knowl':'belyi.genus','avg':True}
-]
-
-class belyi_stats(object):
+class Belyi_stats(StatsDisplay):
     """
     Class for creating and displaying statistics for Belyi maps
     """
+    def __init__(self):
+        ngalmaps = comma(db.belyi_galmaps.stats.count())
+        npassports = comma(db.belyi_passports.stats.count())
+        max_deg = comma(db.belyi_passports.max('deg'))
+        deg_knowl = display_knowl('belyi.degree', title = "degree")
+        belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
+        stats_url = url_for(".statistics")
+        self.short_summary = 'The database currently contains %s %s of %s up to %s.  Here are some <a href="%s">further statistics</a>.' % (ngalmaps, belyi_knowl, deg_knowl, max_deg, stats_url)
+        self.summary = "The database currently contains %s Galois orbits of Belyi maps in %s passports, with %s at most %s." % (ngalmaps, npassports, deg_knowl, max_deg)
+
+    table = db.belyi_galmaps
+    baseurl_func = ".index"
+    row_titles = {'deg': 'degree',
+                  'orbit_size': 'size',
+                  'g': 'genus'}
+    top_titles = {'orbit_size': 'Galois orbit size'}
+    knowls = {'deg': 'belyi.degree',
+              'orbit_size': 'belyi.orbit_size',
+              'g': 'belyi.genus'}
+    stat_list = [{'cols':col, 'totaler': {'avg':True}} for col in ['deg', 'orbit_size', 'g']]
+
+@belyi_page.route("/stats")
+def statistics():
+    title = 'Belyi maps: statistics'
+    bread = (('Belyi Maps', url_for(".index")), ('Statistics', ' '))
+    return render_template("display_stats.html", info=Belyi_stats(), credit=credit_string, title=title, bread=bread, learnmore=learnmore_list())
 
 
-    @cached_method
-    def counts(self):
-        counts = {}
-        ngalmaps = db.belyi_galmaps.stats.count()
-        counts['ngalmaps']  = ngalmaps
-        counts['ngalmaps_c'] = comma(ngalmaps)
-
-        npassports =  db.belyi_passports.stats.count()
-        counts['npassports'] = npassports
-        counts['npassports_c'] = comma(npassports)
-        max_deg = db.belyi_passports.max('deg')
-        counts['max_deg'] = max_deg
-        counts['max_deg_c'] = comma(max_deg)
-        return counts
-
-    @cached_method
-    def stats(self):
-        dists = []
-        for attr in stats_attribute_list:
-            counts = db.belyi_galmaps.stats.display_data([attr["name"]],
-                                                      url_for(".index"),
-                                                      include_avg=attr.get("avg",False),
-                                                      formatter=attr.get("format"),
-                                                      # artifact from copy and paste
-                                                      count_key='curves')
-            rows = [counts[i:i+10] for i in range(0,len(counts),10)]
-            dists.append({'attribute':attr,'rows':rows})
-        return {"distributions": dists}
-
-#        galmaps = belyi_db_galmaps()
-#        self.init_belyi_count()
-#        counts = self._counts
-#        total = counts["ngalmaps"]
-#        stats = {}
-#        dists = []
-#        # TODO use aggregate $group to speed this up and/or just store these counts in the database
-#        for attr in stats_attribute_list:
-#            counts = 100 #FIXME attribute_value_counts(galmaps, attr['name'])
-#            counts = [c for c in counts if c[0] != None]
-#            if len(counts) == 0:
-#                continue
-#            vcounts = []
-#            rows = []
-#            avg = 0
-#            total = sum([c[1] for c in counts])
-#            for value,n in counts:
-#                prop = format_percentage(n,total)
-#                if 'avg' in attr and attr['avg'] and (type(value) == int or type(value) == float):
-#                    avg += n*value
-#                value_string = attr['format'](value) if 'format' in attr else value
-#                vcounts.append({'value': value_string, 'curves': n, 'query':url_for(".index")+'?'+attr['name']+'='+str(value),'proportion': prop})
-#                if len(vcounts) == 10:
-#                    rows.append(vcounts)
-#                    vcounts = []
-#            if len(vcounts):
-#                rows.append(vcounts)
-#            if 'avg' in attr and attr['avg']:
-#                vcounts.append({'value':'\(\\mathrm{avg}\\ %.2f\)'%(float(avg)/total), 'galmaps':total, 'query':url_for(".index") +'?'+attr['name'],'proportion':format_percentage(1,1)})
-#            dists.append({'attribute':attr,'rows':rows})
-#        stats["distributions"] = dists
-#        self._stats = stats
 
 @belyi_page.route("/Completeness")
 def completeness_page():

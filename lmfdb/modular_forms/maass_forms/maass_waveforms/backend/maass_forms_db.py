@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import Integer, loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 logger = mwf_logger
@@ -87,7 +87,7 @@ class MaassDB(object):
     #     Returns a list of (Conrey) indices of representatives of
     #     even or odd  Dirichlet characters mod N
     #     """
-    #     f = self._mongo_db.DirChars.find_one({'Modulus': int(N), 'Parity': int(parity), 'Conrey': int(1)})
+    #     f = db.char_dirichlet.lucky({'Modulus': int(N), 'Parity': int(parity), 'Conrey': int(1)})
     #     if verbose > 0:
 
     #         print "f=", f
@@ -106,20 +106,20 @@ class MaassDB(object):
     #         xi = D.list().index(x[0])
     #         xi = self.getDircharConrey(N, xi)
     #         l.append(int(xi))
-    #     f = self._mongo_db.DirChars.insert(
-    #         {'Modulus': int(N), 'Chars': l, 'Parity': int(parity), 'Conrey': int(1)})
+    #     db.char_dirichlet.insert_many([
+    #         {'Modulus': int(N), 'Chars': l, 'Parity': int(parity), 'Conrey': int(1)}])
     #     return l
 
     # @cached_method
     # def getDircharConrey(self, N, j):
-    #     f = self._mongo_db.DirCharsConrey.find_one({'Modulus': int(N)})
+    #     f = db.char_dirichlet.lucky({'Modulus': int(N)})
     #     if not f:
     #         Dl = DirichletGroup(N).list()
     #         res = range(len(Dl))
     #         for k in range(len(Dl)):
     #             x = Dl[k]
     #             res[k] = self.getDircharConreyFromSageChar(x)
-    #         self._mongo_db.DirCharsConrey.insert({'Modulus': int(N), 'chars': res})
+    #         db.char_dirichlet.insert_many([{'Modulus': int(N), 'chars': res}])
     #         return res[j]
     #     else:
     #         res = f.get('chars')[j]
@@ -134,7 +134,7 @@ class MaassDB(object):
 
     # @cached_method
     # def getDircharSageFromConrey(self, N, j):
-    #     f = self._mongo_db.DirCharsSage.find_one({'Modulus': int(N)})
+    #     f = db.char_dirichlet.lucky({'Modulus': int(N)})
     #     if not f:
     #         DC = DirichletGroup_conrey(N)
     #         maxn = 0
@@ -145,7 +145,7 @@ class MaassDB(object):
     #         for c in DC:
     #             k = c.number()
     #             res[k] = self.getOneDircharSageFromConreyChar(c)
-    #         self._mongo_db.DirCharsSage.insert({'Modulus': int(N), 'chars': res})
+    #         db.char_dirichlet.insert_many([{'Modulus': int(N), 'chars': res}])
     #         return res[j]
     #     else:
     #         res = f.get('chars')[j]
@@ -230,7 +230,6 @@ class MaassDB(object):
         #table['ncols'] = 20  # =len(table['levels'])
         #self.table = table
         #f.put(dumps(table), filename='table')
-        ## self._mongo_db['Table'].insert({'Table':table})
 
     def display_header(self, date=0):
         if date == 1:
