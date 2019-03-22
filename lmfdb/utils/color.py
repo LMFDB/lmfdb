@@ -342,12 +342,12 @@ class NiceGreen(YellowKnowls):
 
 class JohnBlue(YellowKnowls):
     code = 17
-    col_main_ld = '#64B5F6' # P1-300
+    col_main_ld = '#90CAF9' # '#64B5F6' before accessibility change # P1-300
     col_main_dl = c.black
-    col_a_knowl = '#27C'
+    col_a_knowl = '#1C61A6'
     col_main    = '#1565C0' # P1-800
-    col_link    = '#28E'
-    col_visited = '#0091EA' # A1-700
+    col_link    = '#1C61A6' # '#28E' before accessibility change
+    col_visited = '#1C61A6; # '#0091EA' before accessibility change # A1-700
     col_body_text = '#1565C0' # P1-800
     col_sidebar_text = c.black
     col_sidebar_links = '#1565C0' # P1-800
@@ -360,8 +360,8 @@ class JohnBlue(YellowKnowls):
     col_main_d  = c.black # ?00
     knowl_hyper_text = '#1565C0' # P1-800
     knowl_shadow = '#0D47A1' # P1-900
-    sidebar_background_hover = c.white # '#CCE6FC'
-    a_background_hover = '#E3F2FD'
+    sidebar_background_hover = c.white # '#CCE6FC' # accessibility change
+    a_background_hover = '#E3F2FD' # accessibility change
     knowl_hover = '#FFF8C1' # lighter than knowl border
 
 class IndigoHair(YellowKnowls):
