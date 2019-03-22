@@ -43,8 +43,8 @@ def make_label(L):
     GC = [CC(str(elt)) for elt in GC]
     GC.sort(cmp=CCcmp)
 
-    rs = ''.join(['r' + round_to_half_str(elt.real()) for elt in GR])
-    cs = ''.join(['c' + round_to_half_str(elt.real()) for elt in GC])
+    rs = ''.join(['r%d' % ZZ(elt.real()*2) for elt in GR])
+    cs = ''.join(['c%d' % ZZ(elt.real()*2) for elt in GC])
 
     b, e = ZZ(L['conductor']).perfect_power()
     if e == 1:
