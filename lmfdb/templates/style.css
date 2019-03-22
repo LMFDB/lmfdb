@@ -1157,7 +1157,7 @@ div.limit-height {
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
-  color: {{color.grey}};
+  color: {{ color.knowl_border_text }};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
@@ -1876,13 +1876,13 @@ div.maassformplot img {
 
 
 #sidebar .beta {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
     display: inherit;
 }
 
 
 #sidebar .beta a {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
 }
 
 
