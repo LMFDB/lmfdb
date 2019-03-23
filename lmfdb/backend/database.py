@@ -2391,9 +2391,9 @@ class PostgresTable(PostgresBase):
             self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, log_change=False, **kwds)
             self.log_db_change("rewrite", query=query, projection=projection)
         finally:
-            searchfile.unlink(searchfile.name)
+            os.unlink(searchfile.name)
             if self.extra_table is not None:
-                extrafile.unlink(extrafile.name)
+                os.unlink(extrafile.name)
 
     def delete(self, query, resort=True, restat=True, commit=True):
         """
