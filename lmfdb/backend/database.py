@@ -2331,7 +2331,7 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, **kwds):
+    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, searchfile=None, extrafile=None, **kwds):
         """
         This function can be used to edit some or all records in the table.
 
@@ -2359,8 +2359,20 @@ class PostgresTable(PostgresBase):
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
             tostr_func = copy_dumps
-        searchfile = tempfile.NamedTemporaryFile('w', delete=False)
-        extrafile = EmptyContext() if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
+        if searchfile is None:
+            searchfile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(searchfile):
+            raise ValueError("Search file %s already exists" % searchfile)
+        else:
+            searchfile = open(searchfile, 'w')
+        if self.extra_table is None:
+            extrafile = EmptyContext()
+        elif extrafile is None:
+            extrafile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(extrafile):
+            raise ValueError("Extra file %s already exists" % extrafile)
+        else:
+            extrafile = open(extrafile, 'w')
         try:
             with searchfile:
                 with extrafile:
