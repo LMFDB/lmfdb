@@ -21,14 +21,14 @@
 <td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
 <td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
 <td align=left>
-<select name='Parity'>
+<select name='parity'>
       <option value="">all</option>
       <option value="Even" {{ "selected" if args.parity == 'Even'}}>even</option>
       <option value="Odd" {{ "selected" if args.parity == 'Odd'}}>odd</option>
 </select>
 </td>
 <td align=left>
-<select name='Primitive'>
+<select name='primitive'>
       <option value="">all</option>
       <option value="Yes" {{ "selected" if args.primitve == 'Yes'}}>yes</option>
       <option value="No" {{ "selected" if args.primitive == 'No'}}>no</option>
