@@ -9,29 +9,29 @@
 
 <table border="0">
 <tr>
-<td align=left>{{ KNOWL('character.dirichlet.modulus', title='modulus') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.conductor', title='conductor') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.order', title='order') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.parity', title='parity') }}</td>
-<td align=left>{{ KNOWL('character.dirichlet.primitive', title='primitive') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.modulus', title='Modulus') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.conductor', title='Conductor') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.order', title='Order') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+<td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
 </tr>
 
 <tr>
-<td align=left><input type='text' name='modulus' size=6 value="{{args.modulus}}"></td>
-<td align=left><input type='text' name='conductor'size=6 value="{{args.conductor}}"></td>
-<td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
+<td align=left><input type='text' name='Mlus' size=6 value="{{args.modulus}}"></td>
+<td align=left><input type='text' name='Conductor'size=6 value="{{args.conductor}}"></td>
+<td align=left><input type='text' name='Order'size=6 value="{{args.order}}"></td>
 <td align=left>
-<select name='parity'>
+<select name='Parity'>
       <option value="">all</option>
-      <option value="Even">even</option>
-      <option value="Odd">odd</option>
+      <option value="Even" {{ "selected" if args.parity == 'Even'}}>even</option>
+      <option value="Odd" {{ "selected" if args.parity == 'Odd'}}>odd</option>
 </select>
 </td>
 <td align=left>
-<select name='primitive'>
+<select name='Primitive'>
       <option value="">all</option>
-      <option value="Yes">yes</option>
-      <option value="No">no</option>
+      <option value="Yes" {{ "selected" if args.primitve == 'Yes'}}>yes</option>
+      <option value="No" {{ "selected" if args.primitive == 'No'}}>no</option>
 </select>
 </td>
 </tr>
