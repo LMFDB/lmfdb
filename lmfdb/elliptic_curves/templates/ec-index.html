@@ -26,7 +26,8 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 
 {% else %}
 <div>
-{{ KNOWL_INC('dq.ec.extent') }}
+{{elliptic_curve_summary()| safe}}
+Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>

@@ -10,6 +10,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
+from lmfdb.classical_modular_forms.main import url_for_label as url_for_cmf
 from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
@@ -633,6 +634,10 @@ class WebG2C(object):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
                 add_friend (friends, lfunction_friend_from_url(friend_url))
+        for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
+            # be selective, only cmfs of the right dimension and conductor get to be our friends
+            if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
+                add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:

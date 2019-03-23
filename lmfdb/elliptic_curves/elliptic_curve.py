@@ -49,6 +49,7 @@ def EC_redirect():
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -86,7 +87,7 @@ def rational_elliptic_curves(err_args=None):
     #credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
-    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'), calling_function = "ec.rational_elliptic_curves", **err_args)
+    return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
 def random_curve():
@@ -493,7 +494,7 @@ def download_EC_all(label):
 
 @ec_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Elliptic Curve Data over $\Q$'
+    t = 'Completeness of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Completeness', '')]
@@ -502,11 +503,20 @@ def completeness_page():
 
 @ec_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Elliptic Curve Data over $\Q$'
+    t = 'Source of the Elliptic Curve data over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for("ec.rational_elliptic_curves")),
              ('Source', '')]
     return render_template("single.html", kid='dq.ec.source',
+                           credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@ec_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Elliptic Curve data over $\Q$'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('$\Q$', url_for("ec.rational_elliptic_curves")),
+             ('Source', '')]
+    return render_template("single.html", kid='dq.ec.reliability',
                            credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ec_page.route("/Labels")
