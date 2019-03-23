@@ -4613,7 +4613,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         INPUT:
 
-        - ``name`` -- the name of the table.  See existing names for consistency.
+        - ``name`` -- the name of the table, which must include an underscore.  See existing names for consistency.
         - ``search_columns`` -- a dictionary whose keys are valid postgres types and whose values
             are lists of column names (or just a string if only one column has the specified type).
             An id column of type bigint will be added as a primary key (do not include it).
@@ -4648,6 +4648,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if name in self.tablenames:
             raise ValueError("%s already exists"%name)
+        if '_' not in name:
+            raise ValueError("Table name must contain an underscore; first part gives LMFDB section")
         now = time.time()
         if id_ordered is None:
             id_ordered = (sort is not None)
