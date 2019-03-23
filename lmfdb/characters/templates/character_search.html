@@ -77,6 +77,12 @@ table td.params {
             <td align=left> {{ KNOWL('character.dirichlet.order', title="order") }} 
                 <input type='text' name='order'size=10 value={{order}}>
             </td>
+            <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}
+                <select name='parity'> {% for x in ('All', 'Odd', 'Even') %} <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option> {% endfor %} </select>
+            </td>
+            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}
+                <select name='primitive'> {% for x in ('All', 'Yes', 'No') %} <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option> {% endfor %} </select>
+            </td>
         </tr>
 {#<td align=left colspan=4>Maximum number of characters to display <input type='text' name='count' value={{count}} size=10>#}
     </table>
