@@ -65,6 +65,26 @@ Enter criteria into one or more boxes to restrict the search.
             <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
+        <tr>
+            <td align=left>{{ KNOWL('character.dirichlet.parity', title='Parity') }}</td>
+            <td align=left>
+                <select name='parity'>
+                    {% for x in ('All', 'Odd', 'Even') %}
+                        <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='Primitive') }}</td>
+            <td align=left>
+                <select name='primitive'>
+                {% for x in ('All', 'Yes', 'No') %}
+                    <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option>
+                {% endfor %}
+                </select>
+            </td>
+        </tr>
     </table>
     <p></p>
     <td>
