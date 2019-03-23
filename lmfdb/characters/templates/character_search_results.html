@@ -22,16 +22,16 @@
 <td align=left><input type='text' name='order'size=6 value="{{args.order}}"></td>
 <td align=left>
 <select name='parity'>
-    {% for x in ('All', 'Odd', 'Even') %}
-    <option {{ 'selected' if args.parity == x }} value="{{x}}">{{x}}</option>
-    {% endfor %}
+      <option value="">all</option>
+      <option value="Even">even</option>
+      <option value="Odd">odd</option>
 </select>
 </td>
 <td align=left>
 <select name='primitive'>
-    {% for x in ('All', 'Yes', 'No') %}
-    <option {{ 'selected' if args.primitive == x }} value="{{x}}">{{x}}</option>
-    {% endfor %}
+      <option value="">all</option>
+      <option value="Yes">yes</option>
+      <option value="No">no</option>
 </select>
 </td>
 </tr>
