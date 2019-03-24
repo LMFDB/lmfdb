@@ -80,14 +80,15 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     if info.get('maass_id', None) and info.get('db', None):
         return render_one_maass_waveform_wp(**info)
     if info['search'] or (info['browse'] and int(info['weight']) != 0):
+        # This isn't the right place to do input validation, but it is easier to flash errors here (this is a hack to address issue #1820)
         if info.get('level_range'):
             if not re.match(POSINT_RE, info['level_range']):
                 if "-" in info['level_range']:
-                    info['level'] = "..".join(info['level_range'].split("-"))
+                    info['level_range'] = "..".join(info['level_range'].split("-"))
                 if not re.match(POSINT_RANGE_RE, info['level_range']):
                     flash_error("%s is not a level, please specify a positive integer <span style='color:black'>n</span> or postivie integer range <span style='color:black'>m..n</span>.", info['level_range'])
                     return render_template('mwf_navigate.html', **info)
-        if info['character']:
+        if info['character'] != -1:
             if info.get('level_range') and not re.match(POSINT_RE, info['level_range']):
                 flash_error("Character cannot be specified in combination with a range of levels.", info['character'])
             N = int(info.get('level_range','0'))
@@ -99,7 +100,9 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
             if n > q or gcd(q,n) != 1 or (N > 0 and q != N):
                 flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                 return render_template('mwf_navigate.html', **info)
-        if info['weight']:
+            info['level_range'] = str(q)
+            info['character'] = str(n)
+        if info['weight'] != -1:
             if not re.match(INT_RE, info['weight']):
                 flash_error("%s is not a valid weight.  It should be a nonnegative integer.", info['weight'])
                 return render_template('mwf_navigate.html', **info)
