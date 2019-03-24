@@ -115,7 +115,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                 if len(s) != 2:
                     flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
                     return render_template('mwf_navigate.html', **info)
-                if not re.match(FLOAT_RE,s[0]) or not re.match(FLOAR_RE,s[1]):
+                if not re.match(FLOAT_RE,s[0]) or not re.match(FLOAT_RE,s[1]):
                     flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
                     return render_template('mwf_navigate.html', **info)
         search = get_search_parameters(info)
