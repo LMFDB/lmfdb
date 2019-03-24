@@ -90,7 +90,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         if info['character']:
             if info.get('level_range') and not re.match(POSINT_RE, info['level_range']):
                 flash_error("Character cannot be specified in combination with a range of levels.", info['character'])
-            N = int(info.get('level_range','0')
+            N = int(info.get('level_range','0'))
             if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
                 flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                 return render_template('mwf_navigate.html', **info)
