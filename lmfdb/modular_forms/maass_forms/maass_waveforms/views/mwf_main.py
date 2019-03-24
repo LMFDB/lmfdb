@@ -58,7 +58,7 @@ maxNumberOfResultsToShow = 500
 INT_RE = re.compile(r'^(\d*)$')
 POSINT_RE = re.compile(r'^(\d+)$')
 POSINT_RANGE_RE = re.compile(r'^(\d+\.\.\d+)$')
-FLOAT_RE = re.compile(r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+FLOAT_RE = re.compile(r'(\d+([.]\d*)')
 
 
 @mwf.route("/", methods=met)
@@ -69,7 +69,6 @@ FLOAT_RE = re.compile(r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-    print info
     info["credit"] = ""
     info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
@@ -112,7 +111,6 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
             if not re.match(FLOAT_RE,info['ev_range']):
                 if "-" in info['ev_range']:
                     info['ev_range'] = "..".join(info['ev_range'].split("-"))
-                print "ev_range =",info['ev_range']
                 s = info['ev_range'].split("..")
                 if len(s) != 2:
                     flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
