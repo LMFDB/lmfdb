@@ -1152,7 +1152,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 friendlist.append( ('L-function', '/L'+ url) )
             else:
                 if self.conductor == 1:
-                    f.append (('L-function', '/L/Riemann'))
+                    friendlist.append (('L-function', '/L/Riemann'))
             friendlist.append(
                 ('Sato-Tate group', '/SatoTateGroup/0.1.%d' % self.order)
             )
