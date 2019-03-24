@@ -362,17 +362,24 @@ class PostgresBase(object):
                 try:
                     cur.execute(query, values)
                 except (ProgrammingError, NotSupportedError):
-                    print query.as_string(self.conn)
-                    print values
+                    try:
+                        print cur.mogrify(query, values)
+                    except Exception:
+                        print "Error executing %s with values %s" % (query, values)
                     raise
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > self.slow_cutoff:
-                    query = query.as_string(self.conn)
                     if values_list:
-                        query = query.replace('%s','VALUES_LIST')
+                        query = query.as_string(self.conn).replace('%s','VALUES_LIST')
                     elif values:
-                        query = query % (tuple(values))
+                        try:
+                            query = cur.mogrify(query, values)
+                        except Exception:
+                            # This shouldn't happen since the execution above was successful
+                            query = query + str(values)
+                    else:
+                        query = query.as_string(self.conn)
                     self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
                         self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
@@ -1837,7 +1844,8 @@ class PostgresTable(PostgresBase):
             analyzer = SQL("EXPLAIN {0}").format(selecter)
         else:
             analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
-        print selecter.as_string(self.conn)%tuple(values)
+        cur = self.conn.cursor()
+        print cur.mogrify(selecter, values)
         cur = self._execute(analyzer, values, silent=True)
         for line in cur:
             print line[0]
@@ -2323,7 +2331,7 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, **kwds):
+    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, searchfile=None, extrafile=None, **kwds):
         """
         This function can be used to edit some or all records in the table.
 
@@ -2351,8 +2359,20 @@ class PostgresTable(PostgresBase):
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
             tostr_func = copy_dumps
-        searchfile = tempfile.NamedTemporaryFile('w', delete=False)
-        extrafile = EmptyContext() if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
+        if searchfile is None:
+            searchfile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(searchfile):
+            raise ValueError("Search file %s already exists" % searchfile)
+        else:
+            searchfile = open(searchfile, 'w')
+        if self.extra_table is None:
+            extrafile = EmptyContext()
+        elif extrafile is None:
+            extrafile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(extrafile):
+            raise ValueError("Extra file %s already exists" % extrafile)
+        else:
+            extrafile = open(extrafile, 'w')
         try:
             with searchfile:
                 with extrafile:
@@ -2371,9 +2391,9 @@ class PostgresTable(PostgresBase):
             self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, log_change=False, **kwds)
             self.log_db_change("rewrite", query=query, projection=projection)
         finally:
-            searchfile.unlink(searchfile.name)
+            os.unlink(searchfile.name)
             if self.extra_table is not None:
-                extrafile.unlink(extrafile.name)
+                os.unlink(extrafile.name)
 
     def delete(self, query, resort=True, restat=True, commit=True):
         """
@@ -3512,17 +3532,17 @@ class PostgresStatsTable(PostgresBase):
         cur = self._execute(selecter, values)
         nres = cur.fetchone()[0]
         if record:
-            self._record_count(query, nres, suffix, extra)
+            self._record_count(query, nres, split_list, suffix, extra)
         return nres
 
-    def _record_count(self, query, count, suffix='', extra=True):
+    def _record_count(self, query, count, split_list=False, suffix='', extra=True):
         cols, vals = self._split_dict(query)
-        data = [count, cols, vals]
+        data = [count, cols, vals, split_list]
         if self.quick_count(query) is None:
-            updater = SQL("INSERT INTO {0} (count, cols, values, extra) VALUES (%s, %s, %s, %s)")
+            updater = SQL("INSERT INTO {0} (count, cols, values, split, extra) VALUES (%s, %s, %s, %s, %s)")
             data.append(extra)
         else:
-            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s")
+            updater = SQL("UPDATE {0} SET count = %s WHERE cols = %s AND values = %s AND split = %s")
         try:
             # This will fail if we don't have write permission,
             # for example, if we're running as the lmfdb user
@@ -3562,6 +3582,74 @@ class PostgresStatsTable(PostgresBase):
         if nres is None:
             nres = self._slow_count(query, record=record)
         return int(nres)
+
+    def column_counts(self, cols, constraint=None, threshold=None, split_list=False):
+        """
+        Returns all of the counts for a given column or set of columns.
+
+        INPUT:
+
+        - ``cols`` -- a string or list of strings giving column names.
+        - ``constraint`` -- only rows satisfying this constraint will be considered.
+            It should take the form of a dictionary of the form used in search queries.
+        - ``threshold`` -- an integer or None.  If specified, only values with
+            counts above the threshold are returned.
+        - ``split_list`` -- see the documentation for add_stats.
+
+        OUTPUT:
+
+        A dictionary with keys the values taken on by the columns in the database,
+        and value the count of rows taking on those values.  If threshold is provided,
+        only counts at least the threshold will be included.
+
+        If cols is a string, then the keys of the dictionary will be just the values
+        taken on by that column.  If cols is a list of strings, then the keys will
+        be tuples of values taken on by the dictionary.
+
+        If the value taken on by a column is a dictionary D, then the key will be tuple(D.items()).
+        """
+        if isinstance(cols, basestring):
+            cols = [cols]
+            one_col = True
+        else:
+            one_col = False
+            cols = sorted(cols)
+        if constraint is None:
+            ccols, cvals, allcols = None, None, cols
+        else:
+            ccols, cvals = self._split_dict(constraint)
+            allcols = sorted(list(set(cols + constraint.keys())))
+            # Ideally we would include the constraint in the query, but it's not easy to do that
+            # So we check the results in Python
+        jcols = Json(cols)
+        if not self._has_stats(jcols, ccols, cvals, threshold=threshold, split_list=split_list, threshold_inequality=True):
+            self.add_stats(cols, constraint, threshold, split_list)
+        jallcols = Json(allcols)
+        if threshold is None:
+            thresh = SQL("")
+        else:
+            thresh = SQL(" AND count >= {0}").format(Literal(threshold))
+        selecter = SQL("SELECT values, count FROM {0} WHERE cols = %s AND split = %s{1}").format(Identifier(self.counts), thresh)
+        cur = self._execute(selecter, [jallcols, split_list])
+        def make_tuple(val, top_level=True):
+            if one_col and top_level:
+                return make_tuple(val[0], top_level=False)
+            elif isinstance(val, (list, tuple)):
+                return tuple(make_tuple(x, top_level=False) for x in val)
+            elif isinstance(val, dict):
+                return tuple((make_tuple(a, top_level=False), make_tuple(b, top_level=False)) for a,b in val.items())
+            else:
+                return val
+        if constraint is None:
+            return {make_tuple(rec[0]): rec[1] for rec in cur}
+        else:
+            constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
+            column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
+            def satisfies_constraint(val):
+                return all(val[i] == c for i,c in constraint_list)
+            def remove_constraint(val):
+                return [val[i] for i in column_indexes]
+            return {make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
 
     def _quick_max(self, col, ccols, cvals):
         if ccols is None:
@@ -4525,7 +4613,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         INPUT:
 
-        - ``name`` -- the name of the table.  See existing names for consistency.
+        - ``name`` -- the name of the table, which must include an underscore.  See existing names for consistency.
         - ``search_columns`` -- a dictionary whose keys are valid postgres types and whose values
             are lists of column names (or just a string if only one column has the specified type).
             An id column of type bigint will be added as a primary key (do not include it).
@@ -4560,6 +4648,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if name in self.tablenames:
             raise ValueError("%s already exists"%name)
+        if '_' not in name:
+            raise ValueError("Table name must contain an underscore; first part gives LMFDB section")
         now = time.time()
         if id_ordered is None:
             id_ordered = (sort is not None)

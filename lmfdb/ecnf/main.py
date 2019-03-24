@@ -119,6 +119,7 @@ def get_bread(*breads):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -143,6 +144,15 @@ def how_computed_page():
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ecnf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@ecnf_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Elliptic Curve Data over Number Fields'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ecnf.reliability',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ecnf_page.route("/Labels")
 def labels_page():
@@ -249,7 +259,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random")
 def random_curve():

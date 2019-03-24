@@ -95,7 +95,7 @@ def l_function_degree_page(degree):
     return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
 
 
-# L-function of holomorphic cusp form with trivial character browsing page ##############################################
+# L-function of holomorphic cusp form browsing page ##############################################
 @l_function_page.route("/<degree>/CuspForm/")
 def l_function_cuspform_browse_page(degree):
     deg = get_degree(degree)
@@ -198,7 +198,7 @@ def set_info_for_start_page():
     tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
            {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
 
-          [{'title': 'Holomorphic Cusp Form with Trivial Character', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
+          [{'title': 'Holomorphic Cusp Form', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
            {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
            {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
 

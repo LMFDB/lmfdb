@@ -225,6 +225,10 @@ body.knowl #header {
     font-size: 150%;
 }
 
+#header .bread a {
+    color: {{color.bread_links}};
+}
+
 #header .topright {
   text-align: right;
   white-space:nowrap;
@@ -505,7 +509,8 @@ body > .debug {
     padding: 5px;
 }
 #sidebar h2 a:hover {
-  background: {{ color.sidebar_background_h2_hover }};
+    background: {{ color.sidebar_background_h2_hover }};
+    color: {{ color.sidebar_h2_hover }};
 }
 #sidebar h2.link {
   padding: 0px;
@@ -1152,7 +1157,7 @@ div.limit-height {
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
-  color: {{color.grey}};
+  color: {{ color.knowl_border_text }};
   padding: 1px 0 1px 10px;
   margin:  0 0 0 0;
 }
@@ -1168,12 +1173,12 @@ div.limit-height {
 }
 .knowl-header a,
 .knowl-footer a {
-  color: {{ color.knowl_hyper_text }};
+    color: {{ color.knowl_border_links }};
 }
 .knowl-header a:hover,
 .knowl-footer a:hover {
   background: none;
-  color: {{ color.knowl_hover_text }};
+  color: {{ color.knowl_border_hover }};
 }
 
 /* end knowl */
@@ -1871,13 +1876,13 @@ div.maassformplot img {
 
 
 #sidebar .beta {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
     display: inherit;
 }
 
 
 #sidebar .beta a {
-    color: purple; /*{{color.sidebar_text_beta}};*/
+    color: {{color.sidebar_text_beta}};
 }
 
 
