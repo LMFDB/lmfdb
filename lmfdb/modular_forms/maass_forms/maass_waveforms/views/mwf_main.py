@@ -23,8 +23,9 @@ AUTHORS:
 
 import flask
 from flask import render_template, url_for, request, send_file
-from lmfdb import db
-from lmfdb.utils import flash_error, parse_ints, parse_floats
+from lmfdb import re
+from lmfdb.utils import flash_error
+from sage.all import gcd
 
 import StringIO
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
@@ -93,9 +94,9 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
             if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
                 flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                 return render_template('mwf_navigate.html', **info)
-            slabel = label.split('.')
-            q,n = int(slabel[0]), int(slabel[1])
-            if n > q or gcd(q,n) != 1 or (N > 0 and q != N)
+            s = info['character'].split('.')
+            q,n = int(s[0]), int(s[1])
+            if n > q or gcd(q,n) != 1 or (N > 0 and q != N):
                 flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                 return render_template('mwf_navigate.html', **info)
         if info['weight']:
