@@ -408,7 +408,7 @@ def lfunction_friend_from_url(url):
         return ("Hilbert MF " + label, "/" + url)
     return (url, "/" + url)
 
-# add new friend to list of friends, but only if really new (e.g. don't add an elliptic curve and its isogeny class)
+# add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
 def add_friend(friends,friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
