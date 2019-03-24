@@ -54,6 +54,11 @@ def learnmore_list_remove(matchstring):
 
 met = ['GET', 'POST']
 maxNumberOfResultsToShow = 500
+INT_RE = re.compile(r'^(\d*)$')
+POSINT_RE = re.compile(r'^(\d+)$')
+POSINT_RANGE_RE = re.compile(r'^(\d+\.\.\d+)$')
+FLOAT_RE = re.compile(r'((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?')
+
 
 @mwf.route("/", methods=met)
 @mwf.route("/<int:level>/", methods=met)
@@ -63,7 +68,7 @@ maxNumberOfResultsToShow = 500
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-
+    print info
     info["credit"] = ""
     info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
@@ -74,8 +79,29 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     if info.get('maass_id', None) and info.get('db', None):
         return render_one_maass_waveform_wp(**info)
     if info['search'] or (info['browse'] and int(info['weight']) != 0):
-        flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
-        return render_template('mwf_navigate.html', **info)
+        if info['level']:
+            if not re.match(POSINT_RE, info['level']):
+                if "-" in info['level']:
+                    info['level'] = "..".join(info['level'].split("-"))
+                if not re.match(POSINT_RANGE_RE, info['level']):
+                    flash_error("%s is not a level, please specify a positive integer <span style='color:black'>n</span> or postivie integer range <span style='color:black'>m..n</span>.", info['level'])
+                    return render_template('mwf_navigate.html', **info)
+        if info['character']:
+            if info['level'] and not re.match(POSINT_RE, info['level']):
+                flash_error("Character cannot be specified in combination with a range of levels.", info['character'])
+            N = int(info['level']) if info['level'] else 0
+            if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
+                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                return render_template('mwf_navigate.html', **info)
+            slabel = label.split('.')
+            q,n = int(slabel[0]), int(slabel[1])
+            if n > q or gcd(q,n) != 1 or (N > 0 and q ne N)
+                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                return render_template('mwf_navigate.html', **info)
+        if info['weight']:
+            if not re.match(INT_RE, info['weight']):
+                flash_error("%s is not a valid weight.  It should be a nonnegative integer.", info['weight'])
+                return render_template('mwf_navigate.html', **info)
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s" % search)
         return render_search_results_wp(info, search)
