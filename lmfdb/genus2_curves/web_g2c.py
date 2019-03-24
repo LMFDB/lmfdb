@@ -412,7 +412,7 @@ def lfunction_friend_from_url(url):
 def add_friend(friends,friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
-            print "not adding friend", friend,  "already friends with "oldfriend
+            print "not adding friend", friend,  "already friends with ",oldfriend
             return
     print "adding friend", friend
     friends.append(friend)
