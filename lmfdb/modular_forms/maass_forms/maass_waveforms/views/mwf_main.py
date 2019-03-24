@@ -89,7 +89,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                     flash_error("%s is not a level, please specify a positive integer <span style='color:black'>n</span> or postivie integer range <span style='color:black'>m..n</span>.", info['level_range'])
                     return render_template('mwf_navigate.html', **info)
         if info['character'] != -1:
-            if info.get('level_range') and not re.match(POSINT_RE, info['level_range']):
+            if info.get('level_range') and ("." in info['level_range'] or not re.match(POSINT_RE, info['level_range'])):
                 flash_error("Character %s cannot be specified in combination with a range of levels.", info['character'])
             N = int(info.get('level_range','0'))
             if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
