@@ -785,6 +785,9 @@ class WebChar(WebCharObject):
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
                 f.append( ('L-function', '/L'+ url) )
+            else:
+                if self.conductor == 1:
+                    f.append (('L-function', '/L/Riemann'))
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
         if len(self.vflabel)>0:
