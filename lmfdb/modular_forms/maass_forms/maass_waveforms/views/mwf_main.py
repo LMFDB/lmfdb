@@ -23,7 +23,7 @@ AUTHORS:
 
 import flask
 from flask import render_template, url_for, request, send_file
-from lmfdb import re
+import re
 from lmfdb.utils import flash_error
 from sage.all import gcd
 
