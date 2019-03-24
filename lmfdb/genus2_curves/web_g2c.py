@@ -412,15 +412,12 @@ def lfunction_friend_from_url(url):
 def add_friend(friends,friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
-            print "not adding friend", friend,  "already friends with ",oldfriend
             return
-        # compare with convert slashes coverted to dots to deal with minor differences in url/label formatting
+        # compare again with slashes coverted to dots to deal with minor differences in url/label formatting
         olddots = ".".join(oldfriend[1].split("/"))
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
-            print "not adding friend", friend,  "already friends with ",oldfriend
             return
-    print "adding friend", friend
     friends.append(friend)
 
 ###############################################################################
@@ -636,6 +633,12 @@ class WebG2C(object):
         self.friends = friends = [('L-function', data['lfunc_url'])]
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+        if 'split_labels' in data:
+            for friend_label in data['split_labels']:
+                if is_curve:
+                    add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
+                else:
+                    add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
         for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
             if '|' in friend_url:
                 for url in friend_url.split('|'):
@@ -646,12 +649,6 @@ class WebG2C(object):
             # be selective, only cmfs of the right dimension and conductor get to be our friends
             if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
                 add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
-        if 'split_labels' in data:
-            for friend_label in data['split_labels']:
-                if is_curve:
-                    add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
-                else:
-                    add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
         if is_curve:
             friends.append(('Twists', url_for(".index_Q", g20 = str(data['g2'][0]), g21 = str(data['g2'][1]), g22 = str(data['g2'][2]))))
 
