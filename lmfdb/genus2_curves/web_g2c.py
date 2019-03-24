@@ -414,6 +414,12 @@ def add_friend(friends,friend):
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             print "not adding friend", friend,  "already friends with ",oldfriend
             return
+        # compare with convert slashes coverted to dots to deal with minor differences in url/label formatting
+        olddots = ".".join(oldfriend[1].split("/"))
+        newdots = ".".join(friend[1].split("/"))
+        if olddots in newdots or newdots in olddots:
+            print "not adding friend", friend,  "already friends with ",oldfriend
+            return
     print "adding friend", friend
     friends.append(friend)
 
