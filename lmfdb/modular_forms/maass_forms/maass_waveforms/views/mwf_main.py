@@ -95,7 +95,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
                 return render_template('mwf_navigate.html', **info)
             slabel = label.split('.')
             q,n = int(slabel[0]), int(slabel[1])
-            if n > q or gcd(q,n) != 1 or (N > 0 and q ne N)
+            if n > q or gcd(q,n) != 1 or (N > 0 and q != N)
                 flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
                 return render_template('mwf_navigate.html', **info)
         if info['weight']:
