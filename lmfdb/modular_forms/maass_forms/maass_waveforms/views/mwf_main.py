@@ -58,8 +58,7 @@ maxNumberOfResultsToShow = 500
 INT_RE = re.compile(r'^(\d*)$')
 POSINT_RE = re.compile(r'^(\d+)$')
 POSINT_RANGE_RE = re.compile(r'^(\d+\.\.\d+)$')
-FLOAT_RE = re.compile(r'^(\d+([.]\d*))$')
-
+FLOAT_RE = re.compile(r'^(\d+|\d+\.\d)$')
 
 @mwf.route("/", methods=met)
 @mwf.route("/<int:level>/", methods=met)
