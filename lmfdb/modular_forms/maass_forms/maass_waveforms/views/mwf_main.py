@@ -112,6 +112,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
             if not re.match(FLOAT_RE,info['ev_range']):
                 if "-" in info['ev_range']:
                     info['ev_range'] = "..".join(info['ev_range'].split("-"))
+                print "ev_range =",info['ev_range']
                 s = info['ev_range'].split("..")
                 if len(s) != 2:
                     flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
