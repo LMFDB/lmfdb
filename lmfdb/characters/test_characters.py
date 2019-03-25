@@ -32,6 +32,11 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
         assert '\chi_{25}(2' in W.data
 
+    def test_even_odd(self):
+	W = self.tc.get('/Character/Dirichlet/?modulus=35')
+	assert '>Even</t' in W.data
+	assert '>Odd</t' in W.data
+
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
         """
