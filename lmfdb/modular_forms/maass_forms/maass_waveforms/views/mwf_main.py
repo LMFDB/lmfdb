@@ -24,6 +24,17 @@ AUTHORS:
 import flask
 from flask import render_template, url_for, request, send_file
 import StringIO
+import re
+from flask import url_for, request, flash
+from markupsafe import Markup
+
+
+
+from lmfdb.utils import (
+    parse_ints, parse_floats,
+    search_wrap)
+
+
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_utils import get_args_mwf, get_search_parameters
@@ -33,6 +44,18 @@ logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
 
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
+
+
+
+
+#JP
+#def mwf_search(info, query):
+#    parse_ints(info,query,'level_range',name='Level in Range')
+#    parse_floats(info,query,'ev_range',name='R in Range')
+
+#check to see if field is blank and if so assign it as 0 and then call parser regardless
+#    parse_ints(info,query, 'weight',name='Weight')
 
 # this is a blueprint specific default for the tempate system.
 # it identifies the body tag of the html website with class="wmf"
@@ -59,8 +82,8 @@ maxNumberOfResultsToShow = 500
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/", methods=met)
 @mwf.route("/<int:level>/<int:weight>/<int:character>/<float:r1>/<float:r2>/", methods=met)
 def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds):
+    
     info = get_args_mwf(level=level, weight=weight, character=character, r1=r1, r2=r2, **kwds)
-
     info["credit"] = ""
     info["learnmore"] = learnmore_list()
     mwf_logger.debug("args=%s" % request.args)
@@ -71,6 +94,9 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     if info.get('maass_id', None) and info.get('db', None):
         return render_one_maass_waveform_wp(**info)
     if info['search'] or (info['browse'] and int(info['weight']) != 0):
+        if not LIST_RE.match(info['weight']):
+            flash(Markup("TEST HERE !!"),"error")
+            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s" % search)
         return render_search_results_wp(info, search)
@@ -91,6 +117,7 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         info['cur_character'] = character
 
     if level > 0 or weight > -1 or character > -1:
+#         return mwf_search(request.args)
         search = get_search_parameters(info)
         mwf_logger.debug("info=%s" % info)
         mwf_logger.debug("search=%s" % search)
@@ -290,7 +317,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     mwf_logger.debug("col={0}".format(cols))
     return render_template("mwf_one_form.html", **info)
 
-
+#JP HERE?!?!?!?!?!?!?!?
 def render_search_results_wp(info, search):
     r"""
     Render the webpage with results of a search for Maass waveform.

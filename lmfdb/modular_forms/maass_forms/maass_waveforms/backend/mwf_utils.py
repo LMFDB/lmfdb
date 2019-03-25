@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import random
-from flask import url_for, request
+import re
+from flask import url_for, request, flash
+from markupsafe import Markup
 from lmfdb.utils import to_dict, ajax_url
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
 from lmfdb.modular_forms.backend.mf_utils import my_get
+
+LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
+
+
 
 def get_args_mwf(**kwds):
     get_params = ['level', 'weight', 'character', 'id', 'db', 'search',
@@ -51,10 +57,21 @@ def set_info_for_maass_form(data):
         ret.append(["Coefficients", ANs])
     return [title, ret]
 
+
+#JP HERE
 def get_search_parameters(info):
     ret = dict()
     # if not info.has_key('search') or not info['search']:
     #    return ret
+    if not LIST_RE.match(info['weight']):
+        flash(Markup("TEST HERE !!"),"error")        
+#        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+ 
+#    if not LIST_RE.match(info['character']):
+#        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+#    if not LIST_RE.match(info['level_range']):
+#        raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+    
     level = my_get(info, 'level', 0)
     mwf_logger.debug("get_search param=%s" % info)
     mwf_logger.debug("level=%s" % level)
