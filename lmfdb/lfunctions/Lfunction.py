@@ -594,19 +594,14 @@ class Lfunction_from_db(Lfunction):
             raise KeyError('No L-function instance data for "%s" was found in the database.' % url)
         return instance['Lhash']
 
-
     @lazy_attribute
     def origins(self):
         # objects that arise the same identical L-function
-        lorigins = []
         instances = get_instances_by_Lhash(self.Lhash)
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         if self.trace_hash is not None:
             instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
         return names_and_urls(instances)
-        if not self.selfdual and hasattr(self, 'dual_link'):
-            lorigins.append(("Dual L-function", self.dual_link))
-        return lorigins
 
     @property
     def friends(self):
@@ -615,9 +610,19 @@ class Lfunction_from_db(Lfunction):
         if not self.selfdual and hasattr(self, 'dual_link'):
             related_objects.append(("Dual L-function", self.dual_link))
 
-        instances = [elt for elt in get_multiples_by_Lhash(self.Lhash) if elt['Lhash'] != self.Lhash]
+        instances = [
+            elt
+            for elt in get_multiples_by_Lhash(self.Lhash)
+            if elt['Lhash'] != self.Lhash
+        ]
         if self.trace_hash is not None:
-            instances += [elt for elt in get_multiples_by_Lhash(str(self.trace_hash)) if elt['Lhash'] != self.Lhash and elt['Lhash'] != str(self.trace_hash) ]
+            instances += [
+                elt
+                for elt in get_multiples_by_Lhash(str(self.trace_hash))
+                if elt['Lhash'] != self.Lhash
+                and
+                elt['Lhash'] != str(self.trace_hash)
+            ]
         # a temporary fix while we don't replace the old Lhash (=trace_hash)
         # the only thing that we might be missing are genus 2 L-functions
         # hence, self.degree = 2, self.type = CMF
