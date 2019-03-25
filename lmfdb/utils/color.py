@@ -88,6 +88,9 @@ class ColorScheme(object):
         'knowl_shadow': '#88b',
         'knowl_1': '#99b3ff', # paging_full_numbers span.paginate_button
         'knowl_db': '#66d', # knowl-qm.active
+        'knowl_border_links': 'knowl_hyper_text',
+        'knowl_border_hover': 'knowl_hyper_text',
+        'knowl_border_text' : c.grey,
         # td.sorting
         'knowl_ld_1': '#c4c4ff',
         'knowl_l_1': '#D3D6FF',
@@ -175,6 +178,7 @@ class ColorScheme(object):
         'sidebar_background_h2': 'col_main_l', #sidebar tab background
         'sidebar_text': c.black, #sidebar non-header non-link non-future text
         'sidebar_text_h2': c.black, # non-link sidebar header text.
+        'sidebar_h2_hover': 'sidebar_text_h2', # sidebar tab hover text color
 
         'sidebar_background_hover': 'col_main_l',
         'sidebar_background_li': 'col_main_ll',
@@ -290,6 +294,17 @@ class YellowKnowls(ColorScheme):
     def __init__(self):
         self.knowl_underline = self.knowl_hyper_text
 
+class GreyKnowls(ColorScheme):
+    # Subclasses need to set knowl_hyper_text and knowl_shadow
+    knowl_border = '#CDCDCD'
+    knowl_background = '#F5F5F5'
+    knowl_title_text = c.black
+    knowl_hover_text = c.black
+    knowl_thin_border = '#CDCDCD'
+    body_background = c.almost_white
+    def __init__(self):
+        self.knowl_underline = self.knowl_hyper_text
+
 class Original(ColorScheme):
     code = 0
     col_main_d  = '#040'
@@ -360,9 +375,38 @@ class JohnBlue(YellowKnowls):
     col_main_d  = c.black # ?00
     knowl_hyper_text = '#1565C0' # P1-800
     knowl_shadow = '#0D47A1' # P1-900
-    sidebar_background_hover = c.white # '#CCE6FC'
-    a_background_hover = '#E3F2FD'
-    knowl_hover = '#FFF8C1' # lighter than knowl border
+
+class SteelBlue(GreyKnowls):
+    code = 19
+    col_main_ld = '#90CAF9'
+    col_main_dl = c.black
+    col_a_knowl = '#1C61A6'
+    col_main    = '#1565C0' # P1-800
+    col_link    = '#1C61A6'
+    col_visited = '#1C61A6'
+    col_body_text = '#1565C0' # P1-800
+    col_sidebar_text = c.black
+    col_sidebar_links = '#1565C0' # P1-800
+    col_sidebar_header_links = '#0D47A1' # P1-900
+    #col_search_border = '#0D47A1' # P1-900
+    col_main_2  = '#555555'
+    col_main_l  = '#90CAF9' # P1-200
+    col_main_lg = '#0D47A1' # P1-900
+    col_main_ll = '#E3F2FD' # P1-50
+    col_main_d  = c.black # ?00
+    knowl_hyper_text = '#1565C0' # P1-800
+    knowl_shadow = '#0D47A1' # P1-900
+    sidebar_background_hover = c.white # '#CCE6FC' # accessibility change
+    a_background_hover = '#E3F2FD' # accessibility change
+    # knowl_hover = '#FFF8C1' # yellow, lighter than knowl border
+    knowl_hover = '#EDEDED'
+    knowl_border_links = c.black
+    knowl_border_hover = c.black
+    sidebar_h2_hover = c.white
+    sidebar_background_h2_hover = '#0D47A1'
+    knowl_border_text = '#333'
+    sidebar_text_beta = '#006d05'
+    knowl_error = '#006d05'
 
 class IndigoHair(YellowKnowls):
     code = 18

@@ -46,7 +46,7 @@
 Enter criteria into one or more boxes to restrict the search.
 <p></p>
 
-<form>
+<form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
         <tr>
             <td> {{ KNOWL('character.dirichlet.modulus', title="modulus") }}</td>
@@ -65,12 +65,32 @@ Enter criteria into one or more boxes to restrict the search.
             <td> <input type='text' name='order' value="{{args.order}}" size = '10' placeholder="2"></td>
             <td><span class="formexample"> e.g. 2 </span></td>
         </tr>
+        <tr>
+            <td align=left>{{ KNOWL('character.dirichlet.parity', title='parity') }}</td>
+            <td align=left>
+                <select name='parity'>
+                      <option value="">any</option>
+                      <option value="Even">even</option>
+                      <option value="Odd">odd</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td align=left>{{ KNOWL('character.dirichlet.primitive', title='primitive') }}</td>
+            <td align=left>
+                <select name='primitive'>
+                      <option value="">any</option>
+                      <option value="Yes">yes</option>
+                      <option value="No">no</option>
+                </select>
+                </select>
+            </td>
+        </tr>
     </table>
     <p></p>
     <td>
         <button type='submit' name='search' value='1' > Search </button>
     </td>
-    <input type='hidden' name='limit' value='25'/>
 </form>
 
 {#
