@@ -454,13 +454,14 @@ class PostgresBase(object):
                 has_id = True
         return col_list, col_type, has_id
 
-    def _copy_to_select(self, select, filename):
+    def _copy_to_select(self, select, filename, header=""):
         """
         Using the copy_expert from psycopg2 exports the data from a select statement.
         """
         copyto = SQL("COPY ({0}) TO STDOUT").format(select)
         with open(filename, "w") as F:
             try:
+                F.write(header)
                 cur = self.conn.cursor()
                 cur.copy_expert(copyto, F)
             except Exception:
