@@ -1,4 +1,6 @@
 import flask
+from mpmath import nstr, inf
+from sage.all import floor, log
 from lmfdb.logger import make_logger
 from flask import render_template, request, url_for
 
@@ -78,7 +80,7 @@ def list_zeros(N=None,
         zeros = zeros_starting_at_t(t, limit)
 
     if fmt == 'plain':
-        response = flask.Response(("%d %s\n" % (n, str(z)) for (n, z) in zeros))
+        response = flask.Response(("%d %s\n" % (n, nstr(z,31+floor(log(z,10))+1,strip_zeros=False,min_fixed=-inf,max_fixed=+inf)) for (n, z) in zeros))
         response.headers['content-type'] = 'text/plain'
         if download == "yes":
             response.headers['content-disposition'] = 'attachment; filename=zetazeros'

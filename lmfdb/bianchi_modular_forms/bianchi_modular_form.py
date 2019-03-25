@@ -22,8 +22,9 @@ bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source of the data', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Bianchi newform labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -353,13 +354,23 @@ def how_computed_page():
 
 @bmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Bianchi Modular Form Data'
+    t = 'Completeness of the Bianchi Modular Form data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.mf.bianchi.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@bmf_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Bianchi Modular Form data'
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Bianchi Modular Forms', url_for(".index")),
+             ('Relaibility', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.mf.bianchi.reliability',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @bmf_page.route("/Labels")
 def labels_page():

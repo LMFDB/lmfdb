@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 r"""
 
 AUTHORS:
@@ -23,6 +23,10 @@ AUTHORS:
 
 import flask
 from flask import render_template, url_for, request, send_file
+import re
+from lmfdb.utils import flash_error
+from sage.all import gcd
+
 import StringIO
 import re
 from flask import url_for, request, flash
@@ -48,17 +52,6 @@ LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 
 
 
-
-#JP
-#def mwf_search(info, query):
-#    parse_ints(info,query,'level_range',name='Level in Range')
-#    parse_floats(info,query,'ev_range',name='R in Range')
-
-#check to see if field is blank and if so assign it as 0 and then call parser regardless
-#    parse_ints(info,query, 'weight',name='Weight')
-
-# this is a blueprint specific default for the tempate system.
-# it identifies the body tag of the html website with class="wmf"
 @mwf.context_processor
 def body_class():
     return {'body_class': MWF}
@@ -74,6 +67,10 @@ def learnmore_list_remove(matchstring):
 
 met = ['GET', 'POST']
 maxNumberOfResultsToShow = 500
+INT_RE = re.compile(r'^(\d*)$')
+POSINT_RE = re.compile(r'^(\d+)$')
+POSINT_RANGE_RE = re.compile(r'^(\d+\.\.\d+)$')
+FLOAT_RE = re.compile(r'^(\d+|\d+\.\d)$')
 
 @mwf.route("/", methods=met)
 @mwf.route("/<int:level>/", methods=met)
@@ -94,9 +91,45 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
     if info.get('maass_id', None) and info.get('db', None):
         return render_one_maass_waveform_wp(**info)
     if info['search'] or (info['browse'] and int(info['weight']) != 0):
-        if not LIST_RE.match(info['weight']):
-            flash(Markup("TEST HERE !!"),"error")
-            raise ValueError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
+        # This isn't the right place to do input validation, but it is easier to flash errors here (this is a hack to address issue #1820)
+        if info.get('level_range'):
+            if not re.match(POSINT_RE, info['level_range']):
+                if "-" in info['level_range']:
+                    info['level_range'] = "..".join(info['level_range'].split("-"))
+                if not re.match(POSINT_RANGE_RE, info['level_range']):
+                    flash_error("%s is not a level, please specify a positive integer <span style='color:black'>n</span> or postivie integer range <span style='color:black'>m..n</span>.", info['level_range'])
+                    return render_template('mwf_navigate.html', **info)
+        if info['character'] != -1:
+            try:
+                N = int(info.get('level_range','0'))
+            except:
+                flash_error("Character %s cannot be specified in combination with a range of levels.", info['character'])
+                return render_template('mwf_navigate.html', **info)
+            if not re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', info['character']):
+                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                return render_template('mwf_navigate.html', **info)
+            s = info['character'].split('.')
+            q,n = int(s[0]), int(s[1])
+            if n > q or gcd(q,n) != 1 or (N > 0 and q != N):
+                flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", info['character'])
+                return render_template('mwf_navigate.html', **info)
+            info['level_range'] = str(q)
+            info['character'] = str(n)
+        if info['weight'] != -1:
+            if not re.match(INT_RE, info['weight']):
+                flash_error("%s is not a valid weight.  It should be a nonnegative integer.", info['weight'])
+                return render_template('mwf_navigate.html', **info)
+        if info.get('ev_range'):
+            if not re.match(FLOAT_RE,info['ev_range']):
+                if "-" in info['ev_range']:
+                    info['ev_range'] = "..".join(info['ev_range'].split("-"))
+                s = info['ev_range'].split("..")
+                if len(s) != 2:
+                    flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
+                    return render_template('mwf_navigate.html', **info)
+                if not re.match(FLOAT_RE,s[0]) or not re.match(FLOAT_RE,s[1]):
+                    flash_error("%s is not a valid eigenvalue range.  It should be postive real interval.", info['ev_range'])
+                    return render_template('mwf_navigate.html', **info)
         search = get_search_parameters(info)
         mwf_logger.debug("search=%s" % search)
         return render_search_results_wp(info, search)
@@ -317,7 +350,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     mwf_logger.debug("col={0}".format(cols))
     return render_template("mwf_one_form.html", **info)
 
-#JP HERE?!?!?!?!?!?!?!?
+
 def render_search_results_wp(info, search):
     r"""
     Render the webpage with results of a search for Maass waveform.
