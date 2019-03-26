@@ -372,7 +372,7 @@ class KnowlBackend(PostgresBase):
         """
         values = [0, -2, [knowlid]]
         if old:
-            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s links @> %s")
+            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s AND links @> %s")
         else:
             if beta is None:
                 beta = is_beta()
@@ -496,6 +496,9 @@ class KnowlBackend(PostgresBase):
             new_cat = extract_cat(new_name)
             updator = SQL("UPDATE kwl_knowls SET (id, cat) = (%s, %s) WHERE id = %s")
             self._execute(updator, [new_name, new_cat, knowl.id])
+            # Remove source and source_name from all versions
+            updator = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s")
+            self._execute(updator, [None, None, new_name])
             # Only have to update keywords for most recent version and most recent reviewed version
             updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
             self._execute(updator, [make_keywords(knowl.content, new_name, knowl.title), new_name, knowl.timestamp])

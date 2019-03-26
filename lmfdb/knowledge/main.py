@@ -562,8 +562,18 @@ def save_form():
     if not allowed_id(ID):
         return redirect(url_for(".index"))
 
-    NEWID = request.form.get('krename', '').strip()
     FINISH_RENAME = request.form.get('finish_rename', '')
+    if FINISH_RENAME:
+        k = Knowl(ID)
+        if FINISH_RENAME == 'finish':
+            k.actually_rename()
+            flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
+            ID = k.source_name
+        elif FINISH_RENAME == 'undo':
+            k.undo_rename()
+            flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
+        return redirect(url_for(".show", ID=ID))
+    NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
@@ -600,13 +610,6 @@ def save_form():
                     k.actually_rename()
                     flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
-    elif FINISH_RENAME:
-        # We need to sleep briefly so that we don't have two identical timestamps
-        time.sleep(0.01)
-        if FINISH_RENAME == 'finish':
-            k.actually_rename()
-        elif FINISH_RENAME == 'undo':
-            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:

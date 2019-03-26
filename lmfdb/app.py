@@ -368,7 +368,7 @@ def citation():
 def citing():
     t = "How to Cite LMFDB"
     b = [("Citing the LMFDB", url_for("citation")), (t, url_for("citing"))]
-    return render_template(_single_knowl, title=t, kid='content.how-to-cite', body_class='', bread=b)
+    return render_template(_single_knowl, title=t, kid='content.how_to_cite', body_class='', bread=b)
 
 @app.route("/citation/citations")
 def citations():
