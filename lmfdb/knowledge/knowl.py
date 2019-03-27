@@ -252,9 +252,10 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, values)
         return [{k:res[i] for k,i in projfields} for res in cur]
 
-    def save(self, knowl, who):
+    def save(self, knowl, who, most_recent=None):
         """who is the ID of the user, who wants to save the knowl"""
-        most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
+        if most_recent is None:
+            most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
         new_knowl = most_recent is None
         if new_knowl:
             authors = []
@@ -480,7 +481,7 @@ class KnowlBackend(PostgresBase):
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
             new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
-            new_knowl.save(who)
+            new_knowl.save(who, most_recent=knowl)
 
     def undo_rename(self, knowl):
         if knowl.source is None:
@@ -732,8 +733,17 @@ class Knowl(object):
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                      self.previous_review_spot = elt['ms_timestamp']
 
-    def save(self, who):
-        knowldb.save(self, who)
+    def save(self, who, most_recent=None):
+        """
+        INPUT:
+
+        - ``who`` -- the username of the logged in user saving this knowl
+        - ``most_recent`` -- if provided, a previous knowl containing authors.
+            Currently only used when renaming a knowl.
+        """
+        if most_recent is not None:
+            most_recent = {'authors':most_recent.authors}
+        knowldb.save(self, who, most_recent=most_recent)
 
     def delete(self):
         """Marks the knowl as deleted.  Admin only."""
