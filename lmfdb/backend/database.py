@@ -4634,7 +4634,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         sort = table._sort_orig
         id_ordered = table._id_ordered
         search_order = table._search_cols
-        self.create_table(new_name, search_columns, self._label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
+        self.create_table(new_name, search_columns, label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
 
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
         """
@@ -4770,7 +4770,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.grant_insert(name+"_stats")
             # FIXME use global constants ?
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
-            self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
+            self._execute(inserter, [name, Json(sort), id_ordered, not id_ordered, extra_columns is not None, label_col])
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
