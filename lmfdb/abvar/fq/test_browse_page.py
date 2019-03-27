@@ -187,7 +187,7 @@ class AVHomeTest(LmfdbTest):
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no",'2.3.ae_i')
         self.not_check_args("/Variety/Abelian/Fq/?q=3&g=2&jacobian=no",'2.3.ae_i')
         # unknowns
-        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=not_yes&polarizable=yes",'No matches')
+        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=not_yes&polarizable=yes",'3.2.a_ad_a')
         self.check_args("/Variety/Abelian/Fq/?q=2&g=3&p_rank=0&jacobian=not_no",'3.2.c_c_c')
 
     def test_search_princpol(self):
@@ -251,4 +251,4 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D", 'No matches')
         # Combining unknown fields on Jacobian and Principal polarization.
         self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=not_no", '3.2.a_a_ae')
-        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", 'No matches')
+        self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", '3.2.a_ac_a')
