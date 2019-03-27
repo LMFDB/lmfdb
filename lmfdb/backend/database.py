@@ -2332,7 +2332,7 @@ class PostgresTable(PostgresBase):
         # Sort and set self._out_of_order
         pass
 
-    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, **kwds):
+    def rewrite(self, func, query={}, resort=True, reindex=True, restat=True, tostr_func=None, commit=True, searchfile=None, extrafile=None, **kwds):
         """
         This function can be used to edit some or all records in the table.
 
@@ -2360,8 +2360,20 @@ class PostgresTable(PostgresBase):
         # operate on the results, but then func would have to process the strings
         if tostr_func is None:
             tostr_func = copy_dumps
-        searchfile = tempfile.NamedTemporaryFile('w', delete=False)
-        extrafile = EmptyContext() if self.extra_table is None else tempfile.NamedTemporaryFile('w', delete=False)
+        if searchfile is None:
+            searchfile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(searchfile):
+            raise ValueError("Search file %s already exists" % searchfile)
+        else:
+            searchfile = open(searchfile, 'w')
+        if self.extra_table is None:
+            extrafile = EmptyContext()
+        elif extrafile is None:
+            extrafile = tempfile.NamedTemporaryFile('w', delete=False)
+        elif os.path.exists(extrafile):
+            raise ValueError("Extra file %s already exists" % extrafile)
+        else:
+            extrafile = open(extrafile, 'w')
         try:
             with searchfile:
                 with extrafile:
@@ -2380,9 +2392,9 @@ class PostgresTable(PostgresBase):
             self.reload(searchfile.name, extrafile.name, resort=resort, reindex=reindex, restat=restat, commit=commit, log_change=False, **kwds)
             self.log_db_change("rewrite", query=query, projection=projection)
         finally:
-            searchfile.unlink(searchfile.name)
+            os.unlink(searchfile.name)
             if self.extra_table is not None:
-                extrafile.unlink(extrafile.name)
+                os.unlink(extrafile.name)
 
     def delete(self, query, resort=True, restat=True, commit=True):
         """
@@ -4602,7 +4614,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         INPUT:
 
-        - ``name`` -- the name of the table.  See existing names for consistency.
+        - ``name`` -- the name of the table, which must include an underscore.  See existing names for consistency.
         - ``search_columns`` -- a dictionary whose keys are valid postgres types and whose values
             are lists of column names (or just a string if only one column has the specified type).
             An id column of type bigint will be added as a primary key (do not include it).
@@ -4637,6 +4649,8 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         """
         if name in self.tablenames:
             raise ValueError("%s already exists"%name)
+        if '_' not in name:
+            raise ValueError("Table name must contain an underscore; first part gives LMFDB section")
         now = time.time()
         if id_ordered is None:
             id_ordered = (sort is not None)
