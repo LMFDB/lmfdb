@@ -252,7 +252,7 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, values)
         return [{k:res[i] for k,i in projfields} for res in cur]
 
-    def save(self, knowl, who, most_recent=None):
+    def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
         if most_recent is None:
             most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
@@ -262,7 +262,7 @@ class KnowlBackend(PostgresBase):
         else:
             authors = most_recent.pop('authors', [])
 
-        if who and who not in authors:
+        if not minor and who and who not in authors:
             authors = authors + [who]
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
@@ -481,7 +481,7 @@ class KnowlBackend(PostgresBase):
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
             new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
-            new_knowl.save(who, most_recent=knowl)
+            new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
         if knowl.source is None:
@@ -733,17 +733,18 @@ class Knowl(object):
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                      self.previous_review_spot = elt['ms_timestamp']
 
-    def save(self, who, most_recent=None):
+    def save(self, who, most_recent=None, minor=False):
         """
         INPUT:
 
         - ``who`` -- the username of the logged in user saving this knowl
         - ``most_recent`` -- if provided, a previous knowl containing authors.
             Currently only used when renaming a knowl.
+        - ``minor`` -- if True, don't add the current user to the list of authors.
         """
         if most_recent is not None:
             most_recent = {'authors':most_recent.authors}
-        knowldb.save(self, who, most_recent=most_recent)
+        knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):
         """Marks the knowl as deleted.  Admin only."""
