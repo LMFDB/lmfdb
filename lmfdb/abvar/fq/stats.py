@@ -3,7 +3,6 @@ from collections import defaultdict
 from lmfdb import db
 from lmfdb.utils import comma, StatsDisplay
 from lmfdb.logger import make_logger
-from sage.structure.unique_representation import UniqueRepresentation
 from sage.misc.lazy_attribute import lazy_attribute
 
 logger = make_logger("abvarfq")
@@ -27,7 +26,7 @@ class AbvarFqStats(StatsDisplay):
         counts['nclasses'] = ncurves = sum(sum(L) for L in self._counts.itervalues())
         counts['nclasses_c'] = comma(ncurves)
         counts['gs'] = self.gs
-        counts['qs'] = qs = self.qs
+        counts['qs'] = self.qs
         counts['qg_count'] = defaultdict(lambda: defaultdict(int))
         for (g,q), cnt in self._counts.items():
             counts['qg_count'][q][g] = cnt
