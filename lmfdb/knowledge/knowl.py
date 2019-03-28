@@ -614,6 +614,13 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, [0])
         return {res[0]: res[1] for res in cur}
 
+    def remove_author(self, kid, uid):
+        """
+        Remove an author from all versions of a knowl.
+        """
+        updater = SQL("UPDATE kwl_knowls SET authors = array_remove(authors, %s) WHERE id = %s")
+        self._execute(updater, [uid, kid])
+
 knowldb = KnowlBackend()
 
 def knowl_title(kid):
