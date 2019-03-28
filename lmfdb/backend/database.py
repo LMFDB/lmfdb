@@ -3168,7 +3168,11 @@ class PostgresTable(PostgresBase):
                 self._search_cols.append(name)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
-    def drop_column(self, name, commit=True):
+    def drop_column(self, name, commit=True, force=False):
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
+            if not (ok and ok[0] in ['y','Y']):
+                return
         if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         with DelayCommit(self, commit, silence=True):
@@ -4757,11 +4761,15 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
 
-    def drop_table(self, name, commit=True):
+    def drop_table(self, name, commit=True, force=False):
         table = self[name]
         selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
         if self._execute(selecter, [name]).fetchone()[0]:
             raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%(name))
+            if not (ok and ok[0] in ['y','Y']):
+                return
         with DelayCommit(self, commit, silence=True):
             table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
