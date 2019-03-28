@@ -394,10 +394,22 @@ def show(ID):
     return render_template(u"knowl-show.html",
                            title=title,
                            k=k,
+                           cur_username=current_user.get_id(),
                            render=r,
                            bread=b)
 
-
+@knowledge_page.route("/remove_author/<ID>")
+@login_required
+def remove_author(ID):
+    k = Knowl(ID)
+    uid = current_user.get_id()
+    if uid not in k.authors:
+        flash("You are not an author on %s"%(k.id), "error")
+    elif len(k.authors) == 1:
+        flash("You cannot remove yourself unless there are other authors", "error")
+    else:
+        knowldb.remove_author(ID, uid)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/content/<ID>/<int:timestamp>")
 def content(ID, timestamp):
