@@ -787,9 +787,12 @@ def index():
     #    knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
+    b = []
+    if cur_cat:
+        b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
                            title="Knowledge Database",
-                           bread=get_bread(),
+                           bread=get_bread(b),
                            knowls=knowls,
                            search=search,
                            searchbox=searchbox(search, bool(search)),
