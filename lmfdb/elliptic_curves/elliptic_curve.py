@@ -362,6 +362,7 @@ def render_isogeny_class(iso_class):
                            credit=ec_credit(),
                            title=class_data.title,
                            friends=class_data.friends,
+                           KNOWL_ID="ec.q.%s"%iso_class,
                            downloads=class_data.downloads,
                            learnmore=learnmore_list())
 
@@ -429,6 +430,7 @@ def render_curve_webpage_by_label(label):
                          friends=data.friends,
                          downloads=data.downloads,
                          KNOWL_ID="ec.q.%s"%label,
+                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
                          learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
     ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
