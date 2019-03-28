@@ -389,7 +389,7 @@ def show(ID):
             can_delete = (current_user.is_admin() or current_user.get_id() == author)
             author_name = userdb.lookup(author)["full_name"]
             k.comments[i] = (cid, author_name, timestamp, can_delete)
-    b = get_bread([('%s' % title, url_for('.show', ID=ID))])
+    b = get_bread([(k.category, url_for('.index', category=k.category)), ('%s' % title, url_for('.show', ID=ID))])
 
     return render_template(u"knowl-show.html",
                            title=title,
