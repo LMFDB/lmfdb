@@ -34,12 +34,14 @@ class ECisog_class(object):
             if number:
                 label = ".".join([N,iso])
             data = db.ec_curves.lucky({"lmfdb_iso" : label, 'number':1})
+            data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
                 data = db.ec_curves.lucky({"iso" : label, 'number':1})
+                data['label_type'] = 'Cremona'
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -106,10 +108,10 @@ class ECisog_class(object):
         self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                          ('Download stored data for all curves', url_for(".download_EC_all", label=self.lmfdb_iso))]
 
-        if self.lmfdb_iso == self.iso:
-            self.title = "Elliptic Curve Isogeny Class %s" % self.lmfdb_iso
+        if self.label_type == 'Cremona':
+            self.title = "Elliptic Curve Isogeny Class with Cremona label {} (LMFDB label {})".format(self.iso, self.lmfdb_iso)
         else:
-            self.title = "Elliptic Curve Isogeny Class %s (Cremona label %s)" % (self.lmfdb_iso, self.iso)
+            self.title = "Elliptic Curve Isogeny Class with LMFDB label {} (Cremona label {})".format(self.lmfdb_iso, self.iso)
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
                       ('$\Q$', url_for(".rational_elliptic_curves")),
