@@ -264,8 +264,10 @@ def elliptic_curve_search(info, query):
         # fails on 990h3
         query['number'] = 1
 
-    info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
-    info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
+    info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
+    info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
+    info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
+    info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['iso'])
 
 ##########################
 #  Specific curve pages
