@@ -19,7 +19,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
 from lmfdb.ecnf import ecnf_page
-from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
+from lmfdb.ecnf.ecnf_stats import ECNF_stats
 from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
@@ -181,8 +181,8 @@ def index():
     # signatures for a general browse:
 
     ecnfstats = db.ec_nfcurves.stats
-    fields_by_deg = ecnfstats.get_oldstat('fields_by_degree')
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
+    fields_by_deg = ECNF_stats().fields_by_deg
+    fields_by_sig = ECNF_stats().fields_by_sig
     data['fields'] = []
     # Rationals
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
@@ -523,10 +523,10 @@ def search_input_error(info=None, bread=None):
 
 @ecnf_page.route("/browse/")
 def browse():
-    data = db.ec_nfcurves.stats.get_oldstat('signatures_by_degree')
+    data = ECNF_stats().sigs_by_deg
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
-    info = [[d,data[str(d)]] for d in sorted([int(d) for d in data.keys()])]
+    info = [[d,data[d]] for d in sorted(data.keys())]
     credit = 'John Cremona'
     t = 'Elliptic Curves over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
@@ -540,26 +540,24 @@ def statistics_by_degree(d):
     info = {}
 
     ecnfstats = db.ec_nfcurves.stats
-    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
-    if not str(d) in sigs_by_deg:
+    sigs_by_deg = ECNF_stats().sigs_by_deg
+    if d not in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
         info['degree'] = d
 
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
-    counts_by_sig = ecnfstats.get_oldstat('conductor_norm_by_signature')
-    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
+    fields_by_sig = ECNF_stats().fields_by_sig
+    counts_by_sig = ECNF_stats().sig_counts
+    counts_by_field = ECNF_stats().field_counts
 
     def field_counts(f):
-        ff = f.replace(".",":")
-        return [f,counts_by_field[ff]]
+        return [f,counts_by_field[f]]
 
     def sig_counts(sig):
-        sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
-        return [sig, counts_by_sig[sig], [field_counts(f) for f in sorted_fields]]
+        return ['%s,%s'%sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
 
-    info['summary'] = ecnf_degree_summary(d)
-    info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[str(d)]]
+    info['summary'] = ECNF_stats().degree_summary(d)
+    info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[d]]
     credit = 'John Cremona'
     if d==2:
         t = 'Elliptic Curves over Quadratic Number Fields'
@@ -585,8 +583,7 @@ def statistics_by_signature(d,r):
 
     info = {}
 
-    ecnfstats = db.ec_nfcurves.stats
-    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
+    sigs_by_deg = ECNF_stats().sigs_by_deg
     if not str(d) in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
@@ -595,18 +592,17 @@ def statistics_by_signature(d,r):
     if not r in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
-    info['sig'] = sig = '%s,%s' % (r,s)
-    info['summary'] = ecnf_signature_summary(sig)
+    sig = (r,s)
+    info['sig'] = '%s,%s' % sig
+    info['summary'] = ECNF_stats().signature_summary(sig)
 
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
-    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
+    fields_by_sig = ECNF_stats().fields_by_sig
+    counts_by_field = ECNF_stats().field_counts
 
     def field_counts(f):
-        ff = f.replace(".",":")
-        return [f,counts_by_field[ff]]
+        return [f,counts_by_field[f]]
 
-    sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
-    info['sig_stats'] = [field_counts(f) for f in sorted_fields]
+    info['sig_stats'] = [field_counts(f) for f in fields_by_sig[sig]]
     credit = 'John Cremona'
     if info['sig'] == '2,0':
         t = 'Elliptic Curves over Real Quadratic Number Fields'
@@ -629,13 +625,6 @@ def statistics_by_signature(d,r):
               ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-def get_torsion_structures():
-    ecnfstats = db.ec_nfcurves.stats
-    torsion_structures = [t[0] for t in ecnfstats.get_oldstat('torsion_structure')['counts']]
-    torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
-    torsion_structures.sort()
-    return torsion_structures
-
 def tor_struct_search_nf(prefill="any"):
     def fix(t):
         return t + ' selected = "yes"' if prefill==t else t
@@ -645,7 +634,7 @@ def tor_struct_search_nf(prefill="any"):
         return [fix("[{},{}]".format(m,n)), "C{}&times;C{}".format(m,n)]
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
 
-    tors = get_torsion_structures()
+    tors = ECNF_stats().torsion_counts
 
     # The following was the set as of 24/4/2017:
     # assert tors == [[2], [2, 2], [2, 4], [2, 6], [2, 8], [2, 10], [2, 12], [2, 14], [2, 16], [2, 18], [3], [3, 3], [3, 6], [4], [4, 4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [25], [27], [37]]

@@ -3168,7 +3168,11 @@ class PostgresTable(PostgresBase):
                 self._search_cols.append(name)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
-    def drop_column(self, name, commit=True):
+    def drop_column(self, name, commit=True, force=False):
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
+            if not (ok and ok[0] in ['y','Y']):
+                return
         if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         with DelayCommit(self, commit, silence=True):
@@ -3431,6 +3435,15 @@ class PostgresTable(PostgresBase):
                 for checkname, check in inspect.getmembers(verifier.__class__):
                     if isinstance(check, typ):
                         show_check(checkname, check, typ)
+
+    def set_importance(self, importance):
+        """
+        Production tables are marked as important so that they can't be accidentally dropped.
+
+        Use this method to mark a table important or not important.
+        """
+        updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
+        self._execute(updater, [importance, self.search_table])
 
 class PostgresStatsTable(PostgresBase):
     """
@@ -3795,6 +3808,32 @@ class PostgresStatsTable(PostgresBase):
         """
         assert len(ccols) == len(cvals)
         return dict(zip(ccols, cvals))
+
+    def add_numstats(self, col, grouping, constraint=None, threshold=None, suffix=''):
+        """
+        For each value taken on by the columns in ``grouping``, numerical statistics on ``col`` (min, max, avg) will be added.
+
+        This function does not add counts of each distinct value taken on by ``col``, and it uses SQL rather than Python to compute MIN, MAX and AVG.
+
+        Note that add_numstats and add_stats use the same mechanism to check whether stats have already been computed (the presence of a total entry), so if you call one with a        
+        """
+        if threshold is None:
+            having = SQL("")
+        else:
+            having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
+        vars = SQL("COUNT(*), MIN({0}), MAX({0}), AVG({0})").format(Identifier(col))
+        if grouping:
+            groups = SQL(", ").join(map(Identifier, grouping))
+            groupby = SQL(" GROUP BY {0}").format(groups)
+            vars = SQL("{0}, {1}").format(vars, groups)
+        else:
+            groupby = SQL("")
+        now = time.time()
+        with DelayCommit(self, commit, silence=True):
+            selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
+
+    def numstats(self, col, grouping, constraint=None, threshold=None):
+        pass
 
     def add_stats(self, cols, constraint=None, threshold=None, split_list=False, suffix='', commit=True):
         """
@@ -4748,9 +4787,16 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
 
-    def drop_table(self, name, commit=True):
+    def drop_table(self, name, commit=True, force=False):
+        table = self[name]
+        selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
+        if self._execute(selecter, [name]).fetchone()[0]:
+            raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%(name))
+            if not (ok and ok[0] in ['y','Y']):
+                return
         with DelayCommit(self, commit, silence=True):
-            table = self[name]
             table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
