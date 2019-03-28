@@ -3432,6 +3432,15 @@ class PostgresTable(PostgresBase):
                     if isinstance(check, typ):
                         show_check(checkname, check, typ)
 
+    def set_importance(self, importance):
+        """
+        Production tables are marked as important so that they can't be accidentally dropped.
+
+        Use this method to mark a table important or not important.
+        """
+        updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
+        self._execute(updater, [importance, self.search_table])
+
 class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
@@ -4749,8 +4758,11 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         print "Table %s created in %.3f secs"%(name, time.time()-now)
 
     def drop_table(self, name, commit=True):
+        table = self[name]
+        selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
+        if self._execute(selecter, [name]).fetchone()[0]:
+            raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
         with DelayCommit(self, commit, silence=True):
-            table = self[name]
             table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
