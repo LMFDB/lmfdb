@@ -475,8 +475,14 @@ class WebEC(object):
             if d!=lastd:
                 tg1['m'] = len([x for x in tgextra if x['d']==d])
                 lastd = d
-        ## Hard code for now
-        #tg['maxd'] = max(db.ec_curves.stats.get_oldstat('torsion_growth')['degrees'])
+
+        ## Hard-code this for now.  While something like
+        ## max(db.ec_curves.search({},projection='tor_degs')) might
+        ## work, since 'tor_degs' is in the extra table it is very
+        ## slow.  Note that the *only* place where this number is used
+        ## is in the ec-curve template where it says "The number
+        ## fields ... of degree up to {{data.tg.maxd}} such that...".
+        
         tg['maxd'] = 7
 
 

@@ -871,39 +871,56 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
             if diff1: print("expected but absent:      {}".format(diff1))
             if diff2: print("not expected but present: {}".format(diff2))
 
-def update_stats(verbose=True):
-    if verbose:
-        print("Finding max and min conductor and total number of curves")
-    Nlist = curves.distinct('conductor')
-    Nmax = int(max(Nlist))
-    Nmin = int(min(Nlist))
-    Ncurves = int(curves.count())
-    if verbose:
-        print("{} curves of conductor from {} to {}".format(Ncurves,Nmin,Nmax))
-    curves.stats.insert_one({'_id':'conductor', 'min':Nmin, 'max': Nmax, 'total': Ncurves})
-    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
-    # Basic counts for these attributes:
-    ec = curves
-    if verbose:
-        print("Adding simple counts for rank, torsion, torsion structure and Sha")
-    update_attribute_stats(ec, 'curves', ['rank', 'torsion', 'torsion_structure', 'sha'])
-    # rank counts for isogeny classes:
-    if verbose:
-        print("Adding isogeny class rank counts")
-    update_attribute_stats(ec, 'curves', 'rank', prefix='class', filter={'number':1})
-    # torsion order by rank:
-    if verbose:
-        print("Adding torsion counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','torsion'], prefix='byrank', unflatten=True)
-    # torsion structure by rank:
-    if verbose:
-        print("Adding torsion structure counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','torsion_structure'], prefix='byrank', unflatten=True)
-    # sha by rank:
-    if verbose:
-        print("Adding sha counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','sha'], prefix='byrank', unflatten=True)
 
+def update_stats(recount=True, verbose=True):
+
+    ecdb = db.ec_curves
+    ecdbstats = db.ec_curves.stats
+    if recount:
+        ec_count = ecdbstats._slow_count
+        ec_max = ecdbstats._slow_max
+    else:
+        ec_count = ecdb.count
+        ec_max = ecdb.max
+
+    # Do various counts, force each to be a recount so the (possibly)
+    # updated value gets stored:
+    ncurves = ec_count({})
+    nclasses = ec_count({'number':1})
+
+    if verbose:
+        print("{} curves in {} isogeny classes".format(ncurves,nclasses))
+
+    # Various max values, forced to be recomputed (?and stored?)
+    max_N = ec_max('conductor',{})
+    max_r = ec_max('rank',{})
+    max_sha = ec_max('sha',{})
+    max_sqrt_sha = ZZ(max_sha).sqrt() # exact
+    if verbose:
+        print("max conductor = {}".format(max_N))
+        print("max rank = {}".format(max_r))
+        print("max Sha = {} = {}^2".format(max_sha, max_sqrt_sha))
+
+    for r in range(max_r+1):
+        ncu = ec_count({'rank':r})
+        ncl = ec_count({'rank':r, 'number':1})
+        if verbose:
+            print("{} curves in {} classes have rank {}".format(ncu,ncl,r))
+
+    for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
+        ncu = ec_count({'torsion':t})
+        if verbose:
+            print("{} curves have torsion order {}".format(ncu,t))
+        if t in [4,8,12]: # two possible structures
+            ncyc = ec_count({'torsion_structure':[t]})
+            if verbose:
+                print("   of which {} curves have cyclic torsion, {} non-cyclic".format(ncyc,ncu-ncyc))
+
+    for s in range(1,1+max_sqrt_sha):
+        ncu = ec_count({'sha':s**2})
+        if verbose and ncu:
+            print("{} curves have Sha order {}^2".format(ncu,s))
+    
 def update_torsion_growth_stats(verbose=True):
     # torsion growth:
     if verbose:
