@@ -901,6 +901,7 @@ class PostgresTable(PostgresBase):
         """
         Initialize the sorting attributes from a list of columns or pairs (col, direction)
         """
+        self._sort_orig = sort
         self._sort_keys = set([])
         if sort:
             for col in sort:
@@ -4620,9 +4621,37 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         print("Table meta_tables_hist created")
 
+    def create_table_like(self, new_name, table, commit=True):
+        """
+        Copies the schema from an existing table, but none of the data, indexes or stats.
+
+        INPUT:
+
+        - ``new_name`` -- a string giving the desired table name.
+        - ``table`` -- a string or PostgresTable object giving an existing table.
+        """
+        if isinstance(table, basestring):
+            table = self[table]
+        search_columns = {typ: [col for col in table._search_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
+        extra_columns = {typ: [col for col in table._extra_cols if table.col_type[col] == typ] for typ in set(table.col_type.values())}
+        # Remove empty lists
+        for D in [search_columns, extra_columns]:
+            for typ, cols in list(D.items()):
+                if not cols:
+                    D.pop(typ)
+        if not extra_columns:
+            extra_columns = extra_order = None
+        else:
+            extra_order = table._extra_cols
+        label_col = table._label_col
+        sort = table._sort_orig
+        id_ordered = table._id_ordered
+        search_order = table._search_cols
+        self.create_table(new_name, search_columns, label_col, sort, id_ordered, extra_columns, search_order, extra_order, commit=commit)
+
     def create_table(self, name, search_columns, label_col, sort=None, id_ordered=None, extra_columns=None, search_order=None, extra_order=None, commit=True):
         """
-        Add a new search table to the database.
+        Add a new search table to the database.  See also `create_table_like`.
 
         INPUT:
 
@@ -4754,7 +4783,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.grant_insert(name+"_stats")
             # FIXME use global constants ?
             inserter = SQL('INSERT INTO meta_tables (name, sort, id_ordered, out_of_order, has_extras, label_col) VALUES (%s, %s, %s, %s, %s, %s)')
-            self._execute(inserter, [name, sort, id_ordered, not id_ordered, extra_columns is not None, label_col])
+            self._execute(inserter, [name, Json(sort), id_ordered, not id_ordered, extra_columns is not None, label_col])
         self.__dict__[name] = PostgresTable(self, name, label_col, sort=sort, id_ordered=id_ordered, out_of_order=(not id_ordered), has_extras=(extra_columns is not None), total=0)
         self.tablenames.append(name)
         self.tablenames.sort()
@@ -4788,6 +4817,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)))
                 print "Dropped {0}".format(tbl)
             self.tablenames.remove(name)
+            delattr(self, name)
 
     def rename_table(self, old_name, new_name, commit=True):
         assert old_name != new_name
