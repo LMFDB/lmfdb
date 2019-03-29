@@ -389,15 +389,27 @@ def show(ID):
             can_delete = (current_user.is_admin() or current_user.get_id() == author)
             author_name = userdb.lookup(author)["full_name"]
             k.comments[i] = (cid, author_name, timestamp, can_delete)
-    b = get_bread([('%s' % title, url_for('.show', ID=ID))])
+    b = get_bread([(k.category, url_for('.index', category=k.category)), ('%s' % title, url_for('.show', ID=ID))])
 
     return render_template(u"knowl-show.html",
                            title=title,
                            k=k,
+                           cur_username=current_user.get_id(),
                            render=r,
                            bread=b)
 
-
+@knowledge_page.route("/remove_author/<ID>")
+@login_required
+def remove_author(ID):
+    k = Knowl(ID)
+    uid = current_user.get_id()
+    if uid not in k.authors:
+        flash("You are not an author on %s"%(k.id), "error")
+    elif len(k.authors) == 1:
+        flash("You cannot remove yourself unless there are other authors", "error")
+    else:
+        knowldb.remove_author(ID, uid)
+    return redirect(url_for(".show", ID=ID))
 
 @knowledge_page.route("/content/<ID>/<int:timestamp>")
 def content(ID, timestamp):
@@ -787,9 +799,12 @@ def index():
     #    knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
+    b = []
+    if cur_cat:
+        b = [(cur_cat, url_for('.index', category=cur_cat))]
     return render_template("knowl-index.html",
                            title="Knowledge Database",
-                           bread=get_bread(),
+                           bread=get_bread(b),
                            knowls=knowls,
                            search=search,
                            searchbox=searchbox(search, bool(search)),
