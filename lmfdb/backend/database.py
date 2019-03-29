@@ -4817,6 +4817,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
                 self._execute(SQL("DROP TABLE {0}").format(Identifier(tbl)))
                 print "Dropped {0}".format(tbl)
             self.tablenames.remove(name)
+            delattr(self, name)
 
     def rename_table(self, old_name, new_name, commit=True):
         assert old_name != new_name
