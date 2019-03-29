@@ -3513,9 +3513,9 @@ class PostgresStatsTable(PostgresBase):
 
         sage: db.ec_nfcurves.stats.quick_count({'torsion_structure': [2,4]})
         5100
-        sage: torsion_structures = db.ec_nfcurves.stats.column_counts(['torsion_structure'])
+        sage: torsion_structures = db.ec_nfcurves.stats.column_counts('torsion_structure')
         sage: torsion_structures[4,4]
-        14
+        14L
 
     Adding statistics on norm_conductor, grouped by signature::
 
