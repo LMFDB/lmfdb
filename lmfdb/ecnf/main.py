@@ -189,8 +189,8 @@ def index():
 
     # Real quadratics (sample)
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
-    niqfs = len(fields_by_sig['0,1'])
-    nrqfs = len(fields_by_sig['2,0'])
+    niqfs = len(fields_by_sig[0,1])
+    nrqfs = len(fields_by_sig[2,0])
     data['fields'].append(['{} real quadratic fields, including'.format(nrqfs),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
@@ -203,28 +203,28 @@ def index():
 
     # Cubics (sample)
     cubics = ['3.1.23.1'] + ['3.3.{}.1'.format(d) for d in [49,148,1957]]
-    ncubics = len(fields_by_deg['3'])
+    ncubics = len(fields_by_deg[3])
     data['fields'].append(['{} cubic fields, including'.format(ncubics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in cubics)])
 
     # Quartics (sample)
     quartics = ['4.4.{}.1'.format(d) for d in [725,2777,9909,19821]]
-    nquartics = len(fields_by_deg['4'])
+    nquartics = len(fields_by_deg[4])
     data['fields'].append(['{} totally real quartic fields, including'.format(nquartics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quartics)])
 
     # Quintics (sample)
     quintics = ['5.5.{}.1'.format(d) for d in [14641, 24217, 36497, 38569, 65657]]
-    nquintics = len(fields_by_deg['5'])
+    nquintics = len(fields_by_deg[5])
     data['fields'].append(['{} totally real quintic fields, including'.format(nquintics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quintics)])
 
     # Sextics (sample)
     sextics = ['6.6.{}.1'.format(d) for d in [300125, 371293, 434581, 453789, 485125]]
-    nsextics = len(fields_by_deg['6'])
+    nsextics = len(fields_by_deg[6])
     data['fields'].append(['{} totally real sextic fields, including'.format(nsextics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in sextics)])
@@ -547,8 +547,8 @@ def statistics_by_degree(d):
         info['degree'] = d
 
     fields_by_sig = ECNF_stats().fields_by_sig
-    counts_by_sig = ECNF_stats().sig_counts
-    counts_by_field = ECNF_stats().field_counts
+    counts_by_sig = ECNF_stats().sig_normstats
+    counts_by_field = ECNF_stats().field_normstats
 
     def field_counts(f):
         return [f,counts_by_field[f]]
@@ -584,7 +584,7 @@ def statistics_by_signature(d,r):
     info = {}
 
     sigs_by_deg = ECNF_stats().sigs_by_deg
-    if not str(d) in sigs_by_deg:
+    if d not in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
         info['degree'] = d
@@ -597,7 +597,7 @@ def statistics_by_signature(d,r):
     info['summary'] = ECNF_stats().signature_summary(sig)
 
     fields_by_sig = ECNF_stats().fields_by_sig
-    counts_by_field = ECNF_stats().field_counts
+    counts_by_field = ECNF_stats().field_normstats
 
     def field_counts(f):
         return [f,counts_by_field[f]]

@@ -63,20 +63,32 @@ class ECNF_stats(StatsDisplay):
         return db.ec_nfcurves.stats.column_counts('torsion_structure')
     @lazy_attribute
     def field_normstats(self):
-        return db.ec_nfcurves.stats.numstats('conductor_norm', ['field_label'])
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'field_label')
+        return {label: {'ncurves': self.field_counts[label],
+                        'nclasses': self.field_classes[label],
+                        'max_norm': D[label]['max']}
+                for label in D}
     @lazy_attribute
     def sig_normstats(self):
-        return db.ec_nfcurves.stats.numstats('conductor_norm', ['signature'])
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'signature')
+        return {sig: {'ncurves': self.sig_counts[sig],
+                      'nclasses': self.sig_classes[sig],
+                      'max_norm': D[sig]['max']}
+                for sig in D}
     @lazy_attribute
     def deg_normstats(self):
-        return db.ec_nfcurves.stats.numstats('conductor_norm', ['degree'])
+        D = db.ec_nfcurves.stats.numstats('conductor_norm', 'degree')
+        return {deg: {'ncurves': self.deg_counts[deg],
+                      'nclasses': self.deg_classes[deg],
+                      'max_norm': D[deg]['max']}
+                for deg in D}
     @lazy_attribute
     def maxdeg(self):
         return db.ec_nfcurves.max('degree')
     @staticmethod
     def _get_sig(nflabel):
         d,r = map(int,nflabel.split('.',2)[:2])
-        return '%s,%s'%(r,(d-r)//2)
+        return (r,(d-r)//2)
     @staticmethod
     def _get_deg(nflabel):
         return int(nflabel.split('.',1)[0])
@@ -96,7 +108,7 @@ class ECNF_stats(StatsDisplay):
     @lazy_attribute
     def sigs_by_deg(self):
         def _get_deg_s(sig):
-            r, s = map(int, sig.split(','))
+            r, s = sig
             return r + 2*s
         D = defaultdict(list)
         for sig in self.sig_counts:
@@ -117,9 +129,10 @@ class ECNF_stats(StatsDisplay):
 
     @cached_method
     def field_summary(self, field):
-        ncurves = self.field_counts[field]
-        nclasses = self.field_classes[field]
-        max_norm = self.field_normstats[field]['max']
+        stats = self.field_normstats[field]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
         ec_knowl = self.ec_knowl if ncurves==1 else self.ec_knowls
         iso_knowl = self.iso_knowl if ncurves==1 else self.iso_knowls
         nf_knowl = self.nf_knowl if ncurves==1 else self.nf_knowls
@@ -140,9 +153,10 @@ class ECNF_stats(StatsDisplay):
     def signature_summary(self, sig):
         r, s = sig
         d = r+2*s
-        ncurves = self.sig_counts[r,s]
-        nclasses = self.sig_classes[r,s]
-        max_norm = self.sig_normstats[r,s]['max']
+        stats = self.sig_normstats[r,s]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
         return ''.join([r'The database currently contains {} '.format(ncurves),
                         self.ec_knowls,
                         r' defined over ',
@@ -155,9 +169,10 @@ class ECNF_stats(StatsDisplay):
 
     @cached_method
     def degree_summary(self, d):
-        ncurves = self.deg_counts[d]
-        nclasses = self.deg_classes[d]
-        max_norm = self.deg_normstats[d]['max']
+        stats = self.deg_normstats[d]
+        ncurves = stats['ncurves']
+        nclasses = stats['nclasses']
+        max_norm = stats['max_norm']
         return ''.join([r'The database currently contains {} '.format(ncurves),
                         self.ec_knowls,
                         r' defined over ',
