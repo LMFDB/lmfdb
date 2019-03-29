@@ -3449,9 +3449,165 @@ class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
 
+    For each search table (e.g. ec_curves), there are two auxiliary tables supporting
+    statistics functionality.  The counts table (e.g. ec_curves_counts) records
+    the number of rows in the search table that satisfy a particular query.
+    These counts are used by the website to display the number of matches on a
+    search results page, and is also used on statistics pages and some browse pages.
+    The stats table (e.g. ec_curves_stats) is used to record minimum, maximum and
+    average values taken on by a numerical column (possibly over rows subject to some
+    constraint).
+
+    The stats table also serves a second purpose.  When displaying statistics for a
+    section of the website, we often want to compute counts over all possible
+    values of a set of columns.  For example, we might compute the number of
+    elliptic curves with each possible torsion structure, or statistics on the
+    conductor norm for elliptic curves over each number field.  The ``add_stats``
+    and ``add_numstats`` methods provide these features, and when they are called
+    a row is added to the stats table recording that these statistics were computed.
+
+    We are only able to store counts and statistics in this way because our tables
+    rarely change.  When we do make a change, statistics need to be updated.  This
+    is done using the ``refresh_statistics`` method, which is called by default
+    by the data management methods of ``PostgresTable`` like ``reload`` or ``copy_from``.
+    As a consequence, once statistics are added, they do not need to be manually
+    updated.
+
+    The backend functionality of this object supports the StatsDisplay object
+    available in `lmfdb.utils.display_stats`.  See that module for more details
+    on making a statistics page for a section of the LMFDB.  In particular,
+    the interface there has the capacity to automatically call ``add_stats`` so that
+    viewing an appropriate stats page (e.g. beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/stats)
+    is sufficient to add the necessary statistics to the stats and counts tables.
+    The methods ``_get_values_counts`` and ``_get_total_avg`` exist to support
+    the ``StatsDisplay`` object.
+
+    Once statistics have been added, they are accessed using the following functions:
+
+    - ``quick_count`` -- count the number of rows satisfying a query,
+                         returning None if not already cached.
+    - ``count`` -- count the number of rows satisfying a query, computing and storing
+                   the result if not yet cached.
+    - ``max`` -- returns the maximum value attained by a column, computing and storing
+                 the result if not yet cached.
+    - ``column_counts`` -- provides all counts stored for a given column or set of columns.
+                           This will be much faster than calling ``count`` repeatedly.
+                           If ``add_stats`` has not been called, it will do so.
+    - ``numstats`` -- provides numerical statistics on a single column, grouped by
+                      the values taken on by another set of columns.
+    - ``extra_counts`` -- returns a dictionary giving counts that were added separately
+                          from an ``add_stats`` call (for example, via user requests on the website)
+    - ``status`` -- prints a summary of the statistics currently stored.
+
+    EXAMPLES:
+
+    We add some statistics.  These specific commands aren't required in order to access stats,
+    but they hopefully provide an example of how to add statistics that can be generalized to
+    other tables.
+
+    Adding statistics on torsion structure::
+
+        sage: db.ec_nfcurves.stats.add_stats(['torsion_structure'])
+
+    This make counts available::
+
+        sage: db.ec_nfcurves.stats.quick_count({'torsion_structure': [2,4]})
+        5100
+        sage: torsion_structures = db.ec_nfcurves.stats.column_counts(['torsion_structure'])
+        sage: torsion_structures[4,4]
+        14
+
+    Adding statistics on norm_conductor, grouped by signature::
+
+        sage: db.ec_nfcurves.stats.add_numstats('norm_conductor', ['signature'])
+
+    Once added, we can later retrieve the statistics::
+
+        sage: normstats = db.ec_nfcurves.stats.numstats('conductor_norm', ['signature'])
+
+    And find the maximum conductor norm for a curve in the LMFDB over a totally real cubic field::
+
+        sage: normstats[3,0]['max']
+        2059
+
+    You can also find this directly, but if you need the same kind of statistic many times
+    then the ``numstats`` method will be faster::
+
+        sage: db.ec_nfcurves.stats.max('conductor_norm', {'signature': [3,0]})
+        2059
+
+    You can see what additional counts are stored using the ``extra_counts`` method::
+
+        sage: db.mf_newforms.stats.extra_counts().keys()[0]
+        (u'dim',)
+        sage: db.mf_newforms.stats.extra_counts()[('dim',)]
+        [(({u'$gte': 10, u'$lte': 20},), 39288L)]
+
+    SCHEMA:
+
+    The columns in a counts table are:
+
+    - ``cols`` -- these are the columns specified in the query.  A list, stored as a jsonb.
+    - ``values`` -- these could be numbers, or dictionaries giving a more complicated constraint.
+        A list, of the same length as ``cols``, stored as a jsonb.
+    - ``count`` -- the number of rows in the search table where the the columns take on the given values.
+    - ``extra`` -- false if the count was added in an ``add_stats`` method,
+        true if it was added separately (such as by a request on a search results page).
+    - ``split`` -- used when column values are arrays.  If true, then the array is split
+        up before counting.  For example, when counting ramified primes,
+        if split werefalse then [2,3,5] and [2,3,7] would count as separate values
+        (there are 888280 number fields in the LMFDB with ramps = [2,3,5]).
+        If split were true, then both [2,3,5] and [2,3,7] would contribute toward the count for 2.
+
+    For example,
+    ["ramps"], [[2, 3, 5]], 888280, t, f
+    would record the count of number fields with ramps=[2, 3, 5], and
+    ["ramps"], [2], 11372999, f, t
+    would record the count of number fields with ramps containing 2.
+
+    The columns in a stats table are:
+
+    - ``stat`` -- a text field giving the statistic type.  Currently, will be one of
+        "max", "min", "avg", "total" (one such row for each add_stats call),
+        "ntotal" (one such row for each add_numstats call), "split_total"
+        (one such row for each add_stats call with split_list True).
+    - ``cols`` -- the columns for which statistics are being computed.  Must have
+        length 1 and be numerical in order to have "max", "min" or "avg"
+    - ``constraint_cols`` -- columns in the constraint dictionary
+    - ``constraint_values`` -- the values specified for the columns in ``ccols``
+    - ``threshold`` -- NULL or an integer.  If specified, only value sets where the
+        row count surpasses the threshold will be added to the counts table and
+        counted toward min, max and avg statistics.
+
+    BUCKETED STATS:
+
+    Sometimes you want to add statistics on a column, but it takes on too many values.
+    For example, you want to give an idea of the distribution of levels for classical
+    modular forms, but there are thousands of possibilities.
+
+    You can use the ``add_bucketed_counts`` in this circumstance.  You provide a
+    dictionary whose keys are columns, and whose values are a list of strings giving intervals.
+    Counts are computed with values grouped into intervals.
+
+    EXAMPLE::
+
+        sage: db.mf_newforms.stats.add_bucketed_counts(['level', 'weight'], {'level': ['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-10000'], 'weight': ['1','2','3','4','5-8','9-16','17-32','33-64','65-316']})
+
+    You can now count certain ranges:
+
+        sage: db.mf_newforms.stats.quick_count({'level':{'$gte':101, '$lte':1000}, 'weight':4})
+        12281
+
+    But only those specified by the buckets:
+
+        sage: db.mf_newforms.stats.quick_count({'level':{'$gte':201, '$lte':800}, 'weight':2}) is None
+        True
+
     INPUT:
 
     - ``table`` -- a ``PostgresTable`` object.
+    - ``total`` -- an integer, the number of rows in the search table.  If not provided,
+        it will be looked up or computed.
     """
     def __init__(self, table, total=None):
         PostgresBase.__init__(self, table.search_table, table._db)
@@ -3479,6 +3635,7 @@ class PostgresStatsTable(PostgresBase):
            values for the accumulated columns is less than this threshold, those
            rows are thrown away.
         - ``split_list`` -- whether entries of lists should be counted once for each entry.
+        - ``threshold_inequality`` -- if true, then any lower threshold will still count for having stats.
         """
         if split_list:
             values = [jcols, "split_total"]
@@ -3512,6 +3669,9 @@ class PostgresStatsTable(PostgresBase):
         INPUT:
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
+        - ``split_list`` -- see the ``add_stats`` method
+        - ``suffix`` -- if provided, the table with that suffix added will be
+            used to perform the count
 
         OUTPUT:
 
@@ -3530,7 +3690,11 @@ class PostgresStatsTable(PostgresBase):
         INPUT:
 
         - ``query`` -- a mongo-style dictionary, as in the ``search`` method.
+        - ``split_list`` -- see the ``add_stats`` method.
         - ``record`` -- boolean (default False).  Whether to store the result in the count table.
+        - ``suffix`` -- if provided, the table with that suffix added will be
+            used to perform the count
+        - ``extra`` -- used if the result is recorded (see discussion at the top of this class).
 
         OUTPUT:
 
@@ -3549,6 +3713,18 @@ class PostgresStatsTable(PostgresBase):
         return nres
 
     def _record_count(self, query, count, split_list=False, suffix='', extra=True):
+        """
+        Add the count to the counts table.
+
+        INPUT::
+
+        - ``query`` -- a dictionary
+        - ``count`` -- the count of rows in the search table satisfying the query
+        - ``split_list`` -- see the ``add_stats`` method
+        - ``suffix`` -- if provided, the table with that suffix added will be
+            used to store the count
+        - ``extra`` -- see the discussion at the top of this class.
+        """
         cols, vals = self._split_dict(query)
         data = [count, cols, vals, split_list]
         if self.quick_count(query) is None:
@@ -3628,7 +3804,7 @@ class PostgresStatsTable(PostgresBase):
             one_col = False
             cols = sorted(cols)
         if constraint is None:
-            ccols, cvals, allcols = None, None, cols
+            ccols, cvals, allcols = [], [], cols
         else:
             ccols, cvals = self._split_dict(constraint)
             allcols = sorted(list(set(cols + constraint.keys())))
@@ -3660,6 +3836,16 @@ class PostgresStatsTable(PostgresBase):
             return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
 
     def _quick_max(self, col, ccols, cvals):
+        """
+        Return the maximum value achieved by the column, or None if not cached.
+
+        INPUT::
+
+        - ``col`` -- the column
+        - ``ccols`` -- constraint columns
+        - ``cvals`` -- constraint values.  The max will be taken over rows where
+            the constraint columns take on these values.
+        """
         if ccols is None:
             constraint = SQL("constraint_cols IS NULL")
             values = ["max", Json([col])]
@@ -3672,6 +3858,15 @@ class PostgresStatsTable(PostgresBase):
             return cur.fetchone()[0]
 
     def _slow_max(self, col, constraint):
+        """
+        Compute the maximum value achieved by the column.
+
+        INPUT::
+
+        - ``col`` -- the column
+        - ``constraint`` -- a dictionary giving a constraint.  The max will be taken
+            over rows satisfying this constraint.
+        """
         qstr, values = self.table._parse_dict(constraint)
         if qstr is None:
             where = SQL("")
@@ -3692,6 +3887,16 @@ class PostgresStatsTable(PostgresBase):
         return m
 
     def _record_max(self, col, ccols, cvals, m):
+        """
+        Store a computed maximum value in the stats table.
+
+        INPUT:
+
+        - ``col`` -- the column on which the max is taken
+        - ``ccols`` -- the constraint columns
+        - ``cvals`` -- the constraint values
+        - ``m`` -- the maximum value to be stored
+        """
         try:
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values) VALUES (%s, %s, %s, %s, %s)")
             self._execute(inserter.format(Identifier(self.stats)), [Json([col]), "max", m, ccols, cvals])
@@ -3701,6 +3906,13 @@ class PostgresStatsTable(PostgresBase):
     def max(self, col, constraint={}, record=True):
         """
         The maximum value attained by the given column, which must be in the search table.
+
+        INPUT:
+
+        - ``col`` -- the column on which the max is taken.
+        - ``constraint`` -- a dictionary giving a constraint.  The max will be taken
+            over rows satisfying this constraint.
+        - ``record`` -- whether to store the result in the stats table.
 
         EXAMPLES::
 
@@ -3775,9 +3987,8 @@ class PostgresStatsTable(PostgresBase):
         INPUT:
 
         - ``cols`` -- the columns to be displayed.  This will usually be a list of strings of length 1 or 2.
-        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of break points.
-            The buckets are the values between these break points.  Repeating break points
-            makes one bucket consist of just that point.
+        - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists
+            of strings giving either single integers or intervals.
         - ``constraint`` -- a dictionary giving additional constraints on other columns.
         """
         # Conceptually, it makes sense to have the bucket keys included in the columns,
@@ -3805,6 +4016,18 @@ class PostgresStatsTable(PostgresBase):
         return dict(zip(ccols, cvals))
 
     def _print_statmsg(self, cols, constraint, threshold, grouping=None, split_list=False, tense='now'):
+        """
+        Print a message describing the statistics being added.
+
+        INPUT:
+
+        - ``cols`` -- as for ``add_stats``
+        - ``constraint`` -- as output by ``_process_constraint``
+        - ``threshold`` -- as for ``add_stats``
+        - ``grouping`` -- as for ``add_numstats``
+        - ``split_list`` -- as for ``add_stats``
+        - ``tense`` -- either "now" or "past".  Just affects the grammar.
+        """
         if isinstance(constraint, tuple):
             if constraint == (None, None):
                 constraint = {}
@@ -3817,10 +4040,9 @@ class PostgresStatsTable(PostgresBase):
         else:
             msg = "numerical statistics for %s, grouped by %s," % (cols[0], "+".join(grouping))
         if tense == 'now':
-            msg = "Adding %s" % msg
+            msg = "Adding %s to %s " % (msg, self.search_table)
         else:
-            msg = "%s were added" % msg.capitalize()
-        msg += " to " + self.search_table
+            msg = "%s " % msg.capitalize()
         if grouping is None and cols:
             msg += "for " + ", ".join(cols)
         if constraint:
@@ -3870,11 +4092,33 @@ class PostgresStatsTable(PostgresBase):
         """
         For each value taken on by the columns in ``grouping``, numerical statistics on ``col`` (min, max, avg) will be added.
 
-        This function does not add counts of each distinct value taken on by ``col``, and it uses SQL rather than Python to compute MIN, MAX and AVG.
+        This function does not add counts of each distinct value taken on by ``col``,
+        and it uses SQL rather than Python to compute MIN, MAX and AVG.  This makes it more
+        suitable than ``add_stats`` if a column takes on a large number of distinct values.
 
-        Note that add_numstats and add_stats use the same mechanism to check whether stats have already been computed (the presence of a total entry), so if you call one with a      
+        INPUT:
+
+        - ``col`` -- the column whose minimum, maximum and average values are to be computed.
+            Should be an integer or real type in order for `AVG` to function.
+        - ``grouping`` -- a list of columns.  Statistics will be computed within groups defined by
+            the values taken on by these columns.  If no columns given, then the overall statistics
+            will be computed.
+        - ``constraint`` -- a dictionary or pair of lists, giving a query.  Only rows satisfying this
+            constraint will be included in the statistics.
+        - ``threshold`` -- if given, only sets of values for the grouping columns where the
+            count surpasses this threshold will be included.
+        - ``suffix`` -- if given, the counts will be performed on the table with the suffix appended.
+        - ``commit`` -- if false, the results will not be committed to the database.
         """
-        grouping = sorted(grouping)
+        if isinstance(grouping, basestring):
+            grouping = [grouping]
+        else:
+            grouping = sorted(grouping)
+        if isinstance(col, (list, tuple)):
+            if len(col) == 1:
+                col = col[0]
+            else:
+                raise ValueError("Must provide exactly one column")
         where, values, constraint, ccols, cvals, _ = self._process_constraint([col], constraint)
         jcol = Json([col])
         jcgcols = Json(sorted(ccols.adapted + grouping))
@@ -3942,11 +4186,38 @@ class PostgresStatsTable(PostgresBase):
         return cur.rowcount > 0
 
     def numstats(self, col, grouping, constraint=None, threshold=None):
+        """
+        Returns statistics on a column, grouped by a set of other columns.
+
+        If the statistics are not already cached, the ``add_numstats`` method will be called.
+
+        INPUT:
+
+        - ``col`` -- the column whose minimum, maximum and average values are to be computed.
+            Should be an integer or real type in order for `AVG` to function.
+        - ``grouping`` -- a list of columns.  Statistics will be computed within groups defined by
+            the values taken on by these columns.  If no columns given, then the overall statistics
+            will be computed.
+        - ``constraint`` -- a dictionary or pair of lists, giving a query.  Only rows satisfying this
+            constraint will be included in the statistics.
+        - ``threshold`` -- if given, only sets of values for the grouping columns where the
+            count surpasses this threshold will be included.
+
+        OUTPUT:
+
+        A dictionary with keys the possible values taken on the the columns in grouping.
+        Each value is a dictionary with keys 'min', 'max', 'avg'
+        """
         if isinstance(grouping, basestring):
             onegroup = True
             grouping = [grouping]
         else:
             onegroup = False
+        if isinstance(col, (list, tuple)):
+            if len(col) == 1:
+                col = col[0]
+            else:
+                raise ValueError("Only single columns supported")
         grouping = sorted(grouping)
         ccols, cvals = self._split_dict(constraint)
         jcgcols = Json(sorted(ccols.adapted + grouping))
@@ -4082,6 +4353,8 @@ class PostgresStatsTable(PostgresBase):
             if the list [2,4,8] occurred as the value for a certain column,
             the counts for 2, 4 and 8 would each be incremented.  Constraint columns are not split.
             This option is not supported for nontrivial thresholds.
+        - ``suffix`` -- if given, the counts will be performed on the table with the suffix appended.
+        - ``commit`` -- if false, the results will not be committed to the database.
 
         OUTPUT:
 
@@ -4198,6 +4471,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         return [tuple(x) for x in cur]
 
     def _common_cols(self, threshold=700):
+        """
+        Returns a list of columns where the most common value has a count of at least the given threshold.
+        """
         common_cols = []
         for col in self.table._search_cols:
             most_common = self._approx_most_common(col, 1)
@@ -4205,7 +4481,14 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 common_cols.append(col)
         return common_cols
 
-    def _clear_stats_counts(self, extra=True, cols=None):
+    def _clear_stats_counts(self, extra=True):
+        """
+        Deletes all stats and counts.  This cannot be undone.
+
+        INPUT:
+
+        - ``extra`` -- if false, only delete the rows of the counts table not marked as extra.
+        """
         deleter = SQL("DELETE FROM {0}")
         self._execute(deleter.format(Identifier(self.stats)))
         if not extra:
@@ -4213,6 +4496,18 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         self._execute(deleter.format(Identifier(self.counts)))
 
     def add_stats_auto(self, cols=None, constraints=[None], max_depth=None, threshold=1000):
+        """
+        Searches for combinations of columns with many rows having the same set of values.
+
+        The main application is determining which indexes might be useful to add.
+
+        INPUT:
+
+        - ``cols`` -- a set of columns.  If not provided, columns where the most common value has at least 700 rows will be used.
+        - ``constraints`` -- a list of constraints.  Statistics will be added for each set of constraints.
+        - ``max_depth`` -- the maximum number of columns to include
+        - ``threshold`` -- only counts above this value will be included.
+        """
         with DelayCommit(self, silence=True):
             if cols is None:
                 cols = self._common_cols()
@@ -4287,6 +4582,8 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         - ``total`` -- if False, doesn't update the total count (since we can often
             update the total cheaply)
+        - ``suffix`` -- appended to the table name when computing and storing stats.
+            Used when reloading a table.
         """
         with DelayCommit(self, silence=True):
             # Determine the stats and counts currently recorded
@@ -4346,7 +4643,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
                 print "The following counts are being stored",
             print " (we collect all counts referring to the same columns):"
             for cols, values in col_value_dict.items():
-                print "  %s: %s rows in counts table" % (", ".join(cols), len(values))
+                print "  (%s): %s row%s in counts table" % (", ".join(cols), len(values), '' if len(values) == 1 else 's')
         else:
             if have_stats:
                 print "No additional counts are stored."
@@ -4406,7 +4703,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
     def _get_values_counts(self, cols, constraint, split_list, formatter, query_formatter, base_url, buckets=None):
         """
-        Utility function used in ``display_data``.
+        Utility function used in ``display_data``, used to generate data for stats tables.
 
         Returns a list of pairs (value, count), where value is a list of values taken on by the specified
         columns and count is an integer giving the number of rows with those values.
@@ -4417,6 +4714,16 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
 
         - ``cols`` -- a list of column names that are stored in the counts table.
         - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
+        - ``split_list`` -- see ``add_stats``.
+        - ``formatter`` -- a dictionary whose keys are column names and whose values are functions that take a value of that column as input and return a string for display
+        - ``query_formatter`` -- a dictionary whose keys are column names and whose values are functions that take a value of that column as input and return a string for inclusion in a url argument list
+        - ``base_url`` -- the initial part of the url, including the '?' (and possibly some universal arguments)
+        - ``buckets`` -- a dictionary with column names and keys and lists of strings as values.  See ``_bucket_iterator`` for more details
+
+        OUTPUT:
+
+        - ``header`` -- a list of lists giving the values to print along the top or side of the table
+        - ``data`` -- a dictionary with data on counts
         """
         selecter_constraints = [SQL("split = %s"), SQL("cols = %s")]
         if constraint:
@@ -4494,13 +4801,15 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         INPUT:
 
         - ``cols`` -- a list of columns
-        - ``constraint`` -- a dictionary specifying a constraint on rows to consider.
-        - ``avg`` -- boolean, whether to compute the average.
+        - ``constraint`` -- a dictionary specifying a constraint on rows to consider
+        - ``avg`` -- boolean, whether to compute the average
+        - ``split_list`` -- see the ``add_stats`` method
 
         OUTPUT:
 
         - the total number of rows satisying the constraint
-        - the average value of the given column (only possible if cols has length 1), or None if the average not requested.
+        - the average value of the given column (only possible if cols has length 1),
+          or None if the average not requested
         """
         jcols = Json(cols)
         total_str = "split_total" if split_list else "total"
@@ -4526,6 +4835,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         return total, avg
 
     def create_oldstats(self, filename):
+        """
+        Temporary support for statistics created in Mongo.
+        """
         name = self.search_table + "_oldstats"
         with DelayCommit(self, silence=True):
             creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
@@ -4541,6 +4853,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         print "Oldstats created successfully"
 
     def get_oldstat(self, name):
+        """
+        Temporary suppport for statistics created in Mongo.
+        """
         selecter = SQL("SELECT data FROM {0} WHERE _id = %s").format(Identifier(self.search_table + "_oldstats"))
         cur = self._execute(selecter, [name])
         if cur.rowcount != 1:
