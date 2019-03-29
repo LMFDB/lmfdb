@@ -454,7 +454,7 @@ class PostgresBase(object):
                 has_id = True
         return col_list, col_type, has_id
 
-    def _copy_to_select(self, select, filename, header="", sep=None):
+    def _copy_to_select(self, select, filename, header="", sep=None, silent=False):
         """
         Using the copy_expert from psycopg2 exports the data from a select statement.
         """
@@ -471,6 +471,9 @@ class PostgresBase(object):
             except Exception:
                 self.conn.rollback()
                 raise
+            else:
+                if not silent:
+                    print "Created file %s" % filename
 
     def _check_header_lines(self, F, table_name, columns_set, sep=u"\t"):
         """
@@ -719,7 +722,7 @@ class PostgresBase(object):
                 cols_sql, meta_name_sql, table_name_sql, Literal(search_table))
         now = time.time()
         with DelayCommit(self):
-            self._copy_to_select(select, filename)
+            self._copy_to_select(select, filename, silent=True)
         print "Exported %s for %s in %.3f secs" % (meta_name,
                 search_table, time.time() - now)
 
@@ -3114,7 +3117,7 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 cols = SQL(", ").join(map(Identifier, cols))
                 select = SQL("SELECT {0} FROM {1} WHERE {2} = {3}").format(cols, Identifier(table), Identifier(wherecol), Literal(self.search_table))
-                self._copy_to_select(select, filename)
+                self._copy_to_select(select, filename, silent=True)
                 print "\tExported data from %s in %.3f secs to %s" % (table, time.time() - now, filename)
 
             print "Exported %s in %.3f secs" % (self.search_table, time.time() - now_overall)
