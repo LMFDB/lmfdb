@@ -4159,6 +4159,7 @@ class PostgresStatsTable(PostgresBase):
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats_to_add, values_list=True)
             inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             self._execute(inserter.format(Identifier(self.counts + suffix)), counts_to_add, values_list=True)
+        self.logger.info("Added numstats in %.3f secs"%(time.time() - now))
 
     def _has_numstats(self, jcol, cgcols, cvals, threshold):
         """
@@ -4245,7 +4246,7 @@ class PostgresStatsTable(PostgresBase):
                 gvals = _make_tuple(cgvals)
             else:
                 gvals = []
-                for c, v in zip(jcgvols.adapted, cgvals):
+                for c, v in zip(jcgcols.adapted, cgvals):
                     if c in constraint:
                         if constraint[c] != v:
                             gvals = None
