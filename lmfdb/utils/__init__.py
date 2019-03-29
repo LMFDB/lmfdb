@@ -20,7 +20,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'debug', 'flash_error', 'cached',
            'ajax_url',
            'image_callback', 'encode_plot',
-           'KeyedDefaultDict', 'range_formatter',
+           'KeyedDefaultDict', 'make_tuple', 'range_formatter',
            'parse_ints', 'parse_signed_ints', 'parse_floats', 'parse_rational',
            'parse_rats', 'parse_bracketed_posints', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of',
@@ -57,7 +57,7 @@ from .utilities import (
     debug, flash_error, cached,
     ajax_url,  # try to eliminate?
     image_callback, encode_plot,
-    KeyedDefaultDict, range_formatter,
+    KeyedDefaultDict, make_tuple, range_formatter,
     datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime)
 
 from .search_parsing import (
