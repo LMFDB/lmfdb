@@ -1317,7 +1317,6 @@ class Lfunction_HMF(Lfunction):
 
         # Compute Dirichlet coefficients ########################
         R = QQ['x']
-        (x,) = R._first_ngens(1)
         K = NumberField(R(str(f['hecke_polynomial']).replace('^', '**')), 'e')
         iota = K.complex_embeddings()[self.number]
 
