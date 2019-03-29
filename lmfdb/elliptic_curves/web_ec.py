@@ -247,7 +247,6 @@ class WebEC(object):
                                  if (N*data['ap'][i]) %p !=0]
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
-        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
@@ -293,9 +292,14 @@ class WebEC(object):
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         self._code = None
 
-        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        if self.label_type == 'Cremona':
+            self.class_url = url_for(".by_ec_label", label=self.iso)
+            self.class_name = self.iso
+        else:
+            self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+            self.class_name = self.lmfdb_iso
         self.friends = [
-            ('Isogeny class ' + self.lmfdb_iso, self.class_url),
+            ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso))]
@@ -322,13 +326,13 @@ class WebEC(object):
 
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
-        self.properties = [('Label', self.lmfdb_label),
+        self.properties = [('Label', self.label if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
-                           ('Conductor', '\(%s\)' % data['conductor']),
-                           ('Discriminant', '\(%s\)' % data['disc']),
+                           ('Conductor', '%s' % data['conductor']),
+                           ('Discriminant', '%s' % data['disc']),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', '\(%s\)' % self.mw['rank']),
+                           ('Rank', '%s' % self.mw['rank']),
                            ('Torsion Structure', '\(%s\)' % self.mw['tor_struct'])
                            ]
 
