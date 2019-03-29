@@ -36,7 +36,7 @@ from psycopg2.extras import execute_values
 from sage.all import cartesian_product_iterator, binomial
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
-from lmfdb.utils import KeyedDefaultDict
+from lmfdb.utils import KeyedDefaultDict, make_tuple
 from lmfdb.logger import make_logger
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
@@ -3168,7 +3168,11 @@ class PostgresTable(PostgresBase):
                 self._search_cols.append(name)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
-    def drop_column(self, name, commit=True):
+    def drop_column(self, name, commit=True, force=False):
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%name)
+            if not (ok and ok[0] in ['y','Y']):
+                return
         if name in self._sort_keys:
             raise ValueError("Sorting for %s depends on %s; change default sort order with set_sort() before dropping column"%(self.search_table, name))
         with DelayCommit(self, commit, silence=True):
@@ -3432,6 +3436,15 @@ class PostgresTable(PostgresBase):
                     if isinstance(check, typ):
                         show_check(checkname, check, typ)
 
+    def set_importance(self, importance):
+        """
+        Production tables are marked as important so that they can't be accidentally dropped.
+
+        Use this method to mark a table important or not important.
+        """
+        updater = SQL("UPDATE meta_tables SET important = %s WHERE name = %s")
+        self._execute(updater, [importance, self.search_table])
+
 class PostgresStatsTable(PostgresBase):
     """
     This object is used for storing statistics and counts for a search table.
@@ -3631,17 +3644,12 @@ class PostgresStatsTable(PostgresBase):
             thresh = SQL(" AND count >= {0}").format(Literal(threshold))
         selecter = SQL("SELECT values, count FROM {0} WHERE cols = %s AND split = %s{1}").format(Identifier(self.counts), thresh)
         cur = self._execute(selecter, [jallcols, split_list])
-        def make_tuple(val, top_level=True):
-            if one_col and top_level:
-                return make_tuple(val[0], top_level=False)
-            elif isinstance(val, (list, tuple)):
-                return tuple(make_tuple(x, top_level=False) for x in val)
-            elif isinstance(val, dict):
-                return tuple((make_tuple(a, top_level=False), make_tuple(b, top_level=False)) for a,b in val.items())
-            else:
-                return val
+        if one_col:
+            _make_tuple = lambda x: make_tuple(x)[0]
+        else:
+            _make_tuple = make_tuple
         if constraint is None:
-            return {make_tuple(rec[0]): rec[1] for rec in cur}
+            return {_make_tuple(rec[0]): rec[1] for rec in cur}
         else:
             constraint_list = [(i, constraint[col]) for (i, col) in enumerate(allcols) if col in constraint]
             column_indexes = [i for (i, col) in enumerate(allcols) if col not in constraint]
@@ -3649,7 +3657,7 @@ class PostgresStatsTable(PostgresBase):
                 return all(val[i] == c for i,c in constraint_list)
             def remove_constraint(val):
                 return [val[i] for i in column_indexes]
-            return {make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
+            return {_make_tuple(remove_constraint(rec[0])): rec[1] for rec in cur if satisfies_constraint(rec[0])}
 
     def _quick_max(self, col, ccols, cvals):
         if ccols is None:
@@ -3796,6 +3804,179 @@ class PostgresStatsTable(PostgresBase):
         assert len(ccols) == len(cvals)
         return dict(zip(ccols, cvals))
 
+    def add_numstats(self, col, grouping, constraint=None, threshold=None, suffix='', commit=True):
+        """
+        For each value taken on by the columns in ``grouping``, numerical statistics on ``col`` (min, max, avg) will be added.
+
+        This function does not add counts of each distinct value taken on by ``col``, and it uses SQL rather than Python to compute MIN, MAX and AVG.
+
+        Note that add_numstats and add_stats use the same mechanism to check whether stats have already been computed (the presence of a total entry), so if you call one with a        
+        """
+        grouping = sorted(grouping)
+        where, values, constraint, ccols, cvals, _ = self._process_constraint([col], constraint)
+        jcol = Json([col])
+        jcgcols = Json(sorted(ccols.adapted + grouping))
+        if self._has_numstats(jcol, jcgcols, cvals, threshold):
+            self.logger.info("Numstats already exist")
+            return
+        if threshold is None:
+            having = SQL("")
+        else:
+            having = SQL(" HAVING COUNT(*) >= {0}").format(Literal(threshold))
+        vars = SQL("COUNT(*), AVG({0}), MIN({0}), MAX({0})").format(Identifier(col))
+        if grouping:
+            groups = SQL(", ").join(map(Identifier, grouping))
+            groupby = SQL(" GROUP BY {0}").format(groups)
+            vars = SQL("{0}, {1}").format(vars, groups)
+        else:
+            groupby = SQL("")
+        now = time.time()
+        with DelayCommit(self, commit, silence=True):
+            selecter = SQL("SELECT {vars} FROM {table}{where}{groupby}{having}").format(vars=vars, table=Identifier(self.search_table + suffix), groupby=groupby, where=where, having=having)
+            cur = self._execute(selecter, values)
+            counts_to_add = []
+            # We record the grouping in a record to be inserted in the stats table
+            # Note that we don't sort ccols and grouping together, so that we can distinguish them
+            stats_to_add = [(jcol, "ntotal", 0, Json(ccols.adapted + grouping), cvals, threshold)]
+            for statvec in cur:
+                cnt, colstats, gvals = statvec[0], statvec[1:4], statvec[4:]
+                if constraint is None:
+                    jcgvals = gvals
+                else:
+                    jcgvals = []
+                    i = 0
+                    for col in jcgcols.adapted:
+                        if col in grouping:
+                            jcgvals.append(gvals[i])
+                            i += 1
+                        else:
+                            jcgvals.append(constraint[col])
+                jcgvals = Json(jcgvals)
+                counts_to_add.append((jcgcols, jcgvals, cnt, False))
+                for st, val in zip(["avg", "min", "max"], colstats):
+                    stats_to_add.append((jcol, st, val, jcgcols, jcgvals, threshold))
+            # It's possible that stats/counts have been added by an add_stats call
+            # The right solution is a unique index and an ON CONFLICT DO NOTHING clause,
+            # but for now we just live with the possibility of a few duplicate rows.
+            inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
+            self._execute(inserter.format(Identifier(self.stats + suffix)), stats_to_add, values_list=True)
+            inserter = SQL("INSERT INTO {0} (cols, values, count, split) VALUES %s")
+            self._execute(inserter.format(Identifier(self.counts + suffix)), counts_to_add, values_list=True)
+
+    def _has_numstats(self, jcol, cgcols, cvals, threshold):
+        """
+        Checks whether statistics have been recorded for a given set of columns.
+        It just checks whether the "ntotal" stat has been added.
+
+        INPUT:
+
+        - ``jcol`` -- a list containing the column name whose min/max/avg were computed (wrapped in Json)
+        - ``cgcols`` -- the sorted constraint columns, followed by the sorted grouping columns (wrappe in Json)
+        - ``cvals`` -- a list of the values required for the constraint columns (wrapped in Json).
+        - ``threshold`` -- an integer: if the number of rows with a given tuple of
+           values for the grouping columns is less than this threshold, those
+           rows are thrown away.
+        """
+        values = [jcol, "ntotal", cgcols, cvals]
+        if threshold is None:
+            threshold = "threshold IS NULL"
+        else:
+            values.append(threshold)
+            threshold = "threshold = %s"
+        selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND constraint_cols = %s AND constraint_values = %s AND {1}")
+        selecter = selecter.format(Identifier(self.stats), SQL(threshold))
+        cur = self._execute(selecter, values)
+        return cur.rowcount > 0
+
+    def numstats(self, col, grouping, constraint=None, threshold=None):
+        if isinstance(grouping, basestring):
+            onegroup = True
+            grouping = [grouping]
+        else:
+            onegroup = False
+        grouping = sorted(grouping)
+        ccols, cvals = self._split_dict(constraint)
+        jcgcols = Json(sorted(ccols.adapted + grouping))
+        jcol = Json([col])
+        if not self._has_numstats(jcol, jcgcols, cvals, threshold):
+            raise ValueError("Missing numstats")
+        values = [jcol, jcgcols]
+        if threshold is None:
+            threshold = SQL("threshold IS NULL")
+        else:
+            values.append(threshold)
+            threshold = SQL("threshold = %s")
+        selecter = SQL("SELECT stat, value, constraint_values FROM {0} WHERE cols = %s AND constraint_cols = %s AND {1}")
+        selecter = selecter.format(Identifier(self.stats), threshold)
+        nstats = defaultdict(dict)
+        if onegroup:
+            _make_tuple = lambda x: make_tuple(x)[0]
+        else:
+            _make_tuple = make_tuple
+        for rec in db._execute(selecter, values):
+            stat, val, cgvals = rec
+            if stat == 'ntotal':
+                continue
+            if constraint is None:
+                gvals = _make_tuple(cgvals)
+            else:
+                gvals = []
+                for c, v in zip(jcgvols.adapted, cgvals):
+                    if c in constraint:
+                        if constraint[c] != v:
+                            gvals = None
+                            break
+                    else:
+                        gvals.append(v)
+                if gvals is None:
+                    # Doesn't satisfy constraint, so skip to next row
+                    continue
+                gvals = _make_tuple(gvals)
+            nstats[gvals][stat] = val
+        return nstats
+
+    def _process_constraint(self, cols, constraint):
+        """
+        INPUT:
+
+        - ``cols`` -- a list of columns
+        - ``constraint`` -- a dictionary or a pair of lists (the result of calling _split_dict on a dict)
+
+        OUTPUT:
+
+        - ``where`` -- the where clause for a query
+        - ``values`` -- a list of values for input into the _execute statement.
+        - ``constraint`` -- the constraint dictionary
+        - ``ccols`` -- a Json object holding the constraint columns
+        - ``cvals`` -- a Json object holding the constraint values
+        - ``allcols`` -- a sorted list of all columns in cols or constraint
+        """
+        where = [SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols]
+        values, ccols, cvals = [], Json([]), Json([])
+        if constraint is None or constraint == (None, None):
+            allcols = cols
+            constraint = None
+        else:
+            if isinstance(constraint, tuple):
+                # reconstruct constraint from ccols and cvals
+                ccols, cvals = constraint
+                constraint = self._join_dict(ccols, cvals)
+                ccols, cvals = Json(ccols), Json(cvals)
+            else:
+                ccols, cvals = self._split_dict(constraint)
+            # We need to include the constraints in the count table if we're not grouping by that column
+            allcols = sorted(list(set(cols + constraint.keys())))
+            if any(key.startswith('$') for key in constraint.keys()):
+                raise ValueError("Top level special keys not allowed")
+            qstr, values = self.table._parse_dict(constraint)
+            if qstr is not None:
+                where.append(qstr)
+        if allcols:
+            where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
+        else:
+            where = SQL("")
+        return where, values, constraint, ccols, cvals, allcols
+
     def add_stats(self, cols, constraint=None, threshold=None, split_list=False, suffix='', commit=True):
         """
         Add statistics on counts, average, min and max values for a given set of columns.
@@ -3824,30 +4005,7 @@ class PostgresStatsTable(PostgresBase):
         if split_list and threshold is not None:
             raise ValueError("split_list and threshold not simultaneously supported")
         cols = sorted(cols)
-        where = [SQL("{0} IS NOT NULL").format(Identifier(col)) for col in cols]
-        values, ccols, cvals = [], None, None
-        if constraint is None or constraint == (None, None):
-            allcols = cols
-            constraint = None
-        else:
-            if isinstance(constraint, tuple):
-                # reconstruct constraint from ccols and cvals
-                ccols, cvals = constraint
-                constraint = self._join_dict(ccols, cvals)
-                ccols, cvals = Json(ccols), Json(cvals)
-            else:
-                ccols, cvals = self._split_dict(constraint)
-            # We need to include the constraints in the count table if we're not grouping by that column
-            allcols = sorted(list(set(cols + constraint.keys())))
-            if any(key.startswith('$') for key in constraint.keys()):
-                raise ValueError("Top level special keys not allowed")
-            qstr, values = self.table._parse_dict(constraint)
-            if qstr is not None:
-                where.append(qstr)
-        if allcols:
-            where = SQL(" WHERE {0}").format(SQL(" AND ").join(where))
-        else:
-            where = SQL("")
+        where, values, constraint, ccols, cvals, allcols = self._process_constraint(cols, constraint)
         if self._has_stats(Json(cols), ccols, cvals, threshold, split_list):
             self.logger.info("Statistics already exist")
             return
@@ -3877,8 +4035,10 @@ class PostgresStatsTable(PostgresBase):
             cur = self._execute(selecter, values)
             if split_list:
                 to_add = defaultdict(int)
+                allcols = tuple(allcols)
             else:
                 to_add = []
+                jallcols = Json(allcols)
             total = 0
             onenumeric = False # whether we're grouping by a single numeric column
             if len(cols) == 1:
@@ -3888,8 +4048,6 @@ class PostgresStatsTable(PostgresBase):
                     avg = 0
                     mn = None
                     mx = None
-            if split_list:
-                allcols = tuple(allcols)
             for countvec in cur:
                 seen_one = True
                 colvals, count = countvec[:-1], countvec[-1]
@@ -3910,7 +4068,7 @@ class PostgresStatsTable(PostgresBase):
                         total += count
                         to_add[(allcols, vals)] += count
                 else:
-                    to_add.append((Json(allcols), Json(allcolvals), count, False))
+                    to_add.append((jallcols, Json(allcolvals), count, False))
                     total += count
                 if onenumeric:
                     val = colvals[0]
@@ -4748,9 +4906,16 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         self.log_db_change('create_table', tablename=name, name=name, search_columns=search_columns, label_col=label_col, sort=sort, id_ordered=id_ordered, extra_columns=extra_columns, search_order=search_order, extra_order=extra_order)
         print "Table %s created in %.3f secs"%(name, time.time()-now)
 
-    def drop_table(self, name, commit=True):
+    def drop_table(self, name, commit=True, force=False):
+        table = self[name]
+        selecter = SQL("SELECT important FROM meta_tables WHERE name=%s")
+        if self._execute(selecter, [name]).fetchone()[0]:
+            raise ValueError("You cannot drop an important table.  Use the set_importance method on the table if you actually want to drop it.")
+        if not force:
+            ok = raw_input("Are you sure you want to drop %s? (y/N) "%(name))
+            if not (ok and ok[0] in ['y','Y']):
+                return
         with DelayCommit(self, commit, silence=True):
-            table = self[name]
             table.cleanup_from_reload()
             indexes = list(self._execute(SQL("SELECT index_name FROM meta_indexes WHERE table_name = %s"), [name]))
             if indexes:
