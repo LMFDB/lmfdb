@@ -238,11 +238,11 @@ class KnowlBackend(PostgresBase):
             # default to just showing normal knowls
             types = ["normal"]
         if len(types) == 1:
-            secondary_restrictions.append(SQL("abs(type) = %s"))
+            secondary_restrictions.append(SQL("type = %s"))
             values.append(knowl_type_code[types[0]])
         else:
-            secondary_restrictions.append(SQL("abs(type) <= %s"))
-            values.append(1)
+            secondary_restrictions.append(SQL("type = ANY(%s)"))
+            values.append([knowl_type_code[typ] for typ in types])
         secondary_restrictions = SQL(" AND ").join(secondary_restrictions)
         if sort:
             sort = SQL(" ORDER BY ") + self._sort_str(sort)
@@ -614,6 +614,13 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, [0])
         return {res[0]: res[1] for res in cur}
 
+    def remove_author(self, kid, uid):
+        """
+        Remove an author from all versions of a knowl.
+        """
+        updater = SQL("UPDATE kwl_knowls SET authors = array_remove(authors, %s) WHERE id = %s")
+        self._execute(updater, [uid, kid])
+
 knowldb = KnowlBackend()
 
 def knowl_title(kid):
@@ -625,7 +632,7 @@ def knowl_exists(kid):
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
-knowl_type_code = {'annotations': 1, 'normal': 0}
+knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1}
 
 class Knowl(object):
     """
