@@ -70,13 +70,10 @@ class ECisog_class(object):
             if self.label_type == 'Cremona':
                 c['curve_label'] = c['label']
                 _, c_iso, c_number = split_cremona_label(c['label'])
-                print("(C) label = {}, iso={}, number={}".format(c['label'],c_iso, c_number))
             else:
                 c['curve_label'] = c['lmfdb_label']
                 _, c_iso, c_number = split_lmfdb_label(c['lmfdb_label'])
-                print("(L) label = {}, iso={}, number={}".format(c['lmfdb_label'],c_iso, c_number))
             c['short_label'] = "{}{}".format(c_iso,c_number)
-            print("short label = {}".format(c['short_label']))
             
         from sage.matrix.all import Matrix
         if self.label_type == 'Cremona':
