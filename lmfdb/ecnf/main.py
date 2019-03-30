@@ -180,7 +180,6 @@ def index():
     # data['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 
-    ecnfstats = db.ec_nfcurves.stats
     fields_by_deg = ECNF_stats().fields_by_deg
     fields_by_sig = ECNF_stats().fields_by_sig
     data['fields'] = []
@@ -539,7 +538,6 @@ def statistics_by_degree(d):
         return redirect(url_for("ec.statistics"))
     info = {}
 
-    ecnfstats = db.ec_nfcurves.stats
     sigs_by_deg = ECNF_stats().sigs_by_deg
     if d not in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d

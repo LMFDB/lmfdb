@@ -140,14 +140,14 @@ class ECNF_stats(StatsDisplay):
         s = '' if max_norm==1 else 'up to '
         norm_phrase = ' of norm {}{}.'.format(s, max_norm)
         return ''.join([r'The database currently contains {} '.format(ncurves),
-                    ec_knowl,
-                    r' defined over the ',
-                    nf_knowl,
-                    r' {}, in {} '.format(field_pretty(field), nclasses),
-                    iso_knowl,
-                    r', with ',
-                    cond_knowl,
-                    r' of norm {} {}.'.format(s,data['max_norm'])])
+                        ec_knowl,
+                        r' defined over the ',
+                        nf_knowl,
+                        r' {}, in {} '.format(field_pretty(field), nclasses),
+                        iso_knowl,
+                        r', with ',
+                        cond_knowl,
+                        norm_phrase])
 
     @cached_method
     def signature_summary(self, sig):
