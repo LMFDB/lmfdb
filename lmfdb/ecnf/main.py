@@ -525,7 +525,7 @@ def browse():
     data = ECNF_stats().sigs_by_deg
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
-    info = [[d,data[d]] for d in sorted(data.keys())]
+    info = [[d,['%s,%s'%sig for sig in data[d]]] for d in sorted(data.keys())]
     credit = 'John Cremona'
     t = 'Elliptic Curves over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
