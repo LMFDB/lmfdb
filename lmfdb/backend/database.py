@@ -2464,6 +2464,9 @@ class PostgresTable(PostgresBase):
         Update the unique row satisfying the given query, or insert a new row if no such row exists.
         If more than one row exists, raises an error.
 
+        Upserting will often break the order constraint if the table is id_ordered,
+        so you will probably want to call ``resort`` after all upserts are complete.
+
         INPUT:
 
         - ``query`` -- a dictionary with key/value pairs specifying at most one row of the table.
@@ -2472,8 +2475,10 @@ class PostgresTable(PostgresBase):
 
         The keys of both inputs must be columns in either the search or extras table.
 
-        Upserting will often break the order constraint if the table is id_ordered,
-        so you will probably want to call ``resort`` after all upserts are complete.
+        OUTPUT:
+
+        - ``new_row`` -- whether a new row was inserted
+        - ``row_id`` -- the id of the found/new row
         """
         if not query or not data:
             raise ValueError("Both query and data must be nonempty")
@@ -2511,6 +2516,7 @@ class PostgresTable(PostgresBase):
             if cur.rowcount > 1:
                 raise ValueError("Query %s does not specify a unique row"%(query))
             elif cur.rowcount == 1: # update
+                new_row = False
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
                     if len(dat) == 1:
@@ -2529,6 +2535,7 @@ class PostgresTable(PostgresBase):
             else: # insertion
                 if "id" in data or "id" in query:
                     raise ValueError("Cannot specify an id for insertion")
+                new_row = True
                 for col, val in query.items():
                     if col not in search_data:
                         search_data[col] = val
@@ -2536,7 +2543,7 @@ class PostgresTable(PostgresBase):
                 # has inserted data this will be a problem,
                 # but it will raise an error rather than leading to invalid database state,
                 # so it should be okay.
-                search_data["id"] = self.max_id() + 1
+                search_data["id"] = row_id = self.max_id() + 1
                 if self.extra_table is not None:
                     extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
@@ -2549,6 +2556,7 @@ class PostgresTable(PostgresBase):
                 self.stats.total += 1
             self._break_stats()
             self.log_db_change("upsert", query=query, data=data)
+            return new_row, row_id
 
     def insert_many(self, data, resort=True, reindex=False, restat=True, commit=True):
         """
