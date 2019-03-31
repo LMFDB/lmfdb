@@ -2222,7 +2222,7 @@ table.qexp-table td.output {
     font-family: MJX_Math;
 }
 
-input::-webkit-input-placeholder {
+input::placeholder {
     color: #cccccc;
 }
 
