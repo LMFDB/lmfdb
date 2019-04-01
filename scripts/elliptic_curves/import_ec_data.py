@@ -113,7 +113,7 @@ The documents in the mongo collection 'curves' in the database 'elliptic_curves'
    - '2adic_label': (string) Rouse label of the associated modular
       curve (None for CM curves)
    - 'isogeny_matrix': (list of lists of ints) isogeny matrix for
-     curves in the class w.r.t. Cremona ordering
+     curves in the class w.r.t. LMFDB ordering
    - 'isogeny_degrees': (list of ints) degrees of cyclic isogenies from this curve
    - 'class_size': (int) size of isogeny class
    - 'class_deg': (int) max (=lcm) of isogeny degrees in the class

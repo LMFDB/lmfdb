@@ -10,8 +10,7 @@ text-align: center;
 }
 </style>
 
-
-<h2>Elliptic curves in class {{info.lmfdb_iso}}</h2>
+<h2>Elliptic curves in class {{info.iso_label}}</h2>
 {{ place_code('curves') }}
 <table id = "isogeny_class_table">
 <tr>
@@ -28,8 +27,8 @@ text-align: center;
 {% else %}
 <tr>
 {% endif %}
-<td class="center"><a href="{{c.url}}">{{c.lmfdb_label}}</a></td>
-<td class="center">{{c.label}}</td>
+<td class="center"><a href="{{c.curve_url_lmfdb}}">{{c.lmfdb_label}}</a></td>
+<td class="center"><a href="{{c.curve_url_cremona}}">{{c.label}}</a></td>
 <td class="center">{{c.ai}}</td>
 <td align="center">{{c.torsion}}</td>
 <td align="center">
@@ -47,8 +46,8 @@ text-align: center;
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
-{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].label}} has
-{% else %} The elliptic curves in class {{info.lmfdb_iso}} have
+{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].curve_label}} has
+{% else %} The elliptic curves in class {{info.iso_label}} have
 {% endif %}
 {{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>
@@ -79,12 +78,15 @@ text-align: center;
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
 {{ place_code('matrix') }}
+<p>The \(i,j\) entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
+</p>
 <p>
   \({{info.isogeny_matrix_str}}\)
 </p>
 
 <h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
 {{ place_code('plot') }}
+<p>The vertices are labelled with {{info.label_type}} labels. </p>
 <center>
   <img src="{{info.graph_img}}" />
 </center>
