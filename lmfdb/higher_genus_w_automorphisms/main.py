@@ -512,7 +512,7 @@ def render_passport(args):
                      'gpid': smallgroup,
                      'numb':numb,
                      'disp_numb':min(numb,numgenvecs),
-                     'g0': data['g0']   #ADDED JP
+                     'g0': data['g0']
                    })
 
         if spname:
@@ -547,7 +547,8 @@ def render_passport(args):
             elif dat['g0'] > 0:
                 for perm in dat['gen_vectors']:
                     cycperm =Permutation(perm).cycle_string()
-                    if display_perm == '()':
+                    #if display_perm == '()':
+                    if cycperm == '()':
                         x4.append('Id(G)')
                     else:
                         x4.append(sep.join(split_perm(cycperm))) 
