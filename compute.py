@@ -130,6 +130,7 @@ OrbitComputeAut:=function(Vects,A,r);
    end while;  /* while Vects not empty */
    return T, Orbs;
 end function;
+/*
 AbelianOrbitComputeAut:=function(Vects,A,r);
    /* T will be list of final orbits, A is outer auts */
    T:={};
@@ -159,8 +160,8 @@ AbelianOrbitComputeAut:=function(Vects,A,r);
       end while;   
    end while;  /* while Vects not empty */
    return T, Orbs;
-end function;
-'''
+end function;*/
+''' 
 
 top_matter = '''
 // The results are stored in a list of records called 'data'
@@ -241,17 +242,12 @@ if #genvecs gt 0 then
       aut:= [h(aL): aL in A | not IsInner(h(aL))];   /* Outer Automorphisms */
       Vects:={g[1] : g in genvecs};
       braid_Vects:={g[1] : g in braid_genvecs};
-      if IsAbelian(G) then
-         TopRep,TopOrbs:=AbelianOrbitComputeAut(Vects,aut,#signature-1);
-         BrdOrbs:=[];
+      BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
+      if #BrdRep eq 1 then
+      	TopRep:=BrdRep;
+        TopOrbs:=BrdOrbs;
       else
-         BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
-         if #BrdRep eq 1 then
-            TopRep:=BrdRep;
-            TopOrbs:=BrdOrbs;
-         else
-            TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
-         end if;
+        TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
       end if;
       TopOrbsID:=[];
       for j in [1..#TopOrbs] do

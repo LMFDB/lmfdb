@@ -69,3 +69,12 @@
 2019-03-05 09:59:48,768 - Replicate with db.hgcwa_passports.analyze({'genus': 2}, ['id', 'total_label', 'label'], None, 0)
 2019-03-05 10:12:26,887 - SELECT "id", "total_label", "label" FROM "hgcwa_passports" WHERE "id" = 14 ORDER BY "genus", "dim", "cc" ran in 0.140264987946s
 2019-03-05 10:12:26,892 - Replicate with db.hgcwa_passports.analyze({'id': 14}, ['id', 'total_label', 'label'], None, 0)
+2019-03-12 10:27:57,277 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = artin_field_data ORDER BY ordinal_position ran in 0.10239315033s
+2019-03-12 10:28:02,662 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_newspace_portraits ORDER BY ordinal_position ran in 0.1148250103s
+2019-03-12 10:29:50,686 - SELECT "ndim", "jacobian_decomp", "cc", "full_auto", "passport_label", "group", "signH", "label", "hyp_involution", "full_label", "eqn", "cinv", "hyperelliptic", "gen_vectors", "total_label", "g0", "dim", "group_order", "cyclic_trigonal", "r", "signature", "genus", "con" FROM "hgcwa_passports" WHERE "genus" = 2 ORDER BY "genus", "dim", "cc" ran in 0.128811120987s
+2019-03-12 10:29:50,690 - Replicate with db.hgcwa_passports.analyze({'genus': 2}, 1, None, 0)
+2019-04-01 23:55:15,872 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = belyi_galmaps ORDER BY ordinal_position ran in 0.127001047134s
+2019-04-01 23:55:17,362 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = smf_ev ORDER BY ordinal_position ran in 0.12054681778s
+2019-04-01 23:55:45,928 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_hecke_nf ORDER BY ordinal_position ran in 0.101811170578s
+2019-04-01 23:57:14,059 - SELECT "genus" FROM "hgcwa_passports" ORDER BY "genus" DESC LIMIT 1 ran in 0.156264066696s
+2019-04-01 23:59:49,048 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_gamma1_portraits ORDER BY ordinal_position ran in 0.11678814888s
