@@ -143,10 +143,12 @@ class WebEC(object):
         try:
             N, iso, number = split_lmfdb_label(label)
             data = db.ec_curves.lucky({"lmfdb_label" : label})
+            data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 data = db.ec_curves.lucky({"label" : label})
+                data['label_type'] = 'Cremona'
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
 
@@ -245,7 +247,6 @@ class WebEC(object):
                                  if (N*data['ap'][i]) %p !=0]
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
-        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
         self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
@@ -291,9 +292,14 @@ class WebEC(object):
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         self._code = None
 
-        self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+        if self.label_type == 'Cremona':
+            self.class_url = url_for(".by_ec_label", label=self.iso)
+            self.class_name = self.iso
+        else:
+            self.class_url = url_for(".by_double_iso_label", conductor=N, iso_label=iso)
+            self.class_name = self.lmfdb_iso
         self.friends = [
-            ('Isogeny class ' + self.lmfdb_iso, self.class_url),
+            ('Isogeny class ' + self.class_name, self.class_url),
             ('Minimal quadratic twist %s %s' % (data['minq_info'], data['minq_label']), url_for(".by_triple_label", conductor=minq_N, iso_label=minq_iso, number=minq_number)),
             ('All twists ', url_for(".rational_elliptic_curves", jinv=self.jinv)),
             ('L-function', url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso))]
@@ -320,17 +326,20 @@ class WebEC(object):
 
 
         self.plot_link = '<a href="{0}"><img src="{0}" width="200" height="150"/></a>'.format(self.plot)
-        self.properties = [('Label', self.lmfdb_label),
+        self.properties = [('Label', self.label if self.label_type == 'Cremona' else self.lmfdb_label),
                            (None, self.plot_link),
-                           ('Conductor', '\(%s\)' % data['conductor']),
-                           ('Discriminant', '\(%s\)' % data['disc']),
+                           ('Conductor', '%s' % data['conductor']),
+                           ('Discriminant', '%s' % data['disc']),
                            ('j-invariant', '%s' % data['j_inv_latex']),
                            ('CM', '%s' % data['CM']),
-                           ('Rank', '\(%s\)' % self.mw['rank']),
+                           ('Rank', '%s' % self.mw['rank']),
                            ('Torsion Structure', '\(%s\)' % self.mw['tor_struct'])
                            ]
 
-        self.title = "Elliptic Curve %s (Cremona label %s)" % (self.lmfdb_label, self.label)
+        if self.label_type == 'Cremona':
+            self.title = "Elliptic Curve with Cremona label {} (LMFDB label {})".format(self.label, self.lmfdb_label)
+        else:
+            self.title = "Elliptic Curve with LMFDB label {} (Cremona label {})".format(self.lmfdb_label, self.label)
 
         self.bread = [('Elliptic Curves', url_for("ecnf.index")),
                            ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -475,8 +484,14 @@ class WebEC(object):
             if d!=lastd:
                 tg1['m'] = len([x for x in tgextra if x['d']==d])
                 lastd = d
-        ## Hard code for now
-        #tg['maxd'] = max(db.ec_curves.stats.get_oldstat('torsion_growth')['degrees'])
+
+        ## Hard-code this for now.  While something like
+        ## max(db.ec_curves.search({},projection='tor_degs')) might
+        ## work, since 'tor_degs' is in the extra table it is very
+        ## slow.  Note that the *only* place where this number is used
+        ## is in the ec-curve template where it says "The number
+        ## fields ... of degree up to {{data.tg.maxd}} such that...".
+        
         tg['maxd'] = 7
 
 

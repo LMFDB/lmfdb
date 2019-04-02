@@ -301,7 +301,7 @@ class GreyKnowls(ColorScheme):
     knowl_title_text = c.black
     knowl_hover_text = c.black
     knowl_thin_border = '#CDCDCD'
-    body_background = c.almost_white
+    body_background = c.white
     def __init__(self):
         self.knowl_underline = self.knowl_hyper_text
 
@@ -389,7 +389,7 @@ class SteelBlue(GreyKnowls):
     col_sidebar_links = '#1565C0' # P1-800
     col_sidebar_header_links = '#0D47A1' # P1-900
     #col_search_border = '#0D47A1' # P1-900
-    col_main_2  = '#555555'
+    col_main_2  = '#EEEEEE'
     col_main_l  = '#90CAF9' # P1-200
     col_main_lg = '#0D47A1' # P1-900
     col_main_ll = '#E3F2FD' # P1-50
@@ -407,6 +407,8 @@ class SteelBlue(GreyKnowls):
     knowl_border_text = '#333'
     sidebar_text_beta = '#006d05'
     knowl_error = '#006d05'
+    chi_table_background = '#E3F2FD'
+    chitable_imprimitive = c.black
 
 class IndigoHair(YellowKnowls):
     code = 18

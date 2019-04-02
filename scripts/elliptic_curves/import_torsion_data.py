@@ -14,7 +14,10 @@ Additional data fields for each elliptic curve over Q
  'tor_gro': u'jsonb',    dictionary, keys are field labels or poly
                          strings, values are structure constants of the larger torsion
 
-
+NB We have hard-coded the maximum degree of number field for which we
+currently have data (currently 7) in lmfdb/elliptic_curves/web_ec.py
+since tor_degs and the other extra columns are in the extr table.  If
+data for higher degrees is uploaded that will need to be changed.
 """
 import os
 from sage.all import ZZ, PolynomialRing, QQ, NumberField
