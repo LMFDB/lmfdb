@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
 
 <style>
@@ -18,8 +17,6 @@ div.properties-body table tr td.label { vertical-align: top; }
 #content > h2.subhead { color:{{color.black}};}
 </style>
 
-{% set KNOWL_ID = "belyi.%s"|format(data['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 <h2>Invariants</h2>
   <p>
     <table>

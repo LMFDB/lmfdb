@@ -39,8 +39,14 @@ fi
 
 WHAT="$@"
 
+SAGE_COMMAND=$SAGE
+if [[ "$SAGE_COMMAND" == "" ]]; then
+  SAGE_COMMAND=sage
+fi
+echo "Using Sage command $SAGE_COMMAND"
+
 echo "Running pyflakes..."
-read PYFLAKES_ERRCNT < <(find . | grep "\.py$" | xargs pyflakes 2>&1 | tee /dev/stderr | grep "py:" -c)
+read PYFLAKES_ERRCNT < <(find . | grep "\.py$" | xargs $SAGE_COMMAND -python -m pyflakes 2>&1 | tee /dev/stderr | grep "py:" -c)
 if [[ $PYFLAKES_ERRCNT > 0 ]]; then
   echo "WARNING: pyflakes reported $PYFLAKES_ERRCNT error(s)"
 else
@@ -48,12 +54,6 @@ else
 fi
 
 ARGS='-v -s'
-
-SAGE_COMMAND=$SAGE
-if [[ "$SAGE_COMMAND" == "" ]]; then
-  SAGE_COMMAND=sage
-fi
-echo "Using Sage command $SAGE_COMMAND"
 
 if [[ -n $WHAT ]]; then
    eval "$SAGE_COMMAND -python -m pytest $ARGS $COVER $WHAT"

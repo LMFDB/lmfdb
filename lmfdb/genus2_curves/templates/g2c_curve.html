@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
 <style>
 <div.ratpts>span { white-space: nowrap; font-family: serif; }
@@ -31,10 +30,6 @@ function show_invs(invstyle) {
 {#
 <script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
-
-{% set KNOWL_ID = "g2c.%s"|format(data['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 
 <h2> {{ KNOWL('g2c.minimal_equation', title='Minimal equation') }} </h2>
 {{place_code('curve')}}
@@ -320,7 +315,5 @@ Same for all other occasions of it.-->
 {{data.end_lattice_statement|safe}}
 <p></p>
 {% endif %}
-
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

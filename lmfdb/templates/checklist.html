@@ -35,7 +35,7 @@ Elliptic Curve 17.a1</a>: symmetric square L-function<br/>
 <a href="{{ url_for("ec.rational_elliptic_curves", jinv=8000)}}"> 
 Elliptic Curve 256.a1</a> (\(j=8000\)): list of twists<br/>
 <li>
-<a href="{{ url_for("emf.render_elliptic_modular_forms", level=11, weight=2, character=1, label='a')}}"> 
+<a href="{{ url_for("cmf.by_url_newform_label", level=11, weight=2, char_orbit_label='a', hecke_orbit='a')}}"> 
 Elliptic Curve 11.a1</a>: modular form<br/>
 <li>
 <a href="{{ url_for('ec.by_ec_label', label='108.a2') }}">
@@ -93,9 +93,9 @@ Elliptic Curve 108.a2</a>: (\(j(E)=0\) case)<br/>
 
 <ul>
 <li>
-<a href="{{ url_for('l_functions.l_function_maass_page', dbid = "4f5558c888aece2646000013")}}"> A Maass form </a>
-<li><a href="{{ url_for('emf.render_elliptic_modular_forms', level = 11, weight = 6, character = 1,label = "b")}}"> Cuspidal newform 11.6.1b </a> and
-<a href="{{ url_for('l_functions.l_function_emf_page', level = 11, weight = 6, character = 1, label = "b", number = 2)}}"> its associated L-function </a><br/>
+<a href="{{ url_for('l_functions.l_function_maass_page', maass_id = "4f5558c888aece2646000013")}}"> A Maass form </a>
+<li><a href="{{ url_for('cmf.by_url_newform_label', level = 11, weight = 6, char_orbit_label = 'a',hecke_orbit = 'b')}}"> Cuspidal newform 11.6.a.b </a> and
+<a href="{{ url_for('l_functions.l_function_cmf_orbit', level=11, weight=6, char_orbit_label='a', hecke_orbit='b')}}"> its associated L-function </a> (along with the <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=1)}}">first</a>, <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=2)}}">second</a>, and <a href="{{ url_for('l_functions.l_function_cmf_page', level=11, weight=6, character=1, hecke_orbit='b', number=3)}}">third</a> conjugate constituents)<br/>
 </ul>
 
 <p>Symmetric powers</p>

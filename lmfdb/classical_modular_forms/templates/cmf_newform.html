@@ -1,0 +1,224 @@
+{% extends 'cmf_newform_common.html' %}
+
+{% block subcontent %}
+
+
+
+<!-- Complex embeddings and Satake parameters -->
+{% if newform.has_complex_qexp %}
+{% if info.format == 'embed' %}
+<h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the values \(\iota_m(a_n)\) are shown below.</p>
+{% elif info.format == 'analytic_embed' %}
+<h2>{{ KNOWL('nf.embedding',title='Embeddings') }}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the values \(\iota_m(a_n)/n^{(k-1)/2}\) are shown below.</p>
+{% elif info.format == 'satake' %}
+<h2>{{ KNOWL('cmf.satake_parameters',title='Satake parameters') }}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the {{ KNOWL('cmf.satake_parameters',title='Satake parameters') }} \(\iota_m(\alpha_p)\) are shown below.</p>
+{% else %}
+<h2>{{KNOWL('cmf.satake_parameters',title='Satake parameters')}}</h2>
+<p>For each {{ KNOWL('nf.embedding',title='embedding') }} \(\iota_m\) of the coefficient field, the {{ KNOWL('cmf.satake_parameters',title='Satake angles') }} \(\theta_p = \textrm{Arg}(\iota_m(\alpha_p))\) are shown below.</p>
+{% endif %}
+<p>For more information on an embedded modular form you can click on its label.</p>
+
+<script>
+function get_all_embeddings(num_embeddings) {
+  m_inp = $('input[name=m]');
+  m_inp.val('1-'+num_embeddings);
+  $('form[id=complex_embeddings]').submit();
+};
+</script>
+
+<div class="table-scroll-wrapper">
+{% set single_columns = (info.format == 'satake_angle') %}
+<table class="ntdata complex-cols">
+  <thead>
+    <tr>
+      <th class="sticky-head dark" style="min-width: 40px;">{{ KNOWL('cmf.embedding_label', title='Label')}}</th>
+      {% if newform.has_exact_qexp %}
+      <th class="sticky-head dark center" style="left: 60px;">\(\iota_m(\nu)\)</th>
+      {% endif %}
+      {% for n in info.CC_n %}
+      <th class="center dark" colspan="{{1 if single_columns else 3}}">\( {{ newform.embed_header(n, format=info.format) }} \)</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% if info.format == 'satake' or info.format == 'satake_angle' %}
+    {% set headcol_rowspan = 2 %}
+    {% else %}
+    {% set headcol_rowspan = 1 %}
+    {% endif %}
+    {% for m in info.CC_m %}
+    {% if loop.index is divisibleby(2) %}
+    {% set shade = 'dark' %}
+    {% else %}
+    {% set shade = 'light' %}
+    {% endif %}
+    <tr>
+      {% set embedding_label = newform.conrey_from_embedding(m) %}
+      {% set embedding_link = newform.embedded_mf_link(m) %}
+      <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col{% if not newform.has_exact_qexp %} border-right{% endif %}" style="min-width: 40px;"><a href="{{embedding_link}}">{{ embedding_label }}</a></td>
+      {% if loop.index == 1 and newform.has_exact_qexp %}
+      {# Because we're using CSS's sticky for the header columns, and splitting the embeddings into three in order to get alignment on the signs, we hack the horizontal spacing by using a subtable #}
+      <td rowspan = "{{headcol_rowspan*(info.CC_m | length) }}" class="embedding-wrap sticky-col border-right" style="left: 60px;">
+        <table class="sticky-embeddings">
+          {% for mm in info.CC_m %}
+          {% if loop.index is divisibleby(2) %}
+          {% set mmshade = 'dark' %}
+          {% else %}
+          {% set mmshade = 'light' %}
+          {% endif %}
+          <tr>
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap real">
+              {{ newform.embedding_re(mm,prec=info.emb_prec) | safe }}
+            </td>
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} op">
+              {{ newform.embedding_op(mm,prec=info.emb_prec) | safe }}
+            </td>
+            <td rowspan="{{headcol_rowspan}}" class="{{mmshade}} nowrap imag">
+              {{ newform.embedding_im(mm,prec=info.emb_prec) | safe }}
+            </td>
+            {% if headcol_rowspan == 2 %}
+            <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
+          </tr>
+          <tr>
+            <td class="vstrut"> &#65279; </td> {# zero width non-breaking space #}
+            {% endif %} {# headcol_rowspan == 2 #}
+          </tr>
+          {% endfor %} {# mm loop #}
+        </table>
+      </td>
+      {% endif %} {# loop.index == 1 and newform.has_exact_qexp #}
+      {% if info.format == 'embed' or info.format == 'analytic_embed' %}
+      {% for n in info.CC_n %}
+      <td class="nowrap real">
+        {{ newform.embedding_re(m,n,prec=info.emb_prec,format=info.format) | safe }}
+      </td>
+      <td class="op">
+        {{ newform.embedding_op(m,n,prec=info.emb_prec, format=info.format) | safe }}
+      </td>
+      <td class="nowrap imag">
+        {{ newform.embedding_im(m,n,prec=info.emb_prec,format=info.format) | safe }}
+      </td>
+      {% endfor %} {# n loop #}
+      {% else %} {# info.format in ['satake', 'satake_angle'] #}
+      {% for i in [0,1] %}
+      {% for n in info.CC_n %}
+      {% if info.format == 'satake' %}
+      <td class="nowrap real">
+        {{ newform.satake_re(m,n,i,prec=info.emb_prec) | safe }}
+      </td>
+      <td class="op">
+        {{ newform.satake_op(m,n,i) | safe }}
+      </td>
+      <td class="imag">
+        {{ newform.satake_im(m,n,i,prec=info.emb_prec) | safe }}
+      </td>
+      {% else %} {# info.format == 'satake_angle' #}
+      <td class="nowrap right">
+        {{ newform.satake_angle(m,n,i,prec=info.emb_prec) | safe }}
+      </td>
+      {% endif %} {# info.format #}
+      {% endfor %} {# n loop #}
+      {% if i == 0 %}
+    </tr>
+    <tr>
+      {% endif %} {# i == 0 #}
+      {% endfor %} {# i loop #}
+      {% endif %} {# info.format #}
+    </tr>
+    {% endfor %} {# m loop #}
+    {% if info.CC_m[0] == 1 and (info.CC_m | length) < 100 and (info.CC_m | length) < newform.dim %}
+    <tr>
+      <td class="sticky-col" colspan="{{(2 if newform.has_exact_qexp else 1) + (1 if single_columns else 3) * (info.CC_n | length)}}">
+        {% if newform.dim > 100 %}
+        <a onclick="get_all_embeddings({{100}}); return false" href="#">See next {{ 100 - (info.CC_m | length) }} embeddings (of {{newform.dim}} total)</a>
+        {% else %}
+        <a onclick="get_all_embeddings({{newform.dim}}); return false" href="#">See all {{newform.dim}} embeddings</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+</div>
+
+{% if info.err %}
+
+{% endif %}
+<form id='complex_embeddings'>
+  {% if newform.dim <= 4 and info.m is none %}
+  <input type="hidden" name="m" value="{{info.m}}"/>
+  {% endif %}
+  <table>
+    <tr>
+      <td>\(n\): </td>
+      <td><input type='text' name='n' style="width: 160px" value="{{info.n}}" placeholder="{{info.default_nrange}}"></td>
+      <td><span class="formexample"> e.g. 2-40 or 990-1000</span></td>
+    </tr>
+    {% if newform.dim > 4 or (info.m) %}
+    <tr>
+      <td>{{ KNOWL('cmf.embedding',title='Embeddings') }}: </td>
+      <td><input type='text' name='m' style="width: 160px" value="{{info.m}}" placeholder="1-{{newform.dim}}"></td>
+      <td><span class="formexample"> e.g. 1-3 or {{newform.conrey_indexes[-1]}}.{{newform.relative_dim}}</span></td>
+    </tr>
+    {% endif %}
+    <tr>
+      <td>{{ KNOWL('dq.cmf.cc_prec', title='Significant digits') }}: </td>
+      <td><input type='text' name='prec' style="width: 160px" value="{{info.prec}}" placeholder="6"></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('cmf.embedding_format',title='Format') }}: </td>
+      <td><select name='format' style="width: 170px">
+          <option value='embed' {% if info.format == 'embed' %}selected{% endif %}>Complex embeddings</option>
+          <option value='analytic_embed' {% if info.format == 'analytic_embed' %}selected{% endif %}>Normalized embeddings</option>
+          <option value='satake' {% if info.format == 'satake' %}selected{% endif %}>Satake parameters</option>
+          <option value='satake_angle' {% if info.format == 'satake_angle' %}selected{% endif %}>Satake angles</option>
+      </select></td>
+    </tr>
+  </table>
+  <button id="refresh_complex">Refresh table</button>
+</form>
+
+{% endif %}
+
+<!-- Removed old code on special values that didn't seem to be used -->
+
+<!-- Explicit formulas were stored in the old database; need to be ported to knowls -->
+
+<h2>{{KNOWL('cmf.inner_twist', title='Inner twists')}}</h2>
+
+{% if newform.inner_twist_count == 1 %}
+<p>This newform does not admit any ({{KNOWL('cmf.nontrivial_twist', title='nontrivial')}}) {{ KNOWL('cmf.inner_twist',title='inner twists') }}.</p>
+{% else %}
+{{ newform.display_inner_twists() | safe }}
+{% endif %}
+
+{% if newform.char_orbit_index == 1 and newform.level != 1 %}
+<h2>{{KNOWL('cmf.atkinlehner', title='Atkin-Lehner signs')}}</h2>
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th class="center"> \( p \) </th>
+      <th class="center">Sign
+    </tr>
+  </thead>
+  <tbody>
+    {% for p, ev in newform.atkin_lehner_eigenvals %}
+    <tr>
+      <td class="center"> \({{ p }}\) </td>
+      <td class="center"> \({{ ev }}\)</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if newform.hecke_cutters is not none %}
+<h2>{{KNOWL('cmf.hecke_kernels', 'Hecke kernels')}}</h2>
+{{ newform.display_hecke_cutters() | safe }}
+{% endif %}
+
+
+{% endblock %}

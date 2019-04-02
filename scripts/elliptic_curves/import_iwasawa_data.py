@@ -2,6 +2,7 @@
 r""" Import Iwasawa invariant data (as computed by Rob Pollack).
 
 Initial version (Warwick December 2016)
+2018: updated for postgres; not yet tested in that context.
 
 In general "number" means an int or double or string representing a number (e.g. '1/2').
 
@@ -20,17 +21,9 @@ Additional data fields for each elliptic curve over Q
 import os
 from sage.all import ZZ, primes
 
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
+from lmfdb.db_backen import db
 print "setting curves"
-curves = C.elliptic_curves.curves
+curves = db.ec_curves
 
 def read_line(line, debug=0):
     r""" Parses one line from input file.  Returns and a dict containing
@@ -121,7 +114,7 @@ def upload_to_db(base_path, f, test=True):
         #print val
         count += 1
         if not test:
-            curves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            curves.upsert({'label': val['label']}, val)
         if count % 1000 == 0:
             print("inserted %s items" % count)
 
@@ -149,10 +142,9 @@ def read_iwasawa_data(base_path, filename):
     print("finished reading {} lines from file".format(count))
     return iw_data
 
-# for use with the rewrite script in data_mgt/utilities/rewrite.py we
-# need to give it the old and new collection names (e.g. curves and
-# curves.new) and a function taking one mongodb record (dictionary) and
-# returning a possible changed version of it.
+# to use the tabel rewrite() method, we need to give it a function
+# taking one database record (dictionary) and returning a possibly
+# changed version of it.
 
 #  The following returns such a function, only applying it to curves with conductors in a given range
 

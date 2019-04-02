@@ -81,3 +81,5 @@
 2019-04-02 00:08:16,744 - SELECT "title" FROM kwl_knowls WHERE id = curve.highergenus.aut.generatingvector ran in 0.101099014282s
 2019-04-02 00:09:34,357 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = inv_fields_human ORDER BY ordinal_position ran in 0.120556116104s
 2019-04-02 00:09:35,403 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = g2c_curves ORDER BY ordinal_position ran in 0.123870134354s
+2019-04-02 10:09:42,679 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = g2c_curves ORDER BY ordinal_position ran in 0.142976045609s
+2019-04-02 10:11:15,572 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_boxes ORDER BY ordinal_position ran in 0.10949587822s

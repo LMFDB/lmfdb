@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% import 'color.css' as color %}
 
 {% macro place_code(item) %}
 {% if code and code[item] %}
@@ -79,11 +78,13 @@
           <div class="undertopright">
             <a href="{{ url_for('contact') }}" target=_blank">Feedback</a>
               &middot;
-            {% if g.show_menu %}
-               <a href="{{ url_for("menutoggle", show=False)}}">Hide Menu</a>
+            <a href="#" id="menutoggle">
+            {%- if g.show_menu -%}
+               Hide Menu
             {% else %}
-               <a href="{{ url_for("menutoggle", show=True)}}">Show Menu</a>
+               Show Menu
             {% endif %}
+            </a>
           </div>
         </div>
 {# deleting the confusing prev/next character links, 
@@ -114,26 +115,15 @@
 
 {% block sidebar -%}
 {% if g.show_menu %}
-{#  This macro is not used! #}
- {% macro entry(title, entries) -%}
-   {% if entries %}
-    <h2>{{ title }}</h2>
-    <ul class="subnav">
-        {% for text,url in entries %}
-           <li><a href="{{ url }}">{{ text }}</a></li>
-        {% endfor %}
-    </ul>
-   {% endif %}
- {%- endmacro %}
-
 <div id="sidebar">
 {%- include "sidebar.html" -%}
 </div>
-
-
 {% else %}
+<div id="sidebar" style="display: none; witdh=0">
+{%- include "sidebar.html" -%}
+</div>
 <style type="text/css">
-#main { margin: 0; }
+#main { margin-left: 0; }
 </style>
 {% endif %} {# of g.show_menu #}
 {%- endblock sidebar %}
@@ -142,6 +132,10 @@
    {% if entries %}
     <h1 class="properties-header">{{ title }}</h1>
     <div class="properties-body">
+    {% if entries is string %}
+      {# For very large lists of friends, we use javascript #}
+      {{ entries | safe }}
+    {% else %}
     <ul>
         {% for text,url in entries %}
         {% if url %}
@@ -151,6 +145,7 @@
         {% endif %}
         {% endfor %}
     </ul>
+    {% endif %}
   </div>
    {% endif %}
  {%- endmacro %}
@@ -168,7 +163,7 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties2 or origins or friends or downloads or learnmore) %}
+{% if (properties2 or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
       <div id="properties">
        <div id="properties-collapser">&uarr;</div>
     {% if properties2 %}
@@ -179,7 +174,7 @@
          {% if label %}
            <tr><td class="label">{{label|safe}}</td><td>
          {% else %}
-           <tr><td colspan="2">
+           <tr><td colspan="2" align="center">
          {% endif %}
          {% if content is string  -%}
              {{ content|safe }}</td></tr>
@@ -189,7 +184,7 @@
               {{c|safe}}</td></tr>
            {%- endfor %}
          {%- endif %}
-       {%- endfor %} 
+       {%- endfor %}
       </table>
       </div>
     {% endif %}
@@ -197,16 +192,9 @@
    {{ rightnavig("Origins", origins) }}
    {{ rightnavig("Instances", Linstances) }}
    {{ rightnavig("Related objects", friends) }}
-
-   {% block more_props %}{% endblock %}
-   {% if navi %}
-       {{ neighbors("Nearby objects", navi) }}
-   {% endif %}
-
-   {% if downloads %}
-     {{ rightnavig("Downloads", downloads) }}
-   {% endif %}
-
+   {{ rightnavig("Origins of factors", factors_origins) }}
+   {{ neighbors("Nearby objects", navi) }}
+   {{ rightnavig("Downloads", downloads) }}
    {{ rightnavig("Learn more about", learnmore) }}
     </div>
     {%- endif %}
@@ -246,25 +234,15 @@
             {% endfor %}
         </div>
     {% endif %}
-    {% block content_js %}
-        <script type="text/javascript">
-        // strips empty input/select fields from query URLs.  To enable, put onsubmit="cleanSubmit(this.id)" in form tag (and give it an id).
-        function cleanSubmit(id)
-        {
-            var myForm = document.getElementById(id);
-            var allInputs = myForm.getElementsByTagName('input');
-            var allSelects = myForm.getElementsByTagName('select');
-            var item, i, n = 0;
-
-            for(i = 0; item = allInputs[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-            for(i = 0; item = allSelects[i]; i++) { if (item.getAttribute('name') ) { if (!item.value) { item.setAttribute('name', ''); } else { n++ }; } }
-            if (!n) { var all = document.createElement('input'); all.type='hidden'; all.name='all'; all.value='1'; myForm.appendChild(all); }
-        }
-        </script>
-    {% endblock content_js %}
+    {% if KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
+    {% endif %}
     {% block content -%}
     There is nothing here. This is just a template.
     {%- endblock content %}
+    {% if KNOWL_ID %}
+    <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='Additional information') }}</h2>
+    {% endif %}
   </div>
 </div>
 

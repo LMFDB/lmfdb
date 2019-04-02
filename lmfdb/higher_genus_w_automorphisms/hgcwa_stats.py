@@ -1,21 +1,16 @@
 # based on /lmfdb/elliptic_curves/ec_stats.py
+# Authors: David Neill Asanza, Albert Ford, Ngi Nho, Jen Paulhus
+
 
 import re
-from lmfdb.base import getDBConnection
-from lmfdb.utils import make_logger
+from lmfdb import db
+from sage.all import UniqueRepresentation, cached_method
+from lmfdb.logger import make_logger
 
 logger = make_logger("hgcwa")
 
-the_HGCWAstats = None
-
-def db_hgcwa_stats():
-    return getDBConnection().curve_automorphisms.passports.stats
-
-def get_stats_object():
-    global the_HGCWAstats
-    if the_HGCWAstats is None:
-        the_HGCWAstats = HGCWAstats()
-    return the_HGCWAstats
+def oldstat(name):
+    return db.hgcwa_passports.stats.get_oldstat(name)
 
 def max_group_order(counts):
     orders = []
@@ -25,34 +20,21 @@ def max_group_order(counts):
         orders.append(order)
     return max(orders)
 
-class HGCWAstats(object):
+class HGCWAstats(UniqueRepresentation):
     """
     Class for creating and displaying statistics for higher genus curves with automorphisms
     """
-
-    def __init__(self):
-        logger.debug("Constructing an instance of HGCWAstats")
-        self.hgcwa_stats = db_hgcwa_stats()
-        self._counts = {}
-        self._stats = self.compute_stats()
-
     #TODO provide getter for subset of stats (e.g. for top matter)
+    @cached_method
     def stats(self):
-        if not self._stats:
-            self._stats = self.compute_stats()
-        return self._stats
-
-    def compute_stats(self):
         logger.debug("Computing elliptic curve stats...")
-
-        db = self.hgcwa_stats
         stats = {}
 
         # Populate simple data
-        stats['genus'] = db.find_one({'_id':'genus'})
-        stats['dim'] = db.find_one({'_id':'dim'})
-        stats['refined_passports'] = db.find_one({'_id':'passport_label'})
-        stats['generating_vectors'] = db.find_one({'_id':'total_label'})
+        stats['genus'] = oldstat('genus')
+        stats['dim'] = oldstat('dim')
+        stats['refined_passports'] = oldstat('passport_label')
+        stats['generating_vectors'] = oldstat('total_label')
 
         ##################################
         # Collect genus joint statistics #
@@ -62,9 +44,9 @@ class HGCWAstats(object):
         genus_list = [ count[0] for count in stats['genus']['counts'] ]
         genus_list.sort()
 
-        genus_family_counts = db.find_one({'_id':'bygenus/label'})
-        genus_rp_counts = db.find_one({'_id':'bygenus/passport_label'})
-        genus_gv_counts = db.find_one({'_id':'bygenus/total_label'})
+        genus_family_counts = oldstat('bygenus/label')
+        genus_rp_counts = oldstat('bygenus/passport_label')
+        genus_gv_counts = oldstat('bygenus/total_label')
 
         # Get unique joint genus stats
         stats['genus_detail'] = []
@@ -75,7 +57,7 @@ class HGCWAstats(object):
             genus_str = str(genus)
 
             # Get group data
-            groups = db.find_one({'_id':'bygenus/' + genus_str + '/group'})
+            groups = oldstat('bygenus/' + genus_str + '/group')
             group_count = len(groups['counts'])
             group_max_order = max_group_order(groups['counts'])
             genus_stats['groups'] = [group_count, group_max_order]
@@ -96,7 +78,7 @@ class HGCWAstats(object):
         dim_list = [ count[0] for count in stats['dim']['counts'] ]
         dim_max = max(dim_list)
 
-        dim_gv_counts = db.find_one({'_id':'bydim/total_label'})
+        dim_gv_counts = oldstat('bydim/total_label')
 
         # Get unique joint genus stats
         stats['dim_detail'] = []

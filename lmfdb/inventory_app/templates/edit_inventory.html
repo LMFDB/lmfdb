@@ -6,9 +6,9 @@
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_uploader.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
-    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
-    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
-    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
+    var mainBlockList = new BlockList("{{db_name}}", "{{table_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{table_name}}";
+    var pageId = {'db':"{{db_name}}", 'table':"{{table_name}}"};
     var jsonTypes = {{ type_data|safe }};
     var table_fields = {{table_fields | safe}};
     var submitDest = "{{ url_for('inventory_app.submit_edits') }}";
@@ -48,12 +48,12 @@
 </script>
 {% endblock extra_script %}
 
-{% block title_block %} Editing <span id=nicename></span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
+{% block title_block %} Editing <span id=nicename></span> [{{db_name}}.{{table_name}}]{% endblock title_block %}
 
 {% block main_body %}
 <div>
-    <p>The following is the current inventory for this collection as of <span id=scandate></span>.</p>
-    <p>The "INFO" and "NOTES" fields show general information for this collection</p>
+    <p>The following is the current inventory for this table as of <span id=scandate></span>.</p>
+    <p>The "INFO" and "NOTES" fields show general information for this table</p>
     <p>Each normal key contains 3 fields: the value type, description and an example of a typical field. By default the type and example fields are auto-filled from the database. </p>
     <p>After editing any fields you wish to change, press "Submit" to submit your changes</p>
 </div>

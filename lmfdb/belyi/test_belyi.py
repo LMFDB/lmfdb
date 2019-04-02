@@ -1,5 +1,5 @@
-# -*- coding: utf8 -*-
-from lmfdb.base import LmfdbTest
+# -*- coding: utf-8 -*-
+from lmfdb.tests import LmfdbTest
 
 class BelyiTest(LmfdbTest):
 
@@ -12,7 +12,7 @@ class BelyiTest(LmfdbTest):
 
     def test_stats(self):
         L = self.tc.get('/Belyi/stats')
-        assert 'number of maps' in L.data and 'proportion' in L.data
+        assert 'Galois orbits of Belyi maps' in L.data and 'proportion' in L.data
 
     def test_random(self):
         self.check_args('/Belyi/random', 'Monodromy group')

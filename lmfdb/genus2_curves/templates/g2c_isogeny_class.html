@@ -14,9 +14,6 @@ text-align: center;
 }
 </style>
 
-{% set KNOWL_ID = "g2c.%s"|format(data.label) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 <h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
 <table id = "isogeny_class_table">
 <tr>

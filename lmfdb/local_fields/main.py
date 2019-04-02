@@ -2,16 +2,19 @@
 # This Blueprint is about Local Number Fields
 # Author: John Jones
 
-from lmfdb.db_backend import db
-from lmfdb.base import app
 from flask import render_template, request, url_for, redirect
-from lmfdb.utils import web_latex, coeff_to_poly, pol_to_html, display_multiset
-from lmfdb.search_parsing import parse_galgrp, parse_ints, clean_input, parse_rats
-from lmfdb.search_wrapper import search_wrap
 from sage.all import PolynomialRing, QQ, RR
-from lmfdb.local_fields import local_fields_page, logger
 
-from lmfdb.transitive_group import group_display_short, group_display_knowl, group_display_inertia, small_group_data, WebGaloisGroup
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.utils import (
+    web_latex, coeff_to_poly, pol_to_html, display_multiset,
+    parse_galgrp, parse_ints, clean_input, parse_rats,
+    search_wrap)
+from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.galois_groups.transitive_group import (
+    group_display_short, group_display_knowl, group_display_inertia,
+    small_group_data, WebGaloisGroup)
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -20,6 +23,16 @@ def get_bread(breads=[]):
     for b in breads:
         bc.append(b)
     return bc
+
+def learnmore_list():
+    return [('Completeness of the data', url_for(".cande")),
+            ('Source of the data', url_for(".source")),
+            ('Reliability of the data', url_for(".reliability")),
+            ('Local field labels', url_for(".labels_page"))]
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
@@ -117,11 +130,8 @@ def index():
     bread = get_bread()
     if len(request.args) != 0:
         return local_field_search(request.args)
-    info = {'count': 20}
-    learnmore = [#('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
-                ('Local field labels', url_for(".labels_page"))]
-    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore)
+    info = {'count': 50}
+    return render_template("lf-index.html", title="Local Number Fields", bread=bread, credit=LF_credit, info=info, learnmore=learnmore_list())
 
 
 @local_fields_page.route("/<label>")
@@ -138,9 +148,10 @@ def local_field_jump(info):
              table=db.lf_fields,
              title='Local Number Field Search Results',
              err_title='Local Field Search Input Error',
-             per_page=20,
+             per_page=50,
              shortcuts={'jump_to': local_field_jump},
              bread=lambda:get_bread([("Search Results", ' ')]),
+             learnmore=learnmore_list,
              credit=lambda:LF_credit)
 def local_field_search(info,query):
     parse_galgrp(info,query,'gal',qfield=('n','galT'))
@@ -262,10 +273,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
 
         bread = get_bread([(label, ' ')])
-        learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
-                ('Local field labels', url_for(".labels_page"))]
-        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore)
+        return render_template("lf-show-field.html", credit=LF_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 
 def show_slopes(sl):
@@ -310,31 +318,34 @@ def random_field():
     return redirect(url_for(".by_label", label=label), 307)
 
 @local_fields_page.route("/Completeness")
-def completeness_page():
+def cande():
     t = 'Completeness of the Local Field Data'
     bread = get_bread([("Completeness", )])
-    learnmore = [('Source of the data', url_for(".how_computed_page")),
-                ('Local field labels', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.lf.extent',
                            credit=LF_credit, title=t, bread=bread, 
-                           learnmore=learnmore)
+                           learnmore=learnmore_list_remove('Completeness'))
 
 @local_fields_page.route("/Labels")
 def labels_page():
     t = 'Labels for Local Number Fields'
     bread = get_bread([("Labels", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page"))]
-    return render_template("single.html", kid='lf.field.label',learnmore=learnmore, credit=LF_credit, title=t, bread=bread)
+    return render_template("single.html", kid='lf.field.label',
+                  learnmore=learnmore_list_remove('label'), 
+                  credit=LF_credit, title=t, bread=bread)
 
 @local_fields_page.route("/Source")
-def how_computed_page():
+def source():
     t = 'Source of the Local Field Data'
     bread = get_bread([("Source", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                #('Source of the data', url_for(".how_computed_page")),
-                ('Local field labels', url_for(".labels_page"))]
-    return render_template("single.html", kid='dq.lf.source',
+    return render_template("single.html", kid='rcs.source.lf',
                            credit=LF_credit, title=t, bread=bread, 
-                           learnmore=learnmore)
+                           learnmore=learnmore_list_remove('Source'))
+
+@local_fields_page.route("/Reliability")
+def reliability():
+    t = 'Reliability of the Local Field Data'
+    bread = get_bread([("Reliability", '')])
+    return render_template("single.html", kid='rcs.source.lf',
+                           credit=LF_credit, title=t, bread=bread, 
+                           learnmore=learnmore_list_remove('Reliability'))
 

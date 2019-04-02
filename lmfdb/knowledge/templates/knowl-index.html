@@ -1,5 +1,4 @@
 {% extends "homepage.html" %}
-{% import 'color.css' as color %}
 {% block content -%}
 <style type="text/css">
 a.curcat {
@@ -20,10 +19,12 @@ $(function() {
 <tr>
  <td>Search</td>
  <td>
- <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
+   <form id='knowl-search' action="{{ url_for('.index') }}" method="GET">
     <input name="search" value="{{ search }}" size="40" placeholder="ID, description, #hashtag, or full text"/>
     {% if search|length > 0 -%}<a href="{{url_for('.index')}}">clear</a>{%- endif %}
     <button type="submit">Go</button>
+    <label for="regex">Regex: </label>
+    <input type="checkbox" name="regex" value="on" {% if use_regex %}checked="checked"{% endif %} />
   </form>
  </td>
 </tr>
@@ -31,10 +32,10 @@ $(function() {
 <tr>
  <td>Filter</td>
  <td>Category:
-    {% for cat in categories -%}
+    {% for cat, cat_cnt in (categories.items()|sort) -%}
      <a
       {% if cur_cat == cat -%}class='curcat'{%- endif %}
-      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}</a>
+      href="{{ url_for('.index', qualities=qualities, filtered = filtermode, category=cat,) }}">{{cat}}({{cat_cnt}})</a>
        {# {% if not loop.last -%} &middot; {%- endif %} #}
     {%- endfor %}
     {% if categorymode -%}
@@ -53,14 +54,34 @@ $(function() {
    <form method="POST" action="{{ url_for('.index', category=cur_cat, filtered='True') }}">
  {% else %}
    <form method="POST" action="{{ url_for('.index', filtered='True') }}">
- {% endif %}
-    Quality:&nbsp;
-    {% for kq in knowl_qualities -%}
-     <label for="{{ kq }}">{{ kq|capitalize }}</label>:
-     <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
-     &nbsp;&nbsp;
-    {%- endfor %}
-    <button type="submit">Filter</button>
+     {% endif %}
+     <table>
+       <tr>
+         <td>
+           Quality:
+         </td>
+         {% for kq in knowl_qualities -%}
+         <td>
+           <label for="{{ kq }}">{{ kq|capitalize }}</label>:
+           <input type="checkbox" name="{{ kq }}" value="on" {% if kq in qualities -%}checked="checked"{%- endif %} />
+         </td>
+         {%- endfor %}
+         <td rowspan=2 style="vertical-align:center">
+           <button type="submit">Filter</button>
+         </td>
+       </tr>
+       <tr>
+         <td>
+           Type:
+         </td>
+         {% for kt in knowl_types -%}
+         <td>
+           <label for="{{ kt }}">{{ kt|capitalize }}</label>:
+           <input type="checkbox" name="{{ kt }}" value="on" {% if kt in types -%}checked="checked"{%- endif %} />
+         </td>
+         {%- endfor %}
+       </tr>
+     </table>
    </form>
   </td>
 </tr>
@@ -69,7 +90,14 @@ $(function() {
 <tr>
  <td>More</td>
  <td>
-   <a href="{{ url_for('.history') }}">Recently modified Knowls</a></td>
+   <a href="{{ url_for('.history') }}">Recently modified Knowls</a>
+   {%- if user_is_authenticated -%}
+   , <a href="{{ url_for('.comment_history') }}">Recent comments</a>, <a href="{{ url_for('.broken_links') }}">Broken links</a>
+   {%- endif -%}
+   {%- if user_can_review_knowls -%}
+   , <a href="{{ url_for('.review_recent', days=10) }}">Review recent Knowls</a>
+   {% endif %}
+ </td>
 </tr>
 </table>
 

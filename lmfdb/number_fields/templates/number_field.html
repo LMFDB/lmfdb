@@ -14,9 +14,6 @@ table.ntdata a {
    {{ place_code('field') }}
 </p>
 
-        {% set KNOWL_ID = "nf.%s"|format(info['label_raw']) %}
-        <h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
-
         <p><h2> 
         {% if nf.is_reduced() %}
           {{ KNOWL('nf.defining_polynomial.normalization', title='Normalized') }}
@@ -35,6 +32,7 @@ table.ntdata a {
             <tr><td>{{ KNOWL('nf.degree', title="Degree") }}:<td>&nbsp;&nbsp;<td>${{info.degree}}$<td>{{ place_code('degree') }}
             <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
              <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant}}<td>{{ place_code('discriminant') }}
+             <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
             <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
   {% if info.is_abelian %}
             <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
@@ -298,7 +296,5 @@ table.ntdata a {
         by exponents on the *.
     </div>
     {% endif %}
-
-        <h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

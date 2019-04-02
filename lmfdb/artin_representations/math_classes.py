@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
-from lmfdb.transitive_group import group_display_knowl, group_display_short, tryknowl
-from lmfdb.WebNumberField import WebNumberField
-from lmfdb.WebCharacter import WebSmallDirichletCharacter
+from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short, tryknowl
+from lmfdb.number_fields.web_number_field import WebNumberField
+from lmfdb.characters.web_character import WebSmallDirichletCharacter
 
 
 # fun is the function, N the modulus, and n the denominator
@@ -357,7 +357,7 @@ class ArtinRepresentation(object):
         #return (-1)**par
 
     def field_knowl(self):
-        from lmfdb.WebNumberField import nf_display_knowl
+        from lmfdb.number_fields.web_number_field import nf_display_knowl
         nfgg = self.number_field_galois_group()
         if nfgg.url_for():
             return nf_display_knowl(nfgg.label(), nfgg.polredabshtml())
@@ -725,7 +725,7 @@ class NumberFieldGaloisGroup(object):
             # Let pari compute it for us now
             from sage.all import pari
             galt = int(list(pari('polgalois(' + str(self.polredabs()) + ')'))[2])
-            from lmfdb.transitive_group import WebGaloisGroup
+            from lmfdb.galois_groups.transitive_group import WebGaloisGroup
             tg = WebGaloisGroup.from_nt(self.polredabs().degree(), galt)
             return tg.display_short()
         return self._data["G-Name"]

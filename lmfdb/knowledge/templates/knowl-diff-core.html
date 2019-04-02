@@ -1,0 +1,80 @@
+<!-- CodeMirror -->
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
+      integrity="sha384-FI6pF4jT5OLWJXc3EzvnyZEFcAwREFlPw81bB9gbkmyesoJHMq9TxE/CA0PZ7nF6"
+      crossorigin="anonymous"></script>
+<script defer
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/addon/search/searchcursor.min.js"
+      integrity="sha384-ytTGJfQEcykPzyWakPMXw3UUCtFeMOeMu43uMWb/0EQoW3F5zzg+06D8pDJDtbd5"
+      crossorigin="anonymous"></script>
+<link type="text/css"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css"
+      integrity="sha384-qHr0tRKUJCVvDPBkv5JnUcctfAqzS0Qo1NrKtq8O0YNp/0zygS/9JepLTiPLVQkG"
+      crossorigin="anonymous"/>
+
+<!-- Mergely  -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.css"
+      integrity="sha384-N8G4oBuDTLxH6t1v7bNdCcv56sJDJH6JArcx9uKz4vSMFvNjyXDjOyKBsSQy1o5K"
+      crossorigin="anonymous">
+<script defer
+      src="https://cdn.jsdelivr.net/npm/mergely@4.0.11/lib/mergely.js"
+      integrity="sha384-VN5LSIgtGg3krjINbmlVY/4hG2PyALw4wy5wpCC8gxJ+VrpZsyUxlvNwcQq7CDGQ"
+      crossorigin="anonymous"></script>
+<script type="text/javascript" src="/static/diff_match_patch.js"></script>
+<script type="text/javascript">
+
+  function diff(text1, text2) {
+    var dmp = new diff_match_patch();
+    dmp.Diff_Timeout = 2;//parseFloat(document.getElementById('timeout').value);
+    dmp.Diff_EditCost = 5;
+    var diffs = dmp.diff_main(text1, text2);
+    //dmp.diff_cleanupSemantic(d);
+    dmp.diff_cleanupEfficiency(diffs);
+    var ds = dmp.diff_prettyHtml(diffs).replace(/&para;<br>/g,'');
+    return ds;
+  };
+</script>
+
+<style>
+/* Initial height */
+.diff_wrapper {
+  overflow: auto;
+  resize: vertical;
+  padding: 20px;
+}
+ /* Auto-height fix */
+ .mergely-column .CodeMirror {
+   height: auto;
+ }
+
+ .inline{
+   font-family: 12px 'Courier New', Courier, monospace;
+   z-index: auto;
+   position: relative;
+   line-height: 18px;
+   transition: none 0s ease 0s;
+   background: white !important;
+   background-color: white;
+   overflow-wrap: break-word;
+   padding: 2px;
+ }
+ pre {
+   -webkit-rtl-ordering: logical;
+   -webkit-appearance: textarea;
+   white-space: pre-wrap;       /* Since CSS 2.1 */
+   white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+   white-space: -pre-wrap;      /* Opera 4-6 */
+   white-space: -o-pre-wrap;    /* Opera 7 */
+   word-wrap: break-word;       /* Internet Explorer 5.5+ */
+ }
+ del {
+   background: #FFE6E6;
+ }
+ ins {
+   background: #E6FFE6;
+ }
+</style>

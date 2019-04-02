@@ -11,8 +11,6 @@ not-implemented:
     \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
-
-
 top_matter:
   gap:  "# WARNING: The conjugacy class numbers may not be the same as those listed in lmfdb.org, as numberings in Magma and GAP may differ. If you need to connect this data to that posted on lmfdb.org, compare the variables 'passport_label' and 'gen_vector_labels'."
   magma:  RecFormat:=recformat<group,gp_id, signature,gen_vectors,conj_classes,genus,dimension,r,g0, passport_label,gen_vect_label, is_hyperelliptic, hyp_involution, is_cyclic_trigonal,cyc_auto,full_auto, full_sign>;
@@ -68,8 +66,8 @@ g0:
 
 
 dim:
-  gap:   dim:=r-3;
-  magma: dim:=r-3;
+  gap:   dim:=3*g0-3+r;
+  magma: dim:=3*g0-3+r;
 
 
 sym:

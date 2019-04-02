@@ -1,14 +1,14 @@
-import flask
-import lmfdb.utils
+# -*- coding: utf-8 -*-
+from lmfdb.logger import make_logger
 import os
-from flask import render_template, request, url_for
+from flask import Blueprint, Response, render_template, request, url_for
 
-FirstZeros = flask.Blueprint('first L-function zeros', __name__, template_folder="templates")
-logger = lmfdb.utils.make_logger(FirstZeros)
+FirstZeros = Blueprint('first L-function zeros',
+                       __name__, template_folder="templates")
+logger = make_logger(FirstZeros)
 
 import sqlite3
 data_location = os.path.expanduser("~/data/zeros/")
-#print data_location
 
 
 @FirstZeros.route("/")
@@ -28,7 +28,8 @@ def firstzeros():
     # limit=limit, degree=degree, signature_r=signature_r,
     # signature_c=signature_c)
     title = "Search for First Zeros of L-functions"
-    bread=[("L-functions", url_for("l_functions.l_function_top_page")), ("First Zeros Search", " "), ]
+    bread = [("L-functions", url_for("l_functions.l_function_top_page")),
+             ("First Zeros Search", " "), ]
     return render_template("first_zeros.html",
                            start=start, end=end, limit=limit,
                            degree=degree, title=title, bread=bread)
@@ -41,8 +42,6 @@ def list_zeros(start=None,
                fmt=None,
                download=None,
                degree=None):
-               # signature_r = None,
-               # signature_c = None):
     if start is None:
         start = request.args.get('start', None, float)
     if end is None:
@@ -67,39 +66,50 @@ def list_zeros(start=None,
     if start is None and end is None:
         end = 1000
 
-    limit = int(limit)
-
     where_clause = 'WHERE 1=1 '
-
+    values = []
     if end is not None:
-        end = str(end)
-        # fix up rounding errors, otherwise each time you resubmit the page you will lose one line
-        if('.' in end): end = end+'999'
+        # fix up rounding errors
+        # otherwise each time you resubmit the page you will lose one line
+        if('.' in str(end)):
+            end = float(str(end)+'999')
 
     if start is None:
-        where_clause += ' AND zero <= ' + end
+        end = float(end)
+        where_clause += ' AND zero <= ?'
+        values.append(end)
     elif end is None:
         start = float(start)
-        where_clause += ' AND zero >= ' + str(start)
+        where_clause += ' AND zero >= ?'
+        values.append(start)
     else:
-        where_clause += ' AND zero >= {} AND zero <= {}'.format(start, end)
+        start = float(start)
+        end = float(end)
+        where_clause += ' AND zero >= ? AND zero <= ?'
+        values.extend([start, end])
 
     if degree is not None and degree != '':
-        where_clause += ' AND degree = ' + str(degree)
+        degree = int(degree)
+        where_clause += ' AND degree = ?'
+        values.append(degree)
 
+    # the where cause has been fully escaped
+    values.append(int(limit))
     if end is None:
-        query = 'SELECT * FROM (SELECT * FROM zeros {} ORDER BY zero ASC LIMIT {}) ORDER BY zero DESC'.format(
-            where_clause, limit)
+        query = ('SELECT * FROM ' +
+                 '(SELECT * FROM zeros {} ORDER BY zero ASC LIMIT ?)' +
+                 'ORDER BY zero DESC').format(where_clause)
     else:
-        query = 'SELECT * FROM zeros {} ORDER BY zero DESC LIMIT {}'.format(where_clause, limit)
+        query = ('SELECT * FROM zeros {} ' +
+                 'ORDER BY zero DESC LIMIT ?').format(where_clause)
 
-    #print query
-    c = sqlite3.connect(data_location + 'first_zeros.db').cursor()
-    c.execute(query)
+    C = sqlite3.connect(data_location + 'first_zeros.db').cursor()
+    C.execute(query, values)
 
-    response = flask.Response((" ".join([str(x) for x in row]) + "\n" for row in c))
+    response = Response((" ".join([str(x) for x in row]) + "\n" for row in C))
     response.headers['content-type'] = 'text/plain'
     if download == "yes":
-        response.headers['content-disposition'] = 'attachment; filename=zetazeros'
+        response.headers['content-disposition'] =\
+                'attachment; filename=zetazeros'
     # response = flask.Response( ("1 %s\n" % (str(row[0]),) for row in c) )
     return response
