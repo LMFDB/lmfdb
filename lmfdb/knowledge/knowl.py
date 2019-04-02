@@ -486,7 +486,7 @@ class KnowlBackend(PostgresBase):
     def undo_rename(self, knowl):
         if knowl.source is None:
             raise ValueError("Knowl renaming has not been started")
-        self.actually_rename(self, knowl, knowl.source)
+        self.actually_rename(knowl, knowl.source)
 
     def actually_rename(self, knowl, new_name=None):
         if new_name is None:
