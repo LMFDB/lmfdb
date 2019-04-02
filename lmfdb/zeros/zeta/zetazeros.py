@@ -21,7 +21,7 @@ def zetazeros():
         title = "Zeros of $\zeta(s)$"
         bread = [("L-functions", url_for("l_functions.l_function_top_page")),
                  ('Zeros of $\zeta(s)$', ' ')]
-        learnmore = [("Completeness of this data",url_for(".extent") ),("Source of the data", url_for(".source"))]
+        learnmore = [("Completeness of the data",url_for(".extent")),("Source of the data", url_for(".source")),("Reliability of the data", url_for(".reliability"))]
         return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore)
 
 
