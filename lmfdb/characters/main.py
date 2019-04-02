@@ -31,12 +31,14 @@ def ctx_characters():
 
 def learn(current = None):
     r = []
+    if current != 'extent':
+        r.append( ('Completeness of the data', url_for(".extent_page")) )
     if current != 'source':
         r.append( ('Source of the data', url_for(".how_computed_page")) )
-    if current != 'extent':
-        r.append( ('Extent of the data', url_for(".extent_page")) )
+    if current != 'reliability':
+        r.append( ('Reliability of the data', url_for(".reliability")) )
     if current != 'labels':
-        r.append( ('Labels for Dirichlet characters', url_for(".labels_page")) )
+        r.append( ('Dirichlet character labels', url_for(".labels_page")) )
     return r
 
 ###############################################################################
@@ -148,16 +150,25 @@ def labels_page():
 @characters_page.route("/Source")
 def how_computed_page():
     info = {}
-    info['title'] = 'Source of Dirichlet Characters'
+    info['title'] = 'Source of Dirichlet Character Data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
-    return render_template("single.html", kid='dq.character.dirichlet.source', **info)
+    return render_template("single.html", kid='rcs.cande.character.dirichlet', **info)
 
-@characters_page.route("/Extent")
+@characters_page.route("/Reliability")
+def reliability():
+    info = {}
+    info['title'] = 'Reliability of Dirichlet Character Data'
+    info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
+    ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Reliability', '') ]
+    info['learnmore'] = learn('reliability')
+    return render_template("single.html", kid='rcs.rigor.character.dirichlet', **info)
+
+@characters_page.route("/Completeness")
 def extent_page():
     info = {}
-    info['title'] = 'Extent of Dirichlet Characters Data'
+    info['title'] = 'Completeness of Dirichlet Character Data'
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Extent', '') ]
     info['learnmore'] = learn('extent')

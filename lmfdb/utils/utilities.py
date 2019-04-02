@@ -1185,6 +1185,18 @@ class KeyedDefaultDict(defaultdict):
         self[key] = value = self.default_factory(key)
         return value
 
+def make_tuple(val):
+    """
+    Converts lists and dictionaries into tuples, recursively.  The main application
+    is so that the result can be used as a dictionary key.
+    """
+    if isinstance(val, (list, tuple)):
+        return tuple(make_tuple(x) for x in val)
+    elif isinstance(val, dict):
+        return tuple((make_tuple(a), make_tuple(b)) for a,b in val.items())
+    else:
+        return val
+
 def range_formatter(x):
     if isinstance(x, dict):
         if '$gte' in x:

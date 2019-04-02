@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
+
 class EllCurveTest(LmfdbTest):
 
     def check_args_with_timeout(self, path, text):
@@ -98,3 +99,26 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/392/c/1')
         assert ' is strictly larger than ' in L.data
         assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.data
+
+    def test_990h(self):
+        """
+        Test the exceptional 990h/990.i optimal labelling.
+        """
+        # The isogeny class 990h (Cremona labelling) or 990.i (LMFDB labelling)
+        # has a different Gamma-optimal curve in its labelling than all others.
+        L = self.tc.get('/EllipticCurve/Q/990/i/')
+        row = '\n'.join([
+          '<td class="center">[1, -1, 1, -1568, -4669]</td>',
+          '<td align="center">6</td>',
+          '<td align="center">',
+          '1728</td>',
+          '<td>\(\Gamma_0(N)\)-optimal</td>'
+        ])
+        self.assertTrue(row in L.data,
+                        "990.i appears to have the wrong optimal curve.")
+
+        L = self.tc.get('EllipticCurve/Q/990h/')
+        print row
+        print L.data
+        self.assertTrue(row in L.data,
+                        "990h appears to have the wrong optimal curve.")
