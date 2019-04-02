@@ -78,3 +78,6 @@
 2019-04-01 23:55:45,928 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_hecke_nf ORDER BY ordinal_position ran in 0.101811170578s
 2019-04-01 23:57:14,059 - SELECT "genus" FROM "hgcwa_passports" ORDER BY "genus" DESC LIMIT 1 ran in 0.156264066696s
 2019-04-01 23:59:49,048 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = mf_gamma1_portraits ORDER BY ordinal_position ran in 0.11678814888s
+2019-04-02 00:08:16,744 - SELECT "title" FROM kwl_knowls WHERE id = curve.highergenus.aut.generatingvector ran in 0.101099014282s
+2019-04-02 00:09:34,357 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = inv_fields_human ORDER BY ordinal_position ran in 0.120556116104s
+2019-04-02 00:09:35,403 - SELECT column_name, data_type FROM information_schema.columns WHERE table_name = g2c_curves ORDER BY ordinal_position ran in 0.123870134354s

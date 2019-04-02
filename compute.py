@@ -242,13 +242,18 @@ if #genvecs gt 0 then
       aut:= [h(aL): aL in A | not IsInner(h(aL))];   /* Outer Automorphisms */
       Vects:={g[1] : g in genvecs};
       braid_Vects:={g[1] : g in braid_genvecs};
-      BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
-      if #BrdRep eq 1 then
-      	TopRep:=BrdRep;
-        TopOrbs:=BrdOrbs;
-      else
-        TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
-      end if;
+      /*if IsAbelian(G) then
+       *  TopRep,TopOrbs:=AbelianOrbitComputeAut(Vects,aut,#signature-1);
+       * BrdOrbs:=[];
+       * else/
+         BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
+         if #BrdRep eq 1 then
+            TopRep:=BrdRep;
+            TopOrbs:=BrdOrbs;
+         else
+            TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
+         end if;
+      // end if;
       TopOrbsID:=[];
       for j in [1..#TopOrbs] do
          orb:=TopOrbs[j];
