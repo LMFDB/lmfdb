@@ -9,6 +9,8 @@ logger = make_logger(ZetaZeros)
 
 from platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 
+credit_string = "David Platt"
+
 
 @ZetaZeros.route("/")
 def zetazeros():
