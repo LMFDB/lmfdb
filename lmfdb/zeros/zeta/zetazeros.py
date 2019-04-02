@@ -21,14 +21,14 @@ def zetazeros():
         title = "Zeros of $\zeta(s)$"
         bread = [("L-functions", url_for("l_functions.l_function_top_page")),
                  ('Zeros of $\zeta(s)$', ' ')]
-        learnmore = [("Completeness of the data",url_for(".extent")),("Source of the data", url_for(".source")),("Reliability of the data", url_for(".reliability"))]
+        learnmore = [("Completeness of the data",url_for(".completeness")),("Source of the data", url_for(".source")),("Reliability of the data", url_for(".reliability"))]
         return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore)
 
 
 @ZetaZeros.route("/Completeness")
 def completeness():
     t = 'Completeness of Reimann Zeta Zeros Data$'
-    bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Extent', ' ')]
+    bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Completeness', ' ')]
     return render_template("single.html", kid='dq.zeros.zeta.extent',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
