@@ -168,7 +168,17 @@ def download_hmf_magma(**args):
     hecke_eigs = map(str, f['hecke_eigenvalues'])
     AL_eigs    = f['AL_eigenvalues']
 
-    outstr = 'P<x> := PolynomialRing(Rationals());\n'
+    outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
+    outstr += '  It will load the data associated to the HMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '  At the *bottom* of the file, there is code to recreate the\n'
+    outstr += '  Hilbert modular form in Magma, by creating the HMF space\n'
+    outstr += '  and cutting out the corresponding Hecke irreducible subspace.\n'
+    outstr += '  From there, you can ask for more eigenvalues or modify as desired.\n'
+    outstr += '  It is commented out, as this computation may be lengthy.\n'
+    outstr += '*/\n\n'
+
+    outstr += 'P<x> := PolynomialRing(Rationals());\n'
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
@@ -226,6 +236,11 @@ def download_hmf_sage(**args):
 
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
+
+    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr += '  It will load the data associated to the HMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '*/\n\n'
 
     outstr = 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
