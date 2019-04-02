@@ -39,19 +39,19 @@ def zetazeros():
 def completeness():
     t = 'Completeness of Reimann Zeta Zeros Data$'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Completeness', ' ')]
-    return render_template("single.html", kid='dq.zeros.zeta.extent', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    return render_template("single.html", kid='rcs.cande.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @ZetaZeros.route("/Source")
 def source():
     t = 'Source of Reimann Zeta Zeros Data'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Source', ' ')]
-    return render_template("single.html", kid='dq.zeros.zeta.source', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    return render_template("single.html", kid='rcs.source.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @ZetaZeros.route("/Reliability")
 def reliability():
     t = 'Reliability of Riemann Zeta Zeros Data'
     bread = [("L-functions", url_for("l_functions.l_function_top_page")),("Zeros of $\zeta(s)$", url_for(".zetazeros")),('Reliability', ' ')]
-    return render_template("single.html", kid='dq.zeros.zeta.reliability', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    return render_template("single.html", kid='rcs.rigor.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ZetaZeros.route("/list")
 def list_zeros(N=None,
