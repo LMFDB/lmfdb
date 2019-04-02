@@ -575,15 +575,16 @@ def save_form():
         return redirect(url_for(".index"))
 
     FINISH_RENAME = request.form.get('finish_rename', '')
+    UNDO_RENAME = request.form.get('undo_rename', '')
     if FINISH_RENAME:
         k = Knowl(ID)
-        if FINISH_RENAME == 'finish':
-            k.actually_rename()
-            flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
-            ID = k.source_name
-        elif FINISH_RENAME == 'undo':
-            k.undo_rename()
-            flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
+        k.actually_rename()
+        flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
+        return redirect(url_for(".show", ID=k.source_name))
+    elif UNDO_RENAME:
+        k = Knowl(ID)
+        k.undo_rename()
+        flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
         return redirect(url_for(".show", ID=ID))
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))

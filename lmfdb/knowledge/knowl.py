@@ -484,9 +484,15 @@ class KnowlBackend(PostgresBase):
             new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
-        if knowl.source is None:
+        """
+        INPUT:
+
+        - ``knowl`` -- the knowl with the old, desired name
+        """
+        if knowl.source_name is None:
             raise ValueError("Knowl renaming has not been started")
-        self.actually_rename(knowl, knowl.source)
+        renamed_knowl = Knowl(knowl.source_name)
+        self.actually_rename(renamed_knowl, knowl.id)
 
     def actually_rename(self, knowl, new_name=None):
         if new_name is None:
@@ -769,6 +775,9 @@ class Knowl(object):
         knowldb.start_rename(self, new_name, who)
 
     def undo_rename(self):
+        """
+        This should be the knowl with the old name, not the new one.
+        """
         knowldb.undo_rename(self)
 
     def actually_rename(self, new_name=None):
