@@ -242,7 +242,7 @@ def download_hmf_sage(**args):
     outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
     outstr += '*/\n\n'
 
-    outstr = 'P.<x> = PolynomialRing(QQ)\n'
+    outstr += 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
     outstr += 'F.<w> = NumberField(g)\n'
     outstr += 'ZF = F.ring_of_integers()\n\n'
@@ -302,8 +302,8 @@ def render_hmf_webpage(**args):
     info.update(data)
 
     info['downloads'] = [
-        ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
-        ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ('Download modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
+        ('Download eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
     if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
         info['friends'] = [('L-function',

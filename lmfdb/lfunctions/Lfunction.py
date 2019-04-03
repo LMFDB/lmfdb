@@ -661,9 +661,9 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def downloads(self):
-        return [['Download Euler factors', self.download_euler_factor_url],
-                ['Download zeros', self.download_zeros_url],
-                ['Download Dirichlet coefficients', self.download_dirichlet_coeff_url]]
+        return [['Download Euler factors to text', self.download_euler_factor_url],
+                ['Download zeros to text', self.download_zeros_url],
+                ['Download Dirichlet coefficients to text', self.download_dirichlet_coeff_url]]
 
     @lazy_attribute
     def download_euler_factor_url(self):
