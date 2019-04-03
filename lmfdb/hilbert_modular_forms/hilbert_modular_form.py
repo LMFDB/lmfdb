@@ -302,8 +302,8 @@ def render_hmf_webpage(**args):
     info.update(data)
 
     info['downloads'] = [
-        ('Download modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
-        ('Download eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ('Modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
+        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
     if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
         info['friends'] = [('L-function',

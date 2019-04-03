@@ -259,8 +259,8 @@ class WebNewformSpace(object):
 
         # Downloads
         self.downloads = [
-            ('Download trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('Download all stored data to text', url_for('.download_newspace', label=self.label)),
+            ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
+            ('All stored data to text', url_for('.download_newspace', label=self.label)),
         ]
 
         if self.conrey_indexes[0] == 1:
