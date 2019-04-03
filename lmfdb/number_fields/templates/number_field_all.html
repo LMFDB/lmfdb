@@ -75,6 +75,18 @@ Enter values into one or more boxes to restrict the search.
 <td colspan="4"><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
 <span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
 </tr>
+<tr>
+<td align=left>{{KNOWL('nf.root_discriminant', title='root discriminant')}}
+<td colspan="2"><input type='text' name='discriminant' size=10 size=10 example='1..4.3'> 
+<span class="formexample"> e.g. a range such as 1..4.3 or 3..10</span></td>
+
+  <td>{{ KNOWL('nf.cm_field', title='CM field') }}</td>
+  <td><select name='cm_field' width="105" style="width: 105px">
+     <option ></option>
+     <option value='True'>True</option>
+     <option value='False'>False</option>
+  </select></td>
+</tr>
 
 <tr>
 <td align=left>{{KNOWL('nf.galois_group', title='Galois group')}} 

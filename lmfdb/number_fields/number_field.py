@@ -5,13 +5,13 @@ import ast, os, re, StringIO, time
 import flask
 from flask import render_template, request, url_for, redirect, send_file, flash, make_response
 from markupsafe import Markup
-from sage.all import ZZ, QQ, RealField, PolynomialRing, NumberField, latex, primes, pari
+from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
-    clean_input, nf_string_to_label, parse_galgrp, parse_ints,
+    clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     search_wrap)
 from lmfdb.local_fields.main import show_slope_content
@@ -58,10 +58,10 @@ def number_field_data(label):
 #def na_text():
 #    return "Not computed"
 
-# fixed precision display of float
+# fixed precision display of float, rounding off
 def fixed_prec(r, digs=3):
   n = RealField(200)(r)*(10**digs)
-  n = str(n.trunc())
+  n = str(n.round())
   return n[:-digs]+'.'+n[-digs:]
 
 
@@ -387,7 +387,7 @@ def render_field_webpage(args):
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
     data['frob_data'], data['seeram'] = frobs(nf)
-    data['rd'] = fixed_prec(RealField(300)(D.abs()).nth_root(data['degree']))
+    data['rd'] = '$%s$' % fixed_prec(nf.rd(),2)
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -540,7 +540,7 @@ def render_field_webpage(args):
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
                    ('Discriminant', '$%s$' % data['disc_factor']),
-                   ('Root discriminant', '$%s$' % data['rd']),
+                   ('Root discriminant', '%s' % data['rd']),
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
@@ -702,6 +702,7 @@ def number_field_search(info, query):
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_ints(info,query,'class_number')
+    parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='complement')
