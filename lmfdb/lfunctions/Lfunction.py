@@ -48,7 +48,7 @@ def artin_url(label):
 def hmf_url(label, character, number):
     if (not character and not number) or (character == '0' and number == '0'):
         return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
-    else
+    else:
         return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label + "/" + character + "/" + number
 
 def validate_required_args(errmsg, args, *keys):
