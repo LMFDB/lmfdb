@@ -1265,11 +1265,15 @@ class Lfunction_HMFDB(Lfunction_from_db):
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
 
-        validate_required_args ('Unable to construct L-function.', kwargs, 'label')
+        validate_required_args ('Unable to construct Hilbert modular form ' +
+                                'L-function.', args, 'label', 'number', 'character')
+        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+                               args, 'character','number')
+        
         self.label = kwargs['label']
         self.origin_label = self.label
         self._Ltype = "hilbertmodularform"
-        self.url = hmf_url(self.label)
+        self.url = hmf_url(args['label'],args['character'],args['number'])
         Lfunction_from_db.__init__(self, url = self.url)
 
 class Lfunction_HMF(Lfunction):
