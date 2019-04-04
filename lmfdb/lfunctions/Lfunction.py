@@ -1290,6 +1290,10 @@ class Lfunction_HMFDB(Lfunction_from_db):
     def knowltype(self):
         return "mf"
 
+    @lazy_attribute
+    def bread(self):
+        return get_bread(4, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree4'))])
+
     @property
     def friends(self):
         """The 'related objects' to show on webpage."""
