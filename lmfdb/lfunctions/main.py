@@ -12,7 +12,8 @@ import LfunctionPlot
 
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
                        Lfunction_CMF, Lfunction_CMF_orbit,
-                       Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+                       Lfunction_HMF, Lfunction_HMFDB,
+                       Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
                        HypergeometricMotiveLfunction, Lfunction_genus2_Q,
                        Lfunction_from_db)
