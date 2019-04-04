@@ -1259,16 +1259,16 @@ class Lfunction_HMFDB(Lfunction_from_db):
         constructor_logger(self, kwargs)
 
         validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', args, 'label', 'number', 'character')
+                                'L-function.', kwargs, 'label', 'number', 'character')
         validate_integer_args ('Unable to construct Hilbert modular form L-function.',
-                               args, 'character','number')
+                               kwargs, 'character','number')
 
         self._Ltype = "hilbertmodularform"
 
         # Put the arguments into the object dictionary
-        self.label = args['label']
-        self.number = int(args['number'])
-        self.character= int(args['character'])
+        self.label = kwargs['label']
+        self.number = int(kwargs['number'])
+        self.character= int(kwargs['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
