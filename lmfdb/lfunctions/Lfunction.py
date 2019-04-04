@@ -1262,7 +1262,7 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **args):
         constructor_logger(self, args)
 
         validate_required_args ('Unable to construct Hilbert modular form ' +
@@ -1678,11 +1678,11 @@ class ArtinLfunctionDB(Lfunction_from_db):
 
     """
 
-    def __init__(self, **kwargs):
-        constructor_logger(self, kwargs)
+    def __init__(self, **args):
+        constructor_logger(self, args)
 
-        validate_required_args ('Unable to construct L-function.', kwargs, 'label')
-        self.label = kwargs['label']
+        validate_required_args ('Unable to construct L-function.', args, 'label')
+        self.label = args['label']
         self.origin_label = self.label
         self._Ltype = "artin"
         self.url = artin_url(self.label)
