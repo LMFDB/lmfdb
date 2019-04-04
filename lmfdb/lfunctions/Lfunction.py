@@ -46,7 +46,7 @@ def artin_url(label):
     return "ArtinRepresentation/" + label
 
 def hmf_url(label):
-    "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+    return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
