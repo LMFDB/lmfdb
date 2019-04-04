@@ -1256,20 +1256,13 @@ class Lfunction_HMFDB(Lfunction_from_db):
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
 
-        validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', kwargs, 'label')
-
+        validate_required_args ('Unable to construct Hilbert modular form ' + 'L-function.', kwargs, 'label')
         self._Ltype = "hilbertmodularform"
 
-        # Put the arguments into the object dictionary
         self.label = kwargs['label']
         self.origin = self.label
-
-        # check instances
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
         Lfunction_from_db.__init__(self, url = self.url)
-
-        self.numcoeff = 30
 
     @lazy_attribute
     def _Ltype(self):
