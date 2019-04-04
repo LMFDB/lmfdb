@@ -1277,7 +1277,7 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     @lazy_attribute
     def origin_label(self):
-        return self.hmf_label
+        return self.label
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
