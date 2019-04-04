@@ -1277,10 +1277,12 @@ class Lfunction_HMF(Lfunction):
         # check instances
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label.replace(".","/")
         try:
+            print self.url
             Lfunction_from_db.__init__(self, url = self.url)
             self.numcoeff = 30
             return
-        except:
+        except Exception as e:
+            print e
             pass
 
         # Load form (f) from database
