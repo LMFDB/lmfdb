@@ -1258,14 +1258,10 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
         validate_required_args ('Unable to construct L-function.', kwargs, 'label')
         self.label = kwargs['label']
-        self.origin = self.label
+        self.origin_label = self.label
         self._Ltype = "hilbertmodularform"
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
         Lfunction_from_db.__init__(self, url = self.url)
-
-    @lazy_attribute
-    def origin_label(self):
-        return self.origin
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
