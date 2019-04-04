@@ -1275,4 +1275,3 @@ def source(prepath):
     return render_template("single.html", kid=knowl, title=t, bread=bread,
         learnmore=learnmore_list(prepath, remove='Source'))
 
-
