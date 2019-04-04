@@ -1258,7 +1258,6 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
         validate_required_args ('Unable to construct Hilbert modular form ' + 'L-function.', kwargs, 'label')
         self._Ltype = "hilbertmodularform"
-
         self.label = kwargs['label']
         self.origin = self.label
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
