@@ -1675,6 +1675,10 @@ class ArtinLfunctionDB(Lfunction_from_db):
         self.url = "ArtinRepresentation/" + self.label
         Lfunction_from_db.__init__(self, url = self.url)
 
+    @lazy_attribute
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+
 
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function
