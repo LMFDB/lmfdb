@@ -353,7 +353,7 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 
 
 # L-function of Bianchi modular form ###########################################
-@l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>")
+@l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>/")
 def l_function_bmf_page(field,level,suffix):
     args = {'field': field, 'level': level, 'suffix': suffix}
     return render_single_Lfunction(Lfunction_BMF, args, request)
