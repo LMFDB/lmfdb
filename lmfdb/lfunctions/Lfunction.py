@@ -1263,7 +1263,7 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
         # Put the arguments into the object dictionary
         self.label = kwargs['label']
-        self.hmf_label = self.label
+        self.origin_label = self.label
 
         # check instances
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
@@ -1274,10 +1274,6 @@ class Lfunction_HMFDB(Lfunction_from_db):
     @lazy_attribute
     def _Ltype(self):
         return  "Hilbert modular form"
-
-    @lazy_attribute
-    def origin_label(self):
-        return self.label
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
