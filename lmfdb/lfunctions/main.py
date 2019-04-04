@@ -489,34 +489,27 @@ def render_lfunction_exception(err):
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
 
+def learnmore_list(path, remove=None):
+    prepath = re.sub(r'^/L/', '', path)
+    prepath = re.sub(r'/$', '', prepath)
+    learnmore = [
+        ('Completeness of the data', url_for('.completeness', prepath=prepath)),
+        ('Source of the data', url_for('.source', prepath=prepath)),
+        ('Reliability of the data', url_for('.reliability', prepath=prepath))]
+    if remove:
+        return filter(lambda t:t[0].find(remove) <0, learnmore)
+    return learnmore
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
     '''
     info = L.info
     info['args'] = args
-    prepath = request.path
-    prepath = re.sub(r'^/L/','',prepath)
-    prepath = re.sub(r'/$','',prepath)
     info['properties2'] = set_gaga_properties(L)
 
     set_bread_and_friends(info, L, request)
 
-    info['learnmore'] = [('Everyone loves number fields', url_for('number_fields.number_field_render_webpage'))]
-    if L.fromDB:
-        if L._Ltype == 'dirichlet':
-            myltype='dirichlet'
-        elif L._Ltype == 'ellipticcurve':
-            myltype='ec'
-        else:
-            myltype='otherindb'
-    else:
-        if L._Ltype == 'maass':
-            myltype='maass'
-        else:
-            myltype='onthefly'
-    info['learnmore'] = [('Reliability of the data', 
-        url_for('.reliability', prepath=prepath, ltype=myltype))]
+    info['learnmore'] = learnmore_list(request.path)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -1224,17 +1217,62 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
     s += '</table>\n'
     return s
 
-@l_function_page.route("/<path:prepath>/Reliability/<ltype>")
-def reliability(prepath,ltype):
+@l_function_page.route("/<path:prepath>/Reliability")
+def reliability(prepath):
     t = 'Reliability of L-function Data'
-    bread = get_bread(1, [("Reliability", '')])
-    knowlist = {'onthefly': 'rcs.rigor.lfunction.onthefly',
-                'maass': 'rcs.rigor.lfunction.maass',
-                'ec': 'rcs.rigor.lfunction.ec'}
-    if ltype in knowlist.keys():
-        knowl = knowlist[ltype]
+    args = tuple(prepath.split('/'))
+    L = generateLfunctionFromUrl(*args)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
+        else:
+            knowl = 'rcs.rigor.lfunction.lcalc'
     else:
-        knowl = 'rcs.rigor.lfunction.onthefly'
-    return render_template("single.html", kid=knowl, title=t, bread=bread)
+        knowl = 'rcs.rigor.lfunction.lcalc'
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
+    bread.append(('Reliability', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Reliability'))
+
+@l_function_page.route("/<path:prepath>/Completeness")
+def completeness(prepath):
+    t = 'Completeness of L-function Data'
+    args = tuple(prepath.split('/'))
+    L = generateLfunctionFromUrl(*args)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Completeness$','',target[1])))
+    bread.append(('Completeness', ' '))
+    return render_template("single.html", kid='rcs.cande.lfunction', title=t, 
+        bread=bread, learnmore=learnmore_list(prepath, remove='Completeness'))
+
+@l_function_page.route("/<path:prepath>/Source")
+def source(prepath):
+    t = 'Source of L-function Data'
+    args = tuple(prepath.split('/'))
+    L = generateLfunctionFromUrl(*args)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['source'])['source']
+        else:
+            knowl = 'rcs.source.lfunction.lcalc'
+    else:
+        knowl = 'rcs.source.lfunction.lcalc'
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Source$','',target[1])))
+    bread.append(('Source', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Source'))
 
 
