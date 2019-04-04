@@ -1267,6 +1267,7 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
         # Put the arguments into the object dictionary
         self.label = kwargs['label']
+        print self.label
         self.number = int(kwargs['number'])
         self.character= int(kwargs['character'])
         if self.character != 0:
@@ -1284,11 +1285,8 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     @lazy_attribute
     def origin_label(self):
+        print "origin_label",self.label
         return self.label
-
-    @lazy_attribute
-    def bread(self):
-        return get_bread(self.degree, [(self.label, '')])
 
     @lazy_attribute
     def knowltype(self):
