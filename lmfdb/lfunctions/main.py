@@ -360,7 +360,6 @@ def l_function_hmf_page(field, label, character, number):
     try:
         return render_single_Lfunction(Lfunction_HMFDB, args, request)
     except Exception as e:
-        print e
         pass
     return render_single_Lfunction(Lfunction_HMF, args, request)
 
@@ -949,6 +948,10 @@ def generateLfunctionFromUrl(*args, **kwds):
             return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
+        try:
+            return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7])
+        except:
+            pass    
         return Lfunction_HMF(label=args[5], character=args[6], number=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
