@@ -1274,6 +1274,15 @@ class Lfunction_HMF(Lfunction):
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
+        # check instances
+        self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label.replace(".","/")
+        try:
+            Lfunction_from_db.__init__(self, url = self.url)
+            self.numcoeff = 30
+            return
+        except:
+            pass
+
         # Load form (f) from database
         (f, F_hmf) = getHmfData(self.label)
         if f is None:
