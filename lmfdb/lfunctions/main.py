@@ -137,7 +137,6 @@ def l_function_ec_browse_page():
 @l_function_page.route("/<degree>/MaassForm/")
 def l_function_maass_gln_browse_page(degree):
     degree = get_degree(degree)
-    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     if degree < 0:
         return flask.abort(404)
     contents = LfunctionPlot.getAllMaassGraphHtml(degree)
@@ -146,6 +145,7 @@ def l_function_maass_gln_browse_page(degree):
     info = {"bread": get_bread(degree, [("Maass Form", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
     info["contents"] = contents
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("MaassformGLn.html",
                            title='L-functions of GL(%s) Maass Forms' % degree, **info)
 
