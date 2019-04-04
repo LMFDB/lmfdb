@@ -357,9 +357,8 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character,
             'number': number}
-    in_database = db.lfunc_instances.lucky({'url': hmf_url(label)})
-    print label,hmf_url(label), in_database
-    return render_single_Lfunction(Lfunction_HMFDB if in_database else Lfunction_HMF, args, request)
+    instance = db.lfunc_instances.lucky({'url': hmf_url(label)})
+    return render_single_Lfunction(Lfunction_HMFDB if instance else Lfunction_HMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
@@ -410,7 +409,9 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
-    render_single_Lfunction(ArtinLfunctionDB if db.lfunc_instances.lucky({'url': artin_url(label)}) else ArtinLfunction, {'label': label}, request)
+    instance = db.lfunc_instances.lucky({'url': artin_url(label)})
+    print label, artin_url(label), instance
+    render_single_Lfunction(ArtinLfunctionDB if instance else ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
