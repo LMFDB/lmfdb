@@ -1284,11 +1284,11 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     @lazy_attribute
     def origin_label(self):
-        return ".".join(map(str, self.label))
+        return self.label
 
     @lazy_attribute
-    def bread(self):
-        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree4'))])
+    def knowltype(self):
+        return "mf"
 
     @property
     def friends(self):
