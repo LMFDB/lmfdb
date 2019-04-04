@@ -352,11 +352,17 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
+# L-function of Bianchi modular form ###########################################
+@l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>")
+def l_function_bmf_page(field,level,suffix):
+    args = {'field': field, 'level': level, 'suffix': suffix}
+    return render_single_Lfunction(Lfunction_BMF, args, request)
+
+
 # L-function of Hilbert modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/<number>/")
 def l_function_hmf_page(field, label, character, number):
-    args = {'field': field, 'label': label, 'character': character,
-            'number': number}
+    args = {'field': field, 'label': label, 'character': character, 'number': number}
     instance = db.lfunc_instances.lucky({'url': hmf_url(label, character, number)})
     return render_single_Lfunction(Lfunction_HMFDB if instance else Lfunction_HMF, args, request)
 
@@ -603,6 +609,13 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = get_bread(L.degree,
                                       [(L.maass_id.partition('/')[2], request.path)])
 
+    elif L.Ltype() == 'bianchimodularform':
+        friendlink = '/'.join(friendlink.split('/')[:-1])
+        info['friends'] = [('Bianchi modular form ' + L.label, friendlink.rpartition('/')[0])]
+        if L.degree == 4:
+            info['bread'] = get_bread(4, [(L.label, request.path)])
+        else:
+            info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])

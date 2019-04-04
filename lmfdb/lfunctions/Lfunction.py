@@ -1255,6 +1255,25 @@ class Lfunction_Maass(Lfunction):
 
 #############################################################################
 
+class Lfunction_BMF(Lfunction_from_db):
+    """Class representing a Bianchi modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        validate_required_args ('Unable to construct Bianchi modular form L-function.', args, 'field', 'level', 'suffix')
+
+        self.label = '-'.join([args["field"], args["level"], args["suffix"]])
+        self.origin_label = self.label
+        self._Ltype = "bianchimodularform"
+        self.url = "ModularForm/GL2/ImaginaryQuadratic/" + self.label.replace('-','/')
+
+        Lfunction_from_db.__init__(self, url = self.url)
+
 class Lfunction_HMFDB(Lfunction_from_db):
     """Class representing a Hilbert modular form L-function stored in the database
 
