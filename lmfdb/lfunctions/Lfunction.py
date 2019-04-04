@@ -45,8 +45,11 @@ from LfunctionDatabase import (
 def artin_url(label):
     return "ArtinRepresentation/" + label
 
-def hmf_url(label):
-    return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+def hmf_url(label, character, number):
+    if (not character and not number) or (character == '0' and number == '0'):
+        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+    else
+        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label + "/" + character + "/" + number
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
