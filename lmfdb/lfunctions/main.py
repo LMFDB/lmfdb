@@ -16,7 +16,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        Lfunction_Maass, Lfunction_SMF2_scalar_valued,
                        RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
                        SymmetricPowerLfunction, HypergeometricMotiveLfunction,
-                       Lfunction_genus2_Q, Lfunction_from_db)
+                       Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
 from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
@@ -357,11 +357,7 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character,
             'number': number}
-    try:
-        return render_single_Lfunction(Lfunction_HMFDB, args, request)
-    except:
-        pass
-    return render_single_Lfunction(Lfunction_HMF, args, request)
+    return render_single_Lfunction(Lfunction_HMFDB if db.lfunc_instances.lucky({'url': hmf_url(label)}) else Lfunction_HMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
@@ -412,11 +408,7 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
-    try:
-        return render_single_Lfunction(ArtinLfunctionDB, {'label': label}, request)
-    except:
-        pass
-    return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
+    render_single_Lfunction(ArtinLfunctionDB if db.lfunc_instances.lucky({'url': artin_url(label)}) else ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")

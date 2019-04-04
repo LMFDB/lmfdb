@@ -42,6 +42,12 @@ from LfunctionDatabase import (
     get_instance_by_url, getHmfData, getHgmData,
     getEllipticCurveData, get_multiples_by_Lhash)
 
+def artin_url(label):
+    return "ArtinRepresentation/" + label
+
+def hmf_url(label):
+    "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
     if len(missing_keys):
@@ -1260,7 +1266,7 @@ class Lfunction_HMFDB(Lfunction_from_db):
         self.label = kwargs['label']
         self.origin_label = self.label
         self._Ltype = "hilbertmodularform"
-        self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
+        self.url = hmf_url(self.label)
         Lfunction_from_db.__init__(self, url = self.url)
 
 class Lfunction_HMF(Lfunction):
@@ -1672,7 +1678,7 @@ class ArtinLfunctionDB(Lfunction_from_db):
         self.label = kwargs['label']
         self.origin_label = self.label
         self._Ltype = "artin"
-        self.url = "ArtinRepresentation/" + self.label
+        self.url = artin_url(self.label)
         Lfunction_from_db.__init__(self, url = self.url)
 
     @lazy_attribute
