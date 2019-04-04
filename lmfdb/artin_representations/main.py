@@ -55,9 +55,8 @@ def add_lfunction_friends(friends, label):
             if r['type'] == 'CMF':
                 s = r['url'].split('/')
                 cmf_label = '.'.join(s[4:])
-                print "Adding CMF friend " + cmf_label + " with URL " + r['url']
-                friends.append(("Modular form " + cmf_label, r['url']))
-    print friends
+                url = r['url'] if r['url'][0] == '/' else '/' + r['url']
+                friends.append(("Modular form " + cmf_label, url))
     return friends
 
 @artin_representations_page.route("/")
