@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#_ -*- coding: utf-8 -*-
 # The class Lfunction is defined in Lfunction_base and represents an L-function
 # We subclass it here:
 # RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_CMF,
@@ -1256,16 +1256,12 @@ class Lfunction_HMFDB(Lfunction_from_db):
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
 
-        validate_required_args ('Unable to construct Hilbert modular form ' + 'L-function.', kwargs, 'label')
-        self._Ltype = "hilbertmodularform"
+        validate_required_args ('Unable to construct L-function.', kwargs, 'label')
         self.label = kwargs['label']
         self.origin = self.label
+        self._Ltype = "hilbertmodularform"
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
         Lfunction_from_db.__init__(self, url = self.url)
-
-    @lazy_attribute
-    def _Ltype(self):
-        return  "Hilbert modular form"
 
     @lazy_attribute
     def origin_label(self):
