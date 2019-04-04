@@ -356,6 +356,11 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character,
             'number': number}
+    try:
+        render_single_Lfunction(Lfuncion_HMFDB, args, request)
+    except Exception as e:
+        print e
+        pass
     return render_single_Lfunction(Lfunction_HMF, args, request)
 
 

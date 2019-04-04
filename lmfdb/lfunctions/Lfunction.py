@@ -1246,6 +1246,55 @@ class Lfunction_Maass(Lfunction):
 
 #############################################################################
 
+class Lfunction_HMFDB(Lfunction_from_db):
+    """Class representing a Hilbert modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    Possible parameters: number, character
+
+    """
+
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+
+        validate_required_args ('Unable to construct Hilbert modular form ' +
+                                'L-function.', args, 'label', 'number', 'character')
+        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+                               args, 'character','number')
+
+        self._Ltype = "hilbertmodularform"
+
+        # Put the arguments into the object dictionary
+        self.label = args['label']
+        self.number = int(args['number'])
+        self.character= int(args['character'])
+        if self.character != 0:
+            raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
+
+        # check instances
+        self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label.replace(".","/")
+        Lfunction_from_db.__init__(self, url = self.url)
+
+        self.numcoeff = 30
+
+    @lazy_attribute
+    def _Ltype(self):
+        return  "hilbert modular form"
+
+    @lazy_attribute
+    def origin_label(self):
+        return ".".join(map(str, self.label))
+
+    @lazy_attribute
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree4'))])
+
+    @property
+    def friends(self):
+        """The 'related objects' to show on webpage."""
+        lfriends = Lfunction_from_db.friends.fget(self)
+        return lfriends
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
@@ -1273,17 +1322,6 @@ class Lfunction_HMF(Lfunction):
         self.character= int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
-
-        # check instances
-        self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label.replace(".","/")
-        try:
-            print self.url
-            Lfunction_from_db.__init__(self, url = self.url)
-            self.numcoeff = 30
-            return
-        except Exception as e:
-            print e
-            pass
 
         # Load form (f) from database
         (f, F_hmf) = getHmfData(self.label)
