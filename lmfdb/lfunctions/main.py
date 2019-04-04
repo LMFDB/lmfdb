@@ -974,7 +974,7 @@ def generateLfunctionFromUrl(*args, **kwds):
 
     elif args[0] == "ArtinRepresentation":
         try:
-            return render_single_Lfunction(ArtinLfunctionDB,labe=str(args[1]))
+            return render_single_Lfunction(ArtinLfunctionDB,label=str(args[1]))
         except:
             pass
         return ArtinLfunction(label=str(args[1]))
