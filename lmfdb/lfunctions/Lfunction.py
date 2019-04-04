@@ -1285,7 +1285,6 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     @lazy_attribute
     def origin_label(self):
-        print "origin_label",self.hmf_label
         return self.hmf_label
 
     @lazy_attribute
