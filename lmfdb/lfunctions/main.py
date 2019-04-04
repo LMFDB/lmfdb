@@ -357,7 +357,9 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
 def l_function_hmf_page(field, label, character, number):
     args = {'field': field, 'label': label, 'character': character,
             'number': number}
-    return render_single_Lfunction(Lfunction_HMFDB if db.lfunc_instances.lucky({'url': hmf_url(label)}) else Lfunction_HMF, args, request)
+    in_database = db.lfunc_instances.lucky({'url': hmf_url(label)})
+    print label,hmf_url(label), in_database
+    return render_single_Lfunction(Lfunction_HMFDB if in_database else Lfunction_HMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
