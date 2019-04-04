@@ -1657,6 +1657,25 @@ class DedekindZeta(Lfunction):
 
 #############################################################################
 
+
+class ArtinLfunctionDB(Lfunction_from_db):
+    """Class representing a Hilbert modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **kwargs):
+        constructor_logger(self, kwargs)
+
+        validate_required_args ('Unable to construct L-function.', kwargs, 'label')
+        self.label = kwargs['label']
+        self.origin_label = self.label
+        self._Ltype = "artin"
+        self.url = "ArtinRepresentation/" + self.label
+        Lfunction_from_db.__init__(self, url = self.url)
+
+
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function
 

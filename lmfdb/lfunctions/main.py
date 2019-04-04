@@ -14,9 +14,9 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        Lfunction_CMF, Lfunction_CMF_orbit,
                        Lfunction_HMF, Lfunction_HMFDB,
                        Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-                       RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q,
-                       Lfunction_from_db)
+                       RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
+                       SymmetricPowerLfunction, HypergeometricMotiveLfunction,
+                       Lfunction_genus2_Q, Lfunction_from_db)
 from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
@@ -359,7 +359,7 @@ def l_function_hmf_page(field, label, character, number):
             'number': number}
     try:
         return render_single_Lfunction(Lfunction_HMFDB, args, request)
-    except Exception as e:
+    except:
         pass
     return render_single_Lfunction(Lfunction_HMF, args, request)
 
@@ -412,6 +412,10 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
+    try:
+        return render_single_Lfunction(ArtinLfunctionDB, {'label': label}, request)
+    except:
+        pass
     return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
