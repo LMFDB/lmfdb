@@ -973,6 +973,10 @@ def generateLfunctionFromUrl(*args, **kwds):
         return DedekindZeta(label=str(args[1]))
 
     elif args[0] == "ArtinRepresentation":
+        try:
+            return render_single_Lfunction(ArtinLfunctionDB,labe=str(args[1]))
+        except:
+            pass
         return ArtinLfunction(label=str(args[1]))
 
     elif args[0] == "SymmetricPower":
