@@ -1251,27 +1251,19 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     Compulsory parameters: label
 
-    Possible parameters: number, character
-
     """
 
     def __init__(self, **kwargs):
         constructor_logger(self, kwargs)
 
         validate_required_args ('Unable to construct Hilbert modular form ' +
-                                'L-function.', kwargs, 'label', 'number', 'character')
-        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
-                               kwargs, 'character','number')
+                                'L-function.', kwargs, 'label')
 
         self._Ltype = "hilbertmodularform"
 
         # Put the arguments into the object dictionary
         self.label = kwargs['label']
         self.hmf_label = self.label
-        self.number = int(kwargs['number'])
-        self.character= int(kwargs['character'])
-        if self.character != 0:
-            raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
         # check instances
         self.url = "ModularForm/GL2/TotallyReal/" + self.label.split("-")[0] + "/holomorphic/" + self.label
@@ -1281,21 +1273,11 @@ class Lfunction_HMFDB(Lfunction_from_db):
 
     @lazy_attribute
     def _Ltype(self):
-        return  "hilbert modular form"
+        return  "Hilbert modular form"
 
     @lazy_attribute
     def origin_label(self):
         return self.hmf_label
-
-    @lazy_attribute
-    def knowltype(self):
-        return "mf"
-
-    @property
-    def friends(self):
-        """The 'related objects' to show on webpage."""
-        lfriends = Lfunction_from_db.friends.fget(self)
-        return lfriends
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
