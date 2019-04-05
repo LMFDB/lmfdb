@@ -52,8 +52,9 @@ def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
     if rec:
         for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
-            if r['type'] == 'CMF':
-                s = r['url'].split('/')
+            s = r['url'].split('/')
+            # only friend embedded CMFs
+            if r['type'] == 'CMF' and len(s) == 10:
                 cmf_label = '.'.join(s[4:])
                 url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                 friends.append(("Modular form " + cmf_label, url))
