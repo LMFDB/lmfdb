@@ -84,7 +84,6 @@ def rational_elliptic_curves(err_args=None):
         'counts': counts,
         'stats_url': url_for(".statistics")
     }
-    #credit = 'John Cremona and Andrew Sutherland'
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
@@ -110,7 +109,6 @@ def statistics():
         'counts': get_stats().counts(),
         'stats': get_stats().stats(),
     }
-    #credit = 'John Cremona'
     t = 'Elliptic Curves over $\Q$: Statistics'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
              ('$\Q$', url_for(".rational_elliptic_curves")),
@@ -140,8 +138,8 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     err_args['count'] = args.get('count', '100')
     if wellformed_label:
         err_args['err_msg'] = "No curve or isogeny class in the database has label %s" % label
-    elif cremona_label:
-        err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
+    # elif cremona_label:
+    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
     elif missing_curve:
         err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
     elif not label:
@@ -158,17 +156,15 @@ def elliptic_curve_jump(info):
             return by_ec_label(label)
         except ValueError:
             return elliptic_curve_jump_error(label, info, wellformed_label=True)
-    elif label.startswith("Cremona:"):
-        label = label[8:]
-        m = match_cremona_label(label)
-        if m:
-            try:
-                return by_ec_label(label)
-            except ValueError:
-                return elliptic_curve_jump_error(label, info, wellformed_label=True)
-    elif match_cremona_label(label):
-        return elliptic_curve_jump_error(label, info, cremona_label=True)
-    elif label:
+    m = match_cremona_label(label)
+    if m:
+        try:
+            return redirect(url_for(".by_ec_label", label=label))
+            #return by_ec_label(label)
+        except ValueError:
+            return elliptic_curve_jump_error(label, info, wellformed_label=True)
+
+    if label:
         # Try to parse a string like [1,0,3,2,4] as valid
         # Weistrass coefficients:
         lab = re.sub(r'\s','',label)
@@ -238,6 +234,7 @@ def download_search(info):
                            ('$\Q$', url_for(".rational_elliptic_curves")),
                            ('Search Results', '.')],
              credit=ec_credit)
+
 def elliptic_curve_search(info, query):
     parse_rational(info,query,'jinv','j-invariant')
     parse_ints(info,query,'conductor')
@@ -267,8 +264,10 @@ def elliptic_curve_search(info, query):
         # fails on 990h3
         query['number'] = 1
 
-    info['curve_url'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
-    info['iso_url'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
+    info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
+    info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
+    info['curve_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['label'])
+    info['iso_url_Cremona'] = lambda dbc: url_for(".by_ec_label", label=dbc['iso'])
 
 ##########################
 #  Specific curve pages
@@ -324,9 +323,11 @@ def by_ec_label(label):
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         iso = data['lmfdb_iso'].split(".")[1]
         if number:
-            return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
+            return render_curve_webpage_by_label(label)
+            #return redirect(url_for(".by_triple_label", conductor=N, iso_label=iso, number=data['lmfdb_number']))
         else:
-            return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
+            return render_isogeny_class(label)
+            #return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
 
 def by_weierstrass(eqn):

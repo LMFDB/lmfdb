@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#_ -*- coding: utf-8 -*-
 # The class Lfunction is defined in Lfunction_base and represents an L-function
 # We subclass it here:
 # RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_CMF,
@@ -41,6 +41,15 @@ from LfunctionDatabase import (
     get_instances_by_trace_hash, get_lfunction_by_url,
     get_instance_by_url, getHmfData, getHgmData,
     getEllipticCurveData, get_multiples_by_Lhash)
+
+def artin_url(label):
+    return "ArtinRepresentation/" + label
+
+def hmf_url(label, character, number):
+    if (not character and not number) or (character == '0' and number == '0'):
+        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label
+    else:
+        return "ModularForm/GL2/TotallyReal/" + label.split("-")[0] + "/holomorphic/" + label + "/" + character + "/" + number
 
 def validate_required_args(errmsg, args, *keys):
     missing_keys = [key for key in keys if not key in args]
@@ -661,9 +670,9 @@ class Lfunction_from_db(Lfunction):
 
     @lazy_attribute
     def downloads(self):
-        return [['Download Euler factors', self.download_euler_factor_url],
-                ['Download zeros', self.download_zeros_url],
-                ['Download Dirichlet coefficients', self.download_dirichlet_coeff_url]]
+        return [['Euler factors to text', self.download_euler_factor_url],
+                ['Zeros to text', self.download_zeros_url],
+                ['Dirichlet coefficients to text', self.download_dirichlet_coeff_url]]
 
     @lazy_attribute
     def download_euler_factor_url(self):
@@ -1246,6 +1255,45 @@ class Lfunction_Maass(Lfunction):
 
 #############################################################################
 
+class Lfunction_BMF(Lfunction_from_db):
+    """Class representing a Bianchi modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        validate_required_args ('Unable to construct Bianchi modular form L-function.', args, 'field', 'level', 'suffix')
+
+        self.label = '-'.join([args["field"], args["level"], args["suffix"]])
+        self.origin_label = self.label
+        self._Ltype = "bianchimodularform"
+        self.url = "ModularForm/GL2/ImaginaryQuadratic/" + self.label.replace('-','/')
+
+        Lfunction_from_db.__init__(self, url = self.url)
+
+class Lfunction_HMFDB(Lfunction_from_db):
+    """Class representing a Hilbert modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        validate_required_args ('Unable to construct Hilbert modular form ' +
+                                'L-function.', args, 'label', 'number', 'character')
+        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+                               args, 'character','number')
+
+        self.label = args['label']
+        self.origin_label = self.label
+        self._Ltype = "hilbertmodularform"
+        self.url = hmf_url(args['label'],args['character'],args['number'])
+        Lfunction_from_db.__init__(self, url = self.url)
 
 class Lfunction_HMF(Lfunction):
     """Class representing a Hilbert modular form L-function
@@ -1640,6 +1688,29 @@ class DedekindZeta(Lfunction):
 
 
 #############################################################################
+
+
+class ArtinLfunctionDB(Lfunction_from_db):
+    """Class representing a Hilbert modular form L-function stored in the database
+
+    Compulsory parameters: label
+
+    """
+
+    def __init__(self, **args):
+        constructor_logger(self, args)
+
+        validate_required_args ('Unable to construct L-function.', args, 'label')
+        self.label = args['label']
+        self.origin_label = self.label
+        self._Ltype = "artin"
+        self.url = artin_url(self.label)
+        Lfunction_from_db.__init__(self, url = self.url)
+
+    @lazy_attribute
+    def bread(self):
+        return get_bread(2, [('Cusp Form', url_for('.l_function_cuspform_browse_page', degree='degree2'))])
+
 
 class ArtinLfunction(Lfunction):
     """Class representing the Artin L-function

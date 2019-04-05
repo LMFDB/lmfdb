@@ -178,7 +178,7 @@ function show_qexp(qstyle) {
 {% if newform.has_exact_qexp or (newform.embedding_label and newform.has_complex_qexp) %}
 
 <h2 id="qexp-anchor"> {{ KNOWL('cmf.q-expansion',title='$q$-expansion')}}</h2>
-<div id="qexp">
+<div id="qexp-div">
   {% if newform.dim > 1  and not newform.embedding_label %}
     <p>
       {% if not newform.hecke_ring_cyclotomic_generator %}

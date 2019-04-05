@@ -406,7 +406,7 @@ def curves(line, verbose=False):
         'q_curve': q_curve,
         'base_change': base_change,
         'torsion_order': ntors,
-        'torsion_structure': torstruct,
+        'torsion_structure': Json(torstruct),
         'torsion_gens': torgens,
         'equation': str(latex(E)), # no "\(", "\)"
         'local_data': Json(local_data),
