@@ -12,10 +12,11 @@ import LfunctionPlot
 
 from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunction_EMF,
                        Lfunction_CMF, Lfunction_CMF_orbit,
-                       Lfunction_HMF, Lfunction_Maass, Lfunction_SMF2_scalar_valued,
-                       RiemannZeta, DedekindZeta, ArtinLfunction, SymmetricPowerLfunction,
-                       HypergeometricMotiveLfunction, Lfunction_genus2_Q,
-                       Lfunction_from_db)
+                       Lfunction_HMF, Lfunction_HMFDB, Lfunction_BMF,
+                       Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+                       RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
+                       SymmetricPowerLfunction, HypergeometricMotiveLfunction,
+                       Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
 from LfunctionComp import isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
@@ -363,12 +364,19 @@ def l_function_cmf_orbit_redirecit_aa(level, weight):
                                   char_orbit_label='a', hecke_orbit="a", ), code=301)
 
 
+# L-function of Bianchi modular form ###########################################
+@l_function_page.route("/ModularForm/GL2/ImaginaryQuadratic/<field>/<level>/<suffix>/")
+def l_function_bmf_page(field,level,suffix):
+    args = {'field': field, 'level': level, 'suffix': suffix}
+    return render_single_Lfunction(Lfunction_BMF, args, request)
+
+
 # L-function of Hilbert modular form ###########################################
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/<number>/")
 def l_function_hmf_page(field, label, character, number):
-    args = {'field': field, 'label': label, 'character': character,
-            'number': number}
-    return render_single_Lfunction(Lfunction_HMF, args, request)
+    args = {'field': field, 'label': label, 'character': character, 'number': number}
+    instance = db.lfunc_instances.lucky({'url': hmf_url(label, character, number)})
+    return render_single_Lfunction(Lfunction_HMFDB if instance else Lfunction_HMF, args, request)
 
 
 @l_function_page.route("/ModularForm/GL2/TotallyReal/<field>/holomorphic/<label>/<character>/")
@@ -419,7 +427,8 @@ def l_function_nf_page(label):
 # L-function of Artin representation    ########################################
 @l_function_page.route("/ArtinRepresentation/<label>/")
 def l_function_artin_page(label):
-    return render_single_Lfunction(ArtinLfunction, {'label': label}, request)
+    instance = db.lfunc_instances.lucky({'url': artin_url(label)})
+    return render_single_Lfunction(ArtinLfunctionDB if instance else ArtinLfunction, {'label': label}, request)
 
 # L-function of hypergeometric motive   ########################################
 @l_function_page.route("/Motive/Hypergeometric/Q/<label>/<t>")
@@ -624,6 +633,13 @@ def set_bread_and_friends(info, L, request):
             info['bread'] = get_bread(L.degree,
                                       [(L.maass_id.partition('/')[2], request.path)])
 
+    elif L.Ltype() == 'bianchimodularform':
+        friendlink = '/'.join(friendlink.split('/')[:-1])
+        info['friends'] = [('Bianchi modular form ' + L.label, friendlink.rpartition('/')[0])]
+        if L.degree == 4:
+            info['bread'] = get_bread(4, [(L.label, request.path)])
+        else:
+            info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
     elif L.Ltype() == 'hilbertmodularform':
         friendlink = '/'.join(friendlink.split('/')[:-1])
@@ -967,7 +983,11 @@ def generateLfunctionFromUrl(*args, **kwds):
             return Lfunction_CMF_orbit(level=args[4], weight=args[5], char_orbit_label=args[6], hecke_orbit=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'TotallyReal' and args[4] == 'holomorphic':  # Hilbert modular form
-        return Lfunction_HMF(label=args[5], character=args[6], number=args[7])
+        instance = db.lfunc_instances.lucky({'url': hmf_url(args[6], args[6], args[7])})
+        return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
+
+    elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
+        return Lfunction_BMF(field=args[5], level=args[6], suffix=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
         maass_id = args[4]
@@ -984,7 +1004,8 @@ def generateLfunctionFromUrl(*args, **kwds):
         return DedekindZeta(label=str(args[1]))
 
     elif args[0] == "ArtinRepresentation":
-        return ArtinLfunction(label=str(args[1]))
+        instance = db.lfunc_instances.lucky({'url': artin_url(args[1])})
+        return ArtinLfunctionDB(label=str(args[1])) if instance else ArtinLfunction(label=str(args[1]))
 
     elif args[0] == "SymmetricPower":
         return SymmetricPowerLfunction(power=args[1], underlying_type=args[2], field=args[3],
