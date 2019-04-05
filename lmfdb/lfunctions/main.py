@@ -51,7 +51,7 @@ def l_function_history():
 
     bc = [('L-functions', url_for('.l_function_top_page')),
           (t, url_for('.l_function_history'))]
-    return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc)
+    return render_template(_single_knowl, title=t, kid='lfunction.history', body_class='', bread=bc, learnmore=[('Completeness of the data', url_for('.completeness'))])
 
 # Degree 1 L-functions browsing page ##############################################
 @l_function_page.route("/degree1/")
@@ -60,6 +60,7 @@ def l_function_dirichlet_browse_page():
     info["minModDefault"] = 1
     info["maxModDefault"] = 20
     info["maxOrder"] = 19
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     info["contents"] = [LfunctionPlot.getOneGraphHtmlChar(info["minModDefault"], info[
                 "maxModDefault"], 1, info["maxOrder"])]
     return render_template("Degree1.html", title='Degree 1 L-functions', **info)
@@ -68,18 +69,21 @@ def l_function_dirichlet_browse_page():
 @l_function_page.route("/degree2/")
 def l_function_degree2_browse_page():
     info = {"bread": get_bread(2, [])}
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("Degree2.html", title='Degree 2 L-functions', **info)
 
 # Degree 3 L-functions browsing page ##############################################
 @l_function_page.route("/degree3/")
 def l_function_degree3_browse_page():
     info = {"bread": get_bread(3, [])}
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("Degree3.html", title='Degree 3 L-functions', **info)
 
 # Degree 4 L-functions browsing page ##############################################
 @l_function_page.route("/degree4/")
 def l_function_degree4_browse_page():
     info = {"bread": get_bread(4, [])}
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("Degree4.html", title='Degree 4 L-functions', **info)
 
 
@@ -92,6 +96,7 @@ def l_function_degree_page(degree):
     info = {"degree": degree}
     info["key"] = 777
     info["bread"] = get_bread(degree, [])
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("DegreeNavigateL.html", title='Degree ' + str(degree) + ' L-functions', **info)
 
 
@@ -110,6 +115,7 @@ def l_function_cuspform_browse_page(degree):
 @l_function_page.route("/degree2/MaassForm/")
 def l_function_maass_browse_page():
     info = {"bread": get_bread(2, [("Maass Form", url_for('.l_function_maass_browse_page'))])}
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     info["contents"] = [processMaassNavigation()]
     info["gl2spectrum0"] = [paintSvgMaass(1, 10, 0, 10, L="/L")]
     info["colorminus1"] = rgbtohex(signtocolour(-1))
@@ -122,6 +128,7 @@ def l_function_maass_browse_page():
 def l_function_ec_browse_page():
     info = {"bread": get_bread(2, [("Elliptic Curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     info["contents"] = [processEllipticCurveNavigation(11, 65)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
 
@@ -138,6 +145,7 @@ def l_function_maass_gln_browse_page(degree):
     info = {"bread": get_bread(degree, [("Maass Form", url_for('.l_function_maass_gln_browse_page',
                                                               degree='degree' + str(degree)))])}
     info["contents"] = contents
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("MaassformGLn.html",
                            title='L-functions of GL(%s) Maass Forms' % degree, **info)
 
@@ -148,6 +156,7 @@ def l_function_ec_sym2_browse_page():
     info = {"bread": get_bread(3, [("Symmetric Square of Elliptic Curve",
                                     url_for('.l_function_ec_sym2_browse_page'))])}
     info["representation"] = 'Symmetric square'
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 26, 2)]
     return render_template("ellipticcurve.html",
                            title='Symmetric Square L-functions of Elliptic Curves', **info)
@@ -158,6 +167,7 @@ def l_function_ec_sym2_browse_page():
 def l_function_ec_sym3_browse_page():
     info = {"bread": get_bread(4, [("Symmetric Cube of Elliptic Curve", url_for('.l_function_ec_sym3_browse_page'))])}
     info["representation"] = 'Symmetric cube'
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     info["contents"] = [processSymPowerEllipticCurveNavigation(11, 17, 3)]
     return render_template("ellipticcurve.html",
                            title='Symmetric Cube L-functions of Elliptic Curves', **info)
@@ -167,6 +177,7 @@ def l_function_ec_sym3_browse_page():
 def l_function_genus2_browse_page():
     info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
@@ -184,6 +195,7 @@ def l_function_browse_page(degree, gammasignature):
     info = {"bread": get_bread(degree, [(gammasignature, url_for('.l_function_browse_page',
                                             degree='degree' + str(degree), gammasignature=gammasignature))])}
     info["contents"] = contents
+    info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("MaassformGLn.html",
                            title='L-functions of degree %s and signature %s' % (degree, nice_gammasignature), **info)
 
@@ -221,7 +233,7 @@ def set_info_for_start_page():
     info['title'] = 'L-functions'
     info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
 
-    info['learnmore'] = [('History of L-functions', url_for('.l_function_history'))]
+    info['learnmore'] = [('History of L-functions', url_for('.l_function_history')), ('Completeness of the data', url_for('.completeness'))]
 
     return info
 
@@ -489,6 +501,16 @@ def render_lfunction_exception(err):
     info = {'explain': errmsg, 'title': 'Error displaying L-function', 'bread': bread }
     return render_template('problem.html', **info)
 
+def learnmore_list(path, remove=None):
+    prepath = re.sub(r'^/L/', '', path)
+    prepath = re.sub(r'/$', '', prepath)
+    learnmore = [
+        ('Completeness of the data', url_for('.completeness')),
+        ('Source of the data', url_for('.source', prepath=prepath)),
+        ('Reliability of the data', url_for('.reliability', prepath=prepath))]
+    if remove:
+        return filter(lambda t:t[0].find(remove) <0, learnmore)
+    return learnmore
 
 def initLfunction(L, args, request):
     ''' Sets the properties to show on the homepage of an L-function page.
@@ -498,6 +520,8 @@ def initLfunction(L, args, request):
     info['properties2'] = set_gaga_properties(L)
 
     set_bread_and_friends(info, L, request)
+
+    info['learnmore'] = learnmore_list(request.path)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
     info['navi']= set_navi(L)
@@ -1204,3 +1228,55 @@ def processSymPowerEllipticCurveNavigation(startCond, endCond, power):
 
     s += '</table>\n'
     return s
+
+@l_function_page.route("/<path:prepath>/Reliability")
+def reliability(prepath):
+    t = 'Reliability of L-function Data'
+    args = tuple(prepath.split('/'))
+    L = generateLfunctionFromUrl(*args)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['reliability'])['reliability']
+        else:
+            knowl = 'rcs.rigor.lfunction.lcalc'
+    else:
+        knowl = 'rcs.rigor.lfunction.lcalc'
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Reliability$','',target[1])))
+    bread.append(('Reliability', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Reliability'))
+
+@l_function_page.route("/Completeness")
+def completeness():
+    t = 'Completeness of L-function Data'
+    bread = [('Completeness', ' ')]
+    return render_template("single.html", kid='rcs.cande.lfunction', title=t, 
+        bread=bread)
+
+@l_function_page.route("/<path:prepath>/Source")
+def source(prepath):
+    t = 'Source of L-function Data'
+    args = tuple(prepath.split('/'))
+    L = generateLfunctionFromUrl(*args)
+    info={'bread': ()}
+    set_bread_and_friends(info, L, request)
+    if L.fromDB:
+        Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
+        if 'load_key' in Ldb:
+            knowl = db.lfunc_rs_knowls.lucky({'load_key': Ldb['load_key']}, projection=['source'])['source']
+        else:
+            knowl = 'rcs.source.lfunction.lcalc'
+    else:
+        knowl = 'rcs.source.lfunction.lcalc'
+    bread = info['bread']
+    target = bread.pop()
+    bread.append((target[0], re.sub(r'/Source$','',target[1])))
+    bread.append(('Source', ' '))
+    return render_template("single.html", kid=knowl, title=t, bread=bread,
+        learnmore=learnmore_list(prepath, remove='Source'))
+
