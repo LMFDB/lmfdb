@@ -312,11 +312,11 @@ class WebEC(object):
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
-        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
-                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
-                          ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
-                          ('Download SageMath code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Download GP code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
+                          ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
+                          ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
         ]
 
         try:

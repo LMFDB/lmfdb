@@ -574,8 +574,19 @@ def save_form():
     if not allowed_id(ID):
         return redirect(url_for(".index"))
 
-    NEWID = request.form.get('krename', '').strip()
     FINISH_RENAME = request.form.get('finish_rename', '')
+    UNDO_RENAME = request.form.get('undo_rename', '')
+    if FINISH_RENAME:
+        k = Knowl(ID)
+        k.actually_rename()
+        flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
+        return redirect(url_for(".show", ID=k.source_name))
+    elif UNDO_RENAME:
+        k = Knowl(ID)
+        k.undo_rename()
+        flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
+        return redirect(url_for(".show", ID=ID))
+    NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
@@ -597,9 +608,14 @@ def save_form():
             pass
         else:
             try:
-                k.start_rename(NEWID, who)
+                if k.sed_safety == 0:
+                    time.sleep(0.01)
+                    k.actually_rename(NEWID)
+                    flash("Knowl renamed to {0} successfully.".format(NEWID))
+                else:
+                    k.start_rename(NEWID, who)
             except ValueError as err:
-                flash(str(err))
+                flash(str(err), "error")
             else:
                 if k.sed_safety == 1:
                     flash("Knowl rename process started. You can change code references using".format(NEWID))
@@ -607,18 +623,7 @@ def save_form():
                     flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
                     flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
-                else:
-                    time.sleep(0.01)
-                    k.actually_rename()
-                    flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
-    elif FINISH_RENAME:
-        # We need to sleep briefly so that we don't have two identical timestamps
-        time.sleep(0.01)
-        if FINISH_RENAME == 'finish':
-            k.actually_rename()
-        elif FINISH_RENAME == 'undo':
-            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:

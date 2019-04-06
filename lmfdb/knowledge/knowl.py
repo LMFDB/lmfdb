@@ -252,16 +252,17 @@ class KnowlBackend(PostgresBase):
         cur = self._execute(selecter, values)
         return [{k:res[i] for k,i in projfields} for res in cur]
 
-    def save(self, knowl, who):
+    def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
-        most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
+        if most_recent is None:
+            most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
         new_knowl = most_recent is None
         if new_knowl:
             authors = []
         else:
             authors = most_recent.pop('authors', [])
 
-        if who and who not in authors:
+        if not minor and who and who not in authors:
             authors = authors + [who]
 
         search_keywords = make_keywords(knowl.content, knowl.id, knowl.title)
@@ -372,7 +373,7 @@ class KnowlBackend(PostgresBase):
         """
         values = [0, -2, [knowlid]]
         if old:
-            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s links @> %s")
+            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s AND links @> %s")
         else:
             if beta is None:
                 beta = is_beta()
@@ -480,12 +481,18 @@ class KnowlBackend(PostgresBase):
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
             new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
-            new_knowl.save(who)
+            new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
-        if knowl.source is None:
+        """
+        INPUT:
+
+        - ``knowl`` -- the knowl with the old, desired name
+        """
+        if knowl.source_name is None:
             raise ValueError("Knowl renaming has not been started")
-        self.actually_rename(self, knowl, knowl.source)
+        renamed_knowl = Knowl(knowl.source_name)
+        self.actually_rename(renamed_knowl, knowl.id)
 
     def actually_rename(self, knowl, new_name=None):
         if new_name is None:
@@ -496,6 +503,9 @@ class KnowlBackend(PostgresBase):
             new_cat = extract_cat(new_name)
             updator = SQL("UPDATE kwl_knowls SET (id, cat) = (%s, %s) WHERE id = %s")
             self._execute(updator, [new_name, new_cat, knowl.id])
+            # Remove source and source_name from all versions
+            updator = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s")
+            self._execute(updator, [None, None, new_name])
             # Only have to update keywords for most recent version and most recent reviewed version
             updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
             self._execute(updator, [make_keywords(knowl.content, new_name, knowl.title), new_name, knowl.timestamp])
@@ -736,8 +746,18 @@ class Knowl(object):
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                      self.previous_review_spot = elt['ms_timestamp']
 
-    def save(self, who):
-        knowldb.save(self, who)
+    def save(self, who, most_recent=None, minor=False):
+        """
+        INPUT:
+
+        - ``who`` -- the username of the logged in user saving this knowl
+        - ``most_recent`` -- if provided, a previous knowl containing authors.
+            Currently only used when renaming a knowl.
+        - ``minor`` -- if True, don't add the current user to the list of authors.
+        """
+        if most_recent is not None:
+            most_recent = {'authors':most_recent.authors}
+        knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):
         """Marks the knowl as deleted.  Admin only."""
@@ -755,6 +775,9 @@ class Knowl(object):
         knowldb.start_rename(self, new_name, who)
 
     def undo_rename(self):
+        """
+        This should be the knowl with the old name, not the new one.
+        """
         knowldb.undo_rename(self)
 
     def actually_rename(self, new_name=None):

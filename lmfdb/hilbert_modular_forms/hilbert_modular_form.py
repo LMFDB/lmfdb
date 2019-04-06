@@ -168,7 +168,17 @@ def download_hmf_magma(**args):
     hecke_eigs = map(str, f['hecke_eigenvalues'])
     AL_eigs    = f['AL_eigenvalues']
 
-    outstr = 'P<x> := PolynomialRing(Rationals());\n'
+    outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
+    outstr += '  It will load the data associated to the HMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '  At the *bottom* of the file, there is code to recreate the\n'
+    outstr += '  Hilbert modular form in Magma, by creating the HMF space\n'
+    outstr += '  and cutting out the corresponding Hecke irreducible subspace.\n'
+    outstr += '  From there, you can ask for more eigenvalues or modify as desired.\n'
+    outstr += '  It is commented out, as this computation may be lengthy.\n'
+    outstr += '*/\n\n'
+
+    outstr += 'P<x> := PolynomialRing(Rationals());\n'
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
@@ -227,7 +237,12 @@ def download_hmf_sage(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    outstr = 'P.<x> = PolynomialRing(QQ)\n'
+    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr += '  It will load the data associated to the HMF, including\n'
+    outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
+    outstr += '*/\n\n'
+
+    outstr += 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
     outstr += 'F.<w> = NumberField(g)\n'
     outstr += 'ZF = F.ring_of_integers()\n\n'
@@ -287,8 +302,8 @@ def render_hmf_webpage(**args):
     info.update(data)
 
     info['downloads'] = [
-        ('Download to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
-        ('Download to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
+        ('Modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
+        ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
     if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
         info['friends'] = [('L-function',

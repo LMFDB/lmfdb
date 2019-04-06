@@ -90,6 +90,7 @@ function properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
   for (var k = 0; k < initialFriends.length; k++) {
     add_friend(ul, initialFriends[k][0], initialFriends[k][1]);
   }
+  renderMathInElement(ul, katexOpts);
 
   for (var i = 0; i < conrey_indexes.length; i++) {
     for (var j = 1; j <= rel_dim; j++) {
