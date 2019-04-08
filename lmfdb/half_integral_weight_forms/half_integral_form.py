@@ -46,9 +46,9 @@ def half_integral_weight_form_search(info, query):
             raise ValueError
 
 def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
+     list = [str(c) for c in list]
+     Qa = PolynomialRing(QQ,'a')
+     Qq = PowerSeriesRing(Qa,'q')
      return str(Qq([c for c in list]).add_bigoh(len(list)+1))
 
 
@@ -84,21 +84,21 @@ def render_hiwf_webpage(**args):
 
     dim = data['dim']
     dimtheta = data['dimtheta']
-    dimnew=dim-dimtheta
+    dimnew = dim-dimtheta
     info['dimension'] = dim
-    info['dimtheta']= dimtheta
+    info['dimtheta'] = dimtheta
     info['dimnew'] = dimnew
     chi = data['character']
-    info['ch_lab']= chi.replace('.','/')
-    chi1=chi.split(".")
-    chi2="\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"
-    info['char']= chi2
-    info['newpart']=data['newpart']
-    new=[]
+    info['ch_lab'] = chi.replace('.','/')
+    chi1 = chi.split(".")
+    chi2 = "\chi_{"+chi1[0]+"}("+chi1[1]+",\cdot)"
+    info['char'] = chi2
+    info['newpart'] = data['newpart']
+    new = []
     for n in data['newpart']:
-        v={}
+        v = {}
         v['dim'] = n['dim_image']
-        s=[]
+        s = []
         for h in n['half_forms']:
             s.append(my_latex_from_qexp(print_q_expansion(h)))
         v['hiwf'] = s
@@ -106,19 +106,19 @@ def render_hiwf_webpage(**args):
         v['nf'] = n['nf_label']
         v['field_knowl'] = nf_display_knowl(n['nf_label'], n['nf_label'])
         new.append(v)
-    info['new']= new
-    if dimtheta !=0:
-        theta=[]
+    info['new'] = new
+    if dimtheta != 0:
+        theta = []
         for m in data['thetas']:
             for n in m:
-                n_lab= n.replace('.','/')
-                n_l=n.split(".")
-                n_lat="\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"
-                v=[n_lab, n_lat]
+                n_lab = n.replace('.','/')
+                n_l = n.split(".")
+                n_lat = "\chi_{"+n_l[0]+"}("+n_l[1]+",\cdot)"
+                v = [n_lab, n_lat]
                 theta.append(v)
-        info['theta']= theta
+        info['theta'] = theta
     else:
-        info['theta']= data['thetas']
+        info['theta'] = data['thetas']
     return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
 
 
