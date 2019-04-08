@@ -31,7 +31,7 @@ def generate_report():
     #Check connection, editor status etc
     report['connection'] = report_connection()
 
-    all_tables=list(db.inv_tables.search())
+    all_tables = list(db.inv_tables.search())
 
     report['fields'] = report_fields_tables(all_tables)
     report['latest'] = report_latest_changes(all_tables)
@@ -55,7 +55,7 @@ def report_fields_tables(tables):
     Check human.data contains expected fields
     """
 
-    patch=[]
+    patch = []
     for item in tables:
         a = db.inv_fields_human.count({'table_id':item['_id']})
         b = db.inv_fields_auto.count({'table_id':item['_id']})
@@ -67,12 +67,12 @@ def report_fields_tables(tables):
 
     bad_items = []
     for item in tables:
-        all_human=db.inv_fields_human.search({'table_id':item['_id']})
+        all_human = db.inv_fields_human.search({'table_id':item['_id']})
         key_list = []
         for field in all_human:
                 for key in inv.base_editable_fields:
                     try:
-                        name=field['data'][key]
+                        name = field['data'][key]
                         assert(name or not name)
                     except:
                         key_list.append((field, key))
