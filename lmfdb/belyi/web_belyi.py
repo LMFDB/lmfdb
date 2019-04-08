@@ -72,12 +72,12 @@ def make_map_latex(map_str):
     # make strings for lc, num, and den
     num_str = latex(num_new)
     den_str = latex(den_new)
-    if lc==1:
-        lc_str=""
+    if lc == 1:
+        lc_str = ""
     else:
         lc_str = latex(lc)
-    if den_new==1:
-        if lc ==1:
+    if den_new == 1:
+        if lc == 1:
             phi_str = num_str
         else:
             phi_str = lc_str+"("+num_str+")"
@@ -91,7 +91,7 @@ def make_map_latex(map_str):
 
 def belyi_base_field(galmap):
     fld_coeffs = galmap['base_field']
-    if fld_coeffs==[-1,1]:
+    if fld_coeffs == [-1,1]:
         fld_coeffs = [0,1]
     F = WebNumberField.from_coeffs(fld_coeffs)
     return F
@@ -159,12 +159,12 @@ class WebBelyiGalmap(object):
             data['base_field'] = latex(pol)
         else:
             data['in_LMFDB'] = True 
-            if F.poly().degree()==1:
+            if F.poly().degree() == 1:
                 data['isQQ'] = True 
             F.latex_poly = web_latex(F.poly())
             data['base_field'] = F
         crv_str = galmap['curve']
-        if crv_str=='PP1':
+        if crv_str == 'PP1':
             data['curve'] = '\mathbb{P}^1'
         else:
             data['curve'] = make_curve_latex(crv_str)
@@ -313,7 +313,7 @@ class WebBelyiPassport(object):
                 field['isQQ'] = False;
             else:
                 field['in_LMFDB'] = True;
-                if F.poly().degree()==1:
+                if F.poly().degree() == 1:
                     field['isQQ'] = True
                 F.latex_poly = web_latex(F.poly())
                 field['base_field'] = F
