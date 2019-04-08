@@ -23,13 +23,13 @@ def convert_IQF_label(fld, lab):
     if fld.split(".")[:2] != ['2','0']:
         return lab
     newlab = lab
-    if lab[0]=='[':
+    if lab[0] == '[':
         newlab = lab[1:-1].replace(",",".")
-    if len(newlab.split("."))!=3:
+    if len(newlab.split(".")) != 3:
         return newlab
     newlab = db.ec_iqf_labels.lucky({'fld':fld, 'old':newlab}, projection = 'new')
     if newlab:
-        if newlab!=lab:
+        if newlab != lab:
             print("Converted label {} to {} over {}".format(lab, newlab, fld))
         return newlab
     return lab
@@ -93,13 +93,13 @@ def ideal_from_string(K,s, IQF_format=False):
         # numbers stored in the database
         alpha = alpha.encode().replace('w',str(K.gen()))
         I = K.ideal(a,K(alpha.encode()))
-    if I.norm()==N:
+    if I.norm() == N:
         return I
     else:
         return "wrong" ## caller must check
 
 def pretty_ideal(I):
-    easy = I.number_field().degree()==2 or I.norm()==1
+    easy = I.number_field().degree() == 2 or I.norm() == 1
     gens = I.gens_reduced() if easy else I.gens()
     return "\((" + ",".join([latex(g) for g in gens]) + ")\)"
 
@@ -141,9 +141,9 @@ def parse_point(K, s):
     return [K([QQ(ci.encode()) for ci in c.split(",")]) for c in cc]
 
 def inflate_interval(a,b,r):
-    c=(a+b)/2
-    d=(b-a)/2
-    d*=r
+    c = (a+b)/2
+    d = (b-a)/2
+    d *= r
     return (c-d,c+d)
 
 def plot_zone_union(R,S):
@@ -151,35 +151,35 @@ def plot_zone_union(R,S):
 
 # Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x) 
 def EC_R_plot_zone_piece(f,h,a,b):
-    npts=50
-    Y=[]
-    g=f+h**2/4
-    t=a
-    s=(b-a)/npts
+    npts = 50
+    Y = []
+    g = f+h**2/4
+    t = a
+    s = (b-a)/npts
     for i in range(npts+1):
-        y=g(t)
-        if y>0:
-            y=sqrt(y)
-            w=h(t)/2
+        y = g(t)
+        if y > 0:
+            y = sqrt(y)
+            w = h(t)/2
             Y.append(y-w)
             Y.append(-y-w)
-        t+=s
-    (ymin,ymax)=inflate_interval(min(Y),max(Y),1.2)
-    (a,b)=inflate_interval(a,b,1.3)
+        t += s
+    (ymin,ymax) = inflate_interval(min(Y),max(Y),1.2)
+    (a,b) = inflate_interval(a,b,1.3)
     return (a,b,ymin,ymax)
 
 # Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x) 
 def EC_R_plot_zone(f,h):
-    F=f+h**2/4
-    F1=F.derivative()
-    F2=F1.derivative()
-    G=F*F2-F1**2/2
-    ZF=[z[0] for z in F.roots()]
-    ZG=[z[0] for z in G.roots()]
-    xi=max(ZG)
-    if len(ZF)==1:
+    F = f+h**2/4
+    F1 = F.derivative()
+    F2 = F1.derivative()
+    G = F*F2-F1**2/2
+    ZF = [z[0] for z in F.roots()]
+    ZG = [z[0] for z in G.roots()]
+    xi = max(ZG)
+    if len(ZF) == 1:
         return EC_R_plot_zone_piece(f,h,ZF[0],2*xi-ZF[0])
-    if len(ZF)==3:
+    if len(ZF) == 3:
         return plot_zone_union(EC_R_plot_zone_piece(f,h,ZF[0],ZF[1]),EC_R_plot_zone_piece(f,h,ZF[2],2*xi-ZF[2]))
     return EC_R_plot_zone_piece(f,h,ZF[0],2*ZF[1]-ZF[0])
 
@@ -190,17 +190,17 @@ def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
     d = (xmax - xmin)
     return implicit_plot(y ** 2 + ainvs[0] * x * y + ainvs[2] * y - x ** 3 - ainvs[1] * x ** 2 - ainvs[3] * x - ainvs[4], (x, xmin, xmax), (y, ymin, ymax), plot_points=500, aspect_ratio="automatic", color=colour) + plot(0, xmin=c - 1e-5 * d, xmax=c + 1e-5 * d, ymin=ymin, ymax=ymax, aspect_ratio="automatic", color=colour, legend_label=legend)  # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (http://trac.sagemath.org/ticket/15903)
 
-Rx=PolynomialRing(RDF,'x')
+Rx = PolynomialRing(RDF,'x')
 
 def EC_nf_plot(K, ainvs, base_field_gen_name):
     try:
         n1 = K.signature()[0]
         if n1 == 0:
             return plot([])
-        R=[]
-        S=K.embeddings(RDF)
+        R = []
+        S = K.embeddings(RDF)
         for s in S:
-            A=[s(c) for c in ainvs]
+            A = [s(c) for c in ainvs]
             R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]]))) 
         xmin = min([r[0] for r in R])
         xmax = max([r[1] for r in R])
@@ -208,19 +208,19 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         ymax = max([r[3] for r in R])
         cols = rainbow(n1) # Default choice of n colours
         # However, these tend to be too pale, so we preset them for small values of n
-        if n1==1:
-            cols=["blue"]
-        elif n1==2:
-            cols=["red","blue"]
-        elif n1==3:
-            cols=["red","limegreen","blue"]
-        elif n1==4:
+        if n1 == 1:
+            cols = ["blue"]
+        elif n1 == 2:
+            cols = ["red","blue"]
+        elif n1 == 3:
+            cols = ["red","limegreen","blue"]
+        elif n1 == 4:
             cols = ["red", "orange", "forestgreen", "blue"]
-        elif n1==5:
+        elif n1 == 5:
             cols = ["red", "orange", "forestgreen", "blue", "darkviolet"]
-        elif n1==6:
+        elif n1 == 6:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
-        elif n1==7:
+        elif n1 == 7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
         return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + " \mapsto$ " + str(S[i].im_gens()[0].n(20))+"$\dots$") for i in range(n1)]) 
     except:
@@ -265,7 +265,7 @@ class ECNF(object):
         self.numb = str(self.number)
 
         # Conductor, discriminant, j-invariant
-        if self.conductor_norm==1:
+        if self.conductor_norm == 1:
             N = K.ideal(1)
         else:
             N = ideal_from_string(K,self.conductor_ideal)
@@ -395,7 +395,7 @@ class ECNF(object):
         if self.cm and self.galois_images != '?':
             self.cm_ramp = [p for p in ZZ(self.cm).support() if not p in self.non_surjective_primes]
             self.cm_nramp = len(self.cm_ramp)
-            if self.cm_nramp==1:
+            if self.cm_nramp == 1:
                 self.cm_ramp = self.cm_ramp[0]
             else:
                 self.cm_ramp = ", ".join([str(p) for p in self.cm_ramp])
@@ -504,8 +504,8 @@ class ECNF(object):
         # Isogeny information
 
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
-        if len(isodegs)<3:
+        isodegs = [str(d) for d in self.isogeny_degrees if d > 1]
+        if len(isodegs) < 3:
             self.isogeny_degrees = " and ".join(isodegs)
         else:
             self.isogeny_degrees = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
@@ -615,9 +615,9 @@ class ECNF(object):
         gen = self.field.generator_name().replace("\\","") # phi not \phi
         for lang in ['sage', 'magma', 'pari']:
             pol = str(self.field.poly())
-            if lang=='pari':
+            if lang == 'pari':
                 pol = pol.replace('x',gen)
-            elif lang=='magma':
+            elif lang == 'magma':
                 pol = str(self.field.poly().list())
             self._code['field'][lang] = (self._code['field'][lang] % pol).replace("<a>", "<%s>" % gen)
 
