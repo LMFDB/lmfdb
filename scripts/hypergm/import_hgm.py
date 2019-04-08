@@ -16,7 +16,7 @@ password = open(pw_path+pw_filename, "r").readlines()[0].strip()
 #from pymongo import *
 
 from pymongo.mongo_client import MongoClient
-C= MongoClient(port=37010, host='lmfdb-ib')
+C = MongoClient(port=37010, host='lmfdb-ib')
 C['hgm'].authenticate('editor', password)
 
 hgm = C.hgm.newmotives
@@ -68,9 +68,9 @@ def modvecupper(A,p):
     return Ap
 
 def killdup(A,B):
-    aa=mset(A)
-    bb=mset(B)
-    cc=aa & bb
+    aa = mset(A)
+    bb = mset(B)
+    cc = aa & bb
     aa.subtract(cc)
     bb.subtract(cc)
     aa = list(aa.elements())
@@ -101,7 +101,7 @@ def orderAB(A,B):
         return [A,B]
     if 1 in A:
         return [B,A]
-    if A[-1]<B[-1]:
+    if A[-1] < B[-1]:
         return [A,B]
     return [B,A]
 
