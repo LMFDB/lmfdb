@@ -22,15 +22,15 @@ def check_knowls(cat='ec', verbose=False):
         all_content = cont
         cont = cont.replace("KNOWL ","KNOWL")
         i = 0
-        while (i>=0):
+        while (i >= 0):
             i = cont.find("KNOWL_INC")
-            if i>=0:
+            if i >= 0:
                 offset = 10
             else:
                 i = cont.find("KNOWL")
-                if i>=0:
-                    offset=6
-            if (i>=0):
+                if i >= 0:
+                    offset = 6
+            if (i >= 0):
                 cont = cont[i+offset:]
                 qu = cont[0]
                 j = cont.find(qu,1)
@@ -89,7 +89,7 @@ def find_knowl_links(id, base=None, all=True, verbose=False):
     /scratch/home/jcremona/lmfdb/lmfdb/elliptic_curves/templates/ec-search-results.html:  <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
 
     """
-    if base==None:
+    if base == None:
         base = "~/lmfdb"
     found = False
     for L in getoutput('grep -r "{}" {}'.format(id, base)).splitlines():
