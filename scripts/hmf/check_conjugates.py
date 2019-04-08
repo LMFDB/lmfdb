@@ -22,7 +22,7 @@ from sage.all import oo
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') ## read-only on all databases by default
 
 # Run the following function to authenticate on the hmfs database
@@ -273,7 +273,7 @@ def fix_data_fields(min_level_norm=0, max_level_norm=None, fix=False):
         return None
     for f in forms_to_fix:
         count = count+1
-        if count%100==0: print("%s: %s" % (count, f['label']))
+        if count%100 == 0: print("%s: %s" % (count, f['label']))
         fix_data = {}
         deg, r, disc, n = f['field_label'].split('.')
         fix_data['deg'] = int(deg)
@@ -293,7 +293,7 @@ def fix_one_label(lab, reverse=False):
     were required).  If reverse==True the inverse operation is carried
     out (z to y to ... to c to b to a).
     """
-    if len(lab)!=2:
+    if len(lab) != 2:
         return lab
     else:
         if reverse:
@@ -320,10 +320,10 @@ def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=Fal
         return None
     for f in forms_to_fix:
         count = count+1
-        if count%100==0: print("%s: %s" % (count, f['label']))
+        if count%100 == 0: print("%s: %s" % (count, f['label']))
         fix_data = {}
         lab = f['label_suffix']
-        if len(lab)==1:
+        if len(lab) == 1:
             continue
         if f['label'][-2:] != lab:
             print("Incorrect label_suffix %s in form %s" % (lab,f['label']))
@@ -339,7 +339,7 @@ def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=Fal
             forms.update({'label': f['label']}, {"$set": fix_data}, upsert=True)
 
         # find associated elliptic curve and fix that too (where appropriate)
-        if f['deg']==2 and f['dimension']==1:
+        if f['deg'] == 2 and f['dimension'] == 1:
             for e in nfcurves.find({'class_label':f['label']}):
                 fix_data = {}
                 fix_data['iso_label'] = lab
@@ -350,7 +350,7 @@ def fix_labels(field_label, min_level_norm=0, max_level_norm=None, fix_forms=Fal
                 print("using fixed data %s for curve %s" % (fix_data,e['label']))
                 if fix_curves:
                     res = nfcurves.update_one({'_id': e['_id']}, {"$set": fix_data}, upsert=True)
-                    assert res.matched_count==1
+                    assert res.matched_count == 1
         else:
             print("No elliptic curve to fix")
 
@@ -372,9 +372,9 @@ def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curve
         return None
     for c in curves_to_fix:
         count = count+1
-        if count%100==0: print("%s: %s" % (count, c['label']))
+        if count%100 == 0: print("%s: %s" % (count, c['label']))
         lab = c['iso_label']
-        if len(lab)==1:
+        if len(lab) == 1:
             continue
         if c['iso_label'][-2:] != lab:
             print("Incorrect iso_label %s in curve %s" % (lab,c['label']))
@@ -390,7 +390,7 @@ def fix_curve_labels(field_label, min_cond_norm=0, max_cond_norm=None, fix_curve
         print("using fixed data %s for curve %s" % (fix_data,c['label']))
         if fix_curves:
             res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
-            assert res.matched_count==1
+            assert res.matched_count == 1
 
 def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, fix_curves=False):
     r""" One-off utility to correct class label
@@ -415,7 +415,7 @@ def fix_one_curve_label(field_label, cond_label, old_iso_label, new_iso_label, f
         print("using fixed data %s for curve %s" % (fix_data,c['label']))
         if fix_curves:
             res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
-            assert res.matched_count==1
+            assert res.matched_count == 1
 
 def set_one_curve_label(id, new_iso_label, fix_curves=False):
     r""" One-off utility to correct class label
@@ -438,7 +438,7 @@ def set_one_curve_label(id, new_iso_label, fix_curves=False):
         print("using fixed data %s for curve %s" % (fix_data,c['label']))
         if fix_curves:
             res = nfcurves.update_one({'_id': c['_id']}, {"$set": fix_data}, upsert=True)
-            assert res.matched_count==1
+            assert res.matched_count == 1
 
 def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False):
     r""" One-off utility to add a numeric conversion of the letter-coded
@@ -458,7 +458,7 @@ def add_numeric_label_suffixes(min_level_norm=0, max_level_norm=None, fix=False)
           % (forms_to_fix.count(),min_level_norm,max_level_norm))
     for f in forms_to_fix:
         count = count+1
-        if count%100==0: print("%s: %s" % (count, f['label']))
+        if count%100 == 0: print("%s: %s" % (count, f['label']))
         fix_data = {}
         lab = f['label_suffix']
         fix_data['label_nsuffix'] = class_to_int(lab)
