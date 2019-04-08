@@ -48,7 +48,7 @@ class db_struc:
     rollback_human = {STR_NAME : 'inv_rollback', STR_CONTENT:['diff']}
     ops = {STR_NAME : 'inv_ops', STR_CONTENT:[]} #Ops has no fixed format
     def get_fields(self, which):
-        if which =='auto':
+        if which == 'auto':
             return self.fields_auto
         elif which == 'human':
             return self.fields_human
@@ -58,7 +58,7 @@ class db_struc:
     def get_table(self, which):
         """Get table content from name
         """
-        if which =='auto':
+        if which == 'auto':
             return self.fields_auto
         elif which == 'human':
             return self.fields_human
