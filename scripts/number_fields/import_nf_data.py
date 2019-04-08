@@ -59,7 +59,7 @@ pw_filename = "../../../xyzzy"
 password = open(pw_filename, "r").readlines()[0].strip()
 
 from pymongo.mongo_client import MongoClient
-C= MongoClient(port=37010)
+C = MongoClient(port=37010)
 C['numberfields'].authenticate('editor', password)
 fields = C.numberfields.fields
 
@@ -91,10 +91,10 @@ def makels(li):
   return ','.join(li2)
 
 def make_disc_key(D):
-  s=1
-  if D<0: s=-1
+  s = 1
+  if D < 0: s = -1
   Dz = D.abs()
-  if Dz==0: D1 = 0
+  if Dz == 0: D1 = 0
   else: D1 = int(Dz.log(10))
   return s, '%03d%s'%(D1,str(Dz))
 
@@ -121,7 +121,7 @@ def mismatch(oldval, newval, valtype):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 count = 0
@@ -129,7 +129,7 @@ count = 0
 
 def do_import(ll):
   global count
-  print "Importing list of length %d" %(len(ll))
+  print "Importing list of length %d" % (len(ll))
   for F in ll:
     count += 1
     coeffs, T, D, r1, h, clgp, extras, reg, fu, nogrh, subs, reduc, zk = F
@@ -152,12 +152,12 @@ def do_import(ll):
     if reduc == 0:
         data['reduced'] = 0
     # See if we have it and build a label
-    index=1
+    index = 1
     is_new = True
     for field in fields.find({'degree': d,
                  'signature': data['signature'],
                  'disc_abs_key': dstr}):
-      index +=1
+      index += 1
       if field['coeffs'] == data['coeffs']:
         is_new = False
         break
@@ -173,21 +173,21 @@ def do_import(ll):
         data['zk'] = zk
         data['subs'] = subs
         dak = data['disc_abs_key']
-        if len(dak)<19:
-          dakhash=int(dak)
+        if len(dak) < 19:
+          dakhash = int(dak)
         else:
           dakhash = int(dak[0:19])
-        data['dischash'] = dakhash *data['disc_sign']
+        data['dischash'] = dakhash * data['disc_sign']
         data['coeffhash'] = hashlib.md5(data['coeffs']).hexdigest()
 ############
-        if h>0:
+        if h > 0:
             data['class_number'] = h
             data['class_group'] = makels(clgp)
-        if extras>0:
+        if extras > 0:
             data['reg'] = reg
             fu = [web_latex(PR(str(u))) for u in fu]
             data['units'] = fu
-        if nogrh==0:
+        if nogrh == 0:
             data['used_grh'] = True
         #print "entering %s into database"%info
         if saving:
