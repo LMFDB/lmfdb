@@ -19,6 +19,9 @@ The "dimensions" collection entries have the following fields:
    - 'sl2_dims':       (dict) each key is a weight (int), with value a
                          dict with keys 'cuspidal_dim', 'new_dim' (and possibly more)
 
+Note (April 2019): when this script is updated to Postgres, make sure to add the columns
+sl2_new_totaldim, sl2_cusp_totaldim, gl2_new_totaldim, and gl2_cusp_totaldim.  See
+PR #2926 for details.
 """
 from sage.all import polygen, QQ, ZZ, NumberField
 
