@@ -332,7 +332,7 @@ class PostgresBase(object):
         - ``reissued`` -- used internally to prevent infinite recursion when attempting to
             reset the connection.
         - ``buffered`` -- whether to create a server side cursor that must be
-            manually closed after using it
+            manually closed after using it, this implies ``commit=False``.
 
         .. NOTE:
 
@@ -354,6 +354,12 @@ class PostgresBase(object):
         """
         if not isinstance(query, Composable):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
+
+        if buffered:
+            if commit is None:
+                commit = False
+            elif commit:
+                raise ValueError("buffered and commit are incompatible")
 
         try:
             cur = self._db.cursor(buffered=buffered)
@@ -1535,7 +1541,7 @@ class PostgresTable(PostgresBase):
                 qstr, values = self._build_query(query, limit, offset, sort)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
-        cur = self._execute(selecter, values, silent=silent, commit = False, buffered=True,
+        cur = self._execute(selecter, values, silent=silent, buffered=True,
                             slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
         if limit is None:
             if info is not None:
@@ -5013,12 +5019,12 @@ class PostgresDatabase(PostgresBase):
     def cursor(self, buffered=False):
         """
         Returns a new cursor.
-        If buffered, then it creates a server side cursor that must be manually
+        If buffered, then it creates a server side cursor that should be manually
         closed after done using it.
         """
         if buffered:
             self.server_side_counter += 1
-            return self.conn.cursor(str(self.server_side_counter), withhold=True)
+            return self.conn.cursor(str(self.server_side_counter))
         else:
             return self.conn.cursor()
 
