@@ -33,7 +33,7 @@ import os
 import gzip
 
 from pymongo.mongo_client import MongoClient
-C= MongoClient(port=37010)
+C = MongoClient(port=37010)
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -54,7 +54,7 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 def base_label(level,weight,character):
