@@ -57,21 +57,21 @@ def read_line(line, debug=0):
 
     for p,pdat in zip(badp,fields[5:5+nbadp]):
         p = str(p)
-        if debug>1: print("p={}, pdat={}".format(p,pdat))
+        if debug > 1: print("p={}, pdat={}".format(p,pdat))
         if pdat in ['o?','a']:
-            iwdata[p]=pdat
+            iwdata[p] = pdat
         else:
-            iwdata[p]=[int(x) for x in pdat.split(",")]
+            iwdata[p] = [int(x) for x in pdat.split(",")]
 
     # read data for all primes
 
     for p,pdat in zip(primes(1000),fields[5+nbadp:]):
         p = str(p)
-        if debug>1: print("p={}, pdat={}".format(p,pdat))
+        if debug > 1: print("p={}, pdat={}".format(p,pdat))
         if pdat in ['s?','o?','a']:
-            iwdata[p]=pdat
+            iwdata[p] = pdat
         else:
-            iwdata[p]=[int(x) for x in pdat.split(",")]
+            iwdata[p] = [int(x) for x in pdat.split(",")]
 
     data['iwdata'] = iwdata
     if debug: print("label {}, data {}".format(label,data))
@@ -94,7 +94,7 @@ def upload_to_db(base_path, f, test=True):
 
     for line in h.readlines():
         count += 1
-        if count%1000==0:
+        if count%1000 == 0:
             print "read %s lines" % count
         label, data = read_line(line,0)
         data_to_insert[label] = data
@@ -134,7 +134,7 @@ def read_iwasawa_data(base_path, filename):
 
     for line in h.readlines():
         count += 1
-        if count%1000==0:
+        if count%1000 == 0:
             print "read %s lines" % count
         label, data = read_line(line,0)
         iw_data[label] = data
