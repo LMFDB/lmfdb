@@ -5019,12 +5019,12 @@ class PostgresDatabase(PostgresBase):
     def cursor(self, buffered=False):
         """
         Returns a new cursor.
-        If buffered, then it creates a server side cursor that should be manually
+        If buffered, then it creates a server side cursor that must be manually
         closed after done using it.
         """
         if buffered:
             self.server_side_counter += 1
-            return self.conn.cursor(str(self.server_side_counter))
+            return self.conn.cursor(str(self.server_side_counter), withhold=True)
         else:
             return self.conn.cursor()
 
