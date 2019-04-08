@@ -25,9 +25,9 @@ def vect_to_matrix(v):
     return str(latex(matrix(v)))
 
 def print_q_expansion(list):
-     list=[str(c) for c in list]
-     Qa=PolynomialRing(QQ,'a')
-     Qq=PowerSeriesRing(Qa,'q')
+     list = [str(c) for c in list]
+     Qa = PolynomialRing(QQ,'a')
+     Qq = PowerSeriesRing(Qa,'q')
      return web_latex_split_on_pm(Qq([c for c in list]).add_bigoh(len(list)))
 
 def my_latex(s):
@@ -56,7 +56,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 
 # webpages: main, random and search results
@@ -65,10 +65,10 @@ def learnmore_list_remove(matchstring):
 def lattice_render_webpage():
     args = request.args
     if len(args) == 0:
-        maxs=lattice_summary_data()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        maxs = lattice_summary_data()
+        dim_list = range(1, 11, 1)
+        max_class_number = 20
+        class_number_list = range(1, max_class_number+1, 1)
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         name_list = ["A2","Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
@@ -77,9 +77,9 @@ def lattice_render_webpage():
         t = 'Integral Lattices'
         bread = [('Lattice', url_for(".lattice_render_webpage"))]
         info['summary'] = lattice_summary()
-        info['max_cn']=maxs[0]
-        info['max_dim']=maxs[1]
-        info['max_det']=maxs[2]
+        info['max_cn'] = maxs[0]
+        info['max_dim'] = maxs[1]
+        info['max_det'] = maxs[2]
         return render_template("lattice-index.html", info=info, credit=credit, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(args)
@@ -96,8 +96,8 @@ def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
 def lattice_by_label_or_name(lab):
-    clean_lab=str(lab).replace(" ","")
-    clean_and_cap=str(clean_lab).capitalize()
+    clean_lab = str(lab).replace(" ","")
+    clean_and_cap = str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
         label = db.lat_lattices.lucky(
                 {'$or':
@@ -131,8 +131,8 @@ def download_search(info):
     s += c + ' Integral Lattices downloaded from the LMFDB on %s. Found %s lattices.\n\n'%(mydate, len(res))
     # The list entries are matrices of different sizes.  Sage and gp
     # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
+    list_start = '[*' if lang == 'magma' else '['
+    list_end = '*]' if lang == 'magma' else ']'
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
@@ -217,66 +217,66 @@ def render_lattice_webpage(**args):
 
     bread = [('Lattice', url_for(".lattice_render_webpage")), ('%s' % f['label'], ' ')]
     credit = lattice_credit
-    info['dim']= int(f['dim'])
-    info['det']= int(f['det'])
-    info['level']=int(f['level'])
-    info['gram']=vect_to_matrix(f['gram'])
-    info['density']=str(f['density'])
-    info['hermite']=str(f['hermite'])
-    info['minimum']=int(f['minimum'])
-    info['kissing']=int(f['kissing'])
-    info['aut']=int(f['aut'])
+    info['dim'] = int(f['dim'])
+    info['det'] = int(f['det'])
+    info['level'] = int(f['level'])
+    info['gram'] = vect_to_matrix(f['gram'])
+    info['density'] = str(f['density'])
+    info['hermite'] = str(f['hermite'])
+    info['minimum'] = int(f['minimum'])
+    info['kissing'] = int(f['kissing'])
+    info['aut'] = int(f['aut'])
 
-    if f['shortest']=="":
-        info['shortest']==f['shortest']
+    if f['shortest'] == "":
+        info['shortest'] == f['shortest']
     else:
-        if f['dim']==1:
-            info['shortest']=str(f['shortest']).strip('[').strip(']')
+        if f['dim'] == 1:
+            info['shortest'] = str(f['shortest']).strip('[').strip(']')
         else:
-            if info['dim']*info['kissing']<100:
-                info['shortest']=[str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
+            if info['dim']*info['kissing'] < 100:
+                info['shortest'] = [str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
             else:
-                max_vect_num=min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
-                info['shortest']=[str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-                info['all_shortest']="no"
+                max_vect_num = min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1);
+                info['shortest'] = [str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
+                info['all_shortest'] = "no"
         info['download_shortest'] = [
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
-    if f['name']==['Leech']:
-        info['shortest']=[str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
+    if f['name'] == ['Leech']:
+        info['shortest'] = [str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]), 
 str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
-        info['all_shortest']="no"
+        info['all_shortest'] = "no"
         info['download_shortest'] = [
             (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
 
-    ncoeff=20
+    ncoeff = 20
     if f['theta_series'] != "":
-        coeff=[f['theta_series'][i] for i in range(ncoeff+1)]
-        info['theta_series']=my_latex(print_q_expansion(coeff))
+        coeff = [f['theta_series'][i] for i in range(ncoeff+1)]
+        info['theta_series'] = my_latex(print_q_expansion(coeff))
         info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
-    info['class_number']=int(f['class_number'])
+    info['class_number'] = int(f['class_number'])
 
-    if f['dim']==1:
-        info['genus_reps']=str(f['genus_reps']).strip('[').strip(']')
+    if f['dim'] == 1:
+        info['genus_reps'] = str(f['genus_reps']).strip('[').strip(']')
     else:
-        if info['dim']*info['class_number']<50:
-            info['genus_reps']=[vect_to_matrix(n) for n in f['genus_reps']]
+        if info['dim']*info['class_number'] < 50:
+            info['genus_reps'] = [vect_to_matrix(n) for n in f['genus_reps']]
         else:
-            max_matrix_num=min(int(round(25/(info['dim']))), info['class_number']);
-            info['all_genus_rep']="no"
-            info['genus_reps']=[vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
+            max_matrix_num = min(int(round(25/(info['dim']))), info['class_number']);
+            info['all_genus_rep'] = "no"
+            info['genus_reps'] = [vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
     info['download_genus_reps'] = [
         (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma','sage']]
 
     if f['name'] != "":
-        if f['name']==str(f['name']):
-            info['name']= str(f['name'])
+        if f['name'] == str(f['name']):
+            info['name'] = str(f['name'])
         else:
-            info['name']=str(", ".join(str(i) for i in f['name']))
+            info['name'] = str(", ".join(str(i) for i in f['name']))
     else:
         info['name'] == ""
-    info['comments']=str(f['comments'])
+    info['comments'] = str(f['comments'])
     if 'Leech' in info['comments']: # no need to duplicate as it is in the name
         info['comments'] = ''
     if info['name'] == "":
@@ -287,17 +287,17 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
-        ('Dimension', '%s' %info['dim']),
-        ('Determinant', '%s' %info['det']),
-        ('Level', '%s' %info['level'])]
+        ('Dimension', '%s' % info['dim']),
+        ('Determinant', '%s' % info['det']),
+        ('Level', '%s' % info['level'])]
     if info['class_number'] == 0:
-        info['properties']=[('Class number', 'not available')]+info['properties']
+        info['properties'] = [('Class number', 'not available')]+info['properties']
     else:
-        info['properties']=[('Class number', '%s' %info['class_number'])]+info['properties']
-    info['properties']=[('Label', '%s' % info['label'])]+info['properties']
+        info['properties'] = [('Class number', '%s' % info['class_number'])]+info['properties']
+    info['properties'] = [('Label', '%s' % info['label'])]+info['properties']
 
     if info['name'] != "" :
-        info['properties']=[('Name','%s' % info['name'] )]+info['properties']
+        info['properties'] = [('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
@@ -310,7 +310,7 @@ def vect_to_sym(v):
         for j in range(i, n):
             M[i,j] = v[k]
             M[j,i] = v[k]
-            k=k+1
+            k = k+1
     return [[int(M[i,j]) for i in range(n)] for j in range(n)]
 
 
@@ -326,7 +326,7 @@ def theta_display(label, number):
     if number > 150:
         number = 150
     data = db.lat_lattices.lookup(label, projection=['theta_series'])
-    coeff=[data['theta_series'][i] for i in range(number+1)]
+    coeff = [data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
 
 
@@ -389,7 +389,7 @@ def download_lattice_full_lists_v(**args):
     c = download_comment_prefix[lang]
     outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '\\\n'
-    if res['name']==['Leech']:
+    if res['name'] == ['Leech']:
         outstr += str(res['shortest']).replace("'", "").replace("u", "")
     else:
         outstr += str(res['shortest'])
