@@ -78,7 +78,7 @@ def ctx_number_fields():
 
 def global_numberfield_summary():
     init_nf_count()
-    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' %(comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
+    return r'This database contains %s <a title="global number fields" knowl="nf">global number fields</a> of <a title="degree" knowl="nf.degree">degree</a> $n\leq %d$.  Here are some <a href="%s">further statistics</a>.  In addition, extensive data on <a href="%s">class groups of quadratic imaginary fields</a> is available for download.' % (comma(nfields),max_deg,url_for('number_fields.statistics'), url_for('number_fields.render_class_group_data'))
 
 def learnmore_list():
     return [(Completename, url_for(".render_discriminants_page")), 
@@ -90,7 +90,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def poly_to_field_label(pol):
     try:
@@ -157,7 +157,7 @@ def render_class_group_data():
     t = 'Class Groups of Quadratic Imaginary Fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (t, ' ')]
     info['message'] =  ''
-    info['filename']='none'
+    info['filename'] = 'none'
     if 'Fetch' in info:
         if 'k' in info:
             # remove non-digits
@@ -166,7 +166,7 @@ def render_class_group_data():
                 info['message'] = 'The value of k is either invalid or empty'
                 return class_group_request_error(info, bread)
             k = int(k)
-            if k>4095:
+            if k > 4095:
                 info['message'] = 'The value of k is too large'
                 return class_group_request_error(info, bread)
         else:
@@ -206,7 +206,7 @@ def statistics():
     title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
-    ntrans=[0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
+    ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
     n = [fields.count({'degree': n+1}) for n in range(23)]
     nsig = [[fields.count({'degree': deg+1, 'r2': s}) for s in range((deg+3)/2)] for deg in range(23)]
     # Galois groups
@@ -254,8 +254,8 @@ def statistics():
     sigclass1 = db.nf_fields.stats.get_oldstat('sigclass1')['counts']
     sighasclass = db.nf_fields.stats.get_oldstat('sighasclass')['counts']
     sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
-              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
-              'show': sighasclass[nn][r2]>0,
+              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2] > 0 else 0,
+              'show': sighasclass[nn][r2] > 0,
               'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
     n = [ {'cnt': comma(n[nn]),
@@ -363,7 +363,7 @@ def render_field_webpage(args):
         conductor = nf.conductor()
         data['conductor'] = conductor
         dirichlet_chars = nf.dirichlet_group()
-        if len(dirichlet_chars)>0:
+        if len(dirichlet_chars) > 0:
             data['dirichlet_group'] = ['<a href = "%s">$\chi_{%s}(%s,&middot;)$</a>' % (url_for('characters.render_Dirichletwebpage',modulus=data['conductor'], number=j), data['conductor'], j) for j in dirichlet_chars]
             data['dirichlet_group'] = r'$\lbrace$' + ', '.join(data['dirichlet_group']) + r'$\rbrace$'
         if data['conductor'].is_prime() or data['conductor'] == 1:
@@ -406,12 +406,12 @@ def render_field_webpage(args):
                 mm = mydat[0]
                 myurl = url_for('local_fields.by_label', label=mm[0])
                 lab = mm[0]
-                if mm[3]*mm[2]==1:
+                if mm[3]*mm[2] == 1:
                     lab = r'$\Q_{%s}$'%str(p)
                 loc_alg += '<td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
                 for mm in mydat[1:]:
                     lab = mm[0]
-                    if mm[3]*mm[2]==1:
+                    if mm[3]*mm[2] == 1:
                         lab = r'$\Q_{%s}$'%str(p)
                     loc_alg += '<tr><td><a href="%s">%s</a><td>$%s$<td>$%d$<td>$%d$<td>$%d$<td>%s<td>$%s$'%(myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
         loc_alg += '</tbody></table>'
@@ -429,8 +429,8 @@ def render_field_webpage(args):
     # Short version for properties
     grh_lab = nf.short_grh_string()
     if 'Not' in str(data['class_number']):
-        grh_lab=''
-        grh_label=''
+        grh_lab = ''
+        grh_label = ''
     pretty_label = field_pretty(label)
     if label != pretty_label:
         pretty_label = "%s: %s" % (label, pretty_label)
@@ -444,7 +444,7 @@ def render_field_webpage(args):
         rootofunity = web_latex(Ra(str(pari("lift(%s)" % gpK.nfbasistoalg(rootof1coeff))).replace('x','a'))) 
         rootofunity += ' (order $%d$)' % rootofunityorder
     else:
-        rootofunity = web_latex(Ra('-1'))+ ' (order $2$)'
+        rootofunity = web_latex(Ra('-1')) + ' (order $2$)'
 
     info.update({
         'label': pretty_label,
@@ -476,10 +476,10 @@ def render_field_webpage(args):
                                                            char_number_list=','.join(
                                                                [str(a) for a in dirichlet_chars]),
                                                            poly=info['polynomial'])))
-    resinfo=[]
+    resinfo = []
     galois_closure = nf.galois_closure()
-    if galois_closure[0]>0:
-        if len(galois_closure[1])>0:
+    if galois_closure[0] > 0:
+        if len(galois_closure[1]) > 0:
             resinfo.append(('gc', galois_closure[1]))
             if len(galois_closure[2]) > 0:
                 info['friends'].append(('Galois closure',url_for(".by_label", label=galois_closure[2][0])))
@@ -487,8 +487,8 @@ def render_field_webpage(args):
             resinfo.append(('gc', [dnc]))
 
     sextic_twins = nf.sextic_twin()
-    if sextic_twins[0]>0:
-        if len(sextic_twins[1])>0:
+    if sextic_twins[0] > 0:
+        if len(sextic_twins[1]) > 0:
             resinfo.append(('sex', r' $\times$ '.join(sextic_twins[1])))
         else:
             resinfo.append(('sex', dnc))
@@ -496,13 +496,13 @@ def render_field_webpage(args):
     siblings = nf.siblings()
     # [degsib list, label list]
     # first is list of [deg, num expected, list of knowls]
-    if len(siblings[0])>0:
+    if len(siblings[0]) > 0:
         for sibdeg in siblings[0]:
-            if len(sibdeg[2]) ==0:
+            if len(sibdeg[2]) == 0:
                 sibdeg[2] = dnc
             else:
                 sibdeg[2] = ', '.join(sibdeg[2])
-                if len(sibdeg[2])<sibdeg[1]:
+                if len(sibdeg[2]) < sibdeg[1]:
                     sibdeg[2] += ', some '+dnc
                 
         resinfo.append(('sib', siblings[0]))
@@ -512,8 +512,8 @@ def render_field_webpage(args):
                 info['friends'].append(("Degree %s sibling"%labparts[0] ,url_for(".by_label", label=lab)))
 
     arith_equiv = nf.arith_equiv()
-    if arith_equiv[0]>0:
-        if len(arith_equiv[1])>0:
+    if arith_equiv[0] > 0:
+        if len(arith_equiv[1]) > 0:
             resinfo.append(('ae', ', '.join(arith_equiv[1]), len(arith_equiv[1])))
             for aelab in arith_equiv[2]:
                 info['friends'].append(('Arithmetically equivalent sibling',url_for(".by_label", label=aelab)))
@@ -555,9 +555,9 @@ def render_field_webpage(args):
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
         v = nf.factor_perm_repn(info["tim_number_field"])
         def dopow(m):
-            if m==0: return ''
-            if m==1: return '*'
-            return '*<sup>%d</sup>'% m
+            if m == 0: return ''
+            if m == 1: return '*'
+            return '*<sup>%d</sup>' % m
 
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
@@ -618,7 +618,7 @@ def download_search(info):
         delim = 'magma'
         filename = 'fields.m'
     s = com1 + "\n"
-    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n'% mydate
+    s += com + ' Global number fields downloaded from the LMFDB downloaded %s\n' % mydate
     s += com + ' Below is a list called data. Each entry has the form:\n'
     s += com + '   [polynomial, discriminant, t-number, class group]\n'
     s += com + ' Here the t-number is for the Galois group\n'
@@ -707,11 +707,11 @@ def number_field_search(info, query):
                  qfield='ramps',mode='complement')
     # modes are now contained (in), exactly, include
     if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
-        mode='append'
+        mode = 'append'
     elif 'ram_quantifier' in info and str(info['ram_quantifier']) == 'contained':
-        mode='subsets'
+        mode = 'subsets'
     else:
-        mode='exact'
+        mode = 'exact'
     parse_primes(info,query,'ram_primes',name='Ramified primes',
                  qfield='ramps',mode=mode,radical='disc_rad')
     ## This seems not to be used
@@ -775,7 +775,7 @@ def frobs(nf):
             for j in dec:
                 if firstone == 0:
                     s += '{,}\,'
-                if j[0]<15:
+                if j[0] < 15:
                     s += r'{\href{%s}{%d} }'%(url_for('local_fields.by_label', 
                         label="%d.%d.0.1"%(p,j[0])), j[0])
                 else:
@@ -831,7 +831,7 @@ def nf_code(**args):
     lang = args['download_type']
     code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    if lang=='gp':
+    if lang == 'gp':
         lang = 'pari'
     for k in sorted_code_names:
         if lang in nf.code[k]:
