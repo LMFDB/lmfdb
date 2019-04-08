@@ -104,7 +104,7 @@ def ring_pretty(L, f):
 
 
 def QpName(p):
-    if p==0:
+    if p == 0:
         return "$\\R$"
     return "$\\Q_{"+str(p)+"}$"
 
@@ -124,22 +124,22 @@ def eqn_list_to_curve_plot(L,rat_pts):
     f = poly_tup[0]
     h = poly_tup[1]
     g = f+h**2/4
-    if len(g.real_roots())==0 and g(0)<0:
+    if len(g.real_roots()) == 0 and g(0) < 0:
         return text("$X(\mathbb{R})=\emptyset$",(1,1),fontsize=50)
     X0 = [real(z[0]) for z in g.base_extend(CC).roots()]+[real(z[0]) for z in g.derivative().base_extend(CC).roots()]
     a,b = inflate_interval(min(X0),max(X0),1.5)
     groots = [a]+g.real_roots()+[b]
-    if b-a<1e-7:
-        a=-3
-        b=3
-        groots=[a,b]
+    if b-a < 1e-7:
+        a = -3
+        b = 3
+        groots = [a,b]
     ngints = len(groots)-1
     plotzones = []
     npts = 100
     for j in range(ngints):
         c = groots[j]
         d = groots[j+1]
-        if g((c+d)/2)<0:
+        if g((c+d)/2) < 0:
             continue
         (c,d) = inflate_interval(c,d,1.1)
         s = (d-c)/npts
@@ -147,7 +147,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
         yvals = []
         for i in range(npts+1):
             v = g(u)
-            if v>0:
+            if v > 0:
                 v = sqrt(v)
                 w = -h(u)/2
                 yvals.append(w+v)
@@ -157,17 +157,17 @@ def eqn_list_to_curve_plot(L,rat_pts):
         plotzones.append((c,d,m,M))
     x = var('x')
     y = var('y')
-    plot=sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),(y,R[2],R[3]), aspect_ratio='automatic', plot_points=500, zorder=1) for R in plotzones)
-    xmin=min([R[0] for R in plotzones])
-    xmax=max([R[1] for R in plotzones])
-    ymin=min([R[2] for R in plotzones])
-    ymax=max([R[3] for R in plotzones])
+    plot = sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),(y,R[2],R[3]), aspect_ratio='automatic', plot_points=500, zorder=1) for R in plotzones)
+    xmin = min([R[0] for R in plotzones])
+    xmax = max([R[1] for R in plotzones])
+    ymin = min([R[2] for R in plotzones])
+    ymax = max([R[3] for R in plotzones])
     for P in rat_pts:
-    	(x,y,z)=eval(P.replace(':',','))
-        z=ZZ(z)
+    	(x,y,z) = eval(P.replace(':',','))
+        z = ZZ(z)
      	if z: # Do not attempt to plot points at infinity
-      		x=ZZ(x)/z
-      		y=ZZ(y)/z**3
+      		x = ZZ(x)/z
+      		y = ZZ(y)/z**3
       		if x >= xmin and x <= xmax and y >= ymin and y <= ymax:
        			plot += point((x,y),color='red',size=40,zorder=2)
     return plot
@@ -468,13 +468,13 @@ class WebG2C(object):
         if len(tama) == 0:
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
-        if len(slabel)==4:
+        if len(slabel) == 4:
             ratpts = db.g2c_ratpts.lookup(curve['label'])
             if not ratpts:
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
             ratpts = {}
-        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel)==4))
+        return WebG2C(curve, endo, tama, ratpts, is_curve=(len(slabel) == 4))
 
     def make_object(self, curve, endo, tama, ratpts, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
@@ -547,7 +547,7 @@ class WebG2C(object):
             data['tama'] = data['tama'][:-2] # trim last ", "
             if ratpts:
                 if len(ratpts['rat_pts']):
-                    data['rat_pts'] = ',  '.join(web_latex('(' +' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
+                    data['rat_pts'] = ',  '.join(web_latex('(' + ' : '.join(map(str, P)) + ')') for P in ratpts['rat_pts'])
                 data['rat_pts_v'] =  2 if ratpts['rat_pts_v'] else 1
                 # data['mw_rank'] = ratpts['mw_rank']
                 # data['mw_rank_v'] = ratpts['mw_rank_v']
@@ -562,11 +562,11 @@ class WebG2C(object):
             # invariants specific to isogeny class
             curves_data = list(db.g2c_curves.search({"class" : curve['class']}, ['label','eqn']))
             if not curves_data:
-                raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." %(curve['class'],curve['label']))
+                raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." % (curve['class'],curve['label']))
             data['curves'] = [ {"label" : c['label'], "equation_formatted" : list_to_min_eqn(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
             if not lfunc_data:
-                raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." %curve['label'])
+                raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." % curve['label'])
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
@@ -574,7 +574,7 @@ class WebG2C(object):
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
         data['factorsRR_base'] = endo['factorsRR_base']
-        data['end_statement_base'] = """Endomorphism %s over \(\Q\):<br>""" %("ring" if is_curve else "algebra") + \
+        data['end_statement_base'] = """Endomorphism %s over \(\Q\):<br>""" % ("ring" if is_curve else "algebra") + \
             end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None)
 
         # Field over which all endomorphisms are defined
@@ -587,7 +587,7 @@ class WebG2C(object):
         data['factorsRR_geom'] = endo['factorsRR_geom']
         if data['end_field_label'] != '1.1.1.1':
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
-            data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" %("ring" if is_curve else "algebra") + \
+            data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" % ("ring" if is_curve else "algebra") + \
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
         data['real_geom_end_alg_name'] = end_alg_name(curve['real_geom_end_alg'])
 
@@ -681,7 +681,7 @@ class WebG2C(object):
             magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
         else:
             magma_cond_option = ''
-        code['cond'] = {'magma': 'Conductor(LSeries(C%s)); Factorization($1);'% magma_cond_option}
+        code['cond'] = {'magma': 'Conductor(LSeries(C%s)); Factorization($1);' % magma_cond_option}
         code['disc'] = {'magma':'Discriminant(C); Factorization(Integers()!$1);'}
         code['igusa_clebsch'] = {'sage':'C.igusa_clebsch_invariants(); [factor(a) for a in _]',
                                       'magma':'IgusaClebschInvariants(C); [Factorization(Integers()!a): a in $1];'}
