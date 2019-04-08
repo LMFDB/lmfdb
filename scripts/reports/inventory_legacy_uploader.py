@@ -27,7 +27,7 @@ def upload_all_structure(db, structure_dat):
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
                     file.write(json.dumps(orphaned_keys))
-                    inv.log_dest.info("          Orphans written to Orph_"+ DB_name+'_'+coll_name+'.json')
+                    inv.log_dest.info("          Orphans written to Orph_" + DB_name+'_'+coll_name+'.json')
 
 def upload_from_files(db, master_file_name, list_file_name, fresh=False):
     """Upload an entire inventory. CLOBBERS CONTENT
@@ -59,7 +59,7 @@ def upload_from_files(db, master_file_name, list_file_name, fresh=False):
             if len(orphaned_keys) != 0:
                 with open('Orph_'+DB_name+'_'+coll_name+'.json', 'w') as file:
 		    file.write(json.dumps(orphaned_keys))
-		inv.log_dest.info("          Orphans written to Orph_"+ DB_name+'_'+coll_name+'.json')
+		inv.log_dest.info("          Orphans written to Orph_" + DB_name+'_'+coll_name+'.json')
 
     inv.log_dest.info("_____________________________________________________________________________________________")
     inv.log_dest.info("Processing additional inventory")
