@@ -69,11 +69,10 @@ by norm, over \(K=\) {{info.field_pretty}}.
 </p>
 </form>
 
-<form id='next_previous'>
+<form id='re-search'>
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_flag" value="{{info.level_flag}}"/>
-</form>
 
 <div align=left>
   {% include 'forward_back.html' %}
@@ -119,6 +118,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 {% include 'forward_back.html' %}
 
 </div>
+</form>
 {% else %}
 <p>
 No data available for {{info.field_pretty}}

@@ -190,9 +190,11 @@ def bmf_field_dim_table(**args):
         query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
     data = list(db.bmf_dims.search(query, limit=count, offset=start, info=info))
+    print info
     nres = info['number']
     if not info['exact_count']:
-        nres = db.bmf_dims.count(query)
+        info['number'] = nres = db.bmf_dims.count(query)
+        info['exact_count'] = True
     if nres > count or start != 0:
         info['report'] = 'Displaying items %s-%s of %s levels,' % (start + 1, min(nres, start + count), nres)
     else:
