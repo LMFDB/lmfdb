@@ -66,7 +66,7 @@ def upload_table_structure(db_name, table_name, structure_dat, fresh=False):
         db_entry = invc.get_db_id(db_name)
         if db_entry is None:
             #All dbs should have been added from the struc: if not is error
-            inv.log_dest.error("ERROR: No inventory DB entry "+ db_name)
+            inv.log_dest.error("ERROR: No inventory DB entry " + db_name)
             inv.log_dest.error("Cannot add descriptions")
             return []
 
@@ -152,12 +152,12 @@ def delete_contents(db, tbl_name, check=True):
         try:
             db[tbl_name].remove()
         except Exception as e:
-            inv.log_dest.error("Error deleting from "+ tbl_name+' '+ str(e)+", dropping")
+            inv.log_dest.error("Error deleting from " + tbl_name+' ' + str(e)+", dropping")
             #Capped tables, e.g rollback, can only be dropped, so try that
 	    try:
 		db[tbl_name].drop()
             except Exception as e:
-                inv.log_dest.error("Error dropping "+ tbl_name+' '+ str(e))
+                inv.log_dest.error("Error dropping " + tbl_name+' ' + str(e))
 
 def delete_table(db, tbl_name, check=True):
     """Delete tbl_name (must be empty) """
@@ -169,7 +169,7 @@ def delete_table(db, tbl_name, check=True):
 	    assert(db[tbl_name].find_one() is None) #Check content is gone
             db[tbl_name].drop()
         except Exception as e:
-            inv.log_dest.error("Error dropping "+ tbl_name+' '+ str(e))
+            inv.log_dest.error("Error dropping " + tbl_name+' ' + str(e))
             #Capped tables, e.g rollback, can only be dropped, so try that
 
 def delete_all_tables(db):
@@ -181,7 +181,7 @@ def delete_all_tables(db):
             delete_contents(db, tbl)
             delete_table(db, tbl)
         except Exception as e:
-            inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
+            inv.log_dest.error("Error deleting " + tbl + ' ' + str(e))
 
 def delete_table_data(table_id, tbl, dry_run=False):
     """Clean out the data for given table id
