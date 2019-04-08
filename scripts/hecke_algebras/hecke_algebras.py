@@ -17,7 +17,7 @@ import gzip
 
 from lmfdb.base import getDBConnection
 
-C= getDBConnection()
+C = getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -37,7 +37,7 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 
