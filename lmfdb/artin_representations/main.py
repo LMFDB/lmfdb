@@ -33,11 +33,11 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def make_cond_key(D):
-    D1=ZZ(D)
-    if D1<1: D1=ZZ(1)
+    D1 = ZZ(D)
+    if D1 < 1: D1 = ZZ(1)
     D1 = int(D1.log(10))
     return '%04d%s'%(D1,str(D))
 
@@ -46,7 +46,7 @@ def parse_artin_label(label):
     if LABEL_RE.match(label):
         return label
     else:
-        raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
+        raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1" % label)
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
@@ -160,7 +160,7 @@ def render_artin_representation_webpage(label):
         friends.append(("Artin Field", nf_url))
     cc = the_rep.central_character()
     if cc is not None:
-        if the_rep.dimension()==1:
+        if the_rep.dimension() == 1:
             if cc.order == 2:
                 cc_name = cc.symbol
             else:
@@ -188,7 +188,7 @@ def render_artin_representation_webpage(label):
     elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
         friends.append(("L-function", url_for("l_functions.l_function_artin_page",
                                           label=the_rep.label())))
-    info={}
+    info = {}
 
     return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
 
