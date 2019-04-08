@@ -3658,13 +3658,9 @@ class PostgresStatsTable(PostgresBase):
             values = [jcols, "split_total"]
         else:
             values = [jcols, "total"]
-        if ccols is None:
-            ccols = "constraint_cols IS NULL"
-            cvals = "constraint_values IS NULL"
-        else:
-            values.extend([ccols, cvals])
-            ccols = "constraint_cols = %s"
-            cvals = "constraint_values = %s"
+        values.extend([ccols, cvals])
+        ccols = "constraint_cols = %s"
+        cvals = "constraint_values = %s"
         if threshold is None:
             threshold = "threshold IS NULL"
         else:
@@ -3863,12 +3859,8 @@ class PostgresStatsTable(PostgresBase):
         - ``cvals`` -- constraint values.  The max will be taken over rows where
             the constraint columns take on these values.
         """
-        if ccols is None:
-            constraint = SQL("constraint_cols IS NULL")
-            values = ["max", Json([col])]
-        else:
-            constraint = SQL("constraint_cols = %s AND constraint_values = %s")
-            values = ["max", Json([col]), ccols, cvals]
+        constraint = SQL("constraint_cols = %s AND constraint_values = %s")
+        values = ["max", Json([col]), ccols, cvals]
         selecter = SQL("SELECT value FROM {0} WHERE stat = %s AND cols = %s AND threshold IS NULL AND {1}").format(Identifier(self.stats), constraint)
         cur = self._execute(selecter, values)
         if cur.rowcount:
@@ -4832,13 +4824,9 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
         jcols = Json(cols)
         total_str = "split_total" if split_list else "total"
         totaler = SQL("SELECT value FROM {0} WHERE cols = %s AND stat = %s AND threshold IS NULL").format(Identifier(self.stats))
-        if constraint:
-            ccols, cvals = self._split_dict(constraint)
-            totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
-            totaler_values = [jcols, total_str, ccols, cvals]
-        else:
-            totaler = SQL("{0} AND constraint_cols IS NULL").format(totaler)
-            totaler_values = [jcols, total_str]
+        ccols, cvals = self._split_dict(constraint)
+        totaler = SQL("{0} AND constraint_cols = %s AND constraint_values = %s").format(totaler)
+        totaler_values = [jcols, total_str, ccols, cvals]
         cur_total = self._execute(totaler, values=totaler_values)
         if cur_total.rowcount == 0:
             raise ValueError("Database does not contain stats for %s"%(cols[0],))
