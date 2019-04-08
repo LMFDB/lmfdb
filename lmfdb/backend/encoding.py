@@ -356,7 +356,7 @@ def copy_dumps(inp, typ, recursing=False):
         return inp.literal
     elif isinstance(inp, (int, long, Integer, float, RealNumber)):
         return str(inp).replace('L','')
-    elif typ=='boolean':
+    elif typ == 'boolean':
         return 't' if inp else 'f'
     elif isinstance(inp, (datetime.date, datetime.time, datetime.datetime)):
         return "%s"%(inp)
