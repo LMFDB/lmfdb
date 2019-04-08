@@ -158,7 +158,7 @@ def is_string_of(object):
     """ Test for an object being an encoded string
         (comma separated list etc.)"""
 
-    splits=object.split(',')
+    splits = object.split(',')
     if splits[0] is object:
         return string_type
 
@@ -196,7 +196,7 @@ def get_object_id(object):
 def get_description(object):
     """Get a string description of object"""
 
-    rstring=''
+    rstring = ''
     otype = get_object_id(object)
     if otype == python_other:
         return 'non-primitive type (' + str(type(object)) + ')'
