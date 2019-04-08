@@ -17,7 +17,7 @@ import gzip
 
 from lmfdb.base import getDBConnection
 
-C= getDBConnection()
+C = getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -37,15 +37,15 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 
 def base_label(characteristic, deg, level, weight, dirchar):
-    field=str(characteristic)
-    dirchar_index=str(dirchar).split('.')[2]
-    if int(deg)!=1:
-        field=str(characteristic)+"e"+str(deg)
+    field = str(characteristic)
+    dirchar_index = str(dirchar).split('.')[2]
+    if int(deg) != 1:
+        field = str(characteristic)+"e"+str(deg)
     return ".".join([field,str(level),str(weight),dirchar_index])
 
 def last_label(base_label, n):
@@ -66,19 +66,19 @@ print "finished indices"
 
 ## Main importing function
 
-label_dict={}
+label_dict = {}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-        n=label_dict[base_label]+1
-        label_dict[base_label]=n
+        n = label_dict[base_label]+1
+        label_dict[base_label] = n
         return n
-    label_dict[base_label]=1
+    label_dict[base_label] = 1
     return 1
 
 def do_import(ll):
     characteristic,deg,level,weight_grading,reducible,cuspidal_lift,dirchar,atkinlehner,n_coeffs,coeffs,ordinary,min_theta_weight,theta_cycle = ll
-    mykeys =['characteristic','deg','level','weight_grading','reducible','cuspidal_lift','dirchar','atkinlehner','n_coeffs','coeffs','ordinary','min_theta_weight','theta_cycle']
+    mykeys = ['characteristic','deg','level','weight_grading','reducible','cuspidal_lift','dirchar','atkinlehner','n_coeffs','coeffs','ordinary','min_theta_weight','theta_cycle']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
@@ -86,7 +86,7 @@ def do_import(ll):
     blabel = base_label(data['characteristic'],data['deg'],data['level'], data['weight_grading'], data['dirchar'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
-    label= last_label(blabel, data['index'])
+    label = last_label(blabel, data['index'])
     data['label'] = label
 # we need still to organize this better with respect to tie breaks 
 
