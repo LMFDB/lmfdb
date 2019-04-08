@@ -29,14 +29,14 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def bc_info(bc):
-    return 'yes' if bc>0 else 'yes (twist)' if bc<0 else 'no'
+    return 'yes' if bc > 0 else 'yes (twist)' if bc < 0 else 'no'
 
 def cm_info(cm):
     try:
-        return 'no' if cm==0 else str(cm) if cm%4==1 else str(4*cm)
+        return 'no' if cm == 0 else str(cm) if cm%4 == 1 else str(4*cm)
     except TypeError:
         return str(cm)
 
@@ -88,7 +88,7 @@ def random_bmf():    # Random Bianchi modular form
 def bianchi_modular_form_jump(info):
     label = info['label']
     dat = label.split("-")
-    if len(dat)==2: # assume field & level, display space
+    if len(dat) == 2: # assume field & level, display space
         return render_bmf_space_webpage(dat[0], dat[1])
     else: # assume single newform label; will display an error if invalid
         return bianchi_modular_form_by_label(label)
@@ -109,7 +109,7 @@ def bianchi_modular_form_postprocess(res, info, query):
              projection=['label','field_label','short_label','level_label','level_norm','label_suffix','level_ideal','dimension','sfe','bc','CM'],
              cleaners={"level_number": lambda v: v['level_label'].split(".")[1],
                        "level_ideal": lambda v: teXify_pol(v['level_ideal']),
-                       "sfe": lambda v: "+1" if v.get('sfe',None)==1 else ("-1" if v.get('sfe',None)==-1 else "?"),
+                       "sfe": lambda v: "+1" if v.get('sfe',None) == 1 else ("-1" if v.get('sfe',None) == -1 else "?"),
                        "url": lambda v: url_for('.render_bmf_webpage',field_label=v['field_label'], level_label=v['level_label'], label_suffix=v['label_suffix']),
                        "bc": lambda v: bc_info(v['bc']),
                        "cm": lambda v: cm_info(v.pop('CM', '?'))},
@@ -156,12 +156,12 @@ def bmf_field_dim_table(**args):
     argsdict.update(to_dict(request.args))
     gl_or_sl = argsdict['gl_or_sl']
 
-    field_label=argsdict['field_label']
+    field_label = argsdict['field_label']
     field_label = nf_string_to_label(field_label)
 
     start = parse_start(argsdict)
 
-    info={}
+    info = {}
     info['gl_or_sl'] = gl_or_sl
     # level_flag controls whether to list all levels ('all'), only
     # those with positive cuspidal dimension ('cusp'), or only those
@@ -174,7 +174,7 @@ def bmf_field_dim_table(**args):
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         pretty_field_label, ' ')]
     properties = []
-    if gl_or_sl=='gl2_dims':
+    if gl_or_sl == 'gl2_dims':
         info['group'] = 'GL(2)'
         info['bgroup'] = '\GL(2,\mathcal{O}_K)'
     else:
@@ -197,8 +197,8 @@ def bmf_field_dim_table(**args):
     # record.)
     def filter(dat, flag):
         dat1 = dat[gl_or_sl]
-        return any([int(dat1[w][flag])>0 for w in dat1])
-    flag = 'cuspidal_dim' if level_flag=='cusp' else 'new_dim'
+        return any([int(dat1[w][flag]) > 0 for w in dat1])
+    flag = 'cuspidal_dim' if level_flag == 'cusp' else 'new_dim'
     data = [dat for dat in data if level_flag == 'all' or filter(dat, flag)]
 
     info['field'] = field_label
@@ -230,7 +230,7 @@ def bmf_field_dim_table(**args):
     info['nlevels'] = len(data)
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
-                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl=='gl2_dims' else "",
+                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl == 'gl2_dims' else "",
                   'dims': dims[dat['level_label']]} for dat in data]
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
@@ -267,7 +267,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_norm'] = data['level_norm']
                 info['field_poly'] = teXify_pol(str(nf.poly()))
                 info['field_knowl'] = nf_display_knowl(field_label, pretty_field_label)
-                w = 'i' if nf.disc()==-4 else 'a'
+                w = 'i' if nf.disc() == -4 else 'a'
                 L = nf.K().change_names(w)
                 alpha = L.gen()
                 info['field_gen'] = latex(alpha)
@@ -278,7 +278,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 weights = dim_data.keys()
                 weights.sort(key=lambda w: int(w))
                 for w in weights:
-                    dim_data[w]['dim']=dim_data[w]['cuspidal_dim']
+                    dim_data[w]['dim'] = dim_data[w]['cuspidal_dim']
                 info['dim_data'] = dim_data
                 info['weights'] = weights
                 info['nweights'] = len(weights)
@@ -290,7 +290,7 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
-                    'sfe': "+1" if f.get('sfe',None)==1 else "-1" if f.get('sfe',None)==-1 else "?",
+                    'sfe': "+1" if f.get('sfe',None) == 1 else "-1" if f.get('sfe',None) == -1 else "?",
                     'bc': bc_info(f['bc']),
                     'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
