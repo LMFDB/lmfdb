@@ -91,7 +91,7 @@ def show_collections():
                     pt = True
             if pt and first:
                 first = False
-                fh.write('In database ' + db +':\n')
+                fh.write('In database ' + db + ':\n')
             if pt: fh.write(' ' * 4 + scol + '\n')
     if file_output: fh.close()
 
