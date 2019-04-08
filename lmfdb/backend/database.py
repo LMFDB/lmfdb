@@ -4921,7 +4921,11 @@ class PostgresDatabase(PostgresBase):
         return connection
 
     def reset_connection(self):
-        logging.info("Connection broken (status %s); resetting..."%self.conn.closed)
+        """
+        Resets the connection
+        """
+        logging.info("Connection broken (status %s); resetting...",
+                     self.conn.closed)
         conn = self._new_connection()
         # Note that self is the first entry in self._objects
         for obj in self._objects:
@@ -4932,6 +4936,7 @@ class PostgresDatabase(PostgresBase):
         self._objects.append(obj)
 
     def __init__(self, **kwargs):
+        self.server_side_counter = 0
         self._nocommit_stack = 0
         self._silenced = False
         self._objects = []
@@ -4958,11 +4963,11 @@ class PostgresDatabase(PostgresBase):
             cur = sorted(list(self._execute(SQL("SELECT privilege_type FROM information_schema.role_table_grants WHERE grantee = %s AND table_schema = %s AND table_name=%s AND privilege_type IN (" + ",".join(['%s']*len(privileges)) + ")"), [self._user,  'userdb', 'users'] + privileges)))
             self._read_and_write_userdb = cur == sorted([(priv,) for priv in privileges])
 
-        logging.info("User: %s" % self._user)
-        logging.info("Read only: %s" % self._read_only)
-        logging.info("Super user: %s" % self._super_user)
-        logging.info("Read/write to userdb: %s" % self._read_and_write_userdb)
-        logging.info("Read/write to knowls: %s" % self._read_and_write_knowls)
+        logging.info("User: %s", self._user)
+        logging.info("Read only: %s", self._read_only)
+        logging.info("Super user: %s", self._super_user)
+        logging.info("Read/write to userdb: %s", self._read_and_write_userdb)
+        logging.info("Read/write to knowls: %s", self._read_and_write_knowls)
         # Stores the name of the person making changes to the database
         from lmfdb.utils.config import Configuration
         self.__editor = Configuration().get_logging().get('editor')
@@ -4996,6 +5001,12 @@ class PostgresDatabase(PostgresBase):
         return "Interface to Postgres database"
 
 
+    def cursor(self):
+        """
+        Returns a new server side cursor, with automatic name generation
+        """
+        self.server_side_counter += 1
+        return self.conn.cursor(int(self.server_side_counter))
 
 
     def login(self):
