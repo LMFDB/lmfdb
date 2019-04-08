@@ -66,7 +66,7 @@ def compare_row(a, b, verbose = True):
                     print c, j, at, bt
                     if None not in [at,bt]:
                         print at - bt
-                        if at !=0:
+                        if at != 0:
                             print RR(abs((at - bt)/at)).log(2)
                     return False
     return True
@@ -90,7 +90,7 @@ with open(filename, 'r') as F:
                 if c in ['hecke_orbit_code', 'conrey_label','embedding_index','embedding_m']:
                     linesplit[i] = int(linesplit[i])
                 elif c in ['embedding_root_real', 'embedding_root_imag']:
-                    linesplit[i] =float(linesplit[i])
+                    linesplit[i] = float(linesplit[i])
                 elif c == 'an':
                     linesplit[i] = [[float(x), float(y)] for x, y in eval(linesplit[i])]
                 elif c == 'angles':
