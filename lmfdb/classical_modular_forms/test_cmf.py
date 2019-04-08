@@ -75,7 +75,7 @@ class CmfTest(LmfdbTest):
                         print("testing (N, k) = (%s, %s)" % (N, k))
                         url  = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/".format(N, k)
                         rv = self.tc.get(url,follow_redirects=True)
-                        self.assertTrue(rv.status_code==200,"Request failed for {0}".format(url))
+                        self.assertTrue(rv.status_code == 200,"Request failed for {0}".format(url))
                         assert str(N) in rv.data
                         assert str(k) in rv.data
                         assert str(N)+'.'+str(k) in rv.data
