@@ -34,7 +34,7 @@ GG_credit = 'GAP, Magma, J. Jones, and A. Bartel'
 def mult2mult(li):
     ans = []
     for j in range(len(li)):
-        if li[j]>0:
+        if li[j] > 0:
             ans.append([j, li[j]])
     return ans
 
@@ -46,7 +46,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def get_bread(breads=[]):
     bc = [("Galois Groups", url_for(".index"))]
@@ -191,20 +191,20 @@ def render_group_webpage(args):
                                                       str([int(data['order']), int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
         ae = wgg.arith_equivalent()
-        if ae>0:
-            if ae>1:
-                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
+        if ae > 0:
+            if ae > 1:
+                data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.' % ae
             else:
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
         else:
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
-            data['otherreps']="There is no other low degree representation."
+            data['otherreps'] = "There is no other low degree representation."
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
-                onerep['gens']=[list_to_latex_matrix(z[1]) for z in onerep['gens']]
+                onerep['gens'] = [list_to_latex_matrix(z[1]) for z in onerep['gens']]
             data['int_reps'] = intreps
             data['int_reps_complete'] = int_reps_are_complete(intreps)
             dcq = data['moddecompuniq']
@@ -230,7 +230,7 @@ def render_group_webpage(args):
             ('$p$-group', yesno(pgroup)),
         ]
         pretty = group_display_pretty(n,t)
-        if len(pretty)>0:
+        if len(pretty) > 0:
             prop2.extend([('Group:', pretty)])
             info['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
