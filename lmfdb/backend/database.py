@@ -1541,7 +1541,7 @@ class PostgresTable(PostgresBase):
                 qstr, values = self._build_query(query, limit, offset, sort)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
-        cur = self._execute(selecter, values, silent=silent, buffered=True,
+        cur = self._execute(selecter, values, silent=silent, buffered=limit is None,
                             slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
         if limit is None:
             if info is not None:
