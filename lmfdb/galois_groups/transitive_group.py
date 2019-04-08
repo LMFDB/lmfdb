@@ -291,7 +291,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -336,13 +336,13 @@ def galois_module_knowl_guts(n, t, index):
     name = mymod['name']
     out = "$\\Z[G]$ module %s with $G=$ " % str(name)
     out += group_display_knowl(n, t)
-    out += " = %sT%s " %(n, t)
+    out += " = %sT%s " % (n, t)
     out += "<blockquote>"
     out += "Dimension: %s" % str(mymod['dim'])
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
