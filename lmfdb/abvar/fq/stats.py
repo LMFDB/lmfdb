@@ -34,11 +34,11 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def maxq(self):
-        return {g: max(q for gg,q in self._counts if g==gg) for g in self.gs}
+        return {g: max(q for gg,q in self._counts if g == gg) for g in self.gs}
 
     @lazy_attribute
     def maxg(self):
-        maxg = {q: max(g for g,qq in self._counts if q==qq) for q in self.qs}
+        maxg = {q: max(g for g,qq in self._counts if q == qq) for q in self.qs}
         # maxg[None] used in decomposition search
         maxg[None] = max(self.gs)
         return maxg
