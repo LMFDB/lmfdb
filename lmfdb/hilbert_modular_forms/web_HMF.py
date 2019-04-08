@@ -15,9 +15,9 @@ from lmfdb.logger import make_logger
 logger = make_logger("hmf")
 
 def construct_full_label(field_label, weight, level_label, label_suffix):
-    if all([w==2 for w in weight]):           # Parellel weight 2
+    if all([w == 2 for w in weight]):           # Parellel weight 2
         weight_label = ''
-    elif all([w==weight[0] for w in weight]): # Parellel weight
+    elif all([w == weight[0] for w in weight]): # Parellel weight
         weight_label = str(weight[0]) + '-'
     else:                                     # non-parallel weight
         weight_label = str(weight) + '-'
@@ -151,7 +151,7 @@ class WebHMF(object):
         #print("BP_exponents = %s" % BP_exponents)
         AL_eigs = [int(data['hecke_eigenvalues'][k]) for k in BP_indices]
         #print("AL_eigs      = %s" % AL_eigs)
-        if not all([(e==1 and eig in [-1,1]) or (eig==0)
+        if not all([(e == 1 and eig in [-1,1]) or (eig == 0)
                     for e,eig in zip(BP_exponents,AL_eigs)]):
             print("Some bad AL-eigenvalues found")
         # NB the following will put 0 for the eigenvalue for primes
@@ -165,33 +165,33 @@ class WebHMF(object):
     def compare_with_db(self, field=None):
         lab = self.dbdata['label']
         f = WebHMF.by_label(lab)
-        if f==None:
+        if f == None:
             print("No Hilbert newform in the database has label %s" % lab)
             return False
-        if field==None:
+        if field == None:
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
         for key in self.dbdata.keys():
             if key in ['is_base_change', 'is_CM']:
                 continue
-            if key=='hecke_eigenvalues':
-                if self.dbdata[key]!=f.dbdata[key]:
+            if key == 'hecke_eigenvalues':
+                if self.dbdata[key] != f.dbdata[key]:
                     agree = False
                     print("Inconsistent data for HMF %s in field %s" % (lab,key))
                     print("self has %s entries, \ndb   has %s entries" % (len(self.dbdata[key]),len(f.dbdata[key])))
-                    print("Entries differ at indices %s" % [i for i in range(len(self.dbdata[key])) if self.dbdata[key][i]!=f.dbdata[key][i]])
-            elif key=='level_ideal':
-                if self.dbdata[key]!=f.dbdata[key]:
+                    print("Entries differ at indices %s" % [i for i in range(len(self.dbdata[key])) if self.dbdata[key][i] != f.dbdata[key][i]])
+            elif key == 'level_ideal':
+                if self.dbdata[key] != f.dbdata[key]:
                     I = field.ideal_from_str(f.dbdata['level_ideal'])[2]
                     J = field.ideal_from_str(self.dbdata['level_ideal'])[2]
-                    if I==J:
+                    if I == J:
                         print("OK, these are the same ideal")
                     else:
                         agree = False
                         print("These are different ideals!")
 
             else:
-                if self.dbdata[key]!=f.dbdata[key]:
+                if self.dbdata[key] != f.dbdata[key]:
                     agree = False
                     print("Inconsistent data for HMF %s in field %s" % (lab,key))
         return agree
