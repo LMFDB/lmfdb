@@ -18,7 +18,7 @@ from sage.all import matrix
 from lmfdb.lattice.isom import isom
 from lmfdb.base import getDBConnection
 
-C= getDBConnection()
+C = getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -38,7 +38,7 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 def base_label(dimension,determinant,level,class_number):
@@ -62,14 +62,14 @@ print "finished indices"
 
 ## Main importing function
 
-label_dict={}
+label_dict = {}
 
 def label_lookup(base_label):
     if base_label in label_dict:
-        n=label_dict[base_label]+1
-        label_dict[base_label]=n
+        n = label_dict[base_label]+1
+        label_dict[base_label] = n
         return n
-    label_dict[base_label]=1
+    label_dict[base_label] = 1
     return 1
 
 def do_import(ll):
@@ -82,7 +82,7 @@ def do_import(ll):
     blabel = base_label(data['dim'],data['det'],data['level'], data['class_number'])
     data['base_label'] = blabel
     data['index'] = label_lookup(blabel)
-    label= last_label(blabel, data['index'])
+    label = last_label(blabel, data['index'])
     data['label'] = label
  
     lattice = lat.find_one({'label': label})
@@ -91,12 +91,12 @@ def do_import(ll):
         print "new lattice"
         print "***********"
         print "check for isometries..."
-        A=data['gram'];
-        n=len(A[0])
-        d=matrix(A).determinant()
-        result=[B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
-        if len(result)>0:
-            print "... the lattice with base label "+ blabel + " is isometric to " + str(result[0]['gram'])
+        A = data['gram'];
+        n = len(A[0])
+        d = matrix(A).determinant()
+        result = [B for B in lat.find({'dim': int(n), 'det' : int(d)}) if isom(A, B['gram'])]
+        if len(result) > 0:
+            print "... the lattice with base label " + blabel + " is isometric to " + str(result[0]['gram'])
             print "***********"
         else:
             lattice = data
