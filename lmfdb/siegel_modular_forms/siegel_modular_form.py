@@ -88,7 +88,7 @@ def Sp4Z_j_space(k,j):
     try:
         if j in [0,2]:
             headers, table = dimensions._dimension_Sp4Z([k])
-            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
+            info['samples'] = find_samples('Sp4Z' if j == 0 else 'Sp4Z_2', k)
         else:
             headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
         info['headers'] = headers
@@ -124,7 +124,7 @@ def Sp4Z_j():
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
              ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
-    info={'args':request.args}
+    info = {'args':request.args}
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
     except ValueError:
@@ -161,7 +161,7 @@ def build_dimension_table(info, fam, args):
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
-        kwargs={}
+        kwargs = {}
         try:
             for arg in fam.dimension_desc()['args']:
                 if (arg == 'wt_range' or arg == 'k_range') and 'k_range' in dim_args:
@@ -259,7 +259,7 @@ def render_sample_page(family, sam, args, bread):
             info['field_href'] = '<a href="%s">%s</a>'%(info['field_url'], field_pretty(label))
     
     bread.append((info['name'], ''))
-    title='Siegel Modular Forms Sample ' + info['full_name']
+    title = 'Siegel Modular Forms Sample ' + info['full_name']
     properties = [('Space', info['space_href']),
                   ('Name', info['name']),
                   ('Type', '<br>'.join(info['type'].split(','))),
