@@ -108,7 +108,7 @@ def do_import_one(g, q, db, status_file, datadir):
     """
     progress_file = os.path.join(datadir, 'weil-ultmp-g%s-q%s.txt'%(g, q))
     all_file = os.path.join(datadir, 'weil-all-g%s-q%s.txt'%(g, q))
-    saving=True
+    saving = True
     with open(all_file) as Fall:
         for num_lines, line in enumerate(Fall,1):
             pass
@@ -137,7 +137,7 @@ def do_import_one(g, q, db, status_file, datadir):
                     data = json.loads(line_all.strip())
                     t = time.time()
                     do_import(data, db, saving)
-                    t = time.time()- t
+                    t = time.time() - t
                     sum_of_times += t
                     sum_of_squares += t**2
                     if time.time() > print_next_time:
