@@ -42,7 +42,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 
 # webpages: main, random and search results
@@ -53,9 +53,9 @@ def rep_galois_modl_render_webpage():
     if len(args) == 0:
         # FIXME THIS VARIABLE IS NEVER USED
         #counts = get_stats().counts()
-        dim_list= range(1, 11, 1)
-        max_class_number=20
-        class_number_list=range(1, max_class_number+1, 1)
+        dim_list = range(1, 11, 1)
+        max_class_number = 20
+        class_number_list = range(1, max_class_number+1, 1)
         det_list_endpoints = [1, 5000, 10000, 20000, 25000, 30000]
 #        if counts['max_det']>3000:
 #            det_list_endpoints=det_list_endpoints+range(3000, max(int(round(counts['max_det']/1000)+2)*1000, 10000), 1000)
@@ -110,8 +110,8 @@ def download_search(info):
     s += c + ' Integral rep_galois_modls downloaded from the LMFDB on %s. Found %s rep_galois_modls.\n\n'%(mydate, len(res))
     # The list entries are matrices of different sizes.  Sage and gp
     # do not mind this but Magma requires a different sort of list.
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
+    list_start = '[*' if lang == 'magma' else '['
+    list_end = '*]' if lang == 'magma' else ']'
     s += download_assignment_start[lang] + list_start + '\\\n'
     mat_start = "Mat(" if lang == 'gp' else "Matrix("
     mat_end = "~)" if lang == 'gp' else ")"
@@ -171,44 +171,44 @@ def render_rep_galois_modl_webpage(**args):
     credit = rep_galois_modl_credit
 
     for m in ['base_field','image_type','image_label','image_at','projective_type','projective_label','related_objects', 'label']:
-        info[m]=str(data[m])
+        info[m] = str(data[m])
     for m in ['dim','field_char','field_deg','conductor','weight','abs_irr','image_order','degree_proj_field']:
-        info[m]=int(data[m])
-    info['primes_conductor']=[int(i) for i in data['primes_conductor']]
+        info[m] = int(data[m])
+    info['primes_conductor'] = [int(i) for i in data['primes_conductor']]
 
     for m in ['poly_ker','poly_proj_ker']:
-        info[m]=str(data[m]).replace("*", "").strip('(').strip(')')
+        info[m] = str(data[m]).replace("*", "").strip('(').strip(')')
 
-    if data['rep_type'] =="symp":
-        info['rep_type']="Symplectic"
-    elif data['rep_type'] =="orth":
-        info['rep_type']="Orthogonal"
+    if data['rep_type'] == "symp":
+        info['rep_type'] = "Symplectic"
+    elif data['rep_type'] == "orth":
+        info['rep_type'] = "Orthogonal"
     else:
-        info['rep_type']="Linear"
+        info['rep_type'] = "Linear"
 
 
     if info['field_deg'] > int(1):
         try:
-            pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
-            info['field_str']=str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' %(str(data['field_char']), str(data['field_char']), pol))
+            pol = str(conway_polynomial(data['characteristic'], data['deg'])).replace("*", "")
+            info['field_str'] = str('$\mathbb{F}_%s \cong \mathbb{F}_%s[a]$ where $a$ satisfies: $%s=0$' % (str(data['field_char']), str(data['field_char']), pol))
         except:
-            info['field_str']=""
+            info['field_str'] = ""
 
 
-    info['bad_prime_list']=[]
-    info['good_prime_list']=[]
+    info['bad_prime_list'] = []
+    info['good_prime_list'] = []
     for n in data['bad_prime_list']:
         try:
-            n1=[int(n[0]), str(n[1]), str(n[2]), int(n[3]), int(n[4])]
+            n1 = [int(n[0]), str(n[1]), str(n[2]), int(n[3]), int(n[4])]
         except:
-            n1=[int(n[0]), str(n[1]), str(n[2]), str(n[3]), str(n[4])]
+            n1 = [int(n[0]), str(n[1]), str(n[2]), str(n[3]), str(n[4])]
         info['bad_prime_list'].append(n1)
-    info['len_good']=[int(i+1) for i in range(len(data['good_prime_list'][0][1]))]
+    info['len_good'] = [int(i+1) for i in range(len(data['good_prime_list'][0][1]))]
     for n in data['good_prime_list']:
         try:
-            n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), int(n[3]), int(n[4])]
+            n1 = [int(n[0]), [str(m) for m in n[1]], str(n[2]), int(n[3]), int(n[4])]
         except:
-            n1=[int(n[0]), [str(m) for m in n[1]], str(n[2]), str(n[3]), str(n[4])]
+            n1 = [int(n[0]), [str(m) for m in n[1]], str(n[2]), str(n[3]), str(n[4])]
         info['good_prime_list'].append(n1)
 
         info['download_list'] = [
@@ -216,10 +216,10 @@ def render_rep_galois_modl_webpage(**args):
 
     t = "Mod &#x2113; Galois representation "+info['label']
     info['properties'] = [
-        ('Label', '%s' %info['label']),
-        ('Dimension', '%s' %info['dim']),
-        ('Field characteristic', '%s' %info['field_char']),
-        ('Conductor', '%s' %info['conductor']),]
+        ('Label', '%s' % info['label']),
+        ('Dimension', '%s' % info['dim']),
+        ('Field characteristic', '%s' % info['field_char']),
+        ('Conductor', '%s' % info['conductor']),]
     return render_template("rep_galois_modl-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID='gal.modl.%s'%info['label'])
 #friends=friends
 
@@ -274,7 +274,7 @@ def download_rep_galois_modl_full_lists_v(**args):
     c = download_comment_prefix[lang]
     outstr = c + ' Full list of normalized minimal vectors downloaded from the LMFDB on %s. \n\n'%(mydate)
     outstr += download_assignment_start[lang] + '\\\n'
-    if res['name']==['Leech']:
+    if res['name'] == ['Leech']:
         outstr += str(res['shortest']).replace("'", "").replace("u", "")
     else:
         outstr += str(res['shortest'])
