@@ -66,7 +66,7 @@ def full_index():
 def stats():
     def mb(x):
         return int(round(x/2**20.))
-    info={}
+    info = {}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
     if not info['minsize'] in info['minsizes']:
