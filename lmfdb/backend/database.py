@@ -33,6 +33,7 @@ import csv
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError, NotSupportedError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
+from psycopg2.extensions import cursor as pg_cursor
 from sage.all import cartesian_product_iterator, binomial
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
@@ -303,7 +304,9 @@ class PostgresBase(object):
         self.logger = make_logger(loggername, hl = False, extraHandlers = [handler])
 
 
-    def _execute(self, query, values=None, silent=None, values_list=False, template=None, commit=None, slow_note=None, reissued=False):
+    def _execute(self, query, values=None, silent=None, values_list=False,
+                 template=None, commit=None, slow_note=None, reissued=False,
+                 buffered=False):
         """
         Execute an SQL command, properly catching errors and returning the resulting cursor.
 
@@ -328,6 +331,8 @@ class PostgresBase(object):
         - ``slow_note`` -- a tuple for generating more useful data for slow query logging.
         - ``reissued`` -- used internally to prevent infinite recursion when attempting to
             reset the connection.
+        - ``buffered`` -- whether to create a server side cursor that must be
+            manually closed after using it
 
         .. NOTE:
 
@@ -351,7 +356,7 @@ class PostgresBase(object):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
 
         try:
-            cur = self.cursor()
+            cur = self.cursor(buffered=buffered)
 
             t = time.time()
             if values_list:
@@ -1350,11 +1355,15 @@ class PostgresTable(PostgresBase):
         """
         # Eventually want to batch the queries on the extra_table so that we make
         # fewer SQL queries here.
-        for rec in cur:
-            if projection == 0 or isinstance(projection, basestring):
-                yield rec[0]
-            else:
-                yield {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
+        try:
+            for rec in cur:
+                if projection == 0 or isinstance(projection, basestring):
+                    yield rec[0]
+                else:
+                    yield {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
+        finally:
+            if isinstance(cur, pg_cursor):
+                cur.close()
 
     ##################################################################
     # Methods for querying                                           #
@@ -1526,7 +1535,8 @@ class PostgresTable(PostgresBase):
                 qstr, values = self._build_query(query, limit, offset, sort)
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
-        cur = self._execute(selecter, values, silent=silent, slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
+        cur = self._execute(selecter, values, silent=silent, buffered=True,
+                            slow_note=(self.search_table, "analyze", query, repr(projection), limit, offset))
         if limit is None:
             if info is not None:
                 # caller is requesting count data
@@ -1747,7 +1757,7 @@ class PostgresTable(PostgresBase):
                 qstr = SQL(" WHERE {0}").format(qstr)
                 values.extend(qvalues)
             selecter = SQL("SELECT {0} FROM {1} TABLESAMPLE " + mode + "(%s){2}{3}").format(vars, Identifier(self.search_table), repeatable, qstr)
-            cur = self._execute(selecter, values)
+            cur = self._execute(selecter, values, buffered=True)
             return self._search_iterator(cur, search_cols, extra_cols, projection)
 
     ##################################################################
@@ -5000,12 +5010,17 @@ class PostgresDatabase(PostgresBase):
         return "Interface to Postgres database"
 
 
-    def cursor(self):
+    def cursor(self, buffered=False):
         """
-        Returns a new server side cursor, with automatic name generation
+        Returns a new cursor.
+        If buffered, then it creates a server side cursor that must be manually
+        closed after done using it.
         """
-        self.server_side_counter += 1
-        return self.conn.cursor(str(self.server_side_counter))
+        if buffered:
+            self.server_side_counter += 1
+            return self.conn.cursor(str(self.server_side_counter), withhold=True)
+        else:
+            return self.conn.cursor()
 
 
     def login(self):
