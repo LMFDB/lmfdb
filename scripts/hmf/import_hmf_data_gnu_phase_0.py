@@ -62,11 +62,11 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
 
 
 def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
-        fileprefix="."
+    if fileprefix == None:
+        fileprefix = "."
     hmff = file(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
+    if ferrors == None:
         if Dan_test:
             ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_data.err', 'a')
         else:
@@ -383,14 +383,14 @@ def import_extra_data(hmf_extra_filename, fileprefix=None, ferrors=None, test=Tr
     ''' 
     put in docstring!
     '''
-    if ferrors==None:
+    if ferrors == None:
         if Dan_test:
             ferrors = file('/Users/d_yasaki/repos/lmfdb/lmfdb/scripts/hmf/fixing-permuted-primes/import_extra.err', 'a')
         else:
             ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
     field_label = hmf_extra_filename.split('-')[0]
-    if fileprefix==None:
-        fileprefix="."
+    if fileprefix == None:
+        fileprefix = "."
     hmff = file(os.path.join(fileprefix,hmf_extra_filename))
 
     with hmff as infile:
