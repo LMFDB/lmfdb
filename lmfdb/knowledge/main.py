@@ -332,7 +332,7 @@ def edit(ID):
         try:
             lock = knowldb.is_locked(knowl.id)
         except DatabaseError as e:
-            logger.info("Oops, failed to get the lock. Error: %s" %e)
+            logger.info("Oops, failed to get the lock. Error: %s" % e)
     author_edits = lock and lock['username'] == current_user.get_id()
     logger.debug(author_edits)
     if author_edits:
@@ -341,7 +341,7 @@ def edit(ID):
         try:
             knowldb.set_locked(knowl, current_user.get_id())
         except DatabaseError as e:
-            logger.info("Oops, failed to set the lock. Error: %s" %e)
+            logger.info("Oops, failed to set the lock. Error: %s" % e)
 
     b = get_bread([("Edit '%s'" % ID, url_for('.edit', ID=ID))])
     if knowl.type == -2:
