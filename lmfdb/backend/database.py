@@ -5005,7 +5005,7 @@ class PostgresDatabase(PostgresBase):
         Returns a new server side cursor, with automatic name generation
         """
         self.server_side_counter += 1
-        return self.conn.cursor(int(self.server_side_counter))
+        return self.conn.cursor(str(self.server_side_counter))
 
 
     def login(self):
