@@ -17,7 +17,7 @@ import gzip
 
 from lmfdb.base import getDBConnection
 
-C= getDBConnection()
+C = getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -37,7 +37,7 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 
@@ -55,13 +55,13 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,orbit_label,ell,index,idempotent,gen_l,num_gen_l,rel_l,num_charpoly,charpoly_ql= ll
+    level,weight,orbit_label,ell,index,idempotent,gen_l,num_gen_l,rel_l,num_charpoly,charpoly_ql = ll
     mykeys = ['level','weight','orbit_label','ell','index','idempotent','gen_l','num_gen_l','rel_l','num_charpoly_ql','charpoly_ql']
     data = {}
     for j in range(len(mykeys)):
         data[mykeys[j]] = ll[j]
 
-    label=".".join([str(data['orbit_label']),str(data['ell']), str(data['index'])])
+    label = ".".join([str(data['orbit_label']),str(data['ell']), str(data['index'])])
     data['label_l'] = label
 
     alg_orb_l = hecke_orb_l.find_one({'label_l': label})
