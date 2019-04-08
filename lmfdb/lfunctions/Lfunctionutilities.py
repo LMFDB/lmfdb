@@ -39,7 +39,7 @@ def p2sage(s):
                     return f(str(z))
                 except (ValueError, TypeError, NameError, SyntaxError):
                     pass
-        if z!='??':
+        if z != '??':
             logger.error('Error converting "{}" in p2sage'.format(z))
         return z
 
@@ -61,7 +61,7 @@ def string2number(s):
             return CDF(tuple(s))
         elif '/' in strs:
             return Rational(strs)
-        elif strs=='0.5':  # Temporary fix because 0.5 in db for EC
+        elif strs == '0.5':  # Temporary fix because 0.5 in db for EC
             return Rational('1/2')
         elif '.' in strs:
             return float(strs)
@@ -116,12 +116,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
 
     # deal with the zero case
     if coeff_display == "0":
-        if seriescoefftype=="literal":
+        if seriescoefftype == "literal":
             return "0"
         else:
             return ""
 
-    if seriescoefftype=="literal":
+    if seriescoefftype == "literal":
         return coeff_display
 
     if seriescoefftype == "factor":
@@ -437,7 +437,7 @@ def lfuncEPhtml(L,fmt):
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
-                if gal_groups[0]==[0,0]:
+                if gal_groups[0] == [0,0]:
                     pass   # do nothing, because the local factor is 1
                 else:
                     out += "$\\times$".join( [group_display_knowl_C1_as_trivial(n,k) for n, k in gal_groups] )
@@ -478,7 +478,7 @@ def lfuncEPhtml(L,fmt):
 
     last_entry = ""
     if display_galois:
-        last_entry +="<td></td>"
+        last_entry += "<td></td>"
     last_entry += "<td></td>"
     eptable += last_entry
     eptable += "</tr>"
@@ -639,7 +639,7 @@ def specialValueString(L, s, sLatex, normalization="analytic"):
     ''' Returns the LaTex to dislpay for L(s)
         Will eventually be replaced by specialValueTriple.
     '''
-    if normalization=="arithmetic":
+    if normalization == "arithmetic":
         _, tex, Lval =  specialValueTriple(L, s, '', sLatex)
     else:
         tex, _, Lval =  specialValueTriple(L, s, sLatex, '')
