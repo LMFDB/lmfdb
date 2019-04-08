@@ -114,6 +114,6 @@ class HomePageTest(LmfdbTest):
         if not errors:
             print "\nTested %s SMF pages with no errors" % n
         else:
-            print "\nTested %d pages with %d errors occuring on the following pages:" %(n,len(errors))
+            print "\nTested %d pages with %d errors occuring on the following pages:" % (n,len(errors))
             for label in errors:
                 print label
