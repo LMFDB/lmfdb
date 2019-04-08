@@ -174,32 +174,30 @@ def bmf_field_dim_table(**args):
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         pretty_field_label, ' ')]
     properties = []
+    query = {}
+    query['field_label'] = field_label
     if gl_or_sl=='gl2_dims':
         info['group'] = 'GL(2)'
         info['bgroup'] = '\GL(2,\mathcal{O}_K)'
     else:
         info['group'] = 'SL(2)'
         info['bgroup'] = '\SL(2,\mathcal{O}_K)'
+    if level_flag == 'all':
+        query[gl_or_sl] = {'$exists': True}
+    else:
+        # Only get records where the cuspdial/new dimension is positive for some weight
+        totaldim = gl_or_sl.replace('dims', level_flag) + '_totaldim'
+        query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
-    query = {}
-    query['field_label'] = field_label
-    query[gl_or_sl] = {'$exists': True}
-    data = db.bmf_dims.search(query, limit=count, offset=start, info=info)
+    data = list(db.bmf_dims.search(query, limit=count, offset=start, info=info))
     nres = info['number']
+    if not info['exact_count']:
+        info['number'] = nres = db.bmf_dims.count(query)
+        info['exact_count'] = True
     if nres > count or start != 0:
         info['report'] = 'Displaying items %s-%s of %s levels,' % (start + 1, min(nres, start + count), nres)
     else:
         info['report'] = 'Displaying all %s levels,' % nres
-
-    # convert data to a list and eliminate levels where all
-    # new/cuspidal dimensions are 0.  (This could be done at the
-    # search stage, but that requires adding new fields to each
-    # record.)
-    def filter(dat, flag):
-        dat1 = dat[gl_or_sl]
-        return any([int(dat1[w][flag])>0 for w in dat1])
-    flag = 'cuspidal_dim' if level_flag=='cusp' else 'new_dim'
-    data = [dat for dat in data if level_flag == 'all' or filter(dat, flag)]
 
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
