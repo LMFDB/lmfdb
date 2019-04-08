@@ -25,7 +25,7 @@ def is_debug_mode():
 # this is set here and is available for ctx_proc_userdata
 @app.before_request
 def set_beta_state():
-    g.BETA = (os.getenv('BETA')=='1') or is_debug_mode()
+    g.BETA = (os.getenv('BETA') == '1') or is_debug_mode()
 
 def is_beta():
     from flask import g
@@ -111,7 +111,7 @@ def inject_sidebar():
 ##############################
 
 branch = "web"
-if (os.getenv('BETA')=='1'):
+if (os.getenv('BETA') == '1'):
     branch = "dev"
 
 def git_infos():
