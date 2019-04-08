@@ -17,5 +17,5 @@ def update_scrape_progress(db_name, table_name, uid, complete=None, running=None
         if rec_set:
             db.inv_ops.update(rec_find, rec_set)
     except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
+        inv.log_dest.error("Error updating progress " + str(e))
         return False
