@@ -391,9 +391,14 @@ class PostgresBase(object):
                             query = query + str(values)
                     else:
                         query = query.as_string(self.conn)
-                    self.logger.info(query + ' ran in \033[91m {0!s}s \033[0m'.format(t))
+                    self.logger.info(query +
+                                     ' ran in \033[91m {0!s}s \033[0m'.format(t))
                     if slow_note is not None:
-                        self.logger.info("Replicate with db.{0}.{1}({2})".format(slow_note[0], slow_note[1], ", ".join(str(c) for c in slow_note[2:])))
+                        self.logger.info(
+                                "Replicate with db.%s.%s(%s)",
+                                slow_note[0], slow_note[1],
+                                ", ".join(str(c) for c in slow_note[2:])
+                                )
         except (DatabaseError, InterfaceError):
             if self.conn.closed != 0:
                 # If reissued, we need to raise since we're recursing.
@@ -401,8 +406,17 @@ class PostgresBase(object):
                     raise
                 # Attempt to reset the connection
                 self._db.reset_connection()
-                if commit or (commit is None and self._db._nocommit_stack == 0):
-                    return self._execute(query, values=values, silent=silent, values_list=values_list, template=template, slow_note=slow_note, reissued=True)
+                if commit or\
+                        (commit is None and self._db._nocommit_stack == 0):
+                    return self._execute(query,
+                                         values=values,
+                                         silent=silent,
+                                         values_list=values_list,
+                                         template=template,
+                                         commit=commit,
+                                         slow_note=slow_note,
+                                         buffered=buffered,
+                                         reissued=True)
                 else:
                     raise
             else:
