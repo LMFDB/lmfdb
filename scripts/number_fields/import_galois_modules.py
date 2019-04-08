@@ -38,7 +38,7 @@ def sd(f):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 def list2string(li):
@@ -58,9 +58,9 @@ def do_import(ll):
 #    gens.append(ll[j])
 #  data['gens'] = gens
   data['gens'] = ll[2]
-  data['dim']= len(ll[2][0][1][0])
+  data['dim'] = len(ll[2][0][1][0])
   data['complete'] = -1
-  if len(ll)>3:
+  if len(ll) > 3:
     data['complete'] = ll[3]
   gmods.save(data)
   #print data
