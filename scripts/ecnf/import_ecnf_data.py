@@ -196,9 +196,9 @@ def convert_ideal_label(K, lab):
 
     comps = lab.split(".")
     # test for labels which do not need any conversion
-    if len(comps)==2:
+    if len(comps) == 2:
         return lab
-    assert len(comps)==3
+    assert len(comps) == 3
     N, c, d = [int(x) for x in comps]
     a = N//d
     I = K.ideal(a, c+d*K.gen())
@@ -225,7 +225,7 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     prefixes = ['curves', 'curve_data', 'isoclass']
     #prefixes = ['curves']
     suffix = ''.join([".", field_label])
-    if min_norm>0 or max_norm!='infinity':
+    if min_norm > 0 or max_norm != 'infinity':
         suffix = ''.join([suffix, ".", str(min_norm), "-", str(max_norm)])
 
     for prefix in prefixes:
@@ -325,7 +325,7 @@ def curves(line, verbose=False):
     # agrees with the input conductor.
     N = ideal_from_string(K,conductor_ideal)
     NE = E.conductor()
-    if N=="wrong" or N!=NE:
+    if N == "wrong" or N != NE:
         print("Wrong conductor ideal {} for label {}, using actual conductor {} instead".format(conductor_ideal,label,NE))
         conductor_ideal = ideal_to_string(NE)
         N = NE
@@ -339,7 +339,7 @@ def curves(line, verbose=False):
     # get label of elliptic curve over Q for base_change cases (a
     # subset of Q-curves)
 
-    if q_curve!=0:  # q_curve (definitely or possibly, if we have not precomputed Q-curve status)
+    if q_curve != 0:  # q_curve (definitely or possibly, if we have not precomputed Q-curve status)
         # but still want to test for base change!
         if verbose:
             print("testing {} for base-change...".format(label))
@@ -359,13 +359,13 @@ def curves(line, verbose=False):
     # problems except that the bad_reduction_type is then None which
     # cannot be converted to an integer.  The bad reduction types are
     # coded as (Sage) integers in {-1,0,1}.
-    if any([ld.bad_reduction_type()==0 for ld in E.local_data()]):
+    if any([ld.bad_reduction_type() == 0 for ld in E.local_data()]):
         mE = magma(E) # for local root numbers if not semistable
     def local_root_number(ldp): # ldp is a component of E.local_data()
         red_type = ldp.bad_reduction_type()
-        if red_type==0: # additive reduction: call Magma
+        if red_type == 0: # additive reduction: call Magma
             eps = mE.RootNumber(ldp.prime())
-        elif red_type==+1:
+        elif red_type == +1:
             eps = -1
         else:  # good or non-split multiplcative reduction
             eps = +1
@@ -376,7 +376,7 @@ def curves(line, verbose=False):
                    'ord_cond': int(ld.conductor_valuation()),
                    'ord_disc': int(ld.discriminant_valuation()),
                    'ord_den_j': int(max(0,-(E.j_invariant().valuation(ld.prime())))),
-                   'red': None if ld.bad_reduction_type()==None else int(ld.bad_reduction_type()),
+                   'red': None if ld.bad_reduction_type() == None else int(ld.bad_reduction_type()),
                    'rootno': local_root_number(ld),
                    'kod': str(latex(ld.kodaira_symbol())),
                    'cp': int(ld.tamagawa_number())}
@@ -507,7 +507,7 @@ def read1isogmats(base_path, filename_suffix):
             data[label] = {'isogeny_degrees': Json(isogdegs),
                            'class_size': ncurves,
                            'class_deg': maxdeg}
-            if n==0:
+            if n == 0:
                 #print("adding isogmat = {} to {}".format(isogmat,label))
                 data[label]['isogeny_matrix'] = Json(isogmat)
 
@@ -549,7 +549,7 @@ def galrep(line):
     field_label, conductor_label, c_label = data[0].split("-")
     iso_label = ''.join([c for c in c_label if c.isalpha()])
     number = ''.join([c for c in c_label if c.isdigit()])
-    assert iso_label+number==c_label
+    assert iso_label+number == c_label
     conductor_label = convert_conductor_label(field_label, conductor_label)
     print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
@@ -615,7 +615,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
-        if f==isoclass_filename: # dealt with differently
+        if f == isoclass_filename: # dealt with differently
             continue
         try:
             h = open(os.path.join(base_path, f))
@@ -839,17 +839,17 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     elif degree is not None:
         query['degree'] = int(degree)
 
-    count=0
+    count = 0
     for c in table.search(query):
-        count +=1
-        if count%1000==0:
+        count += 1
+        if count%1000 == 0:
             print("Checked {} entries...".format(count))
         expected_keys = key_set
         if ignore_ranks:
             expected_keys = expected_keys - rank_keys
-        if c['number']!=1:
+        if c['number'] != 1:
             expected_keys = expected_keys - number_1_only_keys
-        if c['degree']==6:
+        if c['degree'] == 6:
             expected_keys = expected_keys - galrep_keys
         if c['degree'] > 2:
             expected_keys = expected_keys - ['trace_hash']
@@ -857,7 +857,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
         db_keys = Set([str(k) for k in c.keys()]) - ['_id']
         if ignore_ranks:
             db_keys = db_keys - rank_keys
-        if c['degree']==6:
+        if c['degree'] == 6:
             db_keys = db_keys - galrep_keys
 
         label = c['label']
@@ -865,7 +865,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
         if db_keys == expected_keys:
             for k in db_keys:
                 ktype = keys_and_types[k]
-                if type(c[k]) != ktype and not k=='reg' and ktype==type(int):
+                if type(c[k]) != ktype and not k == 'reg' and ktype == type(int):
                     print("Type mismatch for key {} in curve {}".format(k,label))
                     print(" in database: {}".format(type(c[k])))
                     print(" expected:    {}".format(keys_and_types[k]))
@@ -919,15 +919,15 @@ def add_root_number_to_local_data(field_label, ainvs, ld):
     # ld is a list with one dict for each prime ideal dividing the
     # discriminant of the stored model, which will be empty for a
     # global minimal model of a curve with everywhere good reduction.
-    if len(ld)==0:
+    if len(ld) == 0:
         return ld
     if all(['rootno' in ldp for ldp in ld]): # already have root numbers
-        if not any([ldp['rootno']=='?' for ldp in ld]):
+        if not any([ldp['rootno'] == '?' for ldp in ld]):
             return ld
 
     # test for easy case of a semistable curve (no additive primes)
     # when we do not have to construct the curve at all:
-    if any([ldp['red']==0 for ldp in ld]):
+    if any([ldp['red'] == 0 for ldp in ld]):
         K = nf_lookup(field_label)
         ainvsK = parse_ainvs(K,ainvs)  # list of K-elements
         mE = magma(EllipticCurve(ainvsK))
@@ -936,14 +936,14 @@ def add_root_number_to_local_data(field_label, ainvs, ld):
 
     for i, ldp in enumerate(ld):
         red_type = ldp['red']
-        if red_type==0:
+        if red_type == 0:
             P = magma(ideal_from_string(K,ldp['p']))
             #print("Root number of {}\n   at P={}...".format(mE,P))
             eps = mE.IntegralModel().RootNumber(P)
             #print("... {}".format(eps))
-        elif red_type==+1:
+        elif red_type == +1:
             eps = -1
-        elif red_type==-1:
+        elif red_type == -1:
             eps = +1
         else:  # good reduction
             eps = +1
@@ -1192,7 +1192,7 @@ def fix1_qcurve_flag(ec, verbose=False):
     qc = False
     if ec['cm']:
         qc = True
-    elif all(c=='0' for c in ec['jinv'].split(",")[1:]):
+    elif all(c == '0' for c in ec['jinv'].split(",")[1:]):
         qc = True
 
     if qc: # then we have just set it to True
@@ -1218,7 +1218,7 @@ def fix1_qcurve_flag(ec, verbose=False):
     # Compute the Q-curve flag from scratch
 
     N = ideal_from_string(K.K(),ec['conductor_ideal'])
-    if sigma(N)!=N:
+    if sigma(N) != N:
         qc = False
     else: # construct and check the curve
         ainvsK = parse_ainvs(K.K(), ec['ainvs'])
@@ -1251,7 +1251,7 @@ def is_Q_curve(E):
             continue
         Plist = [P for P in K.primes_above(p)
                  if P.residue_class_degree() == 1]
-        if len(Plist)<2:
+        if len(Plist) < 2:
             continue
         aP0 = E.reduction(Plist[0]).trace_of_frobenius()
         for P in Plist[1:]:
@@ -1259,7 +1259,7 @@ def is_Q_curve(E):
             if aP.abs() != aP0.abs():
                 return False
 
-    if K.degree()>2:
+    if K.degree() > 2:
         raise NotImplementedError("Only quadratic fields implemented so far")
     C = E.isogeny_class()
     jC = [E1.j_invariant() for E1 in C]
@@ -1290,14 +1290,14 @@ def check_Q_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, fix=False, 
     count = 0
     for label in curves:
         count += 1
-        if count%1000==0:
+        if count%1000 == 0:
             print("checked {} curves ({}%)".format(count, 100.0*count/ncurves))
         ec = nfcurves.lucky({'label':label})
         assert label == ec['label']
         method = None
         # first check that j(E) is rational (no computation needed)
         jinv = ec['jinv']
-        if all(c=='0' for c in jinv.split(",")[1:]):
+        if all(c == '0' for c in jinv.split(",")[1:]):
             if verbose: print("{}: j in QQ".format(label))
             qc = True
             method = "j in Q"
@@ -1346,8 +1346,8 @@ def ld1s(s):
             'ord_cond': int(dat[2]),
             'ord_disc': int(dat[3]),
             'ord_den_j': int(dat[4]),
-            'red': None if dat[5]=='None' else int(dat[5]),
-            'rootno': '?' if dat[6]=='?' else int(dat[6]),
+            'red': None if dat[5] == 'None' else int(dat[5]),
+            'rootno': '?' if dat[6] == '?' else int(dat[6]),
             'kod': dat[7], # string
             'cp': int(dat[8])}
 
@@ -1428,7 +1428,7 @@ def add_rootnos_to_local_data_file(filename, base_path=".", test=True):
     print("{} curves to process".format(len(data)))
     for c in data:
         nc += 1
-        if nc%1000==0:
+        if nc%1000 == 0:
             print("{}: {}".format(nc,c['label']))
         c['local_data'] = add_root_number_to_local_data(c['field_label'], c['ainvs'], c['local_data'])
     write_local_data_file(data, filename+".x", base_path)
@@ -1465,13 +1465,13 @@ def read_qcurve_flags(filename, base_path="."):
         if not qcurve in ['0','1']:
             print("Curve {} has no Q-curve flag set: {}".format(label, qcurve))
         else:
-            qcurve_dict[label] = (qcurve=='1')
+            qcurve_dict[label] = (qcurve == '1')
     return qcurve_dict
 
 def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
     QFs = nfcurves.distinct("field_label", {'degree':2})
     IQFs = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
-    RQFs = [f for f in QFs if f[:4]=='2.2.']
+    RQFs = [f for f in QFs if f[:4] == '2.2.']
     cubics = nfcurves.distinct("field_label", {'degree':3})
     quartics = nfcurves.distinct("field_label", {'degree':4})
     quintics = nfcurves.distinct("field_label", {'degree':5})
@@ -1486,7 +1486,7 @@ def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
             qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "RQF/"))
         for f in IQFs:
             qc2.update(read_qcurve_flags(filename="curves."+f, base_path=base + "IQF/"))
-        assert len(qc2)==nfcurves.count({'degree':2}) - 8
+        assert len(qc2) == nfcurves.count({'degree':2}) - 8
         qc.update(qc2)
         
     if 3 in degrees:
@@ -1496,28 +1496,28 @@ def read_all_qcurve_flags(degrees=[2,3,4,5,6]):
                 qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "gunnells/"))
             else:
                 qc3.update(read_qcurve_flags(filename="curves."+f, base_path=base + "cubics/"))
-        assert len(qc3)==nfcurves.count({'degree':3})
+        assert len(qc3) == nfcurves.count({'degree':3})
         qc.update(qc3)
 
     if 4 in degrees:
         qc4 = {}
         for f in quartics:
             qc4.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quartics/"))
-        assert len(qc4)==nfcurves.count({'degree':4})
+        assert len(qc4) == nfcurves.count({'degree':4})
         qc.update(qc4)
 
     if 5 in degrees:
         qc5 = {}
         for f in quintics:
             qc5.update(read_qcurve_flags(filename="curves."+f, base_path=base + "quintics/"))
-        assert len(qc5)==nfcurves.count({'degree':5})
+        assert len(qc5) == nfcurves.count({'degree':5})
         qc.update(qc5)
 
     if 6 in degrees:
         qc6 = {}
         for f in sextics:
             qc6.update(read_qcurve_flags(filename="curves."+f, base_path=base + "sextics/"))
-        assert len(qc6)==nfcurves.count({'degree':6})
+        assert len(qc6) == nfcurves.count({'degree':6})
         qc.update(qc6)
 
     return qc
@@ -1535,7 +1535,7 @@ def make_qcurve_flag_updater(degrees=[2,3,4,5,6], filename=None, basepath="."):
             # else leave C alone
             old_flag = C.get('q_curve', None)
             new_flag = qc[label]
-            if old_flag!=new_flag:
+            if old_flag != new_flag:
                 pass
                 #print("Changing flag for {} from {} to {}".format(C['label'],old_flag,new_flag))
             C['q_curve'] = new_flag
