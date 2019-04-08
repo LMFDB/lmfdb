@@ -121,13 +121,13 @@ def get_inventory_for_display(table_name):
     try:
         records = retrieve_description(table_name)
     except Exception as e:
-        inv.log_dest.error("Unable to get requested inventory "+ str(e))
+        inv.log_dest.error("Unable to get requested inventory " + str(e))
         return {'data': None, 'specials': None, 'scrape_date': None}
 
     try:
         return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scrape_date':records['scrape_date']}
     except Exception as e:
-        inv.log_dest.error("Error decoding inventory object "+ str(e))
+        inv.log_dest.error("Error decoding inventory object " + str(e))
         return {'data': None, 'specials': None, 'scrape_date': None}
 
 def get_indices_for_display(table_name):
@@ -343,7 +343,7 @@ if __name__ == "__main__":
     table_listing = retrieve_db_listing(item)
     table_item = random.choice(table_listing)
     print('_________________________________________')
-    print("Getting for "+ str(table_item))
+    print("Getting for " + str(table_item))
     print(json.dumps(get_inventory_for_display(table_item), indent=4, separators=(',', ': ')))
 
 else:
