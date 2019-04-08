@@ -126,7 +126,7 @@ class WebCharObject:
     @staticmethod
     def textuple(l,tag=True):
         t = ','.join(l)
-        if len(l) > 1: t='(%s)'%t
+        if len(l) > 1: t = '(%s)'%t
         if tag: t = '\(%s\)'%t
         return t
 
@@ -173,7 +173,7 @@ class WebDirichlet(WebCharObject):
         return (mod, num, self.char2tex(mod,num), prim)
 
     def charisprimitive(self,mod,num):
-        if isinstance(self.H, DirichletGroup_conrey) and self.H.modulus()==mod:
+        if isinstance(self.H, DirichletGroup_conrey) and self.H.modulus() == mod:
             H = self.H
         else:
             H = DirichletGroup_conrey(mod)
@@ -478,7 +478,7 @@ class WebHecke(WebCharObject):
         s = []
         for i,e in enumerate(x):
             if e > 0:
-                if e==1:
+                if e == 1:
                     s.append('g_{%i}'%i)
                 else:
                     s.append('g_{%i}^{%i}'%(i,e))
@@ -784,13 +784,13 @@ class WebChar(WebCharObject):
         if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 10000:
             url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
             if get_lfunction_by_url(url[1:]):
-                f.append( ('L-function', '/L'+ url) )
+                f.append( ('L-function', '/L' + url) )
             else:
                 if self.conductor == 1:
                     f.append (('L-function', '/L/Riemann'))
         if self.type == 'Dirichlet':
             f.append( ('Sato-Tate group', '/SatoTateGroup/0.1.%d'%self.order) )
-        if len(self.vflabel)>0:
+        if len(self.vflabel) > 0:
             f.append( ("Value Field", '/NumberField/' + self.vflabel) )
         return f
 
@@ -805,7 +805,7 @@ class WebDirichletFamily(WebCharFamily, WebDirichlet):
 
     def first_moduli(self):
         """ restrict to conductors """
-        return ( m for m in xrange(2, self.maxrows) if m%4!=2 )
+        return ( m for m in xrange(2, self.maxrows) if m%4 != 2 )
 
     def chargroup(self, mod):
         return WebDirichletGroup(modulus=mod,**self.args)
@@ -1149,7 +1149,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 number=self.number
             )
             if get_lfunction_by_url(url[1:]):
-                friendlist.append( ('L-function', '/L'+ url) )
+                friendlist.append( ('L-function', '/L' + url) )
             else:
                 if self.conductor == 1:
                     friendlist.append (('L-function', '/L/Riemann'))
@@ -1493,7 +1493,7 @@ class WebHeckeFamily(WebCharFamily, WebHecke):
                         yield self.k.ideal(ideal)
             """ double the range if one needs more ideal """
             oldbound = bound
-            bound *=2
+            bound *= 2
 
     """ for Hecke, I don't want to init WebHeckeGroup classes
         (recomputing number field and modulus is stupid)
