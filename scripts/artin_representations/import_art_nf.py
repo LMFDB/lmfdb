@@ -29,13 +29,13 @@ password = pw_dict['data']['password']
 #from lmfdb import base
 #C= base.getDBConnection()
 from pymongo.mongo_client import MongoClient
-C= MongoClient(host='lmfdb-ib:37010')
+C = MongoClient(host='lmfdb-ib:37010')
 
 C['artin'].authenticate(username, password)
 
-art=C.artin
-rep=art.representations_new
-nfgal=art.field_data_new
+art = C.artin
+rep = art.representations_new
+nfgal = art.field_data_new
 
 count = 0
 old = 0
@@ -65,7 +65,7 @@ def make_cond_key(D):
 maxint = (2**63)-1
 
 def int_or_string(a):
-  if abs(a)< maxint:
+  if abs(a) < maxint:
     return a
   return str(a)
 
@@ -98,14 +98,14 @@ def artrepload(l):
   cont = l['Baselabel'].split('.')[2]
   l['Container'] = cont
   #print str(l)
-  count +=1
+  count += 1
   outrecs.append(l)
   if len(outrecs) > batchsize:
     rep.insert_many(outrecs)
-    outrecs=[]
+    outrecs = []
   #rep.save(l)
-  if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+  if (count+old) % 100 == 0:
+    print "%s new, %s old" % (str(count),str(old))
   return
 
 def nfgalload(l):
@@ -121,19 +121,19 @@ def nfgalload(l):
   #  if (count+old) % 100==0:
   #    print "%s new, %s old" %(str(count),str(old))
   #  return 
-  l['Polynomial']=polstr
-  artreps=l['ArtinReps']
-  artreps=[{'Baselabel': z[0][0], 'GalConj': z[0][1], 'CharacterField': z[1],
+  l['Polynomial'] = polstr
+  artreps = l['ArtinReps']
+  artreps = [{'Baselabel': z[0][0], 'GalConj': z[0][1], 'CharacterField': z[1],
     'Character': z[2]} for z in artreps]
-  l['ArtinReps']=artreps
+  l['ArtinReps'] = artreps
   outrecs.append(l)
   if len(outrecs) > batchsize:
     nfgal.insert_many(outrecs)
-    outrecs=[]
+    outrecs = []
   #nfgal.save(l)
-  count +=1
-  if (count+old) % 100==0:
-    print "%s new, %s old" %(str(count),str(old))
+  count += 1
+  if (count+old) % 100 == 0:
+    print "%s new, %s old" % (str(count),str(old))
   return
 
 
