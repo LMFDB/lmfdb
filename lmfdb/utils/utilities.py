@@ -58,7 +58,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
         of the factors.
         vari allows to choose the variable of the polynomial to be returned.
     """
-    gal_list=[]
+    gal_list = []
     ZZpT  = PolynomialRing(ZZ, ['p',vari], order = 'negdeglex')
     ZZT = PolynomialRing(ZZ, vari)
     outstr = ''
@@ -91,11 +91,11 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
 
     if galois:
         # 2 factors of degree 2
-        if len(sfacts_fc_list)==2:
+        if len(sfacts_fc_list) == 2:
             if len(sfacts_fc_list[0][0]) == 3 and len(sfacts_fc_list[1][0]) == 3:
                 troubletest = ZZT(sfacts_fc_list[0][0]).disc()*ZZT(sfacts_fc_list[1][0]).disc()
                 if troubletest.is_square():
-                    gal_list=[[2,1]]
+                    gal_list = [[2,1]]
         return outstr, gal_list
     return outstr
 
@@ -182,7 +182,7 @@ def display_multiset(mset, formatter=str, *args):
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -260,7 +260,7 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  +=  sign * CBF(b)* CBF.gens()[0]
+            res  +=  sign * CBF(b) * CBF.gens()[0]
         return res
 
 
@@ -891,7 +891,7 @@ def list_to_latex_matrix(li):
     '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
     """
     dim = len(li[0])
-    mm = r"\left(\begin{array}{"+dim*"r" +"}"
+    mm = r"\left(\begin{array}{"+dim*"r" + "}"
     mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
     mm += r'\end{array}\right)'
     return mm
