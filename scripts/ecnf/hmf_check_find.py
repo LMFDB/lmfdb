@@ -23,7 +23,7 @@ flab3 = [fld for fld in flabels if '3.3.' in fld]
 flab4 = [fld for fld in flabels if '4.4.' in fld]
 flab5 = [fld for fld in flabels if '5.5.' in fld]
 flab6 = [fld for fld in flabels if '6.6.' in fld]
-fld=None # else after re-reading this file fld gets left set to 6.6.905177.1
+fld = None # else after re-reading this file fld gets left set to 6.6.905177.1
 #
 #
 # Code to check conductor labels agree with Hilbert Modular Form level
@@ -451,7 +451,7 @@ def find_curve_labels(field_label='2.2.5.1', min_norm=0, max_norm=None, outfilen
     else:
         return
 
-    if outfilename==None:
+    if outfilename == None:
         return
 
     # Step 2: for each newform for which there was no curve, create a
@@ -555,7 +555,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
                 print("Curve {} does NOT agree with newform".format(ec['short_label']))
                 if verbose:
                     for P,aPf,aPc in zip(good_primes[:nap], f_aplist[:nap], aplist[:nap]):
-                        if aPf!=aPc:
+                        if aPf != aPc:
                             print("P = {} with norm {}".format(P,P.norm().factor()))
                             print("ap from curve: %s" % aPc)
                             print("ap from  form: %s" % aPf)
@@ -607,16 +607,16 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
 
     bad_p = []
     #if field_label=='4.4.1600.1': bad_p = [7**2,13**2,29**2]
-    if field_label=='4.4.2304.1': bad_p = [19**2,29**2]
-    if field_label=='4.4.4225.1': bad_p = [17**2,23**2]
-    if field_label=='4.4.7056.1': bad_p = [29**2,31**2]
-    if field_label=='4.4.7168.1': bad_p = [29**2]
-    if field_label=='4.4.9248.1': bad_p = [23**2]
-    if field_label=='4.4.11025.1': bad_p = [17**2,37**2,43**2]
-    if field_label=='4.4.13824.1': bad_p = [19**2]
-    if field_label=='4.4.12400.1': bad_p = [23**2]
-    if field_label=='4.4.180769.1': bad_p = [23**2]
-    if field_label=='6.6.905177.1': bad_p = [2**3]
+    if field_label == '4.4.2304.1': bad_p = [19**2,29**2]
+    if field_label == '4.4.4225.1': bad_p = [17**2,23**2]
+    if field_label == '4.4.7056.1': bad_p = [29**2,31**2]
+    if field_label == '4.4.7168.1': bad_p = [29**2]
+    if field_label == '4.4.9248.1': bad_p = [23**2]
+    if field_label == '4.4.11025.1': bad_p = [17**2,37**2,43**2]
+    if field_label == '4.4.13824.1': bad_p = [19**2]
+    if field_label == '4.4.12400.1': bad_p = [23**2]
+    if field_label == '4.4.180769.1': bad_p = [23**2]
+    if field_label == '6.6.905177.1': bad_p = [2**3]
     bad_p = []
 
     effort0 = effort
@@ -638,12 +638,12 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             goodP = [(i, P) for i, P in enumerate(Plist)
                      if not P.divides(N)
                      and not P.norm() in bad_p
-                     and P.residue_class_degree()==1]
+                     and P.residue_class_degree() == 1]
             aplist = [int(f['hecke_eigenvalues'][i]) for i, P in goodP]
             Plist = [P for i,P in goodP]
             nap = len(Plist)
             neigs0 = min(nap,100)
-            effort=effort0
+            effort = effort0
             if verbose:
                 print("Using %s ap from Hilbert newform and effort %s" % (neigs0,effort))
                 if bad_p:
@@ -654,10 +654,10 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
             aplist0 = [aplist[i] for i in inds]
             curves = EllipticCurveSearch(K.K(), Plist0, N, aplist0, effort)
             # rep = 0
-            allrep=0
-            while not curves and allrep<10:
+            allrep = 0
+            while not curves and allrep < 10:
                 allrep += 1
-                effort*=2
+                effort *= 2
                 # if rep<2:
                 #     rep += 1
                 # else:
@@ -680,7 +680,7 @@ def find_curves(field_label='2.2.5.1', min_norm=0, max_norm=None, label=None, ou
                 print("!!! No curves for %s found (using %s ap) !!!" % (nf_label,len(aplist)))
                 print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-        if E!=None:
+        if E != None:
             ec = {}
             ec['field_label'] = field_label
             ec['conductor_label'] = form['level_label']
@@ -749,7 +749,7 @@ def EllipticCurveSearch(K, Plist, N, aplist, effort=1000):
     except RuntimeError, arg:
         print("RuntimError in Magma: {}".format(arg))
         return []
-    if ncurves==0:
+    if ncurves == 0:
         return []
     Elist = [0 for i in range(ncurves)]
     for i in range(ncurves):
@@ -867,7 +867,7 @@ def add_numeric_iso_labels(min_conductor_norm=0, max_conductor_norm=None, fix=Fa
           % (curves_to_fix.count(),min_conductor_norm,max_conductor_norm))
     for c in curves_to_fix:
         count = count+1
-        if count%100==0: print("%s: %s" % (count, c['label']))
+        if count%100 == 0: print("%s: %s" % (count, c['label']))
         fix_data = {}
         lab = c['iso_label']
         if 'CM' in lab:
