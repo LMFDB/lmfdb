@@ -32,7 +32,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
@@ -56,18 +56,18 @@ def local_algebra_data(labels):
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
         ans += group_display_knowl(f['gal'][0],f['gal'][1])
-        ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+        ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
-        ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
+        ans += '<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
 def local_field_data(label):
     f = db.lf_fields.lookup(label)
     nicename = ''
     if f['n'] < 3:
-        nicename = ' = '+ prettyname(f)
-    ans = 'Local number field %s%s<br><br>'% (label, nicename)
+        nicename = ' = ' + prettyname(f)
+    ans = 'Local number field %s%s<br><br>' % (label, nicename)
     ans += 'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gt = f['gal']
     gn = f['n']
@@ -208,7 +208,7 @@ def render_field_webpage(args):
             unramdata = db.lf_fields.lookup(unramlabel)
 
         Px = PolynomialRing(QQ, 'x')
-        Pxt=PolynomialRing(Px,'t')
+        Pxt = PolynomialRing(Px,'t')
         Pt = PolynomialRing(QQ, 't')
         Ptx = PolynomialRing(Pt, 'x')
         if data['f'] == 1:
@@ -285,9 +285,9 @@ def show_slope_content(sl,t,u):
     sc = str(sl)
     if sc == '[]':
         sc = r'[\ ]'
-    if t>1:
+    if t > 1:
         sc += '_{%d}'%t
-    if u>1:
+    if u > 1:
         sc += '^{%d}'%u
     return(sc)
 
