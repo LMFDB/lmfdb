@@ -391,7 +391,7 @@ class WebNewform(object):
         if format in angles_formats:
             cc_proj.append(angles_projection)
 
-        cc_data= list(db.mf_hecke_cc.search(query, projection = cc_proj))
+        cc_data = list(db.mf_hecke_cc.search(query, projection = cc_proj))
         if not cc_data:
             self.has_complex_qexp = False
         else:
@@ -1139,7 +1139,7 @@ function switch_basis(btype) {
         s = display_float(2*theta, prec, method='round')
         if s == "1":
             s =  r'\pi'
-        elif s== "-1":
+        elif s == "-1":
             s =  r'-\pi'
         elif s != "0":
             s += r'\pi'
