@@ -190,7 +190,6 @@ def bmf_field_dim_table(**args):
         query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
     data = list(db.bmf_dims.search(query, limit=count, offset=start, info=info))
-    print info
     nres = info['number']
     if not info['exact_count']:
         info['number'] = nres = db.bmf_dims.count(query)
