@@ -27,7 +27,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def list2string(li):
     return ','.join([str(x) for x in li])
@@ -48,16 +48,16 @@ def dogapthing(m1):
     else:
         # Fix multiple backslashes
         m1[2] = re.sub(r'\\+', r'\\', m1[2])
-        m1[2] = '$%s$'% m1[2]
+        m1[2] = '$%s$' % m1[2]
     return m1
 
 def getgroup(m1,ell):
     pind = {2: 0,3:1,5:2,7:3,11:4,13:5}
-    if len(m1[3][2])==0:
+    if len(m1[3][2]) == 0:
         return [m1[2], m1[0]]
     myA = list2string(m1[3][0])
     myB = list2string(m1[3][1])
-    if len(myA)==0 and len(myB)==0:
+    if len(myA) == 0 and len(myB) == 0:
         return [small_group_display_knowl(1,1), 1]
     mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
     if mono is None:
@@ -75,7 +75,7 @@ def normalize_family(label):
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
     aas = '.'.join([str(u) for u in a])
     bs = '.'.join([str(u) for u in b])
-    if 1 in b or b[0]>a[0]:
+    if 1 in b or b[0] > a[0]:
         return 'A%s_B%s'%(aas, bs)
     return 'A%s_B%s'%(bs, aas)
 
@@ -85,7 +85,7 @@ def normalize_motive(label):
     b = sorted([int(u) for u in m.group(3).split('.')], reverse=True)
     aas = '.'.join([str(u) for u in a])
     bs = '.'.join([str(u) for u in b])
-    if 1 in b or b[0]>a[0]:
+    if 1 in b or b[0] > a[0]:
         return 'A%s_B%s_t%s%s.%s'%(aas, bs,m.group(5),m.group(6),m.group(7))
     return 'A%s_B%s_t%s%s.%s'%(bs, aas, m.group(5), m.group(7), m.group(6))
 
@@ -94,7 +94,7 @@ def ab_label(A,B):
     return "A%s_B%s"%('.'.join(str(c) for c in A),'.'.join(str(c) for c in B))
 
 def list2Cnstring(li):
-    l2 = [a for a in li if a>1]
+    l2 = [a for a in li if a > 1]
     if l2 == []:
         return 'C_1'
     fa = [ZZ(a).factor() for a in l2]
@@ -103,22 +103,22 @@ def list2Cnstring(li):
         for pp in b:
             eds.append([pp[0],pp[1]])
     eds.sort()
-    l2 = ['C_{%d}'% (a[0]**a[1]) for a in eds]
+    l2 = ['C_{%d}' % (a[0]**a[1]) for a in eds]
     return (r'\times ').join(l2)
 
 def showlist(li):
-    if len(li)==0:
+    if len(li) == 0:
         return r'[\ ]'
     return li
 
 def splitint(a,p):
-    if a==1:
+    if a == 1:
         return ' '
     j = valuation(a,p)
-    if j==0:
+    if j == 0:
         return str(a)
     a = a/p**j
-    if a==1:
+    if a == 1:
         return latex(ZZ(p**j).factor())
     return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
 
@@ -151,10 +151,10 @@ def factor_out_p(val, p):
     val = ZZ(val)
     if val == 0 or val == -1:
         return str(val)
-    if val==1:
+    if val == 1:
         return '+1'
     s = 1
-    if val<0:
+    if val < 0:
         s = -1
         val = -val
     ord = val.valuation(p)
@@ -164,12 +164,12 @@ def factor_out_p(val, p):
         out += '-'
     else:
         out += '+'
-    if ord==1:
+    if ord == 1:
         out +=  str(p)
-    elif ord>1:
+    elif ord > 1:
         out +=  '%d^{%d}' % (p, ord)
-    if val>1:
-        if ord ==1:
+    if val > 1:
+        if ord == 1:
             out += r'\cdot '
         out += str(val)
     return out
@@ -179,24 +179,24 @@ def poly_with_factored_coeffs(c, p):
     c = [factor_out_p(b,p) for b in c]
     out = ''
     for j in range(len(c)):
-        xpow = 'x^{'+ str(j) +'}'
+        xpow = 'x^{' + str(j) + '}'
         if j == 0:
             xpow = ''
-        elif j==1:
+        elif j == 1:
             xpow = 'x'
         if c[j] != '0':
             if c[j] == '+1':
-                if j==0:
+                if j == 0:
                     out += '+1'
                 else:
                     out += '+'+xpow
             elif c[j] == '-1':
-                if j==0:
+                if j == 0:
                     out += '-1'
                 else:
-                    out += '-'+ xpow
+                    out += '-' + xpow
             else:
-                if j==0:
+                if j == 0:
                     out += c[j]
                 else:
                     out += c[j] + xpow
@@ -326,7 +326,7 @@ def render_hgm_webpage(label):
         d1 = re.sub(r'\s','', d1)
         d1 = re.sub(r'(.)\(', r'\1*(', d1)
         R = PolynomialRing(ZZ, 't')
-        if det[1]=='':
+        if det[1] == '':
             d2 = R(1)
         else:
             d2 = R(d1)
@@ -397,9 +397,9 @@ def render_hgm_family_webpage(label):
     mydet = r'\Q(%s)\otimes\Q(\sqrt{'%str(detexp)
     if int(data['det'][0]) != 1:
         mydet += str(data['det'][0])
-    if len(data['det'][1])>0:
+    if len(data['det'][1]) > 0:
         mydet += data['det'][1]
-    if int(data['det'][0]) == 1 and len(data['det'][1])==0:
+    if int(data['det'][0]) == 1 and len(data['det'][1]) == 0:
         mydet += '1'
     mydet += '})'
     bezoutmat = matrix(data['bezout'])
