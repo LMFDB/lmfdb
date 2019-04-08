@@ -132,7 +132,7 @@ def field_pretty(label):
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
-        if len(subs)==3: # only for V_4 fields
+        if len(subs) == 3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
             if [z for z in subs if z._data is None] == []:
@@ -143,14 +143,14 @@ def field_pretty(label):
                 labels.sort()
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else '\sqrt{%d}'% z for z in labels]
+                labels = ['i' if z == -1 else '\sqrt{%d}' % z for z in labels]
                 return '\(\Q(%s, %s)\)'%(labels[0],labels[1])
     if label in rcycloinfo:
         return '\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
-    tot=0
+    tot = 0
     for j in range(len(li)):
         tot += li[j]*val**j
     return tot
@@ -175,7 +175,7 @@ def modules2string(n, t, modlist):
     ans = modlist[0][0]
     modlist[0][1] -= 1
     for j in range(len(modlist)):
-        while modlist[j][1]>0:
+        while modlist[j][1] > 0:
             ans += r' $\oplus$ '+modlist[j][0]
             modlist[j][1] -= 1
     return ans
@@ -348,10 +348,10 @@ class WebNumberField:
         return self._data['degree']
 
     def is_real_quadratic(self):
-        return self.signature()==[2,0]
+        return self.signature() == [2,0]
 
     def is_imag_quadratic(self):
-        return self.signature()==[0,1]
+        return self.signature() == [0,1]
 
     def poly(self):
         return coeff_to_poly(self._data['coeffs'])
@@ -401,7 +401,7 @@ class WebNumberField:
             galord = int(self.gg().order())
             repcounts = Counter(repdegs)
             gc = 0
-            if galord<24:
+            if galord < 24:
                 del repcounts[galord]
                 if self.degree() < galord:
                     gc = 1 
@@ -426,7 +426,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts.keys())]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0] == d] ] for d in sorted(cnts.keys())]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -447,7 +447,7 @@ class WebNumberField:
         resall = self.resolvents()
         cnt = self.galois_sib_data()[2]
         if 'gal' in resall:
-            knowls= [formatfield(a) for a in resall['gal']]
+            knowls = [formatfield(a) for a in resall['gal']]
             gal = [self.from_coeffs(str(a)) for a in resall['gal']]
             labs = [a.label for a in gal if a._data is not None]
             return [cnt, knowls, labs]
@@ -476,7 +476,7 @@ class WebNumberField:
 
     def unit_galois_action(self):
         if not self.haskey('unitsGmodule'):
-            if self.signature()==[0,2] and self.galois_t() ==2:
+            if self.signature() == [0,2] and self.galois_t() == 2:
                 return [[1,1]]
             # We don't have C_4 classification yet
             #if self.signature()==[2,0] or self.signature()==[0,2]:
@@ -523,7 +523,7 @@ class WebNumberField:
 
     def generator_name(self):
         #Add special case code for the generator if desired:
-        if self.gen_name=='phi':
+        if self.gen_name == 'phi':
             return '\phi'
         else:
             return web_latex(self.gen_name)
@@ -738,7 +738,7 @@ class WebNumberField:
 
         for P in K.primes_of_bounded_norm_iter(ZZ(prime_bound)):
             a = P.norm() % f
-            if gcd(a,f)>1:
+            if gcd(a,f) > 1:
                 continue
             S = S.intersection(Set(G[a].kernel()))
             if len(S) == self.degree():
