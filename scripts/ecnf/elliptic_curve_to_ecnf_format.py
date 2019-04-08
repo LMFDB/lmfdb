@@ -11,21 +11,21 @@ def EllipticCurve_from_hoeij_data(line):
     that is actually corresponding to an elliptic curve, this function returns the elliptic
     curve corresponding to this
     """
-    Rx=PolynomialRing(QQ,'x')
+    Rx = PolynomialRing(QQ,'x')
     x = Rx.gen(0)
     Rxy = PolynomialRing(Rx,'y')
     y = Rxy.gen(0)
     
-    N=ZZ(line.split(",")[0].split()[-1])
-    x_rel=Rx(line.split(',')[-2][2:-4])
-    assert x_rel.leading_coefficient()==1
-    y_rel=line.split(',')[-1][1:-5]
+    N = ZZ(line.split(",")[0].split()[-1])
+    x_rel = Rx(line.split(',')[-2][2:-4])
+    assert x_rel.leading_coefficient() == 1
+    y_rel = line.split(',')[-1][1:-5]
     K = QQ.extension(x_rel,'x')
     x = K.gen(0)
 
-    y_rel=Rxy(y_rel).change_ring(K)
-    y_rel=y_rel/y_rel.leading_coefficient()
-    if y_rel.degree()==1:
+    y_rel = Rxy(y_rel).change_ring(K)
+    y_rel = y_rel/y_rel.leading_coefficient()
+    if y_rel.degree() == 1:
         y = - y_rel[0]
     else:
         #print "needing an extension!!!!"
@@ -39,7 +39,7 @@ def EllipticCurve_from_hoeij_data(line):
     s = (x*y-y+1)/x/y
     b = r*s*(r-1)
     c = s*(r-1)
-    E=EllipticCurve([1-c,-b,-b,0,0])
+    E = EllipticCurve([1-c,-b,-b,0,0])
     return N,E,K
 
 
