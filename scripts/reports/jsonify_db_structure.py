@@ -12,7 +12,7 @@ __version__ = '1.0.0'
 
 def _is_good_database(name):
     """ Function to test if a database is one to scan """
-    bad=['inv']
+    bad = ['inv']
     if name in bad:
       return False
     return True
@@ -71,15 +71,15 @@ def _jsonify_table_info(table, dbname = None):
     results = _get_db_records(table)
 
     json_db_data = {}
-    json_db_data['dbinfo'] ={}
+    json_db_data['dbinfo'] = {}
     json_db_data['dbinfo']['name'] = dbname
     json_db_data['records'] = {}
     json_db_data['fields'] = {}
 
-    lst=set()
+    lst = set()
     for doc in results:
         lst = lst | set(doc['_id'])
-    lst=list(lst)
+    lst = list(lst)
     lst.sort()
 
     for doc in lst:
