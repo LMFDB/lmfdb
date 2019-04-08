@@ -7,7 +7,7 @@ from sage.all import PolynomialRing, Rationals
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
