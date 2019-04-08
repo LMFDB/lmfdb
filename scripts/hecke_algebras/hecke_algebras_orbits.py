@@ -17,7 +17,7 @@ import gzip
 
 from lmfdb.base import getDBConnection
 
-C= getDBConnection()
+C = getDBConnection()
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), "passwords.yaml")))
 username = pw_dict['data']['username']
@@ -37,7 +37,7 @@ def makels(li):
 
 def string2list(s):
   s = str(s)
-  if s=='': return []
+  if s == '': return []
   return [int(a) for a in s.split(',')]
 
 
@@ -55,7 +55,7 @@ print "finished indices"
 ## Main importing function
 
 def do_import(ll):
-    level,weight,orbit,hecke_op,num_hecke_op,gen,num_gen,rel,parent_label,orbit_label= ll
+    level,weight,orbit,hecke_op,num_hecke_op,gen,num_gen,rel,parent_label,orbit_label = ll
     mykeys = ['level','weight','orbit', 'hecke_op','num_hecke_op','gen','num_gen','rel','parent_label','orbit_label']
     data = {}
     for j in range(len(mykeys)):
