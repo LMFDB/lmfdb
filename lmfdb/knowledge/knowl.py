@@ -669,7 +669,7 @@ class Knowl(object):
             if self.exists(allow_deleted=allow_deleted):
                 if editing:
                     # as we want to make edits on the most recent version
-                    timestamp=None
+                    timestamp = None
                 data = knowldb.get_knowl(ID,
                         allow_deleted=allow_deleted, timestamp=timestamp)
             else:
