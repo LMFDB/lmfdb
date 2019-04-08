@@ -56,14 +56,14 @@ class ECisog_class(object):
         # Extract the size of the isogeny class from the database
         self.ncurves = ncurves = self.class_size
         # Create a list of the curves in the class from the database
-        number_key = 'number' if self.label_type=='Cremona' else 'lmfdb_number'
+        number_key = 'number' if self.label_type == 'Cremona' else 'lmfdb_number'
         self.curves = [db.ec_curves.lucky({'iso':self.iso, number_key: i+1})
                           for i in range(ncurves)]
 
         # Set optimality flags.  The optimal curve is number 1 except
         # in one case which is labeled differently in the Cremona tables
         for c in self.curves:
-            c['optimal'] = (c['number']==(3 if self.iso == '990h' else 1))
+            c['optimal'] = (c['number'] == (3 if self.iso == '990h' else 1))
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_triple_label", conductor=N, iso_label=iso, number=c['lmfdb_number'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['label'])
@@ -78,7 +78,7 @@ class ECisog_class(object):
         from sage.matrix.all import Matrix
         if self.label_type == 'Cremona':
             # permute rows/cols
-            perm = lambda i: (c for c in self.curves if c['number']==i+1).next()['lmfdb_number']-1
+            perm = lambda i: (c for c in self.curves if c['number'] == i+1).next()['lmfdb_number']-1
             self.isogeny_matrix = [[self.isogeny_matrix[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         self.isogeny_matrix = Matrix(self.isogeny_matrix)
@@ -105,9 +105,9 @@ class ECisog_class(object):
         self.friends =  [('L-function', self.lfunction_link)]
         if not self.CM:
             self.CM = "no"
-            if int(N)<=300:
+            if int(N) <= 300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
-            if int(N)<=50:
+            if int(N) <= 50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = N, isogeny = iso))]
         if self.newform_exists_in_db:
             self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
@@ -119,13 +119,13 @@ class ECisog_class(object):
             self.title = "Elliptic Curve Isogeny Class with LMFDB label {} (Cremona label {})".format(self.lmfdb_iso, self.iso)
             self.iso_label = self.lmfdb_iso
 
-        self.properties = [('Label', self.iso if self.label_type=='Cremona' else self.lmfdb_iso),
+        self.properties = [('Label', self.iso if self.label_type == 'Cremona' else self.lmfdb_iso),
                            ('Number of curves', str(ncurves)),
                            ('Conductor', '%s' % N),
                            ('CM', '%s' % self.CM),
                            ('Rank', '%s' % self.rank)
                            ]
-        if self.ncurves>1:
+        if self.ncurves > 1:
             self.properties += [('Graph', ''),(None, self.graph_link)]
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
