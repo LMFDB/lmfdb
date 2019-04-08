@@ -518,7 +518,7 @@ def learnmore_list(path, remove=None):
         ('Source of the data', url_for('.source', prepath=prepath)),
         ('Reliability of the data', url_for('.reliability', prepath=prepath))]
     if remove:
-        return filter(lambda t:t[0].find(remove) <0, learnmore)
+        return filter(lambda t:t[0].find(remove) < 0, learnmore)
     return learnmore
 
 def initLfunction(L, args, request):
@@ -533,7 +533,7 @@ def initLfunction(L, args, request):
     info['learnmore'] = learnmore_list(request.path)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
-    info['navi']= set_navi(L)
+    info['navi'] = set_navi(L)
 
     return info
 
@@ -1255,7 +1255,7 @@ def reliability(prepath):
     t = 'Reliability of L-function Data'
     args = tuple(prepath.split('/'))
     L = generateLfunctionFromUrl(*args)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
         Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
@@ -1284,7 +1284,7 @@ def source(prepath):
     t = 'Source of L-function Data'
     args = tuple(prepath.split('/'))
     L = generateLfunctionFromUrl(*args)
-    info={'bread': ()}
+    info = {'bread': ()}
     set_bread_and_friends(info, L, request)
     if L.fromDB:
         Ldb = db.lfunc_lfunctions.lucky({'Lhash': L.Lhash}, projection=['load_key'])
