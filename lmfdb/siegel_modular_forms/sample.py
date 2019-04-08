@@ -135,7 +135,7 @@ def export(collection, name):
     doc['eigenvalues'] = dict(((ev['index'], ev['data']) for ev in evs))
 
     label = doc['collection'][0] + '.' + doc['name']
-    doc['label']= label
+    doc['label'] = label
 
     import json
     return json.dumps(doc, sort_keys=True, indent=4)
