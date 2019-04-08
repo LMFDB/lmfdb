@@ -24,7 +24,7 @@ from sage.all import polygen, QQ, ZZ, NumberField
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 import os
@@ -69,9 +69,9 @@ def convert_ideal_label(K, lab):
 
     comps = lab.split(".")
     # test for labels which do not need any conversion
-    if len(comps)==2:
+    if len(comps) == 2:
         return lab
-    assert len(comps)==3
+    assert len(comps) == 3
     N, c, d = [int(x) for x in comps]
     a = N//d
     I = K.ideal(a, c+d*K.gen())
@@ -157,7 +157,7 @@ def dimtabeis(line, gl_or_sl = "gl"):
     11 	2 	[81,6,3] 	9 	2 	0 	7
 
     """
-    if line[0] =="#":  return '', {}
+    if line[0] == "#":  return '', {}
     data = split(line)
     # Skip header lines
     if data[0] in ["Table","Field"]:  return '', {}
@@ -201,7 +201,7 @@ def SL2dimtab(line):
 
     """
     #print line
-    if line[0] =="#":
+    if line[0] == "#":
         return '', {}
     data = split(line)
 
@@ -246,12 +246,12 @@ def upload_to_db(base_path, filename, insert=True):
 
         count = 0
         for line in h.readlines():
-            if line[0]=='#':
+            if line[0] == '#':
                 continue
             label, data = parse(line)
-            if label=='':
+            if label == '':
                 continue
-            if count%5000==0:
+            if count%5000 == 0:
                 print "read %s" % label
             count += 1
             if label not in data_to_insert:
