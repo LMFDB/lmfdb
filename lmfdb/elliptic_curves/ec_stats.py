@@ -106,7 +106,7 @@ class ECstats(object):
                 gp = "\(C_{2}\\times C_{%s}\)"%(t//2)
                 prop = format_percentage(nncyc,ncurves)
                 tor_counts2.append({'t': t, 'gp': gp, 'ncurves': nncyc, 'prop': prop})
-            elif t==16: # all C_2 x C_8
+            elif t == 16: # all C_2 x C_8
                 gp = "\(C_{2}\\times C_{8}\)"
                 prop = format_percentage(ncu,ncurves)
                 tor_counts2.append({'t': t, 'gp': gp, 'ncurves': ncu, 'prop': prop})
