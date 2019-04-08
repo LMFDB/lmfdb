@@ -95,7 +95,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def hilbert_modular_form_jump(info):
     lab = info['label'].strip()
@@ -361,7 +361,7 @@ def render_hmf_webpage(**args):
     info['hecke_polynomial'] = web_latex_split_on_pm(teXify_pol(hecke_pol))
 
     if not AL_eigs: # empty list
-        if data['level_norm']==1: # OK, no bad primes
+        if data['level_norm'] == 1: # OK, no bad primes
             info['AL_eigs'] = 'none'
         else:                     # not OK, AL eigs are missing
             info['AL_eigs'] = 'missing'
@@ -371,7 +371,7 @@ def render_hmf_webpage(**args):
                             'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
-    display_eigs = display_eigs or (max_eig_len<=300)
+    display_eigs = display_eigs or (max_eig_len <= 300)
     info['display_eigs'] = display_eigs
     if not display_eigs:
         for eig in info['eigs']:
@@ -458,7 +458,7 @@ def statistics_by_degree(d):
     counts = get_counts()
     info = {}
     if not str(d) in counts['degrees']:
-        if d==1:
+        if d == 1:
             info['error'] = "For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
@@ -470,15 +470,15 @@ def statistics_by_degree(d):
         info['stats'] = get_stats(d)
 
     credit = 'John Cremona'
-    if d==2:
+    if d == 2:
         t = 'Hilbert Modular Forms over Real Quadratic Number Fields'
-    elif d==3:
+    elif d == 3:
         t = 'Hilbert Modular Forms over Totally Real Cubic Number Fields'
-    elif d==4:
+    elif d == 4:
         t = 'Hilbert Modular Forms over Totally Real Quartic Number Fields'
-    elif d==5:
+    elif d == 5:
         t = 'Hilbert Modular Forms over Totally Real Quintic Number Fields'
-    elif d==6:
+    elif d == 6:
         t = 'Hilbert Modular Forms over Totally Real Sextic Number Fields'
     else:
         t = 'Hilbert Modular Forms over Totally Real Fields of Degree %s' % d
@@ -486,7 +486,7 @@ def statistics_by_degree(d):
     bread = [('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
               ('Degree %s' % d,' ')]
 
-    if d=='bad':
+    if d == 'bad':
         t = 'Hilbert Modular Forms'
         bread = bread[:-1]
 
