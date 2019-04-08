@@ -13,7 +13,7 @@ from lmfdb.characters.web_character import WebSmallDirichletCharacter
 # for values (value a means e(a/n))
 def id_dirichlet(fun, N, n):
     N = Integer(N)
-    if N==1:
+    if N == 1:
         return (1,1)
     p2 = valuation(N, 2)
     N2 = 2**p2
@@ -28,11 +28,11 @@ def id_dirichlet(fun, N, n):
     idems = [1 for z in Nfact]
     proots = [primitive_root(z) for z in ppows]
     # Get CRT idempotents
-    if p2>0:
+    if p2 > 0:
         ppows2.append(N2)
     for j in range(len(plist)):
         exps = [1 for z in idems]
-        if p2>0:
+        if p2 > 0:
             exps.append(1)
         exps[j] = proots[j]
         idems[j] = crt(exps, ppows2)
@@ -42,19 +42,19 @@ def id_dirichlet(fun, N, n):
     ans = [Integer(mod(proots[j], ppows[j])**idemvals[j]) for j in range(len(proots))]
     ans = crt(ans, ppows)
     # There are cases depending on 2-part of N
-    if p2==0:
+    if p2 == 0:
         return (N, ans)
-    if p2==1:
+    if p2 == 1:
         return (N, crt([1, ans], [2, Nodd]))
-    if p2==2:
-        my3=crt([3, 1], [N2, Nodd])
+    if p2 == 2:
+        my3 = crt([3, 1], [N2, Nodd])
         if fun(my3,n) == 0:
             return (N, crt([1, ans], [4, Nodd]))
         else:
             return (N, crt([3, ans], [4, Nodd]))
     # Final case 2^3 | N
 
-    my5=crt([5, 1], [N2, Nodd])
+    my5 = crt([5, 1], [N2, Nodd])
     test1 = fun(my5,n) * N2/4/n
     test1 = Integer(mod(5,N2)**test1)
     minusone = crt([-1,1], [N2, Nodd])
@@ -81,7 +81,7 @@ class ArtinRepresentation(object):
         if len(x) == 0:
             # Just passing named arguments
             self._data = data_dict["data"]
-            label=self._data['label']
+            label = self._data['label']
         else:
             if len(x) == 1: # Assume we got a label
                 label = x[0]
@@ -208,7 +208,7 @@ class ArtinRepresentation(object):
 
     def smallest_gal_t_format(self):
         galnt = self.smallest_gal_t()
-        if len(galnt)==1:
+        if len(galnt) == 1:
             return galnt[0]
         return tryknowl(galnt[0],galnt[1])
 
@@ -225,7 +225,7 @@ class ArtinRepresentation(object):
         # throughout
         charf = 2*self.character_field()
         localfactors = self.local_factors_table()
-        bad = [0 if dim+1>len(z) else 1 for z in localfactors]
+        bad = [0 if dim+1 > len(z) else 1 for z in localfactors]
         localfactors = [self.from_conjugacy_class_index_to_polynomial(j+1) for j in range(len(localfactors))]
         localfactors = [z.leading_coefficient()*dfactor for z in localfactors]
         # Now take logs to figure out what power these are
@@ -233,7 +233,7 @@ class ArtinRepresentation(object):
         localfactors = [charf*log(z)/(2*I*mypi) for z in localfactors]
         localfactorsa = [z.real().round() % charf for z in localfactors]
         # Test to see if we are ok?
-        localfactorsa = [localfactorsa[j] if bad[j]>0 else -1 for j in range(len(localfactorsa))]
+        localfactorsa = [localfactorsa[j] if bad[j] > 0 else -1 for j in range(len(localfactorsa))]
         def myfunc(inp, n):
             fn = list(factor(inp))
             pvals = [[localfactorsa[self.any_prime_to_cc_index(z[0])-1], z[1]] for z in fn]
@@ -260,7 +260,7 @@ class ArtinRepresentation(object):
         # Get its artin reps
         arts = nfgg.ArtinReps()
         # Filter for 1-dim
-        arts = [a for a in arts if ArtinRepresentation(str(a['Baselabel'])+"c1").dimension()==1]
+        arts = [a for a in arts if ArtinRepresentation(str(a['Baselabel'])+"c1").dimension() == 1]
         artfull = [ArtinRepresentation(str(a['Baselabel'])+"c"+str(a['GalConj'])) for a in arts]
         # hold = artfull
         # Loop as we evaluate at primes until there is only one left
@@ -269,10 +269,10 @@ class ArtinRepresentation(object):
         n = 2*self.character_field()
         p = 2
         disc = nfgg.discriminant()
-        while len(artfull)>1:
+        while len(artfull) > 1:
             if (disc % p) != 0:
-              k=0
-              while k<len(artfull):
+              k = 0
+              while k < len(artfull):
                   if n*artfull[k][1](p,artfull[k][2]) == artfull[k][2]*myfunc(p,n):
                       k += 1
                   else:
@@ -303,7 +303,7 @@ class ArtinRepresentation(object):
         return wc
 
     def det_display(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
             return 'Not available'
         if cc.order == 2:
@@ -314,7 +314,7 @@ class ArtinRepresentation(object):
         return self.central_character_as_artin_rep().label()
 
     def det_url(self):
-        cc= self.central_character()
+        cc = self.central_character()
         if cc is None:
            return 'Not available'
         return url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)
@@ -523,7 +523,7 @@ class ArtinRepresentation(object):
 
     def nf(self):
         if not 'nf' in self._data:
-            self._data['nf']= self.number_field_galois_group()
+            self._data['nf'] = self.number_field_galois_group()
         return self._data['nf']
 
     def hard_factor(self, p):
