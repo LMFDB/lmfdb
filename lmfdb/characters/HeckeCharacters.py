@@ -61,7 +61,7 @@ class RayClassGroup(AbelianGroup_class):
 
     def __str__(self):
       return "Ray class group of modulus %s over %s" \
-           %(self.modulus(),self.__number_field)
+           % (self.modulus(),self.__number_field)
 
     def __repr__(self):
       return self.__str__()
