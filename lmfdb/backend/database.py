@@ -1554,7 +1554,7 @@ class PostgresTable(PostgresBase):
         tbl = self._get_table_clause(extra_cols)
         selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
         cur = self._execute(selecter, values, silent=silent,
-                            buffered=limit is None,
+                            buffered=(limit is None),
                             slow_note=(
                                 self.search_table, "analyze", query,
                                 repr(projection), limit, offset))
