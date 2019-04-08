@@ -41,7 +41,7 @@ class SearchParser(object):
         self.default_qfield = default_qfield
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
-            if field is None: field=self.default_field
+            if field is None: field = self.default_field
             inp = info.get(field)
             if not inp: return
             if name is None:
@@ -135,7 +135,7 @@ def parse_list(inp, query, qfield, process=None):
     Flashes an error and returns true if there are problems parsing.
     """
     cleaned = re.sub(r'[\[\]]','',inp)
-    out= [int(a) for a in cleaned.split(',')]
+    out = [int(a) for a in cleaned.split(',')]
     if process is not None:
         query[qfield] = process(out)
     else:
@@ -564,7 +564,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F[0] == 'Q':
         if '(' in F and ')' in F:
-            F=F.replace('(','').replace(')','')
+            F = F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
             try:
                 d = ZZ(str(F[5:])).squarefree_part()
