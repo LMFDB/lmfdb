@@ -356,7 +356,7 @@ class PostgresBase(object):
             raise TypeError("You must use the psycopg2.sql module to execute queries")
 
         try:
-            cur = self.cursor(buffered=buffered)
+            cur = self._db.cursor(buffered=buffered)
 
             t = time.time()
             if values_list:
@@ -471,7 +471,7 @@ class PostgresBase(object):
         with open(filename, "w") as F:
             try:
                 F.write(header)
-                cur = self.cursor()
+                cur = self._db.cursor()
                 cur.copy_expert(copyto, F)
             except Exception:
                 self.conn.rollback()
@@ -582,7 +582,7 @@ class PostgresBase(object):
                     alter_table = SQL("ALTER TABLE {0} ALTER COLUMN {1} SET DEFAULT nextval(%s)").format(Identifier(table), Identifier('id'))
                     self._execute(alter_table, [seq_name])
 
-                cur = self.cursor()
+                cur = self._db.cursor()
                 cur.copy_from(F, table, columns=columns, **kwds)
 
                 if addid:
@@ -734,7 +734,7 @@ class PostgresBase(object):
     def _copy_from_meta(self, meta_name, filename):
         meta_cols, _, _ = _meta_cols_types_jsonb_idx(meta_name)
         try:
-            cur = self.cursor()
+            cur = self._db.cursor()
             cur.copy_from(filename, meta_name, columns=meta_cols)
         except Exception:
             self.conn.rollback()
@@ -785,7 +785,7 @@ class PostgresBase(object):
             # insert new columns
             with open(filename, "r") as F:
                 try:
-                    cur = self.cursor()
+                    cur = self._db.cursor()
                     cur.copy_from(F, meta_name, columns=meta_cols)
                 except Exception:
                     self.conn.rollback()
@@ -1846,7 +1846,7 @@ class PostgresTable(PostgresBase):
             analyzer = SQL("EXPLAIN {0}").format(selecter)
         else:
             analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
-        cur = self.cursor()
+        cur = self._db.cursor()
         print cur.mogrify(selecter, values)
         cur = self._execute(analyzer, values, silent=True)
         for line in cur:
@@ -3102,7 +3102,7 @@ class PostgresTable(PostgresBase):
                 if addid:
                     cols = ["id"] + cols
                 cols_wquotes = ['"' + col + '"' for col in cols]
-                cur = self.cursor()
+                cur = self._db.cursor()
                 with open(filename, "w") as F:
                     try:
                         if write_header:
@@ -3263,7 +3263,7 @@ class PostgresTable(PostgresBase):
                 try:
                     try:
                         transfer_file = tempfile.NamedTemporaryFile('w', delete=False)
-                        cur = self.cursor()
+                        cur = self._db.cursor()
                         with transfer_file:
                             cur.copy_to(transfer_file, self.search_table, columns=['id'] + columns)
                         with open(transfer_file.name) as F:
@@ -4842,7 +4842,7 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             creator = SQL('CREATE TABLE {0} (_id text COLLATE "C", data jsonb)').format(Identifier(name))
             self._execute(creator)
             self._db.grant_select(name)
-            cur = self.cursor()
+            cur = self._db.cursor()
             with open(filename) as F:
                 try:
                     cur.copy_from(F, self.search_table + "_oldstats")
