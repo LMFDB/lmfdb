@@ -195,7 +195,7 @@ class WebEC(object):
         data['minq_D'] = minqD = self.min_quad_twist['disc']
         minq_label = self.min_quad_twist['label']
         data['minq_label'] = db.ec_curves.lucky({'label':minq_label}, 'lmfdb_label')
-        data['minq_info'] = '(itself)' if minqD==1 else '(by %s)' % minqD
+        data['minq_info'] = '(itself)' if minqD == 1 else '(by %s)' % minqD
         if self.degree is None:
             data['degree'] = 0 # invalid, but will be displayed nicely
         else:
@@ -211,7 +211,7 @@ class WebEC(object):
         minq_N, minq_iso, minq_number = split_lmfdb_label(data['minq_label'])
 
         data['disc_factor'] = latex(Dfac)
-        data['cond_factor'] =latex(Nfac)
+        data['cond_factor'] = latex(Nfac)
         data['disc_latex'] = web_latex(D)
         data['cond_latex'] = web_latex(N)
 
@@ -227,14 +227,14 @@ class WebEC(object):
         if self.cm:
             data['cm_ramp'] = [p for p in ZZ(self.cm).support() if not p in self.non_maximal_primes]
             data['cm_nramp'] = len(data['cm_ramp'])
-            if data['cm_nramp']==1:
+            if data['cm_nramp'] == 1:
                 data['cm_ramp'] = data['cm_ramp'][0]
             else:
                 data['cm_ramp'] = ", ".join([str(p) for p in data['cm_ramp']])
             data['cm_sqf'] = ZZ(self.cm).squarefree_part()
 
             data['CM'] = "yes (\(D=%s\))" % data['CMD']
-            if data['CMD']%4==0:
+            if data['CMD']%4 == 0:
                 d4 = ZZ(data['CMD'])//4
                 data['EndE'] = "\(\Z[\sqrt{%s}]\)" % d4
             else:
@@ -244,13 +244,13 @@ class WebEC(object):
             data['ST'] = st_link_by_name(1,2,'SU(2)')
 
         data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
-                                 if (N*data['ap'][i]) %p !=0]
+                                 if (N*data['ap'][i]) % p != 0]
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.one_deg = ZZ(self.class_deg).is_prime()
         self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
-        if len(isodegs)<3:
+        isodegs = [str(d) for d in self.isogeny_degrees if d > 1]
+        if len(isodegs) < 3:
             data['isogeny_degrees'] = " and ".join(isodegs)
         else:
             data['isogeny_degrees'] = " and ".join([", ".join(isodegs[:-1]),isodegs[-1]])
@@ -305,9 +305,9 @@ class WebEC(object):
             ('L-function', url_for("l_functions.l_function_ec_page", conductor_label = N, isogeny_class_label = iso))]
 
         if not self.cm:
-            if N<=300:
+            if N <= 300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = N, isogeny = iso))]
-            if N<=50:
+            if N <= 50:
                 self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = N, isogeny = iso))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
@@ -392,7 +392,7 @@ class WebEC(object):
 
         tamagawa_numbers = [ZZ(_ld['cp']) for _ld in self.local_data]
         cp_fac = [cp.factor() for cp in tamagawa_numbers]
-        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
+        cp_fac = [latex(cp) if len(cp) < 2 else '('+latex(cp)+')' for cp in cp_fac]
         bsd['tamagawa_factors'] = r'\cdot'.join(cp_fac)
         bsd['tamagawa_product'] = prod(tamagawa_numbers)
 
@@ -423,7 +423,7 @@ class WebEC(object):
             pdata = self.iwdata[p]
             if isinstance(pdata, type(u'?')):
                 if not rtype:
-                    rtype = "ordinary" if pdata=="o?" else "ss"
+                    rtype = "ordinary" if pdata == "o?" else "ss"
                 if rtype == "add":
                     iw['data'] += [[p,rtype,"-","-"]]
                     iw['additive_shown'] = True
@@ -431,7 +431,7 @@ class WebEC(object):
                     iw['data'] += [[p,rtype,"?","?"]]
                     iw['missing_flag'] = True
             else:
-                if len(pdata)==2:
+                if len(pdata) == 2:
                     if not rtype:
                         rtype = "ordinary"
                     lambdas = str(pdata[0])
@@ -461,7 +461,7 @@ class WebEC(object):
                 F = F.replace(":",".")
                 field_data = nf_display_knowl(F, field_pretty(F))
                 deg = int(F.split(".")[0])
-                bcc = [x for x,y in zip(bcs, bcfs) if y==F]
+                bcc = [x for x,y in zip(bcs, bcfs) if y == F]
                 if bcc:
                     from lmfdb.ecnf.main import split_full_label
                     F, NN, I, C = split_full_label(bcc[0])
@@ -481,8 +481,8 @@ class WebEC(object):
         lastd = 1
         for tg1 in tgextra:
             d = tg1['d']
-            if d!=lastd:
-                tg1['m'] = len([x for x in tgextra if x['d']==d])
+            if d != lastd:
+                tg1['m'] = len([x for x in tgextra if x['d'] == d])
                 lastd = d
 
         ## Hard-code this for now.  While something like
@@ -517,5 +517,5 @@ class WebEC(object):
                 for lang in self._code[k]:
                     self._code[k][lang] = self._code[k][lang].split("\n")
                     # remove final empty line
-                    if len(self._code[k][lang][-1])==0:
+                    if len(self._code[k][lang][-1]) == 0:
                         self._code[k][lang] = self._code[k][lang][:-1]
