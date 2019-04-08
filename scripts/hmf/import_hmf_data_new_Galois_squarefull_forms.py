@@ -8,7 +8,7 @@ from sage.all import ZZ, Rationals, PolynomialRing
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 C['admin'].authenticate('lmfdb', 'lmfdb') # read-only
 
 import yaml
@@ -45,11 +45,11 @@ def import_all_data(n, fileprefix=None, ferrors=None, test=True):
 
 
 def import_data(hmf_filename, fileprefix=None, ferrors=None, test=True):
-    if fileprefix==None:
-        fileprefix="."
+    if fileprefix == None:
+        fileprefix = "."
     hmff = file(os.path.join(fileprefix,hmf_filename))
 
-    if ferrors==None:
+    if ferrors == None:
         ferrors = file('/home/jvoight/lmfdb/backups/import_data.err', 'a')
 
     # Parse field data
