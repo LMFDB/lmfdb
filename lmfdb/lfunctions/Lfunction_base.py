@@ -184,7 +184,7 @@ class Lfunction(object):
             info['sv_edge_analytic'] = [svt_edge[0], svt_edge[2]]
             info['sv_edge_arithmetic'] = [svt_edge[1], svt_edge[2]]
 
-            chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) +", \cdot )$"
+            chilatex = "$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) + ", \cdot )$"
             info['chi'] = ''
             if self.charactermodulus != self.level:
                 info['chi'] += "induced by "
