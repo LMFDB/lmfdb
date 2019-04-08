@@ -124,7 +124,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 @ecnf_page.route("/Completeness")
 def completeness_page():
@@ -228,7 +228,7 @@ def index():
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in sextics)])
 
-    data['degrees'] = sorted([int(d) for d in fields_by_deg.keys() if d!='_id'])
+    data['degrees'] = sorted([int(d) for d in fields_by_deg.keys() if d != '_id'])
 
 # data['highlights'] holds data (URL and descriptive text) for a
 # sample of elliptic curves with interesting features:
@@ -485,7 +485,7 @@ def elliptic_curve_search(info, query):
             info['jinv'] = info['jinv'].replace('i','a')
     parse_nf_elt(info,query,'jinv',name='j-invariant')
     if query.get('jinv'):
-        query['jinv'] =','.join(query['jinv'])
+        query['jinv'] = ','.join(query['jinv'])
 
     if 'include_isogenous' in info and info['include_isogenous'] == 'off':
         info['number'] = 1
@@ -534,7 +534,7 @@ def browse():
 
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
     info = {}
 
@@ -557,15 +557,15 @@ def statistics_by_degree(d):
     info['summary'] = ECNF_stats().degree_summary(d)
     info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[d]]
     credit = 'John Cremona'
-    if d==2:
+    if d == 2:
         t = 'Elliptic Curves over Quadratic Number Fields'
-    elif d==3:
+    elif d == 3:
         t = 'Elliptic Curves over Cubic Number Fields'
-    elif d==4:
+    elif d == 4:
         t = 'Elliptic Curves over Quartic Number Fields'
-    elif d==5:
+    elif d == 5:
         t = 'Elliptic Curves over Quintic Number Fields'
-    elif d==6:
+    elif d == 6:
         t = 'Elliptic Curves over Sextic Number Fields'
     else:
         t = 'Elliptic Curves over Number Fields of Degree {}'.format(d)
@@ -576,7 +576,7 @@ def statistics_by_degree(d):
 
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
 def statistics_by_signature(d,r):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
 
     info = {}
@@ -625,7 +625,7 @@ def statistics_by_signature(d,r):
 
 def tor_struct_search_nf(prefill="any"):
     def fix(t):
-        return t + ' selected = "yes"' if prefill==t else t
+        return t + ' selected = "yes"' if prefill == t else t
     def cyc(n):
         return [fix("["+str(n)+"]"), "C{}".format(n)]
     def cyc2(m,n):
@@ -638,9 +638,9 @@ def tor_struct_search_nf(prefill="any"):
     # assert tors == [[2], [2, 2], [2, 4], [2, 6], [2, 8], [2, 10], [2, 12], [2, 14], [2, 16], [2, 18], [3], [3, 3], [3, 6], [4], [4, 4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [25], [27], [37]]
 
     for t in tors:
-        if len(t)==1:
+        if len(t) == 1:
             gps.append(cyc(t[0]))
-        elif len(t)==2:
+        elif len(t) == 2:
             gps.append(cyc2(*t))
 
     return "\n".join(["<select name='torsion_structure'>"] + ["<option value={}>{}</option>".format(a,b) for a,b in gps] + ["</select>"])
@@ -703,7 +703,7 @@ def ecnf_code(**args):
     lang = args['download_type']
     code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
     code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    if lang=='gp':
+    if lang == 'gp':
         lang = 'pari'
     for k in sorted_code_names:
         if lang in Ecode[k]:
