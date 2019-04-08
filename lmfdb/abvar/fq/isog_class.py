@@ -40,7 +40,7 @@ def validate_label(label):
     coeffs = iso.split("_")
     if len(coeffs) != g:
         raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components"%(g))
-    if not all(c.isalpha() and c==c.lower() for c in coeffs):
+    if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
 class AbvarFq_isoclass(object):
