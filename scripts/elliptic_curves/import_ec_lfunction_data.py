@@ -63,7 +63,7 @@ from sage.all import ZZ, primes, sqrt, EllipticCurve, prime_pi
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
@@ -113,9 +113,9 @@ def make_one_euler_factor(E, p):
     """
     ap = int(E.ap(p))
     e = E.conductor().valuation(p)
-    if e==0:
+    if e == 0:
         return [1,-ap,int(p)]
-    if e==1:
+    if e == 1:
         return [1,-ap]
     return [1]
 
@@ -123,7 +123,7 @@ def make_one_euler_factor_db(E, p):
     r"""
     Returns the Euler factor at p from a database elliptic curve E.
     """
-    ld = [ld for ld in E['local_data'] if ld['p']==p]
+    ld = [ld for ld in E['local_data'] if ld['p'] == p]
     if ld: # p is bad, we get ap from the stored local data:
         ap = ld[0]['red']
         if ap:
@@ -180,9 +180,9 @@ def read_line(line):
 
     """
     fields = line.split(":")
-    if len(fields)==6:
+    if len(fields) == 6:
         return read_line_old(line)
-    assert len(fields)==9
+    assert len(fields) == 9
     label = fields[1]
     # get a curve from the database in this isogeny class.  It must
     # have number 1 since only those have the ap and an stored.
@@ -218,7 +218,7 @@ def read_line(line):
 
     zeros = fields[6][1:-1].split(",")
     # omit negative ones and 0, using only string tests:
-    data['positive_zeros'] = [y for y in zeros if y!='0' and y[0]!='-']
+    data['positive_zeros'] = [y for y in zeros if y != '0' and y[0] != '-']
     data['z1'] = data['positive_zeros'][0]
     data['z2'] = data['positive_zeros'][1]
     data['z3'] = data['positive_zeros'][2]
@@ -239,7 +239,7 @@ def read_line(line):
 
     an = E['anlist'] # list indexed from 0 to 10 inclusive
     input_an = [int(a) for a in fields[4][1:-1].split(",")]
-    assert an[2:11]==input_an
+    assert an[2:11] == input_an
     for n in range(2,11):
         data['A%s' % n] = str(an[n])
         data['a%s' % n] = [an[n]/sqrt(float(n)),0]
@@ -260,7 +260,7 @@ def read_line_old(line):
 
     """
     fields = line.split(":")
-    assert len(fields)==6
+    assert len(fields) == 6
     label = fields[1] # use this isogeny class label to get info about the curve
     E = curves.find_one({'iso': label})
 
@@ -288,7 +288,7 @@ def read_line_old(line):
 
     zeros = fields[4][1:-1].split(",")
     # omit negative ones and 0, using only string tests:
-    data['positive_zeros'] = [y for y in zeros if y!='0' and y[0]!='-']
+    data['positive_zeros'] = [y for y in zeros if y != '0' and y[0] != '-']
     data['z1'] = data['positive_zeros'][0]
     data['z2'] = data['positive_zeros'][1]
     data['z3'] = data['positive_zeros'][2]
@@ -299,7 +299,7 @@ def read_line_old(line):
     # constant difference in x-coordinate sequence:
     data['plot_delta'] = plot_xy[1][0]-plot_xy[0][0]
     # list of y coordinates for x>0:
-    data['plot_values'] = [y for x,y in plot_xy if x>=0]
+    data['plot_values'] = [y for x,y in plot_xy if x >= 0]
 
     # Euler factors: we need the ap which are currently not in the
     # database so we call Sage.  It might be a good idea to store in
@@ -336,7 +336,7 @@ def upload_to_db(base_path, f, test=True):
 
     for line in h.readlines():
         count += 1
-        if count%1000==0:
+        if count%1000 == 0:
             print "read %s lines" % count
         Lhash, data, instance = read_line(line)
         if Lhash not in data_to_insert:
