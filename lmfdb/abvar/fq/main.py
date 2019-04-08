@@ -193,13 +193,13 @@ def abelian_variety_search(info, query):
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
-    if not('table_dimension_range' in info) or (info['table_dimension_range']==''):
+    if not('table_dimension_range' in info) or (info['table_dimension_range'] == ''):
         info['table_dimension_range'] = "1-6"
-    if not('table_field_range' in info)  or (info['table_field_range']==''):
+    if not('table_field_range' in info)  or (info['table_field_range'] == ''):
         info['table_field_range'] = "2-27"
 
     table_params = {}
-    av_stats=AbvarFqStats()
+    av_stats = AbvarFqStats()
 
     # Handle dimension range
     gs = av_stats.gs
