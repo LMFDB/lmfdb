@@ -13,7 +13,7 @@ def is_special_field(name):
     """ Check for special (INFO, NOTES etc) fields"""
 
     try:
-        if name[0] =='_' and name[-1]=='_':
+        if name[0] == '_' and name[-1] == '_':
             return True
         return False
     except:
@@ -35,7 +35,7 @@ def is_toplevel_field(name):
 def transform_examples(str, backwards=False):
     """ Converts between stored and display example strings. This is sub-optimal and should probably be fixed upstream
     """
-    if not backwards and len(str)>1 and str[0] == '`' and str[-1] == '`':
+    if not backwards and len(str) > 1 and str[0] == '`' and str[-1] == '`':
         return str[1:-1]
     elif backwards:
         return '`'+str+'`'
