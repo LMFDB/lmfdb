@@ -82,7 +82,7 @@ def paintCSMaass(width, height, xMin, xMax, yMin, yMax,
     ans += "<line x1='{0}' y1='{1}' ".format(str(xshift),str(height))
     ans += "x2='{0}' y2='0' style='stroke:rgb(0,0,0);'/>\n".format(str(xshift))
     # ----------- Tickmarks x axis
-    for i in range(1, xMax -xMin + 1):
+    for i in range(1, xMax - xMin + 1):
         ans += "<line x1='{0}' y1='{1}' ".format(str(i * xfactor + xshift),str(ticlength))
         ans += "x2='{0}' y2='0' ".format(str(i * xfactor + xshift))
         ans += "style='stroke:rgb(0,0,0);'/>\n"
