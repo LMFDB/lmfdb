@@ -105,7 +105,7 @@ def render_DirichletNavigation():
         if re.match(r'^[1-9][0-9]*\.[1-9][0-9]*$', label):
             slabel = label.split('.')
             m,n = int(slabel[0]), int(slabel[1])
-            if m==n==1 or n < m and gcd(m,n) == 1:
+            if m == n == 1 or n < m and gcd(m,n) == 1:
                 return redirect(url_for(".render_Dirichletwebpage", modulus=slabel[0], number=slabel[1]))
         if re.match(r'^[1-9][0-9]*\.[a-z]+$', label):
             slabel = label.split('.')
@@ -228,7 +228,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
         modulus, number = modulus.split('.')
         return redirect(url_for(".render_Dirichletwebpage", modulus=modulus, number=number), 301)
 
-    args={}
+    args = {}
     args['type'] = 'Dirichlet'
     args['modulus'] = modulus
     args['number'] = number
@@ -297,7 +297,7 @@ def _dir_knowl_data(label, orbit=False):
     else:
         number = numbers
         numbers = None
-    args={'type': 'Dirichlet', 'modulus': modulus, 'number': number}
+    args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     webchar = make_webchar(args)
     if orbit and modulus <= 10000:
         inf = "Dirichlet Character Orbit %d.%s\n" % (modulus, webchar.orbit_label)
@@ -471,7 +471,7 @@ def dirichlet_group_table(**args):
 
 def get_group_table(modulus, char_list):
     # Move 1 to the front of the list
-    char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j]==1)))
+    char_list.insert(0, char_list.pop(next(j for j in range(len(char_list)) if char_list[j] == 1)))
     headers = [j for j in char_list]  # Just a copy
     if modulus == 1:
         rows = [[1]]
