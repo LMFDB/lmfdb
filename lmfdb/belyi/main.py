@@ -37,7 +37,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 @belyi_page.route("/")
 def index():
@@ -274,7 +274,7 @@ def download_search(info):
     def coerce_triples(triples):
         deg = len(triples[0][0])
         if lang == 'sage':
-            return '[' +',\n'.join(["map(SymmetricGroup(%d), %s)" % (deg, s) for s in triples]) + ']'
+            return '[' + ',\n'.join(["map(SymmetricGroup(%d), %s)" % (deg, s) for s in triples]) + ']'
         elif lang == "magma":
             return '[' + ',\n'.join([
                 '[' +
@@ -283,7 +283,7 @@ def download_search(info):
                 for s in triples
                 ]) + ']'
 
-            return '[' +',\n'.join(["Sym(%d) ! %s" % (deg, s) for s in triples]) + ']'
+            return '[' + ',\n'.join(["Sym(%d) ! %s" % (deg, s) for s in triples]) + ']'
         else:
             return str(triples)
 
@@ -297,8 +297,8 @@ def download_search(info):
             ]
     c = download_comment_prefix[lang]
     s =  '\n'
-    s += c + ' Belye maps downloaded from the LMFDB, downloaded on %s.\n'% mydate
-    s += c + ' Query "%s" returned %d maps.\n\n' %(str(info.get('query')), len(res_list))
+    s += c + ' Belye maps downloaded from the LMFDB, downloaded on %s.\n' % mydate
+    s += c + ' Query "%s" returned %d maps.\n\n' % (str(info.get('query')), len(res_list))
     s += c + ' Below is a list called data. Each entry has the form:\n'
     s += c + '   [label, permutation_triples]\n'
     s += c + ' where the permutation triples are in one line notation\n'
