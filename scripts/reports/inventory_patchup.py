@@ -7,7 +7,7 @@ def amend_collection_info(inv_db):
     """ Fixes missing or empty string collection Notes and Info for every db
     """
 
-    a=list(inv_db.collection_ids.find())
+    a = list(inv_db.collection_ids.find())
     dummy_info = {} #Dummy per collection info, containing basic fields we want included
     for field in inv.info_editable_fields:
         dummy_info[field] = None
