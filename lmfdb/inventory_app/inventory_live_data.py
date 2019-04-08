@@ -104,7 +104,7 @@ def get_progress_from_db(uid, db_id, table_id):
         #Cheat here: we'll cap running to 99% and the last 1% is left for upload time
         #If no running record found, this assumes it completed before
         #we managed to check it, hence 99%
-        percent = (live_progress[0] *99)/live_progress[1]
+        percent = (live_progress[0] * 99)/live_progress[1]
     except Exception as e:
         inv.log_dest.warning(e)
         percent = 0
@@ -140,7 +140,7 @@ def update_gone_list():
             if gone and table[3] != 'gone':
                 table_id = idc.get_table_id(table_name)
                 idc.update_table(table_id, status=gone_code)
-                inv.log_dest.info(str(table_name) +' is now gone')
+                inv.log_dest.info(str(table_name) + ' is now gone')
 
 #Other scraping result handling
 
