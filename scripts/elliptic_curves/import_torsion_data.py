@@ -52,18 +52,18 @@ def find_field(pol, verbose=False):
     """
     coeffs = str_to_list(pol)
     deg = len(coeffs)-1
-    if deg==2:
+    if deg == 2:
         c, b, a = coeffs
         d = ZZ(b*b-4*a*c).squarefree_part()
-        D = d if (d-1)%4==0 else 4*d
+        D = d if (d-1)%4 == 0 else 4*d
         absD = D.abs()
-        s = 0 if d<0 else 2
+        s = 0 if d < 0 else 2
         return '2.{}.{}.1'.format(s,absD)
 
     from lmfdb.number_fields.number_field import poly_to_field_label
     poly = Qx(coeffs)
     Flabel = poly_to_field_label(poly)
-    if Flabel==None:
+    if Flabel == None:
         print("********* field with polynomial {} is not in the database!".format(poly))
         K = NumberField(poly, 'a')
         poly = K.optimized_representation()[0].defining_polynomial()
@@ -140,7 +140,7 @@ def read_line(line, degree, debug=0):
 
     tordata = [onefieldtor(dat, degree) for dat in fields[2:]]
     if debug: print("before degree check, tordata = {}".format(tordata))
-    tordata = [t for t in tordata if t!=None]
+    tordata = [t for t in tordata if t != None]
     if debug: print("after  degree check, tordata = {}".format(tordata))
     data = dict(tordata)
 
@@ -191,7 +191,7 @@ def upload_to_db(base_path, f, test=True):
 
     for line in h.readlines():
         count += 1
-        if count%1000==0:
+        if count%1000 == 0:
             print "read %s lines" % count
         label, data = read_line(line,0)
         #if data['torsion_growth']label]
@@ -232,9 +232,9 @@ def read_torsion_growth_data(base_path, filename, degree, maxlines=0):
 
     for line in h.readlines():
         count += 1
-        if count%10000==0:
+        if count%10000 == 0:
             print "read %s lines" % count
-        if maxlines and count>maxlines:
+        if maxlines and count > maxlines:
             break
         label, data = read_line(line,degree,0)
         tor_data[label] = data
@@ -252,9 +252,9 @@ def read_xtorsion_growth_data(base_path, filename, degree, maxlines=0):
 
     for line in h.readlines():
         count += 1
-        if count%10000==0:
+        if count%10000 == 0:
             print "read %s lines" % count
-        if maxlines and count>maxlines:
+        if maxlines and count > maxlines:
             break
         label, data = read_xline(line,degree,0)
         tor_data[label] = data
@@ -343,7 +343,7 @@ def write_tordata(tordata, base_path='', degrees = None, maxlines=0):
         count = 0
         for lab, dat in td.iteritems():
             h.write(" ".join([lab]+["[{}]:{}".format(T,F.replace(":",".")) for F,T in dat.items()]) + "\n")
-            count +=1
-            if count==maxlines:
+            count += 1
+            if count == maxlines:
                 break
         h.close()
