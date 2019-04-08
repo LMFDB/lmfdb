@@ -103,7 +103,7 @@ def null_all_scrapes(table_name):
         rec_set = {'complete':True, 'running':False}
         db.inv_ops.update(rec_find, rec_set)
     except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
+        inv.log_dest.error("Error updating progress " + str(e))
         return False
 
 def null_old_scrapes(time=DEFAULT_MAX_TIME):
