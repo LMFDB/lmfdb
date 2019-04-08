@@ -61,7 +61,7 @@ def rewrite_collection(db, incoll, outcoll, func, batchsize=1000, reindex=True, 
         if len(outrecs) >= batchsize:
             db[outcoll].insert_many(outrecs)
             print "%d of %d records (%.1f percent) processed in %.3f secs" % (incnt, tot, 100.0*incnt/tot,time.time()-start)
-            outrecs=[]
+            outrecs = []
     if outrecs:
         db[outcoll].insert_many(outrecs)
     assert db[outcoll].count() == outcnt
