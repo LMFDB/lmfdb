@@ -49,7 +49,7 @@ import os
 
 from lmfdb.base import getDBConnection
 print "getting connection"
-C= getDBConnection()
+C = getDBConnection()
 print "authenticating on the elliptic_curves database"
 import yaml
 pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
@@ -88,9 +88,9 @@ def convert_ideal_label(K, lab):
 
     comps = lab.split(".")
     # test for labels which do not need any conversion
-    if len(comps)==2:
+    if len(comps) == 2:
         return lab
-    assert len(comps)==3
+    assert len(comps) == 3
     N, c, d = [int(x) for x in comps]
     a = N//d
     I = K.ideal(a, c+d*K.gen())
@@ -161,17 +161,17 @@ def newforms(line):
 
     label_suffix = data[2]
     label_nsuffix = numerify_iso_label(label_suffix)
-    if dimension>1:
+    if dimension > 1:
         label_suffix = label_suffix+str(dimension)
     short_label = '-'.join([level_label, label_suffix])
     label = '-'.join([field_label, short_label])
     weight = int(data[4])
     bc = data[5]
-    if bc!='?': bc=int(bc)
+    if bc != '?': bc = int(bc)
     cm = data[6]
-    if cm!='?': cm=int(cm)
+    if cm != '?': cm = int(cm)
     sfe = data[7] # sign
-    if sfe!='?': sfe = int(sfe) # sign
+    if sfe != '?': sfe = int(sfe) # sign
     Lratio = data[8]   # string representing rational number
     try:
         AL_eigs = [int(x) for x in data[9][1:-1].split(",")]
@@ -220,12 +220,12 @@ def upload_to_db(base_path, filename_suffix, insert=True):
 
         count = 0
         for line in h.readlines():
-            if line[0]=='#':
+            if line[0] == '#':
                 continue
             label, data = parse(line)
-            if label=='':
+            if label == '':
                 continue
-            if count%1000==0:
+            if count%1000 == 0:
                 print "read %s" % label
             count += 1
             if label not in data_to_insert:
@@ -286,28 +286,28 @@ def curve_check(fld, min_norm=1, max_norm=None):
     # first check numbers
     norm_range = {}
     norm_range['$gte'] = min_norm
-    if max_norm!=None:
+    if max_norm != None:
         norm_range['$lte'] = max_norm
     print("Checking field {}, norm range {}".format(fld, norm_range))
     form_query = {'field_label':fld, 'dimension':1, 'level_norm':norm_range}
     curve_query = {'field_label':fld, 'number':1, 'conductor_norm':norm_range}
     nforms = forms.count(form_query)
     ncurves = len([c for c in nfcurves.find(curve_query) if not 'CM' in c['label']])
-    if nforms==ncurves:
+    if nforms == ncurves:
         print("# curves = # forms = {}".format(ncurves))
     else:
         print("# curves = {} but # forms = {}".format(ncurves, nforms))
-    if nforms>ncurves:
+    if nforms > ncurves:
         print("{} curves missing".format(nforms-ncurves))
     print("Checking whether there is a curve for each newform...")
     n = 0
     for f in forms.find(form_query):
         lab = f['label']
         nc = nfcurves.count({'class_label':lab})
-        if nc==0:
+        if nc == 0:
             print("newform {} has no curve (bc={}, cm={})".format(lab,f['bc'],f['CM']))
-            n +=1
-    if n==0:
+            n += 1
+    if n == 0:
         print("no missing curves")
     else:
         print("{} missing curves listed".format(n))
@@ -318,10 +318,10 @@ def curve_check(fld, min_norm=1, max_norm=None):
         if 'CM' in lab:
             continue
         nf = forms.count({'label':lab})
-        if nf==0:
+        if nf == 0:
             print("curve class {} has no newform".format(lab))
-            n +=1
-    if n==0:
+            n += 1
+    if n == 0:
         print("no missing newforms")
     else:
         print("{} missing newforms listed".format(n))
