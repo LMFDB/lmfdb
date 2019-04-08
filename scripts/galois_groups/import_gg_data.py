@@ -20,7 +20,7 @@ gps = gr.find({})
 myfile = open('gg_data')
 
 for l in myfile:
-  v= json.loads(l)
+  v = json.loads(l)
   data = {}
   for j in range(len(v)):
     data[labels[j]] = v[j]
