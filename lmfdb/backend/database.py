@@ -1550,14 +1550,17 @@ class PostgresTable(PostgresBase):
             if info is not None:
                 # caller is requesting count data
                 info['number'] = self.count(query)
-            return self._search_iterator(cur, search_cols, extra_cols, projection)
+            return self._search_iterator(cur, search_cols,
+                                         extra_cols, projection)
         if nres is None:
             exact_count = (cur.rowcount < prelimit)
             nres = offset + cur.rowcount
         else:
             exact_count = True
         res = cur.fetchmany(limit)
-        res = list(self._search_iterator(res, search_cols, extra_cols, projection))
+        res = list(
+                self._search_iterator(res, search_cols, extra_cols, projection)
+                )
         if info is not None:
             if offset >= nres:
                 offset -= (1 + (offset - nres) / limit) * limit
