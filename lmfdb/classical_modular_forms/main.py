@@ -42,7 +42,7 @@ def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 
 @cached_function
@@ -150,7 +150,7 @@ def set_info_funcs(info):
                 title = '%s newforms' % count
             else:
                 short = '+'.join([r'\(%s\)'%dim]*count)
-                title=None
+                title = None
             if count == 1:
                 query['jump'] = 'yes'
             link = newform_search_link(short, title=title, **query)
@@ -401,7 +401,7 @@ def render_full_gamma1_space_webpage(label):
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info={}
+    info = {}
     set_info_funcs(info)
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
@@ -625,13 +625,13 @@ def common_parse(info, query, na_check=False):
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
-        parity=info['weight_parity']
+        parity = info['weight_parity']
         if parity == 'even':
             query['weight_parity'] = 1
         elif parity == 'odd':
             query['weight_parity'] = -1
     if 'char_parity' in info:
-        parity=info['char_parity']
+        parity = info['char_parity']
         if parity == 'even':
             query['char_parity'] = 1
         elif parity == 'odd':
