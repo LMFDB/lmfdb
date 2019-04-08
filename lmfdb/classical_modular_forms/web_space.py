@@ -237,12 +237,12 @@ class WebNewformSpace(object):
         self.properties = [('Label',self.label)]
         if self.plot is not None and self.dim > 0:
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
-        self.properties +=[
+        self.properties += [
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Character orbit',self.char_orbit_label),
             ('Rep. character',r'\(%s\)'%self.char_conrey_str),
-            ('Character field',r'\(\Q%s\)' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
+            ('Character field',r'\(\Q%s\)' % ('' if self.char_degree == 1 else r'(\zeta_{%s})' % self.char_order)),
             ('Dimension',str(self.dim)),
         ]
         if self.num_forms is not None:
@@ -403,7 +403,7 @@ class WebGamma1Space(object):
         self.properties = [('Label',self.label),]
         if self.plot is not None and self.new_dim > 0:
             self.properties += [(None, '<a href="{0}"><img src="{0}" width="200" height="200"/></a>'.format(self.plot))]
-        self.properties +=[
+        self.properties += [
             ('Level',str(self.level)),
             ('Weight',str(self.weight)),
             ('Dimension',str(self.new_dim))
