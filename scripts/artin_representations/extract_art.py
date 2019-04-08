@@ -26,13 +26,13 @@ if len(sys.argv) != 3:
     print "Don't make me tell you again."
     sys.exit()
 
-argv=sys.argv
-label=argv[1]
+argv = sys.argv
+label = argv[1]
 
 # internally, we will call the count "bound"
 try:
-    bound=int(argv[2])
-    if bound is None or bound<1:
+    bound = int(argv[2])
+    if bound is None or bound < 1:
         print "Bound is not valid"
         sys.exit()
 except:
@@ -63,12 +63,12 @@ assert base
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 from pymongo.mongo_client import MongoClient
-C= MongoClient(host='lmfdb-ib:37010')
+C = MongoClient(host='lmfdb-ib:37010')
 C['artin'].authenticate(username, password)
 
-art=C.artin
-rep=art.representations
-nfgal=art.field_data
+art = C.artin
+rep = art.representations
+nfgal = art.field_data
 
 #utilities
 
@@ -78,11 +78,11 @@ def makels(li):
   return ','.join(li2)
 
 def myroots(pol, n, zeta):
-    rts=[]
-    j=0
+    rts = []
+    j = 0
     RR = pol.parent()
-    while pol.degree()>0 and j<n:
-        if pol(zeta**j)==0:
+    while pol.degree() > 0 and j < n:
+        if pol(zeta**j) == 0:
             rts.append((n-j) % n)
             pol = RR(pol/(y-zeta**j))
         else:
@@ -98,15 +98,15 @@ def myroots(pol, n, zeta):
 #ar = ArtinRepresentation(str(arep['Baselabel'])+'c1')
 #ar = ArtinRepresentation('2.2e3_3e2.6t5.1c1')
 
-baselabel=label.split('c')
+baselabel = label.split('c')
 a = rep.find_one({'Baselabel': baselabel[0]})
 
 
-ar=ArtinRepresentation(label)
+ar = ArtinRepresentation(label)
 
-outfile=open(label, 'w')
+outfile = open(label, 'w')
 
-cf=a['CharacterField']
+cf = a['CharacterField']
 cfz = ZZ(cf)
 nf = ar.nf()
 nfcc = nf.conjugacy_classes()
@@ -117,7 +117,7 @@ if not cfz.divides(nfcc):
     sys.exit()
 R,x = QQ['x'].objgen()
 pol1 = R.cyclotomic_polynomial(nfcc)
-K,z=NumberField(R.cyclotomic_polynomial(nfcc),'z').objgen()
+K,z = NumberField(R.cyclotomic_polynomial(nfcc),'z').objgen()
 RR,y = K['y'].objgen()
 zsmall = z**(nfcc/cfz)
 allpols = [sum(y**k * sum(pp[k][j] * zsmall**j for j in range(len(pp[k]))) for k in range(len(pp))) for pp in ar.local_factors_table()]
@@ -125,12 +125,12 @@ allroots = [myroots(pp, nfcc, z) for pp in allpols]
 
 outfile.write(str(nfcc)+"\n")
 outfile.write(str(allroots)+"\n")
-j=0
-p=1
-while j<bound:
+j = 0
+p = 1
+while j < bound:
     p = next_prime(p)
     outfile.write(str(ar.any_prime_to_cc_index(p))+"\n")
-    j+=1
+    j += 1
   
 #plist = [ar.any_prime_to_cc_index(p) for p in primes_first_n(bound)]
 #for j in plist:
