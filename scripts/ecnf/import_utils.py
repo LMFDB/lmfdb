@@ -161,7 +161,7 @@ def make_curves_line(ec):
     """
     cond_lab = ec['conductor_label']
     q_curve = ec.get('q_curve', '?')
-    if q_curve!='?': q_curve=str(int(q_curve))
+    if q_curve != '?': q_curve = str(int(q_curve))
     output_fields = [ec['field_label'],
                      cond_lab,
                      ec['iso_label'],
