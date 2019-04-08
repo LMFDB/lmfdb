@@ -142,7 +142,7 @@ def learnmore_list():
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 ###############################################################################
 # Pages
@@ -152,8 +152,8 @@ def learnmore_list_remove(matchstring):
 def index():
     if len(request.args) != 0:
         return search(**request.args)
-    weight_list= [0, 1]
-    degree_list=range(1, 5, 1)
+    weight_list = [0, 1]
+    degree_list = range(1, 5, 1)
     group_list = [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]
     group_dict = { '1.2.1.2.1a':'N(\\mathrm{U}(1))','1.2.3.1.1a':'\\mathrm{SU}(2)', '1.4.1.12.4d':'D_{6,2}','1.4.3.6.2a':'E_6', '1.4.6.1.1a':'G_{3,3}', '1.4.10.1.1a':'\\mathrm{USp}(4)' }
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
@@ -322,7 +322,7 @@ def mu_info(n):
     rec['identity_component'] = st0_pretty(rec['st0_name'])
     rec['st0_description'] = r'\mathrm{trivial}'
     rec['component_group'] = 'C_{%d}'%n
-    rec['trace_zero_density']='0'
+    rec['trace_zero_density'] = '0'
     rec['abelian'] = boolean_name(True)
     rec['cyclic'] = boolean_name(True)
     rec['solvable'] = boolean_name(True)
@@ -375,7 +375,7 @@ def su2_mu_info(w,n):
     rec['abelian'] = boolean_name(True)
     rec['cyclic'] = boolean_name(True)
     rec['solvable'] = boolean_name(True)
-    rec['trace_zero_density']='0'
+    rec['trace_zero_density'] = '0'
     rec['gens'] = r'\begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}'%n
     rec['numgens'] = 1
     rec['subgroups'] = comma_separated_list([st_link("%d.2.3.c%d"%(w,n/p)) for p in n.prime_factors()])
@@ -423,7 +423,7 @@ def nu1_mu_info(w,n):
     rec['abelian'] = boolean_name(n <= 2)
     rec['cyclic'] = boolean_name(n <= 1)
     rec['solvable'] = boolean_name(True)
-    rec['trace_zero_density']='1/2'
+    rec['trace_zero_density'] = '1/2'
     rec['gens'] = r'\left\{\begin{bmatrix} 0 & 1\\ -1 & 0\end{bmatrix}, \begin{bmatrix} 1 & 0 \\ 0 & \zeta_{%d}\end{bmatrix}\right\}'%n
     rec['numgens'] = 2
     rec['subgroups'] = comma_separated_list([st_link("%d.2.1.d%d"%(w,n/p)) for p in n.prime_factors()])
@@ -478,32 +478,32 @@ def render_by_label(label):
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
     info['ambient'] = st_ambient(info['weight'],info['degree'])
-    info['connected']=boolean_name(info['components'] == 1)
-    info['rational']=boolean_name(info.get('rational',True))
+    info['connected'] = boolean_name(info['components'] == 1)
+    info['rational'] = boolean_name(info.get('rational',True))
     st0 = db.gps_sato_tate0.lucky({'name':data['identity_component']})
     if not st0:
         flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
-    info['st0_name']=st0['name']
-    info['identity_component']=st0['pretty']
-    info['st0_description']=st0['description']
+    info['st0_name'] = st0['name']
+    info['identity_component'] = st0['pretty']
+    info['st0_description'] = st0['description']
     G = db.gps_small.lookup(data['component_group'])
     if not G:
         flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
         return redirect(url_for(".index"))
-    info['component_group']=G['pretty']
-    info['cyclic']=boolean_name(G['cyclic'])
-    info['abelian']=boolean_name(G['abelian'])
-    info['solvable']=boolean_name(G['solvable'])
-    info['gens']=comma_separated_list([string_matrix(m) for m in data['gens']])
-    info['numgens']=len(info['gens'])
+    info['component_group'] = G['pretty']
+    info['cyclic'] = boolean_name(G['cyclic'])
+    info['abelian'] = boolean_name(G['abelian'])
+    info['solvable'] = boolean_name(G['solvable'])
+    info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']])
+    info['numgens'] = len(info['gens'])
     info['subgroups'] = comma_separated_list([st_link(sub) for sub in data['subgroups']])
     info['supgroups'] = comma_separated_list([st_link(sup) for sup in data['supgroups']])
     if data['moments']:
         info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
     if data['counts']:
-        c=data['counts']
+        c = data['counts']
         info['probabilities'] = [['\\mathrm{P}[%s=%d]=\\frac{%d}{%d}'%(c[i][0],c[i][1][j][0],c[i][1][j][1],data['components']) for j in range(len(c[i][1]))] for i in range(len(c))]
     return render_st_group(info, portrait=data.get('trace_histogram'))
 
@@ -524,11 +524,11 @@ def render_st_group(info, portrait=None):
     ]
     bread = [
         ('Sato-Tate Groups', url_for('.index')),
-        ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
-        ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
+        ('Weight %d' % info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
+        ('Degree %d' % info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ]
-    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d'% info['weight'] + ' and Degree %d'% info['degree']
+    title = 'Sato-Tate Group \(' + info['pretty'] + '\) of Weight %d' % info['weight'] + ' and Degree %d' % info['degree']
     return render_template('st_display.html',
                            properties2=prop2,
                            credit=credit_string,
