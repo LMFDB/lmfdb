@@ -234,7 +234,7 @@ def allgens(line):
     label = data[0] + data[1] + data[2]
     rank = int(data[4])
     t = data[5]
-    if t=='[]':
+    if t == '[]':
         t = []
     else:
         t = [int(c) for c in t[1:-1].split(",")]
@@ -280,7 +280,7 @@ def twoadic(line):
     27 a 1 [0,0,1,0,-7] inf inf [] CM
     """
     data = split(line)
-    assert len(data)==8
+    assert len(data) == 8
     label = data[0] + data[1] + data[2]
     model = data[7]
     if model == 'CM':
@@ -294,9 +294,9 @@ def twoadic(line):
     index = int(data[4])
     level = ZZ(data[5])
     log_level = int(level.valuation(2))
-    assert 2**log_level==level
-    if data[6]=='[]':
-        gens=[]
+    assert 2**log_level == level
+    if data[6] == '[]':
+        gens = []
     else:
         gens = data[6][1:-1].replace('],[','];[').split(';')
         gens = [[int(c) for c in g[1:-1].split(',')] for g in gens]
@@ -549,16 +549,16 @@ def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
     data_to_insert = {}  # will hold all the data to be inserted
 
     for f in file_list:
-        if f==allisog_filename: # dealt with differently
+        if f == allisog_filename: # dealt with differently
             continue
         h = open(os.path.join(base_path, f))
         print "opened %s" % os.path.join(base_path, f)
 
-        parse=parsing_dict[f]
+        parse = parsing_dict[f]
         count = 0
         for line in h.readlines():
             label, data = parse(line)
-            if count%5000==0:
+            if count%5000 == 0:
                 print "read %s" % label
             count += 1
             if label not in data_to_insert:
@@ -606,7 +606,7 @@ def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
 
     This function reads a single allisog file.
     """
-    if min_N==0:
+    if min_N == 0:
         f = 'allisog/allisog.00000-09999'
     else:
         f = 'allisog/allisog.%s-%s' % (min_N, max_N)
@@ -717,7 +717,7 @@ def make_extra_data(label,number,ainvs,gens):
                            'cp':int(ld.tamagawa_number())}
                           for ld in E.local_data()]
     Etw, Dtw = E.minimal_quadratic_twist()
-    if Etw.conductor()==E.conductor():
+    if Etw.conductor() == E.conductor():
         data['min_quad_twist'] = {'label':label, 'disc':int(1)}
     else:
         minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
@@ -727,7 +727,7 @@ def make_extra_data(label,number,ainvs,gens):
     from lmfdb.elliptic_curves.web_ec import parse_points
     gens = [E(g) for g in parse_points(gens)]
     data['heights'] = [float(P.height()) for P in gens]
-    if number==1:
+    if number == 1:
         data['aplist'] = E.aplist(100,python_ints=True)
         data['anlist'] = E.anlist(20,python_ints=True)
     return data
@@ -806,8 +806,8 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
     }
 
     key_set = Set(keys_and_types.keys())
-    table_key_set = Set(qcurves_col_type)- ['id']
-    if key_set==table_key_set:
+    table_key_set = Set(qcurves_col_type) - ['id']
+    if key_set == table_key_set:
         print("key set matches the table keys exactly")
     else:
         print("key set and table keys differ:")
@@ -839,13 +839,13 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
         query['conductor'] = Nquery
 
     big_deg = 2**31-1
-    count=0
+    count = 0
     for c in table.search(query, projection=2):
-        count +=1
-        if count%10000==0:
+        count += 1
+        if count%10000 == 0:
             print("Checked {} entries...".format(count))
         expected_keys = key_set
-        if c['number']!=1:
+        if c['number'] != 1:
             expected_keys = expected_keys - number_1_only_keys
         if c['conductor'] > iwasawa_bound:
             expected_keys = expected_keys - iwasawa_keys
@@ -857,9 +857,9 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
                 ktype = keys_and_types[k]
                 if k in no_cm_keys and c['cm']:
                     continue
-                if k=='degree' and c[k]>big_deg:
+                if k == 'degree' and c[k] > big_deg:
                     continue
-                if type(c[k])!=ktype:
+                if type(c[k]) != ktype:
                     print("Type mismatch for key {} in curve {}".format(k,label))
                     print(" in database: {}".format(type(c[k])))
                     print(" expected:    {}".format(keys_and_types[k]))
@@ -933,7 +933,7 @@ def update_torsion_growth_stats(verbose=True):
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
 
 def update_int_pts(filename, test=True, verbose=0, basepath=None):
-    if basepath==None:
+    if basepath == None:
         basepath = os.environ['HOME']
     int_pts_data = {}
     for L in open(os.path.join(basepath,filename)):
@@ -945,16 +945,16 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
     for lab in int_pts_data:
         e = curves.lucky({'label':lab})
 
-        assert e['label']==lab
+        assert e['label'] == lab
         dat = int_pts_data[lab]
-        assert e['ainvs']==parse_ainvs(dat['ainvs'])
+        assert e['ainvs'] == parse_ainvs(dat['ainvs'])
         db_xs = e['xcoord_integral_points']
-        if verbose>1:
+        if verbose > 1:
             print("{}: xs read from db:   {}".format(lab,db_xs))
         file_xs = parse_ainvs(dat['xcoord_integral_points'])
-        if verbose>1:
+        if verbose > 1:
             print("{}: xs read from file: {}".format(lab,file_xs))
-        if db_xs==file_xs:
+        if db_xs == file_xs:
             if verbose:
                 print("{}: data agrees".format(lab))
         else:
@@ -969,7 +969,7 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
 
             # Update the copy of the database record:
             e['xcoord_integral_points'] = file_xs
-            if verbose>1:
+            if verbose > 1:
                 print("New curve record for {}: {}".format(lab, e))
             if test:
                 print("Not changing database entry for {}".format(lab))
