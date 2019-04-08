@@ -25,7 +25,7 @@ def Yoshida_Lift(F, hhecke_evals, hlevel, hweight = [2,2], primeprec = 100):
 		if v == 0:
 			if len(F.primes_above(p)) == 1:
 				lam[p] = 0
-				mu[p] = p**(2*(weight -3))*(-p**2 - p*hhecke_evals[F.prime_above(p)] - 1)
+				mu[p] = p**(2*(weight - 3))*(-p**2 - p*hhecke_evals[F.prime_above(p)] - 1)
 			else:
 				lam[p] = p**((weight  - 3))*p*(hhecke_evals[F.primes_above(p)[0]] + hhecke_evals[F.primes_above(p)[1]])
 				mu[p] = p**(2*(weight - 3))*(p**2 + p*hhecke_evals[F.primes_above(p)[0]]*hhecke_evals[F.primes_above(p)[1]] - 1)
