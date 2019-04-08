@@ -1318,7 +1318,7 @@ class Lfunction_HMF(Lfunction):
         # Put the arguments into the object dictionary
         self.label = args['label']
         self.number = int(args['number'])
-        self.character= int(args['character'])
+        self.character = int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
@@ -1626,7 +1626,7 @@ class DedekindZeta(Lfunction):
         # Determine the factorization
         self.grh = wnf.used_grh()
         if self.degree > 1:
-            if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
+            if wnf.is_abelian() and len(wnf.dirichlet_group()) > 0:
                 # cond = wnf.conductor()
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
@@ -1643,20 +1643,20 @@ class DedekindZeta(Lfunction):
                     myj = j % mycond
                     self.factorization += (r'\(\;\cdot\) <a href="/L/Character/Dirichlet/%d/%d/">\(L(s,\chi_{%d}(%d, \cdot))\)</a>'
                                            % (mycond, myj, mycond, myj))
-            elif len(wnf.factor_perm_repn())>0:
+            elif len(wnf.factor_perm_repn()) > 0:
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'
-                                           +'\(\zeta(s)\)</a>')
+                                           + '\(\zeta(s)\)</a>')
                 for j in range(len(ar)):
-                    if nfgg[j]>0:
+                    if nfgg[j] > 0:
                         the_rep = ar[j]
-                        if (the_rep.dimension()>1 or
-                                  str(the_rep.conductor())!=str(1)):
+                        if (the_rep.dimension() > 1 or
+                                  str(the_rep.conductor()) != str(1)):
                             ar_url = url_for("l_functions.l_function_artin_page",
                                              label=the_rep.label())
                             right = (r'\({}^{%d}\)' % (nfgg[j])
-                                     if nfgg[j]>1 else r'')
+                                     if nfgg[j] > 1 else r'')
                             self.factorization += r'\(\;\cdot\)'
                             tex_label = the_rep.label()
                             tex_label = tex_label.replace('_',r'\_')
