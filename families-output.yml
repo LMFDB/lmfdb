@@ -2,15 +2,155 @@
 10:
   topological: 10
   braid: 10
-# 2.24-3.0.3-3-4
-10:
-  topological: 10
-  braid: 10
-# 2.24-3.0.3-3-4
-10:
-  topological: 10
-  braid: 10
-# 2.24-3.0.3-3-4
-10:
-  topological: 10
-  braid: 10
+# 2.6-1.0.2-2-3-3
+31:
+  topological: 31
+  braid: 31
+
+34:
+  topological: 31
+  braid: 31
+# 2.8-4.0.4-4-4
+6:
+  topological: 6
+  braid: 6
+# 2.5-1.0.5-5-5
+24:
+  topological: 15
+  braid: 24
+
+15:
+  topological: 15
+  braid: 15
+
+4:
+  topological: 15
+  braid: 4
+
+21:
+  topological: 15
+  braid: 21
+# 2.6-2.0.2-2-3-3
+32:
+  topological: 32
+  braid: 32
+# 2.3-1.0.3-3-3-3
+33:
+  topological: 33
+  braid: 33
+# 2.4-2.0.2-2-2-2-2
+38:
+  topological: 35
+  braid: 38
+
+37:
+  topological: 35
+  braid: 37
+
+35:
+  topological: 35
+  braid: 35
+# 2.2-1.1.2-2
+36:
+  topological: 36
+  braid: 36
+# 2.2-1.0.2-2-2-2-2-2
+39:
+  topological: 39
+  braid: 39
+# 2.12-4.0.2-2-2-3
+29:
+  topological: 29
+  braid: 29
+# 2.6-2.0.3-6-6
+5:
+  topological: 16
+  braid: 5
+
+16:
+  topological: 16
+  braid: 16
+# 2.16-8.0.2-4-8
+11:
+  topological: 11
+  braid: 11
+
+19:
+  topological: 11
+  braid: 19
+# 2.4-1.0.2-2-4-4
+30:
+  topological: 30
+  braid: 30
+# 2.8-1.0.2-8-8
+17:
+  topological: 17
+  braid: 17
+
+7:
+  topological: 17
+  braid: 7
+# 2.48-29.0.2-3-8
+3:
+  topological: 14
+  braid: 3
+
+14:
+  topological: 14
+  braid: 14
+# 2.12-1.0.3-4-4
+8:
+  topological: 8
+  braid: 8
+# 2.24-8.0.2-4-6
+13:
+  topological: 13
+  braid: 13
+
+2:
+  topological: 13
+  braid: 2
+# 2.8-3.0.2-2-2-4
+28:
+  topological: 28
+  braid: 28
+# 2.10-2.0.2-5-10
+1:
+  topological: 1
+  braid: 1
+
+12:
+  topological: 1
+  braid: 12
+
+20:
+  topological: 1
+  braid: 20
+
+23:
+  topological: 1
+  braid: 23
+# 2.12-5.0.2-6-6
+25:
+  topological: 18
+  braid: 25
+
+26:
+  topological: 18
+  braid: 26
+
+27:
+  topological: 18
+  braid: 27
+
+22:
+  topological: 18
+  braid: 22
+
+18:
+  topological: 18
+  braid: 18
+
+9:
+  topological: 18
+  braid: 9
