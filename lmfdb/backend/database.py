@@ -2577,7 +2577,7 @@ class PostgresTable(PostgresBase):
             if reindex:
                 self.drop_pkeys()
                 self.drop_indexes()
-            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsob']
+            jsonb_cols = [col for col, typ in self.col_type.iteritems() if typ == 'jsonb']
             for i, SD in enumerate(search_data):
                 SD["id"] = self.max_id() + i + 1
                 for col in jsonb_cols:
