@@ -325,7 +325,7 @@ def copy_dumps(inp, typ, recursing=False):
         if not isinstance(inp, basestring):
             inp = str(inp)
         inp = inp.replace('\\','\\\\').replace('\r',r'\r').replace('\n',r'\n').replace('\t',r'\t').replace('"',r'\"')
-        if recursing and '{' in inp or '}' in inp:
+        if recursing and ('{' in inp or '}' in inp):
             inp = '"' + inp + '"'
         return inp
     elif typ in ('json','jsonb'):
