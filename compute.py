@@ -130,7 +130,6 @@ OrbitComputeAut:=function(Vects,A,r);
    end while;  /* while Vects not empty */
    return T, Orbs;
 end function;
-/*
 AbelianOrbitComputeAut:=function(Vects,A,r);
    /* T will be list of final orbits, A is outer auts */
    T:={};
@@ -160,8 +159,8 @@ AbelianOrbitComputeAut:=function(Vects,A,r);
       end while;   
    end while;  /* while Vects not empty */
    return T, Orbs;
-end function;*/
-''' 
+end function;
+'''
 
 top_matter = '''
 // The results are stored in a list of records called 'data'
@@ -208,7 +207,7 @@ Append(~data, rec<RecFormat | group:=G,
                               dimension:=dim,
                               r:=r,
                               g0:=g0,
-                              vector_id:="{_id}">);
+                              vector_id:="{id}">);
 '''
 
 braid_action_code = '''
@@ -220,7 +219,7 @@ Append(~braid_data, rec<RecFormat | group:=G,
                                     dimension:=dim,
                                     r:=r,
                                     g0:=g0,
-                                    vector_id:="{_id}">);
+                                    vector_id:="{id}">);
 '''
 
 orbits_code = '''
@@ -242,18 +241,13 @@ if #genvecs gt 0 then
       aut:= [h(aL): aL in A | not IsInner(h(aL))];   /* Outer Automorphisms */
       Vects:={g[1] : g in genvecs};
       braid_Vects:={g[1] : g in braid_genvecs};
-      /*if IsAbelian(G) then
-       *  TopRep,TopOrbs:=AbelianOrbitComputeAut(Vects,aut,#signature-1);
-       * BrdOrbs:=[];
-       * else/
-         BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
-         if #BrdRep eq 1 then
-            TopRep:=BrdRep;
-            TopOrbs:=BrdOrbs;
-         else
-            TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
-         end if;
-      // end if;
+      BrdRep,BrdOrbs:=OrbitComputeBraid(braid_Vects,#signature-1);
+      if #BrdRep eq 1 then
+          TopRep:=BrdRep;
+          TopOrbs:=BrdOrbs;
+      else
+          TopRep,TopOrbs:=OrbitComputeAut(Vects,aut,#signature-1);    
+      end if;
       TopOrbsID:=[];
       for j in [1..#TopOrbs] do
          orb:=TopOrbs[j];
@@ -298,13 +292,15 @@ def find_representatives(orbits):
     for orbit in orbits:
         rep = min(orbit)
         for object_id in orbit:
-            reps[object_id] = rep
+            reps[str(object_id)] = str(rep)
     return reps
 
 def save_output(label, magma_output):
     output_file.write('# {}'.format(label))
     braid_reps = find_representatives(magma_output['braid'])
+    print('braid_reps{},'.format(braid_reps))
     top_reps = find_representatives(magma_output['topological'])
+    print('top_reps{},'.format(top_reps))
     for object_id in braid_reps:
         braid_rep = braid_reps[object_id]
         top_rep = top_reps[object_id]
@@ -335,22 +331,24 @@ def run_magma(family):
     magma_output = magma.eval(code)
     if not compute_braid or is_abelian:
         for vector in family:
-            magma_output += '\n  - [{}]'.format(vector['_id'])
+            magma_output += '\n  - [{}]'.format(vector['id'])
     save_output(label, yaml.load(magma_output))
 
 sum_time = 0.0        
 for line in input_file:
     family = loads(line)
-    print "Starting family {0}".format(family[0]['label'])
+    print "\nStarting family {0}".format(family[0]['label'])
     sys.stdout.flush()
     start = time.time()
     run_magma(family)
     end = time.time()
     sum_time += end - start
-    print end - start
+    #print end - start
     sys.stdout.flush()
+
+print '\n'
 print sum_time
-print "Done" + input_file_name
+print "Done " + input_file_name
 
 input_file.close()
 output_file.close()
