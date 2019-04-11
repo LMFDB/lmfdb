@@ -1381,6 +1381,7 @@ class PostgresTable(PostgresBase):
                     yield {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
         finally:
             if isinstance(cur, pg_cursor):
+                print "closing cursor"
                 cur.close()
 
     ##################################################################
@@ -2870,12 +2871,16 @@ class PostgresTable(PostgresBase):
             if countsfile is not None:
                 self.stats._copy_extra_counts_to_tmp()
 
-            if self._id_ordered and resort:
-                extra_table = None if self.extra_table is None else self.extra_table + suffix
-                self.resort(self.search_table + suffix, extra_table)
-            else:
-                # We still need to build primary keys
-                self.restore_pkeys(suffix=suffix)
+            ## a workaround while resort is disabled
+            self.restore_pkeys(suffix=suffix)
+            #if self._id_ordered and resort:
+            #    extra_table = None if self.extra_table is None else self.extra_table + suffix
+            #    self.resort(self.search_table + suffix, extra_table)
+            #else:
+            #    # We still need to build primary keys
+            #    self.restore_pkeys(suffix=suffix)
+            # end of workaround
+
             # update the indexes
             # these are needed before reindexing
             if indexesfile is not None:
