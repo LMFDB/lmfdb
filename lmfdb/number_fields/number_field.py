@@ -13,7 +13,7 @@ from lmfdb.utils import (
     web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
-    search_wrap)
+    parse_floats, search_wrap)
 from lmfdb.local_fields.main import show_slope_content
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, cclasses_display_knowl,character_table_display_knowl,
@@ -62,8 +62,10 @@ def number_field_data(label):
 def fixed_prec(r, digs=3):
   n = RealField(200)(r)*(10**digs)
   n = str(n.round())
-  return n[:-digs]+'.'+n[-digs:]
-
+  head = int(n[:-digs])
+  if head>=10**4:
+    head = comma(head)
+  return str(head)+'.'+n[-digs:]
 
 @app.context_processor
 def ctx_galois_groups():
@@ -387,7 +389,8 @@ def render_field_webpage(args):
     else:
         data['discriminant'] = "\(%s=%s\)" % (str(D), data['disc_factor'])
     data['frob_data'], data['seeram'] = frobs(nf)
-    data['rd'] = '$%s$' % fixed_prec(nf.rd(),2)
+    # This could put commas in the rd, we don't want to trigger spaces
+    data['rd'] = ('$%s$' % fixed_prec(nf.rd(),2)).replace(',','{,}')
     # Bad prime information
     npr = len(ram_primes)
     ramified_algebras_data = nf.ramified_algebras_data()
@@ -398,7 +401,7 @@ def render_field_webpage(args):
         loc_alg = ''
         for j in range(npr):
             if ramified_algebras_data[j] is None:
-                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j])
+                loc_alg += '<tr><td>%s<td colspan="7">Data not computed'%str(ram_primes[j]).rstrip('L')
             else:
                 mydat = ramified_algebras_data[j]
                 p = ram_primes[j]
@@ -417,6 +420,8 @@ def render_field_webpage(args):
         loc_alg += '</tbody></table>'
 
     ram_primes = str(ram_primes)[1:-1]
+    # Get rid of python L for big numbers
+    ram_primes = ram_primes.replace('L', '')
     if ram_primes == '':
         ram_primes = r'\textrm{None}'
     data['phrase'] = group_phrase(n, t)
@@ -701,6 +706,7 @@ def number_field_search(info, query):
     parse_galgrp(info,query, qfield=('degree', 'galt'))
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
+    parse_floats(info, query, 'rd')
     parse_ints(info,query,'class_number')
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)

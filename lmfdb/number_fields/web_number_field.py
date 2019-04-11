@@ -306,9 +306,8 @@ class WebNumberField:
     def ramified_primes(self):
         return [int(str(j)) for j in self._data['ramps']]
 
+    # Even rd is in the database, that does not low precision for searching
     def rd(self):
-        if self.haskey('rd'):
-            return self._data['rd']
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
     # Return a nice string for the Galois group
