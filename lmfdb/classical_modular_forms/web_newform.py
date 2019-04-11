@@ -282,9 +282,11 @@ class WebNewform(object):
 
             m = self.embedding_from_embedding_label(self.embedding_label)
             try:
-                related_objects = self.embedded_related_objects[int(m) - 1]
+                if self.embedded_related_objects:
+                    related_objects = self.embedded_related_objects[int(m) - 1]
+                else:
+                    related_objects = []
             except TypeError:
-
                 related_objects = self.related_objects
         else:
             related_objects = self.related_objects
