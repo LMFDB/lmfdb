@@ -271,7 +271,7 @@ class WebNewform(object):
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.sato_tate_group:
             res.append(('Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
-                        'SatoTateGroup/' + self.sato_tate_group))
+                        '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
             res.append(('Newform ' + self.label, nf_url))
             if (self.dual_label is not None and
