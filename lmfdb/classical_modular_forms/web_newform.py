@@ -280,9 +280,9 @@ class WebNewform(object):
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
-            m = int(self.embedding_from_embedding_label(self.embedding_label)) - 1
+            m = self.embedding_from_embedding_label(self.embedding_label)
             try:
-                related_objects = self.embedded_related_objects[m]
+                related_objects = self.embedded_related_objects[int(m) - 1]
             except TypeError:
 
                 related_objects = self.related_objects
