@@ -280,11 +280,11 @@ class WebNewform(object):
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
-            m = self.embedding_from_embedding_label(self.embedding_label)
-            # FIXME: try statement to be removed once data has been pushed to prod
+            m = int(self.embedding_from_embedding_label(self.embedding_label))
             try:
                 related_objects = self.embedded_related_objects[m]
             except TypeError:
+
                 related_objects = self.related_objects
         else:
             related_objects = self.related_objects
