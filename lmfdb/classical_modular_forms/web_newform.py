@@ -280,14 +280,18 @@ class WebNewform(object):
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
-            m = self.embedding_from_embedding_label(self.embedding_label)
-            try:
-                if self.embedded_related_objects:
-                    related_objects = self.embedded_related_objects[int(m) - 1]
-                else:
-                    related_objects = []
-            except TypeError:
+            if self.dim == 1:
+                # use the Galois orbits friends for the unique embedding
                 related_objects = self.related_objects
+            else:
+                m = self.embedding_from_embedding_label(self.embedding_label)
+                try:
+                    if self.embedded_related_objects:
+                        related_objects = self.embedded_related_objects[int(m) - 1]
+                    else:
+                        related_objects = []
+                except TypeError:
+                    related_objects = self.related_objects
         else:
             related_objects = self.related_objects
         if self.sato_tate_group: # FIXME: if statement to be removed once ST are removed
