@@ -18,7 +18,7 @@ class CmfTest(LmfdbTest):
         assert '?search_type=Dimensions&dim=1' in data
         assert '?search_type=SpaceDimensions&char_order=1' in data
         assert "./stats" in data
-        data = self.tc.get("/ModularForm/GL2/Q/holomorph/ic/?search_type=SpaceDimensions",follow_redirects=True).data
+        data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions",follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/23/12/">229</a>' in data
         data = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=SpaceDimensions&char_order=1", follow_redirects=True).data
         assert r'<a href="/ModularForm/GL2/Q/holomorphic/18/4/a/">1</a>' in data
