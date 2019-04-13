@@ -607,7 +607,7 @@ class WebG2C(object):
             data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" %("ring" if is_curve else "algebra") + \
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
-        data['geom_end_alg_name'] = real_geom_end_alg_name(curve['geom_end_alg'])
+        data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
 
         # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
         if is_curve:
