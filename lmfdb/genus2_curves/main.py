@@ -44,6 +44,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End_QQbar tensored with QQ
+geom_end_alg_list = ['M_2(CM)', 'M_2(Q)', 'QM', 'CM x CM', 'CM', 'CM x Q', 'Q x Q', 'RM', 'Q']
+geom_end_alg_dict = { x:x for x in geom_end_alg_list }
+
 aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
 aut_grp_dict = {
         '[2,1]':'C_2',
@@ -101,6 +105,8 @@ def index_Q():
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_dict"] = geom_end_alg_dict
     title = 'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
