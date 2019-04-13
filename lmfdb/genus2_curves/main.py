@@ -278,7 +278,7 @@ def genus2_curve_search(info, query):
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
     info["geom_end_alg_list"] = geom_end_alg_list
-    info["geom_end_alg_to_ST0_dict"] = geom_end_alg_dict
+    info["geom_end_alg_dict"] = geom_end_alg_dict
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
