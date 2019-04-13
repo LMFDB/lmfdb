@@ -277,6 +277,8 @@ def genus2_curve_search(info, query):
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_to_ST0_dict"] = geom_end_alg_dict
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
@@ -299,7 +301,7 @@ def genus2_curve_search(info, query):
         query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
     if 'class' in info:
         query['class'] = info['class']
-    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id'):
+    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
