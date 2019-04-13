@@ -136,6 +136,13 @@ A <a href={{url_for('.random_curve')}}>random genus 2 curve</a> from the databas
 <td>Maximum number of curves to display</td>
 <td><input type='text' name='count' value=50 size=10></td>
 <td><span class="formexample"> &nbsp;</td>
+<td>{{ KNOWL('g2c.geom_end_alg', title='\(\overline{\Q}\)-endomorphism algebra') }}</td>
+<td><select name='geom_end_alg' width="122" style="width: 122px">
+        <option ></option>
+    {% for G in info.geom_end_alg_list %}
+        <option value='{{G}}'>{{info.geom_end_alg_dict[G]}}</option>
+    {% endfor %}
+</select></td>
 </tr>
 <tr>
 <td><button type='submit' value='Search'>Search</button></td>
