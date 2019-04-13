@@ -45,7 +45,7 @@ real_geom_end_alg_to_ST0_dict = {
         }
 
 # End_QQbar tensored with QQ
-geom_end_alg_list = ['M_2(CM)', 'M_2(Q)', 'QM', 'CM x CM', 'CM', 'CM x Q', 'Q x Q', 'RM', 'Q']
+geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
 geom_end_alg_dict = { x:x for x in geom_end_alg_list }
 
 aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
