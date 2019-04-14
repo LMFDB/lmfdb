@@ -13,10 +13,8 @@
 <td>{{ KNOWL('g2c.abs_discriminant', title='discriminant')}}</td>
 <td>{{ KNOWL('g2c.num_rat_pts', title='rational points') }}</td>
 <td>{{ KNOWL('g2c.num_rat_wpts', title='Weierstrass') }}</td>
-<td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
 <td>{{ KNOWL('g2c.torsion_order', title='torsion order')}}</td>
-<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
-<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
+<td>{{ KNOWL('g2c.torsion', title='torsion')}}</td>
 </tr>
 
 <tr>
@@ -24,22 +22,23 @@
 <td><input type='text' name='abs_disc' placeholder='169' style="width: 100px" value="{{info.abs_disc}}"></td>
 <td><input type='text' name='num_rat_pts' placeholder='1'  style="width: 100px" value="{{info.num_rat_pts}}">
 <td><input type='text' name='num_rat_wpts' placeholder='1'  style="width: 100px" value="{{info.num_rat_wpts}}">
-<td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 100px" value="{{info.torsion}}">
 <td><input type='text' name='torsion_order' placeholder='2'  style="width: 100px" value="{{info.torsion_order}}">
-<td><input type='text' name='two_selmer_rank' placeholder='1'  style="width: 100px" value="{{info.two_selmer_rank}}">
-<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 100px" value="{{info.analytic_rank}}">
+<td><input type='text' name='torsion' placeholder='[2,2,2]'  style="width: 100px" value="{{info.torsion}}">
 </tr>
 
 <tr>
+<td>{{ KNOWL('g2c.two_selmer_rank', title='2-Selmer rank')}}</td>
+<td>{{ KNOWL('g2c.analytic_rank', title='analytic rank*')}}</td>
 <td>{{ KNOWL('g2c.gl2type', title='\(\GL_2\)-type') }}</td>
 <td>{{ KNOWL('g2c.st_group', title='\(\mathrm{ST}\)') }}</td>
 <td>{{ KNOWL('g2c.st_group_identity_component', title='\(\mathrm{ST}^0\)') }}</td>
 <td>{{ KNOWL('g2c.aut_grp', title='\(\mathrm{Aut}(X)\)') }}</td>
-<td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
-<td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
-<td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
-<td>{{ KNOWL('ag.geom_simple', title='$\\overline{\\mathbb Q}$-simple') }}</td>
 </tr>
+
+<tr>
+
+<td><input type='text' name='two_selmer_rank' placeholder='1'  style="width: 100px" value="{{info.two_selmer_rank}}">
+<td><input type='text' name='analytic_rank' placeholder='1'  style="width: 100px" value="{{info.analytic_rank}}">
 
 <td><select name='is_gl2_type' style="width: 110px">
   <option ></option>
@@ -68,10 +67,32 @@
     {% endfor %}
 </select></td>
 
+</tr>
+
+<tr>
+<td></td>
+<td>{{ KNOWL('g2c.geom_aut_grp',   title='\(\mathrm{Aut}(X_{\overline{\Q}})\)') }}</td>
+<td>{{ KNOWL('g2c.geom_end_alg', title='\(\overline{\Q}\)-end algebra') }}</td>
+<td>{{ KNOWL('g2c.locally_solvable',   title='locally solvable') }}</td>
+<td>{{ KNOWL('g2c.has_square_sha',   title='square &#1064;*') }}</td>
+<td>{{ KNOWL('ag.geom_simple', title='\(\overline{\mathbb Q}\)-simple') }}</td>
+</tr>
+
+<tr>
+
+<td class="button"><button type='submit' value='refine' style='min-width: 110px'>Search again</button></td>
+
 <td><select name='geom_aut_grp_id' style="width: 110px">
     <option ></option>
     {% for G in info.geom_aut_grp_list %}
         <option value='{{G}}' {{ "selected" if G == info.geom_aut_grp_id }} >{{info.geom_aut_grp_dict[G]}}</option>
+    {% endfor %}
+</select></td>
+
+<td><select name='geom_end_alg' style="width: 110px">
+    <option ></option>
+    {% for G in info.geom_end_alg_list %}
+        <option value='{{G}}' {{ "selected" if G == info.geom_end_alg }} >{{info.geom_end_alg_dict[G]}}</option>
     {% endfor %}
 </select></td>
 
@@ -96,7 +117,6 @@
 
 </tr>
 
-<tr><td class="button"><button type='submit' value='refine' style='min-width: 110px'>Search again</button></td></tr>
 </table>
 </form>
 
