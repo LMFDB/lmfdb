@@ -124,5 +124,5 @@ class BMFTest(LmfdbTest):
 
             # this test isn't very specific
             # but the goal is to test that itself doesn't show in the friends list
-            assert notitself not in L.d
+            assert notitself not in L.data
 
