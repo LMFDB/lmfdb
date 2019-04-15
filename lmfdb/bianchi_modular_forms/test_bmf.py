@@ -118,8 +118,8 @@ class BMFTest(LmfdbTest):
                         'Isogeny class 2.2.8.1-32.1-a'),
                     'Bianchi modular form 2.0.8.1-32.1-a')
                     ]:
-                L = self.tc.get(url)
-                for t in texts:
+            L = self.tc.get(url)
+            for t in texts:
                 assert t in L.data
 
             # this test isn't very specific
