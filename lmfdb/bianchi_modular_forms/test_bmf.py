@@ -102,17 +102,17 @@ class BMFTest(LmfdbTest):
 
     def test_friends(self):
         for url, texts, notitself in [
-                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1-44.3-a',
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.3/a',
                     ('Bianchi modular form 2.0.7.1-44.4-a',
                         'Isogeny class 2.0.7.1-44.3-a',
                         'Isogeny class 2.0.7.1-44.4-a'),
                     'Bianchi modular form 2.0.7.1-44.3-a'),
-                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1-44.4-a',
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1/44.4/a',
                     ('Bianchi modular form 2.0.7.1-44.3-a',
                         'Isogeny class 2.0.7.1-44.3-a',
                         'Isogeny class 2.0.7.1-44.4-a'),
                     'Bianchi modular form 2.0.7.1-44.4-a'),
-                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.8.1-32.1-a',
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.8.1/32.1/a',
                     ('Hilbert modular form 2.2.8.1-32.1-a',
                         'Isogeny class 2.0.8.1-32.1-a',
                         'Isogeny class 2.2.8.1-32.1-a'),
