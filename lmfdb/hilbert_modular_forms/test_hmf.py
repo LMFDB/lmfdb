@@ -110,20 +110,25 @@ class HMFTest(LmfdbTest):
         for url, texts, notitself in [
                 ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.1-a',
                     ('Hilbert modular form 2.2.5.1-31.2-a',
-                     'Isogeny class 2.2.5.1-31.1-a',
-                     'Isogeny class 2.2.5.1-31.2-a'),
+                        'Isogeny class 2.2.5.1-31.1-a',
+                        'Isogeny class 2.2.5.1-31.2-a'),
                     'Hilbert modular form 2.2.5.1-31.1-a'),
                 ('/ModularForm/GL2/TotallyReal/2.2.5.1/holomorphic/2.2.5.1-31.2-a',
                     ('Hilbert modular form 2.2.5.1-31.1-a',
-                     'Isogeny class 2.2.5.1-31.1-a',
-                     'Isogeny class 2.2.5.1-31.2-a'),
+                        'Isogeny class 2.2.5.1-31.1-a',
+                        'Isogeny class 2.2.5.1-31.2-a'),
                     'Hilbert modular form 2.2.5.1-31.2-a'),
                 ('/ModularForm/GL2/TotallyReal/2.2.497.1/holomorphic/2.2.497.1-1.1-a',
                     ('Isogeny class 2.0.7.1-5041.1-CMa',
-                    'Isogeny class 2.0.7.1-5041.3-CMa',
-                    'Isogeny class 2.2.497.1-1.1-a',
-                    'Modular form 497.2.b.a'),
-                    'Hilbert modular form 2.2.497.1-1.1-a')
+                        'Isogeny class 2.0.7.1-5041.3-CMa',
+                        'Isogeny class 2.2.497.1-1.1-a',
+                        'Modular form 497.2.b.a'),
+                    'Hilbert modular form 2.2.497.1-1.1-a'),
+                ('/ModularForm/GL2/TotallyReal/2.2.8.1/holomorphic/2.2.8.1-32.1-a',
+                    ('Bianchi modular form 2.0.8.1-32.1-a',
+                        'Isogeny class 2.0.8.1-32.1-a',
+                        'Isogeny class 2.2.8.1-32.1-a'),
+                    'Hilbert modular form 2.2.8.1-32.1-a',)
                 ]:
             L = self.tc.get(url)
             for t in texts:

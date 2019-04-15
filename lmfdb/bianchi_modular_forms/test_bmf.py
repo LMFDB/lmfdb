@@ -98,3 +98,31 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+'2.0.11.1/256.1/a/', 'Elliptic curve isogeny class 2.0.11.1-256.1-a');
         # A dimension 2 example
         self.check_args(base_url+'2.0.4.1/377.1/a2', 'The Hecke eigenfield is \(\Q(z)\) where  $z$ is a root of the defining');
+
+
+    def test_friends(self):
+        for url, texts, notitself in [
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1-44.3-a',
+                    ('Bianchi modular form 2.0.7.1-44.4-a',
+                        'Isogeny class 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.4-a'),
+                    'Bianchi modular form 2.0.7.1-44.3-a'),
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.7.1-44.4-a',
+                    ('Bianchi modular form 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.3-a',
+                        'Isogeny class 2.0.7.1-44.4-a'),
+                    'Bianchi modular form 2.0.7.1-44.4-a'),
+                ('/ModularForm/GL2/ImaginaryQuadratic/2.0.8.1-32.1-a',
+                    ('Hilbert modular form 2.2.8.1-32.1-a',
+                        'Isogeny class 2.0.8.1-32.1-a',
+                        'Isogeny class 2.2.8.1-32.1-a'),
+                    'Bianchi modular form 2.0.8.1-32.1-a')
+                    ]:
+                L = self.tc.get(url)
+                for t in texts:
+                assert t in L.data
+
+            # this test isn't very specific
+            # but the goal is to test that itself doesn't show in the friends list
+            assert notitself not in L.d
+
