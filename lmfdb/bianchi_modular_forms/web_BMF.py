@@ -191,9 +191,9 @@ class WebBMF(object):
             # old code
             if self.dimension == 1:
                 if self.ec_status == 'exists':
-                    self.friends += [('Elliptic curve isogeny class {}'.format(self.label), self.ec_url)]
+                    self.friends += [('Isogeny class {}'.format(self.label), self.ec_url)]
                 elif self.ec_status == 'missing':
-                    self.friends += [('Elliptic curve {} missing'.format(self.label), "")]
+                    self.friends += [('Isogeny class {} missing'.format(self.label), "")]
                 else:
                     self.friends += [('No elliptic curve', "")]
 
