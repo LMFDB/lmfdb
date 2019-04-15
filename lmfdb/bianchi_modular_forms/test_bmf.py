@@ -121,6 +121,7 @@ class BMFTest(LmfdbTest):
             L = self.tc.get(url)
             for t in texts:
                 assert t in L.data
+            assert 'L-function' in L.data
 
             # this test isn't very specific
             # but the goal is to test that itself doesn't show in the friends list

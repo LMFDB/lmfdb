@@ -185,6 +185,8 @@ class WebBMF(object):
             # remove itself
             self.friends.remove(
                     ('Bianchi modular form {}'.format(self.label), '/' + url))
+            self.friends.append(('L-function', '/L/'+url))
+            
         else:
             # old code
             if self.dimension == 1:
