@@ -14,6 +14,8 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
+from lmfdb.utils import names_and_urls
+from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash, get_instances_by_trace_hash
 
 
 def get_hmf(label):
@@ -305,18 +307,48 @@ def render_hmf_webpage(**args):
         ('Modular form to Magma', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='magma')),
         ('Eigenvalues to Sage', url_for(".render_hmf_webpage_download", field_label=info['field_label'], label=info['label'], download_type='sage'))
         ]
-    if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
-        info['friends'] = [('L-function',
+
+
+    # figure out friends
+    # first try to see if there is an instance of this HMF on Lfun db
+    url = 'ModularForm/GL2/TotallyReal/{}/holomorphic/{}'.format(
+            info['field_label'],
+            info['label'])
+    Lfun = get_lfunction_by_url(url)
+    if Lfun:
+        # first by Lhash
+        instances = get_instances_by_Lhash(Lfun['Lhash'])
+        # then by trace_hash
+        instances += get_instances_by_trace_hash(Lfun['degree'], Lfun['trace_hash'])
+
+        # This will also add the EC/G2C, as this how the Lfun was computed
+        info['friends'] = names_and_urls(instances)
+        # remove itself
+        info['friends'].remove(
+                ('Hilbert modular form {}'.format(info['label']), '/' + url))
+
+        info['friends'] += [('L-function',
                             url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
+
     else:
-        info['friends'] = [('L-function not available', "")]
-    if data['dimension'] == 1:   # Try to attach associated elliptic curve
-        lab = split_class_label(info['label'])
-        ec_from_hmf = db.ec_nfcurves.lookup(label + '1')
-        if ec_from_hmf is None:
-            info['friends'] += [('Elliptic curve not available', "")]
+        # if there is no instance
+        # old code
+        if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
+            info['friends'] = [('L-function',
+                                url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
         else:
-            info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
+            info['friends'] = [('L-function not available', "")]
+
+
+        if data['dimension'] == 1:   # Try to attach associated elliptic curve
+            lab = split_class_label(info['label'])
+            ec_from_hmf = db.ec_nfcurves.lookup(label + '1')
+            if ec_from_hmf is None:
+                info['friends'] += [('Elliptic curve not available', "")]
+            else:
+                info['friends'] += [('Isogeny class ' + info['label'], url_for("ecnf.show_ecnf_isoclass", nf=lab[0], conductor_label=lab[1], class_label=lab[2]))]
+
+
 
     bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
         ('%s' % data['label'], ' ')]
