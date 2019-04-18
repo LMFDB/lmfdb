@@ -451,8 +451,8 @@ def render_family(args):
                     ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
@@ -612,8 +612,8 @@ def render_passport(args):
               ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,

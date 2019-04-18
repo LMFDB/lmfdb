@@ -169,7 +169,7 @@ def api_query(table, id = None):
     if fields:
         fields = ['id'] + fields.split(DELIM)
     else:
-        fields = 1.1
+        fields = 3
 
     if sortby:
         sortby = sortby.split(DELIM)

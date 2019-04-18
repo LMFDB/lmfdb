@@ -48,6 +48,17 @@ def parse_artin_label(label):
     else:
         raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
 
+def add_lfunction_friends(friends, label):
+    rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
+    if rec:
+        for r in db.lfunc_instances.search({'Lhash':rec["Lhash"]}):
+            s = r['url'].split('/')
+            # only friend embedded CMFs
+            if r['type'] == 'CMF' and len(s) == 10:
+                cmf_label = '.'.join(s[4:])
+                url = r['url'] if r['url'][0] == '/' else '/' + r['url']
+                friends.append(("Modular form " + cmf_label, url))
+    return friends
 
 @artin_representations_page.route("/")
 def index():
@@ -158,6 +169,7 @@ def render_artin_representation_webpage(label):
         else:
             detrep = the_rep.central_character_as_artin_rep()
             friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
+    add_lfunction_friends(friends,label)
 
     # once the L-functions are in the database, the link can always be shown
     #if the_rep.dimension() <= 6:
