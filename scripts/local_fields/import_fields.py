@@ -7,17 +7,15 @@ Data is imported directly to the table lf_fields
 
 """
 
-import sys, time, os
+import sys
 from sage.all import QQ
 import re
-import hashlib
 import json
 
 mypath = '../..'
 sys.path.append(mypath)
 
 from lmfdb import db
-from lmfdb.backend.encoding import Json
 
 lf = db.lf_fields
 
@@ -64,12 +62,11 @@ fnames = ['aut','c','coeffs','e','eisen', 'f', 'gal', 'galT', 'gms', 'hw', 'iner
 def prep_ent(l):
     l[6]=l[7]
     l[8]= str(l[8])
-    l[19] = Json([[list2string(u[0]),u[1]] for u in l[19]])
-    l[10] = Json(l[10])
+    l[19] = [[list2string(u[0]),u[1]] for u in l[19]]
     ent = dict(zip(fnames,l))
     ent = top_slope(ent)
-    ent['rf'] = Json(ent['rf'])
-    ent['coeffs'] = Json(ent['coeffs'])
+    ent['rf'] = ent['rf']
+    ent['coeffs'] = ent['coeffs']
     return ent
 
 count=0
@@ -77,8 +74,7 @@ count=0
 # loop over files, and in each, loop over lines
 for path in sys.argv[1:]:
     print path
-    filename = os.path.basename(path)
-    fn = gzip.open(path) if filename[-3:] == '.gz' else open(path)
+    fn = open(path)
     tot = 0
     outrecs = []
     for line in fn.readlines():
