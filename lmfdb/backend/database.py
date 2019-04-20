@@ -2000,6 +2000,7 @@ class PostgresTable(PostgresBase):
             except Exception as err:
                 print "*"*80
                 print "Index creation failed: %s" % (err,)
+                print "*"*80
         print "Created index %s in %.3f secs"%(name, time.time() - now)
 
     def _indexes_touching(self, columns):
