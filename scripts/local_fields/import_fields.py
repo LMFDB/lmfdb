@@ -1,95 +1,102 @@
+# -*- coding: utf-8 -*-
+r""" Import local field data.  
 
-from lmfdb.base import getDBConnection
-fields = getDBConnection().localfields.fields
+Imports from a json file directly to the database.
 
-# The database entries have the following fields
-# p: the prime
-# n: the degree
-# c: discriminant exponent
-# e: ramification index
-# f: residue field degree
-# coefs: a vector of coefficients
-# gal: code for the Galois group
-# inertia: code for the inertia subgroup of the Galois group
-# slopes: list of wild slopes
-# t: tame degree of Galois closure
-# u: unramified degree of Galois closure
-# unram: polynomial defining unramified subfield
-# eisen: Eisenstein polynomial defining field over its unram subfield
-# rf: code for discriminant root field
-# hw: root number
-# gms: Galois mean slope
-# aut: number of automorphisms
-# galT: galois T number
+Data is imported directly to the table lf_fields 
 
-# unused and collides with coeffs defined in loop below
-# def coeffs(s):
-#    return [a for a in s[1:-1].split(',')]
+"""
+
+import sys
+from sage.all import QQ
+import re
+import json
+
+mypath = '../..'
+sys.path.append(mypath)
+
+from lmfdb import db
+
+lf = db.lf_fields
+
+def list2string(li):
+    li2 = [str(x) for x in li]
+    return ','.join(li2)
+
+def string2list(s):
+    s = str(s)
+    if s == '':
+        return []
+    return [int(a) for a in s.split(',')]
+
+def string2slist(sl):
+    sl = str(sl)
+    sl = sl[1:-1]
+    if sl == '':
+        return []
+    return [str(a) for a in sl.split(',')]
+
+def make_slope_key(s):
+    qs = QQ(s)
+    sstring = str(qs*1.)
+    sstring += '0'*14
+    if qs < 10:
+        sstring = '0'+sstring
+    sstring = sstring[0:12]
+    sstring += str(qs)
+    return sstring
+
+def top_slope(ent):
+  sl = string2slist(ent['slopes'])
+  if len(sl)>0:
+    ent['top_slope'] = make_slope_key(sl[-1])
+  elif int(ent['t'])>1:
+    ent['top_slope'] = make_slope_key(1)
+  else:
+    ent['top_slope'] = make_slope_key(0)
+  return ent
+
+# Let us loop over input to load into a dictionary 
+fnames = ['aut','c','coeffs','e','eisen', 'f', 'gal', 'galT', 'gms', 'hw', 'inertia', 'label', 'n', 'p', 'rf', 'slopes', 't', 'u', 'unram', 'subfields', 'gsm']
+
+def prep_ent(l):
+    l[6]=l[7]
+    l[8]= str(l[8])
+    l[19] = [[list2string(u[0]),u[1]] for u in l[19]]
+    ent = dict(zip(fnames,l))
+    ent = top_slope(ent)
+    ent['rf'] = ent['rf']
+    ent['coeffs'] = ent['coeffs']
+    return ent
+
+count=0
+
+# loop over files, and in each, loop over lines
+for path in sys.argv[1:]:
+    print path
+    fn = open(path)
+    tot = 0
+    outrecs = []
+    for line in fn.readlines():
+        line.strip()
+        count += 1
+        if re.match(r'\S',line):
+            #print line
+            l = json.loads(line)
+            chck = lf.lookup(str(l[11])) # by label
+            if chck is None: # we don't have it yet
+                ent = prep_ent(l)
+                outrecs.append(ent)
+                #print str(ent['label'])
+                tot += 1
+    if len(outrecs)>0:
+        lf.insert_many(outrecs)
+
+#outrecs=outrecs[0:125]
+#from pprint import pprint as pp
+#pp(outrecs[0])
+#lf.insert_many(outrecs)
+
+print "Added %d records"% len(outrecs)
 
 
-def base_label(p, n, c, ind):
-    return str(p) + "." + str(n) + "." + str(c) + "." + str(ind)
-
-
-def lookup_or_create(label):
-    item = None  # fields.find_one({'label': label})
-    if item is None:
-        return {'label': label}
-    else:
-        return item
-
-from getme import li  # this reads in the list called li
-
-print "finished importing getme, number = %s" % len(li)
-
-for F in li:
- #    print F
- #   t = time.time()
-    p, c, e, f, n, coeffs, gal, inertia, slopes, t, u, unram, eisen, rf, hw, gms, aut, galT = F
-    data = {
-        'p': p,
-        'c': c,
-        'e': e,
-        'f': f,
-        'n': n,
-        'coeffs': coeffs,
-        'gal': gal,
-        'inertia': inertia,
-        'slopes': slopes,
-        't': t,
-        'u': u,
-        'unram': unram,
-        'eisen': eisen,
-        'rf': rf,
-        'hw': hw,
-        'gms': gms,
-        'aut': aut,
-        'galT': galT
-    }
-
-    index = 1
-    is_new = True
-    holdfield = {}
-    for field in fields.find({'p': p,
-                              'n': n,
-                              'c': c}):
-        index += 1
-        if field['coeffs'] == coeffs:
-            is_new = False
-            holdfield = field
-            break
-
-    if is_new:
-        print "new field"
-        label = base_label(p, n, c, index)
-        info = {'label': label}
-        info.update(data)
-        print "entering %s into database" % info
-        fields.save(info)
-    else:
-        holdfield.update(data)
-        print "field already in database, updating with %s" % holdfield
-        fields.save(holdfield)
- #   if time.time() - t > 5:
- #       print "\t", label
- #       t = time.time()
