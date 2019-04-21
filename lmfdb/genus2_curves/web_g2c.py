@@ -176,7 +176,7 @@ def eqn_list_to_curve_plot(L,rat_pts):
 # Name conversions for the Sato-Tate and real endomorphism algebras
 ###############################################################################
 
-def end_alg_name(name):
+def real_geom_end_alg_name(name):
     name_dict = {
         "R":"\\R",
         "C":"\\C",
@@ -185,6 +185,23 @@ def end_alg_name(name):
         "C x C":"\\C \\times \\C",
         "M_2(R)":"\\mathrm{M}_2(\\R)",
         "M_2(C)":"\\mathrm{M}_2(\\C)"
+        }
+    if name in name_dict.keys():
+        return name_dict[name]
+    else:
+        return name
+
+def geom_end_alg_name(name):
+    name_dict = {
+        "Q":"\\Q",
+        "RM":"\\mathrm{RM}",
+        "Q x Q":"\\Q \\times \\Q",
+        "CM x Q":"\\mathrm{CM} \\times \\Q",
+        "CM":"\\mathrm{CM}",
+        "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
+        "QM":"\\mathrm{QM}",        
+        "M_2(Q)":"\\mathrm{M}_2(\\Q)",
+        "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
         }
     if name in name_dict.keys():
         return name_dict[name]
@@ -589,7 +606,8 @@ class WebG2C(object):
             data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
             data['end_statement_geom'] = """Endomorphism %s over \(\overline{\Q}\):""" %("ring" if is_curve else "algebra") + \
                 end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None)
-        data['real_geom_end_alg_name'] = end_alg_name(curve['real_geom_end_alg'])
+        data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
+        data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
 
         # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
         if is_curve:
@@ -625,6 +643,7 @@ class WebG2C(object):
         properties += [
             ('Sato-Tate group', data['st_group_link']),
             ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\R\)', '\(%s\)' % data['real_geom_end_alg_name']),
+            ('\(\\End(J_{\\overline{\\Q}}) \\otimes \\Q\)', '\(%s\)' % data['geom_end_alg_name']),
             ('\(\\overline{\\Q}\)-simple', bool_pretty(data['is_simple_geom'])),
             ('\(\mathrm{GL}_2\)-type', bool_pretty(data['is_gl2_type'])),
             ]

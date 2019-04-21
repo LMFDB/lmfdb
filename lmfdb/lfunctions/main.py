@@ -987,7 +987,7 @@ def generateLfunctionFromUrl(*args, **kwds):
         return Lfunction_HMFDB(label=args[5], character=args[6], number=args[7]) if instance else Lfunction_HMF(label=args[5], character=args[6], number=args[7])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'ImaginaryQuadratic':  # Bianchi modular form
-        return Lfunction_BMF(field=args[5], level=args[6], suffix=args[7])
+        return Lfunction_BMF(field=args[3], level=args[4], suffix=args[5])
 
     elif args[0] == 'ModularForm' and args[1] == 'GL2' and args[2] == 'Q' and args[3] == 'Maass':
         maass_id = args[4]

@@ -21,7 +21,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.galois_groups.transitive_group import small_group_label_display_knowl
-from lmfdb.sato_tate_groups.main import st_link
+from lmfdb.sato_tate_groups.main import st_link, get_name
 from web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
@@ -254,6 +254,7 @@ class WebNewform(object):
         else:
             character, j = map(int, self.embedding_label.split('.'))
             return [make_label(character, j-1)]
+
     @property
     def friends(self):
         # first newspaces
@@ -268,15 +269,37 @@ class WebNewform(object):
         ns_url = cmf_base + '/'.join(base_label + [char_letter])
         res.append(('Newspace ' + ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
+        if self.sato_tate_group:
+            res.append(('Sato-Tate group \({}\)'.format(get_name(self.sato_tate_group)[0]),
+                        '/SatoTateGroup/' + self.sato_tate_group))
         if self.embedding_label is not None:
             res.append(('Newform ' + self.label, nf_url))
-            if self.dual_label is not None and self.dual_label != self.embedding_label:
+            if (self.dual_label is not None and
+                    self.dual_label != self.embedding_label):
                 dlabel = self.label + '.' + self.dual_label
                 d_url = nf_url + '/' + self.dual_label.replace('.','/') + '/'
                 res.append(('Dual Form ' + dlabel, d_url))
 
-        # then related objects
-        res += names_and_urls(self.related_objects)
+            if self.dim == 1:
+                # use the Galois orbits friends for the unique embedding
+                related_objects = self.related_objects
+            else:
+                m = self.embedding_from_embedding_label(self.embedding_label)
+                try:
+                    if self.embedded_related_objects:
+                        related_objects = self.embedded_related_objects[int(m) - 1]
+                    else:
+                        related_objects = []
+                except TypeError:
+                    related_objects = self.related_objects
+        else:
+            related_objects = self.related_objects
+        if self.sato_tate_group: # FIXME: if statement to be removed once ST are removed
+            try:
+                related_objects.remove('SatoTateGroup/' + self.sato_tate_group)
+            except ValueError:
+                pass
+        res += names_and_urls(related_objects)
 
         # finally L-functions
         if self.weight <= 200:
