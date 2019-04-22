@@ -321,7 +321,7 @@ def random_field():
 def cande():
     t = 'Completeness of the Local Field Data'
     bread = get_bread([("Completeness", )])
-    return render_template("single.html", kid='dq.lf.extent',
+    return render_template("single.html", kid='rcs.cande.lf',
                            credit=LF_credit, title=t, bread=bread, 
                            learnmore=learnmore_list_remove('Completeness'))
 
