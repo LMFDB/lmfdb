@@ -664,6 +664,14 @@ class WebG2C(object):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
                 add_friend (friends, lfunction_friend_from_url(friend_url))
+        # Hack to deal with the fact that currently the same L-function can appear more than once in db.lfunc_lfunctions and we want to friend instances of all of them
+        for Lhash in db.lfunc_lfunctions.search({"trace_hash":data["Lhash"]},"Lhash"):
+            for friend_url in db.lfunc_instances.search({'Lhash':Lhash}, 'url'):
+                if '|' in friend_url:
+                    for url in friend_url.split('|'):
+                        add_friend (friends, lfunction_friend_from_url(url))
+                else:
+                    add_friend (friends, lfunction_friend_from_url(friend_url))           
         for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
             # be selective, only cmfs of the right dimension and conductor get to be our friends
             if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
