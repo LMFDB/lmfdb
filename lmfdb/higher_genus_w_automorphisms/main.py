@@ -771,8 +771,6 @@ def hgcwa_code_download(**args):
     nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
 
     start = time.time()
- #   lines = [(startstr + (signHfmt if dataz.get('signH') is not None else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if dataz.get('hyperelliptic') else '')) for dataz in data]
-#    lines = [(startstr + (signHfmt.format(**dataz) if 'signH' in dataz else (stdfmt + (hypfmt.format(**dataz) if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt.format(**dataz) if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr.format(**dataz))))).format(**dataz) for dataz in data]
     lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
@@ -850,9 +848,7 @@ def hgcwa_code_download_search(res,download_type):
             nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
     
             start = time.time()
-            #lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
-   #         lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else '') if 'hyperelliptic' in dataz else nhypcycstr)) for dataz in data]
-            lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt.format(**dataz) if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt.format(**dataz) if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))) for dataz in data]        
+            lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
             code += '\n'.join(lines)
 
 
