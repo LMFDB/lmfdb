@@ -423,6 +423,9 @@ def lfunction_friend_from_url(url):
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
         return ("Hilbert MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "ImaginaryQuadratic":
+        label = '.'.join(parts[4:6])
+        return ("Bianchi MF " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "Q" and parts[3] == "holomorphic":
         label = '.'.join(parts[4:8])
         return ("Modular form " + label, "/" + url)
