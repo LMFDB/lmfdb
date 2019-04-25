@@ -663,6 +663,7 @@ class WebG2C(object):
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
         if 'split_labels' in data:
+            print "adding split friends",data["split_labels"]
             for friend_label in data['split_labels']:
                 if is_curve:
                     add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
@@ -670,17 +671,21 @@ class WebG2C(object):
                     add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
         for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
             if '|' in friend_url:
+                print "adding lfunc factor friends",friend_url
                 for url in friend_url.split('|'):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
+                print "adding lfunc friend",friend_url
                 add_friend (friends, lfunction_friend_from_url(friend_url))
         # Hack to deal with the fact that currently the same L-function can appear more than once in db.lfunc_lfunctions and we want to friend instances of all of them
         for Lhash in db.lfunc_lfunctions.search({"trace_hash":data["Lhash"]},"Lhash"):
             for friend_url in db.lfunc_instances.search({'Lhash':Lhash}, 'url'):
                 if '|' in friend_url:
+                    print "adding lfunc2 factor friends",friend_url
                     for url in friend_url.split('|'):
                         add_friend (friends, lfunction_friend_from_url(url))
                 else:
+                    print "adding lfunc2 friends",friend_url
                     add_friend (friends, lfunction_friend_from_url(friend_url))           
         for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
             # be selective, only cmfs of the right dimension and conductor get to be our friends
