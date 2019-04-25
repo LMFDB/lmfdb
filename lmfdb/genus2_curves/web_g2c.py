@@ -417,7 +417,8 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        label = parts[1] + "-" + parts[2] + "-" + parts[3]
+        cond = convert_IQF_label(parts[1],parts[2])
+        label = parts[1] + "-" + cond + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
