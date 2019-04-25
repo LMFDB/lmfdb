@@ -444,7 +444,7 @@ def add_friend(friends,friend):
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
             return
-    printf "Added friend",friend
+    print "Added friend",friend
     friends.append(friend)
 
 ###############################################################################
