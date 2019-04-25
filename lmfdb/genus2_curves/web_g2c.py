@@ -3,7 +3,8 @@
 from ast import literal_eval
 from lmfdb import db
 from lmfdb.utils import web_latex, encode_plot, list_to_factored_poly_otherorder
-from lmfdb.ecnf.main import split_full_label
+from lmfdb.ecnf.main import split_full_label as split_ecnf_label
+from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -39,12 +40,9 @@ def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
     else:
-        (nf, conductor_label, class_label, number) = split_full_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = conductor_label, class_label = class_label, number = number)
-        # fixup conductor norm labels for the form "[a,b,c]" that have been converted to urls to ensure friend matching works
-        url.replace("%5B","[")
-        url.replace("%2C",".")
-        url.replace("%5D","]")
+        (nf, cond, isog, num) = split_ecnf_label(label)
+        cond = convert_IQF_label(nf,cond)
+        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
         return url
 
 def url_for_ec_class(ec_label):
@@ -52,8 +50,9 @@ def url_for_ec_class(ec_label):
         (cond, iso, num) = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:
-        (nf, cond, iso, num) = split_full_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=iso)
+        (nf, cond, isog, num) = split_ecnf_label(ec_label)
+        cond = convert_IQF_label(nf,cond)
+        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 def ec_label_class(ec_label):
     x = ec_label
