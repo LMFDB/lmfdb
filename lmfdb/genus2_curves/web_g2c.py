@@ -435,6 +435,7 @@ def lfunction_friend_from_url(url):
 
 # add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
 def add_friend(friends,friend):
+    print "Attempting to add friend",friend,"to friends",friends
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             return
@@ -443,6 +444,7 @@ def add_friend(friends,friend):
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
             return
+    printf "Added friend",friend
     friends.append(friend)
 
 ###############################################################################
