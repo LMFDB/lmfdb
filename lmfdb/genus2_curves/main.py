@@ -408,21 +408,21 @@ def statistics():
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
-    return render_template("single.html", kid='dq.g2c.extent',
+    return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
 def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
-    return render_template("single.html", kid='dq.g2c.source',
+    return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @g2c_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
-    return render_template("single.html", kid='dq.g2c.reliability',
+    return render_template("single.html", kid='rcs.rigor.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Labels")

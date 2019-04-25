@@ -542,21 +542,21 @@ def render_st_group(info, portrait=None):
 def completeness_page():
     t = 'Completeness of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
-    return render_template('single.html', kid='dq.st_group.extent',
+    return render_template('single.html', kid='rcs.cande.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def source_page():
     t = 'Source of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
-    return render_template('single.html', kid='dq.st_group.source',
+    return render_template('single.html', kid='rcs.source.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
-    return render_template('single.html', kid='dq.st_group.reliability',
+    return render_template('single.html', kid='rcs.rigor.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
