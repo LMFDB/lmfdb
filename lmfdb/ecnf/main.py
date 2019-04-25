@@ -378,7 +378,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            learnmore=learnmore_list())
 
 def download_search(info):
-    dltype = info['submit']
+    dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
     com1 = ''  # multiline comment start
