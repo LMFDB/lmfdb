@@ -227,8 +227,8 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "of \(\GL_2\)-type over " + base
-    return "not of \(\GL_2\)-type over " + base
+        return "Of \(\GL_2\)-type over " + base
+    return "Not of \(\GL_2\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
@@ -419,8 +419,6 @@ def lfunction_friend_from_url(url):
     if parts[0] == "EllipticCurve":
         cond = convert_IQF_label(parts[1],parts[2])
         label = parts[1] + "-" + cond + "-" + parts[3]
-        print "cond",cond
-        print "label",label
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
@@ -435,7 +433,6 @@ def lfunction_friend_from_url(url):
 
 # add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
 def add_friend(friends,friend):
-    print "Attempting to add friend",friend,"to friends",friends
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             return
@@ -444,7 +441,6 @@ def add_friend(friends,friend):
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
             return
-    print "Added friend",friend
     friends.append(friend)
 
 ###############################################################################
@@ -663,7 +659,6 @@ class WebG2C(object):
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
         if 'split_labels' in data:
-            print "adding split friends",data["split_labels"]
             for friend_label in data['split_labels']:
                 if is_curve:
                     add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
@@ -671,21 +666,17 @@ class WebG2C(object):
                     add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
         for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
             if '|' in friend_url:
-                print "adding lfunc factor friends",friend_url
                 for url in friend_url.split('|'):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
-                print "adding lfunc friend",friend_url
                 add_friend (friends, lfunction_friend_from_url(friend_url))
         # Hack to deal with the fact that currently the same L-function can appear more than once in db.lfunc_lfunctions and we want to friend instances of all of them
         for Lhash in db.lfunc_lfunctions.search({"trace_hash":data["Lhash"]},"Lhash"):
             for friend_url in db.lfunc_instances.search({'Lhash':Lhash}, 'url'):
                 if '|' in friend_url:
-                    print "adding lfunc2 factor friends",friend_url
                     for url in friend_url.split('|'):
                         add_friend (friends, lfunction_friend_from_url(url))
                 else:
-                    print "adding lfunc2 friends",friend_url
                     add_friend (friends, lfunction_friend_from_url(friend_url))           
         for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
             # be selective, only cmfs of the right dimension and conductor get to be our friends
