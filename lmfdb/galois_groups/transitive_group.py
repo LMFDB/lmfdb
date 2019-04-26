@@ -8,12 +8,16 @@ from sage.all import ZZ, gap
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
 def small_group_display_knowl(n, k, name=None):
+    if not name:
+        myname = '$[%d, %d]$'%(n,k)
+    else:
+        myname = name
     group = db.gps_small.lookup('%s.%s'%(n,k))
     if group is None:
-        return '$[%d, %d]$'%(n,k)
+        return myname
     if not name:
-        name = '$%s$'%group['pretty']
-    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
+        myname = '$%s$'%group['pretty']
+    return '<a title = "' + myname + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + myname + '</a>'
 
 def small_group_label_display_knowl(label, name=None):
     if not name:
@@ -174,6 +178,28 @@ def group_display_pretty(n, t):
         return group['pretty']
     return ""
 
+def group_pretty_and_nTj(n, t, useknowls=False):
+    label = base_label(n, t)
+    string = label
+    group = db.gps_transitive.lookup(label)
+    if useknowls and group is not None:
+        ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
+    else:
+        ntj = label
+    if group is not None and group.get('pretty',None) is not None:
+        pretty = group['pretty']
+        # modify if we use knowls and have the gap id
+        if useknowls:
+            gapid = "%d.%d"%(group['order'],group['gapid'])
+            gapgroup = db.gps_small.lookup(gapid)
+            if gapgroup is not None:
+                print "gapgroup not none"
+                pretty = small_group_display_knowl(group['order'], group['gapid'], name=group['pretty'])
+        string = pretty + ' (as ' + ntj + ')'
+    else:
+        string = ntj
+    return string
+
 def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -181,7 +207,7 @@ def group_display_knowl(n, t, name=None):
         if group is not None and group.get('pretty',None) is not None:
             name = group['pretty']
         else:
-            name = "%dT%d"%(n,t)
+            name = label
     if group is None:
         return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'

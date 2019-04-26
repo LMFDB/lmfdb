@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
+from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -204,7 +204,7 @@ def nf_knowl_guts(label):
     out += Dfact
     out += '<br>Signature: '
     out += str(wnf.signature())
-    out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t())
+    out += '<br>Galois group: '+group_pretty_and_nTj(wnf.degree(),wnf.galois_t(), True)
     out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
@@ -312,7 +312,7 @@ class WebNumberField:
             return 'Not computed'
         n = self._data['degree']
         t = self._data['galt']
-        return group_display_short(n, t)
+        return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
