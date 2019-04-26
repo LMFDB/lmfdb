@@ -11,7 +11,7 @@ from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000

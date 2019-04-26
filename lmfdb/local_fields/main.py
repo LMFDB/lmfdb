@@ -13,7 +13,7 @@ from lmfdb.utils import (
     search_wrap)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
-    group_display_short, group_display_knowl, group_display_inertia,
+    group_display_knowl, group_display_inertia,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
 
 LF_credit = 'J. Jones and D. Roberts'

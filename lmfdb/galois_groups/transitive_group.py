@@ -435,10 +435,9 @@ def resolve_display(resolves):
         else:
             ans += ', '
         k = j[1]
-        name = str(k[0]) + 'T' + str(k[1])
+        name = base_label(k[0], k[1])
         if k[1] == -1:
             name = '%dT?' % k[0]
-        label = base_label(k[0], k[1])
         ans += group_display_knowl(k[0], k[1], name)
     if ans != '':
         ans += '</td></tr></table>'

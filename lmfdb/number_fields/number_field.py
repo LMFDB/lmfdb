@@ -16,8 +16,8 @@ from lmfdb.utils import (
     search_wrap)
 from lmfdb.local_fields.main import show_slope_content
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, cclasses_display_knowl,character_table_display_knowl,
-    group_phrase, group_display_short, galois_group_data, 
+    cclasses_display_knowl,character_table_display_knowl,
+    group_phrase, galois_group_data, 
     group_cclasses_knowl_guts, group_pretty_and_nTj,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
