@@ -7,8 +7,6 @@ from sage.all import ZZ, gap
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
-MAX_GROUP_DEGREE = 23
-
 def small_group_display_knowl(n, k, name=None):
     group = db.gps_small.lookup('%s.%s'%(n,k))
     if group is None:
@@ -114,14 +112,14 @@ class WebGaloisGroup:
             if k == me:
                 start = nextchr(start)
             if cnt == 1:
-                ans += tryknowl(k[0], k[1])
+                ans += group_display_knowl(k[0], k[1])
                 if k == me:
                     ans += 'b'
             else:
                 for j in range(cnt):
                     if j > 0:
                         ans += ', '
-                    ans += "%s%s" % (tryknowl(k[0], k[1]), start)
+                    ans += "%s%s" % (group_display_knowl(k[0], k[1]), start)
                     start = nextchr(start)
         return ans
 
@@ -130,7 +128,7 @@ class WebGaloisGroup:
         for k in self._data['subs']:
             if ans != '':
                 ans += ', '
-            ans += tryknowl(k[0], k[1])
+            ans += group_display_knowl(k[0], k[1])
         return ans
 
 ############  Misc Functions
@@ -154,14 +152,10 @@ def nextchr(c):
 
 
 def trylink(n, t):
-    if n <= MAX_GROUP_DEGREE:
+    label = base_label(n, t)
+    group = db.gps_transitive.lookup(label)
+    if group:
         return '<a href="/GaloisGroup/%dT%d">%dT%d</a>' % (n, t, n, t)
-    return '%dT%d' % (n, t)
-
-
-def tryknowl(n, t):
-    if n <= MAX_GROUP_DEGREE:
-        return group_display_knowl(n, t, '%dT%d' % (n, t))
     return '%dT%d' % (n, t)
 
 
@@ -362,10 +356,7 @@ def subfield_display(n, subs):
     for k in subs:
         if substrs[k[0]] != '':
             substrs[k[0]] += ', '
-        if k[0] <= MAX_GROUP_DEGREE:
-            substrs[k[0]] += group_display_knowl(k[0], k[1])
-        else:
-            substrs[k[0]] += str(k[0]) + 'T' + str(k[1])
+        substrs[k[0]] += group_display_knowl(k[0], k[1])
     for deg in degs:
         ans += '<p>Degree ' + str(deg) + ': '
         if substrs[deg] == '':
@@ -389,20 +380,14 @@ def otherrep_display(n, t, reps):
         if k == me:
             start = chr(ord(start) + 1)
         if cnt == 1:
-            if k[0] <= MAX_GROUP_DEGREE:
-                ans += group_display_knowl(k[0], k[1], name)
-            else:
-                ans += name
+            ans += group_display_knowl(k[0], k[1], name)
             if k == me:
                 ans += 'b'
         else:
             for j in range(cnt):
                 if j > 0:
                     ans += ', '
-                if k[0] <= MAX_GROUP_DEGREE:
-                    ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
-                else:
-                    ans += "%s%s" % (name, start)
+                ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
                 start = chr(ord(start) + 1)
 
     if ans == '':
@@ -425,12 +410,10 @@ def resolve_display(resolves):
             ans += ', '
         k = j[1]
         name = str(k[0]) + 'T' + str(k[1])
-        if k[0] <= MAX_GROUP_DEGREE:
-            ans += group_display_knowl(k[0], k[1], name)
-        else:
-            if k[1] == -1:
-                name = '%dT?' % k[0]
-            ans += name
+        if k[1] == -1:
+            name = '%dT?' % k[0]
+        label = base_label(k[0], k[1])
+        ans += group_display_knowl(k[0], k[1], name)
     if ans != '':
         ans += '</td></tr></table>'
     else:
