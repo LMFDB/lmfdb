@@ -1,8 +1,7 @@
 #!/usr/local/bin/sage -python
 # -*- coding: utf-8 -*-
 import sys
-import os
-assert os
+#import os
 import json
 
 sys.path.append("../..")
@@ -10,12 +9,10 @@ from lmfdb import db
 
 gr = db.gps_transitive
 
-# need to compute label, gapidfull, moddecompuniq, pretty
-# need to fix parity
+# moddecompuniq and pretty are added later if known
 
 mykeys = ['ab', 'arith_equiv', 'auts', 'cyc', 'gapid', 'n', 'order', 'parity', 'prim', 'repns', 'resolve', 'solv', 'subs', 't', 'name']
 
-#myfile = open('gg_data')
 myfile = open(sys.argv[1])
 
 outrecs=[]
@@ -25,6 +22,7 @@ for l in myfile:
   for dd in v:
     for vals in dd:
       data=dict(zip(mykeys, vals))
+      # need to fix parity
       if data['parity'] == 0:
         data['parity'] = -1
       data['label'] = "%dT%d"%(data['n'], data['t'])
