@@ -418,8 +418,8 @@ class WebGamma1Space(object):
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [
-            ('Download trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('Download all stored data to text', url_for('cmf.download_full_space', label=self.label))
+            ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
+            ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
         ]
         self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []
