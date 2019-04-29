@@ -38,7 +38,7 @@ from Lfunctionutilities import (
 from LfunctionComp import isogeny_class_cm
 from LfunctionDatabase import (
         get_lfunction_by_Lhash, get_instances_by_Lhash,
-        get_instances_by_Lhash_and_trace_hash, 
+        get_instances_by_Lhash_and_trace_hash, get_factors_instances, 
         get_instances_by_trace_hash, get_lfunction_by_url,
         get_instance_by_url, getHmfData, getHgmData,
         getEllipticCurveData, get_multiples_by_Lhash_and_trace_hash)
