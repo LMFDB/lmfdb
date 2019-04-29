@@ -16,7 +16,6 @@ from sage.all import (
     latex, CBF, RIF, primes_first_n, next_prime, lazy_attribute)
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
-from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
         web_latex, round_to_half_int, round_CBF_to_half_int,
@@ -37,9 +36,11 @@ from Lfunctionutilities import (
         compute_local_roots_SMF2_scalar_valued,)
 from LfunctionComp import isogeny_class_cm
 from LfunctionDatabase import (
-        get_lfunction_by_Lhash, get_instances_by_Lhash,
-        get_instances_by_Lhash_and_trace_hash, get_factors_instances, 
-        get_instances_by_trace_hash, get_lfunction_by_url,
+        get_lfunction_by_Lhash,
+        get_instances_by_Lhash,
+        get_instances_by_Lhash_and_trace_hash,
+        get_factors_instances,
+        get_lfunction_by_url,
         get_instance_by_url, getHmfData, getHgmData,
         getEllipticCurveData, get_multiples_by_Lhash_and_trace_hash)
 
