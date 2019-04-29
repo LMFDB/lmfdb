@@ -198,7 +198,7 @@ def geom_end_alg_name(name):
         "CM x Q":"\\mathrm{CM} \\times \\Q",
         "CM":"\\mathrm{CM}",
         "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
-        "QM":"\\mathrm{QM}",        
+        "QM":"\\mathrm{QM}",
         "M_2(Q)":"\\mathrm{M}_2(\\Q)",
         "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
         }
@@ -436,7 +436,7 @@ def add_friend(friends,friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             return
-        # compare again with slashes coverted to dots to deal with minor differences in url/label formatting
+        # compare again with slashes converted to dots to deal with minor differences in url/label formatting
         olddots = ".".join(oldfriend[1].split("/"))
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
@@ -553,7 +553,7 @@ class WebG2C(object):
                 sz = "everywhere"
             data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
-            data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
+            data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:

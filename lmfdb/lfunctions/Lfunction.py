@@ -19,10 +19,10 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, round_to_half_int, round_CBF_to_half_int,
-    display_complex, str_to_CBF,
-    Downloader,
-    names_and_urls)
+        web_latex, round_to_half_int, round_CBF_to_half_int,
+        display_complex, str_to_CBF,
+        Downloader,
+        names_and_urls)
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.mwf_classes import WebMaassForm
@@ -33,14 +33,15 @@ import lmfdb.hypergm.hodge
 from Lfunction_base import Lfunction
 from lmfdb.lfunctions import logger
 from Lfunctionutilities import (
-    string2number, get_bread,
-    compute_local_roots_SMF2_scalar_valued,)
+        string2number, get_bread,
+        compute_local_roots_SMF2_scalar_valued,)
 from LfunctionComp import isogeny_class_cm
 from LfunctionDatabase import (
-    get_lfunction_by_Lhash, get_instances_by_Lhash,
-    get_instances_by_trace_hash, get_lfunction_by_url,
-    get_instance_by_url, getHmfData, getHgmData,
-    getEllipticCurveData, get_multiples_by_Lhash)
+        get_lfunction_by_Lhash, get_instances_by_Lhash,
+        get_instances_by_Lhash_and_trace_hash, 
+        get_instances_by_trace_hash, get_lfunction_by_url,
+        get_instance_by_url, getHmfData, getHgmData,
+        getEllipticCurveData, get_multiples_by_Lhash_and_trace_hash)
 
 def artin_url(label):
     return "ArtinRepresentation/" + label
@@ -607,37 +608,22 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def origins(self):
         # objects that arise the same identical L-function
-        lorigins = []
-        instances = get_instances_by_Lhash(self.Lhash)
-        # a temporary fix while we don't replace the old Lhash (=trace_hash)
-        if self.trace_hash is not None:
-            instances = get_instances_by_trace_hash(self.degree, str(self.trace_hash))
+        instances = get_instances_by_Lhash_and_trace_hash(self.Lhash, self.degree, self.trace_hash)
         return names_and_urls(instances)
-        if not self.selfdual and hasattr(self, 'dual_link'):
-            lorigins.append(("Dual L-function", self.dual_link))
-        return lorigins
 
     @property
     def friends(self):
+        """
+        This populates Related objects
+        dual L-fcn and other objects that this L-fcn divides
+        """
         # dual L-function and objects such that the L-functions contain this L-function as a factor
         related_objects = []
         if not self.selfdual and hasattr(self, 'dual_link'):
             related_objects.append(("Dual L-function", self.dual_link))
 
-        instances = [elt for elt in get_multiples_by_Lhash(self.Lhash) if elt['Lhash'] != self.Lhash]
-        if self.trace_hash is not None:
-            instances += [elt for elt in get_multiples_by_Lhash(str(self.trace_hash)) if elt['Lhash'] != self.Lhash and elt['Lhash'] != str(self.trace_hash) ]
-        # a temporary fix while we don't replace the old Lhash (=trace_hash)
-        # the only thing that we might be missing are genus 2 L-functions
-        # hence, self.degree = 2, self.type = CMF
-        if self.degree == 2:
-            # our only hope is to find the missing genus 2 curve with a CMF
-            for Lhash in  set(elt['Lhash'] for elt in instances if elt['type'] == 'CMF'):
-                elt = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = elt.get('trace_hash',None)
-                if trace_hash is not None and elt['degree'] == 4:
-                    # names_and_urls will remove duplicates
-                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
+        instances = get_multiples_by_Lhash_and_trace_hash(
+                self.Lhash, self.degree, self.trace_hash)
         return related_objects + names_and_urls(instances)
 
     @lazy_attribute

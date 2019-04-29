@@ -35,7 +35,7 @@ def get_instances_by_trace_hash(degree, trace_hash):
             return oldurl
 
     res = []
-    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection = 'Lhash', sort=[]):
+    for Lhash in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection='Lhash', sort=[]):
         for elt in get_instances_by_Lhash(Lhash):
             if elt['type'] == 'ECQP':
                 continue
@@ -46,16 +46,68 @@ def get_instances_by_trace_hash(degree, trace_hash):
     return res
 
 
+def get_instances_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
+    instances = get_instances_by_Lhash(Lhash)
+    if trace_hash:
+        instances += get_instances_by_trace_hash(degree, trace_hash)
+    return instances
+
+def get_multiples_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
+    instances = [elt for elt in get_multiples_by_Lhash(Lhash)
+                 if elt['Lhash'] != Lhash]
+
+    if trace_hash:
+        # is usually a number
+        trace_hash = str(trace_hash)
+        # use trace_hash as an Lhash
+        instances += [elt for elt in get_multiples_by_Lhash(trace_hash)
+                      if elt['Lhash'] != Lhash and elt['Lhash'] !=trace_hash ]
+        # a temporary fix while we don't replace the old Lhash (=trace_hash)
+        # the only thing that we might be missing are genus 2 L-functions
+        # hence, self.degree = 2, self.type = CMF
+        if degree == 2:
+            # our only hope is to find the missing genus 2 curve with a CMF
+            for Lhash in set(elt['Lhash'] for elt in instances
+                             if elt['type'] == 'CMF'):
+                other_trace_hash = db.lfunc_lfunctions.lucky(
+                    {'Lhash': Lhash, 'degree': 4}, 'trace_hash')
+                if other_trace_hash is not None:
+                    # names_and_urls will remove duplicates
+                    instances.extend(get_instances_by_trace_hash(
+                        4, str(other_trace_hash)))
+
+    return instances
+
+def get_factors_instances(Lhash):
+        # objects for the factors
+        instances = []
+        if "," in Lhash:
+            for factor_Lhash in set(Lhash.split(",")):
+                # a temporary fix while we don't replace the old Lhash (=trace_hash)
+                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash},
+                                                ['trace_hash', 'degree'])
+                trace_hash = elt.get('trace_hash', None)
+                if trace_hash is not None:
+                    instances.extend(
+                            get_instances_by_trace_hash(elt['degree'],
+                                                        str(trace_hash))
+                            )
+                # names_and_urls will remove duplicates
+                instances.extend(get_instances_by_Lhash(factor_Lhash))
+        return instances
+
+
+
+
 def get_instance_by_url(url):
     return db.lfunc_instances.lucky({'url': url})
 
 def get_lfunction_by_url(url):
-    instance = get_instance_by_url(url);
+    instance = get_instance_by_url(url)
     if not instance:
-        return None;
-
+        return None
     Lhash = instance['Lhash']
-    Ldata =  get_lfunction_by_Lhash(Lhash);
+    Ldata = get_lfunction_by_Lhash(Lhash)
     if not Ldata:
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
