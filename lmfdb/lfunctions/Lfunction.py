@@ -630,7 +630,7 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def factors_origins(self):
         # objects for the factors
-        return names_and_urls(get_factors_instances(self.Lhash))
+        return names_and_urls(get_factors_instances(self.Lhash, self.degree, self.trace_hash))
 
     @lazy_attribute
     def instances(self):
