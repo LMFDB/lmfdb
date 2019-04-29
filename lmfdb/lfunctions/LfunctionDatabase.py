@@ -83,17 +83,13 @@ def get_factors_instances(Lhash):
         instances = []
         if "," in Lhash:
             for factor_Lhash in set(Lhash.split(",")):
-                # a temporary fix while we don't replace the old Lhash (=trace_hash)
                 elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash},
                                                 ['trace_hash', 'degree'])
-                trace_hash = elt.get('trace_hash', None)
-                if trace_hash is not None:
-                    instances.extend(
-                            get_instances_by_trace_hash(elt['degree'],
-                                                        str(trace_hash))
-                            )
                 # names_and_urls will remove duplicates
-                instances.extend(get_instances_by_Lhash(factor_Lhash))
+                instances.extend(
+                        get_instances_by_Lhash_and_trace_hash(factor_Lhash,
+                            elt['degree'],
+                            elt.get('trace_hash', None)))
         return instances
 
 

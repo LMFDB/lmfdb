@@ -629,17 +629,7 @@ class Lfunction_from_db(Lfunction):
     @lazy_attribute
     def factors_origins(self):
         # objects for the factors
-        instances = []
-        if "," in self.Lhash:
-            for factor_Lhash in  set(self.Lhash.split(",")):
-                # a temporary fix while we don't replace the old Lhash (=trace_hash)
-                elt = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = ['trace_hash', 'degree'])
-                trace_hash = elt.get('trace_hash',None)
-                if trace_hash is not None:
-                    instances.extend(get_instances_by_trace_hash(elt['degree'], str(trace_hash)))
-                # names_and_urls will remove duplicates
-                instances.extend(get_instances_by_Lhash(factor_Lhash))
-        return names_and_urls(instances)
+        return names_and_urls(get_factors_instances(self.Lhash))
 
     @lazy_attribute
     def instances(self):
