@@ -1062,31 +1062,6 @@ class Lfunction_genus2_Q(Lfunction_from_db):
     def knowltype(self):
         return "g2c.q"
 
-    @lazy_attribute
-    def factors_origins(self):
-        # this is just a hack, and the data should be replaced
-        instances = []
-        # either the factors are stored in the DB as products of EC
-        for elt in db.lfunc_instances.search({'Lhash': self.Lhash, 'type':'ECQP'}, projection = 'url'):
-            if '|' in elt:
-                for url in elt.split('|'):
-                    url = url.rstrip('/')
-                    # Lhash = trace_hash
-                    instances.extend(get_instances_by_trace_hash(2, db.lfunc_instances.lucky({'url': url}, 'Lhash')))
-                break
-        # or we need to use the trace_hash to find other factorizations
-        if str(self.trace_hash) == self.Lhash:
-            for elt in db.lfunc_lfunctions.search({'trace_hash': self.trace_hash, 'degree' : 4}, projection = 'Lhash'):
-                if ',' in elt:
-                    for factor_Lhash in  elt.split(","):
-                        trace_hash = db.lfunc_lfunctions.lucky({'Lhash': factor_Lhash}, projection = 'trace_hash')
-                        if trace_hash is not None:
-                            instancesf = get_instances_by_trace_hash(
-                                                            2, str(trace_hash))
-                        else:
-                            instancesf = get_instances_by_Lhash(factor_Lhash)
-                        instances.extend(instancesf)
-        return names_and_urls(instances)
 
     #def _set_title(self):
     #    title = "L-function of the Jacobian of a genus 2 curve with label %s" %  (self.origin_label)

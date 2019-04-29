@@ -78,7 +78,7 @@ def get_multiples_by_Lhash_and_trace_hash(Lhash, degree, trace_hash):
 
     return instances
 
-def get_factors_instances(Lhash):
+def get_factors_instances(Lhash, degree, trace_hash):
         # objects for the factors
         instances = []
         if "," in Lhash:
@@ -90,6 +90,19 @@ def get_factors_instances(Lhash):
                         get_instances_by_Lhash_and_trace_hash(factor_Lhash,
                             elt['degree'],
                             elt.get('trace_hash', None)))
+        # try to get factors as EC, this only arises for G2C
+        for elt in db.lfunc_instances.search({'Lhash': Lhash, 'type':'ECQP'}, projection='url'):
+                if '|' in elt:
+                    for url in elt.split('|'):
+                        url = url.rstrip('/')
+                        # Lhash = trace_hash
+                        instances.extend(get_instances_by_trace_hash(2, db.lfunc_instances.lucky({'url': url}, 'Lhash')))
+                    break
+
+        # or we need to use the trace_hash to find other factorizations
+        if str(trace_hash) == Lhash:
+            for elt in db.lfunc_lfunctions.search({'trace_hash': trace_hash, 'degree' : degree}, projection='Lhash'):
+                instances.extend(get_factors_instances(elt, None, None)
         return instances
 
 
