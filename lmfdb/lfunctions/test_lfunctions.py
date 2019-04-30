@@ -496,6 +496,29 @@ class LfunctionTest(LmfdbTest):
         assert 'Isogeny class 14.a' in L.data
         assert 'Modular form 14.2.a.a' in L.data
 
+        L = self.tc.get('/L/Genus2Curve/Q/576/a/')
+        assert 'Hilbert modular form 2.2.8.1-9.1-a' in L.data
+        assert 'Isogeny class 2.2.8.1-9.1-a' in L.data
+        assert 'Isogeny class 576.a' in L.data
+        assert 'Modular form 24.2.d.a' in L.data
+        assert 'Modular form 24.2.d.a.13.1' in L.data
+        assert 'Modular form 24.2.d.a.13.2' in L.data
+
+        L = self.tc.get('/L/Genus2Curve/Q/20736/i/')
+        assert 'Bianchi modular form 2.0.8.1-324.3-a' in L.data
+        assert 'Hilbert modular form 2.2.24.1-36.1-a' in L.data
+        assert 'Isogeny class 2.0.8.1-324.3-a' in L.data
+        assert 'Isogeny class 2.2.24.1-36.1-a' in L.data
+        assert 'Isogeny class 20736.i' in L.data
+        assert 'Origins of factors' in L.data
+        assert 'Isogeny class 36.a' in L.data
+        assert 'Isogeny class 576.f' in L.data
+        assert 'Modular form 36.2.a.a' in L.data
+        assert 'Modular form 36.2.a.a.1.1' in L.data
+        assert 'Modular form 576.2.a.f' in L.data
+        assert 'Modular form 576.2.a.f.1.1' in L.data
+
+
     def test_Llhash(self):
         r"""
         Checking L/lhash/ pages

@@ -115,7 +115,7 @@ def names_and_urls(instances, exclude={}):
     for instance in instances:
         if not isinstance(instance, basestring):
             instance = instance['url']
-        if instance not in exclude:
+        if instance not in exclude and '|' not in instance:
             urls.add(instance)
 
     for url in urls:
