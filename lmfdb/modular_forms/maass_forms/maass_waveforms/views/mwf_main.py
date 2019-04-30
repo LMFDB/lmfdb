@@ -297,7 +297,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     #                   'mult': 'mf.maass.mwf.dimension',
     #                   'ncoeff': 'mf.maass.mwf.ncoefficients',
     #                   'fricke': 'cmf.fricke',
-    #                   'atkinlehner': 'mf.maass.mwf.atkinlehner'}
+    #                   'atkinlehner': 'cmf.atkin-lehner'}
     properties = [('Level', [info['MF'].level]),
                   ('Symmetry', [info['MF'].even_odd()]),
                   ('Weight', [info['MF'].the_weight()]),
@@ -463,7 +463,7 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
               'mf.maass.mwf.eigenvalue', 'mf.maass.mwf.symmetry',
               'mf.maass.mwf.precision', 'mf.maass.mwf.dimension',
               'mf.maass.mwf.ncoefficients', 'cmf.fricke',
-              'mf.maass.mwf.atkinlehner']
+              'cmf.atkin-lehner']
     titles = ['Level', 'Weight', 'Char',
               'Eigenvalue', 'Symmetry',
               'Precision', 'Mult.',
