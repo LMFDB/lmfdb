@@ -2,7 +2,7 @@
 {% block content %}
 
 <div>
-L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
+{{ KNOWL('lfunction', title='L-functions') }} can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
 All known {{ KNOWL('lfunction.known_degree2', title='degree 2') }} L-functions have a
 functional equation of one of the two forms
 \[
@@ -23,8 +23,11 @@ L(s)=
 \prod_{p|N} \left(1-a_p p^{-s}\right)^{-1}.
 \prod_{p\nmid N} \left(1-a_p p^{-s}+\chi(p) p^{-2s}\right)^{-1}.
 \]
-Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, and $\chi$, known as the central character,
-is a primitive Dirichlet character of conductor dividing&nbsp;$N$.
+Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, 
+and $\chi$, known as the central character,
+is a primitive  {{ KNOWL('character.dirichlet', title='Dirichlet character') }} of conductor dividing&nbsp;$N$.
+The functions {{ KNOWL('specialfunction.gammarandc', title='$\Gamma_\R$ and $\Gamma_\C$') }}
+are the gamma factors.
 The parameter $\nu$ is a positive integer or half-integer, the parameter
 $\mu$ is real, and
 $\delta_j$ is 0 or 1.
