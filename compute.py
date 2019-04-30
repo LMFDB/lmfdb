@@ -19,13 +19,14 @@ if output_file_name.endswith('.json'):
     output_file_name = input_file_name[:-5]
 output_file_name += '-output.yml'
 input_file = open(input_file_name, 'r')
-output_file = open(output_file_name, 'a')
+output_file = open(output_file_name, 'w')
 
 # Flush changes in a file to disk
 def flush(file):
     file.flush()
     os.fsync(file.fileno())
 
+# Magma code to compute braid and topological classes
 helper_code = '''
 /* helper functions for orbits */
 /* L is list of IDs */
@@ -287,6 +288,7 @@ if #genvecs gt 0 then
 end if;   /* whether any generating vectors */
 '''
 
+# Find the representative for each equivalence class
 def find_representatives(orbits):
     reps = {}
     for orbit in orbits:
@@ -295,6 +297,7 @@ def find_representatives(orbits):
             reps[str(object_id)] = str(rep)
     return reps
 
+# Write output into an output.yml file
 def save_output(label, magma_output):
     output_file.write('# {}'.format(label))
     braid_reps = find_representatives(magma_output['braid'])
@@ -311,6 +314,7 @@ def save_output(label, magma_output):
 '''.format(object_id, top_rep, braid_rep))
     flush(output_file)
 
+# Compute the braid and equivalence classes
 def run_magma(family):
     label = family[0]['label']
     if len(family) == 1:
@@ -334,7 +338,8 @@ def run_magma(family):
             magma_output += '\n  - [{}]'.format(vector['id'])
     save_output(label, yaml.load(magma_output))
 
-sum_time = 0.0        
+sum_time = 0.0
+# Print to terminal status of the process
 for line in input_file:
     family = loads(line)
     print "\nStarting family {0}".format(family[0]['label'])
