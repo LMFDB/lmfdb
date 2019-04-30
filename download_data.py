@@ -8,6 +8,11 @@ hg = db.hgcwa_passports
 sizes = [0 for i in range(10)]
 file = open('families.json'.format(0), 'w')
 #large_files = [open('largefamilies{0}.json'.format(i), 'w') for i in range(10)]
+
+
+
+#Not include quotient genus greater than zero
+#Pass in genus as the argument
 gendata = list(hg.search({'genus': 2}))
 families = set()
 for i in range(len(gendata)):
