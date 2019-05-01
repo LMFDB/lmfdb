@@ -29,7 +29,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '1.4.6.1.1a' in L.data
         L = self.tc.get('/SatoTateGroup/G_{3,3}', follow_redirects=True)
         assert '1.4.6.1.1a' in L.data
-        L = self.tc.get('/SatoTateGroup/banana')
+        L = self.tc.get('/SatoTateGroup/banana', follow_redirects=True)
         print L.data
         assert 'not a label or name of a Sato-Tate group' in L.data
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
