@@ -1371,17 +1371,17 @@ class PostgresTable(PostgresBase):
         Otherwise, an iterator that yields dictionaries with keys
         from ``search_cols`` and ``extra_cols``.
         """
-        # Eventually want to batch the queries on the extra_table so that we make
-        # fewer SQL queries here.
+        # Eventually want to batch the queries on the extra_table so that we
+        # make fewer SQL queries here.
         try:
             for rec in cur:
                 if projection == 0 or isinstance(projection, basestring):
                     yield rec[0]
                 else:
-                    yield {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
+                    yield {k: v for k, v in zip(search_cols + extra_cols, rec)
+                           if v is not None}
         finally:
             if isinstance(cur, pg_cursor):
-                print "closing cursor"
                 cur.close()
 
     ##################################################################
