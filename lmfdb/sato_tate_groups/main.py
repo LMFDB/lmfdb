@@ -204,14 +204,16 @@ def search_by_label(label):
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
         try:
-            label = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
+            rlabel = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
         except ValueError:
-            label = None
-    if label is None:
-        flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
-        return redirect(url_for(".index"))
-    else:
+            rlabel = None
+        if not rlabel:
+            flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
+            return redirect(url_for(".index"))
+        label = rlabel
         return redirect(url_for('.by_label', label=label), 301)
+    flash_error("%s is not a valid Sato-Tate group label", label)
+    return redirect(url_for(".index"))
 
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
