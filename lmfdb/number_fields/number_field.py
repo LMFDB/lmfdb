@@ -16,8 +16,9 @@ from lmfdb.utils import (
     search_wrap)
 from lmfdb.local_fields.main import show_slope_content
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, cclasses_display_knowl,character_table_display_knowl,
-    group_phrase, group_display_short, galois_group_data, group_cclasses_knowl_guts,
+    cclasses_display_knowl,character_table_display_knowl,
+    group_phrase, galois_group_data, 
+    group_cclasses_knowl_guts, group_pretty_and_nTj,
     group_character_table_knowl_guts, group_alias_table)
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
@@ -372,7 +373,7 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factor(data['conductor'], ram_primes)
             factored_conductor = factor_base_factorization_latex(factored_conductor)
             data['conductor'] = "\(%s=%s\)" % (str(data['conductor']), factored_conductor)
-    data['galois_group'] = group_display_knowl(n, t)
+    data['galois_group'] = group_pretty_and_nTj(n,t,True)
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
@@ -544,7 +545,7 @@ def render_field_webpage(args):
                    ('Ramified ' + primes + '', '$%s$' % ram_primes),
                    ('Class number', '%s %s' % (data['class_number'], grh_lab)),
                    ('Class group', '%s %s' % (data['class_group_invs'], grh_lab)),
-                   ('Galois Group', group_display_short(data['degree'], t))
+                   ('Galois Group', group_pretty_and_nTj(data['degree'], t))
                    ]
     downloads = []
     for lang in [["Magma","magma"], ["SageMath","sage"], ["Pari/GP", "gp"]]:
@@ -720,6 +721,7 @@ def number_field_search(info, query):
     #    if label:
     #        return redirect(url_for(".by_label", label=clean_input(label)))
     info['wnf'] = WebNumberField.from_data
+    info['gg_display'] = group_pretty_and_nTj
 
 def search_input_error(info, bread):
     return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
