@@ -30,8 +30,7 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('/SatoTateGroup/G_{3,3}', follow_redirects=True)
         assert '1.4.6.1.1a' in L.data
         L = self.tc.get('/SatoTateGroup/banana', follow_redirects=True)
-        print L.data
-        assert 'not a label or name of a Sato-Tate group' in L.data
+        assert 'The database currently contains' in L.data
         L = self.tc.get('/SatoTateGroup/1.4.6.1.1a')
         assert 'G_{3,3}' in L.data
         L = self.tc.get('/SatoTateGroup/0.1.mu(37)', follow_redirects=True)
