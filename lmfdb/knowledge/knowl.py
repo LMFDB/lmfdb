@@ -620,7 +620,7 @@ class KnowlBackend(PostgresBase):
         """
         Returns a dictionary giving the count of knowls within each category.
         """
-        selecter = SQL("SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls WHERE type = %s) knowls GROUP BY cat")
+        selecter = SQL("SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls WHERE type = %s AND status >= 0) knowls GROUP BY cat")
         cur = self._execute(selecter, [0])
         return {res[0]: res[1] for res in cur}
 
