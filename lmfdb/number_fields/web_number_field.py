@@ -4,7 +4,7 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap,
+    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
     AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, cached_function)
 
 from lmfdb import db
@@ -306,6 +306,10 @@ class WebNumberField:
     def ramified_primes(self):
         return [int(str(j)) for j in self._data['ramps']]
 
+    # Even rd is in the database, that does not low precision for searching
+    def rd(self):
+        return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
+
     # Return a nice string for the Galois group
     def galois_string(self):
         if not self.haskey('galt'):
@@ -563,6 +567,9 @@ class WebNumberField:
             res = res.replace('\\\\', '\\')
             return res
         return na_text()
+
+    def is_cm_field(self):
+        return self._data['cm']
 
     def disc_factored_latex(self):
         D = self.disc()
