@@ -528,13 +528,6 @@ def render_field_webpage(args):
 
     info['resinfo'] = resinfo
     learnmore = learnmore_list()
-    #if info['signature'] == [0,1]:
-    #    info['learnmore'].append(('Quadratic imaginary class groups', url_for(".render_class_group_data")))
-    # With Galois group labels, probably not needed here
-    # info['learnmore'] = [('Global number field labels',
-    # url_for(".render_labels_page")), ('Galois group
-    # labels',url_for(".render_groups_page")),
-    # (Completename,url_for(".render_discriminants_page"))]
     title = "Global Number Field %s" % info['label']
 
     if npr == 1:
@@ -542,6 +535,8 @@ def render_field_webpage(args):
     else:
         primes = 'primes'
 
+    if len(label)>25:
+        label = label[:11]+'...'+label[-11:]
     properties2 = [('Label', label),
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
