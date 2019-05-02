@@ -171,7 +171,7 @@ def render_group_webpage(args):
             G = gap.SmallGroup(n, t)
         else:
             G = gap.TransitiveGroup(n, t)
-        if ZZ(order) < ZZ('10000000000'):
+        if ZZ(order) < ZZ('10000000'):
             ctable = chartable(n, t)
         else:
             ctable = 'Group too large'
