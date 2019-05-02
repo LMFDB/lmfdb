@@ -536,7 +536,7 @@ def render_field_webpage(args):
         primes = 'primes'
 
     if len(label)>25:
-        label = label[:11]+'...'+label[-11:]
+        label = label[:16]+'...'+label[-6:]
     properties2 = [('Label', label),
                    ('Degree', '$%s$' % data['degree']),
                    ('Signature', '$%s$' % data['signature']),
