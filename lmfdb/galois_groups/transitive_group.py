@@ -231,7 +231,10 @@ def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
         name += group_display_short(n, t)
-    return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    group = db.gps_transitive.lookup(base_label(n, t))
+    if ZZ(group['order']) < ZZ(10000000):
+        return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return name + ' is not computed'
 
 
 def group_phrase(n, t):

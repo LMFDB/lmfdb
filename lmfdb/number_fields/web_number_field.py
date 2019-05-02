@@ -767,11 +767,12 @@ class WebNumberField:
             R = PolynomialRing(QQ, 'x')
             palg = local_algebra_dict[str(p)]
             palgs = [R(str(s)) for s in palg.split(',')]
-            palgstr = [
+            try:
+                palgstr = [
                     list2string([int(c) for c in pol.coefficients(sparse=False)])
                     for pol in palgs]
-            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
-            return [
+                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
+                return [
                     [
                         LF['label'],
                         latex(f),
@@ -784,7 +785,8 @@ class WebNumberField:
                         LF['slopes']
                     ]
                     for LF, f in zip(palgrec, palgs) ]
-        return None
+            except: # we were unable to find the local fields in the database
+                return None
 
     def ramified_algebras_data(self):
         if 'loc_algebras' not in self._data:
