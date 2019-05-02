@@ -50,6 +50,11 @@ table.ntdata a {
   {% else %}
             <tr><td colspan="3">This field is not Galois over $\Q$.</tr>
   {% endif %}
+  {% if nf.is_cm_field() %}
+  <tr><td colspan="3">This is a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+  {% else %}
+  <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+  {% endif %}
 
           </table>
         </p>
