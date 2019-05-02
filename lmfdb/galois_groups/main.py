@@ -161,6 +161,9 @@ def render_group_webpage(args):
         order = data['order']
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
+        print ""
+        print "factored"
+        print ""
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
         if order == 1:
             data['ordermsg'] = "$1$"
@@ -171,7 +174,7 @@ def render_group_webpage(args):
             G = gap.SmallGroup(n, t)
         else:
             G = gap.TransitiveGroup(n, t)
-        if ZZ(order) < ZZ('10000000000'):
+        if ZZ(order) < ZZ('10000000'):
             ctable = chartable(n, t)
         else:
             ctable = 'Group too large'
