@@ -193,7 +193,6 @@ def group_pretty_and_nTj(n, t, useknowls=False):
             gapid = "%d.%d"%(group['order'],group['gapid'])
             gapgroup = db.gps_small.lookup(gapid)
             if gapgroup is not None:
-                print "gapgroup not none"
                 pretty = small_group_display_knowl(group['order'], group['gapid'], name=group['pretty'])
         string = pretty + ' (as ' + ntj + ')'
     else:
