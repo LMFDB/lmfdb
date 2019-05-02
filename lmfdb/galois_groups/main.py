@@ -161,9 +161,6 @@ def render_group_webpage(args):
         order = data['order']
         data['orderfac'] = latex(ZZ(order).factor())
         orderfac = latex(ZZ(order).factor())
-        print ""
-        print "factored"
-        print ""
         data['ordermsg'] = "$%s=%s$" % (order, latex(orderfac))
         if order == 1:
             data['ordermsg'] = "$1$"
