@@ -479,7 +479,6 @@ def introduction():
     b = intro_bread()
     return render_template(_single_knowl, title="Introduction", kid='intro', body_class=_bc, bread=b)
 
-
 @app.route("/intro/features")
 def introduction_features():
     b = intro_bread()
@@ -493,7 +492,6 @@ def introduction_zetatour():
     b.append(('Tutorial', url_for("introduction_zetatour")))
     return render_template(_single_knowl, title="A Tour of the Riemann Zeta Function", kid='intro.tutorial', body_class=_bc, bread=b)
 
-
 @app.route("/bigpicture")
 def bigpicture():
     b = [('Big Picture', url_for('bigpicture'))]
@@ -503,13 +501,6 @@ def bigpicture():
 def universe():
     b = [('LMFDB Universe', url_for('universe'))]
     return render_template("universe.html", title="The LMFDB Universe", body_class=_bc, bread=b)
-
-
-@app.route("/roadmap")
-def roadmap():
-    t = "Future Plans"
-    b = [(t, url_for('roadmap'))]
-    return render_template('roadmap.html', title=t, body_class=_bc, bread=b)
 
 @app.route("/news")
 def news():

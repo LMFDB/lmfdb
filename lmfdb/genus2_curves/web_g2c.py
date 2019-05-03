@@ -3,7 +3,8 @@
 from ast import literal_eval
 from lmfdb import db
 from lmfdb.utils import web_latex, encode_plot, list_to_factored_poly_otherorder
-from lmfdb.ecnf.main import split_full_label
+from lmfdb.ecnf.main import split_full_label as split_ecnf_label
+from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -39,12 +40,9 @@ def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
     else:
-        (nf, conductor_label, class_label, number) = split_full_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = conductor_label, class_label = class_label, number = number)
-        # fixup conductor norm labels for the form "[a,b,c]" that have been converted to urls to ensure friend matching works
-        url.replace("%5B","[")
-        url.replace("%2C",".")
-        url.replace("%5D","]")
+        (nf, cond, isog, num) = split_ecnf_label(label)
+        cond = convert_IQF_label(nf,cond)
+        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
         return url
 
 def url_for_ec_class(ec_label):
@@ -52,8 +50,9 @@ def url_for_ec_class(ec_label):
         (cond, iso, num) = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:
-        (nf, cond, iso, num) = split_full_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=iso)
+        (nf, cond, isog, num) = split_ecnf_label(ec_label)
+        cond = convert_IQF_label(nf,cond)
+        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 def ec_label_class(ec_label):
     x = ec_label
@@ -228,8 +227,8 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "of \(\GL_2\)-type over " + base
-    return "not of \(\GL_2\)-type over " + base
+        return "Of \(\GL_2\)-type over " + base
+    return "Not of \(\GL_2\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
@@ -418,11 +417,18 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        label = parts[1] + "-" + parts[2] + "-" + parts[3]
+        cond = convert_IQF_label(parts[1],parts[2])
+        label = parts[1] + "-" + cond + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
         return ("Hilbert MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "ImaginaryQuadratic":
+        label = '.'.join(parts[4:6])
+        return ("Bianchi MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "Q" and parts[3] == "holomorphic":
+        label = '.'.join(parts[4:8])
+        return ("Modular form " + label, "/" + url)
     return (url, "/" + url)
 
 # add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
@@ -664,6 +670,14 @@ class WebG2C(object):
                     add_friend (friends, lfunction_friend_from_url(url))
             else:
                 add_friend (friends, lfunction_friend_from_url(friend_url))
+        # Hack to deal with the fact that currently the same L-function can appear more than once in db.lfunc_lfunctions and we want to friend instances of all of them
+        for Lhash in db.lfunc_lfunctions.search({"trace_hash":data["Lhash"]},"Lhash"):
+            for friend_url in db.lfunc_instances.search({'Lhash':Lhash}, 'url'):
+                if '|' in friend_url:
+                    for url in friend_url.split('|'):
+                        add_friend (friends, lfunction_friend_from_url(url))
+                else:
+                    add_friend (friends, lfunction_friend_from_url(friend_url))           
         for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
             # be selective, only cmfs of the right dimension and conductor get to be our friends
             if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
