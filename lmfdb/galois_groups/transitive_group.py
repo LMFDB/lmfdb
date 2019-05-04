@@ -52,6 +52,20 @@ def small_group_data(gapid):
     inf += '</table></p>'
     return inf
 
+def list_with_mult(lis):
+    lis2 = [(j[0], j[1]) for j in lis]
+    diflis = list(set(lis2))
+    diflis.sort()
+    ans = ''
+    for k in diflis:
+        if ans != '':
+            ans += ', '
+        cnt = lis2.count(k)
+        ans += group_display_knowl(k[0], k[1])
+        if cnt>1:
+            ans += " x %d"%cnt
+    return ans
+
 
 ############  Galois group object
 
@@ -103,37 +117,10 @@ class WebGaloisGroup:
         return self._data['name']
 
     def otherrep_list(self):
-        reps = [(j[0], j[1]) for j in self._data['repns']]
-        me = (self.n(), self.t())
-        difreps = list(set(reps))
-        difreps.sort()
-        ans = ''
-        for k in difreps:
-            if ans != '':
-                ans += ', '
-            cnt = reps.count(k)
-            start = 'a'
-            if k == me:
-                start = nextchr(start)
-            if cnt == 1:
-                ans += group_display_knowl(k[0], k[1])
-                if k == me:
-                    ans += 'b'
-            else:
-                for j in range(cnt):
-                    if j > 0:
-                        ans += ', '
-                    ans += "%s%s" % (group_display_knowl(k[0], k[1]), start)
-                    start = nextchr(start)
-        return ans
+        return(list_with_mult(self._data['repns']))
 
     def subfields(self):
-        ans = ''
-        for k in self._data['subs']:
-            if ans != '':
-                ans += ', '
-            ans += group_display_knowl(k[0], k[1])
-        return ans
+        return(list_with_mult(self._data['subs']))
 
 ############  Misc Functions
 
