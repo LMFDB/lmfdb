@@ -154,7 +154,7 @@ def how_computed_page():
     info['bread'] = [ ('Characters',url_for(".render_characterNavigation")),
     ('Dirichlet', url_for(".render_Dirichletwebpage")), ('Source', '') ]
     info['learnmore'] = learn('source')
-    return render_template("single.html", kid='rcs.cande.character.dirichlet', **info)
+    return render_template("single.html", kid='rcs.source.character.dirichlet', **info)
 
 @characters_page.route("/Reliability")
 def reliability():
