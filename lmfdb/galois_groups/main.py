@@ -10,7 +10,7 @@ from sage.all import ZZ, latex, gap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, 
+    list_to_latex_matrix, flash_error,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
@@ -148,10 +148,11 @@ def render_group_webpage(args):
         label = label.replace('t', 'T')
         data = db.gps_transitive.lookup(label)
         if data is None:
-            bread = get_bread([("Search Error", ' ')])
-            info['err'] = "Group " + label + " was not found in the database."
-            info['label'] = label
-            return search_input_error(info, bread)
+            if re.match(r'^\d+T\d+$', label):
+                flash_error("Group %s was not found in the database.", label)
+            else:
+                flash_error("%s is not a valid label for a Galois group.", label)
+            return redirect(url_for(".index"))
         data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_data(data)
