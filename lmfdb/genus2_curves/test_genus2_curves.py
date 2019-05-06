@@ -178,8 +178,8 @@ class Genus2Test(LmfdbTest):
                         'Elliptic curve 576.f3',
                         'Elliptic curve 36.a4',
                         'Isogeny class 2.0.8.1-324.3-a',
-                        'Bianchi MF 324.3.a',
-                        'Hilbert MF 2.2.24.1-36.1-a',
+                        'Bianchi modular form 324.3.a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
                         'Isogeny class 2.2.24.1-36.1-a',
                         'Twists',)
                     ),
@@ -188,15 +188,15 @@ class Genus2Test(LmfdbTest):
                         'Isogeny class 576.f',
                         'Isogeny class 36.a',
                         'Isogeny class 2.0.8.1-324.3-a',
-                        'Bianchi MF 324.3.a',
-                        'Hilbert MF 2.2.24.1-36.1-a',
+                        'Bianchi modular form 324.3.a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
                         'Isogeny class 2.2.24.1-36.1-a',)
                     ),
                 ('/Genus2Curve/Q/576/a/',
                     ('L-function',
                         'Isogeny class 2.2.8.1-9.1-a',
                         'Modular form 24.2.d.a',
-                        'Hilbert MF 2.2.8.1-9.1-a',)
+                        'Hilbert modular form 2.2.8.1-9.1-a',)
                     )
                 ]:
             data = self.tc.get(url).data
