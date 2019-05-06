@@ -661,12 +661,16 @@ class WebG2C(object):
         self.friends = friends = []
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+
+        ecs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
-                    add_friend(friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
+                    ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    add_friend(friends, ("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+
+        ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
         # deal with elliptic curves seperately
         instances = []
@@ -683,7 +687,7 @@ class WebG2C(object):
         exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
                    if elt[1]}
         exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
-        for elt in names_and_urls(instances):
+        for elt in ecs + names_and_urls(instances, exclude=exclude):
             # because of the splitting we must use G2C specific code
             add_friend(friends, elt)
         if is_curve:
