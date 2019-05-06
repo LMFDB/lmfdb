@@ -11,9 +11,9 @@
   <table>
       <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
    {% if info.specialname %}
-   <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
+   <tr><td>{{KNOWL('group.small_group_label',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
-  <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
+  <tr><td>{{KNOWL('group.small_group_label',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
   <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
   <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
   </table></p>
