@@ -146,7 +146,7 @@ class ECNF_isoclass(object):
                     Lfun['degree'],
                     Lfun.get('trace_hash'))
             exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
-                     if elt}
+                     if elt[1]}
             exclude.add(lfun_url.lstrip('/L/').rstrip('/'))
             self.friends += names_and_urls(instances, exclude=exclude)
             self.friends += [('L-function', self.urls['Lfunction'])]

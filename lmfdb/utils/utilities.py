@@ -109,8 +109,8 @@ def try_int(foo):
     except Exception:
         return foo
 
-def key_for_numerically_sort(elt):
-    return map(try_int, elt.split("."))
+def key_for_numerically_sort(elt, split="."):
+    return map(try_int, elt.split(split))
 
 def an_list(euler_factor_polynomial_fn,
             upperbound=100000, base_field=QQ):
