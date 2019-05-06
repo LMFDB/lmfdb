@@ -14,7 +14,6 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from lmfdb.classical_modular_forms.main import url_for_label as url_for_cmf
 from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
