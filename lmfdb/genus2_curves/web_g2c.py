@@ -661,6 +661,7 @@ class WebG2C(object):
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
 
+        # first deal with EC
         ecs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
@@ -671,11 +672,12 @@ class WebG2C(object):
 
         ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
-        # deal with elliptic curves seperately
+        # then again EC from lfun
         instances = []
         for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
             instances.extend(elt.split('|'))
 
+        # and then the other isogeny friends
         instances.extend([
             elt['url'] for elt in
             get_instances_by_Lhash_and_trace_hash(data["Lhash"],
@@ -690,7 +692,10 @@ class WebG2C(object):
             # because of the splitting we must use G2C specific code
             add_friend(friends, elt)
         if is_curve:
-            friends.append(('Twists', url_for(".index_Q", g20 = str(data['g2'][0]), g21 = str(data['g2'][1]), g22 = str(data['g2'][2]))))
+            friends.append(('Twists', url_for(".index_Q",
+                                              g20=str(data['g2'][0]),
+                                              g21=str(data['g2'][1]),
+                                              g22=str(data['g2'][2]))))
 
         friends.append(('L-function', data['lfunc_url']))
 
