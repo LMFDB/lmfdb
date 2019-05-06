@@ -7,7 +7,7 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 # TODO This needs to be able to handle any sort of object
 # There should probably be a more relevant field
 # in the database, instead of trying to extract this from a URL
-def name_and_object_from_url(url, check_existence=False, exclude=[]):
+def name_and_object_from_url(url, check_existence=False):
     # the import is here to avoid circular imports
     from lmfdb.backend.database import db
     from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label

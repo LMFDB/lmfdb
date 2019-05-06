@@ -1,10 +1,9 @@
 # Functions for fetching L-function data from databases
 
 from lmfdb import db
-from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 
-def get_lfunction_by_Lhash(Lhash):
-    Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash})
+def get_lfunction_by_Lhash(Lhash, **kwargs):
+    Ldata = db.lfunc_lfunctions.lucky({'Lhash': Lhash}, **kwargs)
     if Ldata is None:
         raise KeyError("Lhash '%s' not found in Lfunctions collection" % (Lhash,))
     return Ldata
@@ -23,6 +22,7 @@ def get_instances_by_trace_hash(degree, trace_hash):
     if degree not in [2, 4]:
         return []
     def ECNF_convert_old_url(oldurl):
+        from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
         # EllipticCurve/2.0.4.1/[4160,64,8]/a/
         if '[' not in oldurl:
             return oldurl
@@ -112,12 +112,12 @@ def get_factors_instances(Lhash, degree, trace_hash):
 def get_instance_by_url(url):
     return db.lfunc_instances.lucky({'url': url})
 
-def get_lfunction_by_url(url):
+def get_lfunction_by_url(url, **kwargs):
     instance = get_instance_by_url(url)
     if not instance:
         return None
     Lhash = instance['Lhash']
-    Ldata = get_lfunction_by_Lhash(Lhash)
+    Ldata = get_lfunction_by_Lhash(Lhash, **kwargs)
     if not Ldata:
         raise KeyError("Lhash '%s' in instances record for URL '%s' not found in Lfunctions collection" % (Lhash, url))
     return Ldata
