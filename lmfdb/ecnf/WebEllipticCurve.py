@@ -2,11 +2,15 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
+from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
+                      implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
-from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
+from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
+                         web_latex_split_on, web_latex_ideal_fact)
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+                                        get_instances_by_Lhash_and_trace_hash)
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -534,25 +538,23 @@ class ECNF(object):
             if db.lfunc_instances.exists({'url':origin_url}):
                 self.urls['Lfunction'] = lfun_url
 
+        # most of this code is repeated in isog_class.py
+        # and should be refactored
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
-        if totally_real:
-            self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
+        if totally_real and not 'Lfunction' in self.urls:
+            self.friends += [('Hilbert modular Form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
-                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
-            else:
+                self.friends += [('Bianchi modular Form is not cuspidal', '')]
+            elif not 'Lfunction' in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('(Bianchi Modular Form %s)' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi modular Form %s)' % self.bmf_label, '')]
 
-        if 'Lfunction' in self.urls:
-            self.friends += [('L-function', self.urls['Lfunction'])]
-        else:
-            self.friends += [('L-function not available', "")]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
@@ -598,6 +600,18 @@ class ECNF(object):
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
 
 
+        if 'Lfunction' in self.urls:
+            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
+            instances = get_instances_by_Lhash_and_trace_hash(
+                    Lfun['Lhash'],
+                    Lfun['degree'],
+                    Lfun.get('trace_hash'))
+            exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                     if elt[1]}
+            self.friends += names_and_urls(instances, exclude=exclude)
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
 
     def code(self):
         if self._code == None:
