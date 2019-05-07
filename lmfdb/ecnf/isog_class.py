@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot
+from lmfdb.utils import encode_plot, names_and_urls, web_latex 
 from lmfdb.logger import make_logger
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
 from sage.all import latex, Matrix, ZZ, Infinity
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+                                        get_instances_by_Lhash_and_trace_hash)
 
 logger = make_logger("ecnf")
 
@@ -108,7 +110,7 @@ class ECNF_isoclass(object):
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field_label, label=self.hmf_label)
             lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
             origin_url = lfun_url.lstrip('/L/').rstrip('/')
-            if sig[0] <= 2 and db.lfunc_instances.exists({'url':origin_url}):
+            if sig[0] <= 2 and db.lfunc_instances.exists({'url': origin_url}):
                 self.urls['Lfunction'] = lfun_url
             elif self.abs_disc ** 2 * self.conductor_norm < 40000:
                 # we shouldn't trust the Lfun computed on the fly for large conductor
@@ -122,20 +124,31 @@ class ECNF_isoclass(object):
             if db.lfunc_instances.exists({'url':origin_url}):
                 self.urls['Lfunction'] = lfun_url
 
+        # most of this code is repeated in WebEllipticCurve.py
+        # and should be refactored
         self.friends = []
-        if totally_real:
+        if totally_real and not 'Lfunction' in self.urls:
             self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
-                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
-            else:
+                self.friends += [('Bianchi modular Form is not cuspidal', '')]
+            elif not 'Lfunction' in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('Bianchi Modular Form %s not available' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi modular Form %s)' % self.bmf_label, '')]
 
         if 'Lfunction' in self.urls:
+            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
+            instances = get_instances_by_Lhash_and_trace_hash(
+                    Lfun['Lhash'],
+                    Lfun['degree'],
+                    Lfun.get('trace_hash'))
+            exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                     if elt[1]}
+            exclude.add(lfun_url.lstrip('/L/').rstrip('/'))
+            self.friends += names_and_urls(instances, exclude=exclude)
             self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]

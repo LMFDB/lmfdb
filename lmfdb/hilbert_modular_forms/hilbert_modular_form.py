@@ -15,7 +15,7 @@ from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 from lmfdb.utils import names_and_urls
-from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash, get_instances_by_trace_hash
+from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
 
 def get_hmf(label):
@@ -316,16 +316,12 @@ def render_hmf_webpage(**args):
             info['label'])
     Lfun = get_lfunction_by_url(url)
     if Lfun:
-        # first by Lhash
-        instances = get_instances_by_Lhash(Lfun['Lhash'])
-        # then by trace_hash
-        instances += get_instances_by_trace_hash(Lfun['degree'], Lfun['trace_hash'])
+        instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'],
+                                                          Lfun['degree'],
+                                                          Lfun['trace_hash'])
 
         # This will also add the EC/G2C, as this how the Lfun was computed
-        info['friends'] = names_and_urls(instances)
-        # remove itself
-        info['friends'].remove(
-                ('Hilbert modular form {}'.format(info['label']), '/' + url))
+        info['friends'] = names_and_urls(instances, exclude={url})
 
         info['friends'] += [('L-function',
                             url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]

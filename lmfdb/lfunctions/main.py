@@ -576,10 +576,19 @@ def set_gaga_properties(L):
 
 
 def set_bread_and_friends(info, L, request):
-    ''' Returns the list of friends to link to and the bread crumbs.
+    """
+    Populates the info dictionary with:
+        - bread -- bread crumbs on top
+        - origins -- objects the give rise to this L-functions, shows as "Origins"
+        - friends -- dual L-fcn and other objects that this L-fcn divides, shows as Related objects
+        - factors_origins -- objects that give rise to the factors of this L-fcn, shows as "Origins of factors"
+        - Linstances -- displays the instances that give rise to this Lhash, only shows up through the Lhash route
+        - downloads -- download links
+    Returns the list of friends to link to and the bread crumbs.
     Depends on the type of L-function and needs to be added to for new types
-    '''
+    """
 
+    # bread crums on top
     info['bread'] = []
     info['origins'] = []
     info['friends'] = []
@@ -617,7 +626,7 @@ def set_bread_and_friends(info, L, request):
 
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
-                elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
+                elt.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
     elif L.Ltype() == 'maass':
         if L.group == 'GL2':

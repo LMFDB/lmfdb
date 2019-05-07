@@ -40,6 +40,21 @@ class EcnfIsogClassTest(LmfdbTest):
         Check related object (near Properties box) of an ECNF isogeny class.
         """
         L = self.tc.get('/EllipticCurve/2.2.5.1/31.1/a/').data
-        assert 'Hilbert Modular Form 2.2.5.1-31.1-a' in L
+        assert 'Hilbert modular form 2.2.5.1-31.1-a' in L
+
+        L = self.tc.get('/EllipticCurve/2.2.8.1/9.1/a/').data
+        assert 'Hilbert modular form 2.2.8.1-9.1-a' in L
+        assert 'Isogeny class 576.a' in L
+        assert 'Modular form 24.2.d.a' in L
+
+        L = self.tc.get('/EllipticCurve/2.0.11.1/256.1/b/').data
+        assert 'Bianchi modular form 2.0.11.1-256.1-a' in L
+        assert 'Bianchi modular form 2.0.11.1-256.1-b' in L
+        assert 'Hilbert modular form 2.2.44.1-16.1-a' in L
+        assert 'Hilbert modular form 2.2.44.1-16.1-c' in L
+        assert 'Isogeny class 2.0.11.1-256.1-a' in L
+        assert 'Isogeny class 2.2.44.1-16.1-a' in L
+        assert 'Isogeny class 2.2.44.1-16.1-c' in L
+        assert 'L-function' in L
 
 
