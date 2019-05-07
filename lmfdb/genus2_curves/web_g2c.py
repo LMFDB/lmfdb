@@ -2,7 +2,10 @@
 
 from ast import literal_eval
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot, list_to_factored_poly_otherorder
+from lmfdb.utils import (key_for_numerically_sort, encode_plot,
+                         list_to_factored_poly_otherorder, names_and_urls,
+                         web_latex)
+from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
 from lmfdb.ecnf.main import split_full_label as split_ecnf_label
 from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
@@ -11,7 +14,6 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from lmfdb.classical_modular_forms.main import url_for_label as url_for_cmf
 from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
@@ -198,7 +200,7 @@ def geom_end_alg_name(name):
         "CM x Q":"\\mathrm{CM} \\times \\Q",
         "CM":"\\mathrm{CM}",
         "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
-        "QM":"\\mathrm{QM}",        
+        "QM":"\\mathrm{QM}",
         "M_2(Q)":"\\mathrm{M}_2(\\Q)",
         "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
         }
@@ -432,11 +434,11 @@ def lfunction_friend_from_url(url):
     return (url, "/" + url)
 
 # add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
-def add_friend(friends,friend):
+def add_friend(friends, friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             return
-        # compare again with slashes coverted to dots to deal with minor differences in url/label formatting
+        # compare again with slashes converted to dots to deal with minor differences in url/label formatting
         olddots = ".".join(oldfriend[1].split("/"))
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
@@ -553,7 +555,7 @@ class WebG2C(object):
                 sz = "everywhere"
             data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
-            data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
+            data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
@@ -655,35 +657,47 @@ class WebG2C(object):
             ]
 
         # Friends
-        self.friends = friends = [('L-function', data['lfunc_url'])]
+        self.friends = friends = []
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+
+        # first deal with EC
+        ecs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
-                    add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
+                    ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
-        for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
-            if '|' in friend_url:
-                for url in friend_url.split('|'):
-                    add_friend (friends, lfunction_friend_from_url(url))
-            else:
-                add_friend (friends, lfunction_friend_from_url(friend_url))
-        # Hack to deal with the fact that currently the same L-function can appear more than once in db.lfunc_lfunctions and we want to friend instances of all of them
-        for Lhash in db.lfunc_lfunctions.search({"trace_hash":data["Lhash"]},"Lhash"):
-            for friend_url in db.lfunc_instances.search({'Lhash':Lhash}, 'url'):
-                if '|' in friend_url:
-                    for url in friend_url.split('|'):
-                        add_friend (friends, lfunction_friend_from_url(url))
-                else:
-                    add_friend (friends, lfunction_friend_from_url(friend_url))           
-        for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
-            # be selective, only cmfs of the right dimension and conductor get to be our friends
-            if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
-                add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
+                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+
+        ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
+
+        # then again EC from lfun
+        instances = []
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+            instances.extend(elt.split('|'))
+
+        # and then the other isogeny friends
+        instances.extend([
+            elt['url'] for elt in
+            get_instances_by_Lhash_and_trace_hash(data["Lhash"],
+                                                  4,
+                                                  int(data["Lhash"])
+                                                  )
+            ])
+        exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                   if elt[1]}
+        exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
+        for elt in ecs + names_and_urls(instances, exclude=exclude):
+            # because of the splitting we must use G2C specific code
+            add_friend(friends, elt)
         if is_curve:
-            friends.append(('Twists', url_for(".index_Q", g20 = str(data['g2'][0]), g21 = str(data['g2'][1]), g22 = str(data['g2'][2]))))
+            friends.append(('Twists', url_for(".index_Q",
+                                              g20=str(data['g2'][0]),
+                                              g21=str(data['g2'][1]),
+                                              g22=str(data['g2'][2]))))
+
+        friends.append(('L-function', data['lfunc_url']))
 
         # Breadcrumbs
         self.bread = bread = [

@@ -5,8 +5,8 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex, names_and_urls
-from lmfdb.lfunctions.LfunctionDatabase import (get_instances_by_Lhash,
-        get_instances_by_trace_hash, get_lfunction_by_url)
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+        get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
 
@@ -175,18 +175,12 @@ class WebBMF(object):
                 self.label.replace('-', '/'))
         Lfun = get_lfunction_by_url(url)
         if Lfun:
-            # first by Lhash
-            instances = get_instances_by_Lhash(Lfun['Lhash'])
-            # then by trace_hash
-            instances += get_instances_by_trace_hash(Lfun['degree'], Lfun['trace_hash'])
+            instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'], Lfun['degree'], Lfun['trace_hash'])
 
             # This will also add the EC/G2C, as this how the Lfun was computed
-            self.friends = names_and_urls(instances)
-            # remove itself
-            self.friends.remove(
-                    ('Bianchi modular form {}'.format(self.label), '/' + url))
+            # and not add itself
+            self.friends = names_and_urls(instances, exclude = {url})
             self.friends.append(('L-function', '/L/'+url))
-            
         else:
             # old code
             if self.dimension == 1:

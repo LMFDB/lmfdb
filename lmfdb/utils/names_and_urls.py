@@ -7,9 +7,10 @@ from lmfdb.utils.utilities import key_for_numerically_sort
 # TODO This needs to be able to handle any sort of object
 # There should probably be a more relevant field
 # in the database, instead of trying to extract this from a URL
-def name_and_object_from_url(url, check_existence = False):
-    # FIXME  the import must be here to avoid circular import
+def name_and_object_from_url(url, check_existence=False):
+    # the import is here to avoid circular imports
     from lmfdb.backend.database import db
+    from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
     url_split = url.rstrip('/').lstrip('/').split("/")
     name = '??'
     obj_exists = False
@@ -24,7 +25,10 @@ def name_and_object_from_url(url, check_existence = False):
                 obj_exists = db.ec_curves.exists({"lmfdb_iso" : label_isogeny_class})
         else:
             # EllipticCurve/2.2.140.1/14.1/a
-            label_isogeny_class =  "-".join(url_split[-3:])
+            field, cond, isog = url_split[-3:]
+            # in the cond is written in the old format
+            cond = convert_IQF_label(field, cond)
+            label_isogeny_class =  "-".join([field, cond, isog])
             if check_existence:
                 obj_exists = db.ec_nfcurves.exists({"class_label" : label_isogeny_class})
         name = 'Isogeny class ' + label_isogeny_class
@@ -101,16 +105,18 @@ def name_and_object_from_url(url, check_existence = False):
 
     return name, obj_exists
 
-def names_and_urls(instances):
+def names_and_urls(instances, exclude={}):
     res = []
     names = set()
     urls = set()
+    exclude = set(exclude)
 
     # remove duplicate urls
     for instance in instances:
         if not isinstance(instance, basestring):
             instance = instance['url']
-        urls.add(instance)
+        if instance not in exclude and '|' not in instance:
+            urls.add(instance)
 
     for url in urls:
         name, obj_exists = name_and_object_from_url(url)
@@ -123,10 +129,12 @@ def names_and_urls(instances):
             continue
             name = '(%s)' % (name)
             url = ""
-        # avoid duplicates
+        # avoid duplicates that might have arise from different instances
         if name not in names:
             res.append((name, url))
             names.add(name)
     # sort based on name + label
-    res.sort(key= lambda x: key_for_numerically_sort(x[0]))
+    res.sort(key=lambda x: key_for_numerically_sort(x[0]))
     return res
+
+
