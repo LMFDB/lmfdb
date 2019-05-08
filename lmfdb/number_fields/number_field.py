@@ -205,7 +205,7 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    # FIXME use display_stats
+    # FIXME use StatsDisplay
     fields = db.nf_fields
     title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
