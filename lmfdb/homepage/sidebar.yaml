@@ -10,8 +10,6 @@
       url_for: "introduction_features"
     - title: Universe
       url_for: "universe"
-    - title: Future Plans
-      url_for: "roadmap"
     - title: News
       url_for: "news"
 

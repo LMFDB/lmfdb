@@ -2,7 +2,7 @@
 {% block content %}
 
 <div>
-L-functions can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
+{{ KNOWL('lfunction', title='L-functions') }} can be organized by {{ KNOWL('lfunction.degree', title='degree') }}.
 All known {{ KNOWL('lfunction.known_degree2', title='degree 2') }} L-functions have a
 functional equation of one of the two forms
 \[
@@ -23,8 +23,12 @@ L(s)=
 \prod_{p|N} \left(1-a_p p^{-s}\right)^{-1}.
 \prod_{p\nmid N} \left(1-a_p p^{-s}+\chi(p) p^{-2s}\right)^{-1}.
 \]
-Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, and $\chi$, known as the central character,
-is a primitive Dirichlet character of conductor dividing&nbsp;$N$.
+Here $N$ is the {{ KNOWL('lfunction.conductor', title='conductor') }} of the L-function, 
+$\varepsilon$ is the {{ KNOWL('lfunction.sign', title='sign')}},
+and $\chi$, known as the central character,
+is a primitive  {{ KNOWL('character.dirichlet', title='Dirichlet character') }} of conductor dividing&nbsp;$N$.
+The functions {{ KNOWL('specialfunction.gammarandc', title='$\Gamma_\R$ and $\Gamma_\C$') }}
+are the gamma factors.
 The parameter $\nu$ is a positive integer or half-integer, the parameter
 $\mu$ is real, and
 $\delta_j$ is 0 or 1.
@@ -73,7 +77,7 @@ will be over-written.  Contact David Farmer is you want to suggest a change. -->
 <tr align="center">
 <th align="center">First&nbsp;complex<br>critical&nbsp;zero</th>
 <th align="center">{{ KNOWL('lfunction.underlying_object', title='underlying object') }}</th>
-<th align="center">{{ KNOWL('lfunction.level', title='$N$') }}</th>
+<th align="center">{{ KNOWL('lfunction.conductor', title='$N$') }}</th>
 <th align="center">{{ KNOWL('lfunction.central_character', title='$\chi$') }}</th>
 <th align="center">{{ KNOWL('lfunction.arithmetic', title='arithmetic') }}</th>
 <th align="center">{{ KNOWL('lfunction.self-dual', title='self-dual') }}</th>

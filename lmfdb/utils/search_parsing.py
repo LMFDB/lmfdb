@@ -397,12 +397,10 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
             return
         inp = sorted(inp)
         if inp:
-            print inp
             dup_free = [inp[0]]
             for i,x in enumerate(inp[1:]):
                 if x != inp[i]:
                     dup_free.append(x)
-            print dup_free
         else:
             dup_free = []
         if qfield in query:

@@ -903,7 +903,7 @@ function switch_basis(btype) {
                   th_wrap('character.dirichlet.parity', 'Parity'),
                   #th_wrap('character.dirichlet.order', 'Order'),
                   th_wrap('cmf.inner_twist_multiplicity', 'Mult.'),
-                  th_wrap('cmf.self_twist_col', 'Type'),
+                  th_wrap('cmf.self_twist_field', 'Self Twist'),
                   th_wrap('cmf.inner_twist_proved', 'Proved'),
                   '  </tr>', '</thead>', '<tbody>']
         trivial = [elt for elt in self.inner_twists if elt[6] == 1]
