@@ -15,8 +15,8 @@ from sage.misc import latex
 
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
+from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
 
 logger = make_logger("abvarfq")
