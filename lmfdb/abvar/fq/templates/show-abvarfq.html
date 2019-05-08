@@ -106,7 +106,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 {% if cl.is_simple %}
 This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its {{ KNOWL('g2c.jac_end_lattice',title="endomorphism lattice")}} is:
 
-{% if cl.is_endo_rational %}
+{% if cl.is_endo_rational() %}
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
 All endomorphisms are defined over ${{cl.field()}}$.
@@ -115,18 +115,20 @@ All endomorphisms are defined over ${{cl.field()}}$.
 
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
-All endomorphisms are defined over <b>say field here</b>.
+All endomorphisms are defined over $({{cl.field()}})^{{cl.geometric_extension_degree}}$.
 
 <h4>Endomorphism algebra over ${{cl.alg_clo_field()}}$</h4>
 
 <h4>Remainder of endomorphism lattice by field</h4>
-
+{{cl.other_endomorphisms_display()|safe}}
+<!--<table>
 {% for extension in cl.endo_extensions() %}
-
-
+<tr><td>
+{{extension.extension_degree}}
+</td></tr>
 
 {% endfor %}
-
+</table>-->
 
 {% endif %}
 
@@ -138,6 +140,7 @@ This isogeny class decomposes as {{cl.decompositioninfo|safe}}, and therefore it
 {% endfor %}
 
 {% endif %}
+
 
 <h2>Base change</h2>
 

@@ -101,6 +101,12 @@ class AbvarFq_isoclass(object):
         else:
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
 
+    def nf(self):
+        if self.is_simple:
+            return self.number_fields[0]
+        else:
+            return None
+    
     def newton_plot(self):
         S = [QQ(s) for s in self.polygon_slopes]
         C = Counter(S)
@@ -207,11 +213,10 @@ class AbvarFq_isoclass(object):
 
     def display_number_field(self):
         if self.is_simple:
-            nf = self.number_fields[0]
-            if nf == "":
+            if self.nf() == "":
                 return "The number field of this isogeny class is not in the database."
             else:
-                return nf_display_knowl(nf,field_pretty(nf))
+                return nf_display_knowl(self.nf(),field_pretty(self.nf()))
         else:
             return "The class is not simple, so we will display the number fields later"
 
@@ -241,15 +246,14 @@ class AbvarFq_isoclass(object):
         factors = zip(self.simple_distinct,self.simple_multiplicities)
         if len(factors) == 1 and factors[0][1] == 1:
             return 'simple'
-        ans = ''
+        factor_str = ''
         for factor in factors:
-            if ans != '':
-                ans += ' $\\times$ '
-            if factor[1] == 1:
-                ans += av_display_knowl(factor[0])
-            else:
-                ans += av_display_knowl(factor[0]) + '<sup> {0} </sup>'.format(factor[1])
-        return ans
+            if factor_str != '':
+                factor_str += ' $\\times$ '
+            factor_str += av_display_knowl(factor[0])
+            if factor[1] > 1:
+                factor_str += '<sup> {0} </sup>'.format(factor[1])
+        return factor_str
     
     def alg_clo_field(self):
         return '\\overline{\F}_{' + '{0}'.format(self.q) + '}'
@@ -260,12 +264,8 @@ class AbvarFq_isoclass(object):
         else:
             return '\F_{' + '{0}^{1}'.format(self.q,s) + '}'
     
-    #tofix
     def is_endo_rational(self):
-        #this should work soon
         return self.geometric_extension_degree == 1
-        #data = db.av_fq_endalg_factors.lookup(self.label)
-        #return data == None
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
@@ -276,19 +276,19 @@ class AbvarFq_isoclass(object):
       
     #old
     def has_real_place(self):
-        my_field = self.nf.split('.')
+        my_field = (self.nf()).split('.')
         real_places = int(my_field[1]) 
         return real_places > 0
     
     #old
     def is_commutative(self):
-        my_invs = self.brauer_invs.split(' ')
-        for inv in my_invs:
-            if inv == '0':
-                continue
-            else:
-                return False
         return True
+        #for inv in self.brauer_invariants:
+        #    if inv == '0':
+        #        continue
+        #    else:
+        #        return False
+        #return True
     
     #old
     @property
@@ -299,7 +299,10 @@ class AbvarFq_isoclass(object):
             return True
     
     def simple_endo_info(self):
-        if self.nf == '1.1.1.1':
+        if not self.is_simple:
+            return None
+        nf = self.nf()
+        if nf == '1.1.1.1':
             ans = 'the quaternion division algebra over ' +  self.display_number_field() + ' ramified at {0} and $\infty$. All ${1}$-endomorphisms are already defined over ${2}$.'.format(self.p,self.alg_clo_field(),self.ext_field(1))
         elif self.has_real_place():
             ans = 'the division algebra over ' + self.display_number_field() + ' ramified at both real infinite places. <br>The geometric endomorphism algebra is $M_2(E)$ where $E$ is the quaternion division algebra over $\\Q$ ramified at {2} and $\infty$. All ${0}$-endomorphisms are defined over ${1}$. '.format(self.alg_clo_field(),self.ext_field(2),self.p)
@@ -324,14 +327,37 @@ class AbvarFq_isoclass(object):
         else:
             ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
             return ans
-
+#old
     def factor_display(self,factor):
         return av_display_knowl(factor)
-    
+#old   
     def invariants_display(self):
         invariants = self.brauer_invs.split(' ')
         num_primes = len(invariants) // self.decomp_length()
         return [(self.places[i], invariants[num_primes*i:num_primes*(i+1)]) for i in range(self.decomp_length())]
+
+    def other_endomorphisms_display(self):
+        ans = '<table>\n'
+        ans += '<tr>'
+        ans += '<th>Extensions Label</th>'
+        ans += '<th>Extension Degree</th>'
+        ans += '<th>Particular Endomorphism</th>'
+        ans += '</tr>\n'
+        for extension in self.endo_extensions():
+            label = extension['extension_label']
+            data=list(db.av_fq_endalg_data.search({'extension_label':label}))
+            table_row = [extension['extension_label'], extension['extension_degree']]
+            ans += '<td>%s</td><td>%s</td>'%tuple(table_row)
+            ans += '<td><table>'
+            ans += '<tr><td>Center</td><td>DivAlgDim</td><td>Brauer Inv</td></tr>'
+            for endo in data[0:1]:
+                ans += '<tr>'
+                ans += '<td>%s</td><td>%s</td><td>%s</td>'%(endo['center'],endo['divalg_dim'],endo['brauer_invariants'])
+                ans += '</tr>\n'
+            ans += '</table></td>\n'
+            ans += '</tr>'
+        ans += "</table>"
+        return ans
 
     def basechange_display(self):
         if self.is_primitive:
