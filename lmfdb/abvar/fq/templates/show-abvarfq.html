@@ -10,8 +10,8 @@
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td><td>&nbsp;&nbsp;${{cl.g}}$</td></tr>
     <tr><td>{{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
     <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}}</td></tr>
-    <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.ang_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
-    {% if cl.is_simple() %}
+    <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.angle_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
+    {% if cl.is_simple %}
     <tr><td>{{KNOWL('av.fq.number_field',title='Number field')}}:</td><td>&nbsp;&nbsp;{{cl.display_number_field()|safe}}</td></tr>
     <tr><td>{{KNOWL('av.fq.galois_group',title='Galois group')}}:</td><td>&nbsp;&nbsp;{{cl.display_galois_group()|safe}}</td></tr>
     {% endif %}
@@ -19,7 +19,7 @@
 </p>
 
 <p>
-{% if cl.is_simple() %}
+{% if cl.is_simple %}
 This isogeny class is {{ KNOWL('av.simple',title="simple") }}.
 {% endif %}
 </p>
@@ -47,17 +47,17 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 <h2>Point counts</h2>
 
 <p>
-{% if cl.is_pp == 1 %}
-{% if cl.is_jac == 1 %}
+{% if cl.has_principal_polarization == 1 %}
+{% if cl.has_jacobian == 1 %}
 This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
-{% elif cl.is_jac == -1 %}
+{% elif cl.has_jacobian == -1 %}
 This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% else %}
 This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% endif %}
-{% elif cl.is_pp == -1 %}
+{% elif cl.has_principal_polarization == -1 %}
 This isogeny class is not {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, and therefore does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
-{% elif cl.is_jac == -1 %}
+{% elif cl.has_jacobian == -1 %}
 This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}, and it is unknown whether it is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% endif %}
 </p>
@@ -71,7 +71,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
         {% endfor %}
     </tr>
     <tr><td>$A(\F_{q^r})$</td>
-        {% for count in cl.A_counts %}
+        {% for count in cl.abvar_counts %}
         <td> {{ count }} </td>
         {% endfor %}
     </tr>
@@ -79,7 +79,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 </p>
 
 <p>
-{% if cl.is_jac == 1 %}
+{% if cl.has_jacobian == 1 %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the curve") }}
 {% else %}
 {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the (virtual) curve") }}
@@ -92,7 +92,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
         {% endfor %}
     </tr>
     <tr><td>$C(\F_{q^r})$</td>
-        {% for count in cl.C_counts %}
+        {% for count in cl.curve_counts %}
         <td>{{ count }}</td>
         {% endfor %}
     </tr>
@@ -103,10 +103,10 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
-{% if cl.is_simple() %}
+{% if cl.is_simple %}
 This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its {{ KNOWL('g2c.jac_end_lattice',title="endomorphism lattice")}} is:
 
-{% if cl.is_endo_rational() %}
+{% if cl.is_endo_rational %}
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
 All endomorphisms are defined over ${{cl.field()}}$.
@@ -142,7 +142,7 @@ This isogeny class decomposes as {{cl.decompositioninfo|safe}}, and therefore it
 <h2>Base change</h2>
 
 <p>
-{% if cl.is_primitive() %}
+{% if cl.is_primitive %}
 This is a {{ KNOWL('ag.primitive',title="primitive") }} isogeny class.
 {% else %}
 This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is a {{ KNOWL('ag.base_change',title="base change") }} from the following isogeny classes over subfields of ${{cl.field()}}$.
