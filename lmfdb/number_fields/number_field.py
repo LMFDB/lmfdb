@@ -3,8 +3,7 @@
 import ast, os, re, StringIO, time
 
 import flask
-from flask import render_template, request, url_for, redirect, send_file, flash, make_response
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect, send_file, make_response
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
 
 from lmfdb import db
@@ -671,7 +670,6 @@ def number_field_jump(info):
         parse_nf_string(info,query,'natural',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
-        label = query['label_orig']
         return redirect(url_for(".number_field_render_webpage"))
 
 ## This doesn't seem to be used currently

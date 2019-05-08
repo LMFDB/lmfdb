@@ -4,8 +4,7 @@
 
 import re, random
 
-from flask import render_template, request, url_for, flash, redirect
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect
 from sage.all import ZZ
 
 from lmfdb import db
@@ -132,7 +131,7 @@ def render_artin_representation_webpage(label):
     except:
         try:
             newlabel=parse_artin_label(label)
-            flash_error("Artin representation %s is not in database", label)
+            flash_error("Artin representation %s is not in database", newlabel)
             return redirect(url_for(".index"))
         except ValueError as err:
             flash_error("%s" % (err))
