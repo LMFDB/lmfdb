@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-from lmfdb.db_backend import db
-from lmfdb.utils import make_logger
-from lmfdb.WebNumberField import nf_display_knowl, field_pretty
+from lmfdb import db
+from lmfdb.logger import make_logger
+from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
-from lmfdb.utils import web_latex
+from lmfdb.utils import web_latex, names_and_urls
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+        get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
+
 
 class WebBMF(object):
     """
@@ -167,13 +170,25 @@ class WebBMF(object):
         self.properties2.append(('Analytic rank', self.anrank))
 
         self.friends = []
-        if self.dimension==1:
-            if self.ec_status == 'exists':
-                self.friends += [('Elliptic curve isogeny class {}'.format(self.label), self.ec_url)]
-            elif self.ec_status == 'missing':
-                self.friends += [('Elliptic curve {} missing'.format(self.label), "")]
-            else:
-                self.friends += [('No elliptic curve', "")]
+        self.friends += [('Newspace {}'.format(self.newspace_label),self.newspace_url)]
+        url = 'ModularForm/GL2/ImaginaryQuadratic/{}'.format(
+                self.label.replace('-', '/'))
+        Lfun = get_lfunction_by_url(url)
+        if Lfun:
+            instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'], Lfun['degree'], Lfun['trace_hash'])
 
-        self.friends += [ ('Newspace {}'.format(self.newspace_label),self.newspace_url)]
-        self.friends += [ ('L-function not available','')]
+            # This will also add the EC/G2C, as this how the Lfun was computed
+            # and not add itself
+            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends.append(('L-function', '/L/'+url))
+        else:
+            # old code
+            if self.dimension == 1:
+                if self.ec_status == 'exists':
+                    self.friends += [('Isogeny class {}'.format(self.label), self.ec_url)]
+                elif self.ec_status == 'missing':
+                    self.friends += [('Isogeny class {} missing'.format(self.label), "")]
+                else:
+                    self.friends += [('No elliptic curve', "")]
+
+            self.friends += [ ('L-function not available','')]

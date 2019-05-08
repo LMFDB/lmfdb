@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class Genus2Test(LmfdbTest):
 
@@ -7,7 +7,7 @@ class Genus2Test(LmfdbTest):
     def test_stats(self):
         L = self.tc.get('/Genus2Curve/Q/stats')
         assert 'Sato-Tate groups' in L.data and 'proportion' in L.data
-        
+
     def test_cond_range(self):
         L = self.tc.get('/Genus2Curve/Q/?cond=100000-1000000')
         assert '100000.a.200000.1' in L.data
@@ -27,23 +27,23 @@ class Genus2Test(LmfdbTest):
     def test_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/1369/a/')
         assert '1369.1' in L.data and '50653.1' in L.data and 'G_{3,3}' in L.data
-        
+
     def test_Lfunction_link(self):
         L = self.tc.get('/L/Genus2Curve/Q/1369/a',follow_redirects=True)
         assert 'G_{3,3}' in L.data and 'Motivic weight' in L.data
-        
+
     def test_twist_link(self):
         L = self.tc.get('/Genus2Curve/Q/?g22=1016576&g20=5071050752/9&g21=195344320/9')
         for label in ['576.b.147456.1', '1152.a.147456.1', '2304.b.147456.1', '4608.a.4608.1','4608.b.4608.1']:
             assert label in L.data
-            
+
     def test_by_conductor(self):
         L = self.tc.get('/Genus2Curve/Q/15360/')
         for x in "abcdefghij":
             assert "15360."+x in L.data
         L = self.tc.get('/Genus2Curve/Q/15360/?abs_disc=169')
         assert 'No matches' in L.data
-            
+
     def test_by_url_isogeny_class_label(self):
         L = self.tc.get('/Genus2Curve/Q/336/a/')
         assert '336.a.172032.1' in L.data
@@ -128,7 +128,7 @@ class Genus2Test(LmfdbTest):
     def test_locally_solvable_serach(self):
         L = self.tc.get('/Genus2Curve/Q/?locally_solvable=False')
         assert '336.a.172032.1' in L.data
-        
+
     def test_sha_search(self):
         L = self.tc.get('/Genus2Curve/Q/?has_square_sha=False')
         assert  '336.a.172032.1' in L.data and not '169.a.169.1' in L.data
@@ -140,13 +140,13 @@ class Genus2Test(LmfdbTest):
         assert '\Z/{29}\Z' in L.data
         L = self.tc.get('/Genus2Curve/Q/118606/a/118606/1')
         assert 'trivial' in L.data
-        
+
     def test_mfhilbert(self):
         L = self.tc.get('/Genus2Curve/Q/12500/a/12500/1')
         assert '2.2.5.1-500.1-a' in L.data
         L = self.tc.get('/Genus2Curve/Q/12500/a/')
         assert '2.2.5.1-500.1-a' in L.data
-        
+
     def test_ratpts(self):
         L = self.tc.get('/Genus2Curve/Q/792079/a/792079/1')
         assert '(-15 : -6579 : 14)' in L.data
@@ -154,4 +154,52 @@ class Genus2Test(LmfdbTest):
         L = self.tc.get('/Genus2Curve/Q/126746/a/126746/1')
         assert 'everywhere' in L.data
         assert 'no rational points' in L.data
-        
+
+    def test_endo_search(self):
+        # first result for every search
+        for endo, text in [
+                ('Q', '249.a.249.1'),
+                ('RM', '529.a.529.1'),
+                ('CM', '3125.a.3125.1'),
+                ('QM', '20736.l.373248.1'),
+                ('Q x Q', '294.a.294.1'),
+                ('CM x Q', '448.a.448.2'),
+                ('CM x CM', 'No matches'),
+                ('M_2(Q)', '169.a.169.1'),
+                ('M_2(CM)', '2916.b.11664.1')]:
+            L = self.tc.get('/Genus2Curve/Q/?geom_end_alg={}'.format(endo))
+            assert text in L.data
+
+    def test_related_objects(self):
+        for url, friends in [
+                ('/Genus2Curve/Q/20736/i/373248/1',
+                    ('L-function',
+                        'Isogeny class 20736.i',
+                        'Elliptic curve 576.f3',
+                        'Elliptic curve 36.a4',
+                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
+                        'Isogeny class 2.2.24.1-36.1-a',
+                        'Twists',)
+                    ),
+                ('/Genus2Curve/Q/20736/i/',
+                    ('L-function',
+                        'Isogeny class 576.f',
+                        'Isogeny class 36.a',
+                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
+                        'Isogeny class 2.2.24.1-36.1-a',)
+                    ),
+                ('/Genus2Curve/Q/576/a/',
+                    ('L-function',
+                        'Isogeny class 2.2.8.1-9.1-a',
+                        'Modular form 24.2.d.a',
+                        'Hilbert modular form 2.2.8.1-9.1-a',)
+                    )
+                ]:
+            data = self.tc.get(url).data
+            for friend in friends:
+                assert friend in data
+

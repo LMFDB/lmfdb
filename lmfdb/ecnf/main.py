@@ -2,30 +2,26 @@
 # This Blueprint is about Elliptic Curves over Number Fields
 # Authors: Harald Schilly and John Cremona
 
-import re
-import time
-import ast
-import StringIO
+import ast, re, StringIO, time
 from operator import mul
 from urllib import quote, unquote
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
-from lmfdb.base import app
-from flask import render_template, request, url_for, redirect, flash, send_file, make_response
-from lmfdb.utils import to_dict
-from lmfdb.search_parsing import parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.ecnf import ecnf_page
-from lmfdb.ecnf.ecnf_stats import ecnf_degree_summary, ecnf_signature_summary, sort_field
-from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
-from lmfdb.ecnf.isog_class import ECNF_isoclass
-from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.WebNumberField import nf_display_knowl, WebNumberField
 
+from flask import render_template, request, url_for, redirect, flash, send_file, make_response
 from markupsafe import Markup
 
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
-TORS_RE = re.compile(r'^\[\]|\[\d+(,\d+)*\]$')
+from lmfdb import db
+from lmfdb.backend.encoding import Json
+from lmfdb.app import app
+from lmfdb.utils import (
+    to_dict,
+    parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints,
+    search_wrap)
+from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
+from lmfdb.ecnf import ecnf_page
+from lmfdb.ecnf.ecnf_stats import ECNF_stats
+from lmfdb.ecnf.WebEllipticCurve import ECNF, web_ainvs, convert_IQF_label
+from lmfdb.ecnf.isog_class import ECNF_isoclass
 
 def split_full_label(lab):
     r""" Split a full curve label into 4 components
@@ -123,6 +119,7 @@ def get_bread(*breads):
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic Curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -147,6 +144,15 @@ def how_computed_page():
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.ecnf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@ecnf_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Elliptic Curve Data over Number Fields'
+    bread = [('Elliptic Curves', url_for("ecnf.index")),
+             ('Source', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.ecnf.reliability',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ecnf_page.route("/Labels")
 def labels_page():
@@ -174,17 +180,16 @@ def index():
     # data['fields'] holds data for a sample of number fields of different
     # signatures for a general browse:
 
-    ecnfstats = db.ec_nfcurves.stats
-    fields_by_deg = ecnfstats.get_oldstat('fields_by_degree')
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
+    fields_by_deg = ECNF_stats().fields_by_deg
+    fields_by_sig = ECNF_stats().fields_by_sig
     data['fields'] = []
     # Rationals
     data['fields'].append(['the rational field', (('1.1.1.1', [url_for('ec.rational_elliptic_curves'), '$\Q$']),)])
 
     # Real quadratics (sample)
     rqfs = ['2.2.{}.1'.format(d) for d in [5, 89, 229, 497]]
-    niqfs = len(fields_by_sig['0,1'])
-    nrqfs = len(fields_by_sig['2,0'])
+    niqfs = len(fields_by_sig[0,1])
+    nrqfs = len(fields_by_sig[2,0])
     data['fields'].append(['{} real quadratic fields, including'.format(nrqfs),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in rqfs)])
@@ -197,28 +202,28 @@ def index():
 
     # Cubics (sample)
     cubics = ['3.1.23.1'] + ['3.3.{}.1'.format(d) for d in [49,148,1957]]
-    ncubics = len(fields_by_deg['3'])
+    ncubics = len(fields_by_deg[3])
     data['fields'].append(['{} cubic fields, including'.format(ncubics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in cubics)])
 
     # Quartics (sample)
     quartics = ['4.4.{}.1'.format(d) for d in [725,2777,9909,19821]]
-    nquartics = len(fields_by_deg['4'])
+    nquartics = len(fields_by_deg[4])
     data['fields'].append(['{} totally real quartic fields, including'.format(nquartics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quartics)])
 
     # Quintics (sample)
     quintics = ['5.5.{}.1'.format(d) for d in [14641, 24217, 36497, 38569, 65657]]
-    nquintics = len(fields_by_deg['5'])
+    nquintics = len(fields_by_deg[5])
     data['fields'].append(['{} totally real quintic fields, including'.format(nquintics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in quintics)])
 
     # Sextics (sample)
     sextics = ['6.6.{}.1'.format(d) for d in [300125, 371293, 434581, 453789, 485125]]
-    nsextics = len(fields_by_deg['6'])
+    nsextics = len(fields_by_deg[6])
     data['fields'].append(['{} totally real sextic fields, including'.format(nsextics),
                            ((nf, [url_for('.show_ecnf1', nf=nf), field_pretty(nf)])
                             for nf in sextics)])
@@ -253,7 +258,7 @@ def index():
     return render_template("ecnf-index.html",
                            title="Elliptic Curves over Number Fields",
                            data=data,
-                           bread=bread, learnmore=learnmore_list_remove('Completeness'))
+                           bread=bread, learnmore=learnmore_list())
 
 @ecnf_page.route("/random")
 def random_curve():
@@ -369,10 +374,11 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
+                           KNOWL_ID="ec.%s"%label,
                            learnmore=learnmore_list())
 
 def download_search(info):
-    dltype = info['submit']
+    dltype = info['Submit']
     delim = 'bracket'
     com = r'\\'  # single line comment start
     com1 = ''  # multiline comment start
@@ -485,8 +491,11 @@ def elliptic_curve_search(info, query):
         info['number'] = 1
         query['number'] = 1
 
-    if 'include_base_change' in info and info['include_base_change'] == 'off':
-        query['base_change'] = []
+    if 'include_base_change' in info:
+        if info['include_base_change'] == 'off':
+            query['base_change'] = []
+        if info['include_base_change'] == 'only':
+            query['base_change'] = {'$ne':[]}
     else:
         info['include_base_change'] = "on"
 
@@ -513,10 +522,10 @@ def search_input_error(info=None, bread=None):
 
 @ecnf_page.route("/browse/")
 def browse():
-    data = db.ec_nfcurves.stats.get_oldstat('signatures_by_degree')
+    data = ECNF_stats().sigs_by_deg
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
-    info = [[d,data[str(d)]] for d in sorted([int(d) for d in data.keys()])]
+    info = [[d,['%s,%s'%sig for sig in data[d]]] for d in sorted(data.keys())]
     credit = 'John Cremona'
     t = 'Elliptic Curves over Number Fields'
     bread = [('Elliptic Curves', url_for("ecnf.index")),
@@ -529,27 +538,24 @@ def statistics_by_degree(d):
         return redirect(url_for("ec.statistics"))
     info = {}
 
-    ecnfstats = db.ec_nfcurves.stats
-    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
-    if not str(d) in sigs_by_deg:
+    sigs_by_deg = ECNF_stats().sigs_by_deg
+    if d not in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
         info['degree'] = d
 
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
-    counts_by_sig = ecnfstats.get_oldstat('conductor_norm_by_signature')
-    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
+    fields_by_sig = ECNF_stats().fields_by_sig
+    counts_by_sig = ECNF_stats().sig_normstats
+    counts_by_field = ECNF_stats().field_normstats
 
     def field_counts(f):
-        ff = f.replace(".",":")
-        return [f,counts_by_field[ff]]
+        return [f,counts_by_field[f]]
 
     def sig_counts(sig):
-        sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
-        return [sig, counts_by_sig[sig], [field_counts(f) for f in sorted_fields]]
+        return ['%s,%s'%sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
 
-    info['summary'] = ecnf_degree_summary(d)
-    info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[str(d)]]
+    info['summary'] = ECNF_stats().degree_summary(d)
+    info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[d]]
     credit = 'John Cremona'
     if d==2:
         t = 'Elliptic Curves over Quadratic Number Fields'
@@ -575,9 +581,8 @@ def statistics_by_signature(d,r):
 
     info = {}
 
-    ecnfstats = db.ec_nfcurves.stats
-    sigs_by_deg = ecnfstats.get_oldstat('signatures_by_degree')
-    if not str(d) in sigs_by_deg:
+    sigs_by_deg = ECNF_stats().sigs_by_deg
+    if d not in sigs_by_deg:
         info['error'] = "The database does not contain any elliptic curves defined over fields of degree %s" % d
     else:
         info['degree'] = d
@@ -585,18 +590,17 @@ def statistics_by_signature(d,r):
     if not r in range(d%2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     s = (d-r)//2
-    info['sig'] = sig = '%s,%s' % (r,s)
-    info['summary'] = ecnf_signature_summary(sig)
+    sig = (r,s)
+    info['sig'] = '%s,%s' % sig
+    info['summary'] = ECNF_stats().signature_summary(sig)
 
-    fields_by_sig = ecnfstats.get_oldstat('fields_by_signature')
-    counts_by_field = ecnfstats.get_oldstat('conductor_norm_by_field')
+    fields_by_sig = ECNF_stats().fields_by_sig
+    counts_by_field = ECNF_stats().field_normstats
 
     def field_counts(f):
-        ff = f.replace(".",":")
-        return [f,counts_by_field[ff]]
+        return [f,counts_by_field[f]]
 
-    sorted_fields = sorted(fields_by_sig[sig], key=sort_field)
-    info['sig_stats'] = [field_counts(f) for f in sorted_fields]
+    info['sig_stats'] = [field_counts(f) for f in fields_by_sig[sig]]
     credit = 'John Cremona'
     if info['sig'] == '2,0':
         t = 'Elliptic Curves over Real Quadratic Number Fields'
@@ -619,13 +623,6 @@ def statistics_by_signature(d,r):
               ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 
-def get_torsion_structures():
-    ecnfstats = db.ec_nfcurves.stats
-    torsion_structures = [t[0] for t in ecnfstats.get_oldstat('torsion_structure')['counts']]
-    torsion_structures = [[int(str(n)) for n in t.split(",")] for t in torsion_structures if t]
-    torsion_structures.sort()
-    return torsion_structures
-
 def tor_struct_search_nf(prefill="any"):
     def fix(t):
         return t + ' selected = "yes"' if prefill==t else t
@@ -635,7 +632,7 @@ def tor_struct_search_nf(prefill="any"):
         return [fix("[{},{}]".format(m,n)), "C{}&times;C{}".format(m,n)]
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
 
-    tors = get_torsion_structures()
+    tors = ECNF_stats().torsion_counts
 
     # The following was the set as of 24/4/2017:
     # assert tors == [[2], [2, 2], [2, 4], [2, 6], [2, 8], [2, 10], [2, 12], [2, 14], [2, 16], [2, 18], [3], [3, 3], [3, 6], [4], [4, 4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19], [20], [21], [22], [25], [27], [37]]

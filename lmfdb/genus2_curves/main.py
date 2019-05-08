@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 
-from ast import literal_eval
 import re
+from ast import literal_eval
 from operator import mul
+
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, comma, flash_error, display_knowl
-from lmfdb.search_parsing import parse_bool, parse_ints, parse_bracketed_posints
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.downloader import Downloader
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, comma, flash_error, display_knowl,
+    parse_bool, parse_ints, parse_bracketed_posints,
+    search_wrap,
+    Downloader,
+    StatsDisplay, formatters)
+from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_page
 from lmfdb.genus2_curves.web_g2c import WebG2C, list_to_min_eqn, st0_group_name
-from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.display_stats import StatsDisplay, boolean_format
 
 credit_string = "Andrew Booker, Jeroen Sijsling, Andrew Sutherland, John Voight,  Raymond van Bommel, Dan Yasaki"
 
@@ -42,6 +44,10 @@ real_geom_end_alg_to_ST0_dict = {
         'R':'USp(4)'
         }
 
+# End_QQbar tensored with QQ
+geom_end_alg_list = [ 'Q', 'RM', 'CM', 'QM', 'Q x Q', 'CM x Q', 'CM x CM', 'M_2(Q)', 'M_2(CM)']
+geom_end_alg_dict = { x:x for x in geom_end_alg_list }
+
 aut_grp_list = ['[2,1]', '[4,1]', '[4,2]', '[6,2]', '[8,3]', '[12,4]']
 aut_grp_dict = {
         '[2,1]':'C_2',
@@ -68,7 +74,8 @@ geom_aut_grp_dict = {
 
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+            ('Source of the data', url_for(".source_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Genus 2 curve labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -98,6 +105,8 @@ def index_Q():
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_dict"] = geom_end_alg_dict
     title = 'Genus 2 Curves over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
@@ -178,7 +187,8 @@ def render_curve_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def render_isogeny_class_webpage(label):
     try:
@@ -192,7 +202,8 @@ def render_isogeny_class_webpage(label):
                            bread=g2c.bread,
                            learnmore=learnmore_list(),
                            title=g2c.title,
-                           friends=g2c.friends)
+                           friends=g2c.friends,
+                           KNOWL_ID="g2c.%s"%label)
 
 def url_for_curve_label(label):
     slabel = label.split(".")
@@ -233,10 +244,11 @@ class G2C_download(Downloader):
     table = db.g2c_curves
     title = 'Genus 2 curves'
     columns = 'eqn'
+    column_wrappers = {'eqn':literal_eval}
     data_format = ['[[f coeffs],[h coeffs]]']
     data_description = 'defining the hyperelliptic curve y^2+h(x)y=f(x).'
     function_body = {'magma':['R<x>:=PolynomialRing(Rationals());',
-                              'return [HyperellipticCurve(R!r[1],R!r[2]):r in data];'],
+                              'return [HyperellipticCurve(R![c:c in r[1]],R![c:c in r[2]]):r in data];'],
                      'sage':['R.<x>=PolynomialRing(QQ)',
                              'return [HyperellipticCurve(R(r[0]),R(r[1])) for r in data]'],
                      'gp':['[apply(Polrev,c)|c<-data];']}
@@ -265,6 +277,8 @@ def genus2_curve_search(info, query):
     info["aut_grp_dict"] = aut_grp_dict
     info["geom_aut_grp_list"] = geom_aut_grp_list
     info["geom_aut_grp_dict"] = geom_aut_grp_dict
+    info["geom_end_alg_list"] = geom_end_alg_list
+    info["geom_end_alg_dict"] = geom_end_alg_dict
     parse_ints(info,query,'abs_disc','absolute discriminant')
     parse_bool(info,query,'is_gl2_type','is of GL2-type')
     parse_bool(info,query,'has_square_sha','has square Sha')
@@ -287,7 +301,7 @@ def genus2_curve_search(info, query):
         query['g2_inv'] = "['%s','%s','%s']"%(info['g20'], info['g21'], info['g22'])
     if 'class' in info:
         query['class'] = info['class']
-    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id'):
+    for fld in ('st_group', 'real_geom_end_alg', 'aut_grp_id', 'geom_aut_grp_id', 'geom_end_alg'):
         if info.get(fld): query[fld] = info[fld]
     info["curve_url"] = lambda label: url_for_curve_label(label)
     info["class_url"] = lambda label: url_for_isogeny_class_label(label)
@@ -362,8 +376,8 @@ class G2C_stats(StatsDisplay):
                   'torsion_order': 'torsion subgroup orders'}
     formatters = {'aut_grp_id': aut_grp_format,
                   'geom_aut_grp_id': geom_aut_grp_format,
-                  'has_square_sha': boolean_format,
-                  'is_gl2_type': boolean_format,
+                  'has_square_sha': formatters.boolean,
+                  'is_gl2_type': formatters.boolean,
                   'real_geom_end_alg': st0_group_format,
                   'st_group': st_group_format}
 
@@ -394,15 +408,22 @@ def statistics():
 def completeness_page():
     t = 'Completeness of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Completeness',''))
-    return render_template("single.html", kid='dq.g2c.extent',
+    return render_template("single.html", kid='rcs.cande.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @g2c_page.route("/Source")
-def how_computed_page():
+def source_page():
     t = 'Source of Genus 2 Curve Data over $\Q$'
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Source',''))
-    return render_template("single.html", kid='dq.g2c.source',
+    return render_template("single.html", kid='rcs.source.g2c',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@g2c_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of Genus 2 Curve Data over $\Q$'
+    bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', url_for(".index")),('Reliability',''))
+    return render_template("single.html", kid='rcs.rigor.g2c',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @g2c_page.route("/Labels")
 def labels_page():

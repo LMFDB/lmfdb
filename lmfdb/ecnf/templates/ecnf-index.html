@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-{{ KNOWL_INC('dq.ecnf.extent') }}
+  {{ ecnf_summary()|safe}}
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} defined over:
@@ -71,11 +71,13 @@ Please enter a value or leave blank:
   curves</td>
   <td>
          <select name='include_base_change'>
-           <option value="off">exclude</option>
-           <option value="" selected>include</option>
+          {% set base_change_values = [('', 'include'), ('off', 'exclude'),  ('only', 'only')] %}
+          {% for val, text in base_change_values %}
+          <option value="{{ val }}">{{ text }}</option>
+          {% endfor %}
          </select>
   </td>
-  <td align=right>{{ KNOWL('ec.q_curve',title="Q_curves") }} </td>
+     <td align=right>{{ KNOWL('ec.q_curve',title="Q_curves") }} </td>
   <td>
          <select name='include_Q_curves'>
            <option value="" selected>include</option>
@@ -83,6 +85,7 @@ Please enter a value or leave blank:
            <option value="only">only</option>
          </select>
   </td>
+
     </tr>
 
    <tr>

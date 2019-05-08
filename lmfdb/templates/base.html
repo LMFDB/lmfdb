@@ -1,81 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<meta name="description" content="{{meta_description|striptags}}"/>
-{% if titletag %}
-<title>LMFDB - {{ titletag|striptags }}</title>
-{% else %}
-<title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}  </title>
-{% endif %}
-<link href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="description" content="{{meta_description|striptags}}"/>
+    {% if titletag %}
+      <title>LMFDB - {{ titletag|striptags }}</title>
+    {% else %}
+      <title>LMFDB{% if title %} - {{ title|striptags }}{% endif %}  </title>
+    {% endif %}
+    <link id="style_css" href="{{ url_for('css') }}" rel="stylesheet" type="text/css" /> 
 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
+    <!-- jQuery -->
+    <script type="text/javascript"
+            src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"
+            integrity="sha384-xBuQ/xzmlsLoJpyjoggmTEz8OWUFM0/RC5BsqQBDX2v5cMvDHcMakNTNrHIW2I5f"
+            crossorigin="anonymous"></script>
+    <!-- jQuery UI -->
+    <script type="text/javascript"
+            src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"
+            integrity="sha384-Dziy8F2VlJQLMShA6FHWNul/veM9bCkRUaLqr199K94ntO5QUrLJBEbYegdSkkqX"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet"
+          href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css"
+          integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
+          crossorigin="anonymous">
 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script> 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script> 
-<script type="text/javascript" src="{{ url_for('static', filename='jquery-ui-1.8.14.custom.min.js') }}"></script> 
-<script type="text/javascript" src="https://www.google.com/jsapi"></script> 
 
-<link rel="stylesheet" href="{{ url_for('static', filename='jquery-ui-1.8.14.custom.css') }}" type="text/css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css" integrity="sha384-9eLZqc9ds8eNjO3TmqPeYcDj8n+Qfa4nuSiGYa6DjLNcv9BtN69ZIulL9+8CqC9Y" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.js" integrity="sha384-K3vbOmF2BtaVai+Qk37uypf7VrgBubhQreNQe9aGsz9lB63dIFiQVlJbr92dw2Lx" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
-<script>
+
+
+
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.watermark.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='js/katex/katex.min.css') }}"
+          integrity="sha384-p8KmSrN9vX18bGeJpqBqeiyKEeq6Y71oTEG41jVb0+y7HVLRLXOrmt4FmZ3wwT2A"
+          crossorigin="anonymous">
+    <script defer
+          src="{{ url_for('static', filename='js/katex/katex.min.js') }}"
+          integrity="sha384-2n+cx+SqcRTk7kIOroh40z39ptLo0rvUP7AsTfQzZob16g4RsW19gSnsusHwATtx"
+          crossorigin="anonymous"></script>
+    <script defer
+          src="{{ url_for('static', filename='js/katex/contrib/auto-render.min.js') }}"
+          integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
+          crossorigin="anonymous"></script>
+    <script>
 katexOpts = {
-    delimiters: [
-    {left: "$$", right: "$$", display: true},
-    {left: "\\[", right: "\\]", display: true},
-    {left: "$", right: "$", display: false},
-    {left: "\\(", right: "\\)", display: false}
-    ],
-    macros: {
-        "\\C": '{\\mathbb{C}}',
-        "\\R": '{\\mathbb{R}}',
-        "\\Q": '{\\mathbb{Q}}',
-        "\\Z": '{\\mathbb{Z}}',
-        "\\F": '{\\mathbb{F}}',
-        "\\H": '{\\mathbb{H}}',
-        "\\HH": '{\\mathcal{H}}',
-        "\\integers": '{\\mathcal{O}}',
-        "\\SL": '{\\textrm{SL}}',
-        "\\GL": '{\\textrm{GL}}',
-        "\\PSL": '{\\textrm{PSL}}',
-        "\\PGL": '{\\textrm{PGL}}',
-        "\\Sp": '{\\textrm{Sp}}',
-        "\\GSp": '{\\textrm{GSp}}',
-        "\\Gal": '{\\mathop{\\rm Gal}}',
-        "\\Aut": '{\\mathop{\\rm Aut}}',
-        "\\Sym": '{\\mathop{\\rm Sym}}',
-        "\\End": '{\\mathop{\\rm End}}',
-        "\\Reg": '{\\mathop{\\rm Reg}}',
-        "\\Ord": '{\\mathop{\\rm Ord}}',
-        "\\sgn": '{\\mathop{\\rm sgn}}',
-        "\\trace": '{\\mathop{\\rm trace}}',
-        "\\Res": '{\\mathop{\\rm Res}}',
-        "\\mathstrut": '\\vphantom(',
-        "\\ideal": '{\\mathfrak{ #1 }}',
-        "\\classgroup": '{Cl(#1)}',
-        "\\modstar": '{\\left( #1/#2 \\right)^\\times}',
-        },
-    };
-document.addEventListener("DOMContentLoaded", function() {
-	renderMathInElement(document.body, katexOpts);
+  delimiters: [
+  {left: "$$", right: "$$", display: true},
+  {left: "\\[", right: "\\]", display: true},
+  {left: "$", right: "$", display: false},
+  {left: "\\(", right: "\\)", display: false}
+],
+  macros: {
+  "\\C": '{\\mathbb{C}}',
+  "\\R": '{\\mathbb{R}}',
+  "\\Q": '{\\mathbb{Q}}',
+  "\\Z": '{\\mathbb{Z}}',
+  "\\F": '{\\mathbb{F}}',
+  "\\H": '{\\mathbb{H}}',
+  "\\HH": '{\\mathcal{H}}',
+  "\\integers": '{\\mathcal{O}}',
+  "\\SL": '{\\textrm{SL}}',
+  "\\GL": '{\\textrm{GL}}',
+  "\\PSL": '{\\textrm{PSL}}',
+  "\\PGL": '{\\textrm{PGL}}',
+  "\\Sp": '{\\textrm{Sp}}',
+  "\\GSp": '{\\textrm{GSp}}',
+  "\\Gal": '{\\mathop{\\rm Gal}}',
+  "\\Aut": '{\\mathop{\\rm Aut}}',
+  "\\Sym": '{\\mathop{\\rm Sym}}',
+  "\\End": '{\\mathop{\\rm End}}',
+  "\\Reg": '{\\mathop{\\rm Reg}}',
+  "\\Ord": '{\\mathop{\\rm Ord}}',
+  "\\sgn": '{\\mathop{\\rm sgn}}',
+  "\\trace": '{\\mathop{\\rm trace}}',
+  "\\Res": '{\\mathop{\\rm Res}}',
+  "\\mathstrut": '\\vphantom(',
+  "\\ideal": '{\\mathfrak{ #1 }}',
+  "\\classgroup": '{Cl(#1)}',
+  "\\modstar": '{\\left( #1/#2 \\right)^\\times}',
+},
+};
+  document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, katexOpts);
 });
-</script>
+    </script>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='js/katex/contrib/copy-tex.min.css') }}"
+          type="text/css"
+          integrity="sha384-Wt5ZF7k6gC4RLUS60qhgaQwWHonteg/5lmXFn0UkrDM4nHoM0cYWWSwYAQof8UZc"
+          crossorigin="anonymous">
+    <script defer
+          src="{{ url_for('static', filename='js/katex/contrib/copy-tex.min.js') }}"
+          integrity="sha384-XhWAe6BtVcvEdS3FFKT7Mcft4HJjPqMQvi5V4YhzH9Qxw497jC13TupOEvjoIPy7"
+          crossorigin="anonymous"></script>
 
-{#- the defs for the knowls, needed to be after mathjax, before analytics, but we do not use mathjax any more -#}
-{%- include "knowl-defs.html" -%}
-{%- from "knowl-defs.html" import KNOWL with context -%}
-{%- from "knowl-defs.html" import KNOWL_LINK with context -%}
-{%- from "knowl-defs.html" import KNOWL_INC with context -%}
-{%- from "knowl-defs.html" import TEXT_DATA with context -%}
+    {#- the defs for the knowls, needed to be after mathjax, before analytics, but we do not use mathjax any more -#}
+    {%- include "knowl-defs.html" -%}
+    {%- from "knowl-defs.html" import KNOWL with context -%}
+    {%- from "knowl-defs.html" import KNOWL_LINK with context -%}
+    {%- from "knowl-defs.html" import KNOWL_INC with context -%}
+    {%- from "knowl-defs.html" import TEXT_DATA with context -%}
 
-<script type="text/javascript">
+    <script type="text/javascript">
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-19138192-1']);
 _gaq.push(['_setDomainName', 'lmfdb.org']);
@@ -84,23 +120,23 @@ _gaq.push(['_trackPageview']);
 _gaq.push(['_trackPageLoadTime']);
 
 (function() {
- var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
- ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
- var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
-</script>
+    </script>
 
-{% if body_class == "checklist" -%}
-<base target="page">
-{%- endif %}
-</head>
+    {% if body_class == "checklist" -%}
+      <base target="page">
+      {%- endif %}
+  </head>
 
-{%- if BETA -%}
-<body class="beta {{ body_class }}">
-{%- else -%}
-<body class="{{ body_class }}">
-{%- endif -%}
+  {%- if BETA -%}
+  <body class="beta {{ body_class }}">
+    {%- else -%}
+    <body class="{{ body_class }}">
+      {%- endif -%}
 
-{% block body -%}{%- endblock body %}
-</body>
+      {% block body -%}{%- endblock body %}
+      </body>
 </html>

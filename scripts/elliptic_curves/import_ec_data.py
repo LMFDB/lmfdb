@@ -7,11 +7,72 @@ the entry does not exist then it creates it and returns that.
 
 Initial version (Paris 2010)
 More tables Feb 2011 Gagan Sekhon
-Needed importing code for Stein-Watkins
 
 Rewritten by John Cremona and David Roe, Bristol, March 2012
+Evolved during 2012-2018
+2018: adapted for postgres, JEC.
 
-The documents in the collection 'curves' in the database 'elliptic_curves' have the following fields:
+Postgres table ec_curves has these columns:
+"""
+
+qcurves_col_type = {
+ u'2adic_gens': u'jsonb',
+ u'2adic_index': u'smallint',
+ u'2adic_label': u'text',
+ u'2adic_log_level': u'smallint',
+ u'ainvs': u'jsonb',
+ u'anlist': u'jsonb',
+ u'aplist': u'jsonb',
+ u'class_deg': u'smallint',
+ u'class_size': u'smallint',
+ u'cm': u'smallint',
+ u'conductor': u'numeric',
+ u'degree': u'numeric',
+ u'equation': u'text',
+ u'galois_images': u'jsonb',
+ u'gens': u'jsonb',
+ u'heights': u'jsonb',
+ u'id': u'bigint',
+ u'iso': u'text',
+ u'iso_nlabel': u'smallint',
+ u'isogeny_degrees': u'jsonb',
+ u'isogeny_matrix': u'jsonb',
+ u'iwdata': u'jsonb',
+ u'iwp0': u'smallint',
+ u'jinv': u'text',
+ u'label': u'text',
+ u'lmfdb_iso': u'text',
+ u'lmfdb_label': u'text',
+ u'lmfdb_number': u'smallint',
+ u'local_data': u'jsonb',
+ u'min_quad_twist': u'jsonb',
+ u'modp_images': u'jsonb',
+ u'nonmax_primes': u'jsonb',
+ u'nonmax_rad': u'integer',
+ u'number': u'smallint',
+ u'rank': u'smallint',
+ u'real_period': u'numeric',
+ u'regulator': u'numeric',
+ u'sha': u'integer',
+ u'sha_an': u'numeric',
+ u'sha_primes': u'jsonb',
+ u'signD': u'smallint',
+ u'special_value': u'numeric',
+ u'tamagawa_product': u'integer',
+ u'tor_degs': u'jsonb',
+ u'tor_fields': u'jsonb',
+ u'tor_gro': u'jsonb',
+ u'torsion': u'smallint',
+ u'torsion_generators': u'jsonb',
+ u'torsion_primes': u'jsonb',
+ u'torsion_structure': u'jsonb',
+ u'trace_hash': u'bigint',
+ u'xcoord_integral_points': u'jsonb',
+}
+
+r"""
+
+The documents in the mongo collection 'curves' in the database 'elliptic_curves' had the following fields:
 
    - '_id': internal mogodb identifier
    - 'label':  (string) full Cremona label, e.g. '1225a2'
@@ -22,25 +83,26 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'iso_nlabel': (int) numerical version of the (lmfdb) isogeny class label
    - 'number': (int) Cremona curve number within its class, e.g. 2
    - 'lmfdb_number': (int) LMFDB curve number within its class, e.g. 2
-   - 'ainvs': (list of strings) list of a-invariants, e.g. ['0', '1', '1', '10617', '75394']
+   - 'ainvs': (string representing list of ints) a-invariants, e.g. '[0,1,1,10617,75394]'
    - 'jinv': (string) j-invariant, e.g. -4096/11
    - 'cm': (int) 0 for no CM, or a negative discriminant
    - 'rank': (int) rank, e.g. 0
    - 'torsion': (int) torsion order, e.g. 1
    - 'torsion_structure': (list of strings) list of invariants of torsion subgroup, e.g. ['3']
    - 'torsion_generators': (list of strings) list of generators of torsion subgroup, e.g. ['(5, 5)']
-   - 'x-coordinates_of_integral_points': (string) list of x-coordinates of integral points, e.g. '[5,16]'
+   - 'xcoord_integral_points': (string) list of x-coordinates of integral points, e.g. '[5,16]'
    - 'gens': (list of strings) list of generators of infinite order, e.g. ['(0:0:1)']
    - 'regulator': (float) regulator, e.g. 1.0
    - 'tamagawa_product': (int) product of Tamagawa numbers, e.g. 4
    - 'special_value': (float) special value of r'th derivative of L-function (divided by r!), e.g.1.490882041449698
    - 'real_period': (float) real period, e.g. 0.3727205103624245
    - 'degree': (int) degree of modular parametrization, e.g. 1984
-   - 'non-maximal_primes': (list of ints) primes p for which the
+   - 'nonmax_primes': (list of ints) primes p for which the
       mod p Galois representation is not maximal, e.g. [5]
-   - 'mod-p_images': (list of strings) Sutherland codes for the
+   - 'nonmax_radd': (int) product of nonmax_primes
+   - 'modp_images': (list of strings) Sutherland codes for the
       images of the mod p Galois representations for the primes in
-      'non-maximal_primes' e.g. ['5B']
+      'nonmax_primes' e.g. ['5B']
    - '2adic_index': (int) the index of the 2-adic representation in
       GL(2,Z2) (or 0 for CM curves, which have infinite index)
    - '2adic_log_level': (int) the smallest n such that the image
@@ -51,7 +113,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - '2adic_label': (string) Rouse label of the associated modular
       curve (None for CM curves)
    - 'isogeny_matrix': (list of lists of ints) isogeny matrix for
-     curves in the class w.r.t. Cremona ordering
+     curves in the class w.r.t. LMFDB ordering
    - 'isogeny_degrees': (list of ints) degrees of cyclic isogenies from this curve
    - 'class_size': (int) size of isogeny class
    - 'class_deg': (int) max (=lcm) of isogeny degrees in the class
@@ -60,7 +122,7 @@ The documents in the collection 'curves' in the database 'elliptic_curves' have 
    - 'torsion_primes': (list of ints) primes dividing torsion
 
 Extra data fields added May 2016 to avoid computation on the fly:
-   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
+   - 'ainvs': (string) '[a1,a2,a3,a4,a6]' (replaced 'ainvs' in due course)
    - 'equation': (string)
    - 'local_data': (list of dicts, one per prime)
    - 'signD': (sign of discriminant) int (+1 or -1)
@@ -70,24 +132,12 @@ Extra data fields added May 2016 to avoid computation on the fly:
    - 'anlist': (list of ints) a_p for p<20
 """
 
-import os.path
-import re
-import sys
-import os
-import pymongo
+import re, os, pprint
 from sage.all import ZZ, RR, EllipticCurve, prod, Set
 from lmfdb.utils import web_latex
-from lmfdb.base import getDBConnection
-print "getting connection"
-C= getDBConnection()
-print "authenticating on the elliptic_curves database"
-import yaml
-pw_dict = yaml.load(open(os.path.join(os.getcwd(), os.extsep, os.extsep, os.extsep, "passwords.yaml")))
-username = pw_dict['data']['username']
-password = pw_dict['data']['password']
-C['elliptic_curves'].authenticate(username, password)
+from lmfdb import db
 print "setting curves"
-curves = C.elliptic_curves.curves
+curves = db.ec_curves
 
 def parse_tgens(s):
     r"""
@@ -101,10 +151,9 @@ def parse_tgens(s):
 
 def parse_ainvs(s):
     r"""
-    Given a string like '[a1,a2,a3,a4,a6]' returns the list of substrings ['a1','a2','a3','a4','a6']
+    Given a string like '[a1,a2,a3,a4,a6]' returns the list of integers [a1,a2,a3,a4,a6]
     """
-#    return [int(a) for a in s[1:-1].split(',')]
-    return [a for a in s[1:-1].split(',')]
+    return [ZZ(a) for a in s[1:-1].split(',')]
 
 
 # def parse_gens(s):
@@ -140,7 +189,7 @@ def allbsd(line):
     """
     data = split(line)
     label = data[0] + data[1] + data[2]
-    ainvs = parse_ainvs(data[3])
+    ainvs = data[3]
 
     torsion = ZZ(data[5])
     sha_an = RR(data[10])
@@ -190,8 +239,8 @@ def allgens(line):
     else:
         t = [int(c) for c in t[1:-1].split(",")]
     torsion = int(prod([ti for ti in t], 1))
-    ainvs = parse_ainvs(data[3])
-    E = EllipticCurve([ZZ(a) for a in ainvs])
+    ainvs = data[3]
+    E = EllipticCurve([ZZ(a) for a in parse_ainvs(ainvs)])
     jinv = unicode(str(E.j_invariant()))
     if E.has_cm():
         cm = int(E.cm_discriminant())
@@ -263,7 +312,7 @@ def twoadic(line):
 def intpts(line):
     r""" Parses one line from an intpts file.  Returns the label and a
     dict containing fields with keys 'ainvs',
-    'x-coordinates_of_integral_points', all values being strings.
+    'xcoord_integral_points', all values being strings.
 
     Input line fields:
 
@@ -275,10 +324,10 @@ def intpts(line):
     """
     data = split(line)
     label = data[0]
-    ainvs = parse_ainvs(data[1])
+    ainvs = data[1]
     return label, {
         'ainvs': ainvs,
-        'x-coordinates_of_integral_points': data[2]
+        'xcoord_integral_points': data[2]
     }
 
 
@@ -343,9 +392,9 @@ def split_galois_image_code(s):
 
 def galrep(line, new_format=True):
     r""" Parses one line from a galrep file.  Returns the label and a
-    dict containing two fields: 'non-maximal_primes', a list of
+    dict containing two fields: 'nonmax_primes', a list of
     primes p for which the Galois representation modulo p is not
-    maximal, 'mod-p_images', a list of strings
+    maximal, 'modp_images', a list of strings
     encoding the image when not maximal, following Sutherland's
     coding scheme for subgroups of GL(2,p).  Note that these codes
     start with a 1 or 2 digit prime followed a letter in
@@ -380,8 +429,9 @@ def galrep(line, new_format=True):
 
     if new_format:
         d = {
-            'non-maximal_primes': pr,
-            'mod-p_images': image_codes,
+            'nonmax_primes': pr,
+            'nonmax_rad': prod(pr),
+            'modp_images': image_codes,
         }
     else:
         d = {
@@ -469,10 +519,11 @@ def comp_dict_by_label(d1, d2):
 # %runfile lmfdb/elliptic_curves/import_ec_data.py
 #
 
-def upload_to_db(base_path, min_N, max_N, insert=True):
-    r""" Uses insert_one() if insert=True, which is faster but will fail if
-    the label is already in the database; otherwise uses update_one()
-    with upsert=True
+def upload_to_db(base_path, min_N, max_N, insert=True, test=True):
+    r""" Uses insert_many() if insert=True, which is faster but will create
+    duplicates and cause problems if any of the the labels are already
+    in the database; otherwise uses upsert() which will update a
+    single row, or add a row.
     """
     allbsd_filename = 'allbsd/allbsd.%s-%s' % (min_N, max_N)
     allgens_filename = 'allgens/allgens.%s-%s' % (min_N, max_N)
@@ -529,90 +580,23 @@ def upload_to_db(base_path, min_N, max_N, insert=True):
         for val in vals:
                 val.update(isogmats[val['label']])
 
-
     if insert:
-        print("inserting all data")
-        curves.insert_many(vals)
+        if test:
+            print("(not) inserting all data")
+            print("First 10 vals:")
+            for v in vals[:10]:
+                pprint.pprint(v)
+        else:
+            print("inserting all data ({} items)".format(len(vals)))
+            curves.insert_many(vals)
     else:
         count = 0
         for val in vals:
             # print val
-            curves.update_one({'label': val['label']}, {"$set": val}, upsert=True)
+            curves.upsert({'label': val['label']}, val)
             count += 1
             if count % 5000 == 0:
                 print "inserted %s" % (val['label'])
-
-
-# A one-off script to add isogeny matrices to the database: this
-# version computes on the fly and does not include the isog_degrees
-# field.  See add_isogs() for the one to use which reads an allisog
-# file.
-
-def add_isogeny_matrices(N1,N2):
-    """
-    Add the 'isogeny_matrix' field to every curve in the database
-    whose conductor is between N1 and N2 inclusive.  The matrix is
-    stored as a list of n lists of n ints, where n is the size of the
-    class and the (i,j) entry is the degree of a cyclic isogeny from
-    curve i to curve j in the class, using the lmfdb numbering within
-    each class.  Hence this matrix is exactly the same for all curves
-    in the class.  This was added in July 2014 to save recomputing the
-    complete isogeny class every time despite the fact that the curves
-    in the class were already in the database.
-    """
-    query = {}
-    query['conductor'] = { '$gt': int(N1)-1, '$lt': int(N2)+1 }
-    query['number'] = int(1)
-    res = curves.find(query)
-    res = res.sort([('conductor', pymongo.ASCENDING),
-                    ('lmfdb_iso', pymongo.ASCENDING)])
-    for C in res:
-        if 'isogeny_matrix' in C:
-            print("class {} has isogeny matrix already, skipping".format(C['label']))
-            continue
-        lmfdb_iso = C['lmfdb_iso']
-        E = EllipticCurve([int(a) for a in C['ainvs']])
-        M = E.isogeny_class(order="lmfdb").matrix()
-        mat = [list([int(c) for c in r]) for r in M.rows()]
-        n = len(mat)
-        print("{} curves in class {}".format(n,lmfdb_iso))
-        for label_i in [lmfdb_iso+str(i+1) for i in  range(n)]:
-            data = {}
-            data['lmfdb_label'] = label_i
-            data['isogeny_matrix'] = mat
-            curves.update({'lmfdb_label': label_i}, {"$set": data}, upsert=True)
-
-def add_isogs(base_path, min_N, max_N, upload=False):
-    r""" Do not use this function as is since it does not permute the
-    matrices returned by allisog() from Cremona to LMFDB labelling
-    before uploading.
-    """
-    f = 'allisog/allisog.%s-%s' % (min_N, max_N)
-    h = open(os.path.join(base_path, f))
-    print("Opened {}".format(os.path.join(base_path, f)))
-    count = 0
-    for line in h.readlines():
-        data = allisog(line)
-        N,iso,num = data['label']
-        class_label = N+iso
-        num=1
-        if 'isogeny_matrix' in curves.find_one({'label':class_label+str(num)}):
-            continue
-        if count%1000==0:
-            print("read {}".format(class_label))
-        count += 1
-        isogmat = data['isogeny_matrix']
-        allisogdegs = data['isogeny_degrees']
-        ncurves = len(allisogdegs)
-        for n in range(ncurves):
-            isogdegs = allisogdegs[n+1]
-            label = class_label+str(n+1)
-            val = {'isogeny_matrix': isogmat,
-                   'isogeny_degrees': isogdegs}
-            if upload:
-                curves.update_one({'label': label}, {"$set": val}, upsert=True)
-            else:
-                print("(not) adding {} to record for {}".format(val,label))
 
 def read1isogmats(base_path, min_N, max_N, lmfdb_order=True):
     r""" Returns a dictionary whose keys are Cremona labels of individual
@@ -661,9 +645,9 @@ def readallisogmats(base_path, nfiles=40):
     return data
 
 # To add all the isogeny matrix data to the database, first use the
-# preceding function readllisogmats() to create a large dict called
+# preceding function readallisogmats() to create a large dict called
 # isogdata keyed on curve labels, then pass the following function to
-# the rewrite_collection() function:
+# the rewrite() method of db_ec_curves:
 
 isogdata = {} # to keep pyflakes happy
 
@@ -675,7 +659,7 @@ def add_isogs_to_one(c):
 def readallgalreps(base_path, f):
     r""" Returns a dictionary whose keys are Cremona labels of individual
     curves, and whose values are a dictionary with the keys
-    'non-maximal_primes' and 'mod-p_images'
+    'nonmax_primes', 'nonmax_rad' and 'modp_images'
 
     This function reads one new-format galrep file.
     """
@@ -690,7 +674,7 @@ def readallgalreps(base_path, f):
 # To add all the galrep data to the database, first use the
 # preceding function readllgalreps() to create a large dict called
 # galrepdata keyed on curve labels, then pass the following function to
-# the rewrite_collection() function:
+# the rewrite() method of db.ec_curves:
 
 galrepdata = {} # to keep pyflakes happy
 
@@ -698,65 +682,29 @@ def add_galreps_to_one(c):
     c.update(galrepdata[c['label']])
     return c
 
-# A one-off script to add (1) exact Sha order; (2) prime factors of Sha; (3) prime factors of torsion
-
-def add_sha_tor_primes(N1,N2):
-    """
-    Add the 'sha', 'sha_primes', 'torsion_primes' fields to every
-    curve in the database whose conductor is between N1 and N2
-    inclusive.
-    """
-    query = {}
-    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
-    res = curves.find(query)
-    res = res.sort([('conductor', pymongo.ASCENDING)])
-    n = 0
-    for C in res:
-        label = C['lmfdb_label']
-        if n%1000==0: print label
-        n += 1
-        torsion = ZZ(C['torsion'])
-        sha = RR(C['sha_an']).round()
-        sha_primes = sha.prime_divisors()
-        torsion_primes = torsion.prime_divisors()
-        data = {}
-        data['sha'] = int(sha)
-        data['sha_primes'] = [int(p) for p in sha_primes]
-        data['torsion_primes'] = [int(p) for p in torsion_primes]
-        curves.update({'lmfdb_label': label}, {"$set": data}, upsert=True)
-
-# one-off script to add numerical conversion of the isogeny class letter code, for sorting purposes
-def add_numerical_iso_codes(N1,N2):
-    """
-    Add the 'iso_nlabel' field to every
-    curve in the database whose conductor is between N1 and N2
-    inclusive.
-    """
-    query = {}
-    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
-    res = curves.find(query)
-    res = res.sort([('conductor', pymongo.ASCENDING)])
-    n = 0
-    for C in res:
-        label = C['lmfdb_label']
-        n += 1
-        if n%1000==0: print label
-        data = {}
-        data['iso_nlabel'] = numerical_iso_label(C['lmfdb_iso'])
-        curves.update_one({'_id': C['_id']}, {"$set": data}, upsert=True)
-
-# one-off script to add extra data for curves already in the database
+# function to compute some extra data on the fly duringupload.  This is called in the function allgens()
 
 def make_extra_data(label,number,ainvs,gens):
-    """
-    C is a database elliptic curve entry.  Returns a dict with which to update the entry.
+    """Given a curve label (and number, as some data is only stored wih
+    curve number 1 in each class) and its ainvs and gens, returns a
+    dict with which to update the entry.
 
-    Data fields needed in C already: 'ainvs', 'lmfdb_label', 'gens', 'number'
+    Extra items computed here:
+    'equation': latex string of curve's equation
+    'signD': sign of discriminant
+    'local_data': list of dicts, one item for each bad prime
+    'min_quad_twist': dict holding curve's min quadratic twist and the twisting discriminant
+    'heights': list of heights of gens
+
+    and for curve #1 in a class only:
+
+    'aplist': list of a_p for p<100
+    'anlist': list of a_n for n<=20
+
     """
-    E = EllipticCurve([int(a) for a in ainvs])
+    E = EllipticCurve(parse_ainvs(ainvs))
     data = {}
     # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
-    data['xainvs'] = ''.join(['[',','.join(ainvs),']'])
     data['equation'] = web_latex(E)
     data['signD'] = int(E.discriminant().sign())
     data['local_data'] = [{'p': int(ld.prime().gen()),
@@ -772,8 +720,7 @@ def make_extra_data(label,number,ainvs,gens):
     if Etw.conductor()==E.conductor():
         data['min_quad_twist'] = {'label':label, 'disc':int(1)}
     else:
-        # Later this should be changed to look for xainvs but now all curves have ainvs
-        minq_ainvs = [str(c) for c in Etw.ainvs()]
+        minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
         r = curves.find_one({'jinv':str(E.j_invariant()), 'ainvs':minq_ainvs})
         minq_label = "" if r is None else r['label']
         data['min_quad_twist'] = {'label':minq_label, 'disc':int(Dtw)}
@@ -785,126 +732,51 @@ def make_extra_data(label,number,ainvs,gens):
         data['anlist'] = E.anlist(20,python_ints=True)
     return data
 
-def add_extra_data(N1,N2,store=False):
-    """Add these fields to curves in the db with conductors from N1 to
-    N2: NB This refers to a new collection 'curves2' which was
-    created temporarily when upgrading the data stored, and no longer
-    exists.
 
-   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
-   - 'equation': (string)
-   - 'local_data': (list of dicts, one per prime)
-   - 'signD': (sign of discriminant) int (+1 or -1)
-   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
-   - 'heights': (list of floats) heights of generators
-   - 'aplist': (list of ints) a_p for p<100
-   - 'anlist': (list of ints) a_p for p<20
-
-    """
-    curves2 = C.elliptic_curves.curves2
-    query = {}
-    query['conductor'] = { '$gte': int(N1), '$lte': int(N2) }
-    res = curves.find(query)
-    res = res.sort([('conductor', pymongo.ASCENDING)])
-    n = 0
-    res = list(res) # since the cursor times out after a few thousand curves
-    newcurves = []
-    for c in res:
-        n += 1
-        if n%100==0:
-            print c['lmfdb_label']
-        if n%1000==0:
-            if store and len(newcurves):
-                curves2.insert_many(newcurves)
-                newcurves = []
-        else:
-            sys.stdout.write(".")
-            sys.stdout.flush()
-        data = make_extra_data(c['label'],c['number'],c['ainvs'],c['gens'])
-        c.update(data)
-        if store:
-            newcurves.append(c)
-        else:
-            pass
-            #print("Not writing updated %s to database.\n" % c['label'])
-    # insert the final left-overs since the last full batch
-    if store and len(newcurves):
-        curves2.insert_many(newcurves)
-
-    print("\nfinished updating conductors from %s to %s" % (N1,N2))
-
-def add_extra_data1(C):
-    """Add these fields to a single curve record in the db (for use with
-    the rewrite script in data_mgt/utilities/rewrite.py):
-
-   - 'xainvs': (string) '[a1,a2,a3,a4,a6]' (will replace 'ainvs' in due course)
-   - 'equation': (string)
-   - 'local_data': (list of dicts, one per prime)
-   - 'signD': (sign of discriminant) int (+1 or -1)
-   - 'min_quad_twist': (dict) {label:string, disc: int} #NB Cremona label
-   - 'heights': (list of floats) heights of generators
-   - 'aplist': (list of ints) a_p for p<100
-   - 'anlist': (list of ints) a_p for p<20
-
-    """
-    C.update(make_extra_data(C['label'],C['number'],C['ainvs'],C['gens']))
-    return C
-
-def tidy_ecdb(C):
-    """A rewrite function for tidying up the curves collection, Feb 2018.
-    """
-    if C['conductor']<380000:
-        return C
-    # 1. delete the old redundant 'ainvs' field (we now use 'xainvs'
-    #C.pop('ainvs')
-    #
-    # 2. add local root number if missing
-    ld = C['local_data']
-    if not 'rootno' in ld[0]:
-        E = EllipticCurve([int(ai) for ai in C['xainvs'][1:-1].split(",")])
-        for i, ldp in enumerate(ld):
-            ldp['rootno'] = int(E.root_number(ZZ(ldp['p'])))
-            ld[i] = ldp
-        C['local_data'] = ld
-    return C
-
-def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=100000):
+def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
     r""" Check that for conductors in the specified range (or all
     conductors) every database entry has all the fields it should, and
     that these have the correct type.
+
+    NB Some key names were changed in the postgres conversion:
+    'xainvs'                --> 'ainvs'
+    'mod-p_images'          --> 'modp_images'
+    'non-maximal_primes'    --> 'nonmax_primes'
+    'x-coordinates_of_integral_points' --> 'xcoord_integral_points'
+
     """
     str_type = type(unicode('abc'))
     int_type = type(int(1))
-    float_type = type(float(1))
+    bigint_type = type(ZZ(1))
     list_type = type([1,2,3])
     dict_type = type({'a':1})
-
+    real_type = type(table.lucky({'label':'11a1'})['sha_an'])
+    
     keys_and_types = {'label':  str_type,
                       'lmfdb_label':  str_type,
-                      'conductor': int_type,
+                      'conductor': bigint_type,
                       'iso': str_type,
                       'lmfdb_iso': str_type,
                       'iso_nlabel': int_type,
                       'number': int_type,
                       'lmfdb_number': int_type,
-                      'ainvs': list_type, # of strings [REDUNDANT]
                       'jinv': str_type,
                       'cm': int_type,
                       'rank': int_type,
                       'torsion': int_type,
                       'torsion_structure': list_type, # of strings
                       'torsion_generators': list_type, # of strings
-                      'x-coordinates_of_integral_points': str_type,
+                      'xcoord_integral_points': list_type,
                       'gens': list_type, # of strings
-                      'regulator': float_type,
+                      'regulator': real_type,
                       'tamagawa_product': int_type,
-                      'special_value': float_type,
-                      'real_period': float_type,
-                      'degree': int_type,
-                      'non-surjective_primes': list_type, # of ints [REDUNDANT]
-                      'non-maximal_primes': list_type, # of ints
+                      'special_value': real_type,
+                      'real_period': real_type,
+                      'degree': bigint_type,
+                      'nonmax_primes': list_type, # of ints
+                      'nonmax_rad': int_type,
                       'galois_images': list_type, # of strings [REDUNDANT]
-                      'mod-p_images': list_type, # of strings
+                      'modp_images': list_type, # of strings
                       '2adic_index': int_type,
                       '2adic_log_level': int_type,
                       '2adic_gens': list_type, # of lists of 4 ints
@@ -913,11 +785,11 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
                       'isogeny_degrees': list_type, # of ints
                       'class_size': int_type,
                       'class_deg': int_type,
-                      'sha_an': float_type,
+                      'sha_an': real_type,
                       'sha': int_type,
                       'sha_primes': list_type, # of ints
                       'torsion_primes': list_type, # of ints
-                      'xainvs': str_type,
+                      'ainvs': list_type,
                       'equation': str_type,
                       'local_data': list_type, # of dicts
                       'signD': int_type,
@@ -927,9 +799,30 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
                       'anlist': list_type, # of ints
                       'iwdata': dict_type,
                       'iwp0': int_type,
-                  }
+                      'tor_fields': list_type,
+                      'tor_gro': dict_type,
+                      'tor_degs': list_type,
+                      'trace_hash': type(long()),
+    }
 
     key_set = Set(keys_and_types.keys())
+    table_key_set = Set(qcurves_col_type)- ['id']
+    if key_set==table_key_set:
+        print("key set matches the table keys exactly")
+    else:
+        print("key set and table keys differ:")
+        diff1 = [k for k in table_key_set if not k in key_set]
+        print("{} keys in table not in key set: {}".format(len(diff1),diff1))
+        diff2 = [k for k in key_set if not k in table_key_set]
+        print("{} keys in key set not in table keys: {}".format(len(diff2),diff2))
+        print()
+        print("{} keys in key set:".format(len(key_set)))
+        print(key_set)
+        print()
+        print("{} keys in table keys:".format(len(table_key_set)))
+        print(table_key_set)
+        return
+
     iwasawa_keys = ['iwdata', 'iwp0']        # not present for N > iwasawa_bound
     number_1_only_keys = ['aplist','anlist'] # only present if 'number':1
     no_cm_keys = ['2adic_log_level', '2adic_gens', '2adic_label']
@@ -945,8 +838,9 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
     if Nquery:
         query['conductor'] = Nquery
 
+    big_deg = 2**31-1
     count=0
-    for c in C.elliptic_curves.get_collection(collection).find(query):
+    for c in table.search(query, projection=2):
         count +=1
         if count%10000==0:
             print("Checked {} entries...".format(count))
@@ -957,58 +851,76 @@ def check_database_consistency(collection, N1=None, N2=None, iwasawa_bound=10000
             expected_keys = expected_keys - iwasawa_keys
 
         label = c['label']
-        db_keys = Set([str(k) for k in c.keys()]) - ['_id']
+        db_keys = Set([str(k) for k in c.keys()]) - ['id']
         if db_keys == expected_keys:
             for k in db_keys:
                 ktype = keys_and_types[k]
                 if k in no_cm_keys and c['cm']:
-                    ktype = type(None)
-                if k=='degree' and c[k]>2**31-1:
-                    ktype = type(c[k]) # = <class 'bson.int64.Int64'>
-                if type(c[k]) != ktype:
+                    continue
+                if k=='degree' and c[k]>big_deg:
+                    continue
+                if type(c[k])!=ktype:
                     print("Type mismatch for key {} in curve {}".format(k,label))
                     print(" in database: {}".format(type(c[k])))
                     print(" expected:    {}".format(keys_and_types[k]))
         else:
-            print("keys mismatch for {}".format(label))
-            diff1 = [k for k in expected_keys if not k in db_keys]
+            diff1 = [k for k in expected_keys if not k in db_keys and not (k in no_cm_keys and c['cm'])]
             diff2 = [k for k in db_keys if not k in expected_keys]
+            if diff1 or diff2:
+                print("keys mismatch for {}".format(label))
             if diff1: print("expected but absent:      {}".format(diff1))
             if diff2: print("not expected but present: {}".format(diff2))
 
-def update_stats(verbose=True):
-    if verbose:
-        print("Finding max and min conductor and total number of curves")
-    Nlist = curves.distinct('conductor')
-    Nmax = int(max(Nlist))
-    Nmin = int(min(Nlist))
-    Ncurves = int(curves.count())
-    if verbose:
-        print("{} curves of conductor from {} to {}".format(Ncurves,Nmin,Nmax))
-    curves.stats.insert_one({'_id':'conductor', 'min':Nmin, 'max': Nmax, 'total': Ncurves})
-    from data_mgt.utilities.rewrite import (update_attribute_stats, update_joint_attribute_stats)
-    # Basic counts for these attributes:
-    ec = C.elliptic_curves
-    if verbose:
-        print("Adding simple counts for rank, torsion, torsion structure and Sha")
-    update_attribute_stats(ec, 'curves', ['rank', 'torsion', 'torsion_structure', 'sha'])
-    # rank counts for isogeny classes:
-    if verbose:
-        print("Adding isogeny class rank counts")
-    update_attribute_stats(ec, 'curves', 'rank', prefix='class', filter={'number':1})
-    # torsion order by rank:
-    if verbose:
-        print("Adding torsion counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','torsion'], prefix='byrank', unflatten=True)
-    # torsion structure by rank:
-    if verbose:
-        print("Adding torsion structure counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','torsion_structure'], prefix='byrank', unflatten=True)
-    # sha by rank:
-    if verbose:
-        print("Adding sha counts by rank")
-    update_joint_attribute_stats(ec, 'curves', ['rank','sha'], prefix='byrank', unflatten=True)
 
+def update_stats(recount=True, verbose=True):
+
+    ecdb = db.ec_curves
+    ecdbstats = db.ec_curves.stats
+    if recount:
+        ec_count = ecdbstats._slow_count
+        ec_max = ecdbstats._slow_max
+    else:
+        ec_count = ecdb.count
+        ec_max = ecdb.max
+
+    # Do various counts, force each to be a recount so the (possibly)
+    # updated value gets stored:
+    ncurves = ec_count({})
+    nclasses = ec_count({'number':1})
+
+    if verbose:
+        print("{} curves in {} isogeny classes".format(ncurves,nclasses))
+
+    # Various max values, forced to be recomputed (?and stored?)
+    max_N = ec_max('conductor',{})
+    max_r = ec_max('rank',{})
+    max_sha = ec_max('sha',{})
+    max_sqrt_sha = ZZ(max_sha).sqrt() # exact
+    if verbose:
+        print("max conductor = {}".format(max_N))
+        print("max rank = {}".format(max_r))
+        print("max Sha = {} = {}^2".format(max_sha, max_sqrt_sha))
+
+    for r in range(max_r+1):
+        ncu = ec_count({'rank':r})
+        ncl = ec_count({'rank':r, 'number':1})
+        if verbose:
+            print("{} curves in {} classes have rank {}".format(ncu,ncl,r))
+
+    for t in  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16]:
+        ncu = ec_count({'torsion':t})
+        if verbose:
+            print("{} curves have torsion order {}".format(ncu,t))
+        if t in [4,8,12]: # two possible structures
+            ncyc = ec_count({'torsion_structure':[t]})
+            if verbose:
+                print("   of which {} curves have cyclic torsion, {} non-cyclic".format(ncyc,ncu-ncyc))
+
+    for s in range(1,1+max_sqrt_sha):
+        ncu = ec_count({'sha':s**2})
+        if verbose and ncu:
+            print("{} curves have Sha order {}^2".format(ncu,s))
+    
 def update_torsion_growth_stats(verbose=True):
     # torsion growth:
     if verbose:
@@ -1019,3 +931,48 @@ def update_torsion_growth_stats(verbose=True):
     tor_gro_degs.sort()
     tor_gro_counts = dict([(str(d),curvesnew.count({'tor_degs': d})) for d in tor_gro_degs])
     curves.stats.insert_one({'_id':'torsion_growth', 'degrees': tor_gro_degs, 'counts': tor_gro_counts})
+
+def update_int_pts(filename, test=True, verbose=0, basepath=None):
+    if basepath==None:
+        basepath = os.environ['HOME']
+    int_pts_data = {}
+    for L in open(os.path.join(basepath,filename)):
+        lab, dat = intpts(L)
+        int_pts_data[lab] = dat
+
+    print("read {} lines of data".format(len(int_pts_data)))
+
+    for lab in int_pts_data:
+        e = curves.lucky({'label':lab})
+
+        assert e['label']==lab
+        dat = int_pts_data[lab]
+        assert e['ainvs']==parse_ainvs(dat['ainvs'])
+        db_xs = e['xcoord_integral_points']
+        if verbose>1:
+            print("{}: xs read from db:   {}".format(lab,db_xs))
+        file_xs = parse_ainvs(dat['xcoord_integral_points'])
+        if verbose>1:
+            print("{}: xs read from file: {}".format(lab,file_xs))
+        if db_xs==file_xs:
+            if verbose:
+                print("{}: data agrees".format(lab))
+        else:
+            if verbose:
+                print("{}: db has {} xs while file has {}".format(lab,len(db_xs),len(file_xs)))
+            d = [x for x in db_xs if not x in file_xs]
+            if d:
+                print("Curve {}: ****************** db has x = {} not in file!".format(lab, d))
+            d = [x for x in file_xs if not x in db_xs]
+            if d and verbose:
+                print("file has x = {} not in db".format(d))
+
+            # Update the copy of the database record:
+            e['xcoord_integral_points'] = file_xs
+            if verbose>1:
+                print("New curve record for {}: {}".format(lab, e))
+            if test:
+                print("Not changing database entry for {}".format(lab))
+            else:
+                print("Using upsert to change database entry for {}".format(lab))
+                curves.upsert({'label': lab}, e)

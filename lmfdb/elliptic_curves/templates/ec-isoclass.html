@@ -1,5 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
 {% block content %}
 
 {{ place_code('class') }}
@@ -11,15 +10,14 @@ text-align: center;
 }
 </style>
 
-
-<h2>Elliptic curves in class {{info.lmfdb_iso}}</h2>
+<h2>Elliptic curves in class {{info.iso_label}}</h2>
 {{ place_code('curves') }}
 <table id = "isogeny_class_table">
 <tr>
 <th>{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
 <th>{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
 <th>{{ KNOWL('ec.q.minimal_weierstrass_equation', title='Weierstrass coefficients') }}</th>
-<th>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+<th>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</th>
 <th>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}</th>
 <th>{{ KNOWL('ec.q.optimal', title='Optimality') }}</th>
 </tr>
@@ -29,8 +27,8 @@ text-align: center;
 {% else %}
 <tr>
 {% endif %}
-<td class="center"><a href="{{c.url}}">{{c.lmfdb_label}}</a></td>
-<td class="center">{{c.label}}</td>
+<td class="center"><a href="{{c.curve_url_lmfdb}}">{{c.lmfdb_label}}</a></td>
+<td class="center"><a href="{{c.curve_url_cremona}}">{{c.label}}</a></td>
 <td class="center">{{c.ai}}</td>
 <td align="center">{{c.torsion}}</td>
 <td align="center">
@@ -45,13 +43,13 @@ text-align: center;
 {% endfor %}
 </table>
 
-<h2>Rank</h2>
+<h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
-{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].label}} has
-{% else %} The elliptic curves in class {{info.lmfdb_iso}} have
+{% if info.ncurves==1 %} The elliptic curve {{info.curves[0].curve_label}} has
+{% else %} The elliptic curves in class {{info.iso_label}} have
 {% endif %}
-rank \({{ info.rank}}\).
+{{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>
 
 <h2>
@@ -80,12 +78,15 @@ rank \({{ info.rank}}\).
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
 {{ place_code('matrix') }}
+<p>The \(i,j\) entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
+</p>
 <p>
   \({{info.isogeny_matrix_str}}\)
 </p>
 
 <h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
 {{ place_code('plot') }}
+<p>The vertices are labelled with {{info.label_type}} labels. </p>
 <center>
   <img src="{{info.graph_img}}" />
 </center>

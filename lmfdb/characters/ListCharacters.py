@@ -4,8 +4,8 @@
 import re
 from sage.all import lcm, factor, divisors
 from sage.databases.cremona import cremona_letter_code
-from lmfdb.db_backend import db
-from lmfdb.WebCharacter import WebDirichlet, WebDirichletCharacter, logger
+from lmfdb import db
+from lmfdb.characters.web_character import WebDirichlet, WebDirichletCharacter, logger
 try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
@@ -185,8 +185,8 @@ class CharacterSearch:
         self.modulus = query.get('modulus')
         self.conductor = query.get('conductor')
         self.order = query.get('order')
-        self.parity = None if query.get('parity', 'All') == 'All' else query.get('parity')
-        self.primitive = None if query.get('primitive', 'All') == 'All' else query.get('primitive')
+        self.parity = query.get('parity')
+        self.primitive = query.get('primitive')
         self.limit = parse_limit(query.get('limit'))
         if self.parity and not self.parity in ['Odd','Even']:
             flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'"),"error")

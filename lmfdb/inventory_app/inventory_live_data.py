@@ -7,7 +7,7 @@ import inventory_db_core as idc
 from scrape_helpers import register_scrape
 import scrape_frontend as sf
 import uuid
-from lmfdb.db_backend import db
+from lmfdb import db
 
 ops_sz = 2000000
 null_uid = '00000000-0000-0000-0000-000000000000'

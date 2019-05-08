@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from lmfdb.utils import web_latex
-from lmfdb.WebNumberField import  WebNumberField
-from lmfdb.transitive_group import group_display_knowl
+from lmfdb.number_fields.web_number_field import  WebNumberField
+from lmfdb.galois_groups.transitive_group import group_display_knowl
 from sage.all import gcd, latex, QQ, FractionField, PolynomialRing
 from flask import url_for
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 
 

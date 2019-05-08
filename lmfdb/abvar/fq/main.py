@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-import StringIO
-from lmfdb.db_backend import db
-from lmfdb.base import app
-from lmfdb.utils import to_dict, make_logger
-from lmfdb.abvar.fq import abvarfq_page
-from lmfdb.search_parsing import parse_ints, parse_string_start, parse_nf_string, parse_galgrp, parse_subset, parse_submultiset, parse_bool, parse_bool_unknown
-from lmfdb.search_wrapper import search_wrap
-from search_parsing import parse_newton_polygon
-from isog_class import validate_label, AbvarFq_isoclass
-from stats import AbvarFqStats
+
+import ast, re, StringIO, time
+
 from flask import flash, render_template, url_for, request, redirect, send_file
 from markupsafe import Markup
+from collections import defaultdict
 from sage.rings.all import PolynomialRing, ZZ
+
+from lmfdb import db
+from lmfdb.app import app
+from lmfdb.logger import make_logger
+from lmfdb.utils import (
+    to_dict,
+    parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
+    parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
+    search_wrap)
+from . import abvarfq_page
+from .search_parsing import parse_newton_polygon
+from .isog_class import validate_label, AbvarFq_isoclass
+from .stats import AbvarFqStats
 
 logger = make_logger("abvarfq")
 
@@ -37,6 +41,7 @@ def ECFq_redirect():
 def learnmore_list():
     return [('Completeness of the data', url_for(".completeness_page")),
             ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -101,7 +106,8 @@ def abelian_varieties_by_gqi(g, q, iso):
                            title='Abelian Variety Isogeny Class %s over $%s$'%(label, cl.field()),
                            bread=bread,
                            cl=cl,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list(),
+                           KNOWL_ID='av.fq.%s'%label)
 
 def download_search(info):
     dltype = info['Submit']
@@ -226,7 +232,7 @@ def abelian_variety_browse(**args):
         else:
             qmin = table_params['q'].get('$gte',min(qs) if qs else table_params['q'].get('$lte',0))
             qmax = table_params['q'].get('$lte',max(qs) if qs else table_params['q'].get('$gte',1000))
-    info['table'] = {}
+    info['table'] = defaultdict(lambda: defaultdict(int))
     if gmin == gmax:
         info['table_dimension_range'] = "{0}".format(gmin)
     else:
@@ -236,16 +242,9 @@ def abelian_variety_browse(**args):
     else:
         info['table_field_range'] = "{0}-{1}".format(qmin, qmax)
 
-    for q in qs:
-        if q < qmin or q > qmax:
-            continue
-        info['table'][q] = {}
-        L = av_stats._counts[q]
-        for g in xrange(gmin, gmax+1):
-            if g < len(L):
-                info['table'][q][g] = L[g]
-            else:
-                info['table'][q][g] = 0
+    for (g,q), cnt in av_stats._counts.items():
+        if qmin <= q <= qmax and gmin <= g <= gmax:
+            info['table'][q][g] = cnt
 
     info['col_heads'] = [q for q in qs if q >= qmin and q <= qmax]
     info['row_heads'] = [g for g in gs if g >= gmin and g <= gmax]
@@ -280,6 +279,13 @@ def completeness_page():
     bread = get_bread(('Completeness', '.'))
     return render_template("single.html", kid='dq.av.fq.extent',
                            credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@abvarfq_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Weil Polynomial Data'
+    bread = get_bread(('Reliability', '.'))
+    return render_template("single.html", kid='dq.av.fq.reliability',
+                           credit=abvarfq_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @abvarfq_page.route("/Source")
 def how_computed_page():

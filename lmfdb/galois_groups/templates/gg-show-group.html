@@ -10,9 +10,6 @@ table.reptable td, table.reptable th {
 }
 </style>
 
-{% set KNOWL_ID = "gg.%s"|format(info['label_raw']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top', title='') }}</h2>
-
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
       <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$ :<td>&nbsp;&nbsp;<td>${{info.n}}$</tr>
@@ -75,7 +72,7 @@ table.reptable td, table.reptable th {
       <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</tr>
       <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</tr>
       <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</tr>
-      <tr><td>{{KNOWL('curve.highergenus.aut.groupnotation','GAP id')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}</tr>
+      <tr><td>{{KNOWL('group.small_group_label','GAP id')}}:<td>&nbsp;&nbsp;<td>{{info.gapid | safe}}</tr>
     </table>
 
     <table>
@@ -129,7 +126,5 @@ list of indecomposable integral representations:
     </table>
   {% endif %}
 {% endif %}
-
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 {% endblock %}

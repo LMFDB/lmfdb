@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class ApiTest(LmfdbTest):
 
@@ -77,5 +77,5 @@ class ApiTest(LmfdbTest):
             if '8T3' in query:
                 assert '"name": "E(8)=2[x]2[x]2"' in data
             if '11a1' in query:
-                assert '"lmfdb_label": "11.a2",' in data
-                assert '"jinv": "-122023936/161051",' in data
+                assert '"lmfdb_label": "11.a2"' in data
+                assert '"jinv": "-122023936/161051"' in data

@@ -1,7 +1,7 @@
 import lmfdb_inventory as inv
 import inventory_db_core as idc
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 def update_scrape_progress(db_name, table_name, uid, complete=None, running=None):
     """Update progress of scrape from db/table names and uid """

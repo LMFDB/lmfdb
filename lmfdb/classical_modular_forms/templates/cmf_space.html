@@ -6,13 +6,13 @@
 
 <table>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.level', title='Level') }}: </td>
+    <td> {{ KNOWL('cmf.level', title='Level') }}: </td>
     <td> \( N \) </td>
     <td>=</td>
     <td>\( {{ space.level }}{{ space.factored_level }} \)</td>
   </tr>
   <tr>
-    <td> {{ KNOWL('mf.elliptic.weight', title='Weight') }}: </td>
+    <td> {{ KNOWL('cmf.weight', title='Weight') }}: </td>
     <td> \( k \) </td>
     <td>=</td>
     <td>\( {{ space.weight }} \)</td>
@@ -21,11 +21,11 @@
     <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit') }}: </td>
     <td> \([\chi]\) </td>
     <td>=</td>
-    <td><a href="{{ space.char_conrey_link | safe }}">{{ space.level }}.{{ space.char_orbit_label }}</a> ({% if space.char_order == 1 %}trivial{% else %}of {{ KNOWL('character.dirichlet.order', title='order') }} \({{ space.char_order }}\) and {{ KNOWL('character.dirichlet.degree', title='degree') }} \({{ space.char_degree }}\){% endif %})</td>
+    <td> {{ space.display_character() | safe }} </td>
   </tr>
   {% if space.char_orbit_index != 1 %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
+    <td> {{ KNOWL('cmf.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
     <td> \(\operatorname{cond}(\chi)\) </td>
     <td>=</td>
     <td>\( {{ space.char_conductor }} \)</td>
@@ -39,21 +39,21 @@
   </tr>
   {% if space.num_forms is not none %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.newform', title='Newforms') }}: </td>
+    <td> {{ KNOWL('cmf.newform', title='Newforms') }}: </td>
     <td></td>
     <td></td>
     <td> \( {{ space.num_forms }} \) </td>
   </tr>
   {% endif %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.sturm_bound', title='Sturm bound') }}: </td>
+    <td> {{ KNOWL('cmf.sturm_bound', title='Sturm bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.sturm_bound }}\) </td>
   </tr>
   {% if space.trace_bound is not none%}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.trace_bound', title='Trace bound') }}: </td>
+    <td> {{ KNOWL('cmf.trace_bound', title='Trace bound') }}: </td>
     <td></td>
     <td></td>
     <td> \({{ space.trace_bound }}\) </td>
@@ -61,7 +61,7 @@
   {% endif %}
   {% if space.hecke_cutter_primes %}
   <tr>
-    <td> {{ KNOWL('mf.elliptic.distinguishing_primes', title='Distinguishing \(T_p\)') }}: </td>
+    <td> {{ KNOWL('cmf.distinguishing_primes', title='Distinguishing \(T_p\)') }}: </td>
     <td></td>
     <td></td>
     <td> {{ space.hecke_cutter_display() }} </td>
@@ -73,15 +73,15 @@
 
 {% if space.weight_parity == -1 and space.char_parity == 1 %}
 
-<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+<p> There are no modular forms of weight {{ space.weight }} and character {{ space.char_orbit_link | safe }} since the weight is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
 
 {% elif space.weight_parity == 1 and space.char_parity == -1 %}
 
-<p> There are no modular forms of weight {{ space.weight }} and character <a href="{{ space.char_conrey_link | safe }}">\({{ space.char_conrey_str }}\)</a> since the weight is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+<p> There are no modular forms of weight {{ space.weight }} and character {{ space.char_orbit_link | safe }} since the weight is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
 
 {% else %}
 
-<p>The following table gives the dimensions of various {{ KNOWL('mf.elliptic.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
+<p>The following table gives the dimensions of various {{ KNOWL('cmf.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
 
 <table class="dimgrid">
   <thead>
@@ -107,16 +107,16 @@
 
 {% if space.weight == 1 %}
 
-<p>The following table gives the dimensions of subspaces with specified {{KNOWL('mf.elliptic.projective_image', title='projective image type')}}.</p>
+<p>The following table gives the dimensions of subspaces with specified {{KNOWL('cmf.projective_image', title='projective image type')}}.</p>
 
 <table class="ntdata">
   <thead>
     <tr class='dark'>
       <th></th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(D_n\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_4\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(S_4\)')}}</th>
-      <th>{{KNOWL('mf.elliptic.projective_image', title='\(A_5\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(D_n\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(A_4\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(S_4\)')}}</th>
+      <th>{{KNOWL('cmf.projective_image', title='\(A_5\)')}}</th>
     </tr>
   </thead>
   <tbody>
@@ -133,7 +133,7 @@
 {% endif %}
 
 {% if space.trivial_character and space.level != 1  and space.dim > 0%}
-<p>The following table gives the dimensions of the cuspidal new subspaces with specified eigenvalues for the {{ KNOWL('mf.elliptic.atkin-lehner',title='Atkin-Lehner operators') }}{% if space.factored_level %} and the {{ KNOWL('mf.elliptic.fricke',title='Fricke involution') }}{% endif %}.</p>
+<p>The following table gives the dimensions of the cuspidal new subspaces with specified eigenvalues for the {{ KNOWL('cmf.atkin-lehner',title='Atkin-Lehner operators') }}{% if space.factored_level %} and the {{ KNOWL('cmf.fricke',title='Fricke involution') }}{% endif %}.</p>
 
 {{ space.ALdim_table() | safe }}
 {% endif %}
@@ -152,7 +152,7 @@ function show_qexp(qstyle) {
     return elementBottom < viewportTop;
   }
 </script>
-<h2 id="qexp-anchor"> {{ KNOWL('mf.elliptic.space_trace_form', title='Trace form') }} </h2>
+<h2 id="qexp-anchor"> {{ KNOWL('cmf.space_trace_form', title='Trace form') }} </h2>
 <div id="qexp">
   <form>
     <table class="qexp-table">
@@ -171,7 +171,7 @@ function show_qexp(qstyle) {
 </div>
 {% endif %}
 
-<h2> {{ KNOWL('mf.elliptic.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.elliptic.hecke-orbit',title='irreducible Hecke orbits') }}</h2>
+<h2> {{ KNOWL('cmf.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('cmf.hecke_orbit',title='irreducible Hecke orbits') }}</h2>
 
 {% if space.num_forms is none %}
 <p>The newforms in this space have not yet been added to the LMFDB.</p>
@@ -184,7 +184,7 @@ function show_qexp(qstyle) {
 <!-- Definitions for coefficient fields -->
 
 {% if space.dim_grid.S.old > 0 %}
-<h2> {{ KNOWL('mf.elliptic.decomposition.old.gamma0chi', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('mf.elliptic.oldspace',title='lower level spaces')}}</h2>
+<h2> {{ KNOWL('cmf.decomposition.old.gamma0chi', title='Decomposition') }} of \({{ space.old_latex() }}\) into {{ KNOWL('cmf.oldspace',title='lower level spaces')}}</h2>
 
 <div class="center">
   \( {{ space.old_latex() }} \cong \) {{ space.oldspace_decomposition() | safe }}

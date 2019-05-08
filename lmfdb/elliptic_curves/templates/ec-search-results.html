@@ -15,9 +15,9 @@
 <td align=left>{{ KNOWL('ec.q.conductor', title='Conductor') }}</td>
 <td align=left>{{ KNOWL('ec.q.j_invariant', title='j-invariant') }}</td>
 <td align=left>{{ KNOWL('ec.complex_multiplication',title="CM") }} </td>
-<td align=left>{{ KNOWL('ec.q.rank', title='Rank') }}</td>
-<td align=left>{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</td>
-<td align=left>{{ KNOWL('ec.q.torsion_subgroup', title='Torsion structure') }}</td>
+<td align=left>{{ KNOWL('ec.rank', title='Rank') }}</td>
+<td align=left>{{ KNOWL('ec.torsion_order', title='Torsion order') }}</td>
+<td align=left>{{ KNOWL('ec.torsion_subgroup', title='Torsion structure') }}</td>
 <td align=left>{{ KNOWL('ec.q.analytic_sha_order', title='Analytic order of &#1064;') }}</td>
 </tr>
 
@@ -113,22 +113,28 @@ table td.params {
 </style>
 
 <table>
+  <tr>
+    <th class="center" colspan=2>Curve</th>
+    <th class="center" colspan=2>{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
+</tr>
 <tr>
   <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
   <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
-  <th class="center">{{ KNOWL('ec.isogeny_class', title='Isogeny class') }}</th>
+  <th class="center">{{ KNOWL('ec.q.lmfdb_label', title='LMFDB label')}}</th>
+  <th class="center">{{ KNOWL('ec.q.cremona_label', title='Cremona label')}}</th>
   <th class="center">{{ KNOWL('ec.weierstrass_coeffs',  title='Weierstrass Coefficients') }}</th>
-  <th class="center">{{ KNOWL('ec.q.rank', title='Rank') }}</th>
-  <th class="center">{{ KNOWL('ec.q.torsion_order', title='Torsion order') }}</th>
+  <th class="center">{{ KNOWL('ec.rank', title='Rank') }}</th>
+  <th class="center">{{ KNOWL('ec.torsion_order', title='Torsion order') }}</th>
 {% if info.surj_primes or info.nonsurj_primes  %}
   <th class="center">{{KNOWL('ec.maximal_galois_rep', title='Non-maximal primes')}}</th>
 {% endif %}
 </tr>
 {% for curve in info.results: %}
 <tr>
-<td class="center"><a href="{{info.curve_url(curve)}}">{{curve.lmfdb_label}}</a></td>
-<td class="center">{{curve.label}}</td>
-<td class="center"><a href="{{info.iso_url(curve)}}">{{curve.lmfdb_iso}}</a></td>
+<td class="center"><a href="{{info.curve_url_LMFDB(curve)}}">{{curve.lmfdb_label}}</a></td>
+<td class="center"><a href="{{info.curve_url_Cremona(curve)}}">{{curve.label}}</a></td>
+<td class="center"><a href="{{info.iso_url_LMFDB(curve)}}">{{curve.lmfdb_iso}}</a></td>
+<td class="center"><a href="{{info.iso_url_Cremona(curve)}}">{{curve.iso}}</a></td>
 <td class="params">{{curve.ainvs}}</td>
 <td class="center">{{curve.rank}}</td>
 <td class="center">{{curve.torsion}}</td>

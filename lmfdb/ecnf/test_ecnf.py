@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
+from lmfdb.tests import LmfdbTest
 
 class EllCurveTest(LmfdbTest):
 
@@ -67,9 +67,9 @@ class EllCurveTest(LmfdbTest):
         Check that the code download links work
         """
         L = self.tc.get('/EllipticCurve/2.0.4.1/5525.5/b/9')
-        assert 'Download Magma code' in L.data
-        assert 'Download SageMath code' in L.data
-        assert 'Download GP code' in L.data
+        assert 'Code to Magma' in L.data
+        assert 'Code to SageMath' in L.data
+        assert 'Code to GP' in L.data
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/magma')
         assert 'Magma code for working with elliptic curve 2.2.89.1-81.1-a1' in L.data
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/sage')
@@ -95,3 +95,31 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/?field=Qsqrt-11&include_base_change=on&conductor_norm=&include_isogenous=on&torsion=&torsion_structure=&count=')
         assert '2.0.11.1' in L.data
         assert '1681' in L.data
+
+
+    def test_related_objects(self):
+        for url, text in [('/EllipticCurve/2.0.8.1/324.3/a/1',
+                ['Isogeny class 324.3-a',
+                 'Twists',
+                 'Base-change of 36.a4',
+                 'Base-change of 576.f3',
+                 'Bianchi modular form 2.0.8.1-324.3-a',
+                 'Hilbert modular form 2.2.24.1-36.1-a',
+                 'Isogeny class 2.2.24.1-36.1-a',
+                 'Isogeny class 20736.i',
+                 'L-function']),
+                ('/EllipticCurve/2.0.11.1/256.1/b/1',
+                    ['Isogeny class 256.1-b',
+                     'Twists',
+                     'Bianchi modular form 2.0.11.1-256.1-a',
+                     'Bianchi modular form 2.0.11.1-256.1-b',
+                     'Hilbert modular form 2.2.44.1-16.1-a',
+                     'Hilbert modular form 2.2.44.1-16.1-c',
+                     'Isogeny class 2.0.11.1-256.1-a',
+                     'Isogeny class 2.2.44.1-16.1-a',
+                     'Isogeny class 2.2.44.1-16.1-c',
+                     'L-function'])]:
+            L = self.tc.get(url).data
+            for t in text:
+                assert t in L
+

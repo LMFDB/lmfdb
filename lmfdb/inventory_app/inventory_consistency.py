@@ -5,7 +5,7 @@ import inventory_helpers as ih
 from scrape_helpers import get_completed_scrapes, get_live_scrapes_older_than
 import datetime
 import threading
-from lmfdb.db_backend import db
+from lmfdb import db
 
 
 def get_latest_report():

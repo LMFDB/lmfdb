@@ -1,6 +1,4 @@
 {% extends 'homepage.html' %}
-{% import 'color.css' as color %}
-
 {% block content %}
 
 <style type="text/css">
@@ -23,7 +21,7 @@
 #chitable td div>a { text-align: right; }
 #chitable td { vertical-align: middle;  white-space: nowrap; }
 #chitable td.a { background: {{color.chi_table_background}}; }
-#chitable td.b { background: none; }
+#chitable td.b { background: {{color.white}}; }
 #chitable th { text-align: center; }
 table.ntdata tr.even, table.ntdata tr:nth-child(even) { background: none; }
 table.ntdata tr.odd, table.ntdata tr:nth-child(odd), table.ntdata tr:first-child { background: none; }

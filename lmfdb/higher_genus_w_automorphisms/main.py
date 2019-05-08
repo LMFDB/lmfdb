@@ -3,20 +3,18 @@
 # Authors: Jen Paulhus, Lex Martin, David Neill Asanza
 # (initial code copied from John Jones Local Fields)
 
-import StringIO
-import re
-import ast
-import yaml
-import os
-from lmfdb.db_backend import db
-from flask import render_template, request, url_for, redirect, send_file, abort
-from lmfdb.utils import flash_error
-from lmfdb.search_parsing import parse_ints, clean_input, parse_bracketed_posints, parse_gap_id
-from lmfdb.search_wrapper import search_wrap
+import ast, os, re, StringIO, yaml
 
+from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
-from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
+
+from lmfdb import db
+from lmfdb.utils import (
+    flash_error,
+    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    search_wrap)
 from lmfdb.sato_tate_groups.main import sg_pretty
+from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
@@ -130,9 +128,11 @@ def index():
             'genus_list': genus_list,
             'stats': HGCWAstats().stats(),}
 
-    learnmore = [('Source of the data', url_for(".how_computed_page")),
+    learnmore = [ ('Completeness of the data', url_for(".completeness_page")),
+                  ('Source of the data', url_for(".how_computed_page")),
+                  ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page")),
-                ('Completeness of the data', url_for(".completeness_page"))]
+               ]
 
     return render_template("hgcwa-index.html", title="Families of Higher Genus Curves with Automorphisms", bread=bread, credit=credit, info=info, learnmore=learnmore)
 
@@ -317,64 +317,6 @@ def evaluate_expr(expr, vars):
 
     return (err, result)
 
-def add_group_order_range(query, expr):
-    # Support -- and .. as range
-    query_range = expr.replace("--", "..")
-    raw_parts = expr.split('..')
-    raw_parts = filter(lambda x: x != '', raw_parts)
-    min_genus = 1
-    max_genus = db.hgcwa_passports.max('genus')
-
-    # when given A-B and A,B are integers treat A-B as a range not subtraction.
-    special_case_parts = expr.split('-')
-    #is_special_case_range = special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
-    is_special_case_range = len(special_case_parts) == 2 and special_case_parts[0].isdigit() and special_case_parts[1].isdigit()
-
-    if is_special_case_range:
-        query["group_order"] = {"$gte": int(special_case_parts[0]), "$lte": int(special_case_parts[1])}
-        return (None, None)
-
-    elif len(raw_parts) == 2:
-        options = []
-
-        for cur_genus in range(min_genus, max_genus + 1):
-            left_err, left_value   = evaluate_expr(raw_parts[0], {'g': cur_genus})
-            right_err, right_value = evaluate_expr(raw_parts[1], {'g': cur_genus})
-            if left_err == None and right_err == None:
-                options.append({"group_order": {"$gte": left_value, "$lte" : right_value}, "genus": cur_genus})
-            elif left_err != None:
-                query["$or"] = [{"genus": {"$lte": 0}}]
-                return (raw_parts[0], left_err)
-            else:
-                query["$or"] = [{"genus": {"$lte": 0}}]
-                return (raw_parts[1], right_err)
-
-        query["$or"] = options
-        return (None, None)
-    elif len(raw_parts) == 1:
-        condition = ""
-
-        if query_range.find('..') != -1:
-            if query_range.index("..") == 0:
-                condition = "$lte"
-            else:
-                condition = "$gte"
-        else:
-            condition = "$eq"
-
-        options = []
-        for cur_genus in range(min_genus, max_genus + 1):
-            err, value = evaluate_expr(raw_parts[0], {'g': cur_genus})
-            if err == None:
-                options.append({"group_order": {condition: value}, "genus": {"$eq": cur_genus}})
-            else:
-                query["$or"] = [{"genus": {"$lte": 0}}]
-                return (raw_parts[0], err)
-
-        query["$or"] = options
-        return (None, None)
-    else:
-        return ("", "You must either specify a group size or range in the format Min..Max")
 
 def higher_genus_w_automorphisms_jump(info):
     labs = info['jump_to']
@@ -402,6 +344,7 @@ def higher_genus_w_automorphisms_postprocess(res, info, query):
              postprocess=higher_genus_w_automorphisms_postprocess,
              bread=lambda:get_bread([("Search Results",'')]),
              credit=lambda:credit)
+
 def higher_genus_w_automorphisms_search(info, query):
     if info.get('signature'):
         #allow for ; in signature
@@ -412,6 +355,7 @@ def higher_genus_w_automorphisms_search(info, query):
     parse_gap_id(info,query,'group',name='Group',qfield='group')
     parse_ints(info,query,'genus',name='Genus')
     parse_ints(info,query,'dim',name='Dimension of the family')
+    parse_ints(info,query,'group_order', name='Group orders')
     if 'inc_hyper' in info:
         if info['inc_hyper'] == 'exclude':
             query['hyperelliptic'] = False
@@ -428,11 +372,8 @@ def higher_genus_w_automorphisms_search(info, query):
         elif info['inc_full'] == 'only':
             query['full_auto'] = {'$exists': False}
     query['cc.1'] = 1
-    if info.get('groupsize'):
-        err, result = add_group_order_range(query, info['groupsize'])
-        if err is not None:
-            flash_error('Parse error on group order field. <font face="Courier New"><br />Given: ' + err + '<br />-------' + result + '</font>')
 
+    
     info['group_display'] = sg_pretty
     info['sign_display'] = sign_display
 
@@ -507,10 +448,11 @@ def render_family(args):
         bread = get_bread([(br_g, './?genus='+br_g),('$'+pretty_group+'$','./?genus='+br_g + '&group='+bread_gp), (bread_sign,' ')])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
+                    ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
         return render_template("hgcwa-show-family.html",
                                title=title, bread=bread, info=info,
@@ -667,10 +609,11 @@ def render_passport(args):
 
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
+              ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
 
-        downloads = [('Download Magma code', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
-                     ('Download Gap code', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
+        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
+                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
 
         return render_template("hgcwa-show-passport.html",
                                title=title, bread=bread, info=info,
@@ -689,6 +632,7 @@ def completeness_page():
     t = 'Completeness of the Automorphisms of Curves Data'
     bread = get_bread([("Completeness", )])
     learnmore = [('Source of the data', url_for(".how_computed_page")),
+                ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.extent',
                             title=t, bread=bread,learnmore=learnmore, credit=credit)
@@ -699,15 +643,29 @@ def labels_page():
     t = 'Label Scheme for the Data'
     bread = get_bread([("Labels", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page"))]
+                 ('Source of the data', url_for(".how_computed_page")),
+                ('Reliability of the data', url_for(".reliability_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.label',
                            learnmore=learnmore, title=t, bread=bread,credit=credit)
+
+
+@higher_genus_w_automorphisms_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Automorphisms of Curve Data'
+    bread = get_bread([("Reliability", '')])
+    learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                  ('Source of the data', url_for(".how_computed_page")),
+                ('Labeling convention', url_for(".labels_page"))]
+    return render_template("single.html", kid='dq.curve.highergenus.aut.reliability',
+                           title=t, bread=bread, learnmore=learnmore, credit=credit)
+
 
 @higher_genus_w_automorphisms_page.route("/Source")
 def how_computed_page():
     t = 'Source of the Automorphisms of Curve Data'
     bread = get_bread([("Source", '')])
     learnmore = [('Completeness of the data', url_for(".completeness_page")),
+                  ('Reliability of the data', url_for(".reliability_page")),
                 ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='dq.curve.highergenus.aut.source',
                            title=t, bread=bread, learnmore=learnmore, credit=credit)

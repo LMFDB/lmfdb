@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ### Class for computing and storing Maass waveforms.
 
-from lmfdb.db_backend import db
+from lmfdb import db
 from sage.all import Integer, loads
 from lmfdb.modular_forms.maass_forms.maass_waveforms import mwf_logger
 logger = mwf_logger

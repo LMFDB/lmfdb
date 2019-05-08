@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # supposed to start via $ sage -python ...
-import lmfdb
-lmfdb.main()
+from lmfdb.website import main
+main()

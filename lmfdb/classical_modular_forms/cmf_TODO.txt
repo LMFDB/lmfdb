@@ -1,30 +1,17 @@
-CRITICAL (BUGS):
-* There some data errors in the lfunctions: (Edgar)
-  - rational L-functions with id in [19435656, 22735454], the Lhash string is not sorted
-  - high weight rational L-functions are missing the euler factors ( id in [22735455, 22778226]) (They are currently hidden)
+OUTSTANDING VERIFICATIONS:
+
+Expected failures:
++ (mf_newforms.check_analytic_rank_proved: 261 failures)
 
 IMPORTANT:
-* Write and run validation procedure to verify modular form data after it has been uploaded to postgres.  Figure out how to incorporate this into our long term workflow. (Drew)
-* Once the RCS knowls are written, adjust the wording at the top of the statistics page to make it clearer what is included in the stats and include explicit links to completeness and rigor knowls. (David)
-* Add notes on provability/completeness to Artin image knowl (Drew)
-* Add related objects to L-functions, move duals (Edgar)
-* Make old L-function labels work (Edgar/David)
-* Draft a new features e-mail (analytic and arithmetic), identify new features propograting to the rest of the LMFDB (David)
-* Draft pull request submission text: allows us to close BLAH issues, new labeling convention but old labels will still work, complete transition to postgres, db_backend changes (David)
-* Add relative dimension selector on newspace page (David)
-* Prove all analytic ranks
-* Update mf.elliptic.hecke-operator knowl and delete group.gammann
-* mf_hecke_cc, lfunctions for  Nk^2 > 4000 and N < 100 and 2 <= k <= 12 and (N = 100 or k = 12) (Edgar)
-* Compute embedding roots (Edgar)
 
 FINAL CHECKS:
-* Make sure indexes are appropriate, especially for new sort orders, index on id (Edgar)
-* Update RCS knowls to match final data set (Drew)
 
 -------------------------- Pull Request Line -------------------------------------------------
-* need to resort mf_hecke_cc, as it doesn't satisfy locality with respect to embedding_m
+* Compute L-functions:
+  - k > 200, N <= 10, Nk^2 <= 100,000 (??) waiting for Dave Platt
+* Prove all analytic ranks (Drew)
 * Add trace forms and portraits for all newspaces and gamma1 of wt k > 1 and Nk^2 <= 40000 -- currently we have everything for N <= 4000 (including wt 1) and Nk^2 <= 40000 (Drew).
-* Add trace tables for newspaces (David)
 * code snippets for form and space pages in Sage and Pari.
 * Lift projective reps for weight one forms to artin reps whereever possible (Drew)
 * add L-functions instances for Artin rep (Edgar)
@@ -36,56 +23,33 @@ FINAL CHECKS:
 * q-expansion bigint knowls display off screen with 100 coefficients (http://cmfs.lmfdb.xyz/ModularForm/GL2/Q/holomorphic/2/218/a/b/)
 * Add related objects from Artin representations back to weight 1 forms
 * Remove Future Plans page and port everything to github
+* Optimize Sage's dimension formulas so that we can run tests over more rows in mf_newspaces
+* Delete cmf.trace-expansion, update references to use cmf.trace_expansions
 
 CRITICAL DB:
 * on a delete, if restat fails on a delete command it still commits the delete command
-
-KNOWL FEATURES: (March)
-* Revision history and reversion (all versions stored in kwl_knowls table)
-* Multiple versions for beta and prod (needs a review status column)
-* Status column (smallint): reviewed, beta, deleted
-* Renaming: change the id on every knowl (no history)
-* jsonb row with links to other knowls
-* search with wildcards
-* View all knowls: SELECT DISTINCT ON id FROM kwl_knowls WHERE status != 'deleted' ORDER BY timestamp DESC
-* Edit locks (prevent editing if locked, get own locks): new table with (id, timestamp, username)
-* Label as annotation (column: boolean? or type?) automatically mark as such if navigated from a top knowl link (use .top and .bottom convention)
-* Link back to object from annotations (another field which is a link back to object)
-* Viewable diffs (on the fly)
-* Do we care about porting data from kwl_history table? No.
-* Add column to user table giving power to review knowls
-* Comments: anyone can leave a comment.  Anyone can search for knowls with comments.
-* Add reviewer column to knowl table; update edit interface.  Do we want reviewing to create a new copy of the knowl, or edit most recent copy?  If second, should have a review timestamp.
-* Use KNOWL_INC more....
-* Preserve author history
 
 COLLABORATION SUGGESTIONS:
 * Forms that have no zeros except at the cusps
 
 GOOD:
-* Create links to dynamics stats from each entry in the currated stats
+* Create links to dynamics stats from each entry in the curated stats
 * figure out the sort order for lfunc_lfunctions
 * merge L-function data of G2C, EC, ECNF with CMF using trace_hash
-* knowls: mf.elliptic.hecke_order, mf.elliptic.embedding_label
 * knowls: make sure top and bottom knowls, explicit formulas are ported over
 * knowl: add remark to sturm_bound knowl for why our sturm bound is off by 1 from Sage (floor vs ceiling)
+* data: download data from old version and compare to see matches (at least with traces) and identify other problems
 
 IT WOULD BE NICE IF:
+* add inner twist data for all newforms (compute using embedding data)
+* add inner twist group structures
+* use linear hecke kernels (potentially much faster than our current hecke cutters)
 * search on character degree?
-* it would be nice if, if hecke field is cyclotomic don't use \zeta_3
+* if hecke field is cyclotomic don't use \zeta_3 (why not?)
 * show AL dimensions for old forms as well as new
-* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
-* LMFDB-wide: equal signs consistent in terms of math-mode or not
-* LMFDB-wide: change sort order in search results
-* knowls: more
-* form pages: if Hecke ring is a power basis, order the generators by the powers and pretty print the q-expansion
 * identify (if possible?) a more precise description of the twisting characters
-* data: download data from old version and compare to see matches (at least with traces) and identify other problems
-* form pages: download to Sage/Magma/pari (using cutters)
-* What about putting in "nice latex" for q-exp when available, e.g. if beta_i = nu^i and nu has a nice rep (like sqrt{N} or zeta_n)?
-* form pages: provide downloads of q-expansions for Magma/pari
-* Saved queries for demos (cf checklist)
-* Inner twist group structures
+* form pages: provide downloads for pari
+* In the link back from an L-function to a modular form, preserve the L-function URL
 
 FUTURE WORK:
 * data: for spaces where we do not compute an algebraic q-expansion, still give the first few Hecke polynomials
@@ -98,8 +62,20 @@ FUTURE WORK:
 * Improve modular form plots, consider plotting images using arb
 
 NOT CMF STUFF:
+* if we are editing a knowl, when hitting cancel, shouldn't send you back to the search
+* on _record_count do not try to write if you don't have the permissions
+* after PR, reconvert nf_fields (as it will have new data), and do the swap
+* add to test.sh to verify '# -*- coding: utf-8 -*-
+* move names_and_urls to somewhere else? fix the circular import in utils
+* add documentation for set_sort
+* list the analytic conductor on the L-function pages
+* remove non-existent instances from lfunc_instances and perhaps stop checking if they exists in names_and_urls
+* convert 1.1 projection to 1 in _parse_projection?
+* cache queries on gps_transitive?
+* rewrite code Dirichlet series, in particular use bigint knowls in the arithmetic version
+* convert other columns to arrays, as GIN indexes for jsonb only supports containment, try: db.nf_fields.analyze({'ramps':{'$contains':[2,3]}}) vs db.nf_fields.analyze({'ramps':[2,3]}) vs db.nf_fields.analyze({'ramps':{'$in':[2,3]}})
+* copy_from and update_many see: https://stackoverflow.com/questions/8910494/how-to-update-selected-rows-with-values-from-a-csv-file-in-postgres
 * have the call method on a table to do just a search
-* max_id should be used instead of self.stats.total + 1 on upsert, insert_many, etc
 * reset start with javascript
 * generalize search_types
 * hidden != search clean hidden
@@ -122,6 +98,24 @@ NOT CMF STUFF:
 * No longer support changing count from refine search elsewhere in LMFDB (it screws up Prev and Next)
 * Move data from US Central to US East Coast
 * It would be good to have an explanation of the connections in the "related objects" links when possible
+* Complex and rational extension types for postgres
+* In create_table, make label unique and add index; port to existing tables (David)
+* Rename cmf.hecke-operator cmf.trace-expansion, and other knowls with hyphens.  Create script to search and replace hyphens.
+* LMFDB-wide: download link to get all data being used to generate page (see Download All Stored Data on elliptic curves)
+* LMFDB-wide: equal signs consistent in terms of math-mode or not
+* LMFDB-wide: change sort order in search results
+* Saved queries for demos (cf checklist)
+* Do restats in different order (compute all counts then upload), and wipe counts if too many
+* Add indexes on counts and stats tables
+* Split up database.py into multiple files
+* Add rename_column method to database.py
+* Add regexps for labels to meta_tables and use them.
+* Switch from pyflakes to flake8
+* Fix json/array bug when deleting a knowl
+
+Style:
+* For the moment we use scientific notation for the Dirichlet coefficients if the integers or fractions take too much space. This is not a CMF issue
+* For the imaginary parts that end in ".", I added a space between them and the "i". See http://cmfs.lmfdb.xyz/L/ModularForm/GL2/Q/holomorphic/7/5/d/a/5/1/ . This is not a CMF issue
 
 TO THINK ABOUT:
 * Are there good reasons for why traces are often zero for many small primes (e.g. 60.2.j)
@@ -140,6 +134,7 @@ ISSUES already addressed:
 - Table options for old/new/CM #674
 - Determine planned extent of classical modular forms #873
 - Source and extent of data for classical modular forms #1224
+- For imprimitive genus 2 L-functions, give links to factors #1227
 - Fix errors in classical modular form data and verify its correctness #1248
 - Tests for lcalc files #1257
 - Modular form history #1282 (we decided not to link it)
@@ -154,8 +149,10 @@ ISSUES already addressed:
 - no data for level = 100, k 7, chi = 99 #2340
 - Request for documentation on modular form web pages #2630
 - Hecke operators, cosets in subset not subgroup #2631
+- Debounce knowl clicking #2687 (this is a PR, that we closed)
 
 Some progress on:
+- David Platt's L-function zeros #557 (this issue is a bit too vague to understand when is going to be closed)
 - L-functions and modularity #2032
 - Search on a_pp #2134
 - Galois conjugate objects: Hilbert, Bianchi, EC #2262

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from lmfdb.base import LmfdbTest
-from lmfdb.WebCharacter import WebDirichlet, WebHecke
+from lmfdb.tests import LmfdbTest
+from lmfdb.characters.web_character import WebDirichlet, WebHecke
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 
 class WebCharacterTest(LmfdbTest):
@@ -31,6 +31,11 @@ class DirichletSearchTest(LmfdbTest):
     def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
         assert '\chi_{25}(2' in W.data
+
+    def test_even_odd(self):
+	W = self.tc.get('/Character/Dirichlet/?modulus=35')
+	assert '>Even</t' in W.data
+	assert '>Odd</t' in W.data
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=51-81')
@@ -151,7 +156,7 @@ class DirichletCharactersTest(LmfdbTest):
     def test_dirichletchar531(self):
         W = self.tc.get('/Character/Dirichlet/531/40')
         assert '/Character/Dirichlet/531/247' in W.data
-        assert '(356,235)' in W.data, "generators"
+        assert '(119,415)' in W.data, "generators"
         #assert 'Kloosterman sum' in W.data
         assert  '(\\zeta_{87})' in W.data, "field of values"
 

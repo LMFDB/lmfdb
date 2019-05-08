@@ -4,28 +4,27 @@ import re
 
 from flask import render_template, url_for, request, redirect, flash
 from markupsafe import Markup
-
 from sage.all import latex
 
-from lmfdb.db_backend import db
-from lmfdb.utils import to_dict, web_latex_ideal_fact
-from lmfdb.search_parsing import parse_range, nf_string_to_label, parse_nf_string, parse_start, parse_count
-from lmfdb.search_wrapper import search_wrap
-from lmfdb.hilbert_modular_forms.hilbert_modular_form import teXify_pol
+from lmfdb import db
+from lmfdb.utils import (
+    to_dict, web_latex_ideal_fact,
+    nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
+    teXify_pol, search_wrap)
+from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
+from lmfdb.nfutils.psort import ideal_from_label
 from lmfdb.bianchi_modular_forms import bmf_page
 from lmfdb.bianchi_modular_forms.web_BMF import WebBMF
-from lmfdb.WebNumberField import field_pretty, WebNumberField, nf_display_knowl
-from lmfdb.nfutils.psort import ideal_from_label
 
 
 bianchi_credit = 'John Cremona, Aurel Page, Alexander Rahm, Haluk Sengun'
 
 field_label_regex = re.compile(r'2\.0\.(\d+)\.1')
-LIST_RE = re.compile(r'^(\d+|(\d+-(\d+)?))(,(\d+|(\d+-(\d+)?)))*$')
 
 def learnmore_list():
-    return [('Completeness of the data', url_for(".completeness_page")),
-            ('Source of the data', url_for(".how_computed_page")),
+    return [('Source of the data', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
             ('Bianchi newform labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -122,20 +121,10 @@ def bianchi_modular_form_search(info, query):
     """Function to handle requests from the top page, either jump to one
     newform or do a search.
     """
-    for field in ['field_label', 'weight', 'level_norm', 'dimension']:
-        if info.get(field):
-            if field == 'weight':
-                query['weight'] = info[field]
-            elif field == 'field_label':
-                parse_nf_string(info,query,field,'base number field',field)
-            elif field == 'label':
-                query[field] = info[field]
-            elif field == 'dimension':
-                query['dimension'] = int(info[field])
-            elif field == 'level_norm':
-                query[field] = parse_range(info[field])
-            else:
-                query[field] = info[field]
+    parse_nf_string(info, query, 'field_label', name='base number field')
+    parse_noop(info, query, 'label')
+    parse_ints(info, query, 'dimension')
+    parse_ints(info, query, 'level_norm')
     if not 'sfe' in info:
         info['sfe'] = "any"
     elif info['sfe'] != "any":
@@ -185,32 +174,30 @@ def bmf_field_dim_table(**args):
     bread = [('Bianchi Modular Forms', url_for(".index")), (
         pretty_field_label, ' ')]
     properties = []
+    query = {}
+    query['field_label'] = field_label
     if gl_or_sl=='gl2_dims':
         info['group'] = 'GL(2)'
         info['bgroup'] = '\GL(2,\mathcal{O}_K)'
     else:
         info['group'] = 'SL(2)'
         info['bgroup'] = '\SL(2,\mathcal{O}_K)'
+    if level_flag == 'all':
+        query[gl_or_sl] = {'$exists': True}
+    else:
+        # Only get records where the cuspdial/new dimension is positive for some weight
+        totaldim = gl_or_sl.replace('dims', level_flag) + '_totaldim'
+        query[totaldim] = {'$gt': 0}
     t = ' '.join(['Dimensions of Spaces of {} Bianchi Modular Forms over'.format(info['group']), pretty_field_label])
-    query = {}
-    query['field_label'] = field_label
-    query[gl_or_sl] = {'$exists': True}
-    data = db.bmf_dims.search(query, limit=count, offset=start, info=info)
+    data = list(db.bmf_dims.search(query, limit=count, offset=start, info=info))
     nres = info['number']
+    if not info['exact_count']:
+        info['number'] = nres = db.bmf_dims.count(query)
+        info['exact_count'] = True
     if nres > count or start != 0:
         info['report'] = 'Displaying items %s-%s of %s levels,' % (start + 1, min(nres, start + count), nres)
     else:
         info['report'] = 'Displaying all %s levels,' % nres
-
-    # convert data to a list and eliminate levels where all
-    # new/cuspidal dimensions are 0.  (This could be done at the
-    # search stage, but that requires adding new fields to each
-    # record.)
-    def filter(dat, flag):
-        dat1 = dat[gl_or_sl]
-        return any([int(dat1[w][flag])>0 for w in dat1])
-    flag = 'cuspidal_dim' if level_flag=='cusp' else 'new_dim'
-    data = [dat for dat in data if level_flag == 'all' or filter(dat, flag)]
 
     info['field'] = field_label
     info['field_pretty'] = pretty_field_label
@@ -365,13 +352,23 @@ def how_computed_page():
 
 @bmf_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Bianchi Modular Form Data'
+    t = 'Completeness of the Bianchi Modular Form data'
     bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
              ('Bianchi Modular Forms', url_for(".index")),
              ('Completeness', '')]
     credit = 'John Cremona'
     return render_template("single.html", kid='dq.mf.bianchi.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+@bmf_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of the Bianchi Modular Form data'
+    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+             ('Bianchi Modular Forms', url_for(".index")),
+             ('Relaibility', '')]
+    credit = 'John Cremona'
+    return render_template("single.html", kid='dq.mf.bianchi.reliability',
+                           credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @bmf_page.route("/Labels")
 def labels_page():

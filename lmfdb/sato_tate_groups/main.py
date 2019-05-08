@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
-import re, itertools
-from flask import render_template, url_for, redirect, request, jsonify
-from lmfdb.sato_tate_groups import st_page
-from lmfdb.utils import to_dict, encode_plot, flash_error
-from lmfdb.search_parsing import parse_ints, parse_rational, parse_count, parse_start, parse_ints_to_list_flash, clean_input
-from lmfdb.db_backend import db
-from lmfdb.base import ctx_proc_userdata
-from psycopg2.extensions import QueryCanceledError
+import itertools, re
 
+from flask import render_template, url_for, redirect, request, jsonify
+from psycopg2.extensions import QueryCanceledError
 from sage.all import ZZ, cos, sin, pi, list_plot, circle, line2d
+
+from lmfdb import db
+from lmfdb.app import ctx_proc_userdata
+from lmfdb.utils import (
+    to_dict, encode_plot, flash_error,
+    parse_ints, parse_rational, parse_count, parse_start,
+    parse_ints_to_list_flash, clean_input)
+from lmfdb.sato_tate_groups import st_page
 
 ###############################################################################
 # Globals
@@ -133,7 +136,8 @@ def st_link_by_name(weight,degree,name):
 
 def learnmore_list():
     return [('Completeness of the data', url_for('.completeness_page')),
-            ('Source of the data', url_for('.how_computed_page')),
+            ('Source of the data', url_for('.source_page')),
+            ('Reliability of the data', url_for('.reliability_page')),
             ('Sato-Tate group labels', url_for('.labels_page'))]
 
 # Return the learnmore list with the matchstring entry removed
@@ -155,7 +159,7 @@ def index():
     info = {'weight_list' : weight_list, 'degree_list' : degree_list, 'st0_list' : st0_list, 'st0_dict' : st0_dict, 'group_list': group_list, 'group_dict' : group_dict}
     title = 'Sato-Tate Groups'
     bread = [('Sato-Tate Groups', '.')]
-    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list_remove('Completeness'), bread=bread)
+    return render_template('st_browse.html', info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
 @st_page.route('/random')
 def random():
@@ -199,15 +203,17 @@ def search_by_label(label):
     # check for general labels of the form w.d.name
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
-        try:
-            label = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
-        except ValueError:
-            label = None
-    if label is None:
+        rlabel = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, "label")
+        if not rlabel:
+            flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
+            return redirect(url_for(".index"))
+        return redirect(url_for('.by_label', label=rlabel), 301)
+    # check for a straight up name
+    rlabel = db.gps_sato_tate.lucky({'name':label}, "label")
+    if not rlabel:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
-    else:
-        return redirect(url_for('.by_label', label=label), 301)
+    return redirect(url_for('.by_label', label=rlabel), 301)
 
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
@@ -531,21 +537,29 @@ def render_st_group(info, portrait=None):
                            info=info,
                            bread=bread,
                            learnmore=learnmore_list(),
-                           title=title)
+                           title=title,
+                           KNOWL_ID='st_group.%s'%(info['label']))
 
 @st_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
-    return render_template('single.html', kid='dq.st.extent',
+    return render_template('single.html', kid='rcs.cande.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
-def how_computed_page():
+def source_page():
     t = 'Source of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
-    return render_template('single.html', kid='dq.st.source',
+    return render_template('single.html', kid='rcs.source.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+@st_page.route('/Reliability')
+def reliability_page():
+    t = 'Reliability of Sato-Tate Group Data'
+    bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
+    return render_template('single.html', kid='rcs.rigor.st_group',
+                           credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')
 def labels_page():

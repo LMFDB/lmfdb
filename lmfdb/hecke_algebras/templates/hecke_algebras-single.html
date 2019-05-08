@@ -2,17 +2,14 @@
 
 {% block content %}
 
-{% set KNOWL_ID = "hecke_algebra.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
 {% if info.num_orbits==0 %}
 
 <div>The Hecke algebra with {{KNOWL('hecke_algebras.label', title='label')}} ${{info.label}}$ is trivial: there are no modular forms of level ${{info.level}}$ and weight ${{info.weight}}$.</div>
 
 {% else %}
 <table>
-    <tr><td align=right>{{ KNOWL('mf.elliptic.level', title='Level') }}:</td><td>{{info.level}}</td></tr>
-    <tr><td align=right>{{ KNOWL('mf.elliptic.weight', title='Weight') }}:</td><td>{{info.weight}}</td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.level', title='Level') }}:</td><td>{{info.level}}</td></tr>
+    <tr><td align=right>{{ KNOWL('cmf.weight', title='Weight') }}:</td><td>{{info.weight}}</td></tr>
     <tr><td align=right>{{KNOWL('hecke_algebras.dimension', title='Dimension')}}:</td><td>{{info.dim_alg}}</td></tr>
     <tr><td align=right>{{KNOWL('hecke_algebras.label', title='Label')}}:</td><td>{{info.label}}</td></tr>
 </table>
@@ -20,7 +17,7 @@
 
 
 {% if info.orbits %}
-<h2>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</h2>
+<h2>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}</h2>
 <div><table>
     <tr><td align="center">{{KNOWL('hecke_algebras.label', title='Label')}}</td><td align="center">Dimension</td></tr>
     {% for j in info.orbits %}
@@ -31,9 +28,9 @@
 </br>
     {% for j in info.orbits %}
         <hr>
-        <h3><a name="{{loop.index}}">{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit')}} {{j.orbit_label}}</a></h3>
+        <h3><a name="{{loop.index}}">{{ KNOWL('cmf.hecke_orbit', title='Hecke orbit')}} {{j.orbit_label}}</a></h3>
         <table>
-        <tr><td align= right>{{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbit')}} dimension:</td><td valign= bottom>{{j.dim}}</td></tr>
+        <tr><td align= right>{{ KNOWL('cmf.hecke_orbit', title='Hecke orbit')}} dimension:</td><td valign= bottom>{{j.dim}}</td></tr>
         {% if j.hecke_op_display == [] %}
             <tr><td align= right valign= top>Hecke operators:</td><td>Download the avaliable Hecke operators $T_n$ for $n\leq {{j.num_hecke_op}}$ for {% for e in j.download_op %} <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}{% endfor %}</td></tr>
         {% else %}

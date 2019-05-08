@@ -2,10 +2,6 @@
 
 {% block content %}
 
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
-
-
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
 
 <table>
@@ -110,10 +106,6 @@
 <p>{{info.comments}}.</p>
 {% endif %}
 {% endif %}
-
-
-{% set KNOWL_ID = "lattice.%s"|format(info['label']) %}
-<h2>{{ KNOWL_INC(KNOWL_ID+'.bottom', title='') }}</h2>
 
 <script type="text/javascript">
 var number_of_coefficients = 20;

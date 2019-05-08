@@ -3,14 +3,16 @@
 from flask import url_for
 from collections import Counter
 
-from lmfdb.utils import make_logger, encode_plot
+from lmfdb.utils import encode_plot
+from lmfdb.logger import make_logger
 
-from lmfdb.db_backend import db
-from lmfdb.base import app
+from lmfdb import db
+from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
+
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.WebNumberField import nf_display_knowl, field_pretty

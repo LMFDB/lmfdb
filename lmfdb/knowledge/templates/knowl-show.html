@@ -4,22 +4,103 @@
 {% from "knowl-defs.html" import knowlbar with context %}
 {{ knowlbar(show_kid=True) }}
 
-{{ render|safe }}  
+{{ render|safe }}
 
+{% if user_is_authenticated and type != -2 %}
+<div style="margin-top: 30px;">
+  <strong>Comments:</strong>
+  <ul>
+    {% for cid, author, timestamp, can_delete in k.comments %}
+    <li>
+      {{ KNOWL(cid) }} ({{author}} on {{timestamp|fmtdatetime}})
+      {% if can_delete %} &middot; <a onclick='return confirm("Really delete comment?  This cannot be undone.");'
+        href="{{ url_for('.delete_comment', ID=cid) }}">delete</a>{% endif %}
+    </li>
+    {% endfor %}
+    <li><a href="{{ url_for('.new_comment', ID=k.id) }}">New comment</a></li>
+  </ul>
+</div>
+{% endif %}
 <div style="margin-top: 30px;">
   <strong>Authors:</strong>
   <ul>
   {% for a in k.author_links() %}
-    <li><a href="{{ url_for('users.profile', userid=a['username']) }}">{{ a['full_name'] or a['username'] }}</a></li>
+    <li><a href="{{ url_for('users.profile', userid=a['username']) }}">{{ a['full_name'] or a['username'] }}</a>{% if a['username'] == cur_username and (k.author_links() | length) > 1 %} (<a onclick='return confirm("Remove yourself as an author of this knowl?  This cannot easily be undone.")' href="{{ url_for('.remove_author', ID=k.id) }}">Remove</a>){% endif %}</li>
   {% endfor %}
   </ul>
 </div>
 <div style="margin-top: 30px;">
   <strong>Knowl status:</strong>
   <ul>
+    {% if k.type == 0 and k.source == k.id %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} to {{KNOWL(k.source_name, k.source_name)}}</li>
+    {% elif k.type == 0 and k.source is not none %}
+    <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} from {{KNOWL(k.source, k.source)}}</li>
+    {% endif %}
     <li>Review status: {{ k.quality }}
-    <li>Last edited by {{k.last_author()}} on {{ k._timestamp }}
+      {% if user_can_review_knowls %}
+      {% if k.status == 0 and k.most_recent %}
+      (<a onclick='return confirm("Mark as positively reviewed?");' href="{{ url_for('.review', ID=k.id, timestamp=k.ms_timestamp) }}">Review</a>)
+      {% elif k.status == 1 %}
+      (<a onclick='return confirm("Return to beta?{% if not k.most_recent %}  If you need to undo this, navigate to /knowledge/review/{{k.ms_timestamp}}{% endif %}");' href="{{ url_for('.demote', ID=k.id, timestamp=k.ms_timestamp) }}">Back to beta</a>)
+      {% endif %}
+      {% endif %}
+    </li>
+    <li>Last edited by {{k.last_author()}} on {{ k.timestamp|fmtdatetime }}</li>
   </ul>
 </div>
+{% if k.type|abs == 1 and k.source %} {# 1 or -1 are annotations #}
+<div style="margin-top: 30px;">
+  <strong>{{ 'Top' if k.type == 1 else 'Bottom' }} Knowl</strong> for <a href="/{{k.source}}">{{k.source_name}}</a>
+</div>
+{% elif k.type == 0 %}
+  <div style="margin-top: 30px;">
+    <strong>Referred to by:</strong>
+  {% if (k.referrers or k.code_referrers) %}
+      <ul>
+        {% for rid in k.referrers %}
+        <li>{{ KNOWL(rid, title=rid) }}</li>
+        {% endfor %}
+        {% for coderef in k.code_referrers %}
+        <li>{{ coderef | safe }}</li>
+        {% endfor %}
+      </ul>
+  {% else %}
+    <p style="text-indent: 1em">Not referenced anywhere at the moment.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% include "knowl-knowl-history.html" %}
+
+
+{% if (k.edit_history | length) > 1 %}
+<script type="text/javascript">
+
+/* edit history */
+var edit_history = {
+  {% for version in k.edit_history %}
+    {{version['ms_timestamp']}}: {{ version['content'] | safe}},
+{% endfor %}
+};
+
+$(function() {
+  $("body").on("click", ".diff_button", function (evt) {
+    evt.preventDefault();
+    $('#differences').toggle('slow');
+    var topselect = $('#lhsselect').offset().top
+    var topoption = $('#lhsselect').find("option[value="+$('#lhsselect').val() +"]").offset().top;
+    $('#lhsselect').scrollTop(topoption - topselect - 10);
+    $('#compare').resize();
+  });
+});
+
+</script>
+<strong>Differences</strong>
+<a href="#" class="diff_button">(show/hide)</a>
+<div id="differences" style="display: none">
+  {%include "knowl-diff.html"%}
+</div>
+{% endif %}
 
 {% endblock %}

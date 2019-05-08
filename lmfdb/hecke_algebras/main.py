@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-import re
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
+import ast, re, StringIO, time
 
 from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
-
-from lmfdb.db_backend import db
-
+from markupsafe import Markup
 from sage.all import latex, matrix, sqrt, sage_eval, prime_range
 
+from lmfdb import db
+from lmfdb.utils import parse_ints, clean_input, search_wrap
 from lmfdb.hecke_algebras import hecke_algebras_page
 from lmfdb.hecke_algebras.hecke_algebras_stats import hecke_algebras_summary
-from lmfdb.search_parsing import parse_ints, clean_input
-from lmfdb.search_wrapper import search_wrap
-
-from markupsafe import Markup
-
-import time
-import ast
-import StringIO
 
 hecke_algebras_credit = 'Samuele Anni, Panagiotis Tsaknias and Gabor Wiese'
 l_range=[ell for ell in prime_range(14)]
@@ -275,7 +267,7 @@ def render_hecke_algebras_webpage(**args):
     else:
         info['friends'] = []
     t = "Hecke Algebra %s" % info['label']
-    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+    return render_template("hecke_algebras-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra.%s'%(info['label']))
 
 
 
@@ -371,7 +363,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
 
     t = "%s-adic and mod %s Data for the Hecke Algebra Orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
-    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'])
+    return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s'%(info['orbit_label']))
 
 
 

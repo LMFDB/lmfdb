@@ -1,29 +1,23 @@
 # -*- coding: utf-8 -*-
-import re
-import time
-import ast
-import StringIO
+import ast, re, StringIO, time
 
-LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
-
-from flask import render_template, request, url_for, redirect, make_response, flash,  send_file
+from flask import render_template, request, url_for, redirect, make_response, flash, send_file
 from markupsafe import Markup
-
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
-from lmfdb.utils import web_latex_split_on_pm
-from lmfdb.search_parsing import parse_ints, parse_list, parse_count, parse_start, clean_input
-from lmfdb.search_wrapper import search_wrap
-
+from lmfdb.utils import (
+    web_latex_split_on_pm,
+    parse_ints, parse_list, parse_count, parse_start, clean_input,
+    search_wrap)
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 from lmfdb.lattice.isom import isom
+from lmfdb.lattice.lattice_stats import lattice_summary, lattice_summary_data
 
 lattice_credit = 'Samuele Anni, Stephan Ehlen, Anna Haensch, Gabriele Nebe and Neil Sloane'
 
 # Database connection
 
-from lmfdb.db_backend import db
+from lmfdb import db
 
 # utilitary functions for displays 
 
@@ -105,7 +99,11 @@ def lattice_by_label_or_name(lab):
     clean_lab=str(lab).replace(" ","")
     clean_and_cap=str(clean_lab).capitalize()
     for l in [lab, clean_lab, clean_and_cap]:
-        label = db.lat_lattices.lucky({'$or':[{'label': l}, {'name': l}]}, 'label')
+        label = db.lat_lattices.lucky(
+                {'$or':
+                    [{'label': l},
+                     {'name': {'$contains': [l]}}]},
+                    'label')
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
@@ -301,7 +299,7 @@ str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2
     if info['name'] != "" :
         info['properties']=[('Name','%s' % info['name'] )]+info['properties']
 #    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
-    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list())
+    return render_template("lattice-single.html", info=info, credit=credit, title=t, bread=bread, properties2=info['properties'], learnmore=learnmore_list(), KNOWL_ID="lattice.%s"%info['label'])
 #friends=friends
 
 def vect_to_sym(v):

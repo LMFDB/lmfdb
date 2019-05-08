@@ -26,7 +26,8 @@ An {{KNOWL("ec", title="elliptic curve")}} is a {{KNOWL("ag.curve.smooth",title=
 
 {% else %}
 <div>
-{{ KNOWL_INC('dq.ec.extent') }}
+{{elliptic_curve_summary()| safe}}
+Here are some <a href={{ url_for('ec.statistics')}}>further statistics</a>.
 </div>
 
 <h2> Browse {{ KNOWL('ec',title='elliptic curves')}} over $\Q$</h2>
@@ -38,13 +39,13 @@ By {{ KNOWL('ec.q.conductor',title = "conductor")}}:
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('ec.q.rank', title="rank")}}:
+By {{ KNOWL('ec.rank', title="rank")}}:
 {% for r in info.rank_list: %}
 <a href="?rank={{r}}">{{r}}</a>
 {% endfor %}
 </p>
 <p>
-By {{ KNOWL('ec.q.torsion_order', torsion=t,title="torsion order") }}:
+By {{ KNOWL('ec.torsion_order', torsion=t,title="torsion order") }}:
 {% for t in info.torsion_list: %}
 <a href="?torsion={{t}}">{{t}}</a>
 {% endfor %}
@@ -59,8 +60,9 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 
 
 <h2> Find a specific curve or {{
-  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients or 
-  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }} </h2>
+  KNOWL('ec.isogeny_class',title="isogeny class") }} by coefficients,
+  {{ KNOWL('ec.q.lmfdb_label',title="LMFDB label") }}, or 
+  {{ KNOWL('ec.q.cremona_label',title="Cremona label") }} </h2>
 {% if err_msg %}
 <form action={{url_for('ec.rational_elliptic_curves')}}>
 {% else %}
@@ -69,7 +71,7 @@ A <a href={{url_for('.random_curve')}}>random elliptic curve</a> from the databa
 <input type='text' name='label' size=25 example="11.a2">
 <button type='submit' name='jump' value='curve or isogeny class label'
         >curve, label or isogeny class label</button>
-<br><span class="formexample">e.g. 11.a2 or 389.a or Cremona:11a1 or 
+<br><span class="formexample">e.g. 11.a2 or 389.a or 11a1 or 389a or 
 [0,1,1,-2,0] or [-3024, 46224]
 </span>
 </form>
@@ -96,7 +98,7 @@ Please enter a value or leave blank:
 
    <tr>
    <td>
-    {{ KNOWL('ec.q.rank',title="rank") }}
+    {{ KNOWL('ec.rank',title="rank") }}
     </td>
            <td>
            <input type='text' name='rank' example="0" size=10 value="{{rank}}" />
@@ -117,7 +119,7 @@ Please enter a value or leave blank:
 
     <tr>
           <td>
-          {{ KNOWL('ec.q.torsion_order',title="torsion order") }}
+          {{ KNOWL('ec.torsion_order',title="torsion order") }}
           </td>
           <td>
           <input type='text' name='torsion' example="2" size=10 value="{{torsion}}" />
@@ -127,7 +129,7 @@ Please enter a value or leave blank:
           </td>
 
           <td>
-          {{ KNOWL('ec.q.torsion_subgroup',title="torsion structure") }}
+          {{ KNOWL('ec.torsion_subgroup',title="torsion structure") }}
           </td>
           <td>
             {{ tor_struct_search_Q()|safe }}

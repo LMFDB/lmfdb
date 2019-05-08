@@ -6,9 +6,9 @@
 <input type="hidden" name="start" value="{{info.start}}"/>
 <table border="0">
 <tr>
-<td align=left>{{ KNOWL('mf.elliptic.level', title='Level') }}</td>
-<td align=left>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</td>
-<td align=left>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</td>
+<td align=left>{{ KNOWL('cmf.level', title='Level') }}</td>
+<td align=left>{{ KNOWL('cmf.weight', title='Weight') }}</td>
+<td align=left>Number of {{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}</td>
 </tr>
 
 <tr>
@@ -20,7 +20,7 @@
 
 
 <tr>
-<td align= left>{{KNOWL('mf.elliptic.hecke-orbit-label', title='Hecke orbit label')}}:</td>
+<td align= left>{{KNOWL('cmf.hecke-orbit-label', title='Hecke orbit label')}}:</td>
 <td align= left>Mod &#x2113; and &#x2113;-adic:</td>
 </tr>
 <tr>
@@ -43,8 +43,8 @@
   {% if info.ell %}
   <tr>
     <th>{{KNOWL('hecke_algebras.orbit_label', title='Orbit label')}}</th>
-    <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
-    <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
+    <th>{{ KNOWL('cmf.level', title='Level') }}</th>
+    <th>{{ KNOWL('cmf.weight', title='Weight') }}</th>
   </tr>
   {% for a in info.results %}
   <tr>
@@ -57,9 +57,9 @@
   {% else %}
   <tr>
     <th>{{KNOWL('hecke_algebras.label', title='Label')}}</th>
-    <th>{{ KNOWL('mf.elliptic.level', title='Level') }}</th>
-    <th>{{ KNOWL('mf.elliptic.weight', title='Weight') }}</th>
-    <th>Number of {{ KNOWL('mf.elliptic.hecke-orbit', title='Hecke orbits') }}</th>
+    <th>{{ KNOWL('cmf.level', title='Level') }}</th>
+    <th>{{ KNOWL('cmf.weight', title='Weight') }}</th>
+    <th>Number of {{ KNOWL('cmf.hecke_orbit', title='Hecke orbits') }}</th>
   </tr>
   {% for a in info.results %}
   <tr>

@@ -3,7 +3,7 @@
 {# Offers options to browse and search #}
 
 <div>
-{{ KNOWL_INC('dq.nf.extent') }}
+{{ KNOWL_INC('nf.extent') }}
 </div>
 
 <h2> Browse {{KNOWL('nf', title='global number fields')}} </h2>
@@ -74,6 +74,18 @@ Enter values into one or more boxes to restrict the search.
 <td align=left>{{KNOWL('nf.discriminant', title='discriminant')}}
 <td colspan="4"><input type='text' name='discriminant' size=10 size=10 example='-1000..-1'> 
 <span class="formexample"> e.g. -3, or a range such as 1000..2000 or 1000-2000 or -1000..-1</span></td>
+</tr>
+<tr>
+<td align=left>{{KNOWL('nf.root_discriminant', title='root discriminant')}}
+<td colspan="2"><input type='text' name='rd' size=10 size=10 example='1..4.3'> 
+<span class="formexample"> e.g. a range such as 1..4.3 or 3..10</span></td>
+
+  <td>{{ KNOWL('nf.cm_field', title='CM field') }}</td>
+  <td><select name='cm_field' width="105" style="width: 105px">
+     <option ></option>
+     <option value='True'>True</option>
+     <option value='False'>False</option>
+  </select></td>
 </tr>
 
 <tr>

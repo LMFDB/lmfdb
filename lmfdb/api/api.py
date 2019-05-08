@@ -7,8 +7,8 @@ import json
 import flask
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
-from lmfdb.db_backend import db
-from lmfdb.db_encoding import Json
+from lmfdb import db
+from lmfdb.backend.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import render_template, request, url_for, current_app
@@ -102,6 +102,8 @@ def stats():
                 link = tablename
             else:
                 link = '<a href = "' + url_for(".api_query", table=tablename) + '">' + tablename + '</a>'
+            if not sizes['toast_bytes']:
+                sizes['toast_bytes'] = 0 
             if sizes['nrows']:
                 avg_size = int(round(float(sizes['table_bytes'] + sizes['toast_bytes'] + sizes['extra_bytes']) / sizes['nrows']))
             else:
@@ -167,7 +169,7 @@ def api_query(table, id = None):
     if fields:
         fields = ['id'] + fields.split(DELIM)
     else:
-        fields = 1.1
+        fields = 3
 
     if sortby:
         sortby = sortby.split(DELIM)

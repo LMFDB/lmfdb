@@ -2,11 +2,15 @@ import os
 import yaml
 from flask import url_for
 from urllib import quote
-from sage.all import ZZ, var, PolynomialRing, QQ, RDF, rainbow, implicit_plot, plot, text, Infinity, sqrt, prod, Factorization
-from lmfdb.db_backend import db
-from lmfdb.utils import web_latex, web_latex_split_on, web_latex_ideal_fact, encode_plot
-from lmfdb.WebNumberField import WebNumberField
+from sage.all import (Factorization, Infinity, PolynomialRing, QQ, RDF, ZZ,
+                      implicit_plot, plot, prod, rainbow, sqrt, text, var)
+from lmfdb import db
+from lmfdb.utils import (encode_plot, names_and_urls, web_latex,
+                         web_latex_split_on, web_latex_ideal_fact)
+from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.sato_tate_groups.main import st_link_by_name
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+                                        get_instances_by_Lhash_and_trace_hash)
 
 # For backwards compatibility of labels of conductors (ideals) over
 # imaginary quadratic fields we provide this conversion utility.  Labels have been of 3 types:
@@ -360,6 +364,12 @@ class ECNF(object):
         # store the factorization of the denominator of j and display
         # that, which is the most interesting part.
 
+        # The equation is stored in the database as a latex string.
+        # Some of these have extraneous double quotes at beginning and
+        # end, shich we fix here.  We also strip out initial \( and \)
+        # (if present) which are added in the template.
+        self.equation = self.equation.replace('"','').replace('\\(','').replace('\\)','')
+
         # Images of Galois representations
 
         if not hasattr(self,'galois_images'):
@@ -406,14 +416,15 @@ class ECNF(object):
             self.ST = st_link_by_name(1,2,'SU(2)')
 
         # Q-curve / Base change
-        self.qc = self.q_curve
-        if self.qc == "?":
-            self.qc = "not determined"
-        elif self.qc == True:
-            self.qc = "yes"
-        elif self.qc == False:
-            self.qc = "no"
-        else: # just in case
+        try:
+            qc = self.q_curve
+            if qc == True:
+                self.qc = "yes"
+            elif qc == False:
+                self.qc = "no"
+            else: # just in case
+                self.qc = "not determined"
+        except AttributeError:
             self.qc = "not determined"
 
         # Torsion
@@ -466,11 +477,22 @@ class ECNF(object):
                 pass
 
         # Local data
+
+        # Fix for Kodaira symbols, which in the database start and end
+        # with \( and \) and may have multiple backslashes.  Note that
+        # to put a single backslash into a python string you have to
+        # use '\\' which will display as '\\' but only counts as one
+        # character in the string.  which are added in the template.
+        def tidy_kod(kod):
+            while '\\\\' in kod:
+                kod = kod.replace('\\\\', '\\')
+            kod = kod.replace('\\(','').replace('\\)','')
+            return kod
+
         for P,ld in zip(badprimes,local_data):
             ld['p'] = web_latex(P)
             ld['norm'] = P.norm()
-            ld['kod'] = ld['kod'].replace('\\\\', '\\')
-            ld['kod'] = web_latex(ld['kod']).replace('$', '')
+            ld['kod'] = tidy_kod(ld['kod'])
 
         # URLs of self and related objects:
         self.urls = {}
@@ -500,8 +522,10 @@ class ECNF(object):
         if totally_real:
             self.hmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field.label, label=self.hmf_label)
-            if sig[0] <= 2:
-                self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if sig[0] <= 2 and db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
             elif self.abs_disc ** 2 * self.conductor_norm < 70000:
                 # we shouldn't trust the Lfun computed on the fly for large conductor
                 self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
@@ -509,27 +533,28 @@ class ECNF(object):
         if imag_quadratic:
             self.bmf_label = "-".join([self.field.label, self.conductor_label, self.iso_label])
             self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
-            self.urls['Lfunction'] = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            origin_url = lfun_url.lstrip('/L/').rstrip('/')
+            if db.lfunc_instances.exists({'url':origin_url}):
+                self.urls['Lfunction'] = lfun_url
 
+        # most of this code is repeated in isog_class.py
+        # and should be refactored
         self.friends = []
         self.friends += [('Isogeny class ' + self.short_class_label, self.urls['class'])]
         self.friends += [('Twists', url_for('ecnf.index', field=self.field_label, jinv=rename_j(j)))]
-        if totally_real:
-            self.friends += [('Hilbert Modular Form ' + self.hmf_label, self.urls['hmf'])]
+        if totally_real and not 'Lfunction' in self.urls:
+            self.friends += [('Hilbert modular Form ' + self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
-                self.friends += [('Bianchi Modular Form is not cuspidal', '')]
-            else:
+                self.friends += [('Bianchi modular Form is not cuspidal', '')]
+            elif not 'Lfunction' in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi Modular Form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular Form %s' % self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('(Bianchi Modular Form %s)' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi modular Form %s)' % self.bmf_label, '')]
 
-        if 'Lfunction' in self.urls:
-            self.friends += [('L-function', self.urls['Lfunction'])]
-        else:
-            self.friends += [('L-function not available', "")]
 
         self.properties = [
             ('Base field', self.field.field_pretty()),
@@ -568,13 +593,25 @@ class ECNF(object):
 
         self._code = None # will be set if needed by get_code()
 
-        self.downloads = [('Download all stored data', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
+        self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
         for lang in [["Magma","magma"], ["SageMath","sage"], ["GP", "gp"]]:
-            self.downloads.append(('Download {} code'.format(lang[0]),
+            self.downloads.append(('Code to {}'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
 
 
+        if 'Lfunction' in self.urls:
+            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
+            instances = get_instances_by_Lhash_and_trace_hash(
+                    Lfun['Lhash'],
+                    Lfun['degree'],
+                    Lfun.get('trace_hash'))
+            exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                     if elt[1]}
+            self.friends += names_and_urls(instances, exclude=exclude)
+            self.friends += [('L-function', self.urls['Lfunction'])]
+        else:
+            self.friends += [('L-function not available', "")]
 
     def code(self):
         if self._code == None:

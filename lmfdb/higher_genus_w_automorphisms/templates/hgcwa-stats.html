@@ -73,7 +73,8 @@ table.ntdata td {
         <th>maximum group order</th>
         {% for genus in genus_detail[i:i+max_cols] %}
         <td>
-          <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>
+	  <!--   <a href={{ url_for('.index', genus=genus.genus_num, groupsize=genus.groups[1])}}>{{genus.groups[1]}}</a>-->
+	   <a href={{ url_for('.index', genus=genus.genus_num, group_order=genus.groups[1])}}>{{genus.groups[1]}}</a>
         </td>
         {% endfor %}
       </tr>
