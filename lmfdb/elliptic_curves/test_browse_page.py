@@ -97,3 +97,6 @@ class HomePageTest(LmfdbTest):
                         '[1, -1, 1, -24575, 1488935]')
         self.check_args_with_timeout("/EllipticCurve/Q/?conductor=&jinv=&rank=&torsion=&torsion_structure=&sha=&surj_primes=&surj_quantifier=exactly&nonsurj_primes=5&optimal=on&count=100",
                         '[1, -1, 0, -1575, 751869]')
+
+        self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
+                        '990h3')

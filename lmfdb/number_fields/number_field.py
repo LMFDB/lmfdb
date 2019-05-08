@@ -3,14 +3,14 @@
 import ast, os, re, StringIO, time
 
 import flask
-from flask import render_template, request, url_for, redirect, send_file, flash, make_response
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect, send_file, make_response
 from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, RealField
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
+    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
+    web_latex_split_on_pm, flash_error,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -205,65 +205,86 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
+    # FIXME use StatsDisplay
     fields = db.nf_fields
     title = 'Global Number Field Statistics'
-    bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
+    bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
+             ('Number Field Statistics', '')]
     init_nf_count()
-    ntrans=[0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
-    n = [fields.count({'degree': n+1}) for n in range(23)]
-    nsig = [[fields.count({'degree': deg+1, 'r2': s}) for s in range((deg+3)/2)] for deg in range(23)]
+    ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954,
+              10, 983, 8, 1117, 164, 59, 7, 25000, 211, 96, 2392, 1854, 8, 5712]
+    degree_stats = fields.stats.column_counts('degree')
+    n = [degree_stats[elt + 1] for elt in range(23)]
+
+    degree_r2_stats = fields.stats.column_counts(['degree', 'r2'])
+    nsig = [[degree_r2_stats[(deg+1, s)] for s in range((deg+3)/2)]
+            for deg in range(23)]
     # Galois groups
-    nt_all = [[fields.count({'degree': deg+1, 'galt': t+1}) for t in range(ntrans[deg+1])] for deg in range(23)]
+    nt_stats = fields.stats.column_counts(['degree', 'galt'])
+    nt_all = [[nt_stats[(deg+1, t+1)] for t in range(ntrans[deg+1])]
+              for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
     sn = galstatdict([u[max(len(u)-1,0)] for u in nt_all], n, [len(u) for u in nt_all])
     an = galstatdict([u[max(len(u)-2,0)] for u in nt_all], n, [len(u)-1 for u in nt_all])
     # t-numbers for D_n
-    dn_tlist = [1,1,2,3,2,3,2,6,3,3,2,12,2,3,2,56,2,13,2,10,5,3,2]
-    dn = galstatdict(db.nf_fields.stats.get_oldstat('dn')['counts'], n, dn_tlist)
+    dn_tlist = [1, 1, 2, 3, 2, 3, 2, 6, 3, 3, 2, 12, 2, 3, 2, 56, 2, 13, 2, 10,
+                5, 3, 2]
+    dn = galstatdict([nt_stats[(j+1,dn_tlist[j])] for j in range(len(dn_tlist))], n, dn_tlist)
 
-    h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)]
+    h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(12)]
     has_h = fields.count({'class_number': {'$exists': True}})
-    hdeg = [[fields.count({'degree': deg+1, 'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)] for deg in range(23)]
-    has_hdeg = [fields.count({'degree': deg+1, 'class_number': {'$exists': True}}) for deg in range(23)]
-    hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
+    hdeg_stats = {j: fields.stats.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)}
+    hdeg = [[hdeg_stats[j][deg+1] for j in range(12)] for deg in range(23)]
+    has_hdeg_stats = fields.stats.column_counts('degree', {'class_number': {'$exists': True}})
+    has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
+    hdeg = [[{'cnt': comma(hdeg[nn][j]),
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
+              'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s' % (nn + 1, str(1 + 10**(j - 1)) + '-' + str(10**j))}
+             for j in range(len(h))]
+            for nn in range(len(hdeg))]
 
     has_hdeg = [{'cnt': comma(has_hdeg[nn]),
                  'prop': format_percentage(has_hdeg[nn], n[nn]),
-                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000'%(nn+1)} for nn in range(len(has_hdeg))]
+                 'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=1-10000000000000' % (nn + 1)} for nn in range(len(has_hdeg))]
     maxt = 1+max([len(entry) for entry in nt])
 
-    nt = [ [ {'cnt': comma(nt[nn][tt]), 
-              'prop': format_percentage(nt[nn][tt], n[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s'%(nn+1,"%dt%d"%(nn+1,tt+1))} for tt in range(len(nt[nn]))] for nn in range(len(nt))]
+    nt = [[{'cnt': comma(nt[nn][tt]),
+            'prop': format_percentage(nt[nn][tt], n[nn]),
+            'query': url_for(".number_field_render_webpage")+'?degree=%d&galois_group=%s' % (nn + 1, "%dt%d" % (nn + 1, tt + 1))}
+           for tt in range(len(nt[nn]))]
+          for nn in range(len(nt))]
     # Totals for signature table
-    sigtotals = [ comma(sum([nsig[nn][r2] for nn in range(max(r2*2-1,0),23)])) for r2 in range(12)]
-    nsig = [ [ {'cnt': comma(nsig[nn][r2]), 
-              'prop': format_percentage(nsig[nn][r2], n[nn]),
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
-    h = [ {'cnt': comma(h[j]),
-           'prop': format_percentage(h[j], has_h),
-           'label': '$10^{'+str(j-1)+'}<h\leq 10^{'+str(j)+'}$',
-           'query': url_for(".number_field_render_webpage")+'?class_number=%s'%(str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))]
+    sigtotals = [comma(
+                 sum([nsig[nn][r2]
+                 for nn in range(max(r2*2 - 1, 0), 23)]))
+                 for r2 in range(12)]
+    nsig = [[{'cnt': comma(nsig[nn][r2]),
+             'prop': format_percentage(nsig[nn][r2], n[nn]),
+             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+    h = [{'cnt': comma(h[j]),
+          'prop': format_percentage(h[j], has_h),
+          'label': '$10^{' + str(j - 1) + '}<h\leq 10^{' + str(j) + '}$',
+          'query': url_for(".number_field_render_webpage")+'?class_number=%s' % (str(1 + 10**(j - 1)) + '-' + str(10**j))} for j in range(len(h))]
     h[0]['label'] = '$h=1$'
     h[1]['label'] = '$1<h\leq 10$'
     h[2]['label'] = '$10<h\leq 10^2$'
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
     # Class number 1 by signature
-    sigclass1 = db.nf_fields.stats.get_oldstat('sigclass1')['counts']
-    sighasclass = db.nf_fields.stats.get_oldstat('sighasclass')['counts']
-    sigclass1 = [ [ {'cnt': comma(sigclass1[nn][r2]), 
-              'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2]>0 else 0,
-              'show': sighasclass[nn][r2]>0,
-              'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1'%(nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+    sigclass1 = fields.stats.get_oldstat('sigclass1')['counts']
+    sighasclass = fields.stats.get_oldstat('sighasclass')['counts']
+    sigclass1 = [[{'cnt': comma(sigclass1[nn][r2]),
+                   'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2] > 0 else 0,
+                   'show': sighasclass[nn][r2] > 0,
+                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
+                  for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
-    n = [ {'cnt': comma(n[nn]),
-           'prop': format_percentage(n[nn], nfields),
-           'query': url_for(".number_field_render_webpage")+'?degree=%d'%(nn+1)} for nn in range(len(n))]
+    n = [{'cnt': comma(n[nn]),
+          'prop': format_percentage(n[nn], nfields),
+          'query': url_for(".number_field_render_webpage")+'?degree=%d' % (nn + 1)}
+         for nn in range(len(n))]
 
     info = {'degree': n,
             'nt': nt,
@@ -279,7 +300,11 @@ def statistics():
             'maxt': maxt,
             'cn': cn, 'dn': dn, 'an': an, 'sn': sn,
             'maxdeg': max_deg}
-    return render_template("nf-statistics.html", info=info, credit=NF_credit, title=title, bread=bread)
+    return render_template("nf-statistics.html",
+                           info=info,
+                           credit=NF_credit,
+                           title=title,
+                           bread=bread)
 
 @nf_page.route("/")
 def number_field_render_webpage():
@@ -349,10 +374,11 @@ def render_field_webpage(args):
     nf = WebNumberField(label)
     data = {}
     if nf.is_null():
-        bread.append(('Search Results', ' '))
-        info['err'] = 'There is no field with label %s in the database' % label
-        info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
-        return search_input_error(info, bread)
+        if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            flash_error("Number field %s was not found in the database.", label)
+        else:
+            flash_error("%s is not a valid label for a global number field.", label)
+        return redirect(url_for(".number_field_render_webpage"))
 
     info['wnf'] = nf
     data['degree'] = nf.degree()
@@ -587,11 +613,10 @@ def by_label(label):
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
             return redirect(url_for(".by_label", label=nflabel), 301)
-        return render_field_webpage({'label': nf_string_to_label(label)})
+        return render_field_webpage({'label': nflabel})
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
-        return search_input_error({'err':''}, bread)
+        flash_error("<span style='color:black'>%s</span> us not a valid input for a <span style='color:black'>label</span>.  "+ str(err), label)
+        return redirect(url_for(".number_field_render_webpage"))
 
 # input is a sage int
 
@@ -670,10 +695,7 @@ def number_field_jump(info):
         parse_nf_string(info,query,'natural',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
-        query['err'] = info['err']
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
-                 ('Search Results', '.')]
-        return search_input_error(query, bread)
+        return redirect(url_for(".number_field_render_webpage"))
 
 ## This doesn't seem to be used currently
 #def number_field_algebra(info):
@@ -724,10 +746,6 @@ def number_field_search(info, query):
     #        return redirect(url_for(".by_label", label=clean_input(label)))
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
-
-def search_input_error(info, bread):
-    return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
-
 
 def residue_field_degrees_function(nf):
     """ Given a WebNumberField, returns a function that has

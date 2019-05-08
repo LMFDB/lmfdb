@@ -149,9 +149,9 @@ def render_group_webpage(args):
         data = db.gps_transitive.lookup(label)
         if data is None:
             if re.match(r'^\d+T\d+$', label):
-                flash_error("Group %s was not found in the database.", label)
+                flash_error("Group <span style='color:black'>%s</span> was not found in the database.", label)
             else:
-                flash_error("%s is not a valid label for a Galois group.", label)
+                flash_error("<span style='color:black'>%s</span> is not a valid label for a Galois group.", label)
             return redirect(url_for(".index"))
         data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
