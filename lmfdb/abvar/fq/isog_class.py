@@ -82,17 +82,9 @@ class AbvarFq_isoclass(object):
         return r
 
     @property
-    def slopes(self):
+    def polygon_slopes(self):
         # Remove the multiset indicators
-        return [s[:-1] for s in self.slps]
-
-    @property
-    def C_counts(self):
-        return [str(ct) for ct in self.C_cnts]
-
-    @property
-    def A_counts(self):
-        return [str(ct) for ct in self.A_cnts]
+        return [s[:-1] for s in self.slopes]
 
     @property
     def polynomial(self):
@@ -110,7 +102,7 @@ class AbvarFq_isoclass(object):
             return '\F_{' + '{0}^{1}'.format(p,r) + '}'
 
     def newton_plot(self):
-        S = [QQ(s) for s in self.slopes]
+        S = [QQ(s) for s in self.polygon_slopes]
         C = Counter(S)
         pts = [(0,0)]
         x = y = 0
@@ -155,13 +147,13 @@ class AbvarFq_isoclass(object):
 
     def _make_jacpol_property(self):
         ans = []
-        if self.is_pp == 1:
+        if self.has_principal_polarization == 1:
             ans.append((None, 'Principally polarizable'))
-        elif self.is_pp == -1:
+        elif self.has_principal_polarization == -1:
             ans.append((None, 'Not principally polarizable'))
-        if self.is_jac == 1:
+        if self.has_jacobian == 1:
             ans.append((None, 'Contains a Jacobian'))
-        elif self.is_jac == -1:
+        elif self.has_jacobian == -1:
             ans.append((None, 'Does not contain a Jacobian'))
         return ans
 
@@ -198,38 +190,37 @@ class AbvarFq_isoclass(object):
             ans += angle
         return ans
 
-    def is_simple(self):
-        return self.is_simp
-
-    def is_primitive(self):
-        return self.is_prim
-
     def is_ordinary(self):
         return self.p_rank == self.g
 
     def is_supersingular(self):
-        return all(slope == '1/2' for slope in self.slopes)
+        return all(slope == '1/2' for slope in self.polygon_slopes)
 
     def display_slopes(self):
-        return '[' + ', '.join(self.slopes) + ']'
+        return '[' + ', '.join(self.polygon_slopes) + ']'
 
     def length_A_counts(self):
-        return len(self.A_counts)
+        return len(self.abvar_counts)
 
     def length_C_counts(self):
-        return len(self.C_counts)
+        return len(self.curve_counts)
 
     def display_number_field(self):
-        if self.nf == "":
-            return "The number field of this isogeny class is not in the database."
+        if self.is_simple:
+            nf = self.number_fields[0]
+            if nf == "":
+                return "The number field of this isogeny class is not in the database."
+            else:
+                return nf_display_knowl(nf,field_pretty(nf))
         else:
-            return nf_display_knowl(self.nf,field_pretty(self.nf))
+            return "The class is not simple, so we will display the number fields later"
 
     def display_galois_group(self):
-        if not hasattr(self, 'galois_t') or not self.galois_t: #the number field was not found in the database
+        if not hasattr(self, 'galois_groups') or not self.galois_groups[0]: #the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            return group_display_knowl(self.galois_n, self.galois_t)
+            group = (self.galois_groups[0]).split("T")
+            return group_display_knowl(group[0], group[1])
 
     def decomposition_display_search(self,factors):
         if len(factors) == 1 and factors[0][1] == 1:
@@ -343,17 +334,18 @@ class AbvarFq_isoclass(object):
         return [(self.places[i], invariants[num_primes*i:num_primes*(i+1)]) for i in range(self.decomp_length())]
 
     def basechange_display(self):
-        models = self.primitive_models
-        if len(models) == 0:
+        if self.is_primitive:
             return 'primitive'
-        ans = '<table class = "ntdata">\n'
-        ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
-        for model in models:
-            ans += '  <tr><td class="center">$%s$</td><td>'%(self.field(model.split('.')[1]))
-            ans += av_display_knowl(model) + ' '
-            ans += '</td></tr>\n'
-        ans += '</table>\n'
-        return ans
+        else:
+            models = self.primitive_models
+            ans = '<table class = "ntdata">\n'
+            ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
+            for model in models:
+                ans += '  <tr><td class="center">$%s$</td><td>'%(self.field(model.split('.')[1]))
+                ans += av_display_knowl(model) + ' '
+                ans += '</td></tr>\n'
+            ans += '</table>\n'
+            return ans
 
 @app.context_processor
 def ctx_decomposition():
