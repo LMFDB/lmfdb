@@ -202,15 +202,22 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
+    # FIXME use display_stats
     fields = db.nf_fields
     title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Number Field Statistics', '')]
     init_nf_count()
-    ntrans=[0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954, 10, 983, 8, 1117,164,59, 7,25000,211,96, 2392, 1854, 8, 5712]
-    n = [fields.count({'degree': n+1}) for n in range(23)]
-    nsig = [[fields.count({'degree': deg+1, 'r2': s}) for s in range((deg+3)/2)] for deg in range(23)]
+    ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954,
+              10, 983, 8, 1117, 164, 59, 7, 25000, 211, 96, 2392, 1854, 8, 5712]
+    degree_stats = fields.stats.column_counts('degree')
+    n = [degree_stats[elt + 1] for elt in range(23)]
+
+    degree_r2_stats = fields.stats.column_counts(['degree', 'r2'])
+    nsig = [[degree_r2_stats[(deg+1, s)] for s in range((deg+3)/2)]
+            for deg in range(23)]
     # Galois groups
-    nt_all = [[fields.count({'degree': deg+1, 'galt': t+1}) for t in range(ntrans[deg+1])] for deg in range(23)]
+    nt_stats = fields.stats.column_counts(['degree', 'galt'])
+    nt_all = [[nt_stats[(deg+1, t+1)] for t in range(ntrans[deg+1])] for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
     cn = galstatdict([u[0] for u in nt_all], n, [1 for u in nt_all])
@@ -222,8 +229,10 @@ def statistics():
 
     h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)]
     has_h = fields.count({'class_number': {'$exists': True}})
-    hdeg = [[fields.count({'degree': deg+1, 'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)] for deg in range(23)]
-    has_hdeg = [fields.count({'degree': deg+1, 'class_number': {'$exists': True}}) for deg in range(23)]
+    hdeg_stats = {j: fields.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)}
+    hdeg = [[hdeg_stats[j][deg+1] for j in range(12)] for deg in range(23)]
+    has_hdeg_stats = fields.column_counts('degree', {'class_number': {'$exists': True}})
+    has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
     hdeg = [ [ {'cnt': comma(hdeg[nn][j]), 
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s'%(nn+1,str(1+10**(j-1))+'-'+str(10**j))} for j in range(len(h))] for nn in range(len(hdeg))]
