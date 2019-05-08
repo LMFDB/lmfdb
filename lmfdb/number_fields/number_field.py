@@ -231,7 +231,7 @@ def statistics():
     # t-numbers for D_n
     dn_tlist = [1, 1, 2, 3, 2, 3, 2, 6, 3, 3, 2, 12, 2, 3, 2, 56, 2, 13, 2, 10,
                 5, 3, 2]
-    dn = galstatdict(fields.stats.get_oldstat('dn')['counts'], n, dn_tlist)
+    dn = galstatdict([nt_stats[(j+1,dn_tlist[j])] for j in range(len(dn_tlist))], n, dn_tlist)
 
     h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(12)]
     has_h = fields.count({'class_number': {'$exists': True}})
