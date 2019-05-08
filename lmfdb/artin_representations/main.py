@@ -11,7 +11,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
-    parse_ints, parse_container, clean_input,
+    parse_ints, parse_container, clean_input, flash_error,
     search_wrap)
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.artin_representations import artin_representations_page
@@ -46,7 +46,7 @@ def parse_artin_label(label):
     if LABEL_RE.match(label):
         return label
     else:
-        raise ValueError("Error parsing input %s.  It is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
+        raise ValueError("input %s is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1"% label)
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
@@ -74,9 +74,8 @@ def artin_representation_jump(info):
     try:
         label = parse_artin_label(label)
     except ValueError as err:
-        flash(Markup("Error: %s" % (err)), "error")
-        bread = get_bread([('Search Results','')])
-        return search_input_error({'err':''}, bread)
+        flash_error("%s" % (err))
+        return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
@@ -131,8 +130,13 @@ def render_artin_representation_webpage(label):
     try:
         the_rep = ArtinRepresentation(label)
     except:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not the label of an Artin representation in the database." % (label)), "error")
-        return search_input_error({'err':''}, bread)
+        try:
+            newlabel=parse_artin_label(label)
+            flash_error("Artin representation %s is not in database", label)
+            return redirect(url_for(".index"))
+        except ValueError as err:
+            flash_error("%s" % (err))
+            return redirect(url_for(".index"))
 
     extra_data = {} # for testing?
     extra_data['galois_knowl'] = group_display_knowl(5,3) # for testing?

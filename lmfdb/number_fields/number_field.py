@@ -10,7 +10,8 @@ from sage.all import ZZ, QQ, PolynomialRing, NumberField, latex, primes, pari, R
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, web_latex_split_on_pm,
+    web_latex, to_dict, coeff_to_poly, pol_to_html, comma, format_percentage, 
+    web_latex_split_on_pm, flash_error,
     clean_input, nf_string_to_label, parse_galgrp, parse_ints, parse_bool,
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, search_wrap)
@@ -349,10 +350,11 @@ def render_field_webpage(args):
     nf = WebNumberField(label)
     data = {}
     if nf.is_null():
-        bread.append(('Search Results', ' '))
-        info['err'] = 'There is no field with label %s in the database' % label
-        info['label'] = args['label_orig'] if 'label_orig' in args else args['label']
-        return search_input_error(info, bread)
+        if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            flash_error("Number field %s was not found in the database.", label)
+        else:
+            flash_error("%s is not a valid label for a global number field.", label)
+        return redirect(url_for(".number_field_render_webpage"))
 
     info['wnf'] = nf
     data['degree'] = nf.degree()
@@ -587,11 +589,10 @@ def by_label(label):
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
             return redirect(url_for(".by_label", label=nflabel), 301)
-        return render_field_webpage({'label': nf_string_to_label(label)})
+        return render_field_webpage({'label': nflabel})
     except ValueError as err:
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid number field. %s" % (label,err)), "error")
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Search Results', ' ')]
-        return search_input_error({'err':''}, bread)
+        flash_error("<span style='color:black'>%s</span> us not a valid input for a <span style='color:black'>label</span>.  "+ str(err), label)
+        return redirect(url_for(".number_field_render_webpage"))
 
 # input is a sage int
 
@@ -670,10 +671,8 @@ def number_field_jump(info):
         parse_nf_string(info,query,'natural',name="Label",qfield='label')
         return redirect(url_for(".by_label", label=query['label']))
     except ValueError:
-        query['err'] = info['err']
-        bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
-                 ('Search Results', '.')]
-        return search_input_error(query, bread)
+        label = query['label_orig']
+        return redirect(url_for(".number_field_render_webpage"))
 
 ## This doesn't seem to be used currently
 #def number_field_algebra(info):
@@ -724,10 +723,6 @@ def number_field_search(info, query):
     #        return redirect(url_for(".by_label", label=clean_input(label)))
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
-
-def search_input_error(info, bread):
-    return render_template("number_field_search.html", info=info, title='Global Number Field Search Error', bread=bread)
-
 
 def residue_field_degrees_function(nf):
     """ Given a WebNumberField, returns a function that has
