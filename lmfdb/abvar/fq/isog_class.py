@@ -256,13 +256,17 @@ class AbvarFq_isoclass(object):
         return factor_str
     
     def alg_clo_field(self):
-        return '\\overline{\F}_{' + '{0}'.format(self.q) + '}'
+        if self.r == 1:
+            return '\\overline{\F}_{' + '{0}'.format(self.p) + '}'
+        else:
+            return '\\overline{\F}_{' + '{0}^{1}'.format(self.p,self.r) + '}'
             
     def ext_field(self,s):
-        if s == 1:
-            return '\F_{' + '{0}'.format(self.q) + '}'
+        n = s*self.r
+        if n == 1:
+            return '\F_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\F_{' + '{0}^{1}'.format(self.q,s) + '}'
+            return '\F_{' + '{0}^{1}'.format(self.p,n) + '}'
     
     def is_endo_rational(self):
         return self.geometric_extension_degree == 1
@@ -270,25 +274,12 @@ class AbvarFq_isoclass(object):
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
         return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
-
     
-            
-      
-    #old
-    def has_real_place(self):
-        my_field = (self.nf()).split('.')
-        real_places = int(my_field[1]) 
-        return real_places > 0
+    def endo_extension_by_deg(self,d):
+        return [factor for factor in self.endo_extensions() if factor['extension_degree']==d]
     
-    #old
-    def is_commutative(self):
-        return True
-        #for inv in self.brauer_invariants:
-        #    if inv == '0':
-        #        continue
-        #    else:
-        #        return False
-        #return True
+    def relevant_degs(self):
+        return Integer(self.geometric_extension_degree).divisors()[1:-1]
     
     #old
     @property
@@ -298,35 +289,22 @@ class AbvarFq_isoclass(object):
         else:
             return True
     
+    #old
     def simple_endo_info(self):
-        if not self.is_simple:
-            return None
-        nf = self.nf()
-        if nf == '1.1.1.1':
-            ans = 'the quaternion division algebra over ' +  self.display_number_field() + ' ramified at {0} and $\infty$. All ${1}$-endomorphisms are already defined over ${2}$.'.format(self.p,self.alg_clo_field(),self.ext_field(1))
-        elif self.has_real_place():
-            ans = 'the division algebra over ' + self.display_number_field() + ' ramified at both real infinite places. <br>The geometric endomorphism algebra is $M_2(E)$ where $E$ is the quaternion division algebra over $\\Q$ ramified at {2} and $\infty$. All ${0}$-endomorphisms are defined over ${1}$. '.format(self.alg_clo_field(),self.ext_field(2),self.p)
-        else:
-            if self.is_commutative():
-                ans = 'the number field ' + self.display_number_field() + '.'
-            else:
-                ans = 'the division algebra over ' + self.display_number_field() + ' with the following ramification data at primes above {0}, and unramified at all archimedean primes:'.format(self.p)
+        data = db.av_fq_endalg_data.lookup(self.label)
+        ans = describe_end_algebra(data['center'].replace('-',''),data['divalg_dim'],self.p)
+        ans += '</td></tr><tr><td>'
+        ans += describe_brauer(self.p,data['places'],data['brauer_invariants'])
         return ans
 
     def endo_info(self,factor):
         pass
     
+    #old
     def decomp_length(self):
         return len(self.decomp)
     
-    def primeideal_display(self,prime_ideal):
-        ans = '($ {0} $'.format(self.p)
-        if prime_ideal == ['0']:
-            ans += ')'
-            return ans
-        else:
-            ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
-            return ans
+
 #old
     def factor_display(self,factor):
         return av_display_knowl(factor)
@@ -376,3 +354,30 @@ class AbvarFq_isoclass(object):
 @app.context_processor
 def ctx_decomposition():
     return {'av_data': av_data}
+
+def describe_end_algebra(p,center,divalg_dim,places,brauer_invariants):
+    if center == '1.1.1.1' and divalg_dim == 4:
+        ans = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$.'.format(p)
+    elif int(center.split('.')[1]) > 0:
+        ans = 'the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
+    elif divalg_dim == 1:
+        ans = 'the number field ' + nf_display_knowl(center,field_pretty(center)) + '.'
+    else:
+       ans = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        ans  = '<table class = "ntdata"><tr><td>$v$</td>'
+        for prime in places:
+            ans += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
+        ans += '</tr><tr><td>$\operatorname{inv}_v$</td>'
+        for inv in brauer_invariants:
+            ans += '<td class="center">${0}$</td>'.format(inv)
+        ans += '</tr></table>'
+    return ans
+
+def primeideal_display(p,prime_ideal):
+    ans = '($ {0} $'.format(p)
+    if prime_ideal == ['0']:
+        ans += ')'
+        return ans
+    else:
+        ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
+        return ans

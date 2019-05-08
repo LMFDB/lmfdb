@@ -109,19 +109,27 @@ This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its {{ KNOWL('g
 {% if cl.is_endo_rational() %}
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
+<table class="g2">
+    <tr><td>$\End(A_F)$ is {{cl.simple_endo_info()|safe}}</td></tr>
+</table>
+
 All endomorphisms are defined over ${{cl.field()}}$.
 
 {% else %}
 
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
+<!--actually put shit here-->
+
 All endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
 
 <h4>Endomorphism algebra over ${{cl.alg_clo_field()}}$</h4>
 
+<!--actually put shit here-->
+
 <h4>Remainder of endomorphism lattice by field</h4>
-{{cl.other_endomorphisms_display()|safe}}
-<!--<table>
+<!--{{cl.other_endomorphisms_display()|safe}}
+<table>
 {% for extension in cl.endo_extensions() %}
 <tr><td>
 {{extension.extension_degree}}
@@ -129,6 +137,20 @@ All endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree
 
 {% endfor %}
 </table>-->
+
+{% for degree in cl.relevant_degs() %}
+
+<p>Endomorphism algebra over $F = {{cl.ext_field(degree)}}$ 
+
+<table class="g2">
+    <tr><td>$\End(A_F)$ is </td></tr>
+</table>
+
+</p>
+
+
+
+{% endfor %}
 
 {% endif %}
 
