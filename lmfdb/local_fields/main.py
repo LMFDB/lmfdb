@@ -9,12 +9,14 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, pol_to_html, display_multiset,
-    parse_galgrp, parse_ints, clean_input, parse_rats,
+    parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
     search_wrap)
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.galois_groups.transitive_group import (
     group_display_knowl, group_display_inertia,
     group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+
+import re
 
 LF_credit = 'J. Jones and D. Roberts'
 
@@ -171,10 +173,11 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            bread = get_bread([("Search Error", ' ')])
-            info['err'] = "Field " + label + " was not found in the database."
-            info['label'] = label
-            return search_input_error(info, bread)
+            if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+                flash_error("Field <span style='color:black'>%s</span> was not found in the database.", label)
+            else:
+                flash_error("<span style='color:black'>%s</span> is not a valid label for a local number field.", label)
+            return redirect(url_for(".index"))
         title = 'Local Number Field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
         p = data['p']
