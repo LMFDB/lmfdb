@@ -266,12 +266,28 @@ class AbvarFq_isoclass(object):
             return '\F_{' + '{0}'.format(self.q) + '}'
         else:
             return '\F_{' + '{0}^{1}'.format(self.q,s) + '}'
+    
+    #tofix
+    def is_endo_rational(self):
+        #this should work soon
+        #return self.geometric_extension_degree == 1
+        data = db.av_fq_endalg_factors.lookup(self.label)
+        return data == None
+
+    def endo_extensions(self):
+        #data = db.av_fq_endalg_factors.lucky({'label':self.label})
+        return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
+
+    
             
+      
+    #old
     def has_real_place(self):
         my_field = self.nf.split('.')
         real_places = int(my_field[1]) 
         return real_places > 0
     
+    #old
     def is_commutative(self):
         my_invs = self.brauer_invs.split(' ')
         for inv in my_invs:
@@ -281,6 +297,7 @@ class AbvarFq_isoclass(object):
                 return False
         return True
     
+    #old
     @property
     def needs_endo_table(self):
         if self.has_real_place() or self.is_commutative():
