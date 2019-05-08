@@ -58,11 +58,11 @@ class AbvarFq_isoclass(object):
         """
         Searches for a specific isogeny class in the database by label.
         """
-        try:
-            data = db.av_fqisog.lookup(label)
-            return cls(data)
-        except (AttributeError, TypeError):
-            raise ValueError("Label not found in database")
+        #try:
+        data = db.av_fq_isog.lookup(label)
+        return cls(data)
+        #except (AttributeError, TypeError):
+            #raise ValueError("Label not found in database")
 
     def make_class(self):
         self.decompositioninfo = self.decomposition_display()
@@ -247,7 +247,7 @@ class AbvarFq_isoclass(object):
         return ans
 
     def decomposition_display(self):
-        factors = self.decomp
+        factors = zip(self.simple_distinct,self.simple_multiplicities)
         if len(factors) == 1 and factors[0][1] == 1:
             return 'simple'
         ans = ''
@@ -272,9 +272,9 @@ class AbvarFq_isoclass(object):
     #tofix
     def is_endo_rational(self):
         #this should work soon
-        #return self.geometric_extension_degree == 1
-        data = db.av_fq_endalg_factors.lookup(self.label)
-        return data == None
+        return self.geometric_extension_degree == 1
+        #data = db.av_fq_endalg_factors.lookup(self.label)
+        #return data == None
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
@@ -343,7 +343,7 @@ class AbvarFq_isoclass(object):
         return [(self.places[i], invariants[num_primes*i:num_primes*(i+1)]) for i in range(self.decomp_length())]
 
     def basechange_display(self):
-        models = self.prim_models
+        models = self.primitive_models
         if len(models) == 0:
             return 'primitive'
         ans = '<table class = "ntdata">\n'
