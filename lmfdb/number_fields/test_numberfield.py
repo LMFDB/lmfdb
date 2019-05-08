@@ -86,7 +86,7 @@ class NumberFieldTest(LmfdbTest):
         assert 'with the same signature and absolute value of the' in L.data
 
     def test_url_bad(self):
-        L = self.tc.get('/NumberField/junk')
+        L = self.tc.get('/NumberField/junk', follow_redirects=True)
         assert 'Error' in L.data # error mesage
 
     def test_random_field(self):
