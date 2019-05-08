@@ -261,8 +261,10 @@ def elliptic_curve_search(info, query):
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     if 'optimal' in info and info['optimal'] == 'on':
-        # fails on 990h3
-        query['number'] = 1
+        # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
+        # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
+        # Instead, we use this more complicated query:
+        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
