@@ -476,6 +476,7 @@ ALPHA_RE = re.compile("[a-z]+")
 
 def url_for_label(label):
     if label == "random":
+        print "url_for_label returned", url_for("cmf.random_form")
         return url_for("cmf.random_form")
     slabel = label.split(".")
     if len(slabel) == 6:
@@ -501,7 +502,9 @@ def url_for_label(label):
 def jump_box(info):
     jump = info.pop("jump").strip()
     if jump == "random":
+        print "random it is"
         return random_form()
+    print "jump =", jump
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
