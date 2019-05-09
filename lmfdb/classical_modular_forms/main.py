@@ -471,6 +471,8 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
 
+POSINT_RE = re.compile("[1-9][0-9]*")
+
 def url_for_label(label):
     slabel = label.split(".")
     if len(slabel) == 6:
@@ -481,7 +483,7 @@ def url_for_label(label):
         func = "cmf.by_url_space_label"
     elif len(slabel) == 2:
         func = "cmf.by_url_full_gammma1_space_label"
-    elif len(slabel) == 1:
+    elif len(slabel) == 1 and POSINT_RE.match(slabel[1]):
         func = "cmf.by_url_level"
     else:
         raise ValueError("Invalid label")
