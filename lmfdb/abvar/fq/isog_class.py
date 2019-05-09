@@ -264,60 +264,40 @@ class AbvarFq_isoclass(object):
     
     def endo_extension_by_deg(self,degree):
         return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
-
-    #old
-    def describe_decomp(self,degree):
-        factors = self.endo_extension_by_deg(degree)
-        if decomposition_display(factors) == 'simple':
-            ans = 'This base change is the simple extension ' 
-            ans += av_display_knowl(factors[0][0]) 
-            ans += ' and its endomorphism algebra is'
-        else:
-            ans = 'This base change is isogenous to ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is'
-        return ans
     
     def display_endo_info(self,degree):
         #this is for degree > 1
         factors = self.endo_extension_by_deg(degree)
+        print '**********************************'
+        print factors
+        print '**********************************'
+        if factors == []:
+            return 'The data at degree ' + str(degree) + ' is missing.'        
         if decomposition_display(factors) == 'simple':
+            end_alg = describe_end_algebra(self.p,factors[0][0])
             ans = 'This base change is the simple isogeny class ' 
             ans += av_display_knowl(factors[0][0]) 
-            ans += ' and its endomorphism algebra is '
-            ans += describe_end_algebra(self.p,factors[0][0])
+            ans += ' and its endomorphism algebra is ' + end_alg[1]
+        elif len(factors) == 1:
+            end_alg = describe_end_algebra(self.p,factors[0][0])
+            ans = 'This base change factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
-            ans += '<ul>'
-            for factor in factors:
-                ans += '<li>'
-                ans += av_display_knowl(factor[0]) + ': '
-                if factor[1] == 1:
-                    ans += describe_end_algebra(self.p,factor[0])
-                else:
-                    ans += "$M_" + str(factor[1]) + "(" + describe_end_algebra(self.p,factor[0]) + ")$"
-                ans += '</li>'
-            ans += '</ul>'
+            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is:' + non_simple_loop(self.p,factors)
         return ans
            
-    
+    #to fix
     def display_base_endo_info(self):
         factors = zip(self.simple_distinct,self.simple_multiplicities)
         if decomposition_display(factors) == 'simple':
-            ans = 'This is a simple isogeny class and its endomorphism algebra is '
-            ans += describe_end_algebra(self.p,factors[0][0])
+            end_alg = describe_end_algebra(self.p,factors[0][0])
+            ans = 'This is a simple isogeny class and its endomorphism algebra is ' + end_alg[1]
+            #ans += describe_end_algebra(self.p,factors[0][0])
+        elif len(factors) == 1:
+            end_alg = describe_end_algebra(self.p,factors[0][0])
+            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
-            ans += '<ul>'
-            for factor in factors:
-                ans += '<li>'
-                ans += av_display_knowl(factor[0]) + ': '
-                if factor[1] == 1:
-                    ans += describe_end_algebra(self.p,factor[0])
-                else:
-                    ans += "$M_" + str(factor[1]) + "(" + describe_end_algebra(self.p,factor[0]) + ")$"
-                ans += '</li>'
-            ans += '</ul>'
+            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is:' + non_simple_loop(self.p,factors)
         return ans
-
 
     def basechange_display(self):
         if self.is_primitive:
@@ -343,21 +323,26 @@ def describe_end_algebra(p,extension_label):
     divalg_dim = factor_data['divalg_dim']
     places = factor_data['places']
     brauer_invariants = factor_data['brauer_invariants']
+    ans = ['','']
     if center == '1.1.1.1' and divalg_dim == 4:
-        ans = '$D$ where $D$ is the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$.'.format(p)
+        ans[0] = 'B'
+        ans[1] = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
     elif int(center.split('.')[1]) > 0:
-        ans = '$D$ where $D$ is the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
+        ans[0] = 'B'
+        ans[1] = 'the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
     elif divalg_dim == 1:
-        ans = nf_display_knowl(center,field_pretty(center))
+        ans[0] = 'K'
+        ans[1] = nf_display_knowl(center,field_pretty(center)) + '.'
     else:
-        ans = '$B$, where $B$ is the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
-        ans  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
+        ans[0] = 'B'
+        ans[1] = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        ans[1]  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
-            ans += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
-        ans += '</tr><tr><td>$\operatorname{inv}_v$</td>'
+            ans[1] += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
+        ans[1] += '</tr><tr><td>$\operatorname{inv}_v$</td>'
         for inv in brauer_invariants:
-            ans += '<td class="center">${0}$</td>'.format(inv)
-        ans += '</tr></table>'
+            ans[1] += '<td class="center">${0}$</td>'.format(inv)
+        ans[1] += '</tr></table>'
     return ans
 
 
@@ -384,3 +369,19 @@ def decomposition_display(factors):
     return factor_str
 
 
+def non_simple_loop(p,factors):
+    ans = '<ul>'
+    for factor in factors:
+        ans += '<li>'
+        ans += av_display_knowl(factor[0]) 
+        if factor[1] > 1:
+           ans += '<sup> {0} </sup>'.format(factor[1]) 
+        ans += ' : '
+        end_alg = describe_end_algebra(p,factor[0])
+        if factor[1] == 1:
+            ans += end_alg[1]
+        else:
+            ans += '$M_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+        ans += '</li>'
+    ans += '</ul>'
+    return ans

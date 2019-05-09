@@ -111,7 +111,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
         <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
     </table>
     </p>
-    <p>All endomorphisms are defined over ${{cl.field()}}$.</p>
+    <p>All geometric endomorphisms are defined over ${{cl.field()}}$.</p>
 
 {% else %}
 
@@ -122,7 +122,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
         </table>
         </p>
         <p>
-        All endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
+        All geometric endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
         </p>
     <b>Endomorphism algebra over ${{cl.alg_clo_field()}}$</b>
         <p><table class='g2'>
@@ -133,10 +133,10 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
         <ul>
         {% for degree in cl.relevant_degs() %}
             <li label=degree>
-                Endomorphism algebra over $F = {{cl.ext_field(degree)}}$:
-                 <table class='g2'>
+                Endomorphism algebra over ${{cl.ext_field(degree)}}$:
+                 <p><table class='g2'>
                     <tr><td>{{cl.display_endo_info(degree)|safe}}</td></t2>
-                </table>
+                </table></p>
             </li>
         {% endfor %}
         </ul>
