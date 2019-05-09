@@ -268,9 +268,6 @@ class AbvarFq_isoclass(object):
     def display_endo_info(self,degree):
         #this is for degree > 1
         factors = self.endo_extension_by_deg(degree)
-        print '**********************************'
-        print factors
-        print '**********************************'
         if factors == []:
             return 'The data at degree ' + str(degree) + ' is missing.'        
         if decomposition_display(factors) == 'simple':
