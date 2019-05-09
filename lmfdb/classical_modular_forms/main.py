@@ -460,11 +460,11 @@ def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embeddi
     conrey_index, embedding = embedding_label.split('.')
     if not (conrey_index.isdigit() and embedding.isdigit()):
         return abort(404, "Invalid embedding label: not integers")
-    return redirect(url_for("cmf.by_url_newform_conreylabel_with_embedding", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
+    return redirect(url_for("cmf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
 # Embedded modular form
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
-def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
+def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     if conrey_index <= 0 or embedding <= 0:
         return abort(404, "Invalid embedding label: negative values")
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
@@ -472,22 +472,27 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
     return render_embedded_newform_webpage(newform_label, embedding_label)
 
 POSINT_RE = re.compile("[1-9][0-9]*")
+ALPHA_RE = re.compile("[a-z]+")
 
 def url_for_label(label):
     slabel = label.split(".")
     if len(slabel) == 6:
-        func = "cmf.by_url_newform_conreylabel_with_embedding"
+        func = "cmf.by_url_embedded_newform_label"
     elif len(slabel) == 4:
         func = "cmf.by_url_newform_label"
     elif len(slabel) == 3:
         func = "cmf.by_url_space_label"
     elif len(slabel) == 2:
         func = "cmf.by_url_full_gammma1_space_label"
-    elif len(slabel) == 1 and POSINT_RE.match(slabel[1]):
+    elif len(slabel) == 1:
         func = "cmf.by_url_level"
     else:
         raise ValueError("Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    for i in range (len(slabel)):
+        if not keytypes[i].match(slabel[i]):
+            raise ValueError("Invalid label")
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
     return url_for(func, **kwds)
 
