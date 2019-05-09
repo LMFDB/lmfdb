@@ -370,7 +370,7 @@ def decomposition_display(factors):
 
 
 def non_simple_loop(p,factors):
-    ans = '<ul>'
+    ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">'
     for factor in factors:
         ans += '<li>'
         ans += av_display_knowl(factor[0]) 
