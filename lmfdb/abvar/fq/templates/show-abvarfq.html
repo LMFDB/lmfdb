@@ -125,33 +125,23 @@ All endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree
 
 <h4>Endomorphism algebra over ${{cl.alg_clo_field()}}$</h4>
 
+    {{cl.describe_decomp(cl.geometric_extension_degree)|safe}}
 <!--actually put shit here-->
 
 <h4>Remainder of endomorphism lattice by field</h4>
-<!--{{cl.other_endomorphisms_display()|safe}}
-<table>
-{% for extension in cl.endo_extensions() %}
-<tr><td>
-{{extension.extension_degree}}
-</td></tr>
+    <ul>
+    {% for degree in cl.relevant_degs() %}
+        <li>
+            Endomorphism algebra over $F = {{cl.ext_field(degree)}}$.
+             
+            {{cl.describe_decomp(degree)|safe}}
+        <table class="g2">
+            <tr><td>$\End(A_F)$ is </td></tr>
+        </table>
 
-{% endfor %}
-</table>-->
-
-{% for degree in cl.relevant_degs() %}
-
-<p>Endomorphism algebra over $F = {{cl.ext_field(degree)}}$ 
-
-<table class="g2">
-    <tr><td>$\End(A_F)$ is </td></tr>
-</table>
-
-</p>
-
-
-
-{% endfor %}
-
+        </li>
+    {% endfor %}
+    </ul>
 {% endif %}
 
 {% else %}

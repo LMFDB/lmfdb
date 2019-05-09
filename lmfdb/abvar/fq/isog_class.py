@@ -65,7 +65,7 @@ class AbvarFq_isoclass(object):
             #raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = decomposition_display(zip(self.simple_distinct,self.simple_multiplicities)
+        self.decompositioninfo = decomposition_display(zip(self.simple_distinct,self.simple_multiplicities))
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
 
@@ -268,6 +268,16 @@ class AbvarFq_isoclass(object):
     def fetch_decomp(self,degree):
         factors = [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extension_by_deg(degree)]
         return factors
+
+    def describe_decomp(self,degree):
+        factors = self.fetch_decomp(degree)
+        if decomposition_display(factors) == 'simple':
+            ans = 'This base change is the simple extension ' 
+            ans += av_display_knowl(factors[0][0]) 
+            ans += ' and its endomorphism algebra is'
+        else:
+            ans = 'This base change is isogenous to ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is'
+        return ans
     
     #old
     def simple_endo_info(self):
@@ -322,12 +332,6 @@ def primeideal_display(p,prime_ideal):
         ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
         return ans
 
-def describe_decomp(factors,multiplicities):
-    if decomposition_display(factors) == 'simple':
-        ans = 'This base change is simple and its endomorphism algebra is'
-    else:
-        ans = 'This base change is isogenous to' + decomposition_display(factors) + 'therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is'
-    return ans
 
 def decomposition_display(factors):
     if len(factors) == 1 and factors[0][1] == 1:
