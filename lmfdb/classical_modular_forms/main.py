@@ -499,7 +499,6 @@ def url_for_label(label):
 
 def jump_box(info):
     jump = info.pop("jump").strip()
-    print "jump =", jump
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
         jump = convert_spacelabel_from_conrey(jump)
