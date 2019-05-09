@@ -182,8 +182,8 @@ def render_group_webpage(args):
         data['chartable'] = ctable
         data['parity'] = "$%s$" % data['parity']
         data['cclasses'] = conjclasses(G, n)
-        data['subinfo'] = subfield_display(n, data['subs'])
-        data['resolve'] = resolve_display(data['resolve'])
+        data['subinfo'] = subfield_display(n, data['subfields'])
+        data['resolve'] = resolve_display(data['quotients'])
         if data['gapid'] == 0:
             data['gapid'] = "Data not available"
         else:

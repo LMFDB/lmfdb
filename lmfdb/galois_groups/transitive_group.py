@@ -52,18 +52,18 @@ def small_group_data(gapid):
     inf += '</table></p>'
     return inf
 
-def list_with_mult(lis):
-    lis2 = [(j[0], j[1]) for j in lis]
-    diflis = list(set(lis2))
-    diflis.sort()
+# Input is a list [[[n1, t1], mult1], [[n2,t2],mult2], ...]
+def list_with_mult(lis, names=True):
     ans = ''
-    for k in diflis:
+    for k in lis:
         if ans != '':
             ans += ', '
-        cnt = lis2.count(k)
-        ans += group_display_knowl(k[0], k[1])
-        if cnt>1:
-            ans += " x %d"%cnt
+        if names:
+            ans += group_display_knowl(k[0][0], k[0][1])
+        else:
+            ans += group_display_knowl(k[0][0], k[0][1], base_label(k[0][0],k[0][1]))
+        if k[1]>1:
+            ans += "<span style='font-size: small'> x %d</span>"% k[1]
     return ans
 
 
@@ -117,10 +117,10 @@ class WebGaloisGroup:
         return self._data['name']
 
     def otherrep_list(self):
-        return(list_with_mult(self._data['repns']))
+        return(list_with_mult(self._data['siblings'], names=False))
 
     def subfields(self):
-        return(list_with_mult(self._data['subs']))
+        return(list_with_mult(self._data['subfields']))
 
 ############  Misc Functions
 
@@ -290,10 +290,14 @@ def galois_group_data(n, t):
     rest += '</blockquote></div>'
 
     rest += '<div><h3>Subfields</h3><blockquote>'
-    rest += subfield_display(n, group['subs'])
+    rest += subfield_display(n, group['subfields'])
     rest += '</blockquote></div>'
     rest += '<div><h3>Other low-degree representations</h3><blockquote>'
-    rest += otherrep_display(n, t, group['repns'])
+    sibs = list_with_mult(group['siblings'], False)
+    if sibs != '':
+        rest += sibs
+    else:
+        rest += 'None'
     rest += '</blockquote></div>'
     rest += '<div align="right">'
     rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>' % (label, str(n), str(t))
@@ -369,9 +373,11 @@ def subfield_display(n, subs):
     for deg in degs:
         substrs[deg] = ''
     for k in subs:
-        if substrs[k[0]] != '':
-            substrs[k[0]] += ', '
-        substrs[k[0]] += group_display_knowl(k[0], k[1])
+        if substrs[k[0][0]] != '':
+            substrs[k[0][0]] += ', '
+        substrs[k[0][0]] += group_display_knowl(k[0][0], k[0][1])
+        if k[1]>1:
+            substrs[k[0][0]] += '<span style="font-size: small"> x %d</span>'%k[1]
     for deg in degs:
         ans += '<p>Degree ' + str(deg) + ': '
         if substrs[deg] == '':
@@ -424,10 +430,12 @@ def resolve_display(resolves):
         else:
             ans += ', '
         k = j[1]
-        name = base_label(k[0], k[1])
         if k[1] == -1:
-            name = '%dT?' % k[0]
-        ans += group_display_knowl(k[0], k[1], name)
+            ans += group_display_knowl(k[0], k[1], '%dT?' % k[0])
+        else:
+            ans += group_display_knowl(k[0], k[1])
+        if j[2]>1:
+            ans += '<span style="font-size: small"> x %d</span>'% j[2]
     if ans != '':
         ans += '</td></tr></table>'
     else:
@@ -501,6 +509,8 @@ def generators(n, t):
     gens = G.SmallGeneratingSet()
     gens = str(gens)
     gens = re.sub("[\[\]]", '', gens)
+    gens = gens.replace(' ', '')
+    gens = gens.replace('),', '), ')
     return gens
 
 
