@@ -286,9 +286,16 @@ class AbvarFq_isoclass(object):
             ans += describe_end_algebra(self.p,factors[0][0])
         else:
             ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
+            ans += '<ul>'
             for factor in factors:
-                
-        
+                ans += '<li>'
+                ans += av_display_knowl(factor[0]) + ': '
+                if factor[1] == 1:
+                    ans += describe_end_algebra(self.p,factor[0])
+                else:
+                    ans += "$M_" + str(factor[1]) + "(" + describe_end_algebra(self.p,factor[0]) + ")$"
+                ans += '</li>'
+            ans += '</ul>'
         return ans
            
     
@@ -299,7 +306,16 @@ class AbvarFq_isoclass(object):
             ans += describe_end_algebra(self.p,factors[0][0])
         else:
             ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
-        
+            ans += '<ul>'
+            for factor in factors:
+                ans += '<li>'
+                ans += av_display_knowl(factor[0]) + ': '
+                if factor[1] == 1:
+                    ans += describe_end_algebra(self.p,factor[0])
+                else:
+                    ans += "$M_" + str(factor[1]) + "(" + describe_end_algebra(self.p,factor[0]) + ")$"
+                ans += '</li>'
+            ans += '</ul>'
         return ans
 
 

@@ -103,60 +103,46 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
-{% if cl.is_simple %}
-This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its {{ KNOWL('g2c.jac_end_lattice',title="endomorphism lattice")}} is:
 
 {% if cl.geometric_extension_degree == 1 %}
-    <h4>Endomorphism algebra over $F={{cl.field()}}$</h4>
-
+    <b>Endomorphism algebra over $F={{cl.field()}}$</b>
+    <p>
     <table class="g2">
-        <tr><td>$\End(A_F)\otimes\Q\simeq$ {{cl.simple_endo_info()|safe}}</td></tr>
+        <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
     </table>
-
-    All endomorphisms are defined over ${{cl.field()}}$.
+    </p>
+    <p>All endomorphisms are defined over ${{cl.field()}}$.</p>
 
 {% else %}
 
-    <h4>Endomorphism algebra over $F={{cl.field()}}$</h4>
-
-                <table class="g2">
-                    <tr><td>$\End(A_F)\otimes\Q \simeq$ {{cl.simple_endo_info()|safe}}</td></tr>
-                </table>
-
-    <!--actually put shit here-->
-
+    <b>Endomorphism algebra over $F={{cl.field()}}$</b>
+        <p>
+        <table class='g2'>
+            <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
+        </table>
+        </p>
+        <p>
         All endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
-
-    <h4>Endomorphism algebra over ${{cl.alg_clo_field()}}$</h4>
-    
-        
-
-        {{cl.display_endo_info(cl.geometric_extension_degree)|safe}}
-
-    <!--actually put shit here-->
-
-    <h4>Remainder of endomorphism lattice by field</h4>
+        </p>
+    <b>Endomorphism algebra over ${{cl.alg_clo_field()}}$</b>
+        <p><table class='g2'>
+            <tr><td>{{cl.display_endo_info(cl.geometric_extension_degree)|safe}}</td></tr>
+        </table></p>
+    {% if cl.relevant_degs() != [] %}
+    <b>Remainder of endomorphism lattice by field</b>
         <ul>
         {% for degree in cl.relevant_degs() %}
-            <li>
+            <li label=degree>
                 Endomorphism algebra over $F = {{cl.ext_field(degree)}}$:
-                 
-                {{cl.describe_decomp(degree)|safe}}
-
-
+                 <table class='g2'>
+                    <tr><td>{{cl.display_endo_info(degree)|safe}}</td></t2>
+                </table>
             </li>
         {% endfor %}
         </ul>
+    {% endif %}
 {% endif %}
 
-{% else %}
-    This isogeny class decomposes as {{cl.decompositioninfo|safe}}, and therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The {{ KNOWL('g2c.jac_end_lattice',title="endomorphism lattice")}} for each factor is
-
-{% for factor in cl.simple_distinct %}
-
-{% endfor %}
-
-{% endif %}
 
 
 <h2>Base change</h2>
