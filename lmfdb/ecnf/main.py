@@ -444,6 +444,8 @@ def download_search(info):
 
 def elliptic_curve_jump(info):
     label = info.get('label', '').replace(" ", "")
+    if label == "random":
+        return random_curve()
     # This label should be a full isogeny class label or a full
     # curve label (including the field_label component)
     try:
