@@ -450,8 +450,7 @@ def elliptic_curve_jump(info):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
     except ValueError:
         info['err'] = ''
-        bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
-        return search_input_error(info, bread)
+        return redirect(url_for("ecnf.index"), 301)
 
     return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
