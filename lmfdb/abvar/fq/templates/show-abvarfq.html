@@ -106,7 +106,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 {% if cl.is_simple %}
 This is a {{ KNOWL('av.simple',title="simple") }} isogeny class. Its {{ KNOWL('g2c.jac_end_lattice',title="endomorphism lattice")}} is:
 
-{% if cl.is_endo_rational() %}
+{% if cl.geometric_extension_degree == 1 %}
 <h4>Endomorphism algebra over ${{cl.field()}}$</h4>
 
 <table class="g2">

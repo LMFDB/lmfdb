@@ -268,8 +268,6 @@ class AbvarFq_isoclass(object):
         else:
             return '\F_{' + '{0}^{1}'.format(self.p,n) + '}'
     
-    def is_endo_rational(self):
-        return self.geometric_extension_degree == 1
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
@@ -281,61 +279,14 @@ class AbvarFq_isoclass(object):
     def relevant_degs(self):
         return Integer(self.geometric_extension_degree).divisors()[1:-1]
     
-    #old
-    @property
-    def needs_endo_table(self):
-        if self.has_real_place() or self.is_commutative():
-            return False
-        else:
-            return True
     
     #old
     def simple_endo_info(self):
         data = db.av_fq_endalg_data.lookup(self.label)
-        ans = describe_end_algebra(data['center'].replace('-',''),data['divalg_dim'],self.p)
-        ans += '</td></tr><tr><td>'
-        ans += describe_brauer(self.p,data['places'],data['brauer_invariants'])
+        ans = describe_end_algebra(self.p,data['center'].replace('-',''),data['divalg_dim'],data['places'],data['brauer_invariants'])
         return ans
-
-    def endo_info(self,factor):
-        pass
-    
-    #old
-    def decomp_length(self):
-        return len(self.decomp)
     
 
-#old
-    def factor_display(self,factor):
-        return av_display_knowl(factor)
-#old   
-    def invariants_display(self):
-        invariants = self.brauer_invs.split(' ')
-        num_primes = len(invariants) // self.decomp_length()
-        return [(self.places[i], invariants[num_primes*i:num_primes*(i+1)]) for i in range(self.decomp_length())]
-
-    def other_endomorphisms_display(self):
-        ans = '<table>\n'
-        ans += '<tr>'
-        ans += '<th>Extensions Label</th>'
-        ans += '<th>Extension Degree</th>'
-        ans += '<th>Particular Endomorphism</th>'
-        ans += '</tr>\n'
-        for extension in self.endo_extensions():
-            label = extension['extension_label']
-            data=list(db.av_fq_endalg_data.search({'extension_label':label}))
-            table_row = [extension['extension_label'], extension['extension_degree']]
-            ans += '<td>%s</td><td>%s</td>'%tuple(table_row)
-            ans += '<td><table>'
-            ans += '<tr><td>Center</td><td>DivAlgDim</td><td>Brauer Inv</td></tr>'
-            for endo in data[0:1]:
-                ans += '<tr>'
-                ans += '<td>%s</td><td>%s</td><td>%s</td>'%(endo['center'],endo['divalg_dim'],endo['brauer_invariants'])
-                ans += '</tr>\n'
-            ans += '</table></td>\n'
-            ans += '</tr>'
-        ans += "</table>"
-        return ans
 
     def basechange_display(self):
         if self.is_primitive:
@@ -363,8 +314,8 @@ def describe_end_algebra(p,center,divalg_dim,places,brauer_invariants):
     elif divalg_dim == 1:
         ans = 'the number field ' + nf_display_knowl(center,field_pretty(center)) + '.'
     else:
-       ans = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
-        ans  = '<table class = "ntdata"><tr><td>$v$</td>'
+        ans = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        ans  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
             ans += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
         ans += '</tr><tr><td>$\operatorname{inv}_v$</td>'
