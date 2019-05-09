@@ -476,7 +476,7 @@ ALPHA_RE = re.compile("[a-z]+")
 
 def url_for_label(label):
     if label == "random":
-        return url_for(".random_form")
+        return None
     slabel = label.split(".")
     if len(slabel) == 6:
         func = "cmf.by_url_embedded_newform_label"
