@@ -258,19 +258,16 @@ class AbvarFq_isoclass(object):
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
         return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
-    
-    def endo_extension_by_deg(self,degree):
-        return [factor for factor in self.endo_extensions() if factor['extension_degree']==degree]
-    
+
     def relevant_degs(self):
         return Integer(self.geometric_extension_degree).divisors()[1:-1]
     
-    def fetch_decomp(self,degree):
-        factors = [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extension_by_deg(degree)]
-        return factors
+    def endo_extension_by_deg(self,degree):
+        return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
 
+    #old
     def describe_decomp(self,degree):
-        factors = self.fetch_decomp(degree)
+        factors = self.endo_extension_by_deg(degree)
         if decomposition_display(factors) == 'simple':
             ans = 'This base change is the simple extension ' 
             ans += av_display_knowl(factors[0][0]) 
@@ -279,16 +276,31 @@ class AbvarFq_isoclass(object):
             ans = 'This base change is isogenous to ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is'
         return ans
     
-    #old
-    def simple_endo_info(self):
-        data = db.av_fq_endalg_data.lookup(self.label)
-        ans = describe_end_algebra(self.p,data['center'].replace('-',''),data['divalg_dim'],data['places'],data['brauer_invariants'])
+    def display_endo_info(self,degree):
+        #this is for degree > 1
+        factors = self.endo_extension_by_deg(degree)
+        if decomposition_display(factors) == 'simple':
+            ans = 'This base change is the simple isogeny class ' 
+            ans += av_display_knowl(factors[0][0]) 
+            ans += ' and its endomorphism algebra is '
+            ans += describe_end_algebra(self.p,factors[0][0])
+        else:
+            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
+            for factor in factors:
+                
+        
         return ans
+           
     
-    def describe_one_end_algebra(self, extension_label):
-        print extension_label
-        factor_data = db.av_fq_endalg_data.lookup(extension_label)
-        return describe_end_algebra(self.p, factor_data['center'], factor_data['divalg_dim'], factor_data['places'], factor_data['brauer_invariants'])
+    def display_base_endo_info(self):
+        factors = zip(self.simple_distinct,self.simple_multiplicities)
+        if decomposition_display(factors) == 'simple':
+            ans = 'This is a simple isogeny class and its endomorphism algebra is '
+            ans += describe_end_algebra(self.p,factors[0][0])
+        else:
+            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is '
+        
+        return ans
 
 
     def basechange_display(self):
@@ -309,7 +321,12 @@ class AbvarFq_isoclass(object):
 def ctx_decomposition():
     return {'av_data': av_data}
 
-def describe_end_algebra(p,center,divalg_dim,places,brauer_invariants):
+def describe_end_algebra(p,extension_label):
+    factor_data = db.av_fq_endalg_data.lookup(extension_label)
+    center = factor_data['center']
+    divalg_dim = factor_data['divalg_dim']
+    places = factor_data['places']
+    brauer_invariants = factor_data['brauer_invariants']
     if center == '1.1.1.1' and divalg_dim == 4:
         ans = '$D$ where $D$ is the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$.'.format(p)
     elif int(center.split('.')[1]) > 0:
@@ -326,6 +343,7 @@ def describe_end_algebra(p,center,divalg_dim,places,brauer_invariants):
             ans += '<td class="center">${0}$</td>'.format(inv)
         ans += '</tr></table>'
     return ans
+
 
 def primeideal_display(p,prime_ideal):
     ans = '($ {0} $'.format(p)
@@ -348,3 +366,5 @@ def decomposition_display(factors):
         if factor[1] > 1:
             factor_str += '<sup> {0} </sup>'.format(factor[1])
     return factor_str
+
+
