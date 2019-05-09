@@ -285,6 +285,10 @@ class AbvarFq_isoclass(object):
         ans = describe_end_algebra(self.p,data['center'].replace('-',''),data['divalg_dim'],data['places'],data['brauer_invariants'])
         return ans
     
+    def describe_one_end_algebra(self, extension_label):
+        print extension_label
+        factor_data = db.av_fq_endalg_data.lookup(extension_label)
+        return describe_end_algebra(self.p, factor_data['center'], factor_data['divalg_dim'], factor_data['places'], factor_data['brauer_invariants'])
 
 
     def basechange_display(self):
@@ -307,13 +311,13 @@ def ctx_decomposition():
 
 def describe_end_algebra(p,center,divalg_dim,places,brauer_invariants):
     if center == '1.1.1.1' and divalg_dim == 4:
-        ans = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$.'.format(p)
+        ans = '$D$ where $D$ is the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$.'.format(p)
     elif int(center.split('.')[1]) > 0:
-        ans = 'the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
+        ans = '$D$ where $D$ is the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
     elif divalg_dim == 1:
-        ans = 'the number field ' + nf_display_knowl(center,field_pretty(center)) + '.'
+        ans = nf_display_knowl(center,field_pretty(center))
     else:
-        ans = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        ans = '$B$, where $B$ is the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
         ans  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
             ans += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
