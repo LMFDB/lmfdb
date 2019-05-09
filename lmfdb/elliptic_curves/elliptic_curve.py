@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, web_latex_split_on_pm,
+    web_latex, to_dict, web_latex_split_on_pm, flash_error,
     parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
     search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -86,6 +86,10 @@ def rational_elliptic_curves(err_args=None):
     }
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    err_msg = err_args.pop("err_msg")
+    if err_msg:
+        label = err_args.pop("label")
+        flash_error(err_msg,label)
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
@@ -136,16 +140,17 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
+    err_args['label'] = label
     if wellformed_label:
-        err_args['err_msg'] = "No curve or isogeny class in the database has label %s" % label
+        err_args['err_msg'] = "No curve or isogeny class in the database has label %s"
     # elif cremona_label:
-    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
+    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'"
     elif missing_curve:
-        err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
+        err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label"
     else:
-        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
+        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
