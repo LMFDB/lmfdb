@@ -475,9 +475,7 @@ POSINT_RE = re.compile("[1-9][0-9]*")
 ALPHA_RE = re.compile("[a-z]+")
 
 def url_for_label(label):
-    if label == "random":
-        print "url_for_label returned", url_for("cmf.random_form")
-        return url_for("cmf.random_form")
+    print "url_for_label =", label
     slabel = label.split(".")
     if len(slabel) == 6:
         func = "cmf.by_url_embedded_newform_label"
