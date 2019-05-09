@@ -65,7 +65,7 @@ class AbvarFq_isoclass(object):
             #raise ValueError("Label not found in database")
 
     def make_class(self):
-        self.decompositioninfo = self.decomposition_display()
+        self.decompositioninfo = decomposition_display(zip(self.simple_distinct,self.simple_multiplicities)
         self.basechangeinfo = self.basechange_display()
         self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial,galois=False,vari = 'x')
 
@@ -241,19 +241,6 @@ class AbvarFq_isoclass(object):
             else:
                 ans += '<a href="{1}">{0}</a>'.format(factor[0],url) + '<sup> {0} </sup> '.format(factor[1])
         return ans
-
-    def decomposition_display(self):
-        factors = zip(self.simple_distinct,self.simple_multiplicities)
-        if len(factors) == 1 and factors[0][1] == 1:
-            return 'simple'
-        factor_str = ''
-        for factor in factors:
-            if factor_str != '':
-                factor_str += ' $\\times$ '
-            factor_str += av_display_knowl(factor[0])
-            if factor[1] > 1:
-                factor_str += '<sup> {0} </sup>'.format(factor[1])
-        return factor_str
     
     def alg_clo_field(self):
         if self.r == 1:
@@ -266,19 +253,21 @@ class AbvarFq_isoclass(object):
         if n == 1:
             return '\F_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\F_{' + '{0}^{1}'.format(self.p,n) + '}'
-    
+            return '\F_{' + '{0}^{1}'.format(self.p,n) + '}'    
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
         return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
     
-    def endo_extension_by_deg(self,d):
-        return [factor for factor in self.endo_extensions() if factor['extension_degree']==d]
+    def endo_extension_by_deg(self,degree):
+        return [factor for factor in self.endo_extensions() if factor['extension_degree']==degree]
     
     def relevant_degs(self):
         return Integer(self.geometric_extension_degree).divisors()[1:-1]
     
+    def fetch_decomp(self,degree):
+        factors = [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extension_by_deg(degree)]
+        return factors
     
     #old
     def simple_endo_info(self):
@@ -332,3 +321,22 @@ def primeideal_display(p,prime_ideal):
     else:
         ans += ',' + web_latex(coeff_to_poly(prime_ideal,'pi')) + ')'
         return ans
+
+def describe_decomp(factors,multiplicities):
+    if decomposition_display(factors) == 'simple':
+        ans = 'This base change is simple and its endomorphism algebra is'
+    else:
+        ans = 'This base change is isogenous to' + decomposition_display(factors) + 'therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is'
+    return ans
+
+def decomposition_display(factors):
+    if len(factors) == 1 and factors[0][1] == 1:
+        return 'simple'
+    factor_str = ''
+    for factor in factors:
+        if factor_str != '':
+            factor_str += ' $\\times$ '
+        factor_str += av_display_knowl(factor[0])
+        if factor[1] > 1:
+            factor_str += '<sup> {0} </sup>'.format(factor[1])
+    return factor_str
