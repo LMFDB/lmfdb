@@ -270,7 +270,7 @@ class AbvarFq_isoclass(object):
         if degree > 1:
             factors = self.endo_extension_by_deg(degree)
             if factors == []:
-                return 'The data at degree ' + str(degree) + ' is missing.'  
+                return 'The data at degree ' + str(degree) + ' is missing.', do_describe
             ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
         else:
             factors = zip(self.simple_distinct,self.simple_multiplicities)
@@ -282,7 +282,7 @@ class AbvarFq_isoclass(object):
         if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return no_endo_data()
+                return no_endo_data(), do_describe
             if degree > 1:
                 ans += 'the simple isogeny class ' 
                 ans += av_display_knowl(factors[0][0]) 
@@ -291,7 +291,7 @@ class AbvarFq_isoclass(object):
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return no_endo_data
+                return no_endo_data(), do_describe
             ans += dec_display + ' and its endomorphism algebra is '
             ans += matrix_display(factors[0],end_alg)
         else:
@@ -362,7 +362,7 @@ def describe_end_algebra(p,extension_label):
         if divalg_dim == 4:
             ans[1] = "the quaternion algebra"
         else:
-            ans[1] = 'the division algebra of dimension ' + divalg_dim
+            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
         ans[1] += ' over {0} ramified at both real infinite places.'.format(nf_display_knowl(center,field_pretty(center)))
     elif divalg_dim == 1:
         ans[0] = 'K'
@@ -372,7 +372,7 @@ def describe_end_algebra(p,extension_label):
         if divalg_dim == 4:
             ans[1] = "the quaternion algebra"
         else:
-            ans[1] = 'the division algebra of dimension ' + divalg_dim
+            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
         ans[1] += ' over ' + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean places:'.format(p)
         ans[1]  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
