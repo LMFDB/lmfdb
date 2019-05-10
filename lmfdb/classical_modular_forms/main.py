@@ -420,7 +420,7 @@ def render_full_gamma1_space_webpage(label):
 def by_url_level(level):
     if not POSINT_RE.match(level):
         try:
-            return redirect(url_for_label(label = level), code=301)
+            return redirect(url_for_label(level), code=301)
         except ValueError:
             flash_error("%s is not a valid newform or space label", level)
             return redirect(url_for(".index"))
