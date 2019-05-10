@@ -26,6 +26,8 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
+POSINT_RE = re.compile("[1-9][0-9]*")
+ALPHA_RE = re.compile("[a-z]+")
 
 @cached_function
 def learnmore_list():
@@ -416,8 +418,11 @@ def render_full_gamma1_space_webpage(label):
 
 @cmf.route("/<level>/")
 def by_url_level(level):
-    if "." in level:
-        return redirect(url_for_label(label = level), code=301)
+    if not POSINT_RE.match(level):
+        try:
+            return redirect(url_for_label(label = level), code=301)
+        except ValueError:
+            flash_error("%s is not a valid newform or space label", level)
     info = to_dict(request.args)
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
@@ -470,9 +475,6 @@ def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, 
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
-
-POSINT_RE = re.compile("[1-9][0-9]*")
-ALPHA_RE = re.compile("[a-z]+")
 
 def url_for_label(label):
     if label == "random":
