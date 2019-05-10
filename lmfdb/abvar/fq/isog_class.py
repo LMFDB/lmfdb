@@ -296,7 +296,7 @@ class AbvarFq_isoclass(object):
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
                 return no_endo_data
-            ans = 'The endomorphism algebra of this simple isogony class is ' + end_alg[1]
+            ans = 'The endomorphism algebra of this simple isogeny class is ' + end_alg[1]
             #ans += describe_end_algebra(self.p,factors[0][0])
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
