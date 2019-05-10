@@ -325,7 +325,7 @@ def by_ec_label(label):
 
         data = db.ec_curves.lucky({label_type: label}, projection=1)
         if data is None:
-            return elliptic_curve_jump_error(label, {})
+            return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         iso = data['lmfdb_iso'].split(".")[1]
         if number:
@@ -358,7 +358,7 @@ def render_isogeny_class(iso_class):
     if class_data == "Invalid label":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
-        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
+        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True, missing_curve=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
@@ -414,11 +414,10 @@ def render_curve_webpage_by_label(label):
     cpt0 = cputime()
     t0 = time.time()
     data = WebEC.by_label(label)
-    print "label", label, "WebEC returned", data
     if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
     if data == "Curve not found":
-        return elliptic_curve_jump_error(label, {}, missing_curve=True, wellformed_label=True)
+        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
     try:
         lmfdb_label = data.lmfdb_label
     except AttributeError:
