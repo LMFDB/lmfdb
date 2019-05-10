@@ -118,7 +118,7 @@ class CmfTest(LmfdbTest):
     def test_failure(self):
         r"""
         Check that bad inputs are handled correctly
-        """"
+        """
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
         assert "for non trivial character." in page.data
