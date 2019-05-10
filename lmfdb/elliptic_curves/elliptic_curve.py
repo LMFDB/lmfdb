@@ -88,6 +88,7 @@ def rational_elliptic_curves(err_args=None):
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
     if err_args.get("err_msg"):
         flash_error(err_args.pop("err_msg"),err_args.pop("label"))
+        return redirect(url_for(".rational_elliptic_curves"))
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
