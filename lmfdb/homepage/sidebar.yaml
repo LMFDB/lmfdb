@@ -149,10 +149,10 @@
                status: future
                colspan: onecolumn
            colspan: onecolumn
-         - title: Shimura
+         - title: Shimura curves
            status: future
            colspan: onecolumn
-         - title: Belyi
+         - title: Belyi maps
            status: beta
            url_for: "belyi.index"
            colspan: onecolumn
