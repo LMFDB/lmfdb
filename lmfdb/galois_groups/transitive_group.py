@@ -122,6 +122,37 @@ class WebGaloisGroup:
     def subfields(self):
         return(list_with_mult(self._data['subfields']))
 
+    def gapgroupnt(self):
+        if int(self.n()) == 1:
+            G = gap.SmallGroup(1, 1)
+        else:
+            G = gap.TransitiveGroup(self.n(), self.t())
+        return G
+
+    def conjclasses(self):
+        if 'conjclasses' in self._data:
+            return self._data['conjclasses']
+        g = self.gapgroupnt()
+        n = self.n()
+        gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
+        cc = g.ConjugacyClasses()
+        ccn = [x.Size() for x in cc]
+        ccc = [x.Representative() for x in cc]
+        if int(n) == 1:
+            cc2 = [[1]]
+            cc = ['()']
+        else:
+            cc = ccc
+            cc2 = [x.cycletype(n) for x in cc]
+        cc2 = [str(x) for x in cc2]
+        cc2 = map(lambda x: re.sub("\[", '', x), cc2)
+        cc2 = map(lambda x: re.sub("\]", '', x), cc2)
+        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+        self._data['conjclasses'] = ans
+        return(ans)
+
+
+
 ############  Misc Functions
 
 def base_label(n, t):
@@ -218,8 +249,7 @@ def character_table_display_knowl(n, t, name=None):
         name = 'Character table for '
         name += group_display_short(n, t)
     group = db.gps_transitive.lookup(base_label(n, t))
-    G = gap.TransitiveGroup(n, t)
-    cclasses = conjclasses(G, n)
+    cclasses = group.conjclasses()
     if ZZ(group['order']) < ZZ(10000000) and len(cclasses) < 21:
         return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
@@ -452,30 +482,10 @@ def group_display_inertia(code):
     ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 
-def conjclasses(g, n):
-    gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-    cc = g.ConjugacyClasses()
-    ccn = [x.Size() for x in cc]
-    ccc = [x.Representative() for x in cc]
-    if int(n) == 1:
-        cc2 = [[1]]
-        cc = ['()']
-    else:
-        cc = ccc
-        cc2 = [x.cycletype(n) for x in cc]
-    cc2 = [str(x) for x in cc2]
-    cc2 = map(lambda x: re.sub("\[", '', x), cc2)
-    cc2 = map(lambda x: re.sub("\]", '', x), cc2)
-    ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-    return(ans)
-
-
 def cclasses(n, t):
-    if int(n) == 1:
-        G = gap.SmallGroup(1, 1)
-    else:
-        G = gap.TransitiveGroup(n, t)
-    cc = conjclasses(G, n)
+    group = db.gps_transitive.lookup(base_label(n,t))
+    G = group.gapgroupnt()
+    cc = G.conjclasses()
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
@@ -493,10 +503,8 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    if int(n) == 1:
-        G = gap.SmallGroup(n, t)
-    else:
-        G = gap.TransitiveGroup(n, t)
+    group = WebGaloisGroup.from_nt(n,t)
+    G = group.gapgroupnt()
     ctable = str(G.CharacterTable().Display())
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
