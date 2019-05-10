@@ -414,7 +414,7 @@ def render_curve_webpage_by_label(label):
     cpt0 = cputime()
     t0 = time.time()
     data = WebEC.by_label(label)
-    print data
+    print "label", label, "WebEC returned", data
     if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
     if data == "Curve not found":
