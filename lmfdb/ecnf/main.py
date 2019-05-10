@@ -260,7 +260,7 @@ def index():
                            data=data,
                            bread=bread, learnmore=learnmore_list())
 
-@ecnf_page.route("/random")
+@ecnf_page.route("/random/")
 def random_curve():
     E = db.ec_nfcurves.random(projection=['field_label', 'conductor_label', 'iso_label', 'number'])
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)

@@ -111,7 +111,7 @@ def index_Q():
     bread = (('Genus 2 Curves', url_for(".index")), ('$\Q$', ' '))
     return render_template("g2c_browse.html", info=info, credit=credit_string, title=title, learnmore=learnmore_list(), bread=bread)
 
-@g2c_page.route("/Q/random")
+@g2c_page.route("/Q/random/")
 def random_curve():
     label = db.g2c_curves.random()
     return redirect(url_for_curve_label(label), 307)
