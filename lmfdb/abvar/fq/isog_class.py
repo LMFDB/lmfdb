@@ -323,7 +323,6 @@ class AbvarFq_isoclass(object):
             ans += '</table>\n'
             return ans
     def twist_display(self):
-        return 0
         ans = ''
         for twist in self.twists:
             ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
