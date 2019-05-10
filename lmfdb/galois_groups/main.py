@@ -168,7 +168,6 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        G = wgg.gapgroupnt()
         cclasses = wgg.conjclasses()
         if ZZ(order) < ZZ(10000000) and len(cclasses) < 21:
             ctable = chartable(n, t)
