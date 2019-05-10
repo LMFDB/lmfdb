@@ -27,8 +27,14 @@ class EllCurveTest(LmfdbTest):
         assert '/EllipticCurve/Q/12350/s/' in L.data
 
     def test_Cremona_label_mal(self):
-        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class')
-        assert '12qx does not define a recognised elliptic curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/?label=Cremona%3A12qx&jump=label+or+isogeny+class', follow_redirects=True)
+        assert '12qx' in L.data and 'does not define a recognised elliptic curve' in L.data
+
+    def test_missing_curve(self):
+        L = self.tc.get('/EllipticCurve/Q/13.a1', follow_redirects=True)
+        assert '13.a1' in L.data and 'No curve' in L.data
+        L = self.tc.get('/EllipticCurve/Q/13a1', follow_redirects=True)
+        assert '13a1' in L.data and 'No curve' in L.data
 
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&jinv=&rank=&torsion=&torsion_structure=&sha=&optimal=&surj_primes=&surj_quantifier=include&nonsurj_primes=&count=100')
