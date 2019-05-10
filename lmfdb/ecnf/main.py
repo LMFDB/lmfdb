@@ -269,14 +269,14 @@ def random_curve():
 def show_ecnf1(nf):
     if "-" in nf:
         try:
-            nf, cond_label, iso_label, number = split_full_label(label.strip())
+            nf, cond_label, iso_label, number = split_full_label(nf.strip())
         except ValueError:
             return redirect(url_for("ecnf.index"))
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        flash_error("%s is not a valid number field label")
+        flash_error("%s is not a valid number field label",nf)
         return redirect(url_for(".index"))
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
