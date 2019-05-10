@@ -41,7 +41,7 @@ def validate_label(label):
         raise ValueError("it must be of the form g.q.iso, where g is a prime power")
     coeffs = iso.split("_")
     if len(coeffs) != g:
-        raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components"%(g))
+        raise ValueError("the final part must be of the form c1_c2_..._cg, with g={0} components".format(g))
     if not all(c.isalpha() and c==c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
@@ -270,7 +270,7 @@ class AbvarFq_isoclass(object):
         factors = self.endo_extension_by_deg(degree)
         if factors == []:
             return 'The data at degree ' + str(degree) + ' is missing.'  
-        ans = 'The base change of $A$ to $%s$ is '%(self.ext_field(degree))
+        ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
         dec_display = decomposition_display(factors)
         if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
@@ -307,6 +307,21 @@ class AbvarFq_isoclass(object):
             ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
 
+    def all_endo_info_display(self):
+        ans = g2_table(self.field(),self.display_base_endo_info(),True)
+        if self.geometric_extension_degree != 1:
+            ans += g2_table(self.alg_clo_field(),self.display_endo_info(self.geometric_extension_degree),True)
+        ans += '<p>All geometric endomorphisms are defined over ${0}$.</p>\n'.format(self.ext_field(self.geometric_extension_degree))
+        if self.relevant_degs() != []:
+            ans += '<b>Remainder of endomorphism lattice by field</b>\n'
+            ans += '<ul>\n'
+            for deg in self.relevant_degs():
+                ans += '<li>'
+                ans += g2_table(self.ext_field(deg),self.display_endo_info(deg),False)
+                ans += '</li>\n'
+            ans += '</ul>\n'
+        return ans
+
     def basechange_display(self):
         if self.is_primitive:
             return 'primitive'
@@ -315,7 +330,7 @@ class AbvarFq_isoclass(object):
             ans = '<table class = "ntdata">\n'
             ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
             for model in models:
-                ans += '  <tr><td class="center">$%s$</td><td>'%(self.field(model.split('.')[1]))
+                ans += '  <tr><td class="center">${0}$</td><td>'.format(self.field(model.split('.')[1]))
                 ans += av_display_knowl(model) + ' '
                 ans += '</td></tr>\n'
             ans += '</table>\n'
@@ -348,7 +363,7 @@ def describe_end_algebra(p,extension_label):
             ans[1] = "the quaternion algebra"
         else:
             ans[1] = 'the division algebra of dimension ' + divalg_dim
-        ans[1] += ' over %s ramified at both real infinite places.'%(nf_display_knowl(center,field_pretty(center)))
+        ans[1] += ' over {0} ramified at both real infinite places.'.format(nf_display_knowl(center,field_pretty(center)))
     elif divalg_dim == 1:
         ans[0] = 'K'
         ans[1] = nf_display_knowl(center,field_pretty(center)) + '.'
@@ -420,3 +435,12 @@ def check_knowl_display(label):
 
 def no_endo_data():
     return "The endomorphism data for this class is not currently in the database."
+
+def g2_table(field,entry,isBold):
+    if isBold:
+        ans = '<b>Endomorphism algebra over ${0}$</b>\n'.format(field)
+    else:
+        ans = 'Endomorphism algebra over ${0}$\n'.format(field)
+    ans += '<table class="g2" style="margin-top: 3px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
+    return ans
+    
