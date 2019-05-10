@@ -483,9 +483,8 @@ def group_display_inertia(code):
     return ans
 
 def cclasses(n, t):
-    group = db.gps_transitive.lookup(base_label(n,t))
-    G = group.gapgroupnt()
-    cc = G.conjclasses()
+    group = WebGaloisGroup.from_nt(n,t)
+    cc = group.conjclasses()
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
