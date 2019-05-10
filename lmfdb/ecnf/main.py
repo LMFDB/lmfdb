@@ -13,7 +13,7 @@ from lmfdb import db
 from lmfdb.backend.encoding import Json
 from lmfdb.app import app
 from lmfdb.utils import (
-    to_dict
+    to_dict,
     parse_ints, parse_noop, nf_string_to_label, parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     search_wrap)
 from lmfdb.number_fields.number_field import field_pretty
