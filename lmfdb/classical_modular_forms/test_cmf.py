@@ -115,9 +115,10 @@ class CmfTest(LmfdbTest):
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
             assert l in page.data
 
-
-
     def test_failure(self):
+        r"""
+        Check that bad inputs are handled correctly
+        """"
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
         assert "for non trivial character." in page.data
@@ -130,10 +131,7 @@ class CmfTest(LmfdbTest):
         assert "No matches" in page.data
         assert "Only for weight 1" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
-        assert "is not a valid input for" in page.data
-
-
-        
+        assert 'maria' in page.data and "is not a valid newform" in page.data   
 
     def test_delta(self):
         r"""
