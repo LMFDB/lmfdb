@@ -156,7 +156,7 @@ table td.params {
     <td class="center">${{ abvar.field() }}$</td>
     <td class="center">${{ abvar.formatted_polynomial }}$</td>
     <td class="center">$ {{ abvar.p_rank }}$</td>
-    <td class="center">{{abvar.decomposition_display_search(abvar.decomp)|safe}}</td>
+    <td class="center">{{abvar.decomposition_display_search(abvar.old_decomp())|safe}}</td>
   </tr>
   {% endfor %}
 </table>
