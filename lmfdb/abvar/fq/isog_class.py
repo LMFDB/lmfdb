@@ -99,7 +99,7 @@ class AbvarFq_isoclass(object):
         if r == 1:
             return '\F_{' + '{0}'.format(p) + '}'
         else:
-            return '\F_{' + '{0}^{1}'.format(p,r) + '}'
+            return '\F_{' + str(p) + '^{' + str(r) + '}}' 
 
     def nf(self):
         if self.is_simple:
@@ -246,14 +246,14 @@ class AbvarFq_isoclass(object):
         if self.r == 1:
             return '\\overline{\F}_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\\overline{\F}_{' + '{0}^{1}'.format(self.p,self.r) + '}'
+            return '\\overline{\F}_{' + str(self.p) + '^{' + str(self.r) + '}}'  
             
     def ext_field(self,s):
         n = s*self.r
         if n == 1:
             return '\F_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\F_{' + '{0}^{1}'.format(self.p,n) + '}'    
+            return '\F_{' + str(self.p) + '^{' + str(n) + '}}'   
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
@@ -272,14 +272,18 @@ class AbvarFq_isoclass(object):
             return 'The data at degree ' + str(degree) + ' is missing.'        
         if decomposition_display(factors) == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
+            if end_alg == None:
+                return "The endomorphism data is not currently in the database."
             ans = 'This base change is the simple isogeny class ' 
             ans += av_display_knowl(factors[0][0]) 
             ans += ' and its endomorphism algebra is ' + end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
+            if end_alg == None:
+                return "The endomorphism data is not currently in the database."
             ans = 'This base change factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is:' + non_simple_loop(self.p,factors)
+            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
            
     #to fix
@@ -287,13 +291,17 @@ class AbvarFq_isoclass(object):
         factors = zip(self.simple_distinct,self.simple_multiplicities)
         if decomposition_display(factors) == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
+            if end_alg == None:
+                return "The endomorphism data is not currently in the database."
             ans = 'This is a simple isogeny class and its endomorphism algebra is ' + end_alg[1]
             #ans += describe_end_algebra(self.p,factors[0][0])
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
+            if end_alg == None:
+                return "The endomorphism data is not currently in the database."
             ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is:' + non_simple_loop(self.p,factors)
+            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
 
     def basechange_display(self):
@@ -309,6 +317,11 @@ class AbvarFq_isoclass(object):
                 ans += '</td></tr>\n'
             ans += '</table>\n'
             return ans
+    def twist_display(self):
+        ans = ''
+        for twist in self.twists:
+            ans += '<tr><td>' + av_display_knowl(twist[0]) + '</td><td>' + av_display_knowl(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+        return ans
 
 @app.context_processor
 def ctx_decomposition():
@@ -316,6 +329,8 @@ def ctx_decomposition():
 
 def describe_end_algebra(p,extension_label):
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
+    if factor_data == None:
+        return None
     center = factor_data['center']
     divalg_dim = factor_data['divalg_dim']
     places = factor_data['places']
@@ -375,6 +390,8 @@ def non_simple_loop(p,factors):
            ans += '<sup> {0} </sup>'.format(factor[1]) 
         ans += ' : '
         end_alg = describe_end_algebra(p,factor[0])
+        if end_alg == None:
+            return "The endomorphism data is not currently in the database."
         if factor[1] == 1:
             ans += end_alg[1]
         else:

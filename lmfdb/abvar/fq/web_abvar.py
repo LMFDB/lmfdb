@@ -15,12 +15,17 @@ def av_display_knowl(label):
     return '<a title = "[av.data]" knowl="av.fq.abvar.data" kwargs="label=' + str(label) + '">' + label + '</a>'
 
 def av_data(label):
-    abvar = db.av_fqisog.lookup(label)
-    wnf = WebNumberField(abvar['nf'])
+    abvar = db.av_fq_isog.lookup(label)
+    if abvar == None:
+        return "This isogeny class is not in the database."
     inf = '<div>Dimension: ' + str(abvar['g']) + '<br />'
-    if not wnf.is_null():
-        inf += 'Number field: ' + nf_display_knowl(abvar['nf'], name = abvar['nf']) + '<br />'
-        inf += 'Galois group: ' + group_display_knowl(abvar['galois_n'],abvar['galois_t']) + '<br />'
+    if abvar['is_simple']:
+        nf = abvar['number_fields'][0]
+        wnf = WebNumberField(nf)
+        if not wnf.is_null():
+            inf += 'Number field: ' + nf_display_knowl(nf, name = nf) + '<br />'
+            gal = abvar['galois_groups'][0].split('T')
+            inf += 'Galois group: ' + group_display_knowl(gal[0],gal[1]) + '<br />'
     inf += '$p$-rank: ' + str(abvar['p_rank']) + '</div>'
     inf += '<div align="right">'
     g, q, iso = split_label(label)
@@ -28,5 +33,4 @@ def av_data(label):
     inf += '<a href="%s">%s home page</a>' % (url, label)
     inf += '</div>'
     return inf
-
 

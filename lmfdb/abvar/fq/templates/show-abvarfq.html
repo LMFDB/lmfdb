@@ -9,6 +9,7 @@
     <tr><td>{{ KNOWL('ag.base_field',title = "Base field") }}:</td><td>&nbsp;&nbsp;${{cl.field()}}$</td></tr>
     <tr><td>{{ KNOWL('ag.dimension',title = "Dimension") }}:</td><td>&nbsp;&nbsp;${{cl.g}}$</td></tr>
     <tr><td>{{ KNOWL('av.fq.weil_polynomial',title='Weil polynomial') }}:</td><td>&nbsp;&nbsp;${{cl.formatted_polynomial}}$</td></tr>
+    <!--<tr><td>Size:</td><td>&nbsp;&nbsp;${{cl.size}}$</td></tr>-->
     <tr><td>{{KNOWL('av.fq.frobenius_angles',title='Frobenius angles')}}:</td><td>&nbsp;&nbsp;{{cl.frob_angles()}}</td></tr>
     <tr><td>{{ KNOWL('av.fq.angle_rank',title="Angle rank") }}:</td><td>&nbsp;&nbsp;${{cl.angle_rank}}$ ({{KNOWL('av.fq.frobenius_angles_correctness',title='numerical')}})</td></tr>
     {% if cl.is_simple %}
@@ -154,6 +155,16 @@ This is a {{ KNOWL('ag.primitive',title="primitive") }} isogeny class.
 This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is a {{ KNOWL('ag.base_change',title="base change") }} from the following isogeny classes over subfields of ${{cl.field()}}$.
 {{cl.basechangeinfo|safe}}
 {% endif %}
+</p>
+
+<h2>Twists</h2>
+
+<p>
+</table>
+    <table class="ntdata">
+        <tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>
+        {{ cl.twist_display()|safe }}
+    </table>
 </p>
 
 
