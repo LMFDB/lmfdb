@@ -10,7 +10,7 @@ logger = make_logger("abvarfq")
 class AbvarFqStats(StatsDisplay):
     @lazy_attribute
     def _counts(self):
-        return db.av_fqisog.stats.column_counts(['g', 'q'])
+        return db.av_fq_isog.stats.column_counts(['g', 'q'])
 
     @lazy_attribute
     def qs(self):
