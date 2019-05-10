@@ -218,7 +218,9 @@ def character_table_display_knowl(n, t, name=None):
         name = 'Character table for '
         name += group_display_short(n, t)
     group = db.gps_transitive.lookup(base_label(n, t))
-    if ZZ(group['order']) < ZZ(10000000):
+    G = gap.TransitiveGroup(n, t)
+    cclasses = conjclasses(G, n)
+    if ZZ(group['order']) < ZZ(10000000) and len(cclasses) < 21:
         return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
 

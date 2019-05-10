@@ -172,10 +172,11 @@ def render_group_webpage(args):
             G = gap.SmallGroup(n, t)
         else:
             G = gap.TransitiveGroup(n, t)
-        if ZZ(order) < ZZ('10000000'):
+        cclasses = conjclasses(G, n)
+        if ZZ(order) < ZZ(10000000) and len(cclasses) < 21:
             ctable = chartable(n, t)
         else:
-            ctable = 'Group too large'
+            ctable = 'Data not available'
         data['gens'] = generators(n, t)
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
