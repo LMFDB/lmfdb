@@ -285,8 +285,7 @@ class AbvarFq_isoclass(object):
                 return no_endo_data
             ans += dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            #ans += decomposition_display(factors) + ' therefore its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
-            ans += dec_display + '. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans += dec_display + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
            
     #to fix
@@ -305,8 +304,7 @@ class AbvarFq_isoclass(object):
                 return no_endo_data
             ans = 'The isogeny class factors as ' + dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            #ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
-            ans = 'The isogeny class factors as %s. The endomorphism algebra for each factor is: %s'%(dec_display, non_simple_loop(self.p,factors))
+            ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
 
     def basechange_display(self):
