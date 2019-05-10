@@ -75,7 +75,7 @@ def split_full_label(lab):
     label_suffix = data[2]
     return (field_label, level_label, label_suffix)
 
-@hmf_page.rout("/lab")
+@hmf_page.route("/lab")
 def hilbert_modular_form_by_label(lab):
     if isinstance(lab, basestring):
         res = db.hmf_forms.lookup(lab, projection=0)
