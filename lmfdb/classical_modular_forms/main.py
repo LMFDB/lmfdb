@@ -26,8 +26,8 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
-POSINT_RE = re.compile("[1-9][0-9]*")
-ALPHA_RE = re.compile("[a-z]+")
+POSINT_RE = re.compile("^[1-9][0-9]*$")
+ALPHA_RE = re.compile("^[a-z]+$")
 
 @cached_function
 def learnmore_list():
