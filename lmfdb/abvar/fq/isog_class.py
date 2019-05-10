@@ -356,7 +356,7 @@ def describe_end_algebra(p,extension_label):
     ans = ['','']
     if center == '1.1.1.1' and divalg_dim == 4:
         ans[0] = 'B'
-        ans[1] = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
+        ans[1] = 'the quaternion algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
     elif int(center.split('.')[1]) > 0:
         ans[0] = 'B'
         if divalg_dim == 4:
