@@ -12,6 +12,31 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
+# Labels of BMFs which have no elliptic curve but are not twists of
+# base change.  Those which have no curve but are twists of base
+# change are detectable automatically in the code below, but these are
+# not.  Up to Galois conjugacy and quadratic twist there are only four
+# of these known; each is associated to the Jacobian of a genus 2
+# curve over the base field; these curves were found by Ciaran
+# Schembri.  At some point we will want to list these abelian surfaces
+# as friends when there is no curve.
+
+bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
+                      '2.0.4.1-34225.7-a',
+                      '2.0.4.1-34225.3-b',
+                      '2.0.4.1-34225.3-a',
+                      '2.0.3.1-67081.3-a',
+                      '2.0.3.1-67081.3-b',
+                      '2.0.3.1-67081.7-b',
+                      '2.0.3.1-67081.7-a',
+                      '2.0.3.1-61009.1-a',
+                      '2.0.3.1-61009.1-b',
+                      '2.0.3.1-61009.9-a',
+                      '2.0.3.1-61009.9-b',
+                      '2.0.3.1-123201.1-b',
+                      '2.0.3.1-123201.1-c',
+                      '2.0.3.1-123201.3-b',
+                      '2.0.3.1-123201.3-c']
 
 class WebBMF(object):
     """
@@ -161,7 +186,7 @@ class WebBMF(object):
             self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         else:
             self.bc_forms = []
-            if self.bct:
+            if self.bct or self.label in bmfs_with_no_curve:
                 self.ec_status = 'none'
             else:
                 self.ec_status = 'missing'
