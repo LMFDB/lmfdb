@@ -142,7 +142,7 @@ def download_search(info):
             s += 'x = polygen(ZZ) \n'
         s += 'data = [ '
     s += '\\\n'
-    for f in db.av_fqisog.search(ast.literal_eval(info["query"]), 'poly'):
+    for f in db.av_fq_isog.search(ast.literal_eval(info["query"]), 'poly'):
         poly = R(f)
         s += str(poly) + ',\\\n'
     s = s[:-3]
@@ -157,7 +157,7 @@ def download_search(info):
     return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
 @search_wrap(template="abvarfq-search-results.html",
-             table=db.av_fqisog,
+             table=db.av_fq_isog,
              title='Abelian Variety Search Results',
              err_title='Abelian Variety Search Input Error',
              shortcuts={'jump': lambda info:by_label(info.get('label','')),
@@ -269,7 +269,7 @@ def by_label(label):
 
 @abvarfq_page.route("/random")
 def random_class():
-    label = db.av_fqisog.random()
+    label = db.av_fq_isog.random()
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
 
