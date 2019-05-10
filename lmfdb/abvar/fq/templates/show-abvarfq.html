@@ -105,43 +105,33 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
 
-{% if cl.geometric_extension_degree == 1 %}
-    <b>Endomorphism algebra over ${{cl.field()}}$</b>
-    <p>
-    <table class="g2">
-        <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
-    </table>
-    </p>
-    <p>All geometric endomorphisms are defined over ${{cl.field()}}$.</p>
-
-{% else %}
-
     <b>Endomorphism algebra over ${{cl.field()}}$</b>
         <p>
         <table class='g2'>
             <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
         </table>
         </p>
-        <p>
-        All geometric endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
-        </p>
+{% if cl.geometric_extension_degree > 1 %}
     <b>Endomorphism algebra over ${{cl.alg_clo_field()}}$</b>
         <p><table class='g2'>
             <tr><td>{{cl.display_endo_info(cl.geometric_extension_degree)|safe}}</td></tr>
         </table></p>
-    {% if cl.relevant_degs() != [] %}
-    <b>Remainder of endomorphism lattice by field</b>
-        <ul>
-        {% for degree in cl.relevant_degs() %}
-            <li label=degree>
-                Endomorphism algebra over ${{cl.ext_field(degree)}}$:
-                 <table class='g2' style='margin-top: 3px;margin-bottom: 5px;'>
-                    <tr><td>{{cl.display_endo_info(degree)|safe}}</td></t2>
-                </table>
-            </li>
-        {% endfor %}
-        </ul>
-    {% endif %}
+{% endif %}
+        <p>
+        All geometric endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
+        </p>
+{% if cl.relevant_degs() != [] %}
+<b>Remainder of endomorphism lattice by field</b>
+    <ul>
+    {% for degree in cl.relevant_degs() %}
+        <li label=degree>
+            Endomorphism algebra over ${{cl.ext_field(degree)}}$:
+             <table class='g2' style='margin-top: 3px;margin-bottom: 5px;'>
+                <tr><td>{{cl.display_endo_info(degree)|safe}}</td></t2>
+            </table>
+        </li>
+    {% endfor %}
+    </ul>
 {% endif %}
 
 

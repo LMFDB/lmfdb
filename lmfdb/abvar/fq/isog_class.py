@@ -269,39 +269,44 @@ class AbvarFq_isoclass(object):
         #this is for degree > 1
         factors = self.endo_extension_by_deg(degree)
         if factors == []:
-            return 'The data at degree ' + str(degree) + ' is missing.'        
-        if decomposition_display(factors) == 'simple':
+            return 'The data at degree ' + str(degree) + ' is missing.'  
+        ans = 'The base change of $A$ to $%s$ is '%(self.ext_field(degree))
+        dec_display = decomposition_display(factors)
+        if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This base change is the simple isogeny class ' 
+                return no_endo_data()
+            ans += 'the simple isogeny class ' 
             ans += av_display_knowl(factors[0][0]) 
             ans += ' and its endomorphism algebra is ' + end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+                return no_endo_data
+            ans += dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            #ans += decomposition_display(factors) + ' therefore its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans += dec_display + '. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
         return ans
            
     #to fix
     def display_base_endo_info(self):
         factors = zip(self.simple_distinct,self.simple_multiplicities)
-        if decomposition_display(factors) == 'simple':
+        dec_display = decomposition_display(factors)
+        if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This is a simple isogeny class and its endomorphism algebra is ' + end_alg[1]
+                return no_endo_data
+            ans = 'The endomorphism algebra of this simple isogony class is ' + end_alg[1]
             #ans += describe_end_algebra(self.p,factors[0][0])
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+                return no_endo_data
+            ans = 'The isogeny class factors as ' + dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            #ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans = 'The isogeny class factors as %s. The endomorphism algebra for each factor is: %s'%(dec_display, non_simple_loop(self.p,factors))
         return ans
 
     def basechange_display(self):
@@ -318,9 +323,10 @@ class AbvarFq_isoclass(object):
             ans += '</table>\n'
             return ans
     def twist_display(self):
+        return 0
         ans = ''
         for twist in self.twists:
-            ans += '<tr><td>' + av_display_knowl(twist[0]) + '</td><td>' + av_display_knowl(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+            ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
         return ans
 
 @app.context_processor
@@ -341,13 +347,21 @@ def describe_end_algebra(p,extension_label):
         ans[1] = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
     elif int(center.split('.')[1]) > 0:
         ans[0] = 'B'
-        ans[1] = 'the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
+        if divalg_dim == 4:
+            ans[1] = "the quaternion algebra"
+        else:
+            ans[1] = 'the division algebra of dimension ' + divalg_dim
+        ans[1] += ' over %s ramified at both real infinite places.'%(nf_display_knowl(center,field_pretty(center)))
     elif divalg_dim == 1:
         ans[0] = 'K'
         ans[1] = nf_display_knowl(center,field_pretty(center)) + '.'
     else:
         ans[0] = 'B'
-        ans[1] = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        if divalg_dim == 4:
+            ans[1] = "the quaternion algebra"
+        else:
+            ans[1] = 'the division algebra of dimension ' + divalg_dim
+        ans[1] += ' over ' + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean places:'.format(p)
         ans[1]  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
             ans[1] += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
@@ -391,11 +405,21 @@ def non_simple_loop(p,factors):
         ans += ' : '
         end_alg = describe_end_algebra(p,factor[0])
         if end_alg == None:
-            return "The endomorphism data is not currently in the database."
-        if factor[1] == 1:
+            ans += no_endo_data()
+        elif factor[1] == 1:
             ans += end_alg[1]
         else:
             ans += '$M_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         ans += '</li>'
     ans += '</ul>'
     return ans
+
+def check_knowl_display(label):
+    abvar = db.av_fq_isog.lookup(label)
+    if abvar == None:
+        return label
+    else:
+        return av_display_knowl(label)
+
+def no_endo_data():
+    return "The endomorphism data for this class is not currently in the database."
