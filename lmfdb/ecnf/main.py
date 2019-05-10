@@ -271,7 +271,7 @@ def show_ecnf1(nf):
         try:
             nf, cond_label, iso_label, number = split_full_label(label.strip())
         except ValueError:
-            return redirect(url_for(".index"))
+            return redirect(url_for("ecnf.index"))
         return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
@@ -459,7 +459,7 @@ def elliptic_curve_jump(info):
         nf, cond_label, iso_label, number = split_full_label(label.strip())
     except ValueError:
         info['err'] = ''
-        return redirect(url_for(".index"))
+        return redirect(url_for("ecnf.index"))
 
     return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
