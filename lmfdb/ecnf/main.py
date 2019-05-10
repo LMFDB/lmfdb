@@ -276,7 +276,6 @@ def show_ecnf1(nf):
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        flash_error("%s is not a valid number field label",nf)
         return redirect(url_for(".index"))
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
