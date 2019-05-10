@@ -285,7 +285,7 @@ class AbvarFq_isoclass(object):
                 return no_endo_data
             ans += dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans += dec_display + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans += dec_display + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
         return ans
            
     #to fix
@@ -304,7 +304,7 @@ class AbvarFq_isoclass(object):
                 return no_endo_data
             ans = 'The isogeny class factors as ' + dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
         else:
-            ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
         return ans
 
     def all_endo_info_display(self):
@@ -408,7 +408,7 @@ def decomposition_display(factors):
 
 
 def non_simple_loop(p,factors):
-    ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">'
+    ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'
     for factor in factors:
         ans += '<li>'
         ans += av_display_knowl(factor[0]) 
@@ -422,8 +422,8 @@ def non_simple_loop(p,factors):
             ans += end_alg[1]
         else:
             ans += '$M_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
-        ans += '</li>'
-    ans += '</ul>'
+        ans += '</li>\n'
+    ans += '</ul>\n'
     return ans
 
 def check_knowl_display(label):
