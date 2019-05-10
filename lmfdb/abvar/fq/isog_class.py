@@ -265,59 +265,58 @@ class AbvarFq_isoclass(object):
     def endo_extension_by_deg(self,degree):
         return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
     
-    def display_endo_info(self,degree):
-        #this is for degree > 1
-        factors = self.endo_extension_by_deg(degree)
-        if factors == []:
-            return 'The data at degree ' + str(degree) + ' is missing.'  
-        ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
+    def display_endo_info(self,degree,do_describe=True):
+        #When degree > 1 we find the factorization by looking at the extension database
+        if degree > 1:
+            factors = self.endo_extension_by_deg(degree)
+            if factors == []:
+                return 'The data at degree ' + str(degree) + ' is missing.'  
+            ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
+        else:
+            factors = zip(self.simple_distinct,self.simple_multiplicities)
+            if self.is_simple:
+                ans = 'The endomorphism algebra of this simple isogeny class is '
+            else:
+                ans = 'The isogeny class factors as '
         dec_display = decomposition_display(factors)
         if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return no_endo_data()
-            ans += 'the simple isogeny class ' 
-            ans += av_display_knowl(factors[0][0]) 
-            ans += ' and its endomorphism algebra is ' + end_alg[1]
+                return no_endo_data(), do_describe
+            if degree > 1:
+                ans += 'the simple isogeny class ' 
+                ans += av_display_knowl(factors[0][0]) 
+                ans += ' and its endomorphism algebra is ' 
+            ans += end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
                 return no_endo_data
-            ans += dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+            ans += dec_display + ' and its endomorphism algebra is '
+            ans += matrix_display(factors[0],end_alg)
         else:
-            ans += dec_display + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
-        return ans
-           
-    #to fix
-    def display_base_endo_info(self):
-        factors = zip(self.simple_distinct,self.simple_multiplicities)
-        dec_display = decomposition_display(factors)
-        if dec_display == 'simple':
-            end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
-                return no_endo_data
-            ans = 'The endomorphism algebra of this simple isogeny class is ' + end_alg[1]
-            #ans += describe_end_algebra(self.p,factors[0][0])
-        elif len(factors) == 1:
-            end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
-                return no_endo_data
-            ans = 'The isogeny class factors as ' + dec_display + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
-        else:
-            ans = 'The isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
-        return ans
+            ans += dec_display 
+            if do_describe:
+                ans += ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor'
+                do_describe = False
+            ans += '. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
+        return ans, do_describe
 
     def all_endo_info_display(self):
-        ans = g2_table(self.field(),self.display_base_endo_info(),True)
+        do_describe = False
+        base_endo_info, do_describe = self.display_endo_info(1)
+        ans = g2_table(self.field(),base_endo_info,True)
         if self.geometric_extension_degree != 1:
-            ans += g2_table(self.alg_clo_field(),self.display_endo_info(self.geometric_extension_degree),True)
-        ans += '<p>All geometric endomorphisms are defined over ${0}$.</p>\n'.format(self.ext_field(self.geometric_extension_degree))
+            geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree,do_describe)
+            ans += g2_table(self.alg_clo_field(),geometric_endo_info,True)
+        ans += 'All geometric endomorphisms are defined over ${0}$.\n'.format(self.ext_field(self.geometric_extension_degree))
         if self.relevant_degs() != []:
-            ans += '<b>Remainder of endomorphism lattice by field</b>\n'
+            ans += '<br>\n<b>Remainder of endomorphism lattice by field</b>\n'
             ans += '<ul>\n'
             for deg in self.relevant_degs():
                 ans += '<li>'
-                ans += g2_table(self.ext_field(deg),self.display_endo_info(deg),False)
+                new_endo_info, do_describe = self.display_endo_info(deg, do_describe)
+                ans += g2_table(self.ext_field(deg),new_endo_info,False)
                 ans += '</li>\n'
             ans += '</ul>\n'
         return ans
@@ -335,6 +334,7 @@ class AbvarFq_isoclass(object):
                 ans += '</td></tr>\n'
             ans += '</table>\n'
             return ans
+
     def twist_display(self):
         ans = ''
         for twist in self.twists:
@@ -356,7 +356,7 @@ def describe_end_algebra(p,extension_label):
     ans = ['','']
     if center == '1.1.1.1' and divalg_dim == 4:
         ans[0] = 'B'
-        ans[1] = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
+        ans[1] = 'the quaternion algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
     elif int(center.split('.')[1]) > 0:
         ans[0] = 'B'
         if divalg_dim == 4:
@@ -406,6 +406,23 @@ def decomposition_display(factors):
             factor_str += '<sup> {0} </sup>'.format(factor[1])
     return factor_str
 
+def no_endo_data():
+    return "The endomorphism data for this class is not currently in the database."
+
+def g2_table(field,entry,is_bold):
+    if is_bold:
+        ans = '<b>Endomorphism algebra over ${0}$</b>\n'.format(field)
+    else:
+        ans = 'Endomorphism algebra over ${0}$\n'.format(field)
+    ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
+    return ans
+
+def matrix_display(factor,end_alg):
+    if end_alg[0] == 'K' and end_alg[1] != factor[0] + '.':
+        ans = '$\mathrm{M}_' + str(factor[1]) + '($' + end_alg[1][:-1] + '$)$'
+    else:
+        ans = '$\mathrm{M}_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+    return ans
 
 def non_simple_loop(p,factors):
     ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'
@@ -421,7 +438,7 @@ def non_simple_loop(p,factors):
         elif factor[1] == 1:
             ans += end_alg[1]
         else:
-            ans += '$M_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+            ans += matrix_display(factor,end_alg)
         ans += '</li>\n'
     ans += '</ul>\n'
     return ans
@@ -432,15 +449,4 @@ def check_knowl_display(label):
         return label
     else:
         return av_display_knowl(label)
-
-def no_endo_data():
-    return "The endomorphism data for this class is not currently in the database."
-
-def g2_table(field,entry,isBold):
-    if isBold:
-        ans = '<b>Endomorphism algebra over ${0}$</b>\n'.format(field)
-    else:
-        ans = 'Endomorphism algebra over ${0}$\n'.format(field)
-    ans += '<table class="g2" style="margin-top: 3px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
-    return ans
     
