@@ -416,7 +416,7 @@ def render_curve_webpage_by_label(label):
     if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
     if data == "Curve not found":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=True)
+        return elliptic_curve_jump_error(label, {}, missing_curve=True, wellformed_label=True)
     try:
         lmfdb_label = data.lmfdb_label
     except AttributeError:

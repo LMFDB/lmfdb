@@ -144,12 +144,12 @@ class WebEC(object):
             N, iso, number = split_lmfdb_label(label)
             data = db.ec_curves.lucky({"lmfdb_label" : label})
             data['label_type'] = 'LMFDB'
-        except AttributeError:
+        except AttributeError, TypeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 data = db.ec_curves.lucky({"label" : label})
                 data['label_type'] = 'Cremona'
-            except AttributeError:
+            except AttributeError, TypeError:
                 return "Invalid label" # caller must catch this and raise an error
 
         if data:
