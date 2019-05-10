@@ -340,6 +340,9 @@ class AbvarFq_isoclass(object):
         for twist in self.twists:
             ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
         return ans
+    
+    def old_decomp(self):
+        return zip(self.simple_distinct,self.simple_multiplicities)
 
 @app.context_processor
 def ctx_decomposition():

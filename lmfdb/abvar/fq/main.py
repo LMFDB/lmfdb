@@ -12,11 +12,11 @@ from lmfdb.app import app
 from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict,
-    parse_ints, parse_string_start, parse_nf_string, parse_galgrp,
+    parse_ints, parse_string_start,
     parse_subset, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap)
 from . import abvarfq_page
-from .search_parsing import parse_newton_polygon
+from .search_parsing import (parse_newton_polygon, parse_nf_string, parse_galgrp)
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 
@@ -169,15 +169,15 @@ def abelian_variety_search(info, query):
     parse_ints(info,query,'q',name='base field')
     parse_ints(info,query,'g',name='dimension')
     parse_bool(info,query,'simple',qfield='is_simple')
-    parse_bool(info,query,'primitive',qfield='is_prim')
-    parse_bool_unknown(info, query, 'jacobian', qfield='is_jac')
-    parse_bool_unknown(info, query, 'polarizable', qfield='is_pp')
+    parse_bool(info,query,'primitive',qfield='is_primitive')
+    parse_bool_unknown(info, query, 'jacobian', qfield='has_jacobian')
+    parse_bool_unknown(info, query, 'polarizable', qfield='has_principal_polarization')
     parse_ints(info,query,'p_rank')
-    parse_ints(info,query,'ang_rank')
-    parse_newton_polygon(info,query,'newton_polygon',qfield='slps')
+    parse_ints(info,query,'angle_rank')
+    parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
     parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
-    parse_string_start(info,query,'abvar_point_count',qfield='A_cnts_str')
-    parse_string_start(info,query,'curve_point_count',qfield='C_cnts_str',first_field='pt_cnt')
+    parse_string_start(info,query,'abvar_point_count',qfield='abvar_counts_str')
+    parse_string_start(info,query,'curve_point_count',qfield='curve_counts_str',first_field='curve_count')
     if info.get('simple_quantifier') == 'contained':
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='subsets')
     elif info.get('simple_quantifier') == 'exactly':
@@ -188,8 +188,8 @@ def abelian_variety_search(info, query):
         parse_ints(info,query,'dim%s_factors'%n)
     for n in range(1,4):
         parse_ints(info,query,'dim%s_distinct'%n)
-    parse_nf_string(info,query,'number_field',qfield='nf')
-    parse_galgrp(info,query,qfield=('galois_n','galois_t'))
+    parse_nf_string(info,query,'number_field',qfield='number_fields')
+    parse_galgrp(info,query,'galois_group',qfield='galois_groups')
 
 def abelian_variety_browse(**args):
     info = to_dict(args)
