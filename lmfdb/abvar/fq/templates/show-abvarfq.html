@@ -118,15 +118,39 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 {% endif %}
 </p>
 
-<h2>Twists</h2>
+<h2 id="twist-anchor">Twists</h2>
+{% if cl.num_twists() > 3 %}
+<script>
+function show_twists(number) {
+    $('.smalloutput').hide();
+    $('.alltwistoutput').hide();
+    $('.'+number).show();
+    var elementBottom = $('#twist-anchor').offset().top + $('#twist-anchor').outerHeight();
+    var viewportTop = $(window).scrollTop();
+    return elementBottom < viewportTop;
+  }
+</script>
+<div>
+  <form>
+    <span class="smalloutput">{{ cl.twist_display(False)|safe }}</span>
+    <span class="alltwistoutput nodisplay">{{ cl.twist_display(True)|safe }}</span>
+    <p>
+      <div class="toggle">
+        <span class="smalloutput"><a onclick="show_twists('alltwistoutput'); return false;" href='#'>Show All</a></span>
+        <span class="alltwistoutput nodisplay"><a onclick="return show_twists('smalloutput');" href='#twist-anchor'>Show Less</a></span>
+      </div>
+    </p>
+  </form>
+</div>
 
-<p>
-</table>
-    <table class="ntdata">
-        <tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>
-        {{ cl.twist_display()|safe }}
-    </table>
-</p>
+{% else %}
+<div>
+  {{ cl.twist_display(True)|safe }}
+</div>
+
+{% endif %}
+
+
 
 
 {% endblock %}

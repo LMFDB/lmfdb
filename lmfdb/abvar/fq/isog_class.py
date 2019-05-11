@@ -9,7 +9,7 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
-from sage.rings.all import Integer, QQ, RR
+from sage.rings.all import Integer, QQ, RR, ZZ, PolynomialRing
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 
@@ -334,11 +334,23 @@ class AbvarFq_isoclass(object):
                 ans += '</td></tr>\n'
             ans += '</table>\n'
             return ans
+    
+    def num_twists(self):
+        return len(self.twists)
 
-    def twist_display(self):
-        ans = ''
+    def twist_display(self,show_all):
+        if show_all:
+            ans = "Below is a list of all twists of the isogeny class."
+        else:
+            ans = "Below is some of the twists of the isogeny class."
+        ans += '<table class = "ntdata">\n'
+        ans += '<tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>\n'
+        i = 0
         for twist in self.twists:
-            ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+            if twist[2] <= 3 or show_all or i < 3:
+                ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+                i += 1
+        ans += '</table>\n'
         return ans
     
     def old_decomp(self):
@@ -347,6 +359,14 @@ class AbvarFq_isoclass(object):
 @app.context_processor
 def ctx_decomposition():
     return {'av_data': av_data}
+
+def irred_L_poly(polylist):
+    from sage.all import latex
+    polylist.reverse()
+    ZZx = PolynomialRing(ZZ,'x')
+    poly = ZZx(polylist)
+    factor = poly.factor()[0][0]
+    return latex(factor)
 
 def describe_end_algebra(p,extension_label):
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
@@ -383,7 +403,9 @@ def describe_end_algebra(p,extension_label):
         ans[1] += '</tr><tr><td>$\operatorname{inv}_v$</td>'
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
-        ans[1] += '</tr></table>'
+        ans[1] += '</tr></table>\n'
+        ext = db.av_fq_isog.lookup(extension_label)
+        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(irred_L_poly(ext['poly'])) 
     return ans
 
 
