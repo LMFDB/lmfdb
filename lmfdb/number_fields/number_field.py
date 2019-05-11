@@ -236,7 +236,8 @@ def statistics():
     h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(12)]
     has_h = fields.count({'class_number': {'$exists': True}})
     hdeg_stats = {j: fields.stats.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)}
-    hdeg = [[hdeg_stats[j][deg+1] for j in range(12)] for deg in range(23)]
+    # if a count is missing it is because it is zero
+    hdeg = [[hdeg_stats[j].get(deg+1, 0) for j in range(12)] for deg in range(23)]
     has_hdeg_stats = fields.stats.column_counts('degree', {'class_number': {'$exists': True}})
     has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
     hdeg = [[{'cnt': comma(hdeg[nn][j]),
