@@ -50,7 +50,7 @@
           url_for: "zeta zeros.zetazeros"
         - title: Operations
           url_for: "tensor_products.index"
-          status: beta
+          status: future
         - title: dummy
           status: future
         - title: Local L-functions
