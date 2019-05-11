@@ -65,7 +65,6 @@
    parts:
      - title: GL(2)
        style: rotate
-       status:
        part2:
          - title: Classical
            url_for: "cmf.index"
