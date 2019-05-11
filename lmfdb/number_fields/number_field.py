@@ -217,11 +217,13 @@ def statistics():
     n = [degree_stats[elt + 1] for elt in range(23)]
 
     degree_r2_stats = fields.stats.column_counts(['degree', 'r2'])
-    nsig = [[degree_r2_stats[(deg+1, s)] for s in range((deg+3)/2)]
+    # if a count is missing it is because it is zero
+    nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)/2)]
             for deg in range(23)]
     # Galois groups
     nt_stats = fields.stats.column_counts(['degree', 'galt'])
-    nt_all = [[nt_stats[(deg+1, t+1)] for t in range(ntrans[deg+1])]
+    # if a count is missing it is because it is zero
+    nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
     nt = [nt_all[j] for j in range(7)]
     # Galois group families
@@ -235,8 +237,10 @@ def statistics():
 
     h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(12)]
     has_h = fields.count({'class_number': {'$exists': True}})
-    hdeg_stats = {j: fields.stats.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt':10**(j-1)}}) for j in range(12)}
-    hdeg = [[hdeg_stats[j][deg+1] for j in range(12)] for deg in range(23)]
+    hdeg_stats = {j: fields.stats.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(1, 12)}
+    hdeg_stats[0] = fields.stats.column_counts('degree', {'class_number': 1})
+    # if a count is missing it is because it is zero
+    hdeg = [[hdeg_stats[j].get(deg+1, 0) for j in range(12)] for deg in range(23)]
     has_hdeg_stats = fields.stats.column_counts('degree', {'class_number': {'$exists': True}})
     has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
     hdeg = [[{'cnt': comma(hdeg[nn][j]),
