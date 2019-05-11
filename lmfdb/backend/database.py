@@ -4264,7 +4264,9 @@ class PostgresStatsTable(PostgresBase):
         jcgcols = Json(sorted(ccols.adapted + grouping))
         jcol = Json([col])
         if not self._has_numstats(jcol, jcgcols, cvals, threshold):
-            raise ValueError("Missing numstats")
+            self.logger.info("Missing numstats, adding them")
+            self.add_numstats(col, grouping, constraint, threshold)
+            # raise ValueError("Missing numstats")
         values = [jcol, jcgcols]
         if threshold is None:
             threshold = SQL("threshold IS NULL")

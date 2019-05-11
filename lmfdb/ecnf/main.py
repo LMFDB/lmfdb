@@ -260,17 +260,23 @@ def index():
                            data=data,
                            bread=bread, learnmore=learnmore_list())
 
-@ecnf_page.route("/random")
+@ecnf_page.route("/random/")
 def random_curve():
     E = db.ec_nfcurves.random(projection=['field_label', 'conductor_label', 'iso_label', 'number'])
     return redirect(url_for(".show_ecnf", nf=E['field_label'], conductor_label=E['conductor_label'], class_label=E['iso_label'], number=E['number']), 307)
 
 @ecnf_page.route("/<nf>/")
 def show_ecnf1(nf):
+    if "-" in nf:
+        try:
+            nf, cond_label, iso_label, number = split_full_label(nf.strip())
+        except ValueError:
+            return redirect(url_for("ecnf.index"))
+        return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
     try:
         nf_label, nf_pretty = get_nf_info(nf)
     except ValueError:
-        return search_input_error()
+        return redirect(url_for(".index"))
     if nf_label == '1.1.1.1':
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args)
@@ -444,14 +450,15 @@ def download_search(info):
 
 def elliptic_curve_jump(info):
     label = info.get('label', '').replace(" ", "")
+    if info.get('jump','') == "random":
+        return random_curve()
     # This label should be a full isogeny class label or a full
     # curve label (including the field_label component)
     try:
         nf, cond_label, iso_label, number = split_full_label(label.strip())
     except ValueError:
         info['err'] = ''
-        bread = [('Elliptic Curves', url_for(".index")), ('Search Results', '.')]
-        return search_input_error(info, bread)
+        return redirect(url_for("ecnf.index"))
 
     return redirect(url_for(".show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number), 301)
 
