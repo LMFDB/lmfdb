@@ -300,7 +300,7 @@ def search():
 def l_functions():
     t = 'L-functions'
     b = [(t, url_for('l_functions'))]
-    lm = [('History of L-functions', '/L/history'),('Completeness of the data',url_for('lfunctions.completeness'))]
+    lm = [('History of L-functions', '/L/history'),('Completeness of the data',url_for('l_functions.completeness'))]
     return render_template('single.html', title=t, kid='lfunction.about', bread=b, learnmore=lm)
 
 @app.route("/L/history")
