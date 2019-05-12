@@ -375,8 +375,8 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Zeros/ArtinRepresentation/4.1609.5t5.1c1/')
         assert '3.504643404484' in L.data
 
-    def test_Lmain(self, follow_redirects=True):
-        L = self.tc.get('/L/')
+    def test_Lmain(self):
+        L = self.tc.get('/L/', follow_redirects=True)
         assert 'Riemann' in L.data and 'modular form' in L.data
 
     def test_Ldegree1(self):
