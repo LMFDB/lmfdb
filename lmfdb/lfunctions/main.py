@@ -1143,19 +1143,19 @@ def processGenus2CurveNavigation(startCond, endCond):
         end = 1000
 
     iso_list = genus2_isogeny_class_table(N, end)
+    print iso_list
     s = '<h5>Examples of L-functions attached to isogeny classes of Jacobians of genus 2 curves</h5>'
     s += '<table>'
 
     counter = 0
     nr_of_columns = 10
-    for cond, iso in iso_list:
+    for cond, x in iso_list:
         label = str(cond) + '.' + iso
         if counter == 0:
             s += '<tr>'
 
         counter += 1
-        s += '<td><a href="' + url_for('.l_function_genus2_page', conductor_label=cond,
-                                       isogeny_class_label = iso) + '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('.l_function_genus2_page', cond, x) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'
