@@ -314,7 +314,7 @@ def l_functions_history():
 def modular_forms():
     t = 'Modular Forms'
     b = [(t, url_for('modular_forms'))]
-    # lm = [('History of varieties', '/Variety/history')]
+    # lm = [('History of modular forms', '/ModularForm/history')]
     return render_template('single.html', title=t, kid='mf.about', bread=b) #, learnmore=lm)
 
 @app.route("/ModularForm/history")
@@ -365,6 +365,20 @@ def representations_history():
     b = [(t, url_for('representations'))]
     b.append(('History', url_for("representations_history")))
     return render_template(_single_knowl, title="A Brief History of Representations", kid='repn.history', body_class=_bc, bread=b)
+
+@app.route('/Motives')
+def motives():
+    t = 'Motives'
+    b = [(t, url_for('motives'))]
+    # lm = [('History of motives', '/Motives/history')]
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b) #, learnmore=lm)
+
+@app.route("/Motives/history")
+def motives_history():
+    t = 'Motives'
+    b = [(t, url_for('motives'))]
+    b.append(('History', url_for("motives_history")))
+    return render_template(_single_knowl, title="A Brief History of Motives", kid='motives.history', body_class=_bc, bread=b)
 
 @app.route('/Group')
 def groups():
