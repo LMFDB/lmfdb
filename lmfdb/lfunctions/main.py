@@ -1150,7 +1150,7 @@ def processGenus2CurveNavigation(startCond, endCond):
     counter = 0
     nr_of_columns = 10
     for cond, x in iso_list:
-        label = str(cond) + '.' + iso
+        label = str(cond) + '.' + x
         if counter == 0:
             s += '<tr>'
 

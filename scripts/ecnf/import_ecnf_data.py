@@ -133,7 +133,6 @@ import re
 import os
 import pprint
 from lmfdb import db
-# from lmfdb.backend.encoding import Json
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
@@ -620,15 +619,13 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     the curves file has been processed).
     """
     curves_filename = 'curves.%s' % (filename_suffix)
-    # commented out unsused assignment below to make pyflakes happy
-    # curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    #curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, isoclass_filename, galrep_filename]
 #    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
 #    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
@@ -848,8 +845,6 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
-    number_1_only_keys = ['isogeny_matrix']
-
     query = {}
     if field is not None:
         query['field_label'] = field
@@ -864,8 +859,6 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
         expected_keys = key_set
         if ignore_ranks:
             expected_keys = expected_keys - rank_keys
-        if c['number']!=1:
-            expected_keys = expected_keys - number_1_only_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys
         if c['degree'] > 2:
