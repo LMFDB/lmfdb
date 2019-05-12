@@ -44,7 +44,7 @@ class Configuration(object):
             dest = 'core_color',
             metavar = "COLOR",
             help = 'color template (see lmfdb/utils/color.py)',
-            default = 0,
+            default = 19,
             type = int)
 
         parser.add_argument('-p','--port',
