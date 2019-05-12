@@ -8,6 +8,8 @@ from sage.env import SAGE_VERSION
 from lmfdb.logger import logger_file_handler, critical
 from lmfdb.homepage import load_boxes, contribs
 
+LMFDB_VERSION = "LMFDB Release 1.1"
+
 ############################
 #         Main app         #
 ############################
@@ -81,6 +83,9 @@ def ctx_proc_userdata():
 
     # default title
     vars['title'] = r'LMFDB'
+
+    # LMFDB version number displayed in footer
+    vars['version'] = LMFDB_VERSION
 
     # meta_description appears in the meta tag "description"
     vars['meta_description'] = r'Welcome to the LMFDB, the database of L-functions, modular forms, and related objects. These pages are intended to be a modern handbook including tables, formulas, links, and references for L-functions and their underlying objects.'
