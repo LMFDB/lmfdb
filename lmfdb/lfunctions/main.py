@@ -130,7 +130,7 @@ def l_function_ec_browse_page():
     info = {"bread": get_bread(2, [("Elliptic Curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    info["contents"] = [processEllipticCurveNavigation(11, 1000)]
+    info["contents"] = [processEllipticCurveNavigation(11, 200)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
 
 
