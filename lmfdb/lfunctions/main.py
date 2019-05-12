@@ -43,7 +43,7 @@ def get_degree(degree_string):
 @l_function_page.route("/")
 def l_function_top_page():
     # Don't duplicate the code in app.py
-    return flask.redirect(url_for('lfunctions'),301)
+    return flask.redirect(url_for('app.lfunctions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():
@@ -1085,13 +1085,13 @@ def processEllipticCurveNavigation(startCond, endCond):
         N = 11
 
     try:
-        if endCond > 500:
-            end = 500
+        if endCond > 1000:
+            end = 1000
         else:
             end = endCond
 
     except:
-        end = 100
+        end = 1000
 
     iso_list = isogeny_class_table(N, end)
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
@@ -1143,7 +1143,6 @@ def processGenus2CurveNavigation(startCond, endCond):
         end = 1000
 
     iso_list = genus2_isogeny_class_table(N, end)
-    print iso_list
     s = '<h5>Examples of L-functions attached to isogeny classes of Jacobians of genus 2 curves</h5>'
     s += '<table>'
 
