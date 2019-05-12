@@ -179,7 +179,7 @@ def l_function_genus2_browse_page():
     info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    info["contents"] = [processGenus2CurveNavigation(169, 700)]
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 # generic/pure L-function browsing page ##############################################
