@@ -42,8 +42,8 @@ def get_degree(degree_string):
 # Top page #####################################################################
 @l_function_page.route("/")
 def l_function_top_page():
-    info = set_info_for_start_page()
-    return render_template("LfunctionNavigate.html", **info)
+    # Don't duplicate the code in app.py
+    return flask.redirect(url_for('lfunctions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():
