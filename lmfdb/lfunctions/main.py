@@ -1155,7 +1155,7 @@ def processGenus2CurveNavigation(startCond, endCond):
             s += '<tr>'
 
         counter += 1
-        s += '<td><a href="' + url_for('.l_function_genus2_page', cond, x) + '">%s</a></td>\n' % label
+        s += '<td><a href="' + url_for('.l_function_genus2_page', cond=cond, x=x) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'
