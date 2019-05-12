@@ -133,7 +133,7 @@ import re
 import os
 import pprint
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+# from lmfdb.backend.encoding import Json
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
@@ -620,7 +620,8 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     the curves file has been processed).
     """
     curves_filename = 'curves.%s' % (filename_suffix)
-    curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    # commented out unsused assignment below to make pyflakes happy
+    # curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
     file_list = [curves_filename, isoclass_filename, galrep_filename]
@@ -846,6 +847,8 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 #
     galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
+
+    number_1_only_keys = [] # TODO: add keys here or delete reference
 
     query = {}
     if field is not None:
