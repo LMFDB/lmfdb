@@ -848,7 +848,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
     galrep_keys = ['galois_images', 'non-surjective_primes']
     print("key_set has {} keys".format(len(key_set)))
 
-    number_1_only_keys = [] # TODO: add keys here or delete reference
+    number_1_only_keys = ['isogeny_matrix']
 
     query = {}
     if field is not None:
