@@ -130,7 +130,7 @@ def l_function_ec_browse_page():
     info = {"bread": get_bread(2, [("Elliptic Curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    info["contents"] = [processEllipticCurveNavigation(11, 65)]
+    info["contents"] = [processEllipticCurveNavigation(11, 1000)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
 
 
@@ -176,10 +176,10 @@ def l_function_ec_sym3_browse_page():
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
 def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
+    info = {"bread": get_bread(4, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    info["contents"] = [processGenus2CurveNavigation(169, 700)]
+    info["contents"] = [processGenus2CurveNavigation(169, 1000)]
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 # generic/pure L-function browsing page ##############################################
