@@ -24,11 +24,11 @@ def genus2_isogeny_class_table(Nmin, Nmax):
     '''
     iso_list = []
 
-    query = {'number': 1, 'cond': {'$lte': Nmax, '$gte': Nmin}}
+    query = {'cond': {'$lte': Nmax, '$gte': Nmin}}
 
     # Get all the curves and sort them according to conductor
     res = db.g2c_curves.search(query, 'class')
-    iso_list = [iso.split('.') for iso in res]
+    iso_list = sorted([iso.split('.') for iso in set([r for r in res])])
 
     return iso_list
 
