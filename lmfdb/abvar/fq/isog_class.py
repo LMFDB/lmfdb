@@ -352,9 +352,6 @@ class AbvarFq_isoclass(object):
                 i += 1
         ans += '</table>\n'
         return ans
-    
-    def old_decomp(self):
-        return zip(self.simple_distinct,self.simple_multiplicities)
 
 @app.context_processor
 def ctx_decomposition():
