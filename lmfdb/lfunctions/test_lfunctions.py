@@ -376,8 +376,8 @@ class LfunctionTest(LmfdbTest):
         assert '3.504643404484' in L.data
 
     def test_Lmain(self):
-        L = self.tc.get('/L/')
-        assert 'Riemann' in L.data and 'Signature' in L.data
+        L = self.tc.get('/L/', follow_redirects=True)
+        assert 'Riemann' in L.data and 'modular form' in L.data
 
     def test_Ldegree1(self):
         L = self.tc.get('/L/degree1/')

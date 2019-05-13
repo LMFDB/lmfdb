@@ -31,7 +31,7 @@
   {%- if entry.status -%}
     {%- if BETA -%}
       {%- if loop.index is even -%}{# want alternating colours here #}
-        <tr bgcolor="{{color.sidebar_background_off}}">
+        <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
       {%- else -%}
         <tr>
       {%- endif -%}{# end alternating colours #}
@@ -78,7 +78,7 @@
     {%- endif -%}{# this concludes the BETA flag #}
   {%- else -%}{# this look through entries with status not set #}
     {%- if loop.index is even -%}{# want alternating colours here #}
-      <tr bgcolor="{{color.sidebar_background_off}}">
+      <tr> <!-- <tr bgcolor="{{color.sidebar_background_off}}"> --> {# actually we don't #}
     {%- else -%}
       <tr>
     {%- endif -%}
