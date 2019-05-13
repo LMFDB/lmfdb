@@ -104,46 +104,7 @@ This isogeny class does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}},
 
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 
-
-{% if cl.geometric_extension_degree == 1 %}
-    <b>Endomorphism algebra over ${{cl.field()}}$</b>
-    <p>
-    <table class="g2">
-        <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
-    </table>
-    </p>
-    <p>All geometric endomorphisms are defined over ${{cl.field()}}$.</p>
-
-{% else %}
-
-    <b>Endomorphism algebra over ${{cl.field()}}$</b>
-        <p>
-        <table class='g2'>
-            <tr><td>{{cl.display_base_endo_info()|safe}}</td></tr>
-        </table>
-        </p>
-        <p>
-        All geometric endomorphisms are defined over ${{cl.ext_field(cl.geometric_extension_degree)}}$.
-        </p>
-    <b>Endomorphism algebra over ${{cl.alg_clo_field()}}$</b>
-        <p><table class='g2'>
-            <tr><td>{{cl.display_endo_info(cl.geometric_extension_degree)|safe}}</td></tr>
-        </table></p>
-    {% if cl.relevant_degs() != [] %}
-    <b>Remainder of endomorphism lattice by field</b>
-        <ul>
-        {% for degree in cl.relevant_degs() %}
-            <li label=degree>
-                Endomorphism algebra over ${{cl.ext_field(degree)}}$:
-                 <table class='g2' style='margin-top: 3px;margin-bottom: 5px;'>
-                    <tr><td>{{cl.display_endo_info(degree)|safe}}</td></t2>
-                </table>
-            </li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endif %}
-
+{{cl.all_endo_info_display()|safe}}
 
 
 <h2>Base change</h2>
@@ -157,15 +118,39 @@ This isogeny class is not {{ KNOWL('ag.primitive',title="primitive") }}.  It is 
 {% endif %}
 </p>
 
-<h2>Twists</h2>
+<h2 id="twist-anchor">Twists</h2>
+{% if cl.num_twists() > 3 %}
+<script>
+function show_twists(number) {
+    $('.smalloutput').hide();
+    $('.alltwistoutput').hide();
+    $('.'+number).show();
+    var elementBottom = $('#twist-anchor').offset().top + $('#twist-anchor').outerHeight();
+    var viewportTop = $(window).scrollTop();
+    return elementBottom < viewportTop;
+  }
+</script>
+<div>
+  <form>
+    <span class="smalloutput">{{ cl.twist_display(False)|safe }}</span>
+    <span class="alltwistoutput nodisplay">{{ cl.twist_display(True)|safe }}</span>
+    <p>
+      <div class="toggle">
+        <span class="smalloutput"><a onclick="show_twists('alltwistoutput'); return false;" href='#'>Show All</a></span>
+        <span class="alltwistoutput nodisplay"><a onclick="return show_twists('smalloutput');" href='#twist-anchor'>Show Less</a></span>
+      </div>
+    </p>
+  </form>
+</div>
 
-<p>
-</table>
-    <table class="ntdata">
-        <tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>
-        {{ cl.twist_display()|safe }}
-    </table>
-</p>
+{% else %}
+<div>
+  {{ cl.twist_display(True)|safe }}
+</div>
+
+{% endif %}
+
+
 
 
 {% endblock %}

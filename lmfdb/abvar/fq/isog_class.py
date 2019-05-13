@@ -9,7 +9,7 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
-from sage.rings.all import Integer, QQ, RR
+from sage.rings.all import Integer, QQ, RR, ZZ, PolynomialRing
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 
@@ -41,7 +41,7 @@ def validate_label(label):
         raise ValueError("it must be of the form g.q.iso, where g is a prime power")
     coeffs = iso.split("_")
     if len(coeffs) != g:
-        raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components"%(g))
+        raise ValueError("the final part must be of the form c1_c2_..._cg, with g={0} components".format(g))
     if not all(c.isalpha() and c==c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
@@ -265,43 +265,60 @@ class AbvarFq_isoclass(object):
     def endo_extension_by_deg(self,degree):
         return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
     
-    def display_endo_info(self,degree):
-        #this is for degree > 1
-        factors = self.endo_extension_by_deg(degree)
-        if factors == []:
-            return 'The data at degree ' + str(degree) + ' is missing.'        
-        if decomposition_display(factors) == 'simple':
+    def display_endo_info(self,degree,do_describe=True):
+        #When degree > 1 we find the factorization by looking at the extension database
+        if degree > 1:
+            factors = self.endo_extension_by_deg(degree)
+            if factors == []:
+                return 'The data at degree ' + str(degree) + ' is missing.', do_describe
+            ans = 'The base change of $A$ to ${0}$ is '.format(self.ext_field(degree))
+        else:
+            factors = zip(self.simple_distinct,self.simple_multiplicities)
+            if self.is_simple:
+                ans = 'The endomorphism algebra of this simple isogeny class is '
+            else:
+                ans = 'The isogeny class factors as '
+        dec_display = decomposition_display(factors)
+        if dec_display == 'simple':
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This base change is the simple isogeny class ' 
-            ans += av_display_knowl(factors[0][0]) 
-            ans += ' and its endomorphism algebra is ' + end_alg[1]
+                return no_endo_data(), do_describe
+            if degree > 1:
+                ans += 'the simple isogeny class ' 
+                ans += av_display_knowl(factors[0][0]) 
+                ans += ' and its endomorphism algebra is ' 
+            ans += end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
             if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+                return no_endo_data(), do_describe
+            ans += dec_display + ' and its endomorphism algebra is '
+            ans += matrix_display(factors[0],end_alg)
         else:
-            ans = 'This base change factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
-        return ans
-           
-    #to fix
-    def display_base_endo_info(self):
-        factors = zip(self.simple_distinct,self.simple_multiplicities)
-        if decomposition_display(factors) == 'simple':
-            end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This is a simple isogeny class and its endomorphism algebra is ' + end_alg[1]
-            #ans += describe_end_algebra(self.p,factors[0][0])
-        elif len(factors) == 1:
-            end_alg = describe_end_algebra(self.p,factors[0][0])
-            if end_alg == None:
-                return "The endomorphism data is not currently in the database."
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' and its endomorphism algebra is $M_' + str(factors[0][1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
-        else:
-            ans = 'This isogeny class factors as ' + decomposition_display(factors) + ' therefore its endomorphism algebra is a direct sum of the endomorphism algebras for each isotypic factor. The endomorphism algebra for each factor is: ' + non_simple_loop(self.p,factors)
+            ans += dec_display 
+            if do_describe:
+                ans += ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor'
+                do_describe = False
+            ans += '. The endomorphism algebra for each factor is: \n' + non_simple_loop(self.p,factors)
+        return ans, do_describe
+
+    def all_endo_info_display(self):
+        do_describe = False
+        base_endo_info, do_describe = self.display_endo_info(1)
+        ans = g2_table(self.field(),base_endo_info,True)
+        if self.geometric_extension_degree != 1:
+            geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree,do_describe)
+            ans += g2_table(self.alg_clo_field(),geometric_endo_info,True)
+        ans += 'All geometric endomorphisms are defined over ${0}$.\n'.format(self.ext_field(self.geometric_extension_degree))
+        if self.relevant_degs() != []:
+            ans += '<br>\n<b>Remainder of endomorphism lattice by field</b>\n'
+            ans += '<ul>\n'
+            for deg in self.relevant_degs():
+                ans += '<li>'
+                new_endo_info, do_describe = self.display_endo_info(deg, do_describe)
+                ans += g2_table(self.ext_field(deg),new_endo_info,False)
+                ans += '</li>\n'
+            ans += '</ul>\n'
         return ans
 
     def basechange_display(self):
@@ -312,20 +329,44 @@ class AbvarFq_isoclass(object):
             ans = '<table class = "ntdata">\n'
             ans += '<tr><td>Subfield</td><td>Primitive Model</td></tr>\n'
             for model in models:
-                ans += '  <tr><td class="center">$%s$</td><td>'%(self.field(model.split('.')[1]))
+                ans += '  <tr><td class="center">${0}$</td><td>'.format(self.field(model.split('.')[1]))
                 ans += av_display_knowl(model) + ' '
                 ans += '</td></tr>\n'
             ans += '</table>\n'
             return ans
-    def twist_display(self):
-        ans = ''
+    
+    def num_twists(self):
+        return len(self.twists)
+
+    def twist_display(self,show_all):
+        if show_all:
+            ans = "Below is a list of all twists of the isogeny class."
+        else:
+            ans = "Below is some of the twists of the isogeny class."
+        ans += '<table class = "ntdata">\n'
+        ans += '<tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>\n'
+        i = 0
         for twist in self.twists:
-            ans += '<tr><td>' + av_display_knowl(twist[0]) + '</td><td>' + av_display_knowl(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+            if twist[2] <= 3 or show_all or i < 3:
+                ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+                i += 1
+        ans += '</table>\n'
         return ans
+    
+    def old_decomp(self):
+        return zip(self.simple_distinct,self.simple_multiplicities)
 
 @app.context_processor
 def ctx_decomposition():
     return {'av_data': av_data}
+
+def irred_L_poly(polylist):
+    from sage.all import latex
+    polylist.reverse()
+    ZZx = PolynomialRing(ZZ,'x')
+    poly = ZZx(polylist)
+    factor = poly.factor()[0][0]
+    return latex(factor)
 
 def describe_end_algebra(p,extension_label):
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
@@ -338,23 +379,33 @@ def describe_end_algebra(p,extension_label):
     ans = ['','']
     if center == '1.1.1.1' and divalg_dim == 4:
         ans[0] = 'B'
-        ans[1] = 'the quaternion division algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
+        ans[1] = 'the quaternion algebra over ' +  nf_display_knowl(center,field_pretty(center)) + ' ramified at ${0}$ and $\infty$'.format(p) + '.'
     elif int(center.split('.')[1]) > 0:
         ans[0] = 'B'
-        ans[1] = 'the division algebra over ' + nf_display_knowl(center,field_pretty(center)) + ' ramified at both real infinite places.'
+        if divalg_dim == 4:
+            ans[1] = "the quaternion algebra"
+        else:
+            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
+        ans[1] += ' over {0} ramified at both real infinite places.'.format(nf_display_knowl(center,field_pretty(center)))
     elif divalg_dim == 1:
         ans[0] = 'K'
         ans[1] = nf_display_knowl(center,field_pretty(center)) + '.'
     else:
         ans[0] = 'B'
-        ans[1] = 'the division algebra of dimension ${0}$ over '.format(divalg_dim) + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean primes:'.format(p)
+        if divalg_dim == 4:
+            ans[1] = "the quaternion algebra"
+        else:
+            ans[1] = 'the division algebra of dimension ' + str(divalg_dim)
+        ans[1] += ' over ' + nf_display_knowl(center,field_pretty(center)) + ' with the following ramification data at primes above ${0}$, and unramified at all archimedean places:'.format(p)
         ans[1]  += '</td></tr><tr><td><table class = "ntdata"><tr><td>$v$</td>'
         for prime in places:
             ans[1] += '<td class="center"> {0} </td>'.format(primeideal_display(p,prime))
         ans[1] += '</tr><tr><td>$\operatorname{inv}_v$</td>'
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
-        ans[1] += '</tr></table>'
+        ans[1] += '</tr></table>\n'
+        ext = db.av_fq_isog.lookup(extension_label)
+        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(irred_L_poly(ext['poly'])) 
     return ans
 
 
@@ -380,9 +431,26 @@ def decomposition_display(factors):
             factor_str += '<sup> {0} </sup>'.format(factor[1])
     return factor_str
 
+def no_endo_data():
+    return "The endomorphism data for this class is not currently in the database."
+
+def g2_table(field,entry,is_bold):
+    if is_bold:
+        ans = '<b>Endomorphism algebra over ${0}$</b>\n'.format(field)
+    else:
+        ans = 'Endomorphism algebra over ${0}$\n'.format(field)
+    ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
+    return ans
+
+def matrix_display(factor,end_alg):
+    if end_alg[0] == 'K' and end_alg[1] != factor[0] + '.':
+        ans = '$\mathrm{M}_' + str(factor[1]) + '($' + end_alg[1][:-1] + '$)$'
+    else:
+        ans = '$\mathrm{M}_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
+    return ans
 
 def non_simple_loop(p,factors):
-    ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">'
+    ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'
     for factor in factors:
         ans += '<li>'
         ans += av_display_knowl(factor[0]) 
@@ -391,11 +459,19 @@ def non_simple_loop(p,factors):
         ans += ' : '
         end_alg = describe_end_algebra(p,factor[0])
         if end_alg == None:
-            return "The endomorphism data is not currently in the database."
-        if factor[1] == 1:
+            ans += no_endo_data()
+        elif factor[1] == 1:
             ans += end_alg[1]
         else:
-            ans += '$M_' + str(factor[1]) + '(' + end_alg[0] + ')$, where $' + end_alg[0] + '$ is ' + end_alg[1]
-        ans += '</li>'
-    ans += '</ul>'
+            ans += matrix_display(factor,end_alg)
+        ans += '</li>\n'
+    ans += '</ul>\n'
     return ans
+
+def check_knowl_display(label):
+    abvar = db.av_fq_isog.lookup(label)
+    if abvar == None:
+        return label
+    else:
+        return av_display_knowl(label)
+    
