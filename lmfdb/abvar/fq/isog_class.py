@@ -227,19 +227,19 @@ class AbvarFq_isoclass(object):
             group = (self.galois_groups[0]).split("T")
             return group_display_knowl(group[0], group[1])
 
-    def decomposition_display_search(self,factors):
-        if len(factors) == 1 and factors[0][1] == 1:
+    def decomposition_display_search(self):
+        if self.is_simple:
             return 'simple'
         ans = ''
-        for factor in factors:
-            url = url_for('abvarfq.by_label',label=factor[0])
+        for simp, e in zip(self.simple_distinct, self.simple_multiplicities):
+            url = url_for('abvarfq.by_label',label=simp)
             if ans != '':
                 ans += '$\\times$ '
-            if factor[1] == 1:
-                ans += '<a href="{1}">{0}</a>'.format(factor[0],url)
+            if e == 1:
+                ans += '<a href="{1}">{0}</a>'.format(simp,url)
                 ans += ' '
             else:
-                ans += '<a href="{1}">{0}</a>'.format(factor[0],url) + '<sup> {0} </sup> '.format(factor[1])
+                ans += '<a href="{1}">{0}</a>'.format(simp,url) + '<sup> {0} </sup> '.format(e)
         return ans
     
     def alg_clo_field(self):
