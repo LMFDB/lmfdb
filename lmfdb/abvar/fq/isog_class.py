@@ -99,14 +99,14 @@ class AbvarFq_isoclass(object):
         if r == 1:
             return '\F_{' + '{0}'.format(p) + '}'
         else:
-            return '\F_{' + str(p) + '^{' + str(r) + '}}' 
+            return '\F_{' + str(p) + '^{' + str(r) + '}}'
 
     def nf(self):
         if self.is_simple:
             return self.number_fields[0]
         else:
             return None
-    
+
     def newton_plot(self):
         S = [QQ(s) for s in self.polygon_slopes]
         C = Counter(S)
@@ -241,19 +241,19 @@ class AbvarFq_isoclass(object):
             else:
                 ans += '<a href="{1}">{0}</a>'.format(simp,url) + '<sup> {0} </sup> '.format(e)
         return ans
-    
+
     def alg_clo_field(self):
         if self.r == 1:
             return '\\overline{\F}_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\\overline{\F}_{' + str(self.p) + '^{' + str(self.r) + '}}'  
-            
+            return '\\overline{\F}_{' + str(self.p) + '^{' + str(self.r) + '}}'
+
     def ext_field(self,s):
         n = s*self.r
         if n == 1:
             return '\F_{' + '{0}'.format(self.p) + '}'
         else:
-            return '\F_{' + str(self.p) + '^{' + str(n) + '}}'   
+            return '\F_{' + str(self.p) + '^{' + str(n) + '}}'
 
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
@@ -261,10 +261,10 @@ class AbvarFq_isoclass(object):
 
     def relevant_degs(self):
         return Integer(self.geometric_extension_degree).divisors()[1:-1]
-    
+
     def endo_extension_by_deg(self,degree):
         return [[factor['extension_label'],factor['multiplicity']] for factor in self.endo_extensions() if factor['extension_degree']==degree]
-    
+
     def display_endo_info(self,degree,do_describe=True):
         #When degree > 1 we find the factorization by looking at the extension database
         if degree > 1:
@@ -284,9 +284,9 @@ class AbvarFq_isoclass(object):
             if end_alg == None:
                 return no_endo_data(), do_describe
             if degree > 1:
-                ans += 'the simple isogeny class ' 
-                ans += av_display_knowl(factors[0][0]) 
-                ans += ' and its endomorphism algebra is ' 
+                ans += 'the simple isogeny class '
+                ans += av_display_knowl(factors[0][0])
+                ans += ' and its endomorphism algebra is '
             ans += end_alg[1]
         elif len(factors) == 1:
             end_alg = describe_end_algebra(self.p,factors[0][0])
@@ -295,7 +295,7 @@ class AbvarFq_isoclass(object):
             ans += dec_display + ' and its endomorphism algebra is '
             ans += matrix_display(factors[0],end_alg)
         else:
-            ans += dec_display 
+            ans += dec_display
             if do_describe:
                 ans += ' and its endomorphism algebra is a direct product of the endomorphism algebras for each isotypic factor'
                 do_describe = False
@@ -334,7 +334,7 @@ class AbvarFq_isoclass(object):
                 ans += '</td></tr>\n'
             ans += '</table>\n'
             return ans
-    
+
     def num_twists(self):
         return len(self.twists)
 
@@ -402,7 +402,7 @@ def describe_end_algebra(p,extension_label):
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += '</tr></table>\n'
         ext = db.av_fq_isog.lookup(extension_label)
-        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(irred_L_poly(ext['poly'])) 
+        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(irred_L_poly(ext['poly']))
     return ans
 
 
@@ -450,9 +450,9 @@ def non_simple_loop(p,factors):
     ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'
     for factor in factors:
         ans += '<li>'
-        ans += av_display_knowl(factor[0]) 
+        ans += av_display_knowl(factor[0])
         if factor[1] > 1:
-           ans += '<sup> {0} </sup>'.format(factor[1]) 
+           ans += '<sup> {0} </sup>'.format(factor[1])
         ans += ' : '
         end_alg = describe_end_algebra(p,factor[0])
         if end_alg == None:
@@ -471,4 +471,4 @@ def check_knowl_display(label):
         return label
     else:
         return av_display_knowl(label)
-    
+
