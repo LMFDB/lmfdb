@@ -90,9 +90,24 @@ Enter values into one or more boxes to restrict the search.
 
 <tr>
 <td align=left>{{KNOWL('nf.galois_group', title='Galois group')}} 
-  <td colspan="4"><input type='text' name='galois_group' size=10 example='C5'>
+  <td colspan="2"><input type='text' name='galois_group' size=10 example='C5'>
 <span class="formexample"> e.g. C5, or 8T12, a list of {{KNOWL('nf.galois_group.name','group labels')}}</span></td>
+
+<td align=left>{{KNOWL('nf.regulator', title='regulator')}} 
+  <td colspan="2"><input type='text' name='regulator' size=10 example='1..3.5'>
+<span class="formexample"> e.g. a range such as 1..3.5</span></td>
 </tr>
+
+<tr>
+<td align=left>{{KNOWL('nf.class_number', title='class number')}} 
+  <td><input type='text' name='class_number' size=10 example='5'>
+<span class="formexample"> e.g. 5</span></td>
+<td>
+<td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure
+  <td><input type='text' name='class_group' size=10 example='[2,4]'>
+<span class="formexample"> e.g. [ ], [3], or [2,4]</span></td>
+</tr>
+
 <tr>
 <td align=left>{{KNOWL('nf.unramified_prime', title='unramified primes')}} 
    <td><input type='text' name='ur_primes' size=10 example='2,3'>
@@ -109,15 +124,6 @@ set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
 <span class="formexample"> e.g. 2,3</span></td>
 </tr>
 
-<tr>
-<td align=left>{{KNOWL('nf.class_number', title='class number')}} 
-  <td><input type='text' name='class_number' size=10 example='5'>
-<span class="formexample"> e.g. 5</span></td>
-<td>
-<td align=left>{{KNOWL('nf.ideal_class_group', title = 'class group')}} structure
-  <td><input type='text' name='class_group' size=10 example='[2,4]'>
-<span class="formexample"> e.g. [ ], [3], or [2,4]</span></td>
-</tr>
 <tr>
 <td align="left" colspan="4">Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size="6" />
 <tr><td>

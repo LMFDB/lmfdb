@@ -545,8 +545,8 @@ class WebNumberField:
         return self._data['unit_rank']
 
     def regulator(self):
-        if self.haskey('reg'):
-            return self._data['reg']
+        if self.haskey('regulator'):
+            return self._data['regulator']
         if self.unit_rank() == 0:
             return 1
         if self.haskey('class_number'):

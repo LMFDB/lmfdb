@@ -332,7 +332,7 @@ def number_field_render_webpage():
         }
         t = 'Global Number Fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
-        return render_template("number_field_all.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
+        return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
         return number_field_search(args)
 
@@ -593,7 +593,7 @@ def render_field_webpage(args):
         info["mydecomp"] = [dopow(x) for x in v]
     except AttributeError:
         pass
-    return render_template("number_field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label)
+    return render_template("nf-show-field.html", properties2=properties2, credit=NF_credit, title=title, bread=bread, code=nf.code, friends=info.pop('friends'), downloads=downloads, learnmore=learnmore, info=info, KNOWL_ID="nf.%s"%label)
 
 def format_coeffs2(coeffs):
     return format_coeffs(string2list(coeffs))
@@ -609,7 +609,7 @@ def format_coeffs(coeffs):
 #    if len(request.args) != 0:
 #        return number_field_search(**request.args)
 #    info['learnmore'] = [('Global Number Field labels', url_for(".render_labels_page")), ('Galois group labels',url_for(".render_groups_page")), (Completename,url_for(".render_discriminants_page"))]
-#    return render_template("number_field_all.html", info = info)
+#    return render_template("nf-index.html", info = info)
 
 @nf_page.route("/<label>")
 def by_label(label):
@@ -712,7 +712,7 @@ def number_field_jump(info):
 #    info = {'results': fields2}
 #    return render_template("number_field_algebra.html", info=info, title=t, bread=bread)
 
-@search_wrap(template="number_field_search.html",
+@search_wrap(template="nf-search.html",
              table=db.nf_fields,
              title='Global Number Field Search Results',
              err_title='Global Number Field Search Error',
@@ -729,6 +729,7 @@ def number_field_search(info, query):
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2,extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
+    parse_floats(info, query, 'regulator')
     parse_ints(info,query,'class_number')
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
