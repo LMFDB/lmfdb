@@ -17,7 +17,7 @@
    type: L
    heading:
       title: L-functions
-      url_for: "l_functions.l_function_top_page"
+      url_for: "l_functions"
    firstpart:
       type: head_row
       heading: "Degree:"
@@ -61,7 +61,7 @@
    type: multilevel
    heading:
       title: Modular Forms
-      url_for: "mf.modular_form_main_page"
+      url_for: "modular_forms"
    parts:
      - title: GL(2)
        style: rotate
@@ -239,6 +239,7 @@
    status: beta
    heading:
       title: Motives
+      url_for: "motives"
    parts:
     - title: "Hypergeometric:"
       status: beta

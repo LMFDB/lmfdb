@@ -43,7 +43,7 @@ def download_sample(name):
 
 @smf_page.route('/')
 def index():
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+    bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index'))]
     if len(request.args) > 0:
         if 'download' in request.args:
@@ -59,7 +59,7 @@ def random_sample():
 @smf_page.route('/<label>')
 @smf_page.route('/<label>/')
 def by_label(label):
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+    bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index'))]
     slabel = label.split('.')
     family = get_smf_family (slabel[0])
@@ -77,7 +77,7 @@ def by_label(label):
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>')
 @smf_page.route('/Sp4Z_j/<int:k>/<int:j>/')
 def Sp4Z_j_space(k,j):
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+    bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
              ('$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
@@ -121,7 +121,7 @@ def Sp4Z_2_space(k):
 @smf_page.route('/Sp4Z_j')
 @smf_page.route('/Sp4Z_j/')
 def Sp4Z_j():
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+    bread = [("Modular Forms", url_for('modular_forms')),
              ('Siegel Modular Forms', url_for('.index')),
              ('$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
     info={'args':request.args}
