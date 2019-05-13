@@ -263,7 +263,7 @@ def by_label(label):
         validate_label(label)
     except ValueError as err:
         flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label: %s." % (label, str(err))), "error")
-        return search_input_error()
+        return redirect(url_for(".abelian_varieties"))
     g, q, iso = split_label(label)
     return redirect(url_for(".abelian_varieties_by_gqi", g = g, q = q, iso = iso))
 
