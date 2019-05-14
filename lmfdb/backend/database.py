@@ -2877,9 +2877,6 @@ class PostgresTable(PostgresBase):
                 self.conn.rollback()
                 raise RuntimeError("Different number of rows in searchfile and extrafile")
 
-            if countsfile is not None:
-                self.stats._copy_extra_counts_to_tmp()
-
             ## a workaround while resort is disabled
             self.restore_pkeys(suffix=suffix)
             #if self._id_ordered and resort:
