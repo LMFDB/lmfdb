@@ -128,7 +128,8 @@ class mf_newforms(MfChecker):
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
         return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) +
-                self.check_crosstable('nf_fields_new', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) +
+                # since coeffs is still jsonb, we must use coeffs_array
+                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs_array', 'label', constraint=nfyes) +
                 self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) +
                 self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], 'label', constraint=nfyes))
 
