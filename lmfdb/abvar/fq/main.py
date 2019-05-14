@@ -168,6 +168,7 @@ def download_search(info):
 def abelian_variety_search(info, query):
     parse_ints(info,query,'q',name='base field')
     parse_ints(info,query,'g',name='dimension')
+    parse_ints(info,query,'geom_deg',qfield='geometric_extension_degree')
     parse_bool(info,query,'simple',qfield='is_simple')
     parse_bool(info,query,'primitive',qfield='is_primitive')
     parse_bool_unknown(info, query, 'jacobian', qfield='has_jacobian')

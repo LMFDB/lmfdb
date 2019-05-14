@@ -190,6 +190,27 @@ Please enter a value or leave blank:
             </td>
         </tr>
         <tr>
+          <td>
+            Geometric extension degree
+          </td>
+          <td>
+            <input type='text' name='geom_deg' example="84" size=10 value="{{info.geom_deg}}"/>
+          </td>
+          <td>
+            <span class="formexample"> e.g. 6-12, 84</span>
+          </td>
+          <td>
+            Geometrically simple
+          </td>
+          <td>
+            <select name='geom_simple'>
+              <option value="yes">yes</option>
+              <option value="" selected>unrestricted</option>
+              <option value="no">no</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
             <td>
                 {{ KNOWL('lf.newton_polygon',title="slopes of Newton polygon") }}
             </td>

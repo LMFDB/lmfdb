@@ -50,6 +50,8 @@ class AbvarFq_isoclass(object):
     Class for an isogeny class of abelian varieties over a finite field
     """
     def __init__(self,dbdata):
+        if 'size' not in dbdata:
+            dbdata['size'] = None
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -340,9 +342,9 @@ class AbvarFq_isoclass(object):
 
     def twist_display(self,show_all):
         if show_all:
-            ans = "Below is a list of all twists of the isogeny class."
+            ans = "Below is a list of all twists of this isogeny class."
         else:
-            ans = "Below is some of the twists of the isogeny class."
+            ans = "Below are some of the twists of this isogeny class."
         ans += '<table class = "ntdata">\n'
         ans += '<tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>\n'
         i = 0
