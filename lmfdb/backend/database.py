@@ -29,6 +29,7 @@ import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, t
 from collections import defaultdict, Counter
 from glob import glob
 import csv
+import sys
 
 from psycopg2 import connect, DatabaseError, InterfaceError, ProgrammingError, NotSupportedError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
@@ -37,7 +38,7 @@ from psycopg2.extensions import cursor as pg_cursor
 from sage.all import cartesian_product_iterator, binomial
 
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
-from lmfdb.utils import KeyedDefaultDict, make_tuple
+from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
 from lmfdb.logger import make_logger
 from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
@@ -372,12 +373,12 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except (ProgrammingError, NotSupportedError):
+                except (ProgrammingError, NotSupportedError) as e:
                     try:
-                        print cur.mogrify(query, values)
+                        context = ' happens while executing {}'.format(cur.mogrify(query, values))
                     except Exception:
-                        print "Error executing %s with values %s" % (query, values)
-                    raise
+                        context = ' happens while executing {} with values {}'.format(query, values)
+                    reraise(type(e), type(e)(str(e) + context), sys.exc_info()[2])
             if silent is False or (silent is None and not self._db._silenced):
                 t = time.time() - t
                 if t > self.slow_cutoff:
@@ -426,7 +427,13 @@ class PostgresBase(object):
         return cur
 
     def _table_exists(self, tablename):
-        cur = self._execute(SQL("SELECT to_regclass(%s)"), [tablename], silent=True)
+        return self._relation_exists(tablename)
+
+    def _index_exists(self, indexname):
+        return self._relation_exists(indexname)
+
+    def _relation_exists(self, name):
+        cur = self._execute(SQL("SELECT to_regclass(%s)"), [name], silent=True)
         return cur.fetchone()[0] is not None
 
     def _constraint_exists(self, tablename, constraintname):
@@ -695,7 +702,7 @@ class PostgresBase(object):
                                                                Identifier(constraint + source),
                                                                Identifier(constraint + target)))
             for index in indexes:
-                if self._table_exists(index + source):
+                if self._index_exists(index + source):
                     self._execute(rename_index.format(Identifier(index + source),
                                                       Identifier(index + target)))
                 else:
@@ -1912,6 +1919,21 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
+    def create_counts_index(self, suffix=""):
+        tablename = self.search_table + "_counts"
+        name = "{}_cols_vals_split".format(tablename) + suffix
+        storage_params = {}
+        now = time.time()
+        if not self._index_exists(name):
+            with DelayCommit(self, silence=True):
+                creator = self._create_index_statement(name, tablename, "btree", ["cols", "values", "split"], None, storage_params)
+                self._execute(creator, storage_params.values())
+            print "Index {} created in {:.3f} secs".format(name, time.time() - now)
+        else:
+            raise ValueError("Index with name {} already exists".format(name))
+
+
+
     def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None):
         """
         Create an index.
@@ -1976,16 +1998,20 @@ class PostgresTable(PostgresBase):
                 name = "_".join([self.search_table] + [col[:2] for col in columns])
             else:
                 name = "_".join([self.search_table] + ["".join(col[0] for col in columns)])
+
+
         with DelayCommit(self, silence=True):
+            if self._index_exists(name):
+                raise ValueError("Index with name {} already exists; try specifying a different name".format())
             selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
             cur = self._execute(selecter, [name, self.search_table])
             if cur.rowcount > 0:
-                raise ValueError("Index with that name already exists; try specifying a different name")
+                raise ValueError("Index with name {} already exists in meta_indexes; try specifying a different name".format(name))
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
             self._execute(creator, storage_params.values())
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
             self._execute(inserter, [name, self.search_table, type, Json(columns), Json(modifiers), storage_params])
-        print "Index %s created in %.3f secs"%(name, time.time()-now)
+        print "Index %s created in %.3f secs"%(name, time.time() - now)
 
     def drop_index(self, name, suffix="", permanent=False, commit=True):
         """
@@ -2774,9 +2800,14 @@ class PostgresTable(PostgresBase):
         backup_number = self._next_backup_number()
         with DelayCommit(self, commit, silence=True):
             indexes = self.list_indexes().keys()
+            counts_indexes = []
+            for table in tables:
+                if table.endswith("_counts"):
+                    counts_indexes.append("{}_counts_cols_vals_split".format(table))
+            indexes += counts_indexes
             constraints = self.list_constraints().keys()
             self._swap(tables, indexes, constraints, '', '_old' + str(backup_number))
-            self._swap(tables, indexes if indexed else [],
+            self._swap(tables, indexes if indexed else counts_indexes,
                        constraints if indexed else [],'_tmp', '')
             for table in tables:
                 self._db.grant_select(table)
@@ -2902,7 +2933,11 @@ class PostgresTable(PostgresBase):
                 for table in [self.stats.counts, self.stats.stats]:
                     if not self._table_exists(table + suffix):
                         self._clone(table, table + suffix)
-                self.stats.refresh_stats(suffix=suffix)
+                        self.create_counts_index(suffix=suffix)
+
+
+                if countsfile is None or statsfile is None:
+                    self.stats.refresh_stats(suffix=suffix)
                 for table in [self.stats.counts, self.stats.stats]:
                     if table not in tables:
                         tables.append(table)
