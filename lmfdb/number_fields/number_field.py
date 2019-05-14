@@ -205,23 +205,23 @@ def galstatdict(li, tots, t):
 
 @nf_page.route("/stats")
 def statistics():
-    # FIXME use StatsDisplay
     fields = db.nf_fields
+    nfstatdb = fields.stats
     title = 'Global Number Field Statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
              ('Number Field Statistics', '')]
     init_nf_count()
     ntrans = [0, 1, 1, 2, 5, 5, 16, 7, 50, 34, 45, 8, 301, 9, 63, 104, 1954,
               10, 983, 8, 1117, 164, 59, 7, 25000, 211, 96, 2392, 1854, 8, 5712]
-    degree_stats = fields.stats.column_counts('degree')
+    degree_stats = nfstatdb.column_counts('degree')
     n = [degree_stats[elt + 1] for elt in range(23)]
 
-    degree_r2_stats = fields.stats.column_counts(['degree', 'r2'])
+    degree_r2_stats = nfstatdb.column_counts(['degree', 'r2'])
     # if a count is missing it is because it is zero
     nsig = [[degree_r2_stats.get((deg+1, s), 0) for s in range((deg+3)/2)]
             for deg in range(23)]
     # Galois groups
-    nt_stats = fields.stats.column_counts(['degree', 'galt'])
+    nt_stats = nfstatdb.column_counts(['degree', 'galt'])
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -235,14 +235,15 @@ def statistics():
                 5, 3, 2]
     dn = galstatdict([nt_stats[(j+1,dn_tlist[j])] for j in range(len(dn_tlist))], n, dn_tlist)
 
-    h = [fields.count({'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(12)]
-    has_h = fields.count({'class_number': {'$exists': True}})
-    hdeg_stats = {j: fields.stats.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(1, 12)}
-    hdeg_stats[0] = fields.stats.column_counts('degree', {'class_number': 1})
+    hdeg_stats = {j: nfstatdb.column_counts('degree', {'class_number': {'$lt': 1+10**j, '$gt': 10**(j-1)}}) for j in range(1, 12)}
+    hdeg_stats[0] = nfstatdb.column_counts('degree', {'class_number': 1})
+    h = [sum(hdeg_stats[j].get(k+1,0) for k in range(max_deg)) for j in range(12)]
     # if a count is missing it is because it is zero
     hdeg = [[hdeg_stats[j].get(deg+1, 0) for j in range(12)] for deg in range(23)]
-    has_hdeg_stats = fields.stats.column_counts('degree', {'class_number': {'$exists': True}})
+    has_hdeg_stats = nfstatdb.column_counts('degree', {'class_number': {'$exists': True}})
     has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
+    has_h = sum(has_hdeg[j] for j in range(len(has_hdeg)))
+    # old has_h = fields.count({'class_number': {'$exists': True}})
     hdeg = [[{'cnt': comma(hdeg[nn][j]),
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s' % (nn + 1, str(1 + 10**(j - 1)) + '-' + str(10**j))}
@@ -277,11 +278,11 @@ def statistics():
     h[0]['query'] = url_for(".number_field_render_webpage")+'?class_number=1'
 
     # Class number 1 by signature
-    sigclass1 = fields.stats.get_oldstat('sigclass1')['counts']
-    sighasclass = fields.stats.get_oldstat('sighasclass')['counts']
-    sigclass1 = [[{'cnt': comma(sigclass1[nn][r2]),
-                   'prop': format_percentage(sigclass1[nn][r2], sighasclass[nn][r2]) if sighasclass[nn][r2] > 0 else 0,
-                   'show': sighasclass[nn][r2] > 0,
+    sigclass1 = nfstatdb.column_counts(['degree', 'r2'], {'class_number': 1})
+    sighasclass = nfstatdb.column_counts(['degree', 'r2'], {'class_number': {'$exists': True}})
+    sigclass1 = [[{'cnt': comma(sigclass1.get((nn+1,r2),0)),
+                   'prop': format_percentage(sigclass1.get((nn+1,r2),0), sighasclass.get((nn+1,r2),0)) if sighasclass.get((nn+1,r2),0) > 0 else 0,
+                   'show': sighasclass.get((nn+1,r2),0) > 0,
                    'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
                   for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
