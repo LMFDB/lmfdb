@@ -1459,8 +1459,8 @@ class PostgresTable(PostgresBase):
              u'r2': 0,
              u'ramps': [11, 53, 702551],
              u'used_grh': False}
-            sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['reg'])
-            {'reg':455.191694993}
+            sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['regulator'])
+            {'regulator':455.191694993}
         """
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
