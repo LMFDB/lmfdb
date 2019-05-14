@@ -243,7 +243,6 @@ def statistics():
     has_hdeg_stats = nfstatdb.column_counts('degree', {'class_number': {'$exists': True}})
     has_hdeg = [has_hdeg_stats[deg+1] for deg in range(23)]
     has_h = sum(has_hdeg[j] for j in range(len(has_hdeg)))
-    # old has_h = fields.count({'class_number': {'$exists': True}})
     hdeg = [[{'cnt': comma(hdeg[nn][j]),
               'prop': format_percentage(hdeg[nn][j], has_hdeg[nn]),
               'query': url_for(".number_field_render_webpage")+'?degree=%d&class_number=%s' % (nn + 1, str(1 + 10**(j - 1)) + '-' + str(10**j))}
