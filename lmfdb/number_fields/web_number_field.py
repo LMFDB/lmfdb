@@ -400,10 +400,12 @@ class WebNumberField:
     # Get data from group database
     def galois_sib_data(self):
         if 'repdata' not in self._data:
-            repdegs = [z[0] for z in self.gg()._data['repns']]
             numae = self.gg().arith_equivalent()
             galord = int(self.gg().order())
-            repcounts = Counter(repdegs)
+            sibcnts = self.gg()._data['siblings']
+            repcounts = Counter()
+            for s in sibcnts:
+                repcounts[s[0][0]] += s[1]
             gc = 0
             if galord<24:
                 del repcounts[galord]
