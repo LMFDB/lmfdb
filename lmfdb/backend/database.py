@@ -3848,7 +3848,7 @@ class PostgresStatsTable(PostgresBase):
             one_col = False
             cols = sorted(cols)
         if constraint is None:
-            ccols, cvals, allcols = [], [], cols
+            ccols, cvals, allcols = Json([]), Json([]), cols
         else:
             ccols, cvals = self._split_dict(constraint)
             allcols = sorted(list(set(cols + constraint.keys())))
