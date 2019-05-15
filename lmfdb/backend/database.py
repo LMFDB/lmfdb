@@ -2067,16 +2067,17 @@ class PostgresTable(PostgresBase):
                 raise ValueError("Index %s does not exist in meta_indexes"%(name,))
             type, columns, modifiers, storage_params = cur.fetchone()
             creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
-            try:
+            if self._index_exists(name + suffix):
                 # Reloading indexes can cause crashes in a way we don't understand.
                 # Postgres complains that the index already exists, even though we haven't
                 # created it yet on this table.
-                # As a workaround, we ignore errors in the index creation code and print a big warning
+                # As a workaround, we avoid errors in the index creation code and print a big warning
+                print "*"*80
+                print "Index restoration failed for {}".format(name + suffix)
+                print "*"*80
+                return
+            else:
                 self._execute(creator, storage_params.values())
-            except Exception as err:
-                print "*"*80
-                print "Index creation failed: %s" % (err,)
-                print "*"*80
         print "Created index %s in %.3f secs"%(name, time.time() - now)
 
     def _indexes_touching(self, columns):
