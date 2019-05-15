@@ -168,11 +168,11 @@ _counts_types =  dict(zip(_counts_cols,
     ("jsonb", "jsonb", "bigint", "boolean", "boolean")))
 _counts_jsonb_idx = jsonb_idx(_counts_cols, _counts_types)
 _counts_indexes = [{"name": "{}_cols_vals_split",
-                  "columns": [('cols', 'values', 'split')],
-                  "type": "btree"},
-                 {"name": "{}_cols_split",
-                  "columns": [('cols', 'split')],
-                  "type": "btree"}]
+                   "columns": ('cols', 'values', 'split'),
+                   "type": "btree"},
+                   {"name": "{}_cols_split",
+                    "columns": ('cols', 'split'),
+                    "type": "btree"}]
 
 
 _stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
@@ -1928,7 +1928,6 @@ class PostgresTable(PostgresBase):
 
     def create_counts_indexes(self, suffix=""):
         tablename = self.search_table + "_counts"
-        name = "{}_cols_vals_split".format(tablename) + suffix
         storage_params = {}
         with DelayCommit(self, silence=True):
             for index in _counts_indexes:
@@ -2816,7 +2815,8 @@ class PostgresTable(PostgresBase):
             counts_indexes = []
             for table in tables:
                 if table.endswith("_counts"):
-                    counts_indexes.append("{}_counts_cols_vals_split".format(table))
+                    counts_indexes = [index["name"].format(table)
+                                            for index in _counts_indexes]
             indexes += counts_indexes
             constraints = self.list_constraints().keys()
             self._swap(tables, indexes, constraints, '', '_old' + str(backup_number))
