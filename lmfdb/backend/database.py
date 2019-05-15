@@ -1943,7 +1943,7 @@ class PostgresTable(PostgresBase):
                                                        tablename,
                                                        index["type"],
                                                        index["columns"],
-                                                       None,
+                                                       [[]] * len(index["columns"]),
                                                        storage_params)
                 self._execute(creator, storage_params.values())
                 print "Index {} created in {:.3f} secs".format(name, time.time() - now)
