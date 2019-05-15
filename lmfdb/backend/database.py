@@ -1926,7 +1926,7 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
-    def create_counts_indexes(self, suffix=""):
+    def create_counts_indexes(self, suffix="", warning_only=False):
         tablename = self.search_table + "_counts"
         storage_params = {}
         with DelayCommit(self, silence=True):
@@ -1934,8 +1934,11 @@ class PostgresTable(PostgresBase):
                 now = time.time()
                 name = index["name"].format(tablename) + suffix
                 if self._index_exists(name):
-                    raise ValueError(
-                            "Index with name {} already exists".format(name))
+                    message = "Index with name {} already exists".format(name)
+                    if warning_only:
+                        print(message)
+                    else:
+                        raise ValueError(message)
                 creator = self._create_index_statement(name,
                                                        tablename,
                                                        index["type"],
