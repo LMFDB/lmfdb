@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 
+"""
+TODO
+- add geometrically simple boolean flag
+- add geometric_number_fields, geometric_galois_groups
+- set Jacobians to 0 when known, make sure it doesn't display otherwise
+- add search on number of twists, max twist degree
+- has geometric supersingular factor (has a degree 1 factor geometrically)
+- search on discriminant over the center (absolute norm down to Q)
+- should we use the polredabs polynomial to give the places?  It's a bit weird to have Q(sqrt(-1)) represented using the polynomial x^2 - 1481250*x + 95367431640625
+- Fun examples: 4.5.f_k_z_cx, 4.2.b_e_c_j, 4.5.k_bt_fa_lt
+"""
+
 from flask import url_for
 from collections import Counter
 
@@ -12,7 +24,7 @@ from lmfdb.app import app
 from sage.rings.all import Integer, QQ, RR, ZZ, PolynomialRing
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
-
+from sage.databases.cremona import class_to_int
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -52,6 +64,8 @@ class AbvarFq_isoclass(object):
     def __init__(self,dbdata):
         if 'size' not in dbdata:
             dbdata['size'] = None
+        if 'jacobian_count' not in dbdata:
+            dbdata['jacobian_count'] = None
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -359,12 +373,27 @@ class AbvarFq_isoclass(object):
 def ctx_decomposition():
     return {'av_data': av_data}
 
-def irred_L_poly(polylist):
+def signed_class_to_int(code):
+    if code == 'a':
+        return ZZ(0)
+    elif code.startswith('a'):
+        return -ZZ(class_to_int(code[1:]))
+    else:
+        return ZZ(class_to_int(code))
+
+def Ppoly_irred(label):
+    g, q, coeffs = label.split('.')
+    g, q = ZZ(g), ZZ(q)
+    polylist = map(signed_class_to_int, coeffs.split('_'))
+    print "A", polylist
+    polylist = [ZZ(1)] + polylist + [q**i * c for (i, c) in enumerate(reversed(polylist[:-1]), 1)] + [q**g]
+    print "B", polylist
     from sage.all import latex
     polylist.reverse()
     ZZx = PolynomialRing(ZZ,'x')
     poly = ZZx(polylist)
     factor = poly.factor()[0][0]
+    print label, factor
     return latex(factor)
 
 def describe_end_algebra(p,extension_label):
@@ -403,8 +432,7 @@ def describe_end_algebra(p,extension_label):
         for inv in brauer_invariants:
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += '</tr></table>\n'
-        ext = db.av_fq_isog.lookup(extension_label)
-        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(irred_L_poly(ext['poly']))
+        ans[1] += 'where $\pi$ is a root of ${0}$.\n'.format(Ppoly_irred(extension_label))
     return ans
 
 
