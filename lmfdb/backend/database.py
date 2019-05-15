@@ -1937,6 +1937,7 @@ class PostgresTable(PostgresBase):
                     message = "Index with name {} already exists".format(name)
                     if warning_only:
                         print(message)
+                        continue
                     else:
                         raise ValueError(message)
                 creator = self._create_index_statement(name,
