@@ -167,6 +167,13 @@ _counts_cols = ("cols", "values", "count", "extra", "split")
 _counts_types =  dict(zip(_counts_cols,
     ("jsonb", "jsonb", "bigint", "boolean", "boolean")))
 _counts_jsonb_idx = jsonb_idx(_counts_cols, _counts_types)
+_counts_indexes = [{"name": "{}_cols_vals_split",
+                  "columns": [('cols', 'values', 'split')],
+                  "type": "btree"},
+                 {"name": "{}_cols_split",
+                  "columns": [('cols', 'split')],
+                  "type": "btree"}]
+
 
 _stats_cols = ("cols", "stat", "value", "constraint_cols", "constraint_values", "threshold")
 _stats_types =  dict(zip(_stats_cols,
@@ -1919,19 +1926,25 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
-    def create_counts_index(self, suffix=""):
+    def create_counts_indexes(self, suffix=""):
         tablename = self.search_table + "_counts"
         name = "{}_cols_vals_split".format(tablename) + suffix
         storage_params = {}
-        now = time.time()
-        if not self._index_exists(name):
-            with DelayCommit(self, silence=True):
-                creator = self._create_index_statement(name, tablename, "btree", ["cols", "values", "split"], None, storage_params)
+        with DelayCommit(self, silence=True):
+            for index in _counts_indexes:
+                now = time.time()
+                name = index["name"].format(tablename) + suffix
+                if self._index_exists(name):
+                    raise ValueError(
+                            "Index with name {} already exists".format(name))
+                creator = self._create_index_statement(name,
+                                                       tablename,
+                                                       index["type"],
+                                                       index["columns"],
+                                                       None,
+                                                       storage_params)
                 self._execute(creator, storage_params.values())
-            print "Index {} created in {:.3f} secs".format(name, time.time() - now)
-        else:
-            raise ValueError("Index with name {} already exists".format(name))
-
+                print "Index {} created in {:.3f} secs".format(name, time.time() - now)
 
 
     def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None):
@@ -2933,7 +2946,7 @@ class PostgresTable(PostgresBase):
                 for table in [self.stats.counts, self.stats.stats]:
                     if not self._table_exists(table + suffix):
                         self._clone(table, table + suffix)
-                        self.create_counts_index(suffix=suffix)
+                        self.create_counts_indexes(suffix=suffix)
 
 
                 if countsfile is None or statsfile is None:
