@@ -2054,7 +2054,7 @@ class PostgresTable(PostgresBase):
         for line in cur:
             print line[0]
 
-    def _list_indexes(self):
+    def _list_built_indexes(self):
         """
         Lists built indexes names on the search table
         """
@@ -2067,7 +2067,7 @@ class PostgresTable(PostgresBase):
          - not necessarily all built
          - not necessarily a supset of all the built indexes.
 
-        For the current built indexes on the search table, see _list_indexes
+        For the current built indexes on the search table, see _list_built_indexes
         """
         selecter = SQL("SELECT index_name, type, columns, modifiers FROM meta_indexes WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True)
@@ -2383,7 +2383,7 @@ class PostgresTable(PostgresBase):
         command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
         self._pkey_common(command, suffix, "Built", True)
 
-    def _list_constraints(self):
+    def _list_built_constraints(self):
         """
         Lists constraints names on the search table
         """
@@ -2395,7 +2395,7 @@ class PostgresTable(PostgresBase):
         Note:
          - not necessarily all built
          - not necessarily a supset of all the built constraints.
-        For the current built constraints on the search table, see _list_constraints
+        For the current built constraints on the search table, see _list_built_constraints
         """
         selecter = SQL("SELECT constraint_name, type, columns, check_func FROM meta_constraints WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True)
