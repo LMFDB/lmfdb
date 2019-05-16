@@ -470,10 +470,16 @@ class PostgresBase(object):
                 return table[0]
 
     def _list_indexes(self, tablename):
+        """
+        Lists built indexes names on the search table `tablename`
+        """
         cur = self._execute(SQL("SELECT indexname FROM pg_indexes WHERE tablename = %s"), [tablename],  silent=True)
         return [elt[0] for elt in cur]
 
     def _list_constraints(self, tablename):
+        """
+        Lists constraints names on the search table `tablename`
+        """
         # if we look into information_schema.table_constraints
         # we also get internal constraints, I'm not sure why
         # Alternatively, we do a triple join to get the right answer
@@ -808,7 +814,7 @@ class PostgresBase(object):
         rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
 
         def target_name(name, tablename, kind):
-            original_name = name
+            original_name = name[:]
             if not name.endswith(source):
                 logging.warning(
                         "{} of {} with name {}".format(kind, tablename, name) +
@@ -816,7 +822,7 @@ class PostgresBase(object):
 
             elif source != '':
                 # drop the suffix
-                original_name = original_name[:len(source)]
+                original_name = original_name[:-len(source)]
 
             assert original_name + source == name
 
@@ -829,7 +835,8 @@ class PostgresBase(object):
                         " uses a restricted suffix. ".format(source) +
                         "The name will be extended with a _ in the swap")
                 target_name = original_name + '_' + target
-
+            # assure that the rename will be successful
+            self._rename_if_exists(target_name)
             return target_name
 
 
@@ -2047,9 +2054,20 @@ class PostgresTable(PostgresBase):
         for line in cur:
             print line[0]
 
+    def _list_indexes(self):
+        """
+        Lists built indexes names on the search table
+        """
+        return self._list_indexes(self.search_table)
+
     def list_indexes(self, verbose=False):
         """
-        Lists the indexes on the search table.
+        Lists the indexes on the search table present in meta_indexes
+        Note:
+         - not necessarily all built
+         - not necessarily a supset of all the built indexes.
+
+        For the current built indexes on the search table, see _list_indexes
         """
         selecter = SQL("SELECT index_name, type, columns, modifiers FROM meta_indexes WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True)
@@ -2365,9 +2383,19 @@ class PostgresTable(PostgresBase):
         command = SQL("ALTER TABLE {0} ADD CONSTRAINT {1} PRIMARY KEY (id)")
         self._pkey_common(command, suffix, "Built", True)
 
+    def _list_constraints(self):
+        """
+        Lists constraints names on the search table
+        """
+        return self._db._list_constraints(self.search_table)
+
     def list_constraints(self, verbose=False):
         """
-        Lists the constraints on the search table.
+        Lists the constraints on the search table present in meta_constraints
+        Note:
+         - not necessarily all built
+         - not necessarily a supset of all the built constraints.
+        For the current built constraints on the search table, see _list_constraints
         """
         selecter = SQL("SELECT constraint_name, type, columns, check_func FROM meta_constraints WHERE table_name = %s")
         cur = self._execute(selecter, [self.search_table], silent=True)
