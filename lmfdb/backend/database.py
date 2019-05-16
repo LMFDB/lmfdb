@@ -818,7 +818,7 @@ class PostgresBase(object):
                 # drop the suffix
                 original_name = original_name[:len(source)]
 
-            assert original_name + source = name
+            assert original_name + source == name
 
             target_name = original_name + target
             try:
