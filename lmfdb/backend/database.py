@@ -3153,7 +3153,7 @@ class PostgresTable(PostgresBase):
                 self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
             print "Reloaded %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
-    def reload_final_swap(self, tables=None, metafile=None, indexed=True, commit=True):
+    def reload_final_swap(self, tables=None, metafile=None, commit=True):
         """
         Renames the _tmp versions of `tables` to the live versions.
         and updates the corresponding meta_tables row if `metafile` is provided
@@ -3162,7 +3162,6 @@ class PostgresTable(PostgresBase):
 
         - ``tables`` -- list of strings (optional), of the tables to renamed. If None is provided, renames all the tables ending in `_tmp`
         - ``metafile`` -- a string (optional), giving a file containing the meta information for the table.
-        - ``indexed`` -- boolean, whether the temporary table has indexes and constraints on it.
         """
         with DelayCommit(self, commit, silence=True):
             if tables is None:
@@ -5946,7 +5945,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             for table, filedata, included in file_list:
                 if table in failures:
                     continue
-                table.reload_final_swap(tables=included, metafile=filedata[-1], reindex=reindex)
+                table.reload_final_swap(tables=included, metafile=filedata[-1])
 
         if failures:
             print "Reloaded %s"%(", ".join(tablenames))
