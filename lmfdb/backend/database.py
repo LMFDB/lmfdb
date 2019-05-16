@@ -863,7 +863,7 @@ class PostgresBase(object):
                                                      Identifier(c_target)))
                     done.add(c_target)
 
-                for index in self._list_constraints(tablename_new):
+                for index in self._list_indexes(tablename_new):
                     if index in done:
                         continue
                     i_target = target_name(index, tablename_new, "Index")
