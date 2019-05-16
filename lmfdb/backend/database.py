@@ -840,7 +840,7 @@ class PostgresBase(object):
                 tablename_new = table + target
                 self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
 
-                done = {} # done constraints/indexes
+                done = set({}) # done constraints/indexes
                 # We threat pkey separately
                 pkey_old = table + source + "_pkey"
                 pkey_new = table + target + "_pkey"
