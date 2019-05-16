@@ -434,18 +434,134 @@ class PostgresBase(object):
         return cur
 
     def _table_exists(self, tablename):
-        return self._relation_exists(tablename)
+        cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"),
+                            [tablename], silent=True)
+        return cur.fetchone()[0] is not None
 
-    def _index_exists(self, indexname):
-        return self._relation_exists(indexname)
+    def _index_exists(self, indexname, tablename=None):
+        if tablename:
+            cur = self._execute(
+                    SQL("SELECT 1 FROM pg_indexes WHERE indexname = %s AND tablename = %s"),
+                    [indexname, tablename],  silent=True)
+            return cur.fetchone()[0] is not None
+        else:
+            cur = self._execute(SQL("SELECT tablename FROM pg_indexes WHERE indexname=%s"),
+                    [indexname],  silent=True)
+            table = cur.fetchone()
+            if table is None:
+                return False
+            else:
+                return table[0]
 
     def _relation_exists(self, name):
         cur = self._execute(SQL("SELECT to_regclass(%s)"), [name], silent=True)
         return cur.fetchone()[0] is not None
 
-    def _constraint_exists(self, tablename, constraintname):
-        cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
-        return cur.fetchone() is not None
+    def _constraint_exists(self, constraintname, tablename=None):
+        if tablename:
+            cur = self._execute(SQL("SELECT 1 from information_schema.table_constraints where table_name=%s and constraint_name=%s"), [tablename, constraintname],  silent=True)
+            return cur.fetchone() is not None
+        else:
+            cur = self._execute(SQL("SELECT table_name from information_schema.table_constraints where constraint_name=%s"), [constraintname],  silent=True)
+            table = cur.fetchone()
+            if table is None:
+                return False
+            else:
+                return table[0]
+
+    def _list_indexes(self, tablename):
+        cur = self._execute(SQL("SELECT indexname FROM pg_indexes WHERE tablename = %s"), [tablename],  silent=True)
+        return [elt[0] for elt in cur]
+
+    def _list_constraints(self, tablename):
+        # if we look into information_schema.table_constraints
+        # we also get internal constraints, I'm not sure why
+        # Alternatively, we do a triple join to get the right answer
+        cur = self._execute(SQL("SELECT con.con.conname "
+                               "FROM pg_catalog.pg_constraint con "
+                               "INNER JOIN pg_catalog.pg_class rel "
+                               "           ON rel.oid = con.conrelid "
+                               "INNER JOIN pg_catalog.pg_namespace nsp "
+                               "           ON nsp.oid = connamespace "
+                               "WHERE rel.relname = %s"),
+                               [tablename],  silent=True)
+        return [elt[0] for elt in cur]
+
+
+
+    def _rename_if_exists(self, name, suffix=""):
+        """
+        Given:
+            -- `name` of an index or constraint,
+            -- `suffix` a suffix to append to `name`
+        if an index or constraint `name` + `suffix` already exists,
+        renames so it ends in _depN
+        """
+        if self._relation_exists(name + suffix):
+            # First we determine its type
+            kind = None
+            tablename = self._constraint_exists(name + suffix)
+            if tablename:
+                kind = "Constraint"
+                begin_renamer = SQL("ALTER TABLE {0} RENAME CONSTRAINT").format(tablename)
+                end_renamer = SQL("{0} TO {1}")
+                begin_command = SQL("ALTER TABLE {0}").format(tablename)
+                end_command = SQL("DROP CONSTRAINT {0}")
+            elif self._index_exists(name + suffix):
+                kind = "Index"
+                begin_renamer = SQL("")
+                end_renamer = SQL("ALTER INDEX {0} RENAME TO {1}")
+                begin_command = SQL("")
+                end_command = SQL("DROP INDEX {0}")
+            else:
+                raise ValueError("Relation with " +
+                                 "name {} ".format(name + suffix) +
+                                 "already exists. " +
+                                 "And it is not an index " +
+                                 "or a constraint")
+
+            # Find a new name for the existing index
+            depsuffix = "_dep0" + suffix
+            i = 0
+            deprecated_name = name[:64 - len(depsuffix)] + depsuffix
+            while self._relation_exists(deprecated_name):
+                i += 1
+                depsuffix = "_dep" + str(i) + suffix
+                deprecated_name = name[:64 - len(depsuffix)] + depsuffix
+
+            self._execute(begin_renamer + end_renamer.format(
+                Identifier(name + suffix, deprecated_name)))
+
+            command = begin_command + end_command.format(deprecated_name)
+
+            logging.warning("{} with name {} ".format(kind, name + suffix) +
+                            "already exists. " +
+                            "It has been renamed to {} ".format(deprecated_name) +
+                            "and it can be deleted " +
+                            "with the following SQL command:\n" +
+                            self.cursor().mogrify(command))
+
+    def _check_restricted_suffix(self, name, kind="Index", skip_dep=False):
+        """
+        Given:
+            -- `name` of an index/constraint, and
+            -- `kind` in ["Index", "Constraint"] (only used for error msg)
+        checks that `name` doesn't end with:
+            - _tmp
+            _ _pkey
+            _ _oldN
+            - _depN
+        """
+        tests = [(r"_old[\d]+$", "_oldN"),
+                 (r"_tmp$", "_tmp"),
+                 ("_pkey$", "_pkey")]
+        if not skip_dep:
+            tests.append((r"_dep[\d]+_$", "_depN"))
+        for match, message in tests:
+            if re.match(match, name):
+                raise ValueError("{} name {} is invalid, ".format(kind, name) +
+                                 "cannot end in {}, ".format(message) +
+                                 "try specifying a different name")
 
     @staticmethod
     def _sort_str(sort_list):
@@ -676,7 +792,7 @@ class PostgresBase(object):
 
 
 
-    def _swap(self, tables, indexes, constraints, source, target):
+    def _swap(self, tables, source, target):
         """
         Renames tables, indexes, constraints and primary keys, for use in reload.
 
@@ -684,36 +800,76 @@ class PostgresBase(object):
 
         - ``tables`` -- a list of table names to reload (including suffixes like
             ``_extra`` or ``_counts`` but not ``_tmp``).
-        - ``indexes`` -- a list of index names to reload, without suffixes.
-        - ``constraints`` -- a list of constraint names to reload, without suffixes.
         - ``source`` -- the source suffix for the swap.
         - ``target`` -- the target suffix for the swap.
         """
         rename_table = SQL("ALTER TABLE {0} RENAME TO {1}")
         rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
         rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
+
+        def name_converter(name, tablename, kind):
+            original_name = name
+            if not name.endswith(source):
+                logging.warning(
+                        "{} of {} with name {}".format(kind, tablename, name) +
+                        " does not end with the suffix {}".format(source))
+
+            elif source != '':
+                # drop the suffix
+                original_name = original_name[:len(source)]
+
+            assert original_name + source = name
+
+            target_name = original_name + target
+            try:
+                self._check_restricted_suffix(original_name, kind, skip_dep=True)
+            except ValueError:
+                logging.warning(
+                        "{} of {} with name {}".format(kind, tablename, name) +
+                        " uses a restricted suffix. ".format(source) +
+                        "The name will be extended with a _ in the swap")
+                target_name = original_name + '_' + target
+
+            return original_name + source, target_name
+
+
+
         with DelayCommit(self, silence=True):
             for table in tables:
                 tablename_old = table + source
                 tablename_new = table + target
                 self._execute(rename_table.format(Identifier(tablename_old), Identifier(tablename_new)))
+
+                done = {} # done constraints/indexes
+                # We threat pkey separately
                 pkey_old = table + source + "_pkey"
                 pkey_new = table + target + "_pkey"
-                if self._constraint_exists(tablename_new, pkey_old):
+                if self._constraint_exists(pkey_old, tablename_new):
                     self._execute(rename_constraint.format(Identifier(tablename_new),
                                                            Identifier(pkey_old),
                                                            Identifier(pkey_new)))
-                for constraint in constraints:
-                    if self._constraint_exists(tablename_new, constraint + source):
-                        self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                               Identifier(constraint + source),
-                                                               Identifier(constraint + target)))
-            for index in indexes:
-                if self._index_exists(index + source):
-                    self._execute(rename_index.format(Identifier(index + source),
-                                                      Identifier(index + target)))
-                else:
-                    print "Warning: index %s does not exist"%(index + source)
+                    done.add(pkey_old)
+
+
+                for constraint in self._list_constraints(tablename_new):
+                    if constraint in done:
+                        continue
+                    c_source, c_target = name_converter(constraint,
+                                                        tablename_new,
+                                                        "Constraint")
+                    self._execute(rename_constraint.format(Identifier(tablename_new),
+                                                               Identifier(c_source),
+                                                               Identifier(c_target)))
+                    done.add(constraint)
+                for index in self._list_constraints(tablename_new):
+                    if index in done:
+                        continue
+                    i_source, i_target = name_converter(constraint,
+                                                        tablename_new,
+                                                        "Constraint")
+                    self._execute(rename_index.format(Identifier(i_source),
+                                                      Identifier(i_target)))
+                    done.add(index)
 
 
 
@@ -1933,8 +2089,8 @@ class PostgresTable(PostgresBase):
             for index in _counts_indexes:
                 now = time.time()
                 name = index["name"].format(tablename) + suffix
-                if self._index_exists(name):
-                    message = "Index with name {} already exists".format(name)
+                if self._relation_exists(name):
+                    message = "Relation with name {} already exists".format(name)
                     if warning_only:
                         print(message)
                         continue
@@ -1948,6 +2104,50 @@ class PostgresTable(PostgresBase):
                                                        storage_params)
                 self._execute(creator, storage_params.values())
                 print "Index {} created in {:.3f} secs".format(name, time.time() - now)
+
+
+
+    def _check_index_name(self, name, kind="Index"):
+        """
+        Given:
+            -- `name` of an index/constraint, and
+            -- `kind` in ["Index", "Constraint"]
+        checks that `name` doesn't end with:
+            - _tmp
+            _ _pkey
+            _ _oldN
+            - _depN
+        and that doesn't clash with another relation.
+
+        """
+
+
+        self._check_restricted_suffix(name, kind)
+
+
+        if self._relation_exists(name): # this also works for constraints
+            raise ValueError("{} name {} is invalid, ".format(kind, name) +
+                             "a relation with that name already exists, " +
+                             "e.g, index, constraint or table; " +
+                             "try specifying a different name")
+
+        if kind == "Index":
+            meta = "meta_indexes"
+            meta_name = "index_name"
+        elif kind == "Constraint":
+            meta = "meta_constraints"
+            meta_name = "constraint_name"
+        else:
+            raise ValueError("""kind={} is not "Index" or "Constraint" """)
+
+        selecter = SQL("SELECT 1 FROM {} WHERE {} = %s AND table_name = %s")
+        cur = self._execute(selecter.format(map(Identifier, [meta, meta_name])),
+                            [name, self.search_table])
+        if cur.rowcount > 0:
+            raise ValueError("{} name {} is invalid, ".format(kind, name) +
+                             "an {} with that name".format(kind.lower()) +
+                             "already exists in {}; ".format(meta) +
+                             "try specifying a different name")
 
 
     def create_index(self, columns, type="btree", modifiers=None, name=None, storage_params=None):
@@ -2016,13 +2216,9 @@ class PostgresTable(PostgresBase):
                 name = "_".join([self.search_table] + ["".join(col[0] for col in columns)])
 
 
+
         with DelayCommit(self, silence=True):
-            if self._index_exists(name):
-                raise ValueError("Index with name {} already exists; try specifying a different name".format())
-            selecter = SQL("SELECT 1 FROM meta_indexes WHERE index_name = %s AND table_name = %s")
-            cur = self._execute(selecter, [name, self.search_table])
-            if cur.rowcount > 0:
-                raise ValueError("Index with name {} already exists in meta_indexes; try specifying a different name".format(name))
+            self._check_index_name(name, "Index")
             creator = self._create_index_statement(name, self.search_table, type, columns, modifiers, storage_params)
             self._execute(creator, storage_params.values())
             inserter = SQL("INSERT INTO meta_indexes (index_name, table_name, type, columns, modifiers, storage_params) VALUES (%s, %s, %s, %s, %s, %s)")
@@ -2048,6 +2244,9 @@ class PostgresTable(PostgresBase):
             self._execute(dropper)
         print "Dropped index %s in %.3f secs"%(name, time.time() - now)
 
+
+
+
     def restore_index(self, name, suffix=""):
         """
         Restore a specified index using the meta_indexes table.
@@ -2067,17 +2266,9 @@ class PostgresTable(PostgresBase):
                 raise ValueError("Index %s does not exist in meta_indexes"%(name,))
             type, columns, modifiers, storage_params = cur.fetchone()
             creator = self._create_index_statement(name + suffix, self.search_table + suffix, type, columns, modifiers, storage_params)
-            if self._index_exists(name + suffix):
-                # Reloading indexes can cause crashes in a way we don't understand.
-                # Postgres complains that the index already exists, even though we haven't
-                # created it yet on this table.
-                # As a workaround, we avoid errors in the index creation code and print a big warning
-                print "*"*80
-                print "Index restoration failed for {}".format(name + suffix)
-                print "*"*80
-                return
-            else:
-                self._execute(creator, storage_params.values())
+            # this avoids clashes with deprecated indexes/constraints
+            self._rename_if_exists(name, suffix)
+            self._execute(creator, storage_params.values())
         print "Created index %s in %.3f secs"%(name, time.time() - now)
 
     def _indexes_touching(self, columns):
@@ -2271,11 +2462,11 @@ class PostgresTable(PostgresBase):
                 name = "_".join([self.search_table] + ["c"] + [col[:2] for col in columns])
             else:
                 name = "_".join([self.search_table] + ["c"] + ["".join(col[0] for col in columns)])
+
+
+
         with DelayCommit(self, silence=True):
-            selecter = SQL("SELECT 1 FROM meta_constraints WHERE constraint_name = %s AND table_name = %s")
-            cur = self._execute(selecter, [name, self.search_table])
-            if cur.rowcount > 0:
-                raise ValueError("Constraint with that name already exists; try specifying a different name")
+            self._check_index_name(name, "Constraint") # also works for constraints
             table = self.search_table if search else self.extra_table
             creator = self._create_constraint_statement(name, table, type, columns, check_func)
             self._execute(creator)
@@ -2327,6 +2518,8 @@ class PostgresTable(PostgresBase):
         now = time.time()
         with DelayCommit(self, silence=True):
             type, columns, check_func, table = self._get_constraint_data(name, suffix)
+            # this avoids clashes with deprecated indexes/constraints
+            self._rename_if_exists(name, suffix)
             creator = self._create_constraint_statement(name + suffix, table, type, columns, check_func)
             self._execute(creator)
         print "Created constraint %s in %.3f secs"%(name, time.time() - now)
@@ -2803,7 +2996,7 @@ class PostgresTable(PostgresBase):
 
 
 
-    def _swap_in_tmp(self, tables, indexed, commit=True):
+    def _swap_in_tmp(self, tables, commit=True):
         """
         Helper function for ``reload``: appends _old{n} to the names of tables/indexes/pkeys
         and renames the _tmp versions to the live versions.
@@ -2811,22 +3004,12 @@ class PostgresTable(PostgresBase):
         INPUT:
 
         - ``tables`` -- a list of tables to rename (e.g. self.search_table, self.extra_table, self.stats.counts, self.stats.stats)
-        - ``indexed`` -- boolean, whether the temporary table has indexes and constraints on it.
         """
         now = time.time()
         backup_number = self._next_backup_number()
         with DelayCommit(self, commit, silence=True):
-            indexes = self.list_indexes().keys()
-            counts_indexes = []
-            for table in tables:
-                if table.endswith("_counts"):
-                    counts_indexes = [index["name"].format(table)
-                                            for index in _counts_indexes]
-            indexes += counts_indexes
-            constraints = self.list_constraints().keys()
-            self._swap(tables, indexes, constraints, '', '_old' + str(backup_number))
-            self._swap(tables, indexes if indexed else counts_indexes,
-                       constraints if indexed else [],'_tmp', '')
+            self._swap(tables, '', '_old' + str(backup_number))
+            self._swap(tables, '_tmp', '')
             for table in tables:
                 self._db.grant_select(table)
                 if table.endswith("_counts") or table.endswith("_stats"):
@@ -2970,7 +3153,7 @@ class PostgresTable(PostgresBase):
                 self.log_db_change("reload", counts=(countsfile is not None), stats=(statsfile is not None))
             print "Reloaded %s in %.3f secs" % (self.search_table, time.time() - now_overall)
 
-    def reload_final_swap(self, tables=None, metafile=None, reindex=True, commit=True):
+    def reload_final_swap(self, tables=None, metafile=None, indexed=True, commit=True):
         """
         Renames the _tmp versions of `tables` to the live versions.
         and updates the corresponding meta_tables row if `metafile` is provided
@@ -2979,8 +3162,7 @@ class PostgresTable(PostgresBase):
 
         - ``tables`` -- list of strings (optional), of the tables to renamed. If None is provided, renames all the tables ending in `_tmp`
         - ``metafile`` -- a string (optional), giving a file containing the meta information for the table.
-        - ``reindex`` -- whether to drop the indexes and constraints before importing data and rebuild them afterward.
-            If the number of rows is a substantial fraction of the size of the table, this will be faster.
+        - ``indexed`` -- boolean, whether the temporary table has indexes and constraints on it.
         """
         with DelayCommit(self, commit, silence=True):
             if tables is None:
@@ -2990,7 +3172,7 @@ class PostgresTable(PostgresBase):
                     if self._table_exists(tablename):
                         tables.append(tablename)
 
-            self._swap_in_tmp(tables, reindex, commit=False)
+            self._swap_in_tmp(tables, commit=False)
             if metafile is not None:
                 self.reload_meta(metafile)
 
@@ -3735,6 +3917,7 @@ class PostgresStatsTable(PostgresBase):
         - ``split_list`` -- whether entries of lists should be counted once for each entry.
         - ``threshold_inequality`` -- if true, then any lower threshold will still count for having stats.
         """
+        print  (jcols, ccols, cvals, threshold, split_list, threshold_inequality)
         if split_list:
             values = [jcols, "split_total"]
         else:
@@ -3753,6 +3936,8 @@ class PostgresStatsTable(PostgresBase):
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
         selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
+        print cur.rowcount
+        print cur.mogrify(selecter, values)
         return cur.rowcount > 0
 
     def quick_count(self, query, split_list=False, suffix=''):
@@ -3906,6 +4091,9 @@ class PostgresStatsTable(PostgresBase):
             # So we check the results in Python
         jcols = Json(cols)
         if not self._has_stats(jcols, ccols, cvals, threshold=threshold, split_list=split_list, threshold_inequality=True):
+            print "4090"
+            print jcols, ccols, cvals
+            print cols, constraint, threshold, split_list
             self.add_stats(cols, constraint, threshold, split_list)
         jallcols = Json(allcols)
         if threshold is None:
