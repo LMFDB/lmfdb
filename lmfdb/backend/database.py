@@ -530,9 +530,9 @@ class PostgresBase(object):
                 deprecated_name = name[:64 - len(depsuffix)] + depsuffix
 
             self._execute(begin_renamer + end_renamer.format(
-                Identifier(name + suffix, deprecated_name)))
+                Identifier(name + suffix), Identifier(deprecated_name)))
 
-            command = begin_command + end_command.format(deprecated_name)
+            command = begin_command + end_command.format(Identifier(deprecated_name))
 
             logging.warning("{} with name {} ".format(kind, name + suffix) +
                             "already exists. " +
