@@ -539,7 +539,7 @@ class PostgresBase(object):
                             "It has been renamed to {} ".format(deprecated_name) +
                             "and it can be deleted " +
                             "with the following SQL command:\n" +
-                            self.cursor().mogrify(command))
+                            self._db.cursor().mogrify(command))
 
     def _check_restricted_suffix(self, name, kind="Index", skip_dep=False):
         """
