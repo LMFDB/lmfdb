@@ -807,7 +807,7 @@ class PostgresBase(object):
         rename_constraint = SQL("ALTER TABLE {0} RENAME CONSTRAINT {1} TO {2}")
         rename_index = SQL("ALTER INDEX {0} RENAME TO {1}")
 
-        def name_converter(name, tablename, kind):
+        def target_name(name, tablename, kind):
             original_name = name
             if not name.endswith(source):
                 logging.warning(
@@ -830,7 +830,7 @@ class PostgresBase(object):
                         "The name will be extended with a _ in the swap")
                 target_name = original_name + '_' + target
 
-            return original_name + source, target_name
+            return target_name
 
 
 
@@ -848,28 +848,28 @@ class PostgresBase(object):
                     self._execute(rename_constraint.format(Identifier(tablename_new),
                                                            Identifier(pkey_old),
                                                            Identifier(pkey_new)))
-                    done.add(pkey_old)
+                    done.add(pkey_new)
 
 
                 for constraint in self._list_constraints(tablename_new):
                     if constraint in done:
                         continue
-                    c_source, c_target = name_converter(constraint,
-                                                        tablename_new,
-                                                        "Constraint")
-                    self._execute(rename_constraint.format(Identifier(tablename_new),
-                                                               Identifier(c_source),
-                                                               Identifier(c_target)))
-                    done.add(constraint)
+                    c_target = target_name(constraint,
+                                           tablename_new,
+                                           "Constraint")
+                    self._execute(
+                            rename_constraint.format(Identifier(tablename_new),
+                                                     Identifier(constraint),
+                                                     Identifier(c_target)))
+                    done.add(c_target)
+
                 for index in self._list_constraints(tablename_new):
                     if index in done:
                         continue
-                    i_source, i_target = name_converter(constraint,
-                                                        tablename_new,
-                                                        "Constraint")
-                    self._execute(rename_index.format(Identifier(i_source),
+                    i_target = target_name(index, tablename_new, "Index")
+                    self._execute(rename_index.format(Identifier(index),
                                                       Identifier(i_target)))
-                    done.add(index)
+                    done.add(i_target) # not really needed
 
 
 
