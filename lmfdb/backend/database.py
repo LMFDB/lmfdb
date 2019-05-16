@@ -454,10 +454,8 @@ class PostgresBase(object):
                 return table[0]
 
     def _relation_exists(self, name):
-        # if the relation does not exist, returns a NULL value
-        # otherwise, the name of the relation
-        cur = self._execute(SQL("SELECT to_regclass(%s)"), [name], silent=True)
-        return cur.fetchone()[0] is not None
+        cur = self._execute(SQL('SELECT 1 FROM pg_class where relname = %s'), [name])
+        return cur.fetchone() is not None
 
     def _constraint_exists(self, constraintname, tablename=None):
         if tablename:
@@ -479,7 +477,7 @@ class PostgresBase(object):
         # if we look into information_schema.table_constraints
         # we also get internal constraints, I'm not sure why
         # Alternatively, we do a triple join to get the right answer
-        cur = self._execute(SQL("SELECT con.con.conname "
+        cur = self._execute(SQL("SELECT con.conname "
                                "FROM pg_catalog.pg_constraint con "
                                "INNER JOIN pg_catalog.pg_class rel "
                                "           ON rel.oid = con.conrelid "
