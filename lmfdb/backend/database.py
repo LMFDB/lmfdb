@@ -436,14 +436,14 @@ class PostgresBase(object):
     def _table_exists(self, tablename):
         cur = self._execute(SQL("SELECT 1 from pg_tables where tablename=%s"),
                             [tablename], silent=True)
-        return cur.fetchone()[0] is not None
+        return cur.fetchone() is not None
 
     def _index_exists(self, indexname, tablename=None):
         if tablename:
             cur = self._execute(
                     SQL("SELECT 1 FROM pg_indexes WHERE indexname = %s AND tablename = %s"),
                     [indexname, tablename],  silent=True)
-            return cur.fetchone()[0] is not None
+            return cur.fetchone() is not None
         else:
             cur = self._execute(SQL("SELECT tablename FROM pg_indexes WHERE indexname=%s"),
                     [indexname],  silent=True)
@@ -454,6 +454,8 @@ class PostgresBase(object):
                 return table[0]
 
     def _relation_exists(self, name):
+        # if the relation does not exist, returns a NULL value
+        # otherwise, the name of the relation
         cur = self._execute(SQL("SELECT to_regclass(%s)"), [name], silent=True)
         return cur.fetchone()[0] is not None
 
