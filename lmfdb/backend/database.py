@@ -2121,7 +2121,7 @@ class PostgresTable(PostgresBase):
                                                        [[]] * len(index["columns"]),
                                                        storage_params)
                 self._execute(creator, storage_params.values())
-                print "Index {} created in {:.3f} secs".format(name, time.time() - now)
+                print "Index {} created in {:.3f} secs".format(index["name"].format(tablename), time.time() - now)
 
 
 
