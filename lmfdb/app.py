@@ -272,7 +272,12 @@ def statshealth():
         for url in ['/NumberField/stats',
                     '/ModularForm/GL2/Q/holomorphic/stats',
                     '/EllipticCurve/Q/stats',
+                    '/EllipticCurve/browse/2/',
                     '/EllipticCurve/browse/3/',
+                    '/EllipticCurve/browse/4/',
+                    '/EllipticCurve/browse/5/',
+                    '/EllipticCurve/browse/6/',
+                    '/Genus2Curve/Q/stats',
                     '/Belyi/stats',
                     '/HigherGenus/C/Aut/stats',
                     ]:
@@ -282,7 +287,7 @@ def statshealth():
             except Exception:
                 abort(503)
         else:
-            return "LMFDB!"
+            return "LMFDB stats are healthy!"
     else:
         abort(503)
 
