@@ -2049,10 +2049,7 @@ class PostgresTable(PostgresBase):
         else:
             analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
         cur = self._db.cursor()
-        print cur.mogrify(selecter, values)
         cur = self._execute(analyzer, values, silent=True)
-        for line in cur:
-            print line[0]
 
     def _list_built_indexes(self):
         """
@@ -3947,7 +3944,6 @@ class PostgresStatsTable(PostgresBase):
         - ``split_list`` -- whether entries of lists should be counted once for each entry.
         - ``threshold_inequality`` -- if true, then any lower threshold will still count for having stats.
         """
-        print  (jcols, ccols, cvals, threshold, split_list, threshold_inequality)
         if split_list:
             values = [jcols, "split_total"]
         else:
@@ -3966,9 +3962,6 @@ class PostgresStatsTable(PostgresBase):
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
         selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
-        print cur.rowcount
-        print cur.mogrify(selecter, values)
-        return cur.rowcount > 0
 
     def quick_count(self, query, split_list=False, suffix=''):
         """
