@@ -4750,7 +4750,7 @@ class PostgresStatsTable(PostgresBase):
                         "{:d} rows were just inserted to".format(len(to_add)) +
                         " into {}, ".format(self.counts + suffix) +
                         "all with with cols = {}. ".format(jallcols) +
-                        "This might decrease the counts table performance" +
+                        "This might decrease the counts table performance " +
                         "significantly! Consider clearing all the stats " +
                         "db.{}.stats._clear_stats_counts()".format(self.search_table) +
                         " and rebuilding the stats more carefully."
