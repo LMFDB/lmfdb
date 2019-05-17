@@ -2100,7 +2100,7 @@ class PostgresTable(PostgresBase):
         creator = SQL("CREATE INDEX {0} ON {1} USING %s ({2}){3}"%(type))
         return creator.format(Identifier(name), Identifier(table), columns, storage_params)
 
-    def create_counts_indexes(self, suffix="", warning_only=False):
+    def _create_counts_indexes(self, suffix="", warning_only=False):
         tablename = self.search_table + "_counts"
         storage_params = {}
         with DelayCommit(self, silence=True):
@@ -3149,6 +3149,7 @@ class PostgresTable(PostgresBase):
 
             # update the indexes
             # these are needed before reindexing
+
             if indexesfile is not None:
                 # we do the swap at the end
                 self.reload_indexes(indexesfile)
@@ -3162,14 +3163,16 @@ class PostgresTable(PostgresBase):
                 for table in [self.stats.counts, self.stats.stats]:
                     if not self._table_exists(table + suffix):
                         self._clone(table, table + suffix)
-                        self.create_counts_indexes(suffix=suffix)
-
 
                 if countsfile is None or statsfile is None:
                     self.stats.refresh_stats(suffix=suffix)
                 for table in [self.stats.counts, self.stats.stats]:
                     if table not in tables:
                         tables.append(table)
+
+            if countsfile:
+                # create index on counts table
+                self._create_counts_indexes(suffix=suffix)
 
             if final_swap:
                 self.reload_final_swap(tables=tables, metafile=metafile, commit = False)
