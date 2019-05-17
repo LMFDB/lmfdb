@@ -2049,7 +2049,10 @@ class PostgresTable(PostgresBase):
         else:
             analyzer = SQL("EXPLAIN ANALYZE {0}").format(selecter)
         cur = self._db.cursor()
+        print cur.mogrify(selecter, values)
         cur = self._execute(analyzer, values, silent=True)
+        for line in cur:
+             print line[0]
 
     def _list_built_indexes(self):
         """
