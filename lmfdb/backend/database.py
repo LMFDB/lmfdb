@@ -4721,6 +4721,8 @@ class PostgresStatsTable(PostgresBase):
                         mn = val
                     if mx is None or val > mx:
                         mx = val
+
+
             if not seen_one:
                 self.logger.info("No rows exceeded the threshold; returning after %.3f secs" % (time.time() - now))
                 return False
@@ -4734,27 +4736,25 @@ class PostgresStatsTable(PostgresBase):
                 stats.append((jcols, "avg", avg, ccols, cvals, threshold))
                 stats.append((jcols, "min", mn, ccols, cvals, threshold))
                 stats.append((jcols, "max", mx, ccols, cvals, threshold))
+
+
             # Note that the cols in the stats table does not add the constraint columns, while in the counts table it does.
             inserter = SQL("INSERT INTO {0} (cols, stat, value, constraint_cols, constraint_values, threshold) VALUES %s")
             self._execute(inserter.format(Identifier(self.stats + suffix)), stats, values_list=True)
             inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             if split_list:
                 to_add = [(Json(c), Json(v), ct, True, False) for ((c, v), ct) in to_add.items()]
+            cur = self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
             if len(to_add) > 10000:
                 logging.warning(
-                        "You are about to add {:d} rows ".format(len(to_add)) +
-                        "all with values = {} into ".format(jallcols) +
-                        "the counts table {}. ".format(self.counts + suffix) +
+                        "{:d} rows, ".format(len(to_add)) +
+                        "with with cols = {}, were added ".format(jallcols) +
+                        "into {}.".format(self.counts + suffix) +
                         "This might decrease the counts table performance" +
-                        "significantly!"
+                        "significantly! Consider clearing all the stats " +
+                        "db.{}_clear_stats_counts()".format(self.search_table) +
+                        " and rebuilding them more carefully."
                         )
-                ok = raw_input(
-                        "Are you sure you want to add {:d}".format(len(to_add)) +
-                        "rows to {}? (y/N) ".format(self.counts + suffix))
-                if not (ok and ok[0] in ['y','Y']):
-                    logging.warning("Aborting insertion")
-                    return False
-            self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
         self.logger.info("Added stats in %.3f secs"%(time.time() - now))
         return True
 
