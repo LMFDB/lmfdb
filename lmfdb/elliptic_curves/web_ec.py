@@ -249,7 +249,6 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)
