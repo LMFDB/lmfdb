@@ -4113,7 +4113,7 @@ class PostgresStatsTable(PostgresBase):
             one_col = False
             cols = sorted(cols)
         if constraint is None:
-            ccols, cvals, allcols = [], [], cols
+            ccols, cvals, allcols = Json([]), Json([]), cols
         else:
             ccols, cvals = self._split_dict(constraint)
             allcols = sorted(list(set(cols + constraint.keys())))
@@ -4121,9 +4121,6 @@ class PostgresStatsTable(PostgresBase):
             # So we check the results in Python
         jcols = Json(cols)
         if not self._has_stats(jcols, ccols, cvals, threshold=threshold, split_list=split_list, threshold_inequality=True):
-            print "4090"
-            print jcols, ccols, cvals
-            print cols, constraint, threshold, split_list
             self.add_stats(cols, constraint, threshold, split_list)
         jallcols = Json(allcols)
         if threshold is None:
@@ -4749,6 +4746,20 @@ class PostgresStatsTable(PostgresBase):
             inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             if split_list:
                 to_add = [(Json(c), Json(v), ct, True, False) for ((c, v), ct) in to_add.items()]
+            if len(to_add) > 10000:
+                logging.warning(
+                        "You are about to add {:d} rows ".format(len(to_add)) +
+                        "all with values = {} into ".format(jallcols) +
+                        "the counts table {}. ".format(self.counts + suffix)
+                        "This might decrease the counts table performance" +
+                        "significantly!"
+                        )
+                ok = raw_input(
+                        "Are you sure you want to add {:d}".format(len(to_add)) +
+                        "rows to {}? (y/N) ".format(self.counts + suffix)
+                if not (ok and ok[0] in ['y','Y']):
+                    logging.warning("Aborting insertion")
+                    return False
             self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
         self.logger.info("Added stats in %.3f secs"%(time.time() - now))
         return True
