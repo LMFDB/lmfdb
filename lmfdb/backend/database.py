@@ -3962,6 +3962,7 @@ class PostgresStatsTable(PostgresBase):
         selecter = SQL("SELECT 1 FROM {0} WHERE cols = %s AND stat = %s AND {1} AND {2} AND {3}")
         selecter = selecter.format(Identifier(self.stats), SQL(ccols), SQL(cvals), SQL(threshold))
         cur = self._execute(selecter, values)
+        return cur.rowcount > 0
 
     def quick_count(self, query, split_list=False, suffix=''):
         """
