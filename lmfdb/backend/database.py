@@ -4750,13 +4750,13 @@ class PostgresStatsTable(PostgresBase):
                 logging.warning(
                         "You are about to add {:d} rows ".format(len(to_add)) +
                         "all with values = {} into ".format(jallcols) +
-                        "the counts table {}. ".format(self.counts + suffix)
+                        "the counts table {}. ".format(self.counts + suffix) +
                         "This might decrease the counts table performance" +
                         "significantly!"
                         )
                 ok = raw_input(
                         "Are you sure you want to add {:d}".format(len(to_add)) +
-                        "rows to {}? (y/N) ".format(self.counts + suffix)
+                        "rows to {}? (y/N) ".format(self.counts + suffix))
                 if not (ok and ok[0] in ['y','Y']):
                     logging.warning("Aborting insertion")
                     return False
