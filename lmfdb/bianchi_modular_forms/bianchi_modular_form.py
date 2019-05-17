@@ -293,6 +293,9 @@ def render_bmf_space_webpage(field_label, level_label):
                     'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
+                # currently we have newforms of dimension 1 and 2 only (mostly dimension 1)
+                info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
+                info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 

@@ -61,11 +61,19 @@
 {%if info.nnewforms > 0 %}
 There
 {%if info.nnewforms == 1 %}
-is one rational cuspidal newform
+is one cuspidal newform
 {%else%}
 are {{info.nnewforms}} cuspidal newforms
 {%endif%}
-at this level in the database:
+at this level in the database,
+{%if info.nnf2 == 0 %}
+{%if info.nnf1 == 1 %}which has{%else%}all of which have{%endif%} rational coefficients.
+{%elif info.nnf1 == 0 %}
+{%if info.nnf2 == 1 %}which has{%else%}all of which have{%endif%} quadratic coefficients.
+{%else%}
+{{info.nnf1}} with rational coefficients and
+{{info.nnf2}} with quadratic coefficients.
+{%endif%}
 <table border=1 class="ntdata">
   <tr>
     <th>{{ KNOWL('mf.bianchi.labels', title='label') }}
