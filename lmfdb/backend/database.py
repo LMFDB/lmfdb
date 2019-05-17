@@ -4747,7 +4747,7 @@ class PostgresStatsTable(PostgresBase):
             inserter = SQL("INSERT INTO {0} (cols, values, count, split, extra) VALUES %s")
             if split_list:
                 to_add = [(Json(c), Json(v), ct, True, False) for ((c, v), ct) in to_add.items()]
-            cur = self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
+            self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
             if len(to_add) > 10000:
                 logging.warning(
                         "{:d} rows were just inserted to".format(len(to_add)) +
