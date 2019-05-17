@@ -4747,13 +4747,13 @@ class PostgresStatsTable(PostgresBase):
             cur = self._execute(inserter.format(Identifier(self.counts + suffix)), to_add, values_list=True)
             if len(to_add) > 10000:
                 logging.warning(
-                        "{:d} rows, ".format(len(to_add)) +
-                        "with with cols = {}, were added ".format(jallcols) +
-                        "into {}.".format(self.counts + suffix) +
+                        "{:d} rows were just inserted to".format(len(to_add)) +
+                        " into {}, ".format(self.counts + suffix) +
+                        "all with with cols = {}. ".format(jallcols) +
                         "This might decrease the counts table performance" +
                         "significantly! Consider clearing all the stats " +
-                        "db.{}_clear_stats_counts()".format(self.search_table) +
-                        " and rebuilding them more carefully."
+                        "db.{}.stats._clear_stats_counts()".format(self.search_table) +
+                        " and rebuilding the stats more carefully."
                         )
         self.logger.info("Added stats in %.3f secs"%(time.time() - now))
         return True
