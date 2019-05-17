@@ -2115,13 +2115,13 @@ class PostgresTable(PostgresBase):
                     else:
                         raise ValueError(message)
                 creator = self._create_index_statement(name,
-                                                       tablename,
+                                                       tablename + suffix,
                                                        index["type"],
                                                        index["columns"],
                                                        [[]] * len(index["columns"]),
                                                        storage_params)
                 self._execute(creator, storage_params.values())
-                print "Index {} created in {:.3f} secs".format(index["name"].format(tablename), time.time() - now)
+                print "Index {} created in {:.3f} secs".format(index["name"].format(self.search_table), time.time() - now)
 
 
 
