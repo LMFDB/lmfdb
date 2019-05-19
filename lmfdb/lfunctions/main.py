@@ -210,6 +210,7 @@ def l_function_riemann_page():
     return render_single_Lfunction(RiemannZeta, args, request)
 
 
+@l_function_page.route("/ArtinRepresentation/1.1.1t1.1c1")
 @l_function_page.route("/Character/Dirichlet/1/1/")
 @l_function_page.route("/NumberField/1.1.1.1/")
 def l_function_riemann_redirect():
@@ -566,7 +567,8 @@ def set_bread_and_friends(info, L, request):
     if L.Ltype() == 'riemann':
         info['friends'] = [('\(\mathbb Q\)', url_for('number_fields.by_label', label='1.1.1.1')),
                            ('Dirichlet Character \(\\chi_{1}(1,\\cdot)\)',url_for('characters.render_Dirichletwebpage',
-                                                                                  modulus=1, number=1))]
+                                                                                  modulus=1, number=1)),
+                           ('Artin Representation 1.1.1t1.1c1', url_for('artin_representations.render_artin_representation_webpage',label='1.1.1t1.1c1'))]
         info['bread'] = get_bread(1, [('Riemann Zeta', request.path)])
 
     elif L.Ltype() == 'dirichlet':
