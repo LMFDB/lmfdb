@@ -275,7 +275,7 @@ def render_one_maass_waveform_wp(info, prec=9):
     else:
         prev_data = ('','','')
 
-    info['navi'] = ( prev_data, next_data )
+    # info['navi'] = ( prev_data, next_data )
 
     info["downloads"] = [ ('All stored data of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
