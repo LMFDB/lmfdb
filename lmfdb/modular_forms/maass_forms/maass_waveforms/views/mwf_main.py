@@ -262,19 +262,17 @@ def render_one_maass_waveform_wp(info, prec=9):
         info["friends"] = [("L-function", Llink)]
 
     # Navigation to previous and next form
-    next_form_id = info['MF'].next_maassform_id()
-    if next_form_id:
-        next_data = ('next', r"$f_{\text next}$", url_for('mwf.render_one_maass_waveform',
-                                                                maass_id = next_form_id) )
-    else:
-        next_data = ('','','')
-    prev_form_id = info['MF'].prev_maassform_id()
-    if prev_form_id:
-        prev_data = ('previous', r"$f_{\text prev}$", url_for('mwf.render_one_maass_waveform',
-                                                                maass_id = prev_form_id) )
-    else:
-        prev_data = ('','','')
-
+    # next_form_id = info['MF'].next_maassform_id()
+    # if next_form_id:
+    #    next_data = ('next', r"$f_{\text next}$", url_for('mwf.render_one_maass_waveform', maass_id = next_form_id) )
+    # else:
+    #    next_data = ('','','')
+    # prev_form_id = info['MF'].prev_maassform_id()
+    # if prev_form_id:
+    #    prev_data = ('previous', r"$f_{\text prev}$", url_for('mwf.render_one_maass_waveform', maass_id = prev_form_id) )
+    # else:
+    #    prev_data = ('','','')
+    
     # info['navi'] = ( prev_data, next_data )
 
     info["downloads"] = [ ('All stored data of the form',
