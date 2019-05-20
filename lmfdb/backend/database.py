@@ -5546,10 +5546,10 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
             self.tablenames.remove(old_name)
             self.tablenames.sort()
 
-    def copy_to(self, search_tables, data_folder, make_folder=False, **kwds):
-        if make_folder:
-            if not os.path.isdir(data_folder):
-                os.makedirs(data_folder)
+    def copy_to(self, search_tables, data_folder, **kwds):
+        if os.path.exists(data_folder):
+            return ValueError("The path {} already exists".format(data_folder))
+        os.makedirs(data_folder)
         failures = []
         for tablename in search_tables:
             if tablename in self.tablenames:
@@ -5570,7 +5570,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if failures:
             print "Failed to copy %s (not in tablenames)" % (", ".join(failures))
 
-    def copy_to_from_remote(self, search_tables, data_folder, make_folder=False, remote_opts = None, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
         if remote_opts is None:
             from lmfdb.utils.config import Configuration
             remote_opts = Configuration().get_postgresql_default()
@@ -5578,22 +5578,35 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         source = PostgresDatabase(**remote_opts)
 
         # copy all the data
-        source.copy_to(search_tables=search_tables, data_folder=data_folder,
-                       make_folder=make_folder, **kwds)
+        source.copy_to(search_tables, data_folder, **kwds)
 
 
-    def reload_all(self, data_folder, resort=None, reindex=True, restat=None,
-                   adjust_schema=False, commit=True, halt_on_errors=True,
+    def reload_all(self, data_folder, halt_on_errors=True, resort=None, reindex=True, restat=None,
+                   adjust_schema=False, commit=True,
                    **kwds):
         """
         Reloads all tables from files in a given folder.  The filenames must match
         the names of the tables, with `_extras`, `_counts` and `_stats` appended as appropriate.
 
-        Note that this function currently does not reload data that is not in a search table,
-        such as knowls or user data.
+        INPUT:
 
-        Input is as for the `reload` function.
+            - ``data_folder`` -- the folder that contains files to be reloaded
+            - ``halt_on_errors`` -- whether to stop if a DatabaseError is
+                encountered while trying to reload one of the tables
+
+        INPUTS passed to `reload` function in `PostgresTable`:
+
+                - ``resort``, ``reindex``, ``restat``, ``adjust_schema``, ``commit``, and any extra keywords
+
+
+
+        Note that this function currently does not reload data that is not in a
+        search table, such as knowls or user data.
+
         """
+        if not os.path.isdir(data_folder):
+            raise ValueError(
+                    "The path {} is not a directory".format(data_folder))
         with DelayCommit(self, commit, silence=True):
             file_list = []
             tablenames = []
@@ -5723,9 +5736,14 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
         INPUT:
 
-        - ``data_folder`` -- the folder used in ``reload_all``; determines which tables
+        - ``data_folder`` -- the folder used in ``reload_all``;
+            determines which tables
             were modified.
         """
+        if not os.path.isdir(data_folder):
+            raise ValueError(
+                    "The path {} is not a directory".format(data_folder))
+
         with DelayCommit(self, commit, silence=True):
             for tablename in self.tablenames:
                 searchfile = os.path.join(data_folder, tablename + '.txt')
