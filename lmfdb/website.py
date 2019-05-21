@@ -90,6 +90,10 @@ import rep_galois_modl
 assert rep_galois_modl
 import hecke_algebras
 assert hecke_algebras
+import groups
+assert groups
+import groups.abstract
+assert groups.abstract
 from inventory_app.inventory_app import inventory_app
 assert inventory_app
 
