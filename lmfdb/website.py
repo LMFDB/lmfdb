@@ -89,6 +89,10 @@ from . import hecke_algebras
 assert hecke_algebras
 from . import inventory_app
 assert inventory_app
+import groups
+assert groups
+import groups.abstract
+assert groups.abstract
 
 from .lmfdb_database import db
 if db.is_verifying:
