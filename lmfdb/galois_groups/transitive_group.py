@@ -169,6 +169,11 @@ class WebGaloisGroup:
         self._data['conjclasses'] = ans
         return(ans)
 
+    def sibling_bound(self):
+        return self._data['bound_siblings']
+
+    def quotient_bound(self):
+        return self._data['bound_quotients']
 
 
 ############  Misc Functions

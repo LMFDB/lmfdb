@@ -22,9 +22,15 @@ table.reptable td, table.reptable th {
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
       <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
       <tr><td>{{KNOWL('gg.field_automorphisms', '$|\Aut(F/K)|$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
-      <tr><td>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}:<td>&nbsp;&nbsp;<td>{{info.resolve|safe}}</tr>
     </table>
   </p>
+
+  <p><h2>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}</h2>
+  <blockquote>
+  {{info.resolve|safe}}
+
+<p> Resolvents shown for degrees $\leq {{info.wgg.quotient_bound()}}$
+  </blockquote>
 
   <p><h2>{{ KNOWL('gg.subfields', title='Subfields') }}</h2>
    <p>
@@ -37,6 +43,7 @@ table.reptable td, table.reptable th {
    <p>
    <blockquote>
     {{info.otherreps|safe}}
+    <p> Other representations shown for degrees $\leq {{info.wgg.sibling_bound()}}$
    </blockquote>
    {% if info.arith_equiv %}
      <blockquote>

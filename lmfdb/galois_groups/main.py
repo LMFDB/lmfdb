@@ -141,8 +141,7 @@ def yesno(val):
 
 
 def render_group_webpage(args):
-    data = None
-    info = {}
+    data = {}
     if 'label' in args:
         label = clean_input(args['label'])
         label = label.replace('t', 'T')
@@ -156,6 +155,7 @@ def render_group_webpage(args):
         data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
         wgg = WebGaloisGroup.from_nt(data['n'], data['t'])
+        data['wgg'] = wgg
         n = data['n']
         t = data['t']
         data['yesno'] = yesno
@@ -192,7 +192,7 @@ def render_group_webpage(args):
                 data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
             else:
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
-        else:
+        elif ae > -1:
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
         if len(data['otherreps']) == 0:
             data['otherreps']="There is no other low degree representation."
@@ -228,13 +228,12 @@ def render_group_webpage(args):
         pretty = group_display_pretty(n,t)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
-            info['pretty_name'] = pretty
+            data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
-        info.update(data)
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%info['label_raw'], learnmore=learnmore_list())
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
 
 
 def search_input_error(info, bread):
