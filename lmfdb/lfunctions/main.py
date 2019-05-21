@@ -496,7 +496,7 @@ def initLfunction(L, args, request):
     info['learnmore'] = learnmore_list(request.path)
 
     (info['zeroslink'], info['plotlink']) = set_zeroslink_and_plotlink(L, args)
-    info['navi']= set_navi(L)
+    # info['navi']= set_navi(L)
 
     return info
 
