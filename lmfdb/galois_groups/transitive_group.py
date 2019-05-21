@@ -246,7 +246,7 @@ def cclasses_display_knowl(n, t, name=None):
         name += group_display_short(n, t)
     if WebGaloisGroup.from_nt(n,t).num_conjclasses() < 50:
         return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-    return name + 'is not computed'
+    return name + ' is not computed'
 
 
 def character_table_display_knowl(n, t, name=None):
