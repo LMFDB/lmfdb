@@ -6,6 +6,7 @@
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
 <input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
 <table border="0">
 
 <tr>
@@ -46,12 +47,31 @@ set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
  <td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
 
 </tr>
-
+<tr>
+<td align='left'> {{KNOWL('nf.root_discriminant', title='root discriminant')}} range <td align='left' colspan='2'> <input type='text' name='rd' size='20' value="{{info.rd}}"></td>
+<td align='left'>
+   <td>{{ KNOWL('nf.cm_field', title='CM field') }}</td>
+     <td><select name='cm_field' width="105" style="width: 105px">
+  {% if info.cm_field == 'True' %} 
+      <option ></option>
+      <option value='True' selected='yes'>True</option>
+      <option value='False'>False</option>
+{% elif info.cm_field == 'False' %}
+      <option ></option>
+      <option value='True'>True</option>
+      <option value='False' selected='yes'>False</option>
+{% else %}
+      <option ></option>
+      <option value='True'>True</option>
+      <option value='False'>False</option>
+{% endif %}
+      </select></td>
+{# 
 <tr>
 <td align='left' colspan='4'>Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size='10'>
 </td>
 </tr>
-
+#}
 
 <tr> 
 <td class="button" align=left><button type='submit' value='refine'>Search again</button></td> 
@@ -96,7 +116,6 @@ set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
 <td align='left'><a href="/NumberField/{{field.label}}">{{field.label}}</a></td>
 <td>{{ wnf.web_poly() | safe }}</td>
 <td>\( {{ wnf.disc_factored_latex() }} \)</td>
-{# <td>{{ info.group_display(field.galois) }}</td> #}
 <td>{{ wnf.galois_string() }}</td>
 {# {% if field.class_group is defined %} #}
 {% if wnf.haskey('class_group') %}

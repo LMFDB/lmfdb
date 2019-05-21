@@ -24,7 +24,7 @@ def get_bread(**kwds):
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
              ('hecke_orbit', 'Hecke orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
-    bread = [('Modular Forms', url_for('mf.modular_form_main_page')),
+    bread = [('Modular Forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
     if 'other' in kwds:
         return bread + [(kwds['other'], ' ')]
@@ -418,8 +418,8 @@ class WebGamma1Space(object):
         self.bread = get_bread(level=self.level, weight=self.weight)
         # Downloads
         self.downloads = [
-            ('Download trace form to text', url_for('cmf.download_traces', label=self.label)),
-            ('Download all stored data to text', url_for('cmf.download_full_space', label=self.label))
+            ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
+            ('All stored data to text', url_for('cmf.download_full_space', label=self.label))
         ]
         self.title = r"Space of Cuspidal Newforms of Level %s and Weight %s"%(self.level, self.weight)
         self.friends = []

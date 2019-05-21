@@ -4,14 +4,14 @@ import os, yaml
 
 from flask import url_for
 from sage.all import (
-    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap,
+    gcd, Set, ZZ, is_even, is_odd, euler_phi, CyclotomicField, gap, RealField,
     AbelianGroup, QQ, gp, NumberField, PolynomialRing, latex, pari, cached_function)
 
 from lmfdb import db
 from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html,
         display_multiset, factor_base_factor, factor_base_factorization_latex)
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import group_display_short, WebGaloisGroup, group_display_knowl, galois_module_knowl
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
@@ -204,7 +204,7 @@ def nf_knowl_guts(label):
     out += Dfact
     out += '<br>Signature: '
     out += str(wnf.signature())
-    out += '<br>Galois group: '+group_display_knowl(wnf.degree(),wnf.galois_t())
+    out += '<br>Galois group: '+group_pretty_and_nTj(wnf.degree(),wnf.galois_t(), True)
     out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
@@ -306,13 +306,17 @@ class WebNumberField:
     def ramified_primes(self):
         return [int(str(j)) for j in self._data['ramps']]
 
+    # Even rd is in the database, that does not low precision for searching
+    def rd(self):
+        return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
+
     # Return a nice string for the Galois group
     def galois_string(self):
         if not self.haskey('galt'):
             return 'Not computed'
         n = self._data['degree']
         t = self._data['galt']
-        return group_display_short(n, t)
+        return group_pretty_and_nTj(n, t)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
@@ -396,10 +400,12 @@ class WebNumberField:
     # Get data from group database
     def galois_sib_data(self):
         if 'repdata' not in self._data:
-            repdegs = [z[0] for z in self.gg()._data['repns']]
             numae = self.gg().arith_equivalent()
             galord = int(self.gg().order())
-            repcounts = Counter(repdegs)
+            sibcnts = self.gg()._data['siblings']
+            repcounts = Counter()
+            for s in sibcnts:
+                repcounts[s[0][0]] += s[1]
             gc = 0
             if galord<24:
                 del repcounts[galord]
@@ -563,6 +569,9 @@ class WebNumberField:
             res = res.replace('\\\\', '\\')
             return res
         return na_text()
+
+    def is_cm_field(self):
+        return self._data['cm']
 
     def disc_factored_latex(self):
         D = self.disc()
@@ -760,11 +769,12 @@ class WebNumberField:
             R = PolynomialRing(QQ, 'x')
             palg = local_algebra_dict[str(p)]
             palgs = [R(str(s)) for s in palg.split(',')]
-            palgstr = [
+            try:
+                palgstr = [
                     list2string([int(c) for c in pol.coefficients(sparse=False)])
                     for pol in palgs]
-            palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
-            return [
+                palgrec = [db.lf_fields.lucky({'p': p, 'coeffs': map(int, c.split(','))}) for c in palgstr]
+                return [
                     [
                         LF['label'],
                         latex(f),
@@ -777,7 +787,8 @@ class WebNumberField:
                         LF['slopes']
                     ]
                     for LF, f in zip(palgrec, palgs) ]
-        return None
+            except: # we were unable to find the local fields in the database
+                return None
 
     def ramified_algebras_data(self):
         if 'loc_algebras' not in self._data:

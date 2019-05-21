@@ -17,7 +17,7 @@ from Lfunction import (Lfunction_Dirichlet, Lfunction_EC, #Lfunction_EC_Q, Lfunc
                        RiemannZeta, DedekindZeta, ArtinLfunction, ArtinLfunctionDB,
                        SymmetricPowerLfunction, HypergeometricMotiveLfunction,
                        Lfunction_genus2_Q, Lfunction_from_db, artin_url, hmf_url)
-from LfunctionComp import isogeny_class_table
+from LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from Lfunctionutilities import (p2sage, styleTheSign, get_bread, parse_codename,
                                 getConductorIsogenyFromLabel)
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
@@ -42,8 +42,8 @@ def get_degree(degree_string):
 # Top page #####################################################################
 @l_function_page.route("/")
 def l_function_top_page():
-    info = set_info_for_start_page()
-    return render_template("LfunctionNavigate.html", **info)
+    # Don't duplicate the code in app.py
+    return flask.redirect(url_for('l_functions'),301)
 
 @l_function_page.route("/history")
 def l_function_history():
@@ -130,7 +130,7 @@ def l_function_ec_browse_page():
     info = {"bread": get_bread(2, [("Elliptic Curve", url_for('.l_function_ec_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    info["contents"] = [processEllipticCurveNavigation(11, 65)]
+    info["contents"] = [processEllipticCurveNavigation(11, 200)]
     return render_template("ellipticcurve.html", title='L-functions of Elliptic Curves', **info)
 
 
@@ -176,10 +176,10 @@ def l_function_ec_sym3_browse_page():
 # L-function of genus 2 curves browsing page ##############################################
 @l_function_page.route("/degree4/Genus2Curve/")
 def l_function_genus2_browse_page():
-    info = {"bread": get_bread(2, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
+    info = {"bread": get_bread(4, [("Genus 2 Curve", url_for('.l_function_genus2_browse_page'))])}
     info["representation"] = ''
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
-    #FIXME info["contents"] = [processGenus2CurveNavigation(169, 700)] # FIX THIS
+    info["contents"] = [processGenus2CurveNavigation(169, 1000)]
     return render_template("genus2curve.html", title='L-functions of Genus 2 Curves', **info)
 
 # generic/pure L-function browsing page ##############################################
@@ -199,44 +199,6 @@ def l_function_browse_page(degree, gammasignature):
     info["learnmore"] = [('Completeness of the data', url_for('.completeness'))]
     return render_template("MaassformGLn.html",
                            title='L-functions of degree %s and signature %s' % (degree, nice_gammasignature), **info)
-
-
-###########################################################################
-#   Helper functions, navigation pages
-###########################################################################
-def set_info_for_start_page():
-    ''' Sets the properties of the top L-function page.
-    '''
-
-    tt = [[{'title': 'Riemann Zeta Function', 'link': url_for('.l_function_riemann_page')},
-           {'title': 'Dirichlet L-function', 'link': url_for('.l_function_dirichlet_browse_page')}],
-
-          [{'title': 'Holomorphic Cusp Form', 'link': url_for('.l_function_cuspform_browse_page',degree='degree2')},
-           {'title': 'GL2 Maass Form', 'link': url_for('.l_function_maass_browse_page')},
-           {'title': 'Elliptic Curve', 'link': url_for('.l_function_ec_browse_page')}],
-
-          [{'title': '', 'link': ''},
-           {'title': 'Signature (0,0,0;)', 'link': url_for('.l_function_browse_page',
-                                                       degree='degree3', gammasignature='r0r0r0')},
-           {'title': 'Symmetric Square L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym2_browse_page')}],
-
-          [{'title': 'Signature (0,0,0,0;) and real cofficients', 'link': url_for('.l_function_browse_page', degree='degree4', gammasignature='r0r0r0r0') + '#r0r0r0r0selfdual'},
-           {'title': 'Signature (0,0,0,0;)', 'link': url_for('.l_function_browse_page',
-                                                       degree='degree4', gammasignature='r0r0r0r0')},
-           {'title': 'Symmetric Cube L-function of Elliptic Curve', 'link': url_for('.l_function_ec_sym3_browse_page')}]]
-
-    info = {
-        'degree_list': range(1, 5),
-        'type_table': tt,
-        'type_row_list': [0, 1, 2, 3]
-        }
-
-    info['title'] = 'L-functions'
-    info['bread'] = [('L-functions', url_for('.l_function_top_page'))]
-
-    info['learnmore'] = [('History of L-functions', url_for('.l_function_history')), ('Completeness of the data', url_for('.completeness'))]
-
-    return info
 
 ################################################################################
 #   Route functions, individual L-function homepages
@@ -576,10 +538,19 @@ def set_gaga_properties(L):
 
 
 def set_bread_and_friends(info, L, request):
-    ''' Returns the list of friends to link to and the bread crumbs.
+    """
+    Populates the info dictionary with:
+        - bread -- bread crumbs on top
+        - origins -- objects the give rise to this L-functions, shows as "Origins"
+        - friends -- dual L-fcn and other objects that this L-fcn divides, shows as Related objects
+        - factors_origins -- objects that give rise to the factors of this L-fcn, shows as "Origins of factors"
+        - Linstances -- displays the instances that give rise to this Lhash, only shows up through the Lhash route
+        - downloads -- download links
+    Returns the list of friends to link to and the bread crumbs.
     Depends on the type of L-function and needs to be added to for new types
-    '''
+    """
 
+    # bread crums on top
     info['bread'] = []
     info['origins'] = []
     info['friends'] = []
@@ -617,7 +588,7 @@ def set_bread_and_friends(info, L, request):
 
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
-                elt.sort(key= lambda x: key_for_numerically_sort(x[0]))
+                elt.sort(key=lambda x: key_for_numerically_sort(x[0]))
 
     elif L.Ltype() == 'maass':
         if L.group == 'GL2':
@@ -1114,13 +1085,13 @@ def processEllipticCurveNavigation(startCond, endCond):
         N = 11
 
     try:
-        if endCond > 500:
-            end = 500
+        if endCond > 1000:
+            end = 1000
         else:
             end = endCond
 
     except:
-        end = 100
+        end = 1000
 
     iso_list = isogeny_class_table(N, end)
     s = '<h5>Examples of L-functions attached to isogeny classes of elliptic curves</h5>'
@@ -1136,6 +1107,54 @@ def processEllipticCurveNavigation(startCond, endCond):
         counter += 1
         s += '<td><a href="' + url_for('.l_function_ec_page', conductor_label=cond,
                                        isogeny_class_label = iso) + '">%s</a></td>\n' % label
+
+        if counter == nr_of_columns:
+            s += '</tr>\n'
+            counter = 0
+
+    if counter > 0:
+        s += '</tr>\n'
+
+    s += '</table>\n'
+    return s
+
+
+def processGenus2CurveNavigation(startCond, endCond):
+    """
+    Produces a table of all L-functions of elliptic curves with conductors
+    from startCond to endCond
+    """
+    try:
+        N = startCond
+        if N < 169:
+            N = 169
+        elif N > 1000:
+            N = 1000
+    except:
+        N = 169
+
+    try:
+        if endCond > 1000:
+            end = 1000
+        else:
+            end = endCond
+
+    except:
+        end = 1000
+
+    iso_list = genus2_isogeny_class_table(N, end)
+    s = '<h5>Examples of L-functions attached to isogeny classes of Jacobians of genus 2 curves</h5>'
+    s += '<table>'
+
+    counter = 0
+    nr_of_columns = 10
+    for cond, x in iso_list:
+        label = str(cond) + '.' + x
+        if counter == 0:
+            s += '<tr>'
+
+        counter += 1
+        s += '<td><a href="' + url_for('.l_function_genus2_page', cond=cond, x=x) + '">%s</a></td>\n' % label
 
         if counter == nr_of_columns:
             s += '</tr>\n'

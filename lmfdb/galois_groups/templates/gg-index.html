@@ -3,7 +3,7 @@
 {% block content %}
 
 <div>
-{{ KNOWL_INC('dq.gg.extent') }}
+{{ KNOWL_INC('gg.extent') }}
 </div>
 
 <h2>Browse {{KNOWL('gg.galois_group', title="Galois groups")}}</h2>
@@ -12,7 +12,7 @@
 <p>
 Browse by {{KNOWL('gg.degree', title='degree')}} $n$ :
 {% for n in info.degree_list: %}
-    <a href="?n={{n}}">{{n}}</a>
+   <a href="?n={{n}}">{{n}}</a>
 {% endfor %}
 </p>
 
@@ -122,7 +122,7 @@ Search by {{KNOWL('gg.label',title="Galois group label")}}
 
           <tr>
             <td align="left">
-              {{KNOWL('curve.highergenus.aut.groupnotation',title='GAP id')}} 
+              {{KNOWL('group.small_group_label',title='GAP id')}} 
             </td><td><input type="text" name="gapid" value="" placeholder="[8,3]"></td>
 	    <td>
 	      <span class="formexample">e.g. [8,3] or [16,7]</span>

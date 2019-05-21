@@ -143,18 +143,19 @@ class WebEC(object):
         try:
             N, iso, number = split_lmfdb_label(label)
             data = db.ec_curves.lucky({"lmfdb_label" : label})
+            if not data:
+                return "Curve not found" # caller must catch this and raise an error
             data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 data = db.ec_curves.lucky({"label" : label})
+                if not data:
+                    return "Curve not found" # caller must catch this and raise an error
                 data['label_type'] = 'Cremona'
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
-
-        if data:
-            return WebEC(data)
-        return "Curve not found" # caller must catch this and raise an error
+        return WebEC(data)
 
     def make_curve(self):
         # To start with the data fields of self are just those from
@@ -248,7 +249,6 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)

@@ -7,15 +7,17 @@ from sage.all import ZZ, gap
 
 from lmfdb.utils import list_to_latex_matrix, display_multiset
 
-MAX_GROUP_DEGREE = 23
-
 def small_group_display_knowl(n, k, name=None):
+    if not name:
+        myname = '$[%d, %d]$'%(n,k)
+    else:
+        myname = name
     group = db.gps_small.lookup('%s.%s'%(n,k))
     if group is None:
-        return '$[%d, %d]$'%(n,k)
+        return myname
     if not name:
-        name = '$%s$'%group['pretty']
-    return '<a title = "' + name + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + name + '</a>'
+        myname = '$%s$'%group['pretty']
+    return '<a title = "' + myname + ' [group.small.data]" knowl="group.small.data" kwargs="gapid=' + str(n) + '.' + str(k) + '">' + myname + '</a>'
 
 def small_group_label_display_knowl(label, name=None):
     if not name:
@@ -49,6 +51,20 @@ def small_group_data(gapid):
         inf += '<tr><td>%d<td>%d<td>%d'%(row[0],row[1],row[2])
     inf += '</table></p>'
     return inf
+
+# Input is a list [[[n1, t1], mult1], [[n2,t2],mult2], ...]
+def list_with_mult(lis, names=True):
+    ans = ''
+    for k in lis:
+        if ans != '':
+            ans += ', '
+        if names:
+            ans += group_display_knowl(k[0][0], k[0][1])
+        else:
+            ans += group_display_knowl(k[0][0], k[0][1], base_label(k[0][0],k[0][1]))
+        if k[1]>1:
+            ans += "<span style='font-size: small'> x %d</span>"% k[1]
+    return ans
 
 
 ############  Galois group object
@@ -101,37 +117,41 @@ class WebGaloisGroup:
         return self._data['name']
 
     def otherrep_list(self):
-        reps = [(j[0], j[1]) for j in self._data['repns']]
-        me = (self.n(), self.t())
-        difreps = list(set(reps))
-        difreps.sort()
-        ans = ''
-        for k in difreps:
-            if ans != '':
-                ans += ', '
-            cnt = reps.count(k)
-            start = 'a'
-            if k == me:
-                start = nextchr(start)
-            if cnt == 1:
-                ans += tryknowl(k[0], k[1])
-                if k == me:
-                    ans += 'b'
-            else:
-                for j in range(cnt):
-                    if j > 0:
-                        ans += ', '
-                    ans += "%s%s" % (tryknowl(k[0], k[1]), start)
-                    start = nextchr(start)
-        return ans
+        return(list_with_mult(self._data['siblings'], names=False))
 
     def subfields(self):
-        ans = ''
-        for k in self._data['subs']:
-            if ans != '':
-                ans += ', '
-            ans += tryknowl(k[0], k[1])
-        return ans
+        return(list_with_mult(self._data['subfields']))
+
+    def gapgroupnt(self):
+        if int(self.n()) == 1:
+            G = gap.SmallGroup(1, 1)
+        else:
+            G = gap.TransitiveGroup(self.n(), self.t())
+        return G
+
+    def conjclasses(self):
+        if 'conjclasses' in self._data:
+            return self._data['conjclasses']
+        g = self.gapgroupnt()
+        n = self.n()
+        gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
+        cc = g.ConjugacyClasses()
+        ccn = [x.Size() for x in cc]
+        ccc = [x.Representative() for x in cc]
+        if int(n) == 1:
+            cc2 = [[1]]
+            cc = ['()']
+        else:
+            cc = ccc
+            cc2 = [x.cycletype(n) for x in cc]
+        cc2 = [str(x) for x in cc2]
+        cc2 = map(lambda x: re.sub("\[", '', x), cc2)
+        cc2 = map(lambda x: re.sub("\]", '', x), cc2)
+        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
+        self._data['conjclasses'] = ans
+        return(ans)
+
+
 
 ############  Misc Functions
 
@@ -154,14 +174,10 @@ def nextchr(c):
 
 
 def trylink(n, t):
-    if n <= MAX_GROUP_DEGREE:
+    label = base_label(n, t)
+    group = db.gps_transitive.lookup(label)
+    if group:
         return '<a href="/GaloisGroup/%dT%d">%dT%d</a>' % (n, t, n, t)
-    return '%dT%d' % (n, t)
-
-
-def tryknowl(n, t):
-    if n <= MAX_GROUP_DEGREE:
-        return group_display_knowl(n, t, '%dT%d' % (n, t))
     return '%dT%d' % (n, t)
 
 
@@ -180,6 +196,27 @@ def group_display_pretty(n, t):
         return group['pretty']
     return ""
 
+def group_pretty_and_nTj(n, t, useknowls=False):
+    label = base_label(n, t)
+    string = label
+    group = db.gps_transitive.lookup(label)
+    if useknowls and group is not None:
+        ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
+    else:
+        ntj = label
+    if group is not None and group.get('pretty',None) is not None:
+        pretty = group['pretty']
+        # modify if we use knowls and have the gap id
+        if useknowls:
+            gapid = "%d.%d"%(group['order'],group['gapid'])
+            gapgroup = db.gps_small.lookup(gapid)
+            if gapgroup is not None:
+                pretty = small_group_display_knowl(group['order'], group['gapid'], name=group['pretty'])
+        string = pretty + ' (as ' + ntj + ')'
+    else:
+        string = ntj
+    return string
+
 def group_display_knowl(n, t, name=None):
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
@@ -187,7 +224,7 @@ def group_display_knowl(n, t, name=None):
         if group is not None and group.get('pretty',None) is not None:
             name = group['pretty']
         else:
-            name = "%dT%d"%(n,t)
+            name = label
     if group is None:
         return name
     return '<a title = "' + name + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
@@ -211,7 +248,11 @@ def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
         name += group_display_short(n, t)
-    return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    group = WebGaloisGroup.from_nt(n, t)
+    cclasses = group.conjclasses()
+    if ZZ(group.order()) < ZZ(10000000) and len(cclasses) < 21:
+        return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return name + ' is not computed'
 
 
 def group_phrase(n, t):
@@ -281,10 +322,14 @@ def galois_group_data(n, t):
     rest += '</blockquote></div>'
 
     rest += '<div><h3>Subfields</h3><blockquote>'
-    rest += subfield_display(n, group['subs'])
+    rest += subfield_display(n, group['subfields'])
     rest += '</blockquote></div>'
     rest += '<div><h3>Other low-degree representations</h3><blockquote>'
-    rest += otherrep_display(n, t, group['repns'])
+    sibs = list_with_mult(group['siblings'], False)
+    if sibs != '':
+        rest += sibs
+    else:
+        rest += 'None'
     rest += '</blockquote></div>'
     rest += '<div align="right">'
     rest += '<a href="/GaloisGroup/%s">%sT%s home page</a>' % (label, str(n), str(t))
@@ -360,12 +405,11 @@ def subfield_display(n, subs):
     for deg in degs:
         substrs[deg] = ''
     for k in subs:
-        if substrs[k[0]] != '':
-            substrs[k[0]] += ', '
-        if k[0] <= MAX_GROUP_DEGREE:
-            substrs[k[0]] += group_display_knowl(k[0], k[1])
-        else:
-            substrs[k[0]] += str(k[0]) + 'T' + str(k[1])
+        if substrs[k[0][0]] != '':
+            substrs[k[0][0]] += ', '
+        substrs[k[0][0]] += group_display_knowl(k[0][0], k[0][1])
+        if k[1]>1:
+            substrs[k[0][0]] += '<span style="font-size: small"> x %d</span>'%k[1]
     for deg in degs:
         ans += '<p>Degree ' + str(deg) + ': '
         if substrs[deg] == '':
@@ -389,20 +433,14 @@ def otherrep_display(n, t, reps):
         if k == me:
             start = chr(ord(start) + 1)
         if cnt == 1:
-            if k[0] <= MAX_GROUP_DEGREE:
-                ans += group_display_knowl(k[0], k[1], name)
-            else:
-                ans += name
+            ans += group_display_knowl(k[0], k[1], name)
             if k == me:
                 ans += 'b'
         else:
             for j in range(cnt):
                 if j > 0:
                     ans += ', '
-                if k[0] <= MAX_GROUP_DEGREE:
-                    ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
-                else:
-                    ans += "%s%s" % (name, start)
+                ans += "%s%s" % (group_display_knowl(k[0], k[1], name), start)
                 start = chr(ord(start) + 1)
 
     if ans == '':
@@ -424,13 +462,12 @@ def resolve_display(resolves):
         else:
             ans += ', '
         k = j[1]
-        name = str(k[0]) + 'T' + str(k[1])
-        if k[0] <= MAX_GROUP_DEGREE:
-            ans += group_display_knowl(k[0], k[1], name)
+        if k[1] == -1:
+            ans += group_display_knowl(k[0], k[1], '%dT?' % k[0])
         else:
-            if k[1] == -1:
-                name = '%dT?' % k[0]
-            ans += name
+            ans += group_display_knowl(k[0], k[1])
+        if j[2]>1:
+            ans += '<span style="font-size: small"> x %d</span>'% j[2]
     if ans != '':
         ans += '</td></tr></table>'
     else:
@@ -445,30 +482,9 @@ def group_display_inertia(code):
     ans = "Intransitive group isomorphic to "+small_group_display_knowl(code[1][0],code[1][1])
     return ans
 
-def conjclasses(g, n):
-    gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-    cc = g.ConjugacyClasses()
-    ccn = [x.Size() for x in cc]
-    ccc = [x.Representative() for x in cc]
-    if int(n) == 1:
-        cc2 = [[1]]
-        cc = ['()']
-    else:
-        cc = ccc
-        cc2 = [x.cycletype(n) for x in cc]
-    cc2 = [str(x) for x in cc2]
-    cc2 = map(lambda x: re.sub("\[", '', x), cc2)
-    cc2 = map(lambda x: re.sub("\]", '', x), cc2)
-    ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-    return(ans)
-
-
 def cclasses(n, t):
-    if int(n) == 1:
-        G = gap.SmallGroup(1, 1)
-    else:
-        G = gap.TransitiveGroup(n, t)
-    cc = conjclasses(G, n)
+    group = WebGaloisGroup.from_nt(n,t)
+    cc = group.conjclasses()
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
@@ -486,10 +502,8 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    if int(n) == 1:
-        G = gap.SmallGroup(n, t)
-    else:
-        G = gap.TransitiveGroup(n, t)
+    group = WebGaloisGroup.from_nt(n,t)
+    G = group.gapgroupnt()
     ctable = str(G.CharacterTable().Display())
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
@@ -504,6 +518,8 @@ def generators(n, t):
     gens = G.SmallGeneratingSet()
     gens = str(gens)
     gens = re.sub("[\[\]]", '', gens)
+    gens = gens.replace(' ', '')
+    gens = gens.replace('),', '), ')
     return gens
 
 

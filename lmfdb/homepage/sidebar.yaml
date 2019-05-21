@@ -10,8 +10,6 @@
       url_for: "introduction_features"
     - title: Universe
       url_for: "universe"
-    - title: Future Plans
-      url_for: "roadmap"
     - title: News
       url_for: "news"
 
@@ -19,7 +17,7 @@
    type: L
    heading:
       title: L-functions
-      url_for: "l_functions.l_function_top_page"
+      url_for: "l_functions"
    firstpart:
       type: head_row
       heading: "Degree:"
@@ -52,7 +50,7 @@
           url_for: "zeta zeros.zetazeros"
         - title: Operations
           url_for: "tensor_products.index"
-          status: beta
+          status: future
         - title: dummy
           status: future
         - title: Local L-functions
@@ -63,7 +61,7 @@
    type: multilevel
    heading:
       title: Modular Forms
-      url_for: "mf.modular_form_main_page"
+      url_for: "modular_forms"
    parts:
      - title: GL(2)
        style: rotate
@@ -86,13 +84,13 @@
            url_for: "modlmf.modlmf_render_webpage"
            status: future
            colspan: onecolumn
-         - title: Hecke Algebra 
+         - title: Hecke algebra 
            url_for: "hecke_algebras.hecke_algebras_render_webpage"
            status: future
            colspan: onecolumn
      - title: GL(3)
        style: rotate
-       status: beta
+       status: future_rotated
        part2:
          - title: Maass
            status: future
@@ -102,14 +100,12 @@
            colspan: onecolumn
      - title: Other
        style: rotate
-       status: beta
+       status: future_rotated
        part2:
          - title: Siegel
            status: beta
            url_for: "smf.index"
          - title: U(2,1)
-           status: future
-         - title: Other
            status: future
 
 4Var:
@@ -130,9 +126,6 @@
              - title: /NumberFields
                url_for: "ecnf.index"
                colspan: onecolumn
-             - title: $\Q$-curves
-               status: future
-               colspan: onecolumn
            colspan: onecolumn
          - title: "Genus 2:"
            part3:
@@ -144,11 +137,24 @@
                status: future
                colspan: onecolumn
            colspan: onecolumn
-         - title: Belyi
+         - title: "Genus 3:"
+           status: future
+           part3:
+             - title: $/\Q$
+               status: future
+             - title: $/\F_{q}(t)$
+               status: future
+             - title: /NumberFields
+               status: future
+               colspan: onecolumn
+           colspan: onecolumn
+         - title: Shimura curves
+           status: future
+           colspan: onecolumn
+         - title: Belyi maps
            status: beta
            url_for: "belyi.index"
-         - title: Shimura
-           status: future
+           colspan: onecolumn
          - title: "Higher genus:"
            part3:
              - title: Families
@@ -172,8 +178,6 @@
          - title: Shimura varieties
            status: future
            colspan: onecolumn
-         - title: Higher
-           status: future
      - title: ""
        style: rotate
        part2:
@@ -213,7 +217,7 @@
            url_for:  "characters.render_Dirichletwebpage"
          - title: Hecke
            url_for:  "characters.render_Heckewebpage"
-           status: beta
+           status: future
       colspan: onecolumn
     - title: "Galois:"
       status: future
@@ -235,6 +239,7 @@
    status: beta
    heading:
       title: Motives
+      url_for: "motives"
    parts:
     - title: "Hypergeometric:"
       status: beta
@@ -266,14 +271,18 @@
       colspan: onecolumn
     - title: Lattices
       url_for: "lattice.lattice_render_webpage"
-      status:  beta
-    - title: Subgroups of
+      status: beta
+      colspan: onecolumn
+    - title: Small groups
+      status: future
+      colspan: onecolumn
+    - title: Finite subgroups of
       part2:
-         - title: $\SL(2)$
+         - title: $\GL(n,\F_q)$
            status:  future
-         - title: dummy
+         - title: $\GL(n,\Z)$
            status: future
-         - title: $\GL(2,\F_p)$
+         - title: $\GL(n,\C)$
            status:  future
       status: future
       colspan: onecolumn

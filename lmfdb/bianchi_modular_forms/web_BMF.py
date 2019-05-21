@@ -5,13 +5,38 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label
 from lmfdb.utils import web_latex, names_and_urls
-from lmfdb.lfunctions.LfunctionDatabase import (get_instances_by_Lhash,
-        get_instances_by_trace_hash, get_lfunction_by_url)
+from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
+        get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
+# Labels of BMFs which have no elliptic curve but are not twists of
+# base change.  Those which have no curve but are twists of base
+# change are detectable automatically in the code below, but these are
+# not.  Up to Galois conjugacy and quadratic twist there are only four
+# of these known; each is associated to the Jacobian of a genus 2
+# curve over the base field; these curves were found by Ciaran
+# Schembri.  At some point we will want to list these abelian surfaces
+# as friends when there is no curve.
+
+bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
+                      '2.0.4.1-34225.7-a',
+                      '2.0.4.1-34225.3-b',
+                      '2.0.4.1-34225.3-a',
+                      '2.0.3.1-67081.3-a',
+                      '2.0.3.1-67081.3-b',
+                      '2.0.3.1-67081.7-b',
+                      '2.0.3.1-67081.7-a',
+                      '2.0.3.1-61009.1-a',
+                      '2.0.3.1-61009.1-b',
+                      '2.0.3.1-61009.9-a',
+                      '2.0.3.1-61009.9-b',
+                      '2.0.3.1-123201.1-b',
+                      '2.0.3.1-123201.1-c',
+                      '2.0.3.1-123201.3-b',
+                      '2.0.3.1-123201.3-c']
 
 class WebBMF(object):
     """
@@ -161,7 +186,7 @@ class WebBMF(object):
             self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         else:
             self.bc_forms = []
-            if self.bct:
+            if self.bct or self.label in bmfs_with_no_curve:
                 self.ec_status = 'none'
             else:
                 self.ec_status = 'missing'
@@ -175,18 +200,12 @@ class WebBMF(object):
                 self.label.replace('-', '/'))
         Lfun = get_lfunction_by_url(url)
         if Lfun:
-            # first by Lhash
-            instances = get_instances_by_Lhash(Lfun['Lhash'])
-            # then by trace_hash
-            instances += get_instances_by_trace_hash(Lfun['degree'], Lfun['trace_hash'])
+            instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'], Lfun['degree'], Lfun['trace_hash'])
 
             # This will also add the EC/G2C, as this how the Lfun was computed
-            self.friends = names_and_urls(instances)
-            # remove itself
-            self.friends.remove(
-                    ('Bianchi modular form {}'.format(self.label), '/' + url))
+            # and not add itself
+            self.friends = names_and_urls(instances, exclude = {url})
             self.friends.append(('L-function', '/L/'+url))
-            
         else:
             # old code
             if self.dimension == 1:

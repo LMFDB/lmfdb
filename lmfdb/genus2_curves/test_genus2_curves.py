@@ -169,3 +169,37 @@ class Genus2Test(LmfdbTest):
                 ('M_2(CM)', '2916.b.11664.1')]:
             L = self.tc.get('/Genus2Curve/Q/?geom_end_alg={}'.format(endo))
             assert text in L.data
+
+    def test_related_objects(self):
+        for url, friends in [
+                ('/Genus2Curve/Q/20736/i/373248/1',
+                    ('L-function',
+                        'Isogeny class 20736.i',
+                        'Elliptic curve 576.f3',
+                        'Elliptic curve 36.a4',
+                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
+                        'Isogeny class 2.2.24.1-36.1-a',
+                        'Twists',)
+                    ),
+                ('/Genus2Curve/Q/20736/i/',
+                    ('L-function',
+                        'Isogeny class 576.f',
+                        'Isogeny class 36.a',
+                        'Isogeny class 2.0.8.1-324.3-a',
+                        'Bianchi modular form 2.0.8.1-324.3-a',
+                        'Hilbert modular form 2.2.24.1-36.1-a',
+                        'Isogeny class 2.2.24.1-36.1-a',)
+                    ),
+                ('/Genus2Curve/Q/576/a/',
+                    ('L-function',
+                        'Isogeny class 2.2.8.1-9.1-a',
+                        'Modular form 24.2.d.a',
+                        'Hilbert modular form 2.2.8.1-9.1-a',)
+                    )
+                ]:
+            data = self.tc.get(url).data
+            for friend in friends:
+                assert friend in data
+

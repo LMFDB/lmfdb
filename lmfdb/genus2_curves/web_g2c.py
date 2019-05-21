@@ -2,15 +2,18 @@
 
 from ast import literal_eval
 from lmfdb import db
-from lmfdb.utils import web_latex, encode_plot, list_to_factored_poly_otherorder
-from lmfdb.ecnf.main import split_full_label
+from lmfdb.utils import (key_for_numerically_sort, encode_plot,
+                         list_to_factored_poly_otherorder, names_and_urls,
+                         web_latex)
+from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
+from lmfdb.ecnf.main import split_full_label as split_ecnf_label
+from lmfdb.ecnf.WebEllipticCurve import convert_IQF_label
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.genus2_curves import g2c_logger
-from lmfdb.classical_modular_forms.main import url_for_label as url_for_cmf
 from sage.all import latex, ZZ, QQ, CC, PolynomialRing, factor, implicit_plot, point, real, sqrt, var,  nth_prime
 from sage.plot.text import text
 from flask import url_for
@@ -39,12 +42,9 @@ def url_for_ec(label):
     if not '-' in label:
         return url_for('ec.by_ec_label', label = label)
     else:
-        (nf, conductor_label, class_label, number) = split_full_label(label)
-        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = conductor_label, class_label = class_label, number = number)
-        # fixup conductor norm labels for the form "[a,b,c]" that have been converted to urls to ensure friend matching works
-        url.replace("%5B","[")
-        url.replace("%2C",".")
-        url.replace("%5D","]")
+        (nf, cond, isog, num) = split_ecnf_label(label)
+        cond = convert_IQF_label(nf,cond)
+        url = url_for('ecnf.show_ecnf', nf = nf, conductor_label = cond, class_label = isog, number = num)
         return url
 
 def url_for_ec_class(ec_label):
@@ -52,8 +52,9 @@ def url_for_ec_class(ec_label):
         (cond, iso, num) = split_lmfdb_label(ec_label)
         return url_for('ec.by_double_iso_label', conductor=cond, iso_label=iso)
     else:
-        (nf, cond, iso, num) = split_full_label(ec_label)
-        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=iso)
+        (nf, cond, isog, num) = split_ecnf_label(ec_label)
+        cond = convert_IQF_label(nf,cond)
+        return url_for('ecnf.show_ecnf_isoclass', nf=nf, conductor_label=cond, class_label=isog)
 
 def ec_label_class(ec_label):
     x = ec_label
@@ -199,7 +200,7 @@ def geom_end_alg_name(name):
         "CM x Q":"\\mathrm{CM} \\times \\Q",
         "CM":"\\mathrm{CM}",
         "CM x CM":"\\mathrm{CM} \\times \\mathrm{CM}",
-        "QM":"\\mathrm{QM}",        
+        "QM":"\\mathrm{QM}",
         "M_2(Q)":"\\mathrm{M}_2(\\Q)",
         "M_2(CM)":"\\mathrm{M}_2(\\mathrm{CM})"
         }
@@ -228,8 +229,8 @@ def st0_group_name(name):
 
 def gl2_statement_base(factorsRR, base):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
-        return "of \(\GL_2\)-type over " + base
-    return "not of \(\GL_2\)-type over " + base
+        return "Of \(\GL_2\)-type over " + base
+    return "Not of \(\GL_2\)-type over " + base
 
 def gl2_simple_statement(factorsQQ, factorsRR):
     if factorsRR in [ ['RR', 'RR'], ['CC'] ]:
@@ -418,19 +419,26 @@ def lfunction_friend_from_url(url):
         label = parts[2] + "." + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "EllipticCurve":
-        label = parts[1] + "-" + parts[2] + "-" + parts[3]
+        cond = convert_IQF_label(parts[1],parts[2])
+        label = parts[1] + "-" + cond + "-" + parts[3]
         return ("EC isogeny class " + label, "/" + url)
     if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "TotallyReal" and parts[4] == "holomorphic":
         label = parts[5]
         return ("Hilbert MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "ImaginaryQuadratic":
+        label = '.'.join(parts[4:6])
+        return ("Bianchi MF " + label, "/" + url)
+    if parts[0] == "ModularForm" and parts[1] == "GL2" and parts[2] == "Q" and parts[3] == "holomorphic":
+        label = '.'.join(parts[4:8])
+        return ("Modular form " + label, "/" + url)
     return (url, "/" + url)
 
 # add new friend to list of friends, but only if really new (don't add an elliptic curve and its isogeny class)
-def add_friend(friends,friend):
+def add_friend(friends, friend):
     for oldfriend in friends:
         if oldfriend[0] == friend[0] or oldfriend[1] in friend[1] or friend[1] in oldfriend[1]:
             return
-        # compare again with slashes coverted to dots to deal with minor differences in url/label formatting
+        # compare again with slashes converted to dots to deal with minor differences in url/label formatting
         olddots = ".".join(oldfriend[1].split("/"))
         newdots = ".".join(friend[1].split("/"))
         if olddots in newdots or newdots in olddots:
@@ -547,7 +555,7 @@ class WebG2C(object):
                 sz = "everywhere"
             data['non_solvable_places'] = sz
             data['torsion_order'] = curve['torsion_order']
-            data['torsion_factors'] = [ ZZ(a) for a in literal_eval(curve['torsion_subgroup']) ]
+            data['torsion_factors'] = [ZZ(a) for a in literal_eval(curve['torsion_subgroup'])]
             if len(data['torsion_factors']) == 0:
                 data['torsion_subgroup'] = '\mathrm{trivial}'
             else:
@@ -649,27 +657,47 @@ class WebG2C(object):
             ]
 
         # Friends
-        self.friends = friends = [('L-function', data['lfunc_url'])]
+        self.friends = friends = []
         if is_curve:
             friends.append(('Isogeny class %s.%s' % (data['slabel'][0], data['slabel'][1]), url_for(".by_url_isogeny_class_label", cond=data['slabel'][0], alpha=data['slabel'][1])))
+
+        # first deal with EC
+        ecs = []
         if 'split_labels' in data:
             for friend_label in data['split_labels']:
                 if is_curve:
-                    add_friend (friends, ("Elliptic curve " + friend_label, url_for_ec(friend_label)))
+                    ecs.append(("Elliptic curve " + friend_label, url_for_ec(friend_label)))
                 else:
-                    add_friend (friends, ("EC isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
-        for friend_url in db.lfunc_instances.search({'Lhash':data['Lhash']}, 'url'):
-            if '|' in friend_url:
-                for url in friend_url.split('|'):
-                    add_friend (friends, lfunction_friend_from_url(url))
-            else:
-                add_friend (friends, lfunction_friend_from_url(friend_url))
-        for cmf_friend in db.mf_newforms.search({'trace_hash':data['Lhash']},["label","dim","level"]):
-            # be selective, only cmfs of the right dimension and conductor get to be our friends
-            if cmf_friend["dim"] == 2 and cmf_friend["level"]**2 == data['cond']:
-                add_friend (friends, ("Modular form " + cmf_friend["label"], url_for_cmf(cmf_friend["label"])))
+                    ecs.append(("Isogeny class " + ec_label_class(friend_label), url_for_ec_class(friend_label)))
+
+        ecs.sort(key=lambda x: key_for_numerically_sort(x[0]))
+
+        # then again EC from lfun
+        instances = []
+        for elt in db.lfunc_instances.search({'Lhash':data['Lhash'], 'type' : 'ECQP'}, 'url'):
+            instances.extend(elt.split('|'))
+
+        # and then the other isogeny friends
+        instances.extend([
+            elt['url'] for elt in
+            get_instances_by_Lhash_and_trace_hash(data["Lhash"],
+                                                  4,
+                                                  int(data["Lhash"])
+                                                  )
+            ])
+        exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                   if elt[1]}
+        exclude.add(data['lfunc_url'].lstrip('/L/').rstrip('/'))
+        for elt in ecs + names_and_urls(instances, exclude=exclude):
+            # because of the splitting we must use G2C specific code
+            add_friend(friends, elt)
         if is_curve:
-            friends.append(('Twists', url_for(".index_Q", g20 = str(data['g2'][0]), g21 = str(data['g2'][1]), g22 = str(data['g2'][2]))))
+            friends.append(('Twists', url_for(".index_Q",
+                                              g20=str(data['g2'][0]),
+                                              g21=str(data['g2'][1]),
+                                              g22=str(data['g2'][2]))))
+
+        friends.append(('L-function', data['lfunc_url']))
 
         # Breadcrumbs
         self.bread = bread = [

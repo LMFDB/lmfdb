@@ -115,9 +115,10 @@ class CmfTest(LmfdbTest):
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
             assert l in page.data
 
-
-
     def test_failure(self):
+        r"""
+        Check that bad inputs are handled correctly
+        """
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/983/2000/c/a/', follow_redirects=True)
         assert "Level and weight too large" in page.data
         assert "for non trivial character." in page.data
@@ -130,10 +131,7 @@ class CmfTest(LmfdbTest):
         assert "No matches" in page.data
         assert "Only for weight 1" in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/maria/', follow_redirects=True)
-        assert "is not a valid input for" in page.data
-
-
-        
+        assert 'maria' in page.data and "is not a valid newform" in page.data   
 
     def test_delta(self):
         r"""
@@ -592,11 +590,14 @@ class CmfTest(LmfdbTest):
         assert '0.5, -2.2282699087' in page.data
         assert '0.406839418685' in page.data
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform/27.2.e.a', follow_redirects=True)
-        assert '[-1, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0]' in page.data # a_2
+        assert '"analytic_rank_proved": true' in page.data
+        assert '[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' in page.data # a1 (make sure qexp is there)
+        assert '[1, 1, 27, 5, 1, 9, 0]' in page.data # non-trivial inner twist
         assert '-2.2282699087' in page.data
         assert '[0, 12, -6, -6, -6, -3, 0, -6, 6, 0, -3, 3, 12, -6, 15, 9, 0, 9, 9, -3, -3, -12, 3, -12, -18, 3, -30' in page.data
         assert '-0.498394' in page.data
         assert '0.406839418685' in page.data
+        assert '1.2.3.c9' in page.data # Sato-Tate group
 
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_full_space/20.5', follow_redirects = True)

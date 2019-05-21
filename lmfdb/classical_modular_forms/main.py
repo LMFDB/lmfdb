@@ -26,6 +26,8 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_table, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 
+POSINT_RE = re.compile("^[1-9][0-9]*$")
+ALPHA_RE = re.compile("^[a-z]+$")
 
 @cached_function
 def learnmore_list():
@@ -416,8 +418,12 @@ def render_full_gamma1_space_webpage(label):
 
 @cmf.route("/<level>/")
 def by_url_level(level):
-    if "." in level:
-        return redirect(url_for_label(label = level), code=301)
+    if not POSINT_RE.match(level):
+        try:
+            return redirect(url_for_label(level), code=301)
+        except ValueError:
+            flash_error("%s is not a valid newform or space label", level)
+            return redirect(url_for(".index"))
     info = to_dict(request.args)
     if 'level' in info:
         return redirect(url_for('.index', **request.args), code=307)
@@ -460,11 +466,11 @@ def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embeddi
     conrey_index, embedding = embedding_label.split('.')
     if not (conrey_index.isdigit() and embedding.isdigit()):
         return abort(404, "Invalid embedding label: not integers")
-    return redirect(url_for("cmf.by_url_newform_conreylabel_with_embedding", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
+    return redirect(url_for("cmf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
 # Embedded modular form
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
-def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
+def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     if conrey_index <= 0 or embedding <= 0:
         return abort(404, "Invalid embedding label: negative values")
     newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
@@ -472,9 +478,11 @@ def by_url_newform_conreylabel_with_embedding(level, weight, char_orbit_label, h
     return render_embedded_newform_webpage(newform_label, embedding_label)
 
 def url_for_label(label):
+    if label == "random":
+        return url_for("cmf.random_form")
     slabel = label.split(".")
     if len(slabel) == 6:
-        func = "cmf.by_url_newform_conreylabel_with_embedding"
+        func = "cmf.by_url_embedded_newform_label"
     elif len(slabel) == 4:
         func = "cmf.by_url_newform_label"
     elif len(slabel) == 3:
@@ -486,6 +494,10 @@ def url_for_label(label):
     else:
         raise ValueError("Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    for i in range (len(slabel)):
+        if not keytypes[i].match(slabel[i]):
+            raise ValueError("Invalid label")
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
     return url_for(func, **kwds)
 
@@ -1033,7 +1045,7 @@ def space_search(info, query):
 @cmf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Classical Modular Form Data'
-    return render_template("single.html", kid='dq.cmf.extent',
+    return render_template("single.html", kid='rcs.cande.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
@@ -1042,7 +1054,7 @@ def completeness_page():
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of Classical Modular Form Data'
-    return render_template("single.html", kid='dq.cmf.source',
+    return render_template("single.html", kid='rcs.source.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
@@ -1058,7 +1070,7 @@ def labels_page():
 @cmf.route("/Reliability")
 def reliability_page():
     t = 'Reliability of Classical Modular Form Data'
-    return render_template("single.html", kid='dq.cmf.reliability',
+    return render_template("single.html", kid='rcs.rigor.cmf',
                            credit=credit(), title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))

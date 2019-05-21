@@ -1206,7 +1206,9 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m }
+            return { 'sage': 'kronecker_character(%i)'%m,
+                     'pari': 'znchartokronecker(g,chi)'
+                     }
         return None
 
     @property
@@ -1354,7 +1356,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m }
+            return { 'sage': 'kronecker_character(%i)'%m,
+                     'pari': 'znchartokronecker(g,chi)'
+                     }
         return None
 
     @property

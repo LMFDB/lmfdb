@@ -133,7 +133,6 @@ import re
 import os
 import pprint
 from lmfdb import db
-from lmfdb.backend.encoding import Json
 from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, magma, primes, latex
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
@@ -173,6 +172,16 @@ def nf_lookup(label):
     #print "The field with label %s is %s" % (label, K)
     nf_lookup_table[label] = K
     return K
+
+
+def LMFDB_label(ec):
+    """Get LMFDB label from ec_curves table, instead of using Sage's
+    database (which may not be installed).
+    """
+    try:
+        return qcurves.lucky({'ainvs':[int(c) for c in ec.ainvs()]}, projection='lmfdb_label')
+    except:
+        return "?"
 
 from lmfdb.nfutils.psort import ideal_label
 
@@ -388,7 +397,7 @@ def curves(line, verbose=False):
     edata = {
         'field_label': field_label,
         'degree': deg,
-        'signature': Json(sig),
+        'signature': sig,
         'abs_disc': abs_disc,
         'class_label': class_label,
         'short_class_label': short_class_label,
@@ -406,10 +415,10 @@ def curves(line, verbose=False):
         'q_curve': q_curve,
         'base_change': base_change,
         'torsion_order': ntors,
-        'torsion_structure': Json(torstruct),
+        'torsion_structure': torstruct,
         'torsion_gens': torgens,
         'equation': str(latex(E)), # no "\(", "\)"
-        'local_data': Json(local_data),
+        'local_data': local_data,
         'minD': minD,
         'non_min_p': non_minimal_primes,
     }
@@ -504,13 +513,15 @@ def read1isogmats(base_path, filename_suffix):
         for n in range(ncurves):
             isogdegs = allisogdegs[n+1]
             label = class_label+str(n+1)
-            data[label] = {'isogeny_degrees': Json(isogdegs),
+            data[label] = {'isogeny_degrees': isogdegs,
                            'class_size': ncurves,
                            'class_deg': maxdeg}
             if n==0:
                 #print("adding isogmat = {} to {}".format(isogmat,label))
-                data[label]['isogeny_matrix'] = Json(isogmat)
-
+                data[label]['isogeny_matrix'] = isogmat
+            else:
+                #postgres will fail if not all columns present
+                data[label]['isogeny_matrix'] = None
     return data
 
 def split_galois_image_code(s):
@@ -551,7 +562,7 @@ def galrep(line):
     number = ''.join([c for c in c_label if c.isdigit()])
     assert iso_label+number==c_label
     conductor_label = convert_conductor_label(field_label, conductor_label)
-    print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
+    #print("Converting conductor label from {} to {}".format(data[0].split("-")[1], conductor_label))
     short_label = "%s-%s%s" % (conductor_label, iso_label, str(number))
     label = "%s-%s" % (field_label, short_label)
     image_codes = data[1:]
@@ -592,7 +603,7 @@ def add_galrep_data_to_nfcurve(cu):
         cu.update(galrepdat[cu['label']])
     return cu
 
-filename_base_list = ['curves', 'curve_data']
+filename_base_list = ['curves', 'isoclass']
 
 #
 
@@ -601,15 +612,20 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
     duplicates and cause problems if any of the the labels are already
     in the database; otherwise uses upsert() which will update a
     single row, or add a row.
+
+    NB We do *not* yet have a function curve_data() to parse a line
+    from a curve_data file!  So if you include curve_data in the list
+    of filesnames to be processed, this will fail (but not until after
+    the curves file has been processed).
     """
     curves_filename = 'curves.%s' % (filename_suffix)
-    curve_data_filename = 'curve_data.%s' % (filename_suffix)
+    #curve_data_filename = 'curve_data.%s' % (filename_suffix)
     isoclass_filename = 'isoclass.%s' % (filename_suffix)
     galrep_filename = 'galrep.%s' % (filename_suffix)
-    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
+    file_list = [curves_filename, isoclass_filename, galrep_filename]
+#    file_list = [curves_filename, curve_data_filename, isoclass_filename, galrep_filename]
 #    file_list = [isoclass_filename]
 #    file_list = [curves_filename]
-#    file_list = [curve_data_filename]
 #    file_list = [galrep_filename]
 
     data_to_insert = {}  # will hold all the data to be inserted
@@ -658,6 +674,7 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
             #print("adding isog data for {}".format(lab))
             if lab in isogmats:
                 val.update(isogmats[lab])
+                #print("updated val with {}".format(isogmats[lab]))
             else:
                 print("error: label {} not in isogmats!".format(lab))
 
@@ -665,8 +682,8 @@ def upload_to_db(base_path, filename_suffix, insert=True, test=True):
         if test:
             print("(not) inserting all data")
             #nfcurves.insert_many(vals)
-            print("First 10 vals:")
-            for v in vals[:10]:
+            print("First val:")
+            for v in vals[:1]:
                 pprint.pprint(v)
         else:
             print("inserting all data ({} items)".format(len(vals)))
@@ -812,11 +829,6 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 
     key_set = Set(keys_and_types.keys())
 #
-#   Some keys are only used for the first curve in each class.
-#   Currently only the isogeny matrix, but later there may be more.
-#
-    number_1_only_keys = ['isogeny_matrix'] # only present if 'number':1
-#
 #   As of April 2017 rank data is only computed for imaginary
 #   quadratic fields so we need to be able to say to ignore the
 #   associated keys.  Also (not yet implemented) if we compute rank
@@ -847,8 +859,6 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
         expected_keys = key_set
         if ignore_ranks:
             expected_keys = expected_keys - rank_keys
-        if c['number']!=1:
-            expected_keys = expected_keys - number_1_only_keys
         if c['degree']==6:
             expected_keys = expected_keys - galrep_keys
         if c['degree'] > 2:
@@ -1569,3 +1579,42 @@ def kod_eqn_updater(C):
     for ld in C['local_data']:
         ld['kod'] = kod_fixer(ld['kod'])
     return C
+    
+def check_bc(field_label, label=None, update=False):
+    """Checks that curve(s) over the field have their base_change column
+    correct in the database.  Set label to the short label (without
+    the field) to apply to a single curve, otherwise it checks all
+    curves over the field.  Will output information if there is a
+    discrepancy.  No change is made to the database unless
+    update=True.
+    """
+    K = FIELD(field_label)
+    query = {'field_label':field_label}
+    if label != None:
+        query['short_label'] = label
+    ntotal = nfcurves.count(query)
+    if ntotal==0:
+        print("No curves over field {}".format(field_label))
+        return
+    curves = nfcurves.search(query, projection=['label','ainvs','base_change'])
+    print("field {}: processing {} curves".format(field_label,ntotal))
+    nc = 0
+    for ec in curves:
+        label = ec['label']
+        nc += 1
+        if nc%1000==0:
+            print("processed {} of {} curves".format(nc,ntotal))
+        ainvsK = parse_ainvs(K.K(), ec['ainvs'])
+        E = EllipticCurve(ainvsK)
+        base_change = [LMFDB_label(E1) for E1 in E.descend_to(QQ)]
+        if base_change != ec['base_change']:
+            print("Bad base-change data for {}: database has {} instead of {}".format(ec['label'],ec['base_change'],base_change))
+            if update:
+                print("updating database entry...")
+                c = nfcurves.lucky({'label':label}) # no projection as we need everything
+                #print("Old curve record = {}".format(c))
+                c['base_change'] = base_change
+                print("New curve record = {}".format(c))
+                nfcurves.update({'label':label}, c, resort=False, restat=False)
+            else:   
+                print("leaving database unchanged")

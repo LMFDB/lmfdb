@@ -15,7 +15,7 @@ from lmfdb.hilbert_modular_forms import hmf_page
 from lmfdb.hilbert_modular_forms.hilbert_field import findvar
 from lmfdb.hilbert_modular_forms.hmf_stats import get_stats, get_counts, hmf_degree_summary
 from lmfdb.utils import names_and_urls
-from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash, get_instances_by_trace_hash
+from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url, get_instances_by_Lhash_and_trace_hash
 
 
 def get_hmf(label):
@@ -52,7 +52,7 @@ def hilbert_modular_form_render_webpage():
     if len(args) == 0:
         info = {}
         t = 'Hilbert Modular Forms'
-        bread = [("Modular Forms", url_for('mf.modular_form_main_page')),
+        bread = [("Modular Forms", url_for('modular_forms')),
                  ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage"))]
         info['learnmore'] = []
         info['counts'] = get_counts()
@@ -116,7 +116,7 @@ def hilbert_modular_form_jump(info):
              shortcuts={'label':hilbert_modular_form_jump},
              projection=['field_label', 'short_label', 'label', 'level_ideal', 'dimension'],
              cleaners={"level_ideal": lambda v: teXify_pol(v['level_ideal'])},
-             bread=lambda:[("Modular Forms", url_for('mf.modular_form_main_page')),
+             bread=lambda:[("Modular Forms", url_for('modular_forms')),
                            ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list,
@@ -142,7 +142,7 @@ def hilbert_modular_form_search(info, query):
 
 def search_input_error(info = None, bread = None):
     if info is None: info = {'err':''}
-    if bread is None: bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
+    if bread is None: bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")), ('Search Results', ' ')]
     return render_template("hilbert_modular_form_search.html", info=info, title="Hilbert Modular Form Search Error", bread=bread)
 
 @hmf_page.route('/<field_label>/holomorphic/<label>/download/<download_type>')
@@ -316,16 +316,12 @@ def render_hmf_webpage(**args):
             info['label'])
     Lfun = get_lfunction_by_url(url)
     if Lfun:
-        # first by Lhash
-        instances = get_instances_by_Lhash(Lfun['Lhash'])
-        # then by trace_hash
-        instances += get_instances_by_trace_hash(Lfun['degree'], Lfun['trace_hash'])
+        instances = get_instances_by_Lhash_and_trace_hash(Lfun['Lhash'],
+                                                          Lfun['degree'],
+                                                          Lfun['trace_hash'])
 
         # This will also add the EC/G2C, as this how the Lfun was computed
-        info['friends'] = names_and_urls(instances)
-        # remove itself
-        info['friends'].remove(
-                ('Hilbert modular form {}'.format(info['label']), '/' + url))
+        info['friends'] = names_and_urls(instances, exclude={url})
 
         info['friends'] += [('L-function',
                             url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
@@ -350,7 +346,7 @@ def render_hmf_webpage(**args):
 
 
 
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
         ('%s' % data['label'], ' ')]
 
     t = "Hilbert Cusp Form %s" % info['label']
@@ -443,7 +439,7 @@ def render_hmf_webpage(**args):
 @hmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Completeness', '')]
     return render_template("single.html", kid='dq.mf.hilbert.extent',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
@@ -451,7 +447,7 @@ def completeness_page():
 @hmf_page.route("/Source")
 def how_computed_page():
     t = 'Source of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Source', '')]
     return render_template("single.html", kid='dq.mf.hilbert.source',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
@@ -459,7 +455,7 @@ def how_computed_page():
 @hmf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of the Hilbert Modular Forms Data'
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Reliability', '')]
     return render_template("single.html", kid='dq.mf.hilbert.reliability',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
@@ -467,7 +463,7 @@ def reliability_page():
 @hmf_page.route("/Labels")
 def labels_page():
     t = 'Label of an Hilbert Modular Form'
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for(".hilbert_modular_form_render_webpage")),
              ('Labels', '')]
     return render_template("single.html", kid='mf.hilbert.label',
                            credit=hmf_credit, title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
@@ -481,7 +477,7 @@ def browse():
     credit = 'John Voight'
     t = 'Hilbert Modular Forms'
 
-    bread = [("Modular Forms", url_for('mf.modular_form_main_page')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
+    bread = [("Modular Forms", url_for('modular_forms')), ('Hilbert Modular Forms', url_for("hmf.hilbert_modular_form_render_webpage")),
              ('Browse', ' ')]
     return render_template("hmf_stats.html", info=info, credit=credit, title=t, bread=bread, learnmore=learnmore_list())
 

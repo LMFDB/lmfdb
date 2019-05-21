@@ -9,7 +9,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.backend.encoding import Json
 from lmfdb.utils import (
-    web_latex, to_dict, web_latex_split_on_pm,
+    web_latex, to_dict, web_latex_split_on_pm, flash_error,
     parse_rational, parse_ints, parse_bracketed_posints, parse_primes, parse_element_of,
     search_wrap)
 from lmfdb.elliptic_curves import ec_page, ec_logger
@@ -86,6 +86,9 @@ def rational_elliptic_curves(err_args=None):
     }
     t = 'Elliptic Curves over $\Q$'
     bread = [('Elliptic Curves', url_for("ecnf.index")), ('$\Q$', ' ')]
+    if err_args.get("err_msg"):
+        flash_error(err_args.pop("err_msg"),err_args.pop("label"))
+        return redirect(url_for(".rational_elliptic_curves"))
     return render_template("ec-index.html", info=info, credit=ec_credit(), title=t, bread=bread, learnmore=learnmore_list(), calling_function = "ec.rational_elliptic_curves", **err_args)
 
 @ec_page.route("/random")
@@ -136,16 +139,17 @@ def elliptic_curve_jump_error(label, args, wellformed_label=False, cremona_label
     for field in ['conductor', 'torsion', 'rank', 'sha', 'optimal', 'torsion_structure']:
         err_args[field] = args.get(field, '')
     err_args['count'] = args.get('count', '100')
+    err_args['label'] = label
     if wellformed_label:
-        err_args['err_msg'] = "No curve or isogeny class in the database has label %s" % label
+        err_args['err_msg'] = "No curve or isogeny class in the database has label %s"
     # elif cremona_label:
-    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'" % label
+    #     err_args['err_msg'] = "To search for a Cremona label use 'Cremona:%s'"
     elif missing_curve:
-        err_args['err_msg'] = "The elliptic curve %s (conductor = %s) is not in the database" % (label, args.get('conductor','?'))
+        err_args['err_msg'] = "The elliptic curve %s is not in the database"
     elif not label:
         err_args['err_msg'] = "Please enter a non-empty label"
     else:
-        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$" % label
+        err_args['err_msg'] = "%s does not define a recognised elliptic curve over $\mathbb{Q}$"
     return rational_elliptic_curves(err_args)
 
 def elliptic_curve_jump(info):
@@ -261,8 +265,10 @@ def elliptic_curve_search(info, query):
     parse_primes(info, query, 'nonsurj_primes', name='non-maximal primes',
                  qfield='nonmax_primes',mode=mode, radical='nonmax_rad')
     if 'optimal' in info and info['optimal'] == 'on':
-        # fails on 990h3
-        query['number'] = 1
+        # For all isogeny classes except 990h the optimal curve is number 1, while for class 990h it is number 3.
+        # So setting query['number'] = 1 is nearly correct, but fails on 990h3.
+        # Instead, we use this more complicated query:
+        query.update({"$or":[{'iso':'990h', 'number':3}, {'iso':{'$ne':'990h'},'number':1}]})
 
     info['curve_url_LMFDB'] = lambda dbc: url_for(".by_triple_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1], number=dbc['lmfdb_number'])
     info['iso_url_LMFDB'] = lambda dbc: url_for(".by_double_iso_label", conductor=dbc['conductor'], iso_label=split_lmfdb_label(dbc['lmfdb_iso'])[1])
@@ -319,7 +325,7 @@ def by_ec_label(label):
 
         data = db.ec_curves.lucky({label_type: label}, projection=1)
         if data is None:
-            return elliptic_curve_jump_error(label, {})
+            return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
         ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         iso = data['lmfdb_iso'].split(".")[1]
         if number:
@@ -352,7 +358,7 @@ def render_isogeny_class(iso_class):
     if class_data == "Invalid label":
         return elliptic_curve_jump_error(iso_class, {}, wellformed_label=False)
     if class_data == "Class not found":
-        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True)
+        return elliptic_curve_jump_error(iso_class, {}, wellformed_label=True, missing_curve=True)
     class_data.modform_display = url_for(".modular_form_display", label=class_data.lmfdb_iso+"1", number="")
 
     return render_template("ec-isoclass.html",
@@ -411,7 +417,7 @@ def render_curve_webpage_by_label(label):
     if data == "Invalid label":
         return elliptic_curve_jump_error(label, {}, wellformed_label=False)
     if data == "Curve not found":
-        return elliptic_curve_jump_error(label, {}, wellformed_label=True)
+        return elliptic_curve_jump_error(label, {}, wellformed_label=True, missing_curve=True)
     try:
         lmfdb_label = data.lmfdb_label
     except AttributeError:

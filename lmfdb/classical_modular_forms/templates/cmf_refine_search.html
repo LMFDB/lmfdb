@@ -49,7 +49,7 @@ function set_buckets(col_selecter, bucket_id) {
       </div>
     </td>
     <td>{{ KNOWL('cmf.analytic_conductor', title='Analytic conductor') }}</td>
-    <td>{{ KNOWL('cmf.analytic_conductor', title='\(Nk^2\)') }}</td>
+    <td>{{ KNOWL('cmf.nk2', title='\(Nk^2\)') }}</td>
     <td>{{ KNOWL('cmf.dimension', title='Dim.') }}
       <div class="float-right"><select name="dim_type" style="min-width: 105px;">
         <option value=""{% if info.dim_type == '' %} selected='yes'{% endif %}>absolute</option>
@@ -202,7 +202,7 @@ function set_buckets(col_selecter, bucket_id) {
 </table>
 </form>
 {% if info.search_type == 'DynStats' %}
-<p>Note that the newforms in the database may not be {{ KNOWL('dq.cmf.extent', title='representative') }}.</p>
+<p>Note that the newforms in the database may not be {{ KNOWL('rcs.cande.cmf', title='representative') }}.</p>
 {% endif %}
 
 {% block show_results %}{% endblock %}
