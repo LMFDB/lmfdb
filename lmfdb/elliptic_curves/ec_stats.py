@@ -3,6 +3,7 @@ from lmfdb.app import app
 from lmfdb.utils import comma, format_percentage
 from lmfdb.logger import make_logger
 from lmfdb import db
+from sage.all import Integer
 
 logger = make_logger("ec")
 
@@ -120,7 +121,7 @@ class ECstats(object):
         
         max_sha = ecdb.max('sha')
         stats['max_sha'] = max_sha
-        max_sqrt_sha = max_sha.sqrt() # exact!
+        max_sqrt_sha = Integer(max_sha).sqrt() # exact since all sha values are squares!
         sha_counts = [{'s':s,'ncurves':ecdb.count({'sha':s**2})} for s in range(1,1+max_sqrt_sha)]
         # remove values with a count of 0
         sha_counts = [sc for sc in sha_counts if sc['ncurves']]
