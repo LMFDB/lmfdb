@@ -117,6 +117,7 @@ def bianchi_modular_form_postprocess(res, info, query):
                            ('Search Results', '.')],
              learnmore=learnmore_list,
              properties=lambda: [])
+
 def bianchi_modular_form_search(info, query):
     """Function to handle requests from the top page, either jump to one
     newform or do a search.
@@ -296,10 +297,11 @@ def render_bmf_space_webpage(field_label, level_label):
                 # currently we have newforms of dimension 1 and 2 only (mostly dimension 1)
                 info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
                 info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
+                info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] - 2*info['nnf2']
                 properties2 = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
                 friends = [('Newform {}'.format(f['label']), f['url']) for f in info['nfdata'] ]
 
-    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties2=properties2, friends=friends)
+    return render_template("bmf-space.html", info=info, credit=credit, title=t, bread=bread, properties2=properties2, friends=friends, learnmore=learnmore_list())
 
 @bmf_page.route('/<field_label>/<level_label>/<label_suffix>/')
 def render_bmf_webpage(field_label, level_label, label_suffix):
@@ -325,7 +327,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
     except ValueError:
         raise
         info['err'] = "No Bianchi modular form in the database has label {}".format(label)
-    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=properties2, friends=friends, info=info)
+    return render_template("bmf-newform.html", title=title, credit=credit, bread=bread, data=data, properties2=properties2, friends=friends, info=info, learnmore=learnmore_list())
 
 def bianchi_modular_form_by_label(lab):
     if lab == '':
