@@ -509,9 +509,9 @@ class PostgresBase(object):
             tablename = self._constraint_exists(name + suffix)
             if tablename:
                 kind = "Constraint"
-                begin_renamer = SQL("ALTER TABLE {0} RENAME CONSTRAINT").format(tablename)
+                begin_renamer = SQL("ALTER TABLE {0} RENAME CONSTRAINT").format(Identifier(tablename))
                 end_renamer = SQL("{0} TO {1}")
-                begin_command = SQL("ALTER TABLE {0}").format(tablename)
+                begin_command = SQL("ALTER TABLE {0}").format(Identifier(tablename))
                 end_command = SQL("DROP CONSTRAINT {0}")
             elif self._index_exists(name + suffix):
                 kind = "Index"
