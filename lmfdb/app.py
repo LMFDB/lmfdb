@@ -249,13 +249,45 @@ def index():
 def about():
     return render_template("about.html", title="About the LMFDB")
 
-# basic health check
 @app.route("/health")
 @app.route("/alive")
 def alive():
+    """
+    a basic health check
+    """
     from lmfdb import db
     if db.is_alive():
         return "LMFDB!"
+    else:
+        abort(503)
+
+@app.route("/statshealth")
+def statshealth():
+    """
+    a health check on the stats pages
+    """
+    from lmfdb import db
+    if db.is_alive():
+        tc = app.test_client()
+        for url in ['/NumberField/stats',
+                    '/ModularForm/GL2/Q/holomorphic/stats',
+                    '/EllipticCurve/Q/stats',
+                    '/EllipticCurve/browse/2/',
+                    '/EllipticCurve/browse/3/',
+                    '/EllipticCurve/browse/4/',
+                    '/EllipticCurve/browse/5/',
+                    '/EllipticCurve/browse/6/',
+                    '/Genus2Curve/Q/stats',
+                    '/Belyi/stats',
+                    '/HigherGenus/C/Aut/stats',
+                    ]:
+            try:
+                if tc.get(url).status_code != 200:
+                    abort(503)
+            except Exception:
+                abort(503)
+        else:
+            return "LMFDB stats are healthy!"
     else:
         abort(503)
 
