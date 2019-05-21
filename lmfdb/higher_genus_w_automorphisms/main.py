@@ -62,7 +62,6 @@ def sign_display(L):
         signL = "[ " + str(L[0]) + "; "
         for i in range(1,sizeL-1):
             signL= signL + str(L[i]) + ", "
-
         signL=signL + str(L[sizeL-1]) + " ]"
     return signL
 
@@ -381,7 +380,6 @@ def higher_genus_w_automorphisms_search(info, query):
         elif info['inc_full'] == 'only':
             query['full_auto'] = {'$exists': False}
     query['cc.1'] = 1
-
     
     info['group_display'] = sg_pretty
     info['sign_display'] = sign_display
