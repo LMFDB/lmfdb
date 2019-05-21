@@ -1,0 +1,58 @@
+{% extends "homepage.html" %}
+
+
+{% block content %}
+
+
+
+<p><h2> Group Information</h2>
+
+  <table>
+      <tr><td> NAME HERE  </td><td> link to aliases? </td></tr>
+      <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.order}} </td></tr>
+      <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.exponent}} </td></tr>
+    </table>
+</p>
+
+<p><h2>Properties</h2>
+  <table>
+      <tr><td>{{KNOWL('group.abelian',title='Abelian:')}}</td><td> {{info.is_abelian}} </td></tr>
+      <tr><td>{{KNOWL('group.nilpotent',title='Nilpotent:')}}</td><td> {{info.is_nilpotent}} </td></tr>
+    </table>
+
+  </p>
+
+<p> <h2>Subgroups </h2>
+ <!-- <table>
+   {% if info.specialname %}
+   <tr><td>{{KNOWL('group.small_group_label',title='Name')}}:</td> <td>${{info.group}}$</td></tr>
+   {% endif %}
+     <tr><td>{{KNOWL('group.small_group_label',title='Identifier')}}:</td><td>{{info.gpid}}</td></tr>
+    </table> -->
+
+</p>
+
+
+<p> <h2> Conjugacy Classes </h2>
+
+<!--<table>
+  <tr>
+     <th>{{KNOWL('dq.curve.highergenus.aut.label',title='Refined Passport Label')}} </th>
+  <th>{{KNOWL('curve.highergenus.aut.conjugacyclasses',title="Lists of Conjugacy Classes")}}</th>
+ 
+</tr>
+{% for itm in info.passport %}
+<tr>
+  <td class="center"><a href="{{itm[2]}}">{{itm[1]}}</td>
+  <td class="center">{{itm[0]}}</td>
+
+</tr>
+{% endfor %}
+</table> -->
+  
+
+</p>
+
+
+  
+{% endblock %}
