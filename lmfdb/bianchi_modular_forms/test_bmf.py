@@ -78,7 +78,7 @@ class BMFTest(LmfdbTest):
         r"""
         Check newspace pages
         """
-        self.check_args(base_url+'2.0.3.1/77283.1', 'are 2 cuspidal newforms')
+        self.check_args(base_url+'2.0.3.1/77283.1', 'contains the following\nnewforms')
         self.check_args(base_url+'2.0.11.1/207.6', 'Dimension of new cuspidal subspace:')
         # I don't know why the follwing fails, as the text was copied from the page source:
         #self.check_args(base_url+'2.0.11.1/207.6', '\((2 a + 13) = (\left(a - 1\right))^{2} \cdot (\left(a - 5\right)) \)')
