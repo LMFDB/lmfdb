@@ -40,6 +40,8 @@ def dosubs(ent):
     diflis.sort()
     ans = [[j[0], [j[1], j[2]], lis2.count(j)] for j in diflis]
     ent['quotients'] = ans
+    ent['bound_quotients'] = 47
+    ent['bound_siblings'] = 47
     del ent['resolve']
 
     return(ent)

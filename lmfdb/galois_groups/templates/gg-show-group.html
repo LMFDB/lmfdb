@@ -48,6 +48,7 @@ table.reptable td, table.reptable th {
   <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
    <p>
 
+      {% if info.cclasses is defined %}
    <table class="ntdata">
       <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
       <tbody>
@@ -60,6 +61,9 @@ table.reptable td, table.reptable th {
         {% endfor %}
       </tbody>
       </table>
+      {% else %}
+        Data not computed.
+      {% endif %}
 
 
    </p>

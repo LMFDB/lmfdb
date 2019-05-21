@@ -17,7 +17,7 @@ from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
     group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
-    subfield_display, resolve_display, generators, chartable,
+    subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
 # Test to see if this gap installation knows about transitive groups
@@ -168,17 +168,17 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        cclasses = wgg.conjclasses()
-        if ZZ(order) < ZZ(10000000) and len(cclasses) < 21:
+        if wgg.num_conjclasses() < 50:
+            data['cclasses'] = wgg.conjclasses()
+        if ZZ(order) < ZZ(10000000) and wgg.num_conjclasses() < 21:
             ctable = chartable(n, t)
         else:
             ctable = 'Data not available'
-        data['gens'] = generators(n, t)
+        data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
         data['chartable'] = ctable
         data['parity'] = "$%s$" % data['parity']
-        data['cclasses'] = wgg.conjclasses()
         data['subinfo'] = subfield_display(n, data['subfields'])
         data['resolve'] = resolve_display(data['quotients'])
         if data['gapid'] == 0:
