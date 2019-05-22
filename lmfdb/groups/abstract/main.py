@@ -28,6 +28,59 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
+#function to create string of group characteristics 
+def create_boolean_string(gp):   
+    if gp.is_abelian():
+        #strng = "KNOWL('group.abelian',title='Abelian')"
+        strng = "Abelian"
+        if gp.is_cyclic():
+            strng = strng + ", Cyclic"
+    else:
+        #strng = "KNOWL('group.abelian',title='non-Abelian')"
+        strng = "non-Abelian"
+
+    if gp.is_solvable():
+        strng = strng + ", Solvable"
+        if gp.is_cyclic():
+            strng = strng + ", Supersolvable"
+    else:
+        strng = strng + ", non-Solvable"
+
+    if gp.is_nilpotent():
+        strng = strng + ", Nilpotent"
+
+    if gp.is_metacyclic():
+        strng = strng + ", Metacyclic"
+
+    if gp.is_metabelian():
+        strng = strng + ", Metabelian"
+
+    if gp.is_simple():
+        strng = strng + ", Simple"
+
+    if gp.is_almost_simple():
+        strng = strng + ", Almost Simple"
+
+    if gp.is_quasisimple():
+        strng = strng + ", Quasisimple"
+        
+    if gp.is_perfect():
+        strng = strng + ", Perfect"
+        
+    if gp.is_monomial():
+        strng = strng + ", Monomial"
+
+    if gp.is_rational():
+        strng = strng + ", Rational"
+
+    if gp.is_Zgroup():
+        strng = strng + ", Zgroup"
+        
+    if gp.is_Agroup():
+        strng = strng + ", Agroup"
+        
+    return strng   
+
 
 @abstract_page.route("/")
 def index():
@@ -85,8 +138,12 @@ def render_abstract_group(args):
         if gp.is_null():
             flash_error( "No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        #check if it fails to be a potential label even]
+        #check if it fails to be a potential label even]           
 
+            
+        info['boolean_characteristics_string']=create_boolean_string(gp) 
+
+        
         info['gpc'] = gp
 
         if gp.is_abelian():
@@ -101,11 +158,13 @@ def render_abstract_group(args):
 
 
         factored_order = web_latex(gp.order_factor(),False)    
-            
-        title = 'Abstract Group '  + label 
+        aut_order = web_latex(gp.aut_order_factor(),False)    
+
+        
+        title = 'Abstract Group '  + '$' + gp.name_label() + '$'
 
         prop2 = [
-            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order)
+            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
         ]
         info.update({'is_abelian': is_abelian,
                     'is_nilpotent': is_nilpotent,

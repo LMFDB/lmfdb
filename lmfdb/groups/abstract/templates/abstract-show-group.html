@@ -9,18 +9,17 @@
 <h2> Group Information</h2>
 <p>
   <table>
-    <tr><td> NAME HERE  </td><td> link to aliases? </td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
-    <tr><td>Automorphism info</td></tr>
+    <tr><td>${{gp.name_label()}}$  </td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order()}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent()}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{gp.aut_group()}}$</td></tr>
+        <tr><td>Outer Automorphisms:</td><td>${{gp.out_group()}}$</td></tr>
   </table>
 
   <br>
 
-  <table>
-    <tr><td>{{KNOWL('group.abelian',title='Abelian:')}}</td><td> {{info.is_abelian}} </td></tr>
-    <tr><td>{{KNOWL('group.nilpotent',title='Nilpotent:')}}</td><td> {{info.is_nilpotent}} </td></tr>
-  </table>
+{{info.boolean_characteristics_string}}
+  
 </p>
 
 <h2>Constructions</h2>
@@ -46,9 +45,9 @@
 </p>
 
 <table>
-  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td>{{gp.center_label}}</td><td> {{gp.center}} </td>  <td> {{gp.central_quotient}} </td></tr>
-  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td>{{gp.commutator_label}}</td><td> {{gp.commutator}} </td>  <td> {{gp.abelian_quotient}} </td></tr>
-  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td>{{gp.frattini_label}}</td><td> {{gp.frattini}} </td>  <td> {{gp.frattini_quotient}} </td></tr>
+  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td> {{gp.center()}} </td> <td>$Z = {{gp.center_label()}}$</td>  <td> $G/Z = {{gp.central_quot()}}$ </td></tr>
+  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td> {{gp.commutator()}} </td><td> $G' = {{gp.commutator_label()}}$</td>  <td> $G/G' = {{gp.abelian_quot()}}$ </td></tr>
+  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td> {{gp.frattini()}} </td><td>$\Phi = {{gp.frattini_label()}}$</td>  <td> $G/\Phi = {{gp.frattini_quot()}}$ </td></tr>
   <!--    <tr><td>{{KNOWL('group.fitting',title='Fitting')}}:</td> <td>{{info.group}}</td><td>  </td>  <td> </td></tr>
           <tr><td>{{KNOWL('group.radical',title='Radical')}}:</td> <td>{{info.group}}</td><td> </td>  <td>  </td></tr>
   <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>{{info.gpid}}</td><td> </td>  <td> </td></tr>-->

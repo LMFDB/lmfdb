@@ -5,6 +5,13 @@ from lmfdb import db
 
 from sage.all import factor, lazy_attribute
 
+#currently uses gps_small db to pretty print groups
+def group_names_pretty(label):
+    data = db.gps_small.lookup(label)
+    if data and 'pretty' in data:
+        return data['pretty']
+    return label
+
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -79,6 +86,9 @@ class WebAbstractGroup(WebObj):
     def exponent(self):
         return self._data['exponent']
 
+    def name_label(self):
+        return group_names_pretty(self._data['label'])
+
 
 ### properties
 #also create properties list to go along with this
@@ -101,8 +111,8 @@ class WebAbstractGroup(WebObj):
     def is_metacyclic(self):
         return self._data['metacyclic']
 
-    def is_metaabelian(self):
-        return self._data['metaabelian']
+    def is_metabelian(self):
+        return self._data['metabelian']
 
     def is_simple(self):
         return self._data['simple']
@@ -128,14 +138,12 @@ class WebAbstractGroup(WebObj):
     def is_Agroup(self):
         return self._data['Agroup']
 
-
-
+   
 
 ###automorphism group
 #WHAT IF NULL??
     def aut_group(self):
-        return int(self._data['aut_group'])
-
+        return group_names_pretty(self._data['aut_group'])
 
     def aut_order(self):
         return int(self._data['aut_order'])
@@ -146,15 +154,15 @@ class WebAbstractGroup(WebObj):
 
 #WHAT IF NULL??
     def out_group(self):
-        return int(self._data['out_group'])
+        return group_names_pretty(self._data['outer_group'])
 
 
     def out_order(self):
-        return int(self._data['out_order'])
+        return int(self._data['outer_order'])
 
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
-        return factor(int(self._data['out_order']))
+        return factor(int(self._data['outer_order']))
     
 
 ###special subgroups
@@ -162,26 +170,26 @@ class WebAbstractGroup(WebObj):
         return self._data['center']
 
     def center_label(self):
-        return self._data['center_label']
+        return group_names_pretty(self._data['center_label'])
 
     def central_quot(self):
-        return self._data['central_quotient']
+        return group_names_pretty(self._data['central_quotient'])
     
 
     def commutator(self):
         return self._data['commutator']
 
     def commutator_label(self):
-        return self._data['commutator_label']
+        return group_names_pretty(self._data['commutator_label'])
 
     def abelian_quot(self):
-        return self._data['abelian_quotient']
+        return group_names_pretty(self._data['abelian_quotient'])
 
     def frattini(self):
         return self._data['frattini']
 
     def frattini_label(self):
-        return self._data['frattini_label']
+        return group_names_pretty(self._data['frattini_label'])
 
     def frattini_quot(self):
         return self._data['frattini_quotient']
