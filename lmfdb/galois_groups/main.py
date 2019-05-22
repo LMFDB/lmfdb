@@ -186,7 +186,8 @@ def render_group_webpage(args):
                                                       int(data['gapid']),
                                                       str([int(data['order']), int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
-        ae = wgg.arith_equivalent()
+        ae = data['arith_equiv']
+        del data['arith_equiv']
         if ae>0:
             if ae>1:
                 data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
