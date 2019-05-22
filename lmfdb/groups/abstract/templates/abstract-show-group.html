@@ -10,8 +10,8 @@
 <p>
   <table>
     <tr><td> NAME HERE  </td><td> link to aliases? </td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order()}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent()}} </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
     <tr><td>Automorphism info</td></tr>
   </table>
 
@@ -24,9 +24,16 @@
 </p>
 
 <h2>Constructions</h2>
-<p>
-  Aliases
-</p>
+
+{% if gp.direct_products %}
+<p> {% for sub in gp.direct_products %} $({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
+{% if gp.semidirect_products %}
+<p> {% for sub in gp.semidirect_products %} $({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
+{% if gp.nonsplit_products %}
+<p> {% for sub in gp.nonsplit_products %} $({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
 
 <h2>Series</h2>
 <p>
@@ -35,21 +42,39 @@
 
 <h2> Subgroups </h2>
 
-<p>Count of number of subgroups of various types.</p>
+<p>There are {{gp.number_subgroups}} subgroups{% if gp.number_normal_subgroups < gp.number_subgroups %} in {{gp.number_conjugacy_classes}} conjugacy classes, {{ gp.number_normal_subgroups }} normal{% else %}, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}{{ gp.number_characteristic_subgroups }}{% else %}all{% endif %} characteristic).
+</p>
 
 <table>
-  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td>{{gp.center_label()}}</td><td> {{gp.center()}} </td>  <td> {{gp.central_quot()}} </td></tr>
-  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td>{{gp.commutator_label()}}</td><td> {{gp.commutator()}} </td>  <td> {{gp.abelian_quot()}} </td></tr>
-  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td>{{gp.frattini_label()}}</td><td> {{gp.frattini()}} </td>  <td> {{gp.frattini_quot()}} </td></tr>
+  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td>{{gp.center_label}}</td><td> {{gp.center}} </td>  <td> {{gp.central_quotient}} </td></tr>
+  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td>{{gp.commutator_label}}</td><td> {{gp.commutator}} </td>  <td> {{gp.abelian_quotient}} </td></tr>
+  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td>{{gp.frattini_label}}</td><td> {{gp.frattini}} </td>  <td> {{gp.frattini_quotient}} </td></tr>
   <!--    <tr><td>{{KNOWL('group.fitting',title='Fitting')}}:</td> <td>{{info.group}}</td><td>  </td>  <td> </td></tr>
           <tr><td>{{KNOWL('group.radical',title='Radical')}}:</td> <td>{{info.group}}</td><td> </td>  <td>  </td></tr>
   <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>{{info.gpid}}</td><td> </td>  <td> </td></tr>-->
-  <tr><td>Sylow subgroups</td></tr>
+  {% for p, e in gp.factored_order %}
+  <tr><td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td><td>${{gp.p_sylow(p)}}$</tr></tr>
+{% endfor %}
 </table>
 
-<p>Show lattice of subgroups</p>
+<table>
+  {% for layer in gp.subgroup_layers %}
+  <tr>
+    {% for subgp in layer %}
+    <td>${{subgp.subgroup_tex}}$</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
 
 <h2> Supergroups </h2>
+
+{% if gp.maximal_subgroup_of %}
+<p> Maximal subgroup of {% for sup in gp.maximal_subgroup_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+{% endif %}
+{% if gp.maximal_quotient_of %}
+<p> Maximal quotient of {% for sup in gp.maximal_quotient_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+{% endif %}
 
 <h2> Character Theory </h2>
 <p>
