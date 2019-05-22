@@ -194,8 +194,6 @@ def render_group_webpage(args):
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
         elif ae > -1:
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
-        if len(data['otherreps']) == 0:
-            data['otherreps']="There is no other low degree representation."
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]

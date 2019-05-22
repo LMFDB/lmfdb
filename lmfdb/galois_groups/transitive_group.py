@@ -470,11 +470,12 @@ def resolve_display(resolves):
     for j in resolves:
         if j[0] != old_deg:
             if old_deg < 0:
-                ans += '<table>'
+                ans += '<table><tr><th>'
+                ans += '|G/N|<th>Galois groups for stem field(s)'
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td>' + str(j[0]) + ': </td><td>'
+            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
