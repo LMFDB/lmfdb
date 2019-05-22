@@ -45,7 +45,7 @@
   <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td>$\Phi = {{gp.show_frattini_label()}}$</td>  <td> $G/\Phi = {{gp.show_frattini_quotient()}}$ </td></tr>
   <tr><td>{{KNOWL('group.fitting',title='Fitting')}}:</td> <td>$\operatorname{Fit} = {{gp.subgroups[gp.fitting].subgroup_tex}}$</td><td>$G/\operatorname{Fit} = {{gp.subgroups[gp.fitting].quotient_tex}}$</td></tr>
   <tr><td>{{KNOWL('group.radical',title='Radical')}}:</td> <td>$R = {{gp.subgroups[gp.radical].subgroup_tex}}$</td><td>$G/R = {{gp.subgroups[gp.radical].quotient_tex}}$</td></tr>
-  <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>$\operatorname{soc} = {{gp.subgroups[gp.socle].subgroup_tex}}$</td><td>$G/\operatorname{soc} = {{gp.subgroups[gp.socle].subgroup_tex}}$</td></tr>
+  <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>$\operatorname{soc} = {{gp.subgroups[gp.socle].subgroup_tex}}$</td><td>$G/\operatorname{soc} = {{gp.subgroups[gp.socle].quotient_tex}}$</td></tr>
   {% for p, e in gp.factored_order %}
   <tr><td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td><td>${{gp.p_sylow(p)}}$</tr></tr>
 {% endfor %}
