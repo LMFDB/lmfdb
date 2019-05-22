@@ -187,7 +187,6 @@ def render_group_webpage(args):
                                                       str([int(data['order']), int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
         ae = data['arith_equiv']
-        del data['arith_equiv']
         if ae>0:
             if ae>1:
                 data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
@@ -195,6 +194,8 @@ def render_group_webpage(args):
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
         elif ae > -1:
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
+        else:
+            data['arith_equiv'] = r'Data on whether or not a number field with this Galois group has <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields has not been computed.'
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
