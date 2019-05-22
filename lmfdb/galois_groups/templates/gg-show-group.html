@@ -62,7 +62,8 @@ table.reptable td, table.reptable th {
       </tbody>
       </table>
       {% else %}
-        Data not computed.
+        There are {{ info.num_cc }} conjugacy classes of elements.
+        Data not shown.
       {% endif %}
 
 
@@ -80,9 +81,15 @@ table.reptable td, table.reptable th {
     </table>
 
     <table>
-      <tr><td>Character table:<td>&nbsp;&nbsp;<td><pre>
+      <tr><td>Character table:
+      {% if info.chartable is defined %}
+      <td>&nbsp;&nbsp;<td>
+      <pre>
 {{info.chartable}}
-</pre></td></tr>
+</pre>
+      {% else %}
+      Data not available.
+      {% endif %}
     </table> </div> </p>
 {% if info.int_reps %}
 <p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
