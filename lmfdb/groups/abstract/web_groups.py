@@ -5,6 +5,14 @@ from lmfdb import db
 
 from sage.all import factor, lazy_attribute
 
+#currently uses gps_small db to pretty print groups
+def group_names_pretty(label):
+    pretty = db.gps_small.lookup(label, 'pretty')
+    if pretty:
+        return pretty
+    else:
+        return label
+
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -27,7 +35,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.tex_name = db.gps_small.lookup(label, 'pretty') # temporary
+        self.tex_name = group_names_pretty(label)
         self.subgroups = {subdata['counter']: WebAbstractSubgroup(self, subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient':label})} # Should join with gps_groups to get pretty names for subgroup and quotient
         self.conjugacy_classes = {ccdata['counter']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group':label})}
         self.characters = {chardata['counter']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group':label})} # Should join with creps once we have images and join queries
@@ -79,6 +87,9 @@ class WebAbstractGroup(WebObj):
     def exponent(self):
         return self._data['exponent']
 
+    def name_label(self):
+        return group_names_pretty(self._data['label'])
+
 
 ### properties
 #also create properties list to go along with this
@@ -101,8 +112,8 @@ class WebAbstractGroup(WebObj):
     def is_metacyclic(self):
         return self._data['metacyclic']
 
-    def is_metaabelian(self):
-        return self._data['metaabelian']
+    def is_metabelian(self):
+        return self._data['metabelian']
 
     def is_simple(self):
         return self._data['simple']
@@ -128,14 +139,12 @@ class WebAbstractGroup(WebObj):
     def is_Agroup(self):
         return self._data['Agroup']
 
-
-
+   
 
 ###automorphism group
 #WHAT IF NULL??
-    def aut_group(self):
-        return int(self._data['aut_group'])
-
+    def show_aut_group(self):
+        return group_names_pretty(self.aut_group)
 
     def aut_order(self):
         return int(self._data['aut_order'])
@@ -144,56 +153,46 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return factor(int(self._data['aut_order']))
 
-#WHAT IF NULL??
-    def out_group(self):
-        return int(self._data['out_group'])
+    #WHAT IF NULL??
+    def show_outer_group(self):
+        return group_names_pretty(self.outer_group)
 
 
     def out_order(self):
-        return int(self._data['out_order'])
+        return int(self._data['outer_order'])
 
     #TODO if prime factors get large, use factors in database
     def out_order_factor(self):
-        return factor(int(self._data['out_order']))
-    
+        return factor(int(self._data['outer_order']))
 
-###special subgroups
-    def center(self):
-        return self._data['center']
+    ###special subgroups
 
-    def center_label(self):
-        return self._data['center_label']
+    def show_center_label(self):
+        return group_names_pretty(self.center_label)
 
-    def central_quot(self):
-        return self._data['central_quotient']
-    
+    def show_central_quotient(self):
+        return group_names_pretty(self.central_quotient)
 
-    def commutator(self):
-        return self._data['commutator']
+    def show_commutator_label(self):
+        return group_names_pretty(self.commutator_label)
 
-    def commutator_label(self):
-        return self._data['commutator_label']
+    def show_abelian_quotient(self):
+        return group_names_pretty(self.abelian_quotient)
 
-    def abelian_quot(self):
-        return self._data['abelian_quotient']
+    def show_frattini_label(self):
+        return group_names_pretty(self.frattini_label)
 
-    def frattini(self):
-        return self._data['frattini']
-
-    def frattini_label(self):
-        return self._data['frattini_label']
-
-    def frattini_quot(self):
-        return self._data['frattini_quotient']
+    def show_frattini_quotient(self):
+        return group_names_pretty(self.frattini_quotient)
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
     def __init__(self, ambient_gp, label, data=None):
         self.ambient_gp = ambient_gp
         WebObj.__init__(self, label, data)
-        self.subgroup_tex = db.gps_small.lookup(self.subgroup, 'pretty') # temporary
+        self.subgroup_tex = group_names_pretty(self.subgroup) # temporary
         if 'quotient' in self._data:
-            self.quotient_tex = db.gps_small.lookup(self.quotient, 'pretty') # temporary
+            self.quotient_tex = group_names_pretty(self.quotient) # temporary
 
 class WebAbstractConjClass(WebObj):
     table = db.gps_groups_cc
@@ -213,4 +212,4 @@ class WebAbstractSupergroup(WebObj):
         self.sub_or_quo_gp = sub_or_quo
         self.typ = typ
         WebObj.__init__(self, label, data)
-        self.ambient_tex = db.gps_small.lookup(self.ambient, 'pretty') # temporary
+        self.ambient_tex = group_names_pretty(self.ambient) # temporary
