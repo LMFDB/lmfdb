@@ -34,7 +34,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.tex_name = db.gps_small.lookup(label, 'pretty') # temporary
+        self.tex_name = group_names_pretty(label) # remove once in database
         self.subgroups = {subdata['counter']: WebAbstractSubgroup(self, subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient':label})} # Should join with gps_groups to get pretty names for subgroup and quotient
         self.conjugacy_classes = {ccdata['counter']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group':label})}
         self.characters = {chardata['counter']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group':label})} # Should join with creps once we have images and join queries
@@ -83,12 +83,10 @@ class WebAbstractGroup(WebObj):
     def order_factor(self):
         return factor(int(self._data['order']))
 
-    def exponent(self):
-        return self._data['exponent']
-
     def name_label(self):
         return group_names_pretty(self._data['label'])
 
+<<<<<<< HEAD
 
 ### properties
 #also create properties list to go along with this
@@ -144,9 +142,12 @@ class WebAbstractGroup(WebObj):
 #WHAT IF NULL??
     def aut_group(self):
         return group_names_pretty(self._data['aut_group'])
-
-    def aut_order(self):
-        return int(self._data['aut_order'])
+=======
+    ###automorphism group
+    #WHAT IF NULL??
+    def show_aut_group(self):
+        return group_names_pretty(self.aut_group)
+>>>>>>> Removing access functions from web_group, some other backend group changes
 
     #TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
