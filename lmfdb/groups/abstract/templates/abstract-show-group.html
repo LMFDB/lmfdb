@@ -34,23 +34,18 @@
 <p> {% for sub in gp.nonsplit_products %} $({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$, {% endfor %} </p>
 {% endif %}
 
-<h2>Series</h2>
-<p>
-
-</p>
-
 <h2> Subgroups </h2>
 
 <p>There are {{gp.number_subgroups}} subgroups{% if gp.number_normal_subgroups < gp.number_subgroups %} in {{gp.number_conjugacy_classes}} conjugacy classes, {{ gp.number_normal_subgroups }} normal{% else %}, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}{{ gp.number_characteristic_subgroups }}{% else %}all{% endif %} characteristic).
 </p>
 
 <table>
-  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td> {{gp.center()}} </td> <td>$Z = {{gp.center_label()}}$</td>  <td> $G/Z = {{gp.central_quot()}}$ </td></tr>
-  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td> {{gp.commutator()}} </td><td> $G' = {{gp.commutator_label()}}$</td>  <td> $G/G' = {{gp.abelian_quot()}}$ </td></tr>
-  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td> {{gp.frattini()}} </td><td>$\Phi = {{gp.frattini_label()}}$</td>  <td> $G/\Phi = {{gp.frattini_quot()}}$ </td></tr>
-  <!--    <tr><td>{{KNOWL('group.fitting',title='Fitting')}}:</td> <td>{{info.group}}</td><td>  </td>  <td> </td></tr>
-          <tr><td>{{KNOWL('group.radical',title='Radical')}}:</td> <td>{{info.group}}</td><td> </td>  <td>  </td></tr>
-  <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>{{info.gpid}}</td><td> </td>  <td> </td></tr>-->
+  <tr><td>{{KNOWL('group.center',title='Center')}}:</td> <td>$Z = {{gp.show_center_label()}}$</td>  <td> $G/Z = {{gp.show_central_quotient()}}$ </td></tr>
+  <tr><td>{{KNOWL('group.commutator',title='Commutator')}}:</td><td> $G' = {{gp.show_commutator_label()}}$</td>  <td> $G/G' = {{gp.show_abelian_quotient()}}$ </td></tr>
+  <tr><td>{{KNOWL('group.frattini',title='Frattini')}}:</td><td>$\Phi = {{gp.show_frattini_label()}}$</td>  <td> $G/\Phi = {{gp.show_frattini_quotient()}}$ </td></tr>
+  <tr><td>{{KNOWL('group.fitting',title='Fitting')}}:</td> <td>$\operatorname{Fit} = {{gp.subgroups[gp.fitting].subgroup_tex}}$</td><td>$G/\operatorname{Fit} = {{gp.subgroups[gp.fitting].quotient_tex}}$</td></tr>
+  <tr><td>{{KNOWL('group.radical',title='Radical')}}:</td> <td>$R = {{gp.subgroups[gp.radical].subgroup_tex}}$</td><td>$G/R = {{gp.subgroups[gp.radical].quotient_tex}}$</td></tr>
+  <tr><td>{{KNOWL('group.socle',title='Socle')}}:</td><td>$\operatorname{soc} = {{gp.subgroups[gp.socle].subgroup_tex}}$</td><td>$G/\operatorname{soc} = {{gp.subgroups[gp.socle].subgroup_tex}}$</td></tr>
   {% for p, e in gp.factored_order %}
   <tr><td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td><td>${{gp.p_sylow(p)}}$</tr></tr>
 {% endfor %}
@@ -65,6 +60,11 @@
   </tr>
   {% endfor %}
 </table>
+
+<h3>Series</h3>
+<p>
+
+</p>
 
 <h2> Supergroups </h2>
 
