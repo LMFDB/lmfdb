@@ -9,9 +9,11 @@ from lmfdb import db
 from lmfdb.utils import (
     flash_error,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
-    search_wrap)
+    search_wrap, web_latex)
 
 from lmfdb.groups.abstract import abstract_page
+from lmfdb.groups.abstract.web_groups import(
+    WebAbstractGroup)
 
 
 #This currently allows for 6.32a  
@@ -79,39 +81,38 @@ def render_abstract_group(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        dataz = list(db.gps_groups.search({'label':label}))
-        if len(dataz) == 0:
+        gp = WebAbstractGroup(label)
+        if gp.is_null():
             flash_error( "No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        data=dataz[0]
-        order = data['order']
-        exponent = data['exponent']
+        #check if it fails to be a potential label even]
 
-        if data['abelian']:
+        info['gpc'] = gp
+
+        if gp.is_abelian():
             is_abelian='Yes'
         else:
             is_abelian='No'
 
-        if data['nilpotent']:
+        if gp.is_nilpotent():
             is_nilpotent='Yes'
         else:
             is_nilpotent='No'            
 
+
+        factored_order = web_latex(gp.order_factor(),False)    
             
-        title = 'Abstract Group FILL ' 
+        title = 'Abstract Group '  + label 
 
         prop2 = [
-            ('Order', '\(%d\)' % order),
+            ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order)
         ]
-        info.update({'order': order,
-                    'exponent': exponent,
-                    'is_abelian': is_abelian,
+        info.update({'is_abelian': is_abelian,
                     'is_nilpotent': is_nilpotent,
                    })
 
        
-#FIX BREAD
-        bread = get_bread()
+        bread = get_bread([(label, )])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
                     ('Reliability of the data', url_for(".reliability_page")),
