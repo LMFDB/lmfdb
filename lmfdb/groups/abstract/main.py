@@ -7,7 +7,7 @@ from sage.all import Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
-    flash_error,
+    flash_error, display_knowl,
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap, web_latex)
 
@@ -15,9 +15,7 @@ from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup)
 
-
-#This currently allows for 6.32a  
-abstract_group_label_regex = re.compile(r'(\d+)\.(([a-z]+)|(\d+))')
+abstract_group_label_regex = re.compile(r'(\d+)\.(([a-z]+)|(\d+))$')
 
 def label_is_valid(lab):
     return abstract_group_label_regex.match(lab)
@@ -28,58 +26,56 @@ def get_bread(breads=[]):
         bc.append(b)
     return bc
 
-#function to create string of group characteristics 
-def create_boolean_string(gp):   
-    if gp.is_abelian():
-        #strng = "KNOWL('group.abelian',title='Abelian')"
-        strng = "Abelian"
-        if gp.is_cyclic():
-            strng = strng + ", Cyclic"
+#function to create string of group characteristics
+def create_boolean_string(gp):
+    if gp.abelian:
+        strng = display_knowl('group.abelian','Abelian')
+        if gp.cyclic:
+            strng += ", Cyclic"
     else:
-        #strng = "KNOWL('group.abelian',title='non-Abelian')"
-        strng = "non-Abelian"
+        strng = display_knowl('group.abelian', "non-Abelian")
 
-    if gp.is_solvable():
-        strng = strng + ", Solvable"
-        if gp.is_cyclic():
-            strng = strng + ", Supersolvable"
+    if gp.solvable:
+        strng += ", Solvable"
+        if gp.supersolvable:
+            strng += ", Supersolvable"
     else:
-        strng = strng + ", non-Solvable"
+        strng += ", non-Solvable"
 
-    if gp.is_nilpotent():
-        strng = strng + ", Nilpotent"
+    if gp.nilpotent:
+        strng += ", Nilpotent"
 
-    if gp.is_metacyclic():
-        strng = strng + ", Metacyclic"
+    if gp.metacyclic:
+        strng += ", Metacyclic"
 
-    if gp.is_metabelian():
-        strng = strng + ", Metabelian"
+    if gp.metabelian:
+        strng += ", Metabelian"
 
-    if gp.is_simple():
-        strng = strng + ", Simple"
+    if gp.simple:
+        strng += ", Simple"
 
-    if gp.is_almost_simple():
-        strng = strng + ", Almost Simple"
+    if gp.almost_simple:
+        strng += ", Almost Simple"
 
-    if gp.is_quasisimple():
-        strng = strng + ", Quasisimple"
-        
-    if gp.is_perfect():
-        strng = strng + ", Perfect"
-        
-    if gp.is_monomial():
-        strng = strng + ", Monomial"
+    if gp.quasisimple:
+        strng += ", Quasisimple"
 
-    if gp.is_rational():
-        strng = strng + ", Rational"
+    if gp.perfect:
+        strng += ", Perfect"
 
-    if gp.is_Zgroup():
-        strng = strng + ", Zgroup"
-        
-    if gp.is_Agroup():
-        strng = strng + ", Agroup"
-        
-    return strng   
+    if gp.monomial:
+        strng += ", Monomial"
+
+    if gp.rational:
+        strng += ", Rational"
+
+    if gp.Zgroup:
+        strng += ", Zgroup"
+
+    if gp.Agroup:
+        strng += ", Agroup"
+
+    return strng
 
 
 @abstract_page.route("/")
@@ -129,7 +125,7 @@ def by_label(label):
 #    info['group_display'] = sg_pretty
 #    info['sign_display'] = sign_display
 
-#Writes individual pages    
+#Writes individual pages
 def render_abstract_group(args):
     info = {}
     if 'label' in args:
@@ -138,39 +134,23 @@ def render_abstract_group(args):
         if gp.is_null():
             flash_error( "No group with label %s was found in the database.", label)
             return redirect(url_for(".index"))
-        #check if it fails to be a potential label even]           
+        #check if it fails to be a potential label even]
 
-            
-        info['boolean_characteristics_string']=create_boolean_string(gp) 
 
-        
+        info['boolean_characteristics_string']=create_boolean_string(gp)
+
+
         info['gpc'] = gp
 
-        if gp.is_abelian():
-            is_abelian='Yes'
-        else:
-            is_abelian='No'
+        factored_order = web_latex(gp.order_factor(),False)
+        aut_order = web_latex(gp.aut_order_factor(),False)
 
-        if gp.is_nilpotent():
-            is_nilpotent='Yes'
-        else:
-            is_nilpotent='No'            
-
-
-        factored_order = web_latex(gp.order_factor(),False)    
-        aut_order = web_latex(gp.aut_order_factor(),False)    
-
-        
-        title = 'Abstract Group '  + '$' + gp.name_label() + '$'
+        title = 'Abstract Group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
             ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
         ]
-        info.update({'is_abelian': is_abelian,
-                    'is_nilpotent': is_nilpotent,
-                   })
 
-       
         bread = get_bread([(label, )])
         learnmore =[('Completeness of the data', url_for(".completeness_page")),
                 ('Source of the data', url_for(".how_computed_page")),
@@ -191,10 +171,6 @@ def render_abstract_group(args):
 
 
 
-
-
-
-    
 
 @abstract_page.route("/Completeness")
 def completeness_page():

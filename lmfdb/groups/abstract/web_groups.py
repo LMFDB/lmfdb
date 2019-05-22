@@ -35,7 +35,7 @@ class WebAbstractGroup(WebObj):
     table = db.gps_groups
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        self.tex_name = group_names_pretty(label)
+        self.tex_name = group_names_pretty(label) # remove once in database
         self.subgroups = {subdata['counter']: WebAbstractSubgroup(self, subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient':label})} # Should join with gps_groups to get pretty names for subgroup and quotient
         self.conjugacy_classes = {ccdata['counter']: WebAbstractConjClass(self, ccdata['label'], ccdata) for ccdata in db.gps_groups_cc.search({'group':label})}
         self.characters = {chardata['counter']: WebAbstractCharacter(self, chardata['label'], chardata) for chardata in db.gps_char.search({'group':label})} # Should join with creps once we have images and join queries
@@ -84,70 +84,13 @@ class WebAbstractGroup(WebObj):
     def order_factor(self):
         return factor(int(self._data['order']))
 
-    def exponent(self):
-        return self._data['exponent']
-
     def name_label(self):
         return group_names_pretty(self._data['label'])
 
-
-### properties
-#also create properties list to go along with this
-
-    def is_abelian(self):
-        return self._data['abelian']
-
-    def is_cyclic(self):
-        return self._data['cyclic']
-
-    def is_solvable(self):
-        return self._data['solvable']
-    
-    def is_super_solvable(self):
-        return self._data['supersolvable']
-
-    def is_nilpotent(self):
-        return self._data['nilpotent']
-
-    def is_metacyclic(self):
-        return self._data['metacyclic']
-
-    def is_metabelian(self):
-        return self._data['metabelian']
-
-    def is_simple(self):
-        return self._data['simple']
-    
-    def is_almost_simple(self):
-        return self._data['almost_simple']
-
-    def is_quasisimple(self):
-        return self._data['quasisimple']
-
-    def is_perfect(self):
-        return self._data['perfect']
-
-    def is_monomial(self):
-        return self._data['monomial']
-
-    def is_rational(self):
-        return self._data['rational']
-    
-    def is_Zgroup(self):
-        return self._data['Zgroup']
-
-    def is_Agroup(self):
-        return self._data['Agroup']
-
-   
-
-###automorphism group
-#WHAT IF NULL??
+    ###automorphism group
+    #WHAT IF NULL??
     def show_aut_group(self):
         return group_names_pretty(self.aut_group)
-
-    def aut_order(self):
-        return int(self._data['aut_order'])
 
     #TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
