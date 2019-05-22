@@ -123,8 +123,15 @@ class WebGaloisGroup:
             return self._data['pretty']
         return self._data['name']
 
-    def otherrep_list(self):
-        return(list_with_mult(self._data['siblings'], names=False))
+    def otherrep_list(self, givebound=True):
+        sibs = self._data['siblings']
+        pharse = "with degree $\leq %d$"% self.sibling_bound()
+        if len(sibs)==0 and givebound:
+            return "There are no siblings "+pharse
+        li = list_with_mult(sibs, names=False)
+        if givebound:
+            li += '<p>Siblings are shown '+pharse
+        return li
 
     def subfields(self):
         return(list_with_mult(self._data['subfields']))
