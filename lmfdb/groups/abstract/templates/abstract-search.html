@@ -66,7 +66,7 @@
     <th>{{ KNOWL('group.name', title='Name') }}</th>
     <th>{{ KNOWL('group.order', title='Order') }}</th>
     <th>{{ KNOWL('group.exponent', title='Exponent') }}</th>
-    <th>{{ KNOWL('gg.conjugacy_class', title='$|G^{\\natural}|$') }}</th>
+    <th>{{ KNOWL('gg.conjugacy_classes', title='$|G^{\\natural}|$') }}</th>
     <th>{{ KNOWL('group.center', title='Center') }}</th>
     <th>{{ KNOWL('group.outer_aut', title='$|\mathrm{Out}(G)|$') }}</th>
     <th>{{ KNOWL('group.abelian', title='Abelian') }}</th>
@@ -77,11 +77,11 @@
 <tr>
     <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a>
     <td> {# No names yet #}
-    <td> {{info.show_factor(group.order)}} 
-    <td> {{info.show_factor(group.exponent)}} 
-    <td> {{group.number_conjugacy_classes}} 
-    <td> {{group.center_label}}
-    <td> {{group.outer_order}}
+    <td align=center> {{info.show_factor(group.order)}} 
+    <td align=center> {{info.show_factor(group.exponent)}} 
+    <td align=center> {{group.number_conjugacy_classes}} 
+    <td align=center> {{group.center_label}}
+    <td align=center> {{info.show_factor(group.outer_order)}}
     <td align=center> {{('&#x2713;' if group.abelian else '')|safe}}
     <td align=center> {{('&#x2713;' if group.solvable else '')|safe}}
     <td align=center> {{('&#x2713; (' + group.nilpotency_class|string +')' if group.nilpotent else '')|safe}}
