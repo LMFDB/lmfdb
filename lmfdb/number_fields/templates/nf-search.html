@@ -10,20 +10,40 @@
 <table border="0">
 
 <tr>
-<td align=left> {{KNOWL('nf.degree', title='degree')}} <td align=left> <input type='text' name='degree' size="3" value="{{info.degree}}"></td>
+<td align=left> {{KNOWL('nf.degree', title='degree')}} <td align=left> <input type='text' name='degree' size="10" value="{{info.degree}}"></td>
 
 
-<td align=left> {{KNOWL('nf.signature', title='signature')}} <td align=left> <input type='text' name='signature' size=5 value="{{info.signature}}"></td>
+<td align=left> {{KNOWL('nf.signature', title='signature')}} <td align=left> <input type='text' name='signature' size="10" value="{{info.signature}}"></td>
 
-<td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} <td align=left> <input type='text' name='galois_group' size="5" value="{{info.galois_group}}"></td></tr>
+<td align=left> {{KNOWL('nf.galois_group', title='Galois group')}} <td align=left> <input type='text' name='galois_group' size="10" value="{{info.galois_group}}"></td></tr>
 <tr>
-<td align=left> {{KNOWL('nf.class_number', title='class number')}} <td align=left> <input type='text' name='class_number' size=3 value="{{info.class_number}}"></td>
-<td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='class_group' size="5" value="{{info.class_group}}"></td>
-<td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size="5" value="{{info.ur_primes}}"></td>
+<td align=left> {{KNOWL('nf.class_number', title='class number')}} <td align=left> <input type='text' name='class_number' size="10" value="{{info.class_number}}"></td>
+<td align=left> {{KNOWL('nf.ideal_class_group', title='class group')}} <td align=left> <input type='text' name='class_group' size="10" value="{{info.class_group}}"></td>
+<td align=left> {{KNOWL('nf.regulator', title='regulator')}} <td align=left> <input type='text' name='regulator' size="10" value="{{info.regulator}}"></td>
 </tr>
+
 <tr>
-<td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
-<td align=right colspan="2">
+<td align='left'>
+   {{ KNOWL('nf.cm_field', title='CM field') }}</td>
+     <td><select name='cm_field' width="105" style="width: 105px">
+  {% if info.cm_field == 'True' %} 
+      <option ></option>
+      <option value='True' selected='yes'>True</option>
+      <option value='False'>False</option>
+{% elif info.cm_field == 'False' %}
+      <option ></option>
+      <option value='True'>True</option>
+      <option value='False' selected='yes'>False</option>
+{% else %}
+      <option ></option>
+      <option value='True'>True</option>
+      <option value='False'>False</option>
+{% endif %}
+      </select></td>
+
+<td align=left> {{KNOWL('nf.unramified_prime', title='unramified primes')}}<td align=left> <input type='text' name='ur_primes' size="10" value="{{info.ur_primes}}"></td>
+
+<td align=left colspan="1">
 set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
 {% if info.ram_quantifier == 'contained' %}
 <select name = "ram_quantifier">
@@ -44,28 +64,13 @@ set of {{KNOWL('nf.ramified_primes', title='ramified primes')}}
   <option value='include'>superset of</option>
 </select>
 {% endif %}
- <td align=left> <input type='text' name='ram_primes' size=5 value="{{info.ram_primes}}"></td>
+ <td align=left> <input type='text' name='ram_primes' size="10" value="{{info.ram_primes}}"></td>
 
-</tr>
 <tr>
+<td align='left'> {{KNOWL('nf.discriminant', title='discriminant')}} range <td align='left' colspan='2'> <input type='text' name='discriminant' size='20' value="{{info.discriminant}}"></td>
+
 <td align='left'> {{KNOWL('nf.root_discriminant', title='root discriminant')}} range <td align='left' colspan='2'> <input type='text' name='rd' size='20' value="{{info.rd}}"></td>
-<td align='left'>
-   <td>{{ KNOWL('nf.cm_field', title='CM field') }}</td>
-     <td><select name='cm_field' width="105" style="width: 105px">
-  {% if info.cm_field == 'True' %} 
-      <option ></option>
-      <option value='True' selected='yes'>True</option>
-      <option value='False'>False</option>
-{% elif info.cm_field == 'False' %}
-      <option ></option>
-      <option value='True'>True</option>
-      <option value='False' selected='yes'>False</option>
-{% else %}
-      <option ></option>
-      <option value='True'>True</option>
-      <option value='False'>False</option>
-{% endif %}
-      </select></td>
+
 {# 
 <tr>
 <td align='left' colspan='4'>Maximum number of fields to display <input type='text' name='count' value="{{info.count}}" size='10'>
