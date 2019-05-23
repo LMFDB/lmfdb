@@ -32,15 +32,35 @@
 
 <h2>Constructions</h2>
 
-{% if gp.direct_products %}
-<p> {% for sub in gp.direct_products %} $({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$, {% endfor %} </p>
-{% endif %}
-{% if gp.semidirect_products %}
-<p> {% for sub in gp.semidirect_products %} $({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$, {% endfor %} </p>
-{% endif %}
-{% if gp.nonsplit_products %}
-<p> {% for sub in gp.nonsplit_products %} $({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$, {% endfor %} </p>
-{% endif %}
+<table>
+  <tr>
+    <td colspan="{{1+gp.most_product_expressions()}}">${{gp.presentation()}}$</td>
+  </tr>
+  {% if gp.direct_products %}
+  <tr>
+    <td>{{KNOWL('group.direct_product', 'Direct product:')}}</td>
+    {% for sub in gp.direct_products %}
+    <td>$({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$</td>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  {% if gp.semidirect_products %}
+  <tr>
+    <td>{{KNOWL('group.semidirect_product', 'Semidirect product:')}}</td>
+    {% for sub in gp.semidirect_products %}
+    <td>$({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$</td>
+    {% endfor %}
+  </tr>
+  {% endif %}
+  {% if gp.nonsplit_products %}
+  <tr>
+    <td>{{KNOWL('group.nonsplit_product', 'Non-split product:')}}</td>
+    {% for sub in gp.nonsplit_products %}
+    <td>$({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$</td>
+    {% endfor %}
+  </tr>
+  {% endif %}
+</table>
 
 <h2> Subgroups </h2>
 

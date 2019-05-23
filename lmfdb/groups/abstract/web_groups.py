@@ -6,6 +6,8 @@ from lmfdb import db
 from sage.all import factor, lazy_attribute
 from sage.libs.gap.libgap import libgap
 
+fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
+
 #currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
     data = db.gps_small.lookup(label)
@@ -62,6 +64,9 @@ class WebAbstractGroup(WebObj):
         # Could show up multiple times as a quotient of different normal subgroups in the same ambient group
         # So we should elimintate duplicates from the following list
         return [WebAbstractSupergroup(self, 'quo', supdata['label'], supdata) for supdata in db.gps_subgroups.search({'quotient': self.label, 'minimal_normal':True}, sort=['ambient_order', 'ambient'])]
+
+    def most_product_expressions(self):
+        return max(len(self.direct_products), len(self.semidirect_products), len(self.nonsplit_products))
 
     @lazy_attribute
     def direct_products(self):
@@ -122,10 +127,77 @@ class WebAbstractGroup(WebObj):
                  "-".join(map(str, getattr(self, name))))
                 for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
 
-    def solvable_presentation(self):
-        if self.solvable:
-            G = libgap.PcGroupCode(self.order, self.pc_code)
-            relators = G.FamilyPcgs().IsomorphismFpGroupByPcgs("g").Image().RelatorsOfFpGroup()
+    @lazy_attribute
+    def G(self):
+        # Reconstruct the group from the data stored above
+        if self.elt_rep_type == 0: # PcGroup
+            return libgap.PcGroupCode(self.pc_code, self.order)
+        elif self.elt_rep_type < 0: # Permutation group
+            gens = [self.decode(g) for g in self.perm_gens]
+            return libgap.Group(gens)
+        else:
+            # TODO: Matrix groups
+            raise NotImplementedError
+
+    @lazy_attribute
+    def pcgs(self):
+        return self.G.Pcgs()
+    def decode_as_pcgs(self, code):
+        # Decode an element
+        vec = []
+        if code < 0 or code >= self.order:
+            raise ValueError
+        for m in reversed(self.pcgs_relative_orders):
+            c = code % m
+            vec.insert(0, c)
+            code = code // m
+        return self.pcgs.PcElementByExponents(vec)
+    def decode_as_perm(self, code):
+        # code should be an integer with 0 <= m < factorial(n)
+        n = -self.elt_rep_type
+        return SymmetricGroup(n)(Permutations(n).unrank(code))
+
+    #@lazy_attribute
+    #def fp_isom(self):
+    #    G = self.G
+    #    P = self.pcgs
+    #    def position(x):
+    #        # Return the unique generator
+    #        vec = P.ExponentsOfPcElement(x)
+    #        if sum(vec) == 1:
+    #            for i in range(len(vec)):
+    #                if vec[i]:
+    #                    return i
+    #    gens = G.GeneratorsOfGroup()
+    #    # We would like to remove extraneous generators, but can't figure out how to do so
+    #    rords = P.RelativeOrders()
+    #    for i, (g, r) in enumerate(zip(gens, rords)):
+    #        j = position(g**r)
+    #        if j is None:
+    #            # g^r is not another generator
+
+    def write_element(self, elt):
+        # Given an uncoded element, return a latex form for printing on the webpage.
+        if self.elt_rep_type == 0:
+            s = str(elt)
+            for i in range(self.ngens):
+                s = s.replace("f%s"%(i+1), chr(97+i))
+            return s
+
+    def presentation(self):
+        if self.elt_rep_type == 0:
+            relators = self.G.FamilyPcgs().IsomorphismFpGroupByPcgs("f").Image().RelatorsOfFpGroup()
+            gens = ', '.join(chr(97+i) for i in range(self.ngens))
+            relators = ', '.join(map(str, relators))
+            for i in range(self.ngens):
+                relators = relators.replace("f%s"%(i+1), chr(97+i))
+            relators = fix_exponent_re.sub(r"^{\1}", relators)
+            relators = relators.replace("*","")
+            return r"\langle %s | %s \rangle" % (gens, relators)
+        elif self.elt_rep_type < 0:
+            return r"\langle %s \rangle" % (", ".join(map(self.decode_as_perm, self.perm_gens)))
+        else:
+            raise NotImplementedError
 
     def is_null(self):
         return self._data is None
