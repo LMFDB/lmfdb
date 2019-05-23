@@ -3,7 +3,7 @@
 import ast, os, re, StringIO, yaml
 
 from flask import render_template, request, url_for, redirect, send_file, abort
-from sage.all import Permutation
+from sage.all import Permutation, ZZ, latex
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -148,6 +148,7 @@ def group_download(info):
              credit=lambda:credit_string)
 def group_search(info, query):
     info['group_url'] = lambda label: get_url(label)
+    info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpoltency_class', 'nilpotency class')
