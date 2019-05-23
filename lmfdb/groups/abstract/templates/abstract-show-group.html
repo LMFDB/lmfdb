@@ -1,0 +1,126 @@
+{% extends "homepage.html" %}
+
+
+{% block content %}
+
+<script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
+<script type="text/javascript">
+  $(document).ready(
+  function() {
+  $(".subgp").hover(highlight_group, unhighlight_group);
+  });
+</script>
+
+{% set gp = info.gpc %}
+
+<h2> Group Information</h2>
+<p>
+  <table>
+    <tr><td>${{gp.name_label()}}$  </td><td>  </td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>${{gp.show_outer_group()}}$</td></tr>
+    <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
+  </table>
+</p>
+
+<p>
+  {{info.boolean_characteristics_string | safe}}
+
+</p>
+
+<h2>Constructions</h2>
+
+{% if gp.direct_products %}
+<p> {% for sub in gp.direct_products %} $({{sub.subgroup_tex}}) \times ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
+{% if gp.semidirect_products %}
+<p> {% for sub in gp.semidirect_products %} $({{sub.subgroup_tex}}) \rtimes ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
+{% if gp.nonsplit_products %}
+<p> {% for sub in gp.nonsplit_products %} $({{sub.subgroup_tex}}) . ({{sub.quotient_tex}})$, {% endfor %} </p>
+{% endif %}
+
+<h2> Subgroups </h2>
+
+<p>There are {{gp.number_subgroups}} subgroups{% if gp.number_normal_subgroups < gp.number_subgroups %} in {{gp.number_subgroup_classes}} conjugacy classes, {{ gp.number_normal_subgroups }} normal{% else %}, all normal{% endif %} ({% if gp.number_characteristic_subgroups < gp.number_normal_subgroups %}{{ gp.number_characteristic_subgroups }}{% else %}all{% endif %} characteristic).
+</p>
+
+<table>
+  <tr>
+    <td>{{KNOWL('group.center',title='Center')}}:</td>
+    <td>$Z =$ <span class="subgp chargp" data-sgid="{{gp.center}}">${{gp.show_center_label()}}$</span></td>
+    <td>$G/Z = {{gp.show_central_quotient()}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.commutator',title='Commutator')}}:</td>
+    <td> $G' =$ <span class="subgp chargp" data-sgid="{{gp.commutator}}">${{gp.show_commutator_label()}}$</span></td>
+    <td> $G/G' = {{gp.show_abelian_quotient()}}$ </td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.frattini',title='Frattini')}}:</td>
+    <td>$\Phi =$ <span class="subgp chargp" data-sgid="{{gp.frattini}}">${{gp.show_frattini_label()}}$</span></td>
+    <td>$G/\Phi = {{gp.show_frattini_quotient()}}$ </td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.fitting',title='Fitting')}}:</td>
+    <td>$\operatorname{Fit} =$ <span class="subgp chargp" data-sgid="{{gp.fitting}}">${{gp.subgroups[gp.fitting].subgroup_tex}}$</td>
+    <td>$G/\operatorname{Fit} = {{gp.subgroups[gp.fitting].quotient_tex}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.radical',title='Radical')}}:</td>
+    <td>$R =$ <span class="subgp chargp" data-sgid="{{gp.radical}}">${{gp.subgroups[gp.radical].subgroup_tex}}$</td>
+    <td>$G/R = {{gp.subgroups[gp.radical].quotient_tex}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.socle',title='Socle')}}:</td>
+    <td>$\operatorname{soc} =$ <span class="subgp chargp" data-sgid="{{gp.socle}}">${{gp.subgroups[gp.socle].subgroup_tex}}$</td>
+    <td>$G/\operatorname{soc} = {{gp.subgroups[gp.socle].quotient_tex}}$</td>
+  </tr>
+  {% for p, subgp in gp.sylow_subgroups() %}
+  <tr>
+    <td>{{p}}-{{KNOWL('group.sylow_subgroup', 'Sylow subgroup')}}</td>
+    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<table>
+  {% for layer in gp.subgroup_layers %}
+  <tr>
+    {% for subgp in layer %}
+    <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+<h3>Series</h3>
+<table>
+  {% for kwl, name, subs, spandata in gp.series() %}
+  <tr>
+    <td>{{KNOWL(kwl, name)}}</td>
+    {% for sub in subs %}
+    <td><span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.counter}}">${{sub.subgroup_tex}}$</span></td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+
+<h2> Supergroups </h2>
+
+{% if gp.maximal_subgroup_of %}
+<p> Maximal subgroup of {% for sup in gp.maximal_subgroup_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+{% endif %}
+{% if gp.maximal_quotient_of %}
+<p> Maximal quotient of {% for sup in gp.maximal_quotient_of %} ${{sup.ambient_tex}}$, {% endfor %}</p>
+{% endif %}
+
+<h2> Character Theory </h2>
+<p>
+
+</p>
+
+
+{% endblock %}
