@@ -1636,8 +1636,8 @@ class PostgresTable(PostgresBase):
              u'r2': 0,
              u'ramps': [11, 53, 702551],
              u'used_grh': False}
-            sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['reg'])
-            {'reg':455.191694993}
+            sage: nf.lucky({'label':u'6.6.409587233.1'},projection=['regulator'])
+            {'regulator':455.191694993}
         """
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
@@ -3208,8 +3208,8 @@ class PostgresTable(PostgresBase):
 
         # Reinitialize object
         tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
-        table = PostgresTable(self, *tabledata)
-        self.__dict__[self.search_table] = table
+        table = PostgresTable(self._db, *tabledata)
+        self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
         """
@@ -5829,17 +5829,17 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
 
     def copy_to(self, search_tables, data_folder, **kwds):
         if os.path.exists(data_folder):
-            return ValueError("The path {} already exists".format(data_folder))
+            raise ValueError("The path {} already exists".format(data_folder))
         os.makedirs(data_folder)
         failures = []
         for tablename in search_tables:
             if tablename in self.tablenames:
                 table = self[tablename]
                 searchfile = os.path.join(data_folder, tablename + '.txt')
-                statsfile =  os.path.join(data_folder, tablename + '_stats.txt')
-                countsfile =  os.path.join(data_folder, tablename + '_counts.txt')
-                extrafile =  os.path.join(data_folder, tablename + '_extras.txt')
-                if table.extra_table is  None:
+                statsfile = os.path.join(data_folder, tablename + '_stats.txt')
+                countsfile = os.path.join(data_folder, tablename + '_counts.txt')
+                extrafile = os.path.join(data_folder, tablename + '_extras.txt')
+                if table.extra_table is None:
                     extrafile = None
                 indexesfile = os.path.join(data_folder, tablename + '_indexes.txt')
                 constraintsfile = os.path.join(data_folder, tablename + '_constraints.txt')
@@ -5851,7 +5851,7 @@ SELECT table_name, row_estimate, total_bytes, index_bytes, toast_bytes,
         if failures:
             print "Failed to copy %s (not in tablenames)" % (", ".join(failures))
 
-    def copy_to_from_remote(self, search_tables, data_folder, remote_opts = None, **kwds):
+    def copy_to_from_remote(self, search_tables, data_folder, remote_opts=None, **kwds):
         if remote_opts is None:
             from lmfdb.utils.config import Configuration
             remote_opts = Configuration().get_postgresql_default()

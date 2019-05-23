@@ -48,6 +48,7 @@ table.reptable td, table.reptable th {
   <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
    <p>
 
+      {% if info.cclasses is defined %}
    <table class="ntdata">
       <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
       <tbody>
@@ -60,6 +61,10 @@ table.reptable td, table.reptable th {
         {% endfor %}
       </tbody>
       </table>
+      {% else %}
+        There are {{ info.num_cc }} conjugacy classes of elements.
+        Data not shown.
+      {% endif %}
 
 
    </p>
@@ -76,9 +81,15 @@ table.reptable td, table.reptable th {
     </table>
 
     <table>
-      <tr><td>Character table:<td>&nbsp;&nbsp;<td><pre>
+      <tr><td>Character table:
+      {% if info.chartable is defined %}
+      <td>&nbsp;&nbsp;<td>
+      <pre>
 {{info.chartable}}
-</pre></td></tr>
+</pre>
+      {% else %}
+      Data not available.
+      {% endif %}
     </table> </div> </p>
 {% if info.int_reps %}
 <p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
