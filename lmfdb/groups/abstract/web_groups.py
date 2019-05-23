@@ -4,6 +4,7 @@ import string
 from lmfdb import db
 
 from sage.all import factor, lazy_attribute
+from sage.libs.gap.libgap import libgap
 
 #currently uses gps_small db to pretty print groups
 def group_names_pretty(label):
@@ -120,6 +121,11 @@ class WebAbstractGroup(WebObj):
                  [self.subgroups[i] for i in getattr(self, name)],
                  "-".join(map(str, getattr(self, name))))
                 for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
+
+    def solvable_presentation(self):
+        if self.solvable:
+            G = libgap.PcGroupCode(self.order, self.pc_code)
+            relators = G.FamilyPcgs().IsomorphismFpGroupByPcgs("g").Image().RelatorsOfFpGroup()
 
     def is_null(self):
         return self._data is None
