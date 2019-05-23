@@ -8,14 +8,26 @@ from sage.all import Permutation
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, display_knowl,
-    parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
+    parse_ints, parse_bool, clean_input, parse_bracketed_posints, 
+    parse_gap_id,
     search_wrap, web_latex)
 
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup)
 
-abstract_group_label_regex = re.compile(r'(\d+)\.(([a-z]+)|(\d+))$')
+credit_string = "John Jones, Jen Paulhus, David Roe, David Roberts, and Andrew Sutherland"
+
+abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
+
+def learnmore_list():
+    return [ ('Completeness of the data', url_for(".completeness_page")),
+             ('Source of the data', url_for(".how_computed_page")),
+             ('Reliability of the data', url_for(".reliability_page")),
+             ('Labeling convention', url_for(".labels_page")) ]
+
+def learnmore_list_remove(matchstring):
+    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
 
 def label_is_valid(lab):
     return abstract_group_label_regex.match(lab)
@@ -81,18 +93,13 @@ def create_boolean_string(gp):
 @abstract_page.route("/")
 def index():
     bread = get_bread()
-#    if request.args:
-#        return abstract_search(request.args)
+    if request.args:
+        return group_search(request.args)
     info = {'count': 50,
+            'order_list': ['1-10', '20-100', '101-200'] 
             }
 
-    learnmore = [ ('Completeness of the data', url_for(".completeness_page")),
-                  ('Source of the data', url_for(".how_computed_page")),
-                  ('Reliability of the data', url_for(".reliability_page")),
-                ('Labeling convention', url_for(".labels_page")),
-               ]
-
-    return render_template("abstract-index.html", title="Abstract Groups", bread=bread, info=info, learnmore=learnmore)
+    return render_template("abstract-index.html", title="Abstract Groups", bread=bread, info=info, learnmore=learnmore_list())
 
 
 
@@ -111,19 +118,47 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
+#### Searching
+def group_jump(info):
+    return redirect(url_for('.by_label', label=info['jump']))
 
-#Search Setup
-#def abstract_search(info, query):
-#    parse_ints(info,query,'genus',name='Genus')
-#    parse_ints(info,query,'dim',name='Dimension of the family')
-#    parse_ints(info,query,'group_order', name='Group orders')
-#    if 'inc_hyper' in info:
-#        if info['inc_hyper'] == 'exclude':
-#            query['hyperelliptic'] = False
-#        elif info['inc_hyper'] == 'only':
-#            query['hyperelliptic'] = True
-#    info['group_display'] = sg_pretty
-#    info['sign_display'] = sign_display
+def group_download(info):
+    t = 'Stub'
+    bread = get_bread([("Jump", '')])
+    return render_template("single.html", kid='rcs.groups.abstract.source',
+                           title=t, bread=bread, 
+                           learnmore=learnmore_list_remove('Source'),
+                           credit=credit_string)
+
+
+@search_wrap(template="abstract-search.html",
+             table=db.gps_groups,
+             title='Abstract Group Search Results',
+             err_title='Abstract Groups Search Input Error',
+             shortcuts={'jump':group_jump,
+                        'download':group_download},
+             projection=['label','order','abelian','exponent','solvable',
+                        'nilpotent','center_label','outer_order',
+                        'nilpotency_class','number_conjugacy_classes'],
+             #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
+             #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
+             #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
+             bread=lambda:get_bread([('Search Results', '')]),
+             learnmore=learnmore_list,
+             credit=lambda:credit_string)
+def group_search(info, query):
+    info['group_url'] = lambda label: get_url(label)
+    parse_ints(info, query, 'order', 'order')
+    parse_ints(info, query, 'exponent', 'exponent')
+    parse_ints(info, query, 'nilpoltency_class', 'nilpotency class')
+    parse_ints(info, query, 'number_conjugacy_classes', 'number of conjugacy classes')
+    parse_bool(info, query, 'abelian', 'is abelian')
+    parse_bool(info, query, 'solvable', 'is solvable')
+    parse_bool(info, query, 'nilpotent', 'is nilpotent')
+    parse_bool(info, query, 'perfect', 'is perfect')
+
+def get_url(label):
+    return url_for(".by_label", label=label)
 
 #Writes individual pages
 def render_abstract_group(args):
@@ -164,9 +199,9 @@ def render_abstract_group(args):
                                title=title, bread=bread, info=info,
                                properties2=prop2,
                                #friends=friends,
-                               learnmore=learnmore,)
-
-                               #downloads=downloads, credit=credit)
+                               learnmore=learnmore_list(),
+                               #downloads=downloads, 
+                               credit=credit_string)
 
 
 
@@ -175,44 +210,39 @@ def render_abstract_group(args):
 @abstract_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of the Abstract Groups Data'
-    bread = get_bread([("Completeness", )])
-    learnmore = [('Source of the data', url_for(".how_computed_page")),
-                ('Reliability of the data', url_for(".reliability_page")),
-                ('Labeling convention', url_for(".labels_page"))]
+    bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.abstract.extent',
-                            title=t, bread=bread,learnmore=learnmore,) #credit=credit
+                            title=t, bread=bread,
+                            learnmore=learnmore_list_remove('Complete'), 
+                            credit=credit_string)
 
 
 @abstract_page.route("/Labels")
 def labels_page():
-    t = 'Label Scheme for the Data'
+    t = 'Labels for Abstract Groups'
     bread = get_bread([("Labels", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                 ('Source of the data', url_for(".how_computed_page")),
-                ('Reliability of the data', url_for(".reliability_page"))]
     return render_template("single.html", kid='rcs.groups.abstract.label',
-                           learnmore=learnmore, title=t, bread=bread,) #credit=credit)
+                           learnmore=learnmore_list_remove('label'), 
+                           title=t, bread=bread, credit=credit_string)
 
 
 @abstract_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of the Abstract Groups Data'
     bread = get_bread([("Reliability", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                  ('Source of the data', url_for(".how_computed_page")),
-                ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='rcs.groups.abstract.reliability',
-                           title=t, bread=bread, learnmore=learnmore,) #credit=credit)
+                           title=t, bread=bread, 
+                           learnmore=learnmore_list_remove('Reliability'), 
+                           credit=credit_string)
 
 
 @abstract_page.route("/Source")
 def how_computed_page():
     t = 'Source of the Automorphisms of Curve Data'
     bread = get_bread([("Source", '')])
-    learnmore = [('Completeness of the data', url_for(".completeness_page")),
-                  ('Reliability of the data', url_for(".reliability_page")),
-                ('Labeling convention', url_for(".labels_page"))]
     return render_template("single.html", kid='rcs.groups.abstract.source',
-                           title=t, bread=bread, learnmore=learnmore,) #credit=credit)
+                           title=t, bread=bread, 
+                           learnmore=learnmore_list_remove('Source'),
+                           credit=credit_string)
 
 
