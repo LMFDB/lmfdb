@@ -3208,8 +3208,8 @@ class PostgresTable(PostgresBase):
 
         # Reinitialize object
         tabledata = self._execute(SQL("SELECT name, label_col, sort, count_cutoff, id_ordered, out_of_order, has_extras, stats_valid, total FROM meta_tables WHERE name = %s"), [self.search_table]).fetchone()
-        table = PostgresTable(self, *tabledata)
-        self.__dict__[self.search_table] = table
+        table = PostgresTable(self._db, *tabledata)
+        self._db.__dict__[self.search_table] = table
 
     def drop_tmp(self):
         """
