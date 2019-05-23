@@ -1,0 +1,99 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<h2>Refine search </h2>
+
+<form id="re-search" onsubmit="cleanSubmit(this.id)">
+<input type="hidden" name="start" value="{{info.start}}"/>
+<input type="hidden" name="count" value="{{info.count}}"/>
+
+<table>
+  <tr>
+    <td>{{KNOWL('group.order',title='order')}}
+    <td>{{KNOWL('group.exponent',title='exponent')}}
+    <td>{{KNOWL('group.nilpotent',title='nilpoltency class')}}
+    <td>{{KNOWL('gg.conjugacy_classes',title='$|G^\\natural|$')}}
+  <tr>
+  <td><input type='text' name='order' placeholder='1..10' style="width: 100px" value="{{info.order}}">
+  <td><input type='text' name='exponent' placeholder='2,4,6' style="width: 100px" value="{{info.exponent}}">
+  <td><input type='text' name='nipoltency_class' placeholder='2,3' style="width: 100px" value="{{info.nipoltency_class}}">
+  <td><input type='text' name='number_conjugacy_classes' placeholder='3..10' style="width: 100px" value="{{info.number_conjugacy_classes}}">
+  <tr>
+    <td>{{ KNOWL('group.abelian', title='abelian') }}
+    <td>{{ KNOWL('group.solvable', title='solvable') }}
+    <td>{{ KNOWL('group.nilpotent', title='nilpotent') }}
+    <td>{{ KNOWL('group.perfect', title='perfect') }}
+
+  <tr>
+    <td><select name='abelian' style="width: 110px">
+      <option ></option>
+      <option value="True" {{ "selected" if info.abelian == 'True'}}>True</option>
+      <option value="False" {{ "selected" if info.abelian == 'False'}}>False</option>
+      </select>
+    <td><select name='solvable' style="width: 110px">
+      <option ></option>
+      <option value="True" {{ "selected" if info.solvable == 'True'}}>True</option>
+      <option value="False" {{ "selected" if info.solvable == 'False'}}>False</option>
+      </select>
+
+    <td><select name='nilpotent' style="width: 110px">
+      <option ></option>
+      <option value="True" {{ "selected" if info.nilpotent == 'True'}}>True</option>
+      <option value="False" {{ "selected" if info.nilpotent == 'False'}}>False</option>
+      </select>
+
+    <td><select name='perfect' style="width: 110px">
+      <option ></option>
+      <option value="True" {{ "selected" if info.perfect == 'True'}}>True</option>
+      <option value="False" {{ "selected" if info.perfect == 'False'}}>False</option>
+      </select>
+
+          <tr>
+<td class="button"><button type='submit' value='refine' style='min-width: 110px'>Search again</button></td>
+
+{#
+     <td align=right> Maximum number of groups to display:
+     <td><input id="count" type="text" name="count" value="50" size="10">
+#}
+  </table>
+      </form>
+{% include 'matches.html' %}
+{% if info.number %}
+
+<table class="ntdata">
+<tr>
+    <th>{{ KNOWL('group.label', title='Label') }}</th>
+    <th>{{ KNOWL('group.name', title='Name') }}</th>
+    <th>{{ KNOWL('group.order', title='Order') }}</th>
+    <th>{{ KNOWL('group.exponent', title='Exponent') }}</th>
+    <th>{{ KNOWL('gg.conjugacy_class', title='$|G^{\\natural}|$') }}</th>
+    <th>{{ KNOWL('group.center', title='Center') }}</th>
+    <th>{{ KNOWL('group.outer_aut', title='$|\mathrm{Out}(G)|$') }}</th>
+    <th>{{ KNOWL('group.abelian', title='Abelian') }}</th>
+    <th>{{ KNOWL('group.solvable', title='Solvable') }}</th>
+    <th>{{ KNOWL('group.nilpotent', title='Nilpotent') }}</th>
+</tr>
+{% for group in info.results: %}
+<tr>
+    <td align=center> <a href="{{info.group_url(group.label)}}">{{group.label}}</a>
+    <td> {# No names yet #}
+    <td> {{group.order}} 
+    <td> {{group.exponent}} 
+    <td> {{group.number_conjugacy_classes}} 
+    <td> {{group.center_label}}
+    <td> {{group.outer_order}}
+    <td align=center> {{('&#x2713;' if group.abelian else '')|safe}}
+    <td align=center> {{('&#x2713;' if group.solvable else '')|safe}}
+    <td align=center> {{('&#x2713; (' + group.nilpotency_class|string +')' if group.nilpotent else '')|safe}}
+</tr>
+{% endfor %}
+</table>
+{% include 'forward_back.html' %}
+{#
+   {% include 'download_search_results.html' %}
+#}
+{% endif %}
+{% include 'debug_info.html' %}
+
+
+{% endblock %}
