@@ -36,44 +36,44 @@ def create_boolean_string(gp):
         strng = display_knowl('group.abelian', "non-Abelian")
 
     if gp.solvable:
-        strng += ", Solvable"
+        strng += ", "+  display_knowl('group.solvable', "Solvable")
         if gp.supersolvable:
-            strng += ", Supersolvable"
+            strng += ", " + display_knowl('group.supersolvable', "Supersolvable")
     else:
-        strng += ", non-Solvable"
+        strng += ", " + display_knowl('group.solvable', "non-Solvable")
 
     if gp.nilpotent:
-        strng += ", Nilpotent"
+        strng += ", " + display_knowl('group.nilpotent', "Nilpotent")
 
     if gp.metacyclic:
-        strng += ", Metacyclic"
+        strng += ", " +  display_knowl('group.metacyclic', "Metacyclic")
 
     if gp.metabelian:
-        strng += ", Metabelian"
+        strng += ", " +  display_knowl('group.metabelian', "Metabelian")
 
     if gp.simple:
-        strng += ", Simple"
+        strng += ", " +  display_knowl('group.simple', "Simple")
 
     if gp.almost_simple:
-        strng += ", Almost Simple"
+        strng += ", " +  display_knowl('group.almost_simple', "Almost Simple")
 
     if gp.quasisimple:
-        strng += ", Quasisimple"
+        strng += ", " +  display_knowl('group.quasisimple', "Quasisimple")
 
     if gp.perfect:
-        strng += ", Perfect"
+        strng += ", " +  display_knowl('group.perfect', "Perfect")
 
     if gp.monomial:
-        strng += ", Monomial"
+        strng += ", " +  display_knowl('group.monomial', "Monomial")
 
     if gp.rational:
-        strng += ", Rational"
+        strng += ", " +  display_knowl('group.rational', "Rational")
 
     if gp.Zgroup:
-        strng += ", Zgroup"
+        strng += ", " +  display_knowl('group.zgroup', "Zgroup")
 
     if gp.Agroup:
-        strng += ", Agroup"
+        strng += ", " +  display_knowl('group.agroup', "Agroup")
 
     return strng
 
