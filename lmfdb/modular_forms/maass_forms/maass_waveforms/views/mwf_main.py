@@ -28,16 +28,6 @@ from lmfdb.utils import flash_error
 from sage.all import gcd
 
 import StringIO
-import re
-from flask import url_for, request, flash
-from markupsafe import Markup
-
-
-
-from lmfdb.utils import (
-    parse_ints, parse_floats,
-    search_wrap)
-
 
 from lmfdb.modular_forms.maass_forms.maass_waveforms import MWF, mwf_logger, mwf
 from lmfdb.modular_forms.maass_forms.maass_waveforms.backend.maass_forms_db import maass_db
@@ -48,10 +38,9 @@ logger = mwf_logger
 import json
 from lmfdb.utils import rgbtohex, signtocolour
 
-LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$')
 
-
-
+# this is a blueprint specific default for the tempate system.
+# it identifies the body tag of the html website with class="wmf"
 @mwf.context_processor
 def body_class():
     return {'body_class': MWF}
@@ -150,7 +139,6 @@ def render_maass_waveforms(level=0, weight=-1, character=-1, r1=0, r2=0, **kwds)
         info['cur_character'] = character
 
     if level > 0 or weight > -1 or character > -1:
-#         return mwf_search(request.args)
         search = get_search_parameters(info)
         mwf_logger.debug("info=%s" % info)
         mwf_logger.debug("search=%s" % search)
