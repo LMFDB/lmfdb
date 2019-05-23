@@ -10,14 +10,14 @@ from sage.all import ZZ, latex, gap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, flash_error,
+    list_to_latex_matrix, flash_error, comma,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
     group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
-    subfield_display, resolve_display, generators, chartable,
+    subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
 # Test to see if this gap installation knows about transitive groups
@@ -168,17 +168,15 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        cclasses = wgg.conjclasses()
-        if ZZ(order) < ZZ(10000000) and len(cclasses) < 21:
-            ctable = chartable(n, t)
-        else:
-            ctable = 'Data not available'
-        data['gens'] = generators(n, t)
+        if wgg.num_conjclasses() < 50:
+            data['cclasses'] = wgg.conjclasses()
+        if ZZ(order) < ZZ(10000000) and wgg.num_conjclasses() < 21:
+            data['chartable'] = chartable(n, t)
+        data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
-        data['chartable'] = ctable
+        data['num_cc'] = comma(wgg.num_conjclasses())
         data['parity'] = "$%s$" % data['parity']
-        data['cclasses'] = wgg.conjclasses()
         data['subinfo'] = subfield_display(n, data['subfields'])
         data['resolve'] = resolve_display(data['quotients'])
         if data['gapid'] == 0:
