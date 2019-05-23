@@ -17,15 +17,16 @@
 <p>
   <table>
     <tr><td>${{gp.name_label()}}$  </td><td>  </td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order()}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent()}} </td></tr>
-    <tr><td>Automorphism Group:</td><td>${{gp.aut_group()}}$</td></tr>
-        <tr><td>Outer Automorphisms:</td><td>${{gp.out_group()}}$</td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{gp.order}} </td></tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{gp.exponent}} </td></tr>
+    <tr><td>Automorphism Group:</td><td>${{gp.show_aut_group()}}$</td></tr>
+    <tr><td>Outer Automorphisms:</td><td>${{gp.show_outer_group()}}$</td></tr>
+    <tr><td>Minimal degree of permutation representation:</td><td>{{gp.transitive_degree}}</td></tr>
   </table>
+</p>
 
-  <br>
-
-{{info.boolean_characteristics_string | safe}}
+<p>
+  {{info.boolean_characteristics_string | safe}}
 
 </p>
 
