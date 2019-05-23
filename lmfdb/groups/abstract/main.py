@@ -96,10 +96,11 @@ def index():
     if request.args:
         return group_search(request.args)
     info = {'count': 50,
-            'order_list': ['1-10', '20-100', '101-200'] 
+            'order_list': ['1-10', '20-100', '101-200'],
+            'nilp_list': range(1,5)
             }
 
-    return render_template("abstract-index.html", title="Abstract Groups", bread=bread, info=info, learnmore=learnmore_list())
+    return render_template("abstract-index.html", title="Abstract Groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
