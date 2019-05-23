@@ -274,14 +274,17 @@ Note that you need editor priviledges to add, delete or modify data.
    large numbers of rows, this method will be faster.
 
    ```python
-   sage: db.test_table.copy_from('test.txt', search_cols=['dim', 'discriminant', 'label', 'bad_primes'])
+   sage: db.test_table.copy_from('test.txt', sep='|'])
    ```
 
    Example contents of `test.txt`:
 
    ```
-   1    12      1.12.A  [2,3]
-   2    30      2.30.A  [2,3,5]
+   dim|discriminant|label|bad_primes
+   smallint|numeric|text|jsonb
+
+   1|12|1.12.A|[2,3]
+   2|30|2.30.A|[2,3,5]
    ```
 
    Note that very few (if any) LMFDB tables currently enforce
