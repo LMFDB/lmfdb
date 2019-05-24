@@ -119,6 +119,16 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
+def show_type(label):
+    wag = WebAbstractGroup(label)
+    if wag.abelian:
+        return 'Abelian - '+str(len(wag.smith_abelian_invariants))
+    if wag.nilpotent:
+        return 'Nilpotent - '+str(wag.nilpotency_class)
+    if wag.solvable:
+        return 'Solvable - '+str(wag.derived_length)
+    return 'General - ?'
+
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
@@ -148,9 +158,10 @@ def group_download(info):
              learnmore=learnmore_list,
              credit=lambda:credit_string)
 def group_search(info, query):
-    info['group_url'] = lambda label: get_url(label)
+    info['group_url'] = get_url
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
-    info['getname']= lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
+    info['getname'] = lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
+    info['show_type'] = show_type 
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
