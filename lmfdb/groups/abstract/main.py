@@ -150,6 +150,7 @@ def group_download(info):
 def group_search(info, query):
     info['group_url'] = lambda label: get_url(label)
     info['show_factor'] = lambda num: '$'+latex(ZZ(num).factor())+'$'
+    info['getname']= lambda label: '$'+WebAbstractGroup(label).tex_name+'$'
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'exponent', 'exponent')
     parse_ints(info, query, 'nilpotency_class', 'nilpotency class')
