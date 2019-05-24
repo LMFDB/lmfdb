@@ -71,7 +71,7 @@
     <th>{{ KNOWL('group.outer_aut', title='$|\mathrm{Out}(G)|$') }}</th>
     <th>{{ KNOWL('group.abelian', title='Abelian') }}</th>
     <th>{{ KNOWL('group.solvable', title='Solvable') }}</th>
-    <th>{{ KNOWL('group.nilpotent', title='Nilpotent') }}</th>
+    <th>{{ KNOWL('group.nilpotent', title='Nilpotency class') }}</th>
 </tr>
 {% for group in info.results: %}
 <tr>
@@ -84,7 +84,7 @@
     <td align=center> {{info.show_factor(group.outer_order)}}
     <td align=center> {{('&#x2713;' if group.abelian else '')|safe}}
     <td align=center> {{('&#x2713;' if group.solvable else '')|safe}}
-    <td align=center> {{('&#x2713; (' + group.nilpotency_class|string +')' if group.nilpotent else '')|safe}}
+    <td align=center> {{(group.nilpotency_class if group.nilpotent else '')|safe}}
 </tr>
 {% endfor %}
 </table>
