@@ -1,9 +1,9 @@
 import re
-import string
+#import string
 
 from lmfdb import db
 
-from sage.all import factor, lazy_attribute
+from sage.all import factor, lazy_attribute, Permutations, SymmetricGroup
 from sage.libs.gap.libgap import libgap
 
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")

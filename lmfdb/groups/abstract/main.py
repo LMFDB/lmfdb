@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import ast, os, re, StringIO, yaml
+import re #, StringIO, yaml, ast, os
 
-from flask import render_template, request, url_for, redirect, send_file, abort
-from sage.all import Permutation, ZZ, latex
+from flask import render_template, request, url_for, redirect #, send_file, abort
+from sage.all import ZZ, latex #, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
     flash_error, display_knowl,
-    parse_ints, parse_bool, clean_input, parse_bracketed_posints, 
-    parse_gap_id,
+    parse_ints, parse_bool, clean_input, 
+    # parse_gap_id, parse_bracketed_posints, 
     search_wrap, web_latex)
 
 from lmfdb.groups.abstract import abstract_page
@@ -190,10 +190,6 @@ def render_abstract_group(args):
         ]
 
         bread = get_bread([(label, )])
-        learnmore =[('Completeness of the data', url_for(".completeness_page")),
-                ('Source of the data', url_for(".how_computed_page")),
-                    ('Reliability of the data', url_for(".reliability_page")),
-                ('Labeling convention', url_for(".labels_page"))]
 
 #        downloads = [('Code to Magma', url_for(".hgcwa_code_download",  label=label, download_type='magma')),
 #                     ('Code to Gap', url_for(".hgcwa_code_download", label=label, download_type='gap'))]
