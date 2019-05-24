@@ -16,7 +16,7 @@ from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup)
 
-credit_string = "John Jones, Jen Paulhus, David Roe, David Roberts, and Andrew Sutherland"
+credit_string = "Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
 
@@ -79,13 +79,13 @@ def create_boolean_string(gp):
         strng += ", " +  display_knowl('group.monomial', "Monomial")
 
     if gp.rational:
-        strng += ", " +  display_knowl('group.rational', "Rational")
+        strng += ", " +  display_knowl('group.rational_group', "Rational")
 
     if gp.Zgroup:
-        strng += ", " +  display_knowl('group.zgroup', "Zgroup")
+        strng += ", " +  display_knowl('group.z_group', "Zgroup")
 
     if gp.Agroup:
-        strng += ", " +  display_knowl('group.agroup', "Agroup")
+        strng += ", " +  display_knowl('group.a_group', "Agroup")
 
     return strng
 
