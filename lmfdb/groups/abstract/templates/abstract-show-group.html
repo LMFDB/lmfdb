@@ -10,6 +10,8 @@
   $(".subgp").hover(highlight_group, unhighlight_group);
   });
 </script>
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/prototype-1.4.0.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph-ez.js') }}"></script>
 
 {% set gp = info.gpc %}
 
@@ -115,6 +117,16 @@
   </tr>
   {% endfor %}
 </table>
+
+<h3>Diagram</h3>
+<p>
+<canvas id="subdiagram" width="800" height="600" style="border: 1px solid black">
+  Sorry, your browser doesn't support the subgroup diagram.
+</canvas>
+
+<script type="text/javascript">
+{{ info.dojs|safe }}
+</script>
 
 <h3>Series</h3>
 <table>

@@ -188,8 +188,12 @@ def render_abstract_group(args):
 
         info['boolean_characteristics_string']=create_boolean_string(gp)
 
-
         info['gpc'] = gp
+        info['dojs'] = 'make_sdiagram(document.getElementById("subdiagram"),'
+        layers = gp.subgroup_layer_by_order
+        info['dojs'] += str(layers[0]) + ',' + str(layers[1])
+        info['dojs'] += ');'
+
 
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
