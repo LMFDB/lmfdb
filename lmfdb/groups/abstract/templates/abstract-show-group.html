@@ -118,11 +118,15 @@
 
 <h3>Series</h3>
 <table>
-  {% for kwl, name, subs, spandata in gp.series() %}
+  {% for kwl, name, subs, spandata, symb in gp.series() %}
   <tr>
     <td>{{KNOWL(kwl, name)}}</td>
     {% for sub in subs %}
-    <td><span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.counter}}">${{sub.subgroup_tex}}$</span></td>
+    <td>
+      {% if not loop.first %}
+        ${{symb}}$</td><td>
+      {% endif %}
+      <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.counter}}">${{sub.subgroup_tex}}$</span></td>
     {% endfor %}
   </tr>
   {% endfor %}
