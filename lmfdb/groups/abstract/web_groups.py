@@ -121,11 +121,15 @@ class WebAbstractGroup(WebObj):
         return syl_list
 
     def series(self):
-        return [('group.%s'%name,
+        data = [['group.%s'%name,
                  name.replace('_',' ').capitalize(),
                  [self.subgroups[i] for i in getattr(self, name)],
-                 "-".join(map(str, getattr(self, name))))
+                 "-".join(map(str, getattr(self, name))),
+                 r'\rhd']
                 for name in ['derived_series', 'chief_series', 'lower_central_series', 'upper_central_series']]
+        data[3][4] = r'\lhd'
+        data[3][2].reverse()
+        return data
 
     @lazy_attribute
     def G(self):
