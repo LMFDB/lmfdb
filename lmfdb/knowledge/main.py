@@ -17,9 +17,9 @@ import json
 import time
 from lmfdb.app import app, is_beta
 from datetime import datetime
-from flask import abort, flash, jsonify, make_response,\
-                  redirect, render_template, render_template_string,\
-                  request, url_for
+from flask import (abort, flash, jsonify, make_response,
+                   redirect, render_template, render_template_string,
+                   request, url_for)
 from flask_login import login_required, current_user
 from knowl import Knowl, knowldb, knowl_title, knowl_exists
 from lmfdb.users import admin_required, knowl_reviewer_required
@@ -27,8 +27,9 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
-from lmfdb.utils import datetime_to_timestamp_in_ms,\
-                        timestamp_in_ms_to_datetime
+from lmfdb.utils import (flash_error,
+                         datetime_to_timestamp_in_ms,
+                         timestamp_in_ms_to_datetime)
 
 #ejust for those, who still use an older markdown
 try:
@@ -780,7 +781,17 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    try:
+        knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    except Exception as e:
+        knowls = {}
+        flash_error(("Unexpected error while performing the search:<br>" +
+                     "knowldb.search(category={}, filters={}, types={}, " +
+                     "keywords={}, regex={})<br>" +
+                     '<span style="font-family: monospace;">{}' +
+                     ': {}</span>').format(repr(cur_cat), filters, types,
+                                           keywords, regex,
+                                           type(e).__name__, str(e)))
 
     def first_char(k):
         t = k['title']
@@ -800,8 +811,8 @@ def index():
     from itertools import groupby
     knowls = groupby(knowls, first_char)
     knowl_qualities = ["reviewed", "beta"]
-    #if current_user.is_authenticated:
-    #    knowl_qualities.append("in progress")
+#    if current_user.is_authenticated:
+#        knowl_qualities.append("in progress")
     if current_user.is_admin():
         knowl_qualities.append("deleted")
     b = []

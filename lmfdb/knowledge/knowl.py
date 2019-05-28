@@ -226,7 +226,9 @@ class KnowlBackend(PostgresBase):
             restrictions = SQL(" WHERE ") + SQL(" AND ").join(restrictions)
         else:
             restrictions = SQL("")
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1} ORDER BY id, timestamp DESC").format(sqlfields, restrictions)
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1}"
+                       " ORDER BY id, timestamp DESC").format(sqlfields,
+                                                              restrictions)
         secondary_restrictions = []
         if len(filters) > 0:
             secondary_restrictions.append(SQL("knowls.{0} = ANY(%s)").format(Identifier("status")))
@@ -248,9 +250,13 @@ class KnowlBackend(PostgresBase):
             sort = SQL(" ORDER BY ") + self._sort_str(sort)
         else:
             sort = SQL("")
-        selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(sqlfields, selecter, secondary_restrictions, sort)
+        selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(
+                sqlfields,
+                selecter,
+                secondary_restrictions,
+                sort)
         cur = self._execute(selecter, values)
-        return [{k:res[i] for k,i in projfields} for res in cur]
+        return [{k: res[i] for k, i in projfields} for res in cur]
 
     def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
