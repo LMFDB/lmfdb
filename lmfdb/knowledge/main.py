@@ -195,7 +195,7 @@ def ref_to_link(txt):
                 ans += ", "
             ans += this_link
 
-    return '[' + ans + ']' + " " + everythingelse
+    return '[' + ans + ']'  + everythingelse
 
 def md_latex_accents(text):
     """
