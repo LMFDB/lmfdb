@@ -3229,7 +3229,7 @@ class PostgresTable(PostgresBase):
         """
         Use this method to revert to an older version of a table.
 
-        Note that doing calling this method twice with the same input
+        Note that calling this method twice with the same input
         should return you to the original state.
 
         INPUT:
@@ -3248,17 +3248,15 @@ class PostgresTable(PostgresBase):
         elif not self._table_exists("%s_old%s"%(self.search_table, backup_number)):
             raise ValueError("Backup %s does not exist"%backup_number)
         with DelayCommit(self, commit, silence=True):
-            indexes = self.list_indexes().keys()
-            constraints = self.list_constraints().keys()
             old = '_old' + str(backup_number)
             tables = []
             for suffix in ['', '_extras', '_stats', '_counts']:
                 tablename = "{0}{1}".format(self.search_table, suffix)
                 if self._table_exists(tablename + old):
                     tables.append(tablename)
-            self._swap(tables, indexes, constraints, '', '_tmp')
-            self._swap(tables, indexes, constraints, old, '')
-            self._swap(tables, indexes, constraints, '_tmp', old)
+            self._swap(tables, '', '_tmp')
+            self._swap(tables, old, '')
+            self._swap(tables, '_tmp', old)
             self.log_db_change("reload_revert")
         print "Swapped backup %s with %s"%(self.search_table, "{0}_old{1}".format(self.search_table, backup_number))
 
