@@ -299,7 +299,6 @@ function refresh_preview() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
       renderMathInElement($content.get(0), katexOpts);
       refresh_id = null;
       // once rendering is done.
@@ -311,6 +310,7 @@ function refresh_preview() {
       }
       /* finally, set the title and hide the refresh link */
       $title.html($("#ktitle").val());
+      renderMathInElement($title.get(0), katexOpts); // render any math in the title
       $refresh.fadeOut();
     }).fail(function() { $title.html("ERROR"); })
 }
