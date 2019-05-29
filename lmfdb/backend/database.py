@@ -31,7 +31,7 @@ from glob import glob
 import csv
 import sys
 
-from psycopg2 import connect, DatabaseError, InterfaceError, OperationalError, ProgrammingError, NotSupportedError
+from psycopg2 import connect, DatabaseError, InterfaceError, OperationalError, ProgrammingError, NotSupportedError, DataError
 from psycopg2.sql import SQL, Identifier, Placeholder, Literal, Composable
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor as pg_cursor
@@ -380,7 +380,7 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except (OperationalError, ProgrammingError, NotSupportedError) as e:
+                except (OperationalError, ProgrammingError, NotSupportedError, DataError) as e:
                     try:
                         context = ' happens while executing {}'.format(cur.mogrify(query, values))
                     except Exception:
