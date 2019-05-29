@@ -280,6 +280,7 @@ function update_content(start, end, new_text) {
   if (isFirefox) {
     // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
+    var content = $kcontent.val();
     var new_content = content.substring(0, start) + new_text + content.substring(end);
     $kcontent.val(new_content);
   } else {
@@ -299,7 +300,6 @@ function refresh_preview() {
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
-      renderMathInElement($title.get(0), katexOpts); // FIXME this doesn't do what is intended as the contents of title is currently "Processing ..."
       renderMathInElement($content.get(0), katexOpts);
       refresh_id = null;
       // once rendering is done.
@@ -311,6 +311,7 @@ function refresh_preview() {
       }
       /* finally, set the title and hide the refresh link */
       $title.html($("#ktitle").val());
+      renderMathInElement($title.get(0), katexOpts); // render any math in the title
       $refresh.fadeOut();
     }).fail(function() { $title.html("ERROR"); })
 }
