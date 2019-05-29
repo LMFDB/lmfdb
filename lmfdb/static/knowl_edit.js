@@ -280,6 +280,7 @@ function update_content(start, end, new_text) {
   if (isFirefox) {
     // the insertText method doesn't work on Firefox, so we have to just replace the val, losing undo capability
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1220696
+    var content = $kcontent.val();
     var new_content = content.substring(0, start) + new_text + content.substring(end);
     $kcontent.val(new_content);
   } else {
