@@ -22,9 +22,15 @@ table.reptable td, table.reptable th {
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
       <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>
       <tr><td>{{KNOWL('gg.field_automorphisms', '$|\Aut(F/K)|$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</tr>
-      <tr><td>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}:<td>&nbsp;&nbsp;<td>{{info.resolve|safe}}</tr>
     </table>
   </p>
+
+  <p><h2>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}</h2>
+  <blockquote>
+  {{info.resolve|safe}}
+
+<p> Resolvents shown for degrees $\leq {{info.wgg.quotient_bound()}}$
+  </blockquote>
 
   <p><h2>{{ KNOWL('gg.subfields', title='Subfields') }}</h2>
    <p>
@@ -38,16 +44,15 @@ table.reptable td, table.reptable th {
    <blockquote>
     {{info.otherreps|safe}}
    </blockquote>
-   {% if info.arith_equiv %}
-     <blockquote>
-        {{info.arith_equiv|safe}}
-     </blockquote>
-   {% endif %}
+   <blockquote>
+      {{info.arith_equiv|safe}}
+   </blockquote>
    </p>
 
   <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy Classes') }}</h2>
    <p>
 
+      {% if info.cclasses is defined %}
    <table class="ntdata">
       <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
       <tbody>
@@ -60,6 +65,10 @@ table.reptable td, table.reptable th {
         {% endfor %}
       </tbody>
       </table>
+      {% else %}
+        There are {{ info.num_cc }} conjugacy classes of elements.
+        Data not shown.
+      {% endif %}
 
 
    </p>
@@ -76,9 +85,15 @@ table.reptable td, table.reptable th {
     </table>
 
     <table>
-      <tr><td>Character table:<td>&nbsp;&nbsp;<td><pre>
+      <tr><td>Character table:
+      {% if info.chartable is defined %}
+      <td>&nbsp;&nbsp;<td>
+      <pre>
 {{info.chartable}}
-</pre></td></tr>
+</pre>
+      {% else %}
+      Data not available.
+      {% endif %}
     </table> </div> </p>
 {% if info.int_reps %}
 <p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>

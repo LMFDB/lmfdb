@@ -66,6 +66,10 @@ def list_with_mult(lis, names=True):
             ans += "<span style='font-size: small'> x %d</span>"% k[1]
     return ans
 
+# Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
+def cyclestrings(perm):
+    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    return ''.join(a)
 
 ############  Galois group object
 
@@ -111,23 +115,44 @@ class WebGaloisGroup:
     def order(self):
         return int(self._data['order'])
 
+    def gens(self):
+        return(self._data['gens'])
+
     def display_short(self):
         if self._data.get('pretty',None) is not None:
             return self._data['pretty']
         return self._data['name']
 
-    def otherrep_list(self):
-        return(list_with_mult(self._data['siblings'], names=False))
+    def otherrep_list(self, givebound=True):
+        sibs = self._data['siblings']
+        pharse = "with degree $\leq %d$"% self.sibling_bound()
+        if len(sibs)==0 and givebound:
+            return "There are no siblings "+pharse
+        li = list_with_mult(sibs, names=False)
+        if givebound:
+            li += '<p>Siblings are shown '+pharse
+        return li
 
     def subfields(self):
         return(list_with_mult(self._data['subfields']))
+
+    def generator_string(self):
+        if str(self.n()) == "1":
+            return "None needed"
+        gens = self.gens()
+        gens = [cyclestrings(g) for g in gens]
+        gens = ', '.join(gens)
+        return gens
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
             G = gap.SmallGroup(1, 1)
         else:
-            G = gap.TransitiveGroup(self.n(), self.t())
+            G = gap('Group(['+self.generator_string()+'])')
         return G
+
+    def num_conjclasses(self):
+        return self._data['num_conj_classes']
 
     def conjclasses(self):
         if 'conjclasses' in self._data:
@@ -151,27 +176,17 @@ class WebGaloisGroup:
         self._data['conjclasses'] = ans
         return(ans)
 
+    def sibling_bound(self):
+        return self._data['bound_siblings']
+
+    def quotient_bound(self):
+        return self._data['bound_quotients']
 
 
 ############  Misc Functions
 
 def base_label(n, t):
     return str(n) + "T" + str(t)
-
-# When labeling other rep'ns, we go successively through characters
-# This can exhaust the alphabet.  So, c could be a longer string!
-
-
-def nextchr(c):
-    s = ord('a') - 1  # really 96
-    l = [ZZ(ord(j) - s) for j in list(c)]
-    l.reverse()
-    tot = ZZ(l, 27) + 1
-    newl = tot.digits(27)
-    newl.reverse()
-    newl = map(lambda x: x + 1 if x == 0 else x, newl)
-    return ''.join([chr(j + s) for j in newl])
-
 
 def trylink(n, t):
     label = base_label(n, t)
@@ -238,10 +253,15 @@ def galois_module_knowl(n, t, index):
 
 
 def cclasses_display_knowl(n, t, name=None):
+    ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'Conjugacy class representatives for '
+        name = 'The %d conjugacy class representatives for '% ncc
+        if n==1 and t==1:
+            name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
-    return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    if ncc < 50:
+        return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return name + ' are not computed'
 
 
 def character_table_display_knowl(n, t, name=None):
@@ -249,8 +269,7 @@ def character_table_display_knowl(n, t, name=None):
         name = 'Character table for '
         name += group_display_short(n, t)
     group = WebGaloisGroup.from_nt(n, t)
-    cclasses = group.conjclasses()
-    if ZZ(group.order()) < ZZ(10000000) and len(cclasses) < 21:
+    if ZZ(group.order()) < ZZ(10000000) and group.num_conjclasses() < 21:
         return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
 
@@ -318,7 +337,7 @@ def galois_group_data(n, t):
     inf += '%s</div>'%(group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
-    rest += generators(n, t)
+    rest += WebGaloisGroup.from_nt(n,t).generator_string()
     rest += '</blockquote></div>'
 
     rest += '<div><h3>Subfields</h3><blockquote>'
@@ -454,11 +473,12 @@ def resolve_display(resolves):
     for j in resolves:
         if j[0] != old_deg:
             if old_deg < 0:
-                ans += '<table>'
+                ans += '<table><tr><th>'
+                ans += '|G/N|<th>Galois groups for stem field(s)'
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td>' + str(j[0]) + ': </td><td>'
+            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
@@ -484,12 +504,14 @@ def group_display_inertia(code):
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
-    cc = group.conjclasses()
+    if group.num_conjclasses() >= 50:
+        return 'Data not computed'
     html = """<div>
             <table class="ntdata">
             <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
             <tbody>
          """
+    cc = group.conjclasses()
     for c in cc:
         html += '<tr><td>' + str(c[3]) + '</td>'
         html += '<td>' + str(c[2]) + '</td>'
@@ -508,19 +530,6 @@ def chartable(n, t):
     ctable = re.sub("^.*\n", '', ctable)
     ctable = re.sub("^.*\n", '', ctable)
     return ctable
-
-
-def generators(n, t):
-    if str(n) == "1":
-        return "None needed"
-    else:
-        G = gap.TransitiveGroup(n, t)
-    gens = G.SmallGeneratingSet()
-    gens = str(gens)
-    gens = re.sub("[\[\]]", '', gens)
-    gens = gens.replace(' ', '')
-    gens = gens.replace('),', '), ')
-    return gens
 
 
 def group_alias_table():
