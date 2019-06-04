@@ -81,11 +81,11 @@ A <a href={{url_for('.random_class')}}>random isogeny class</a> from the databas
 <form>
     <table>
         <tr>
-            <td>cardinality of the {{ KNOWL('ag.base_field',title='base field') }} range:</td>
+            <td>Cardinality of the {{ KNOWL('ag.base_field',title='base field') }} range:</td>
             <td><input type="text" name="table_field_range" example="2-32" value="{{info.table_field_range}}"></td>
         </tr>
         <tr>
-            <td>{{ KNOWL('ag.dimension',title = "dimension") }} range:</td>
+            <td>{{ KNOWL('ag.dimension',title = "Dimension") }} range:</td>
             <td><input type="text" name="table_dimension_range" example="1-6" value="{{info.table_dimension_range}}"></td>
         </tr>
     </table>
@@ -110,13 +110,13 @@ Please enter a value or leave blank:
 <form id='search' onsubmit="cleanSubmit(this.id)">
     <table>
         <tr>
-            <td>cardinality  of the {{ KNOWL('ag.base_field',title='base field') }}</td>
+            <td>Cardinality  of the {{ KNOWL('ag.base_field',title='base field') }}</td>
             <td>
                 <input type='text' name='q' example="81" size=10 value="{{info.q}}" />
             </td>
             <td><span class="formexample"> e.g. 81 or 3-49</span></td>
             <td>
-                {{ KNOWL('ag.primitive',title="primitive") }}
+                {{ KNOWL('ag.primitive',title="Primitive") }}
             </td>
             <td>
                 <select name='primitive'>
@@ -127,13 +127,13 @@ Please enter a value or leave blank:
             </td>
         </tr>
         <tr>
-            <td>{{ KNOWL('ag.dimension',title = "dimension") }}</td>
+            <td>{{ KNOWL('ag.dimension',title = "Dimension") }}</td>
             <td>
                 <input type='text' name='g' example="2" size=10 value="{{info.g}}" />
             </td>
             <td><span class="formexample"> e.g. 2 or 3-5</span></td>
             <td>
-                {{ KNOWL('av.simple',title="simple") }}
+                {{ KNOWL('av.simple',title="Simple") }}
             </td>
             <td>
                 <select name='simple'>
@@ -153,22 +153,20 @@ Please enter a value or leave blank:
             <td>
                 <span class="formexample"> e.g. 2 </span>
             </td>
-            <td>
-                {{KNOWL('ag.jacobian',title='Jacobian')}}
-            </td>
-            <td>
-                <select name='jacobian'>
-                    <option value="yes">yes</option>
-		    <option value="not_no">yes or unknown</option>
-                    <option value="" selected>unrestricted</option>
-		    <option value="not_yes">no or unknown</option>
-                    <option value="no">no</option>
-                </select>
-            </td>
+          <td>
+            {{ KNOWL('av.geometrically_simple', 'Geometrically simple') }}
+          </td>
+          <td>
+            <select name='geom_simple'>
+              <option value="yes">yes</option>
+              <option value="" selected>unrestricted</option>
+              <option value="no">no</option>
+            </select>
+          </td>
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.fq.angle_rank',title="angle rank") }}
+                {{ KNOWL('av.fq.angle_rank',title="Angle rank") }}
             </td>
             <td>
                 <input type='text' name='ang_rank' example="3" size=10 value="{{info.ang_rank}}" />
@@ -177,7 +175,7 @@ Please enter a value or leave blank:
                 <span class="formexample"> e.g. 3 </span>
             </td>
             <td>
-                {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}
+                {{ KNOWL('av.princ_polarizable', title = 'Principally polarizable')}}
             </td>
             <td>
                 <select name='polarizable'>
@@ -191,28 +189,60 @@ Please enter a value or leave blank:
         </tr>
         <tr>
           <td>
-            Geometric extension degree
+            {{KNOWL('av.jacobian_count', title='Number of Jacobians')}}
           </td>
           <td>
-            <input type='text' name='geom_deg' example="84" size=10 value="{{info.geom_deg}}"/>
+            <input type='text' name='jac_cnt' example="6" size=10>
           </td>
           <td>
-            <span class="formexample"> e.g. 6-12, 84</span>
+            <span class="formexample">e.g. 6 </span>
           </td>
           <td>
-            Geometrically simple
+            {{KNOWL('ag.jacobian',title='Jacobian')}}
           </td>
           <td>
-            <select name='geom_simple'>
+            <select name='jacobian'>
               <option value="yes">yes</option>
+	      <option value="not_no">yes or unknown</option>
               <option value="" selected>unrestricted</option>
+	      <option value="not_yes">no or unknown</option>
               <option value="no">no</option>
             </select>
           </td>
         </tr>
         <tr>
+          <td>
+            {{KNOWL('av.hyperelliptic_count', title='Number of Hyperellipic Jacobians')}}
+          </td>
+          <td>
+            <input type='text' name='hyp_cnt' example="6" size=10>
+          </td>
+          <td>
+            <span class="formexample">e.g. 6 </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Degree of {{KNOWL('av.endomorphism_field', 'endomorphism field')}}
+          </td>
+          <td>
+            <input type='text' name='geom_deg' example="168" size=10 />
+          </td>
+          <td>
+            <span class="formexample"> e.g. 6-12, 168</span>
+          </td>
+          <td>
+            Number of {{KNOWL('av.twist', 'twists')}}
+          </td>
+          <td>
+            <input type='text' name='twist_count' example="96" size=10 />
+          </td>
+          <td>
+            <span class="formexample"> e.g. 6-20, 96</span>
+          </td>
+        <tr>
             <td>
-                {{ KNOWL('lf.newton_polygon',title="slopes of Newton polygon") }}
+                {{ KNOWL('lf.newton_polygon',title="Slopes of Newton polygon") }}
             </td>
             <td colspan=3>
                 <input type='text' name='newton_polygon' example="[0,0,1/2]" size=40 value="{{info.newton_polygon}}" />
@@ -223,7 +253,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.fq.initial_coefficients',title='initial coefficients')}}
+                {{ KNOWL('av.fq.initial_coefficients',title='Initial coefficients')}}
             </td>
             <td colspan=3>
                 <input type='text' name='initial_coefficients' example="[1,-1,3,9]" size=40 value="{{info.initial_coefficients}}" />
@@ -234,7 +264,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('ag.fq.point_counts',title="point counts of the abelian variety") }}
+                {{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
             </td>
             <td colspan=3>
                 <input type='text' name='abvar_point_count' example="[75,7125]" size=40 value="{{info.abvar_point_count}}" />
@@ -245,7 +275,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.fq.curve_point_counts',title="point counts of the curve") }}
+                {{ KNOWL('av.fq.curve_point_counts',title="Point counts of the curve") }}
             </td>
             <td colspan=3>
                 <input type='text' name='curve_point_count' example="[9,87]" size=40 value="{{info.curve_point_count}}"/>
@@ -256,7 +286,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="simple factors") }}
+                {{ KNOWL('av.decomposition',title="Simple factors") }}
                 <select name='simple_quantifier'>
                   <option value='contained'>subset of</option>
                   <option value='exactly'>equal to</option>
@@ -271,14 +301,19 @@ Please enter a value or leave blank:
             </td>
         </tr>
         <tr>
+          <td colspan="4">
+            Use {{ KNOWL('av.decomposition',title="geometric decomposition") }} in the following inputs <input type="checkbox" name="use_geom_decomp">
+          </td>
+        </tr>
+        <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="number of dimension 1 factors") }}
+                &nbsp;&nbsp;&nbsp;&nbsp;{{ KNOWL('av.decomposition',title="Dimension 1 factors") }}
             </td>
             <td>
                 <input type='text' name='dim1_factors' example="1-3" size=10 value="{{info.dim1_factors}}" />
             </td>
-            <td>
-                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            <td style="text-align:right;">
+                {{ KNOWL('av.decomposition',title="Distinct factors") }}
             </td>
             <td>
                 <input type='text' name='dim1_distinct' example="1-2" size=10 value="{{info.dim1_distinct}}" />
@@ -287,13 +322,13 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="number of dimension 2 factors") }}
+                &nbsp;&nbsp;&nbsp;&nbsp;{{ KNOWL('av.decomposition',title="Dimension 2 factors") }}
             </td>
             <td>
                 <input type='text' name='dim2_factors' example="1-3" size=10 value="{{info.dim2_factors}}" />
             </td>
-            <td>
-                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            <td style="text-align:right;">
+                {{ KNOWL('av.decomposition',title=" Distinct factors") }}
             </td>
             <td>
                 <input type='text' name='dim2_distinct' example="1-2" size=10 value="{{info.dim2_distinct}}" />
@@ -302,13 +337,13 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="number of dimension 3 factors") }}
+                &nbsp;&nbsp;&nbsp;&nbsp;{{ KNOWL('av.decomposition',title="Dimension 3 factors") }}
             </td>
             <td>
                 <input type='text' name='dim3_factors' example="2" size=10 value="{{info.dim3_factors}}" />
             </td>
-            <td>
-                {{ KNOWL('av.decomposition',title="(distinct)") }}
+            <td style="text-align:right;">
+                {{ KNOWL('av.decomposition',title="Distinct factors") }}
             </td>
             <td>
                 <input type='text' name='dim3_distinct' example="1" size=10 value="{{info.dim3_distinct}}" />
@@ -317,7 +352,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="number of dimension 4 factors") }}
+                &nbsp;&nbsp;&nbsp;&nbsp;{{ KNOWL('av.decomposition',title="Dimension 4 factors") }}
             </td>
             <td colspan=3>
                 <input type='text' name='dim4_factors' example="1" size=10 value="{{info.dim4_factors}}" />
@@ -326,7 +361,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{ KNOWL('av.decomposition',title="number of dimension 5 factors") }}
+                &nbsp;&nbsp;&nbsp;&nbsp;{{ KNOWL('av.decomposition',title="Dimension 5 factors") }}
             </td>
             <td colspan=3>
                 <input type='text' name='dim5_factors' example="0" size=10 value="{{info.dim5_factors}}" />
@@ -335,7 +370,7 @@ Please enter a value or leave blank:
         </tr>
         <tr>
             <td>
-                {{KNOWL('av.fq.number_field',title='number field')}}
+                {{KNOWL('av.fq.number_field',title='Number field')}}
             </td>
             <td colspan=3>
                 <input type='text' name='number_field' example="4.0.29584.2" size=40 value="{{info.number_field}}"/>
@@ -346,7 +381,7 @@ Please enter a value or leave blank:
         </tr>
 	<tr>
 	    <td>
-	        {{KNOWL('nf.galois_group',title='galois group')}}
+	        {{KNOWL('nf.galois_group',title='Galois group')}}
 	    </td>
 	    <td colspan=3>
 	        <input type='text' name='galois_group' example="4T3" size=40 value="{{info.galois_group}}"/>

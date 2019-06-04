@@ -170,11 +170,15 @@ def abelian_variety_search(info, query):
     parse_ints(info,query,'g',name='dimension')
     parse_ints(info,query,'geom_deg',qfield='geometric_extension_degree')
     parse_bool(info,query,'simple',qfield='is_simple')
+    parse_bool(info,query,'geom_simple',qfield='is_geometrically_simple')
     parse_bool(info,query,'primitive',qfield='is_primitive')
     parse_bool_unknown(info, query, 'jacobian', qfield='has_jacobian')
     parse_bool_unknown(info, query, 'polarizable', qfield='has_principal_polarization')
     parse_ints(info,query,'p_rank')
     parse_ints(info,query,'angle_rank')
+    parse_ints(info,query,'jac_cnt', qfield='jacobian_count', name='Number of Jacobians')
+    parse_ints(info,query,'hyp_cnt', qfield='hyp_count', name='Number of Hyperelliptic Jacobians')
+    parse_ints(info,query,'twist_count')
     parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
     parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
     parse_string_start(info,query,'abvar_point_count',qfield='abvar_counts_str')
@@ -185,10 +189,14 @@ def abelian_variety_search(info, query):
         parse_subset(info,query,'simple_factors',qfield='simple_distinct',mode='exact')
     elif info.get('simple_quantifier') == 'include':
         parse_submultiset(info,query,'simple_factors',mode='append')
+    if info.get('use_geom_decomp') == 'on':
+        dimstr = 'geom_dim'
+    else:
+        dimstr = 'dim'
     for n in range(1,6):
-        parse_ints(info,query,'dim%s_factors'%n)
+        parse_ints(info,query,'dim%s_factors'%n, qfield='%s%s_factors'%(dimstr,n))
     for n in range(1,4):
-        parse_ints(info,query,'dim%s_distinct'%n)
+        parse_ints(info,query,'dim%s_distinct'%n, qfield='%s%s_distinct'%(dimstr,n))
     parse_nf_string(info,query,'number_field',qfield='number_fields')
     parse_galgrp(info,query,'galois_group',qfield='galois_groups')
 

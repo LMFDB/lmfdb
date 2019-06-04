@@ -28,11 +28,24 @@ from sage.rings.all import Integer, QQ, RR, ZZ, PolynomialRing
 from sage.plot.all import line, points, circle, Graphics
 from sage.misc import latex
 from sage.databases.cremona import class_to_int
+from sage.misc.cachefunc import cached_method
 
 from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data#, av_knowl_guts
+
+def maxq(g, p):
+    # This should eventually move to stats
+    maxspec = {2: {1:1024, 2:1024, 3:16, 4:4, 5:2, 6:2},
+               3: {1:729, 2:729, 3:9, 4:3, 5:3},
+               5: {1:625, 2:625, 3:25},
+               7: {1:343, 2:343, 3:7}}
+    maxgen = {1:500, 2:211, 3:13}
+    if p < 10:
+        return maxspec[p][g]
+    else:
+        return maxgen[g]
 
 logger = make_logger("abvarfq")
 
@@ -274,6 +287,7 @@ class AbvarFq_isoclass(object):
         else:
             return '\F_{' + str(self.p) + '^{' + str(n) + '}}'
 
+    @cached_method
     def endo_extensions(self):
         #data = db.av_fq_endalg_factors.lucky({'label':self.label})
         return  list(db.av_fq_endalg_factors.search({'base_label':self.label}))
@@ -363,14 +377,34 @@ class AbvarFq_isoclass(object):
         else:
             ans = "Below are some of the twists of this isogeny class."
         ans += '<table class = "ntdata">\n'
-        ans += '<tr><td>Twist</td><td>Geometric Label</td><td>Extension Degree</td></tr>\n'
+        ans += '<tr><td>Twist</td><td>Extension Degree</td><td>Common base change</td></tr>\n'
         i = 0
         for twist in self.twists:
             if twist[2] <= 3 or show_all or i < 3:
-                ans += '<tr><td>' + check_knowl_display(twist[0]) + '</td><td>' + check_knowl_display(twist[1]) + '</td><td>$' + str(twist[2]) + '$</td></tr>\n'
+                if self.q**twist[2] <= maxq(self.g, self.p):
+                    bc = av_display_knowl(twist[1])
+                else:
+                    bc = '(not in LMFDB)'
+                ans += '<tr><td>' + av_display_knowl(twist[0]) + '</td><td>$' + str(twist[2]) + '$</td><td>' + bc + '</td></tr>\n'
                 i += 1
         ans += '</table>\n'
         return ans
+
+    def curve_display(self):
+        if hasattr(self, 'curves') and self.curves:
+            s = '\n<ul>\n'
+            cutoff = 20 if len(self.curves) > 30 else len(self.curves)
+            for cv in self.curves[:cutoff]:
+                cv = cv.replace('*', '')
+                if '=' not in cv:
+                    cv = cv + '=0'
+                s += '  <li>$%s$</li>\n' % cv
+            if cutoff < len(self.curves):
+                s += '  <li>and %s more</li>\n' % (len(self.curves) - cutoff)
+            s += '</ul>\n'
+            return s
+        else:
+            return ''
 
 @app.context_processor
 def ctx_decomposition():
@@ -400,6 +434,7 @@ def Ppoly_irred(label):
     return latex(factor)
 
 def describe_end_algebra(p,extension_label):
+    # This should eventually be done with a join, but okay for now
     factor_data = db.av_fq_endalg_data.lookup(extension_label)
     if factor_data == None:
         return None
@@ -497,11 +532,3 @@ def non_simple_loop(p,factors):
         ans += '</li>\n'
     ans += '</ul>\n'
     return ans
-
-def check_knowl_display(label):
-    abvar = db.av_fq_isog.lookup(label)
-    if abvar == None:
-        return label
-    else:
-        return av_display_knowl(label)
-

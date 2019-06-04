@@ -26,9 +26,13 @@
 </p>
 
 <p>
-{% if cl.is_simple %}
-This isogeny class is {{ KNOWL('av.simple',title="simple") }}.
-{% endif %}
+  {% if cl.is_geometrically_simple %}
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} and {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  {% elif cl.is_simple %}
+  This isogeny class is {{ KNOWL('av.simple',title='simple') }} but not {{ KNOWL('av.geometrically_simple',title='geometrically simple') }}.
+  {% else %}
+  This isogeny class is not {{ KNOWL('av.simple',title='simple') }}.
+  {% endif %}
 </p>
 
 <h2>{{ KNOWL('lf.newton_polygon',title="Newton polygon") }}</h2>
@@ -55,10 +59,12 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 
 <p>
 {% if cl.has_principal_polarization == 1 %}
-{% if cl.has_jacobian == 1 %}
-This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
-{% elif cl.has_jacobian == -1 %}
+{% if cl.has_jacobian == -1 %}
 This isogeny class is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but does not contain a {{KNOWL('ag.jacobian',title='Jacobian')}}.
+{% elif cl.jacobian_count is not none %}
+This isogeny class contains the {{KNOWL('ag.jacobian',title='Jacobians')}} of {{ cl.jacobian_count }} curves, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}:{{ cl.curve_display() | safe }}
+{% elif cl.has_jacobian == 1 %}
+This isogeny class contains a {{KNOWL('ag.jacobian',title='Jacobian')}}, and hence is {{ KNOWL('av.princ_polarizable', title = 'principally polarizable')}}.
 {% else %}
 This isogeny class is {{KNOWL('av.princ_polarizable', title = 'principally polarizable')}}, but it is unknown whether it contains a {{KNOWL('ag.jacobian',title='Jacobian')}}.
 {% endif %}
