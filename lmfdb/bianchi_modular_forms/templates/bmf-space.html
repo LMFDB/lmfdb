@@ -59,13 +59,33 @@
 
 <p>
 {%if info.nnewforms > 0 %}
+This space contains the following
+{%if info.nnewforms == 1 %}
+newform.
+{%else%}
+newforms.
+{%endif%}
+{%if info.nnf_missing>0 %}
+Newforms of higher dimension are not yet in the database.
+{%endif%}
+
+{#
 There
 {%if info.nnewforms == 1 %}
-is one rational cuspidal newform
+is one newform
 {%else%}
-are {{info.nnewforms}} cuspidal newforms
+are {{info.nnewforms}} newforms
 {%endif%}
-at this level in the database:
+at this level,
+{%if info.nnf2 == 0 %}
+{%if info.nnf1 == 1 %}which has{%else%}all of which have{%endif%} rational coefficients.
+{%elif info.nnf1 == 0 %}
+{%if info.nnf2 == 1 %}which has{%else%}all of which have{%endif%} quadratic coefficients.
+{%else%}
+{{info.nnf1}} with rational coefficients and
+{{info.nnf2}} with quadratic coefficients.
+{%endif%}
+#}
 <table border=1 class="ntdata">
   <tr>
     <th>{{ KNOWL('mf.bianchi.labels', title='label') }}
@@ -87,7 +107,7 @@ at this level in the database:
   {% endfor%}
 </table>
 {%else %}
-There are no cuspidal newforms at this level in the database.
+There are no newforms at this{%if info.nnf_missing > 0 %} level in the database.{%else%} level.{%endif%}
 {%endif %}
 </p>
 
@@ -98,6 +118,6 @@ There are no cuspidal newforms at this level in the database.
 <hr>
  {{ info }}
 </div>
-{%endif %}
+{%endif%}
 
-{%endblock %}
+{%endblock%}

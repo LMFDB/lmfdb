@@ -17,6 +17,35 @@ myfile = open(sys.argv[1])
 
 outrecs=[]
 
+def dosubs(ent):
+    lis = ent['subs']
+    lis2 = [(j[0], j[1]) for j in lis]
+    diflis = list(set(lis2))
+    diflis.sort()
+    ans = [[[j[0], j[1]], lis2.count(j)] for j in diflis]
+    ent['subfields'] = ans
+    del ent['subs']
+
+    lis = ent['repns']
+    lis2 = [(j[0], j[1]) for j in lis]
+    diflis = list(set(lis2))
+    diflis.sort()
+    ans = [[[j[0], j[1]], lis2.count(j)] for j in diflis]
+    ent['siblings'] = ans
+    del ent['repns']
+
+    lis = ent['resolve']
+    lis2 = [(j[0], j[1][0], j[1][1]) for j in lis]
+    diflis = list(set(lis2))
+    diflis.sort()
+    ans = [[j[0], [j[1], j[2]], lis2.count(j)] for j in diflis]
+    ent['quotients'] = ans
+    ent['bound_quotients'] = 47
+    ent['bound_siblings'] = 47
+    del ent['resolve']
+
+    return(ent)
+
 for l in myfile:
   v= json.loads(l)
   for dd in v:
@@ -29,6 +58,7 @@ for l in myfile:
       data['gapidfull'] = ""
       if data['gapid']>0:
           data['gapidfull'] = "[%d,%d]"%(data['order'],data['gapid'])
+      data = dosubs(data)
       outrecs.append(data)
 
 if len(outrecs)>0:
