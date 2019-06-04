@@ -179,6 +179,7 @@ def abelian_variety_search(info, query):
     parse_ints(info,query,'jac_cnt', qfield='jacobian_count', name='Number of Jacobians')
     parse_ints(info,query,'hyp_cnt', qfield='hyp_count', name='Number of Hyperelliptic Jacobians')
     parse_ints(info,query,'twist_count')
+    parse_ints(info,query,'size')
     parse_newton_polygon(info,query,'newton_polygon',qfield='slopes')
     parse_string_start(info,query,'initial_coefficients',qfield='poly_str',initial_segment=["1"])
     parse_string_start(info,query,'abvar_point_count',qfield='abvar_counts_str')
