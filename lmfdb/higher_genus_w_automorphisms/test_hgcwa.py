@@ -50,3 +50,16 @@ class HigherGenusWithAutomorphismsTest(LmfdbTest):
         assert 'Distribution of groups in curves of genus 5' in L.data
 
         
+    def test_quo_genus_gt_0(self):
+        L = self.tc.get('/HigherGenus/C/Aut/3.2-1.2.0.1')
+        assert '[2;-]' in L.data
+
+    def test_quo_genus_search(self):
+        L = self.tc.get('/HigherGenus/C/Aut/?genus=3&g0=1..3')
+        assert 'displaying all 10 matches' in L.data
+
+    def idG_showing(self):
+        L = self.tc.get('/HigherGenus/C/Aut/2.2-1.1.2-2.1')
+        assert 'Id(G)' in L.data
+
+        
