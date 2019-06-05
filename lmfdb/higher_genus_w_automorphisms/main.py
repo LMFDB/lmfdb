@@ -508,7 +508,7 @@ def render_passport(args):
         prop2 = [
             ('Genus', '\(%d\)' % g),
             ('Quotient Genus', '\(%d\)' % g0),
-            ('Small Group', '\(%s\)' %  pretty_group),
+            ('Group', '\(%s\)' %  pretty_group),
             ('Signature', '\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
             ('Generating Vectors','\(%d\)' % numb)
         ]
