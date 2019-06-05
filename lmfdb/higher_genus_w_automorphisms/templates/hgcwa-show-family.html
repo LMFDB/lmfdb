@@ -7,13 +7,13 @@
 
 
 
-<p><h2> Family Information</h2>
+<h2> Family Information</h2>
 
   <table>
       <tr><td> {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
       <tr><td>{{KNOWL('curve.highergenus.aut.dimension',title='Dimension of the family:')}}</td><td> {{info.dim}} </td></tr>
     </table>
-</p>
+
 
 
 <h2>Cover</h2><table>
@@ -23,15 +23,13 @@
       </table> 
 
 
-<p> <h2>Group </h2>
+<h2>Group </h2>
   <table>
    {% if info.specialname %}
    <tr><td>{{KNOWL('group.small_group_label',title='Name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
      <tr><td>{{KNOWL('group.small_group_label',title='Identifier')}}:</td><td>{{info.gpid}}</td></tr>
     </table>
-
-</p>
 
 
 <p> <h2> Conjugacy Class(es) of {{KNOWL('curve.highergenus.aut.refinedpassport',title='Refined Passports')}} </h2>
@@ -57,3 +55,4 @@
 
   
 {% endblock %}
+
