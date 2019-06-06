@@ -1,22 +1,25 @@
 {% extends "homepage.html" %}
 
-<!-- in templates -->
 
 {% block content %}
 
 
 
-<p><h2> Family Information</h2>
+<h2> Family Information</h2>
 
   <table>
-      <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
+    <tr><td>  {{KNOWL('ag.curve.genus',title='Genus')}}:  </td><td> {{ info.genus }} </td></tr>
+     <tr><td>  {{KNOWL('ag.curve.genus',title='Quotient Genus')}}:  </td><td> {{ info.g0 }} </td></tr>
    {% if info.specialname %}
    <tr><td>{{KNOWL('group.small_group_label',title='Group name')}}:</td> <td>${{info.group}}$</td></tr>
    {% endif %}
   <tr><td>{{KNOWL('group.small_group_label',title='Group identifier')}}:</td> <td>{{info.gpid}}</td></tr>
   <tr><td>{{KNOWL('curve.highergenus.aut.signature', title='Signature')}}:</td> <td>${{info.sign}}$</td></tr>
-  <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
-  </table></p>
+  </table>
+    {% if info.passport_cc %}
+  <table>
+    <tr><td>{{KNOWL('curve.highergenus.aut.conjugacyclasses', title="Conjugacy classes")}} for this {{KNOWL('curve.highergenus.aut.refinedpassport',title='refined passport')}}: </td><td>{{info.passport_cc}}</td></tr>
+  </table> {% endif %}
 
 
 <p>  {% if info.fullauto  %}
@@ -32,8 +35,8 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
  {% endif %}
 
 
-
-  <p><h2>Other Data</h2>
+{% if info.other_data  %}
+<h2>Other Data</h2>
     <table>
        <!-- <tr><td>Dimension of the corresponding {{KNOWL('ag.shimura_variety',title='Shimura variety')}}:</td><td>{{ info.Ndim}}</td></tr>-->
       {% if info.ishyp %}
@@ -47,8 +50,8 @@ The full automorphism group for this family is ${{info.fullauto}}$ with signatur
        <tr><td>{{KNOWL('ag.cyclic_trigonal',title='Trigonal automorphism')}}:</td> <td>{{info.cinv}}</td></tr>
        {% endif %}  {% endif %}
     </table>
+{% endif %}
 
-  </p>
 
   <p>
     {% if info.eqns %}
