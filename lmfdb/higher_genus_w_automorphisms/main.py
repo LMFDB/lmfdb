@@ -22,6 +22,7 @@ from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-?[^\.]*$)')
 passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
+hgcwa_group = re.compile(r'\[(\d+),(\d+)\]')
 
 def label_is_one_family(lab):
     return family_label_regex.match(lab)
@@ -53,7 +54,11 @@ def tfTOyn(bool):
     else:
         return "No"
 
+# Convert [4,1] to 4.1, then  apply sg_pretty
+def group_display(strg):
+    return sg_pretty(re.sub(hgcwa_group, r'\1.\2', strg))
 
+    
 def sign_display(L):
     sizeL = len(L)
     if sizeL == 1:
@@ -169,7 +174,6 @@ def groups_per_genus(genus):
     groups = group_stats['counts']
 
     # Create isomorphism classes
-    hgcwa_group = re.compile(r'\[(\d+),(\d+)\]')
     iso_classes = []
 
     for group in groups:
@@ -358,11 +362,11 @@ def higher_genus_w_automorphisms_search(info, query):
         parse_bracketed_posints(info,query,'signature',split=False,name='Signature',keepbrackets=True)
         if query.get('signature'):
             query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
-    parse_gap_id(info,query,'group',name='Group',qfield='group')
-    parse_ints(info,query,'g0',name='Quotient Genus')
-    parse_ints(info,query,'genus',name='Genus')
-    parse_ints(info,query,'dim',name='Dimension of the family')
-    parse_ints(info,query,'group_order', name='Group orders')
+    parse_gap_id(info,query,'group',qfield='group')
+    parse_ints(info,query,'g0')
+    parse_ints(info,query,'genus')
+    parse_ints(info,query,'dim')
+    parse_ints(info,query,'group_order')
     if 'inc_hyper' in info:
         if info['inc_hyper'] == 'exclude':
             query['hyperelliptic'] = False
@@ -379,10 +383,36 @@ def higher_genus_w_automorphisms_search(info, query):
         elif info['inc_full'] == 'only':
             query['full_auto'] = {'$exists': False}
     query['cc.1'] = 1
-
     
-    info['group_display'] = sg_pretty
+    info['group_display'] = group_display
     info['sign_display'] = sign_display
+
+    if 'sort_order' in info:
+        
+        if info['sort_order'] == '':   
+            query['__sort__'] = ['genus', 'group_order', 'g0','dim']
+        elif info['sort_order'] == 'genus':
+            query['__sort__'] = ['genus', 'group_order', 'g0', 'dim']
+        elif info['sort_order'] == 'descgenus':
+            query['__sort__'] = [('genus',-1), 'group_order', 'g0', 'dim']    
+        elif info['sort_order'] == 'g0':
+            query['__sort__'] = ['g0', 'genus', 'group_order', 'dim']
+        elif info['sort_order'] == 'descg0':
+            query['__sort__'] = [('g0',-1), 'genus', 'group_order', 'dim']
+        elif info.get('sort_order') == 'dim':
+            query['__sort__'] = ['dim', 'genus', 'group_order', 'g0']
+        elif info.get('sort_order') == 'descdim':
+            query['__sort__'] = [('dim',-1), 'genus', 'group_order', 'g0']
+        elif info.get('sort_order') == 'group_order':
+            query['__sort__'] = ['group_order', 'genus', 'g0', 'dim']
+        elif info.get('sort_order') == 'descgroup_order':
+            query['__sort__'] = [('group_order',-1), 'genus', 'g0', 'dim']
+            
+
+    else:
+        query['__sort__'] = ['genus', 'group_order',  'g0', 'dim']
+
+
 
 def render_family(args):
     info = {}
@@ -615,11 +645,11 @@ def render_passport(args):
 
 
         if Lfriends:
-           for Lf in Lfriends:
-              friends = [("Full automorphism " + Lf, Lf),("Family containing this refined passport ",  urlstrng) ]
+            friends = [("Full automorphism " + Lf, Lf) for Lf in Lfriends]
+            friends += [("Family containing this refined passport ",  urlstrng)]
 
         else:
-            friends = [("Family containing this refined passport",  urlstrng) ]
+            friends = [("Family containing this refined passport",  urlstrng)]
 
 
         bread_sign = label_to_breadcrumbs(br_sign)
