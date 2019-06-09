@@ -98,13 +98,13 @@ class WebAbstractGroup(WebObj):
         layers = [[subs[top]]]
         seen = set([top])
         added_something = True # prevent data error from causing infinite loop
-        print "starting while"
+        #print "starting while"
         while len(seen) < len(subs) and added_something:
             layers.append([])
             added_something = False
             for H in layers[-2]:
-                print H.counter
-                print "contains", H.contains
+                #print H.counter
+                #print "contains", H.contains
                 for new in H.contains:
                     if new not in seen:
                         seen.add(new)
@@ -114,7 +114,7 @@ class WebAbstractGroup(WebObj):
         for g in subs:
             for h in subs[g].contains:
                 edges.append([h, g])
-        print [[gp.subgroup for gp in layer] for layer in layers]
+        #print [[gp.subgroup for gp in layer] for layer in layers]
         return [layers, edges]
 
     # May not use anymore
