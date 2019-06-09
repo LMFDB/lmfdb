@@ -10,8 +10,7 @@
   $(".subgp").hover(highlight_group, unhighlight_group);
   });
 </script>
-<script type="text/javascript" src="{{ url_for('static', filename='graphs/prototype-1.4.0.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph-ez.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
 {% set gp = info.gpc %}
 
@@ -109,7 +108,7 @@
 </table>
 
 <table>
-  {% for layer in gp.subgroup_layers %}
+  {% for layer in gp.subgroup_layers[0] %}
   <tr>
     {% for subgp in layer %}
     <td><span class="{{subgp.spanclass()}}" data-sgid="{{subgp.counter}}">${{subgp.subgroup_tex}}$</span></td>
@@ -120,13 +119,17 @@
 
 <h3>Diagram</h3>
 <p>
-<canvas id="subdiagram" width="800" height="600" style="border: 1px solid black">
+<canvas id="subdiagram" width="800" height="600" style="border: 0px solid black">
   Sorry, your browser doesn't support the subgroup diagram.
 </canvas>
 
 <script type="text/javascript">
 {{ info.dojs|safe }}
 </script>
+<h4>Subgroup information</h4>
+<div id="selectedsub">
+Click on a subgroup in the diagram to see information about it.
+</div>
 
 <h3>Series</h3>
 <table>

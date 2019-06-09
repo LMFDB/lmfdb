@@ -14,11 +14,13 @@ from lmfdb.utils import (
 
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
-    WebAbstractGroup)
+    WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
+    group_pretty_image_number)
 
 credit_string = "Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, and Andrew Sutherland"
 
 abstract_group_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))$')
+abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -28,6 +30,9 @@ def learnmore_list():
 
 def learnmore_list_remove(matchstring):
     return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+
+def sub_label_is_valid(lab):
+    return abstract_subgroup_label_regex.match(lab)
 
 def label_is_valid(lab):
     return abstract_group_label_regex.match(lab)
@@ -189,10 +194,18 @@ def render_abstract_group(args):
         info['boolean_characteristics_string']=create_boolean_string(gp)
 
         info['gpc'] = gp
-        info['dojs'] = 'make_sdiagram(document.getElementById("subdiagram"),'
-        layers = gp.subgroup_layer_by_order
-        info['dojs'] += str(layers[0]) + ',' + str(layers[1])
+
+        # prepare for javascript call to make the diagram
+        layers = gp.subgroup_layers
+        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image_number(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        subs = gp.subgroups
+        orders = list(set(sub.subgroup_order for sub in subs.values()))
+        orders.sort()
+
+        info['dojs'] = 'make_sdiagram("subdiagram","%s",'% str(label)
+        info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
+        print info['dojs']
 
 
         factored_order = web_latex(gp.order_factor(),False)
@@ -217,8 +230,29 @@ def render_abstract_group(args):
                                #downloads=downloads, 
                                credit=credit_string)
 
-
-
+@abstract_page.route("/subinfo/<label>")
+def shortsubinfo(label):
+    if not sub_label_is_valid(label):
+        # Should only come from code, so return nothing if label is bad
+        return ''
+    wsg = WebAbstractSubgroup(label)
+    ambientlabel = str(wsg.ambient)
+    ans = 'Information on subgroup $%s$<br>' % wsg.subgroup_tex
+    nt = '' if wsg.cyclic else ' not'
+    ans += 'This is%s a cyclic subgroup<br>'% nt
+    if wsg.normal:
+        ans += 'This is normal with quotient group '
+        ans +=  '$'+group_names_pretty(wsg.quotient)+'$'
+        nt = '' if wsg.characteristic else ' not'
+        ans += '<br>This is%s characteristic'%nt
+    else:
+        ans += 'This is not normal, it has %d subgroups in its conjugacy class'% wsg.count
+    ans +='<br>Normalizer: $%s$'% WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer))).subgroup_tex
+    ans +='<br>Centralizer: $%s$'% WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.centralizer))).subgroup_tex
+    p = wsg.sylow
+    if p>0:
+        ans += '<br>This is a Sylow %d-subgroup'% p
+    return ans
 
 
 @abstract_page.route("/Completeness")
