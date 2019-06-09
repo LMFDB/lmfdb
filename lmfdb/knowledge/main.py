@@ -28,7 +28,7 @@ from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
 from lmfdb.utils import datetime_to_timestamp_in_ms,\
-                        timestamp_in_ms_to_datetime
+                        timestamp_in_ms_to_datetime, flash_error
 
 #ejust for those, who still use an older markdown
 try:
@@ -195,7 +195,7 @@ def ref_to_link(txt):
                 ans += ", "
             ans += this_link
 
-    return '[' + ans + ']' + " " + everythingelse
+    return '[' + ans + ']'  + everythingelse
 
 def md_latex_accents(text):
     """
@@ -757,8 +757,8 @@ def render_knowl(ID, footer=None, kwargs=None,
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
+    from psycopg2 import DataError
     cur_cat = request.args.get("category", "")
-
 
     filtermode = request.args.get("filtered")
     from knowl import knowl_status_code, knowl_type_code
@@ -780,7 +780,14 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    try:
+        knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    except DataError as e:
+        knowls = {}
+        if regex and "invalid regular expression" in str(e):
+	    flash_error("The string %s is not a valid regular expression", keywords)
+        else:
+            flash_error("Unexpected error %s occured during knowl search", str(e))
 
     def first_char(k):
         t = k['title']

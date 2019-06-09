@@ -170,7 +170,7 @@ table.ntdata a {
 {% if info.show_subs %}
 <td >{{ wgg.subfields() | safe }}</td>
 {% endif %}
-<td >{{wgg.otherrep_list()|safe}}</td>
+<td >{{wgg.otherrep_list(givebound=False)|safe}}</td>
 </tr>
 
 {% endfor %}

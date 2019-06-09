@@ -123,8 +123,15 @@ class WebGaloisGroup:
             return self._data['pretty']
         return self._data['name']
 
-    def otherrep_list(self):
-        return(list_with_mult(self._data['siblings'], names=False))
+    def otherrep_list(self, givebound=True):
+        sibs = self._data['siblings']
+        pharse = "with degree $\leq %d$"% self.sibling_bound()
+        if len(sibs)==0 and givebound:
+            return "There are no siblings "+pharse
+        li = list_with_mult(sibs, names=False)
+        if givebound:
+            li += '<p>Siblings are shown '+pharse
+        return li
 
     def subfields(self):
         return(list_with_mult(self._data['subfields']))
@@ -169,6 +176,11 @@ class WebGaloisGroup:
         self._data['conjclasses'] = ans
         return(ans)
 
+    def sibling_bound(self):
+        return self._data['bound_siblings']
+
+    def quotient_bound(self):
+        return self._data['bound_quotients']
 
 
 ############  Misc Functions
@@ -241,12 +253,15 @@ def galois_module_knowl(n, t, index):
 
 
 def cclasses_display_knowl(n, t, name=None):
+    ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'Conjugacy class representatives for '
+        name = 'The %d conjugacy class representatives for '% ncc
+        if n==1 and t==1:
+            name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
-    if WebGaloisGroup.from_nt(n,t).num_conjclasses() < 50:
+    if ncc < 50:
         return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-    return name + ' is not computed'
+    return name + ' are not computed'
 
 
 def character_table_display_knowl(n, t, name=None):
@@ -458,11 +473,12 @@ def resolve_display(resolves):
     for j in resolves:
         if j[0] != old_deg:
             if old_deg < 0:
-                ans += '<table>'
+                ans += '<table><tr><th>'
+                ans += '|G/N|<th>Galois groups for stem field(s)'
             else:
                 ans += '</td></tr>'
             old_deg = j[0]
-            ans += '<tr><td>' + str(j[0]) + ': </td><td>'
+            ans += '<tr><td align="right">' + str(j[0]) + ':&nbsp; </td><td>'
         else:
             ans += ', '
         k = j[1]
