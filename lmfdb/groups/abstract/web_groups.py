@@ -16,6 +16,13 @@ def group_names_pretty(label):
     else:
         return label
 
+def group_pretty_image_number(label):
+    num = db.gps_small.lookup(label, 'image_number')
+    if num:
+        return num
+    else:
+        return 0 # there is no image 0
+
 class WebObj(object):
     def __init__(self, label, data=None):
         self.label = label
@@ -43,7 +50,7 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def subgroups(self):
         # Should join with gps_groups to get pretty names for subgroup and quotient
-        return {subdata['counter']: WebAbstractSubgroup(self, subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
+        return {subdata['counter']: WebAbstractSubgroup(subdata['label'], subdata) for subdata in db.gps_subgroups.search({'ambient': self.label})}
 
     @lazy_attribute
     def conjugacy_classes(self):
@@ -92,20 +99,40 @@ class WebAbstractGroup(WebObj):
         layers = [[subs[top]]]
         seen = set([top])
         added_something = True # prevent data error from causing infinite loop
-        print "starting while"
+        #print "starting while"
         while len(seen) < len(subs) and added_something:
             layers.append([])
             added_something = False
             for H in layers[-2]:
-                print H.counter
-                print "contains", H.contains
+                #print H.counter
+                #print "contains", H.contains
                 for new in H.contains:
                     if new not in seen:
                         seen.add(new)
                         added_something = True
                         layers[-1].append(subs[new])
-        print [[gp.subgroup for gp in layer] for layer in layers]
-        return layers
+        edges = []
+        for g in subs:
+            for h in subs[g].contains:
+                edges.append([h, g])
+        #print [[gp.subgroup for gp in layer] for layer in layers]
+        return [layers, edges]
+
+    # May not use anymore
+    @lazy_attribute
+    def subgroup_layer_by_order(self):
+        # Need to update to account for possibility of not having all inclusions
+        subs = self.subgroups
+        orders = list(set(sub.subgroup_order for sub in subs.values()))
+        layers = {j:[] for j in orders}
+        edges = []
+        for sub in subs.values():
+            layers[sub.subgroup_order].append(sub)
+            for k in sub.contained_in:
+                edges.append([k, sub.counter])
+        llayers = [layers[k] for k in sorted(layers.keys())]
+        llayers = [[[gp.counter, str(gp.subgroup_tex), str(gp.subgroup), gp.count] for gp in ll] for ll in llayers]
+        return [llayers, edges]
 
     def sylow_subgroups(self):
         """
@@ -221,7 +248,10 @@ class WebAbstractGroup(WebObj):
     ###automorphism group
     #WHAT IF NULL??
     def show_aut_group(self):
-        return group_names_pretty(self.aut_group)
+        try:
+            return group_names_pretty(self.aut_group)
+        except:
+            return r'\textrm{Not computed}'
 
     #TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
@@ -229,7 +259,10 @@ class WebAbstractGroup(WebObj):
 
     #WHAT IF NULL??
     def show_outer_group(self):
-        return group_names_pretty(self.outer_group)
+        try:
+            return group_names_pretty(self.outer_group)
+        except:
+            return r'\textrm{Not computed}'
 
 
     def out_order(self):
@@ -261,13 +294,19 @@ class WebAbstractGroup(WebObj):
 
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroups
-    def __init__(self, ambient_gp, label, data=None):
-        self.ambient_gp = ambient_gp
+    def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
+        self.ambient_gp = self.ambient # in case we still need it
         self.subgroup_tex = group_names_pretty(self.subgroup) # temporary
         if 'quotient' in self._data:
             self.quotient_tex = group_names_pretty(self.quotient) # temporary
 
+    @classmethod
+    def from_label(cls, label):
+        ambientlabel = re.sub(r'^(\d+\.[a-z0-9]+)\.\d+$', r'\1', label)
+        ambient = WebAbstractGroup(ambientlabel)
+        return cls(ambient, label)
+        
     def spanclass(self):
         s = "subgp"
         if self.characteristic:

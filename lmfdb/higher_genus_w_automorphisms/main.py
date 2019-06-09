@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This Blueprint is about Higher Genus Curves
-# Authors: Jen Paulhus, Lex Martin, David Neill Asanza
+# Authors: Jen Paulhus, Lex Martin, David Neill Asanza, Nhi Ngo, Albert Ford
 # (initial code copied from John Jones Local Fields)
 
 import ast, os, re, StringIO, yaml
@@ -19,7 +19,7 @@ from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 
 
 # Determining what kind of label
-family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-[^\.]*$)')
+family_label_regex = re.compile(r'(\d+)\.(\d+-\d+)\.(\d+\.\d+-?[^\.]*$)')
 passport_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+\.\d+.*))\.(\d+)')
 cc_label_regex = re.compile(r'((\d+)\.(\d+-\d+)\.(\d+)\.(\d+.*))\.(\d+)')
 
@@ -56,15 +56,19 @@ def tfTOyn(bool):
 
 def sign_display(L):
     sizeL = len(L)
-    signL = "[ " + str(L[0]) + "; "
-    for i in range(1,sizeL-1):
-        signL= signL + str(L[i]) + ", "
-
-    signL=signL + str(L[sizeL-1]) + " ]"
+    if sizeL == 1:
+        signL = "[ " + str(L[0]) + "; -]"
+    else:
+        signL = "[ " + str(L[0]) + "; "
+        for i in range(1,sizeL-1):
+            signL= signL + str(L[i]) + ", "
+        signL=signL + str(L[sizeL-1]) + " ]"    
     return signL
 
 def cc_display(L):
     sizeL = len(L)
+    if sizeL == 0:
+        return
     if sizeL == 1:
         return str(L[0])
     stg = str(L[0])+ ", "
@@ -90,12 +94,14 @@ def sort_sign(L):
     return [L[0]] +L1
 
 def label_to_breadcrumbs(L):
-    newsig = '['
-    for i in range(0,len(L)):
+    newsig = '['+L[0]
+    for i in range(1,len(L)):
         if (L[i] == '-'):
             newsig += ","
         elif (L[i] == '.'):
             newsig += ';'
+        elif (L[i] == '0'):  # The case where there is no ramification gives a 0 in signature
+            newsig += '-'
         else:
             newsig += L[i]
 
@@ -353,6 +359,7 @@ def higher_genus_w_automorphisms_search(info, query):
         if query.get('signature'):
             query['signature'] = info['signature'] = str(sort_sign(ast.literal_eval(query['signature']))).replace(' ','')
     parse_gap_id(info,query,'group',name='Group',qfield='group')
+    parse_ints(info,query,'g0',name='Quotient Genus')
     parse_ints(info,query,'genus',name='Genus')
     parse_ints(info,query,'dim',name='Dimension of the family')
     parse_ints(info,query,'group_order', name='Group orders')
@@ -387,6 +394,7 @@ def render_family(args):
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
+        g0=data['g0']
         GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
@@ -403,6 +411,7 @@ def render_family(args):
 
         prop2 = [
             ('Genus', '\(%d\)' % g),
+             ('Quotient Genus', '\(%d\)' %  g0),
             ('Group', '\(%s\)' %  pretty_group),
             ('Signature', '\(%s\)' % sign_display(ast.literal_eval(data['signature'])))
         ]
@@ -471,6 +480,7 @@ def render_passport(args):
             return redirect(url_for(".index"))
         data=dataz[0]
         g = data['genus']
+        g0=data['g0']
         GG = ast.literal_eval(data['group'])
         gn = GG[0]
         gt = GG[1]
@@ -497,7 +507,8 @@ def render_passport(args):
 
         prop2 = [
             ('Genus', '\(%d\)' % g),
-            ('Small Group', '\(%s\)' %  pretty_group),
+            ('Quotient Genus', '\(%d\)' % g0),
+            ('Group', '\(%s\)' %  pretty_group),
             ('Signature', '\(%s\)' % sign_display(ast.literal_eval(data['signature']))),
             ('Generating Vectors','\(%d\)' % numb)
         ]
@@ -507,7 +518,8 @@ def render_passport(args):
                      'group': pretty_group,
                      'gpid': smallgroup,
                      'numb':numb,
-                     'disp_numb':min(numb,numgenvecs)
+                     'disp_numb':min(numb,numgenvecs),
+                     'g0': data ['g0']
                    })
 
         if spname:
@@ -533,11 +545,19 @@ def render_passport(args):
                 x3=' '
 
             x4=[]
-            for perm in dat['gen_vectors']:
-                cycperm=Permutation(perm).cycle_string()
+            if dat['g0'] == 0:
+                for perm in dat['gen_vectors']:
+                    cycperm=Permutation(perm).cycle_string()
+                    x4.append(sep.join(split_perm(cycperm)))
 
-                x4.append(sep.join(split_perm(cycperm)))
-
+            elif dat['g0'] > 0:
+                for perm in dat['gen_vectors']:
+                    cycperm =Permutation(perm).cycle_string()
+                    #if display_perm == '()':
+                    if cycperm == '()':
+                        x4.append('Id(G)')
+                    else:
+                        x4.append(sep.join(split_perm(cycperm)))
             Ldata.append([x1,x2,x3,x4])
 
 
@@ -752,7 +772,7 @@ def hgcwa_code_download(**args):
     nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
 
     start = time.time()
-    lines = [(startstr + (signHfmt if dataz.get('signH') is not None else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if dataz.get('hyperelliptic') else '')) for dataz in data]
+    lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
     code += '\n'.join(lines)
     print "%s seconds for %d bytes" %(time.time() - start,len(code))
     strIO = StringIO.StringIO()
@@ -762,8 +782,6 @@ def hgcwa_code_download(**args):
 
 
 
-
-#JEN TEST FUNCTION
 @higher_genus_w_automorphisms_page.route("/download/<download_type>")
 #def hgcwa_code_download_search(**args):
 def hgcwa_code_download_search(res,download_type):
@@ -831,7 +849,7 @@ def hgcwa_code_download_search(res,download_type):
             nhypcycstr += code_list['add_to_total_basic'][lang] + '\n'
     
             start = time.time()
-            lines = [(startstr + (signHfmt if 'signH' in dataz else stdfmt).format(**dataz) + ((hypfmt.format(**dataz) if dataz['hyperelliptic'] else cyctrigfmt.format(**dataz) if dataz['cyclic_trigonal'] else nhypcycstr) if 'hyperelliptic' in dataz else '')) for dataz in data]
+            lines = [(startstr + (signHfmt if 'signH' in dataz else (stdfmt + (hypfmt if (dataz.get('hyperelliptic') and dataz['hyperelliptic']) else cyctrigfmt if (dataz.get('cyclic_trigonal') and dataz['cyclic_trigonal']) else nhypcycstr)))).format(**dataz) for dataz in data]
             code += '\n'.join(lines)
 
 
