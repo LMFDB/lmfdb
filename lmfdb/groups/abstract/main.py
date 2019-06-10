@@ -205,7 +205,7 @@ def render_abstract_group(args):
         info['dojs'] = 'make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
-        print info['dojs']
+        #print info['dojs']
 
 
         factored_order = web_latex(gp.order_factor(),False)
