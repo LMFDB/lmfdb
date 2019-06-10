@@ -15,7 +15,12 @@
  *
 /*--------------------------------------------------------------------------*/
 
-foob = '';
+/* For debugging, it can hold a value to be inspected in the console */
+var dbug = '';
+
+/* Highlight colors */
+var selected_color = 'deepskyblue';
+var highlit_color = 'yellowgreen';
 
 Graph = class {
 	constructor(ambient) {
@@ -28,7 +33,7 @@ Graph = class {
 	addNode(value, posn, orders, options) {
 		var key = value[1].toString();
 		var node = this.nodeSet[key];
-        foob = [value, posn, orders, this.nodes, node];
+        dbug = [value, posn, orders, this.nodes, node];
 		if(node == undefined) {
 			node = new Node(key);
 			this.nodeSet[key] = node;
@@ -102,6 +107,7 @@ class Node {
 		this.value = value; 
 		this.style = {};
 		this.selected = false;
+		this.highlit = false;
         this.label = '';
         this.image = null;
         this.level = 0;
@@ -113,6 +119,14 @@ class Node {
 		for (var k in options) {
 			this.options[k] = options[k];
 		}
+	}
+
+	highlight() {
+		this.highlit = true;
+	}
+
+	unhighlight() {
+		this.highlit = false;
 	}
 
 	select() {
@@ -218,9 +232,6 @@ class Renderer {
         if(node.image == null) {
             img = new Image();
             img.src="/static/graphs/img/eq"+node.imgnum+".png";
-            //if(node.selected) { this.ctx.fillStyle = 'blue';}
-            if(node.selected) { img.style.backgroundColor = 'blue';}
-            img.style.backgroundColor = 'blue';
             node.image = img;
             img.onload = function() {
                 ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
@@ -232,10 +243,13 @@ class Renderer {
             img = node.image;
             var lft = node.center[0]-0.5*img.width;
             if(node.selected) {
-                ctxt.fillStyle='#09f';
+                ctxt.fillStyle= selected_color;
                 ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
             }
-            //node.image.style.backgroundColor = 'blue';
+            if(node.highlit) {
+                ctxt.fillStyle= highlit_color;
+                ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+            }
             ctxt.drawImage(node.image,lft,node.center[1]-4);
             if(node.ccsize>1) {
                 ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
@@ -321,6 +335,22 @@ class Renderer {
 		  var node = this.graph.nodes[i];
 		  node.center = this.translate([node.layoutPosX, node.layoutPosY]);
 		}
+    }
+
+    highlight(subid) {
+        var node = this.graph.nodeSet[subid];
+        if(node) {
+            node.highlight();
+            this.draw();
+        }
+    }
+
+    unhighlight(subid){
+        var node = this.graph.nodeSet[subid];
+        if(node) {
+            node.unhighlight();
+            this.draw();
+        }
     }
 }
 
@@ -720,5 +750,6 @@ function make_sdiagram(canv,ambient, nodes, edges, orders) {
 		renderer.draw();
 	}
   });
+  return renderer;
 }
 

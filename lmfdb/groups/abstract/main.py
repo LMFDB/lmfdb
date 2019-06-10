@@ -202,7 +202,7 @@ def render_abstract_group(args):
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
 
-        info['dojs'] = 'make_sdiagram("subdiagram","%s",'% str(label)
+        info['dojs'] = 'var sdiagram = make_sdiagram("subdiagram","%s",'% str(label)
         info['dojs'] += str(ll) + ',' + str(layers[1]) + ',' + str(orders)
         info['dojs'] += ');'
         #print info['dojs']
