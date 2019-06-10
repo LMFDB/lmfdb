@@ -696,6 +696,7 @@ function showsubinfo(node, ambient) {
     function(data){
       mydiv.innerHTML = data; 
       renderMathInElement(mydiv, katexOpts);
+      $(".subgp").hover(highlight_group, unhighlight_group);
       });
 }
 
