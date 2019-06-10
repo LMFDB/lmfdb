@@ -237,21 +237,25 @@ def shortsubinfo(label):
         return ''
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
-    ans = 'Information on subgroup $%s$<br>' % wsg.subgroup_tex
+    ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
     nt = '' if wsg.cyclic else ' not'
-    ans += 'This is%s a cyclic subgroup<br>'% nt
+    ans += 'This is%s a cyclic subgroup<br>\n'% nt
     if wsg.normal:
         ans += 'This is normal with quotient group '
         ans +=  '$'+group_names_pretty(wsg.quotient)+'$'
         nt = '' if wsg.characteristic else ' not'
-        ans += '<br>This is%s characteristic'%nt
+        ans += '\n<br>This is%s characteristic'%nt
     else:
         ans += 'This is not normal, it has %d subgroups in its conjugacy class'% wsg.count
-    ans +='<br>Normalizer: $%s$'% WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer))).subgroup_tex
-    ans +='<br>Centralizer: $%s$'% WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.centralizer))).subgroup_tex
+    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
+    ans +='<br>\nNormalizer: <span class="%s" data-sgid="%d">$%s$</span>' % (h.spanclass(), h.counter, h.subgroup_tex)
+    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.centralizer)))
+    ans +='<br>\nCentralizer: <span class="%s" data-sgid="%d">$%s$</span>'% (h.spanclass(), h.counter, h.subgroup_tex)
     p = wsg.sylow
     if p>0:
-        ans += '<br>This is a Sylow %d-subgroup'% p
+        ans += '<br>\nThis is a Sylow %d-subgroup'% p
+    #print ""
+    #print ans
     return ans
 
 
