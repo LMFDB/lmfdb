@@ -105,7 +105,7 @@ def index():
             'nilp_list': range(1,5)
             }
 
-    return render_template("abstract-index.html", title="Abstract Groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
+    return render_template("abstract-index.html", title="Abstract groups", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
 
 
 
@@ -149,8 +149,8 @@ def group_download(info):
 
 @search_wrap(template="abstract-search.html",
              table=db.gps_groups,
-             title='Abstract Group Search Results',
-             err_title='Abstract Groups Search Input Error',
+             title='Abstract group search results',
+             err_title='Abstract groups search input error',
              shortcuts={'jump':group_jump,
                         'download':group_download},
              projection=['label','order','abelian','exponent','solvable',
@@ -211,7 +211,7 @@ def render_abstract_group(args):
         factored_order = web_latex(gp.order_factor(),False)
         aut_order = web_latex(gp.aut_order_factor(),False)
 
-        title = 'Abstract Group '  + '$' + gp.tex_name + '$'
+        title = 'Abstract group '  + '$' + gp.tex_name + '$'
 
         prop2 = [
             ('Label', '\(%s\)' %  label), ('Order', '\(%s\)' % factored_order), ('#Aut(G)', '\(%s\)' % aut_order)
@@ -230,7 +230,8 @@ def render_abstract_group(args):
                                #downloads=downloads, 
                                credit=credit_string)
 
-    
+def make_knowl(title, knowlid):
+    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
 
 @abstract_page.route("/subinfo/<label>")
 def shortsubinfo(label):
@@ -240,34 +241,35 @@ def shortsubinfo(label):
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
     # helper function
-    def subinfo_getsub(prop, count):
+    def subinfo_getsub(title, knowlid, count):
         h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
+        prop = make_knowl(title, knowlid)
         return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
             prop, h.spanclass(), h.counter, h.subgroup_tex)
 
     ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
     ans += '<table>'
-    ans += '<tr><td>Cyclic <td> %s\n' % wsg.cyclic
-    ans += '<tr><td>Normal <td>'
+    ans += '<tr><td>%s <td> %s\n' % (
+        make_knowl('Cyclic', 'group.cyclic'),wsg.cyclic)
+    ans += '<tr><td>%s<td>' % make_knowl('Normal', 'group.subgroup.normal')
     if wsg.normal:
         ans += 'True with quotient group '
         ans +=  '$'+group_names_pretty(wsg.quotient)+'$\n'
     else:
         ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
-    ans += '<tr><td>Characteristic <td>%s\n' % wsg.characteristic
+    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Characteristic', 'group.characteristic_subgroup'), wsg.characteristic)
 
     h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
-    # These should be changed to knowls
-    ans += subinfo_getsub('Normalizer', wsg.normalizer)
-    ans += subinfo_getsub('Normal closure', wsg.normal_closure)
-    ans += subinfo_getsub('Centralizer', wsg.centralizer)
-    ans += subinfo_getsub('Core', wsg.core)
-    ans += '<tr><td>Central <td>%s\n' % wsg.central
-    ans += '<tr><td>Hall <td>%s\n' % wsg.hall
+    ans += subinfo_getsub('Normalizer', 'group.subgroup.normalizer',wsg.normalizer)
+    ans += subinfo_getsub('Normal closure', 'group.subgroup.normal_closure', wsg.normal_closure)
+    ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
+    ans += subinfo_getsub('Core', 'group.core', wsg.core)
+    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Central', 'group.central'), wsg.central)
+    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall)
     #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
     p = wsg.sylow
     nt = 'Yes for p = %d' % p if p>0 else 'No'
-    ans += '<tr><td>Sylow subgroup<td> %s'% nt
+    ans += '<tr><td>%s<td> %s'% (make_knowl('Sylow subgroup', 'group.sylow_subgroup'), nt)
     #print ""
     #print ans
     ans += '</table>'
@@ -276,7 +278,7 @@ def shortsubinfo(label):
 
 @abstract_page.route("/Completeness")
 def completeness_page():
-    t = 'Completeness of the Abstract Groups Data'
+    t = 'Completeness of the abstract groups data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.abstract.extent',
                             title=t, bread=bread,
@@ -286,7 +288,7 @@ def completeness_page():
 
 @abstract_page.route("/Labels")
 def labels_page():
-    t = 'Labels for Abstract Groups'
+    t = 'Labels for abstract groups'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='rcs.groups.abstract.label',
                            learnmore=learnmore_list_remove('label'), 
@@ -295,7 +297,7 @@ def labels_page():
 
 @abstract_page.route("/Reliability")
 def reliability_page():
-    t = 'Reliability of the Abstract Groups Data'
+    t = 'Reliability of the abstract groups data'
     bread = get_bread([("Reliability", '')])
     return render_template("single.html", kid='rcs.groups.abstract.reliability',
                            title=t, bread=bread, 
@@ -305,7 +307,7 @@ def reliability_page():
 
 @abstract_page.route("/Source")
 def how_computed_page():
-    t = 'Source of the Automorphisms of Curve Data'
+    t = 'Source of the abstract group data'
     bread = get_bread([("Source", '')])
     return render_template("single.html", kid='rcs.groups.abstract.source',
                            title=t, bread=bread, 
