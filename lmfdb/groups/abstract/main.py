@@ -230,6 +230,8 @@ def render_abstract_group(args):
                                #downloads=downloads, 
                                credit=credit_string)
 
+    
+
 @abstract_page.route("/subinfo/<label>")
 def shortsubinfo(label):
     if not sub_label_is_valid(label):
@@ -237,25 +239,38 @@ def shortsubinfo(label):
         return ''
     wsg = WebAbstractSubgroup(label)
     ambientlabel = str(wsg.ambient)
+    # helper function
+    def subinfo_getsub(prop, count):
+        h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(count)))
+        return '<tr><td>%s<td><span class="%s" data-sgid="%d">$%s$</span>\n' % (
+            prop, h.spanclass(), h.counter, h.subgroup_tex)
+
     ans = 'Information on subgroup <span class="%s" data-sgid="%d">$%s$</span><br>\n' % (wsg.spanclass(), wsg.counter, wsg.subgroup_tex)
-    nt = '' if wsg.cyclic else ' not'
-    ans += 'This is%s a cyclic subgroup<br>\n'% nt
+    ans += '<table>'
+    ans += '<tr><td>Cyclic <td> %s\n' % wsg.cyclic
+    ans += '<tr><td>Normal <td>'
     if wsg.normal:
-        ans += 'This is normal with quotient group '
-        ans +=  '$'+group_names_pretty(wsg.quotient)+'$'
-        nt = '' if wsg.characteristic else ' not'
-        ans += '\n<br>This is%s characteristic'%nt
+        ans += 'True with quotient group '
+        ans +=  '$'+group_names_pretty(wsg.quotient)+'$\n'
     else:
-        ans += 'This is not normal, it has %d subgroups in its conjugacy class'% wsg.count
+        ans += 'False, and it has %d subgroups in its conjugacy class\n'% wsg.count
+    ans += '<tr><td>Characteristic <td>%s\n' % wsg.characteristic
+
     h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.normalizer)))
-    ans +='<br>\nNormalizer: <span class="%s" data-sgid="%d">$%s$</span>' % (h.spanclass(), h.counter, h.subgroup_tex)
-    h = WebAbstractSubgroup("%s.%s"%(ambientlabel,str(wsg.centralizer)))
-    ans +='<br>\nCentralizer: <span class="%s" data-sgid="%d">$%s$</span>'% (h.spanclass(), h.counter, h.subgroup_tex)
+    # These should be changed to knowls
+    ans += subinfo_getsub('Normalizer', wsg.normalizer)
+    ans += subinfo_getsub('Normal closure', wsg.normal_closure)
+    ans += subinfo_getsub('Centralizer', wsg.centralizer)
+    ans += subinfo_getsub('Core', wsg.core)
+    ans += '<tr><td>Central <td>%s\n' % wsg.central
+    ans += '<tr><td>Hall <td>%s\n' % wsg.hall
+    #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
     p = wsg.sylow
-    if p>0:
-        ans += '<br>\nThis is a Sylow %d-subgroup'% p
+    nt = 'Yes for p = %d' % p if p>0 else 'No'
+    ans += '<tr><td>Sylow subgroup<td> %s'% nt
     #print ""
     #print ans
+    ans += '</table>'
     return ans
 
 
