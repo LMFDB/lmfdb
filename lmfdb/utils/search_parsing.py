@@ -5,7 +5,7 @@
 import re
 from collections import defaultdict, Counter
 
-from flask import flash
+from lmfdb.utils.utilities import flash_error
 from markupsafe import Markup
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
@@ -69,7 +69,7 @@ class SearchParser(object):
             if self.clean_info:
                 info[field] = inp
         except (ValueError, AttributeError, TypeError) as err:
-            flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s" % (inp, name, str(err))), "error")
+            flash_error("<span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. %s", inp, name, str(err))
             info['err'] = ''
             raise
 
@@ -123,8 +123,7 @@ def parse_ints_to_list_flash(arg,name):
     try:
         return parse_ints_to_list(arg)
     except ValueError:
-        errmsg = "Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>." % (arg,name)
-        flash(Markup(errmsg+"  It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121)."), "error")
+        flash_error("Error: <span style='color:black'>%s</span> is not a valid input for <span style='color:black'>%s</span>. It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).", arg, name)
         raise
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling

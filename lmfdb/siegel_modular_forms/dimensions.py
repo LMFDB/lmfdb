@@ -136,7 +136,7 @@ def dimension_Sp4Z_2(wt_range):
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """
-    return _dimension_Gamma_2(wt_range, 2, group = 'Sp4(Z)')
+    return _dimension_Gamma_2(wt_range, 2, group='Sp4(Z)')
 
 def dimension_table_Sp4Z_j(wt_range, j_range):
     result = {}
@@ -145,11 +145,11 @@ def dimension_table_Sp4Z_j(wt_range, j_range):
     for j in j_range:
         if is_odd(j):
             for wt in wt_range:
-                result[wt][j]=0
+                result[wt][j] = 0
         else:
-            _,olddim= dimension_Sp4Z_j(wt_range, j)
+            _, olddim = dimension_Sp4Z_j(wt_range, j)
             for wt in wt_range:
-                result[wt][j]=olddim[wt]['Total']
+                result[wt][j] = olddim[wt]['Total']
     return result
 
 def dimension_Sp4Z_j(wt_range, j):
@@ -159,8 +159,8 @@ def dimension_Sp4Z_j(wt_range, j):
       <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
-    """    
-    return _dimension_Gamma_2(wt_range, j, group = 'Sp4(Z)')
+    """
+    return _dimension_Gamma_2(wt_range, j, group='Sp4(Z)')
 
 
 

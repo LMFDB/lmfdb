@@ -215,7 +215,7 @@ def index():
         elif search_type == 'SpaceDimensions':
             bad_keys = [key for key in newform_only_fields if key in info]
             if bad_keys:
-                flash_error("%s invalid for searching spaces" % (", ".join(bad_keys)))
+                flash_error("%s invalid for searching spaces", ", ".join(bad_keys))
             return dimension_space_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
@@ -533,7 +533,7 @@ def jump_box(info):
             return redirect(url_for_label(jump), 301)
         except ValueError:
             errmsg = "%s is not a valid newform or space label"
-    flash_error (errmsg, jump)
+    flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
 
@@ -710,9 +710,9 @@ def newform_parse(info, query):
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
         if key in info:
-            msg = "%s not valid when searching for spaces" % display
-            flash_error(msg)
-            raise ValueError(msg)
+            msg = "%s not valid when searching for spaces"
+            flash_error(msg, display)
+            raise ValueError(msg  % display)
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
