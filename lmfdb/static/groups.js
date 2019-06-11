@@ -1,5 +1,4 @@
 
-
 function highlight_group(evt) {
     var subseries = $(this).attr("data-sgseries");
     var subid = $(this).attr("data-sgid");
