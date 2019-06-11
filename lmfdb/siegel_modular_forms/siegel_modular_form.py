@@ -4,8 +4,7 @@
 
 import StringIO
 
-from flask import render_template, url_for, request, send_file, flash, redirect
-from markupsafe import Markup
+from flask import render_template, url_for, request, send_file, redirect
 from sage.all import latex, Set
 
 from lmfdb import db

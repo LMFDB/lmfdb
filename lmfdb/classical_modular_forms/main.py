@@ -3,7 +3,6 @@ from collections import defaultdict
 import re
 
 from flask import render_template, url_for, redirect, abort, request
-from markupsafe import Markup
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
                      cached_function, prime_range, prod
 from sage.databases.cremona import class_to_int, cremona_letter_code

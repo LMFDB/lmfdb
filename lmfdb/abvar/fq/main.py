@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import ast, re, StringIO, time
+import ast
+import re
+import StringIO
+import time
 
 from flask import render_template, url_for, request, redirect, send_file
-from markupsafe import Markup
 from collections import defaultdict
 from sage.rings.all import PolynomialRing, ZZ
 

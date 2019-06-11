@@ -6,7 +6,6 @@ import re
 from collections import defaultdict, Counter
 
 from lmfdb.utils.utilities import flash_error
-from markupsafe import Markup
 from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 

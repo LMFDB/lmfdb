@@ -113,7 +113,7 @@ def conductor_label_norm(lab):
     if re.match(r'\d+.\d+',s):
         return s.split('.')[0]
     else:
-        flash_error("%s is not a valid conductor label. It must be of the form N.m or [N,c,d]" % lab)
+        flash_error("%s is not a valid conductor label. It must be of the form N.m or [N,c,d]", lab)
         raise ValueError
 
 def get_nf_info(lab):

@@ -174,7 +174,7 @@ def hecke_algebras_search(info, query):
                 flash_error("Orbit label %s and input Level or Weight are not compatible", info.get('orbit_label'))
                 return redirect(url_for(".hecke_algebras_render_webpage"))
             if int(info.get('level'))!=check[0]:
-                flash_error("Orbit label %s and Level %s are not compatible inputs" %(info.get('orbit_label'), info.get('level'))
+                flash_error("Orbit label %s and Level %s are not compatible inputs", info.get('orbit_label'), info.get('level'))
                 return redirect(url_for(".hecke_algebras_render_webpage"))
         if 'weight' in info and info.get('weight'):
             if int(info.get('weight'))!=check[1]:

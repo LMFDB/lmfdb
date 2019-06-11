@@ -10,7 +10,6 @@ try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from markupsafe import Markup
 from lmfdb.utils import flash_error
 
 # utility functions #
