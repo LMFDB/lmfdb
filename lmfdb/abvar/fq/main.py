@@ -96,7 +96,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     try:
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError as err:
-        flash_error("%s is not in the database.", label, "error")
+        flash_error("%s is not in the database.", label)
         return search_input_error()
     bread = get_bread((str(g), url_for(".abelian_varieties_by_g", g=g)),
                       (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
