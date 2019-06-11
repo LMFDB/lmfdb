@@ -175,7 +175,7 @@ def login(**kwargs):
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
         # FIXME add color cookie, see change_colors
         return flask.redirect(next or url_for(".info"))
-    flask.flash(Markup("Oops! Wrong username or password."), "error")
+    flash_error("Oops! Wrong username or password.")
     return flask.redirect(url_for(".info"))
 
 
