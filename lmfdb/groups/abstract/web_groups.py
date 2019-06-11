@@ -161,7 +161,9 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def G(self):
         # Reconstruct the group from the data stored above
-        if self.elt_rep_type == 0: # PcGroup
+        if self.order == 1: # trvial
+            return libgap.TrivialGroup()
+        elif self.elt_rep_type == 0: # PcGroup
             return libgap.PcGroupCode(self.pc_code, self.order)
         elif self.elt_rep_type < 0: # Permutation group
             gens = [self.decode(g) for g in self.perm_gens]
