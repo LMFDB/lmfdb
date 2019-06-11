@@ -226,7 +226,7 @@ class WebAbstractGroup(WebObj):
                 relators = relators.replace("f%s"%(i+1), chr(97+i))
             relators = fix_exponent_re.sub(r"^{\1}", relators)
             relators = relators.replace("*","")
-            return r"\langle %s | %s \rangle" % (gens, relators)
+            return r"\langle %s \mid %s \rangle" % (gens, relators)
         elif self.elt_rep_type < 0:
             return r"\langle %s \rangle" % (", ".join(map(self.decode_as_perm, self.perm_gens)))
         else:
