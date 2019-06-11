@@ -2779,7 +2779,7 @@ class PostgresTable(PostgresBase):
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s is not a column of %s"%(col, self.search_table))
         if self.extra_table is None:
-            search_data = data
+            search_data = dict(data)
             for col in data:
                 if col not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
