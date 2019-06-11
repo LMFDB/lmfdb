@@ -2823,7 +2823,8 @@ class PostgresTable(PostgresBase):
                     self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
                     self._break_order()
-            else: # insertion
+
+            else:  # insertion
                 if "id" in data or "id" in query:
                     raise ValueError("Cannot specify an id for insertion")
                 new_row = True
@@ -2838,8 +2839,8 @@ class PostgresTable(PostgresBase):
                 if self.extra_table is not None:
                     extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
-                    inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
-                    inserter.format(Identifier(table),
+                    inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
+                                    Identifier(table),
                                     SQL(", ").join(map(Identifier, dat.keys())),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))
