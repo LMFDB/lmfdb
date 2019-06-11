@@ -265,7 +265,7 @@ def shortsubinfo(label):
     ans += subinfo_getsub('Centralizer', 'group.subgroup.centralizer', wsg.centralizer)
     ans += subinfo_getsub('Core', 'group.core', wsg.core)
     ans += '<tr><td>%s <td>%s\n' % (make_knowl('Central', 'group.central'), wsg.central)
-    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall)
+    ans += '<tr><td>%s <td>%s\n' % (make_knowl('Hall', 'group.subgroup.hall'), wsg.hall>0)
     #ans += '<tr><td>Coset action <td>%s\n' % wsg.coset_action_label
     p = wsg.sylow
     nt = 'Yes for $p$ = %d' % p if p>0 else 'No'
