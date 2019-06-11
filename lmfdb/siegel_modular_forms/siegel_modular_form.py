@@ -23,7 +23,7 @@ import sample
 ###############################################################################
 
 def find_samples(family, weight):
-    slist = db.smf_samples.search({'collection':{'$contains':[family]}, 'weight':int(weight)},'name')
+    slist = db.smf_samples.search({'collection': {'$contains': [family]}, 'weight': int(weight)}, 'name')
     ret = []
     for name in slist:
         url = url_for(".by_label", label=family+"."+name)

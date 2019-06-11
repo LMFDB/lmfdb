@@ -10,8 +10,8 @@ try:
     from dirichlet_conrey import DirichletGroup_conrey
 except:
     logger.critical("dirichlet_conrey.pyx cython file is not available ...")
-from flask import flash
 from markupsafe import Markup
+from lmfdb.utils import flash_error
 
 # utility functions #
 
@@ -39,8 +39,8 @@ def parse_interval(arg, name):
         s = arg[1:-1].split('..')
         a,b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:
-        flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)"%(arg,name)), "error")
-        raise ValueError("invalid "+name)
+        flash_error("%s is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)", arg, name)
+        raise ValueError("invalid " + name)
     return a,b
 
 def parse_limit (arg):
@@ -51,7 +51,7 @@ def parse_limit (arg):
     if re.match('^[0-9]+$', arg):
         limit = int(arg)
     if limit > 100:
-        flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100."%arg), "error")
+        flash_error("%s is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100.", arg)
         raise ValueError("limit")
     return limit
 
@@ -189,17 +189,17 @@ class CharacterSearch:
         self.primitive = query.get('primitive')
         self.limit = parse_limit(query.get('limit'))
         if self.parity and not self.parity in ['Odd','Even']:
-            flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'"),"error")
+            flash_error("%s is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'")
             raise ValueError('parity')
         if self.primitive and not self.primitive in ['Yes','No']:
-            flash(Markup("Error:  <span style='color:black'>%s</span> is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'"),"error")
+            flash_error("%s is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'")
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
-            flash(Markup("Error: Searching is limited to charactors of modulus less than $10^5$"),"error")
+            flash_error("Searching is limited to charactors of modulus less than $10^5$")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
-            flash(Markup("Error: For order searching the minimum modulus needs to be less than $10^3$"),"error")
+            flash_error("For order searching the minimum modulus needs to be less than $10^3$")
             raise ValueError('modulus')
 
         self.cmin, self.cmax = parse_interval(self.conductor, 'conductor') if self.conductor else (1, self.mmax)

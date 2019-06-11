@@ -343,7 +343,7 @@ def random_Dirichletwebpage():
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
-    args = {'type':'Dirichlet', 'modulus':modulus, 'number':number}
+    args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     if not val:
         return flask.abort(404)
     try:

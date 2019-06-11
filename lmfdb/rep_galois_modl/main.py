@@ -2,12 +2,11 @@
 
 import ast, re, StringIO, time
 
-from flask import flash, make_response, send_file, request, render_template, redirect, url_for
-from markupsafe import Markup
+from flask import make_response, send_file, request, render_template, redirect, url_for
 from sage.all import ZZ, conway_polynomial
 
 from lmfdb import db
-from lmfdb.utils import parse_ints, parse_list, search_wrap
+from lmfdb.utils import flash_error, parse_ints, parse_list, search_wrap
 #should these functions be defined in lattices or somewhere else?
 from lmfdb.lattice.main import vect_to_sym, vect_to_matrix
 from lmfdb.rep_galois_modl import rep_galois_modl_page #, rep_galois_modl_logger
@@ -86,9 +85,9 @@ def rep_galois_modl_by_label_or_name(lab):
     if db.modlgal_reps.exists({'$or':[{'label': lab}, {'name': lab}]}):
         return render_rep_galois_modl_webpage(label=lab)
     if rep_galois_modl_label_regex.match(lab):
-        flash(Markup("The integral rep_galois_modl <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral rep_galois_modl %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral rep_galois_modl in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral rep_galois_modl in the database has label or name %s", lab)
     return redirect(url_for(".rep_galois_modl_render_webpage"))
 
 #download
@@ -146,7 +145,7 @@ def rep_galois_modl_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", % gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -159,7 +158,7 @@ def render_rep_galois_modl_webpage(**args):
     if data is None:
         t = "Mod &#x2113; Galois representations Search Error"
         bread = [('Representations', "/Representation"),("mod &#x2113;", url_for(".rep_galois_modl_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; Galois representation in the database." % (lab)),"error")
+        flash_error("%s is not a valid label for a mod &#x2113; Galois representation in the database.", lab)
         return render_template("rep_galois_modl-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)

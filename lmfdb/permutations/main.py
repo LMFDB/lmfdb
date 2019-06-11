@@ -6,6 +6,7 @@ import flask
 from flask import render_template, request, url_for, redirect
 from lmfdb.permutations import permutations_page, logger
 from sage.all import Permutation, Integer
+from lmfdb.utils import flash_error
 
 def get_bread(breads=[]):
     bc = [("Permutations", url_for(".index"))]
@@ -42,7 +43,7 @@ def show():
         p = Permutation(data)
     except (TypeError, ValueError):
         logger.info("Impossible to create a permutation from input.")
-        flask.flash("Ooops, impossible to create a permutation from given input!", "error")
+        flash_error("Ooops, impossible to create a permutation from given input!")
         return flask.redirect(url_for(".index"))
     return render_template("permutations.html", permutation=p,
             rankbread=get_bread())

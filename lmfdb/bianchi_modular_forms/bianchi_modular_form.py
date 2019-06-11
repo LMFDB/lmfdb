@@ -2,13 +2,13 @@
 
 import re
 
-from flask import render_template, url_for, request, redirect, flash
+from flask import render_template, url_for, request, redirect
 from markupsafe import Markup
 from sage.all import latex
 
 from lmfdb import db
 from lmfdb.utils import (
-    to_dict, web_latex_ideal_fact,
+    to_dict, web_latex_ideal_fact, flash_error,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints,
     teXify_pol, search_wrap)
 from lmfdb.number_fields.web_number_field import field_pretty, WebNumberField, nf_display_knowl
@@ -340,10 +340,13 @@ def bianchi_modular_form_by_label(lab):
         lab = res['label']
 
     if res is None:
-        flash(Markup("No Bianchi modular form in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No Bianchi modular form in the database has label or name %s", lab)
         return redirect(url_for(".index"))
     else:
-        return redirect(url_for(".render_bmf_webpage", field_label = res['field_label'], level_label = res['level_label'], label_suffix = res['label_suffix']))
+        return redirect(url_for(".render_bmf_webpage",
+                        field_label=res['field_label'],
+                        level_label=res['level_label'],
+                        label_suffix=res['label_suffix']))
 
 @bmf_page.route("/Source")
 def how_computed_page():

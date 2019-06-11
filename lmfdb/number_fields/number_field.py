@@ -619,7 +619,7 @@ def by_label(label):
             return redirect(url_for(".by_label", label=nflabel), 301)
         return render_field_webpage({'label': nflabel})
     except ValueError as err:
-        flash_error("<span style='color:black'>%s</span> is not a valid input for a <span style='color:black'>label</span>.  "+ str(err), label)
+        flash_error("%s is not a valid input for a <span style='color:black'>label</span>.  %s", label, str(err))
         return redirect(url_for(".number_field_render_webpage"))
 
 # input is a sage int

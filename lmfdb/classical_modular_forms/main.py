@@ -2,7 +2,7 @@
 from collections import defaultdict
 import re
 
-from flask import render_template, url_for, redirect, abort, request, flash
+from flask import render_template, url_for, redirect, abort, request
 from markupsafe import Markup
 from sage.all import ZZ, next_prime, cartesian_product_iterator,\
                      cached_function, prime_range, prod
@@ -335,7 +335,7 @@ def render_newform_webpage(label):
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if errs:
-        flash(Markup("<br>".join(errs)), "error")
+        flash_error("%s", "<br>".join(errs))
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
@@ -367,7 +367,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
-        flash(Markup("<br>".join(errs)), "error")
+        flash_error("%s", "<br>".join(errs))
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
