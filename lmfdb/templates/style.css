@@ -2,8 +2,6 @@
 
 {%- macro BORDER_RADIUS(R) -%}
   border-radius: {{R}}px;
-  -webkit-border-radius: {{R}}px;
-  -moz-border-radius: {{R}}px;
 {%- endmacro -%}
 
 {# end defs #}
@@ -179,12 +177,12 @@ a:hover {
 
 #header {
   background: {{color.header_background}};
-  box-shadow:          0px 5px 5px {{color.header_shadow}};
+  box-shadow: 0px 5px 5px {{color.header_shadow}};
 }
 
 body.knowl #header {
   background: {{ color.knowl_l }};
-  box-shadow:          0px 5px 5px {{color.knowl_shadow}};
+  box-shadow: 0px 5px 5px {{color.knowl_shadow}};
 }
 
 #header #logo {
@@ -259,7 +257,7 @@ body.knowl #header {
     color: {{color.header_text_topright}};
 }
 #header .undertopright:first-child {
-      margin-top: 0;
+    margin-top: 0;
 }
 
 #header #navi {
@@ -358,7 +356,6 @@ body > .debug {
 
 .properties-body ul:last-child li:last-child a {
   border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
 }
 .properties-body li {
   display: block;
@@ -384,13 +381,11 @@ body > .debug {
   background: {{color.properties_body_background}};
   min-width: 200px;
   border-bottom-left-radius: 10px;
-  -moz-border-radius-bottomleft: 10px;
   max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
   overflow-y: auto; /* scrollbar if we overflow */
 }
 .properties-header {
   border-top-left-radius: 10px;
-  -moz-border-radius-topleft: 10px;
   margin: 0;
   margin-top: 10px;
   padding: 5px 9px;
@@ -437,9 +432,7 @@ body > .debug {
   background: {{color.sidebar_background}};
   margin-bottom: 100px;
   border-top-right-radius: 10px;
-  -moz-border-radius-topright: 10px;
   border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px;
 }
 #sidebar .list li {
   padding: 5px;
@@ -475,12 +468,10 @@ body > .debug {
 #sidebar h2:first-child {
   margin: 0;
   border-top-right-radius: 10px;
-  -moz-border-radius-topright: 10px;
 }
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 10px;
-  -moz-border-radius-bottomright: 10px;
 }
 #sidebar ul {
     margin: 0px;
@@ -525,12 +516,12 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 
 
 .visible {
-	visibility: visible;
+    visibility: visible;
 }
 
 .hidden {
-	visibility: hidden;
-	height: 0px;
+    visibility: hidden;
+    height: 0px;
 }
 
 .code {
@@ -567,16 +558,12 @@ input, textarea {
   font-size: 110%;
   padding: 3px;
   border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
 }
 /* TODO: above? */
 
 button, select {
   padding: 3px 6px;
   border-radius: 4px;
-  -moz-border-radius:4px;
-  -webkit-border-radius:4px;
   cursor: pointer;
   border: 2px solid {{color.button_border}};
   min-width: 75px;
@@ -623,7 +610,7 @@ body.knowl form select:hover {
 }
 
 form table td.button {
-	padding-top: 7px
+    padding-top: 7px
 }
 
 table {
@@ -765,7 +752,6 @@ table .knowl-link {
   display: inline;
   border-bottom: 1px dotted {{ color.knowl_hyper_text }};
   border-radius: 0px;
-  -moz-border-radius: 0px;
   padding: 1px;
 }
 .knowl-bar {
@@ -775,7 +761,6 @@ table .knowl-link {
   margin-bottom: 5px;
   border-bottom: 1px solid {{ color.knowl_thin_border }};
   border-top-left-radius: 10px;
-  -moz-border-radius-topleft: 10px;
 }
 .knowl-bar button,
 .knowl-bar input,
@@ -810,7 +795,6 @@ table .knowl-link {
   padding: 3px 5px 0px 5px;
   background: {{ color.knowl_l_1 }};
   border-top-left-radius: 5px;
-  -moz-border-radius-topleft: 5px;
 }
 .knowl {
   padding: 0;
@@ -840,8 +824,6 @@ table .knowl-link {
   padding: 2px;
   margin: 1px;
   border-radius: 2px;
-  -webkit-border-radius: 2px;
-  -moz-border-radius: 2px;
 }
 #knowl-index td div:hover {
   background: {{ color.knowl_hover }};
@@ -1023,8 +1005,6 @@ table.statgrid td.cnt {
   border-bottom: 1px dotted {{ color.knowl_underline }};
   cursor: pointer;
   border-radius: 0;
-  -webkit-border-radius: 0;
-  -moz-border-radius: 0;
   margin: 3px 0 0 0;
 }
 *[knowl]:hover,
@@ -1035,9 +1015,7 @@ table.statgrid td.cnt {
   margin: 0;
   padding: 3px 0 0 0;
   border-top-left-radius: 3px;
-  -moz-border-radius-topleft: 3px;
   border-top-right-radius: 3px;
-  -moz-border-radius-topright: 3px;
 }
 
 body.knowl #header {
@@ -1297,41 +1275,41 @@ body.knowl hr {
 /* tables */
 /* TODO: where? do colors get used?*/
 table.tablesorter {
-	font-family:arial;
-	background-color: {{color.light_grey_2}};
-	margin:10px 0pt 15px;
-	font-size: 8pt;
-	width: 100%;
-	text-align: left;
+    font-family:arial;
+    background-color: {{color.light_grey_2}};
+    margin:10px 0pt 15px;
+    font-size: 8pt;
+    width: 100%;
+    text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
   background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
   border: 1px solid {{color.white}};
-	font-size: 8pt;
-	padding: 4px;
+    font-size: 8pt;
+    padding: 4px;
 }
 table.tablesorter thead tr .header {
-	background-image: url("static/images/black-unsorted.gif");
-	background-repeat: no-repeat;
-	background-position: center right;
-	cursor: pointer;
+    background-image: url("static/images/black-unsorted.gif");
+    background-repeat: no-repeat;
+    background-position: center right;
+    cursor: pointer;
   padding-left: 4px;
   padding-right: 15px;
 }
 table.tablesorter tbody td {
     color: {{color.dark_grey}};
-	padding: 4px;
-	background-color: {{color.white}};
-	vertical-align: top;
+    padding: 4px;
+    background-color: {{color.white}};
+    vertical-align: top;
 }
 table.tablesorter tbody tr.odd td {
     background-color:{{color.knowl_background}};
 }
 table.tablesorter thead tr .headerSortUp {
-	background-image: url("static/images/black-asc.gif");
+    background-image: url("static/images/black-asc.gif");
 }
 table.tablesorter thead tr .headerSortDown {
-	background-image: url("static/images/black-desc.gif");
+    background-image: url("static/images/black-desc.gif");
 }
 table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
     background-color: {{color.light_grey_2}};
@@ -1343,48 +1321,48 @@ table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSo
 }
 
 .dataTables_processing {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 250px;
-	height: 30px;
-	margin-left: -125px;
-	margin-top: -15px;
-	padding: 14px 0 2px 0;
-	border: 1px solid {{color.light_grey_3}};
-	text-align: center;
-	color: {{color.grey}};
-	font-size: 14px;
-	background-color: {{color.white}};
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 250px;
+    height: 30px;
+    margin-left: -125px;
+    margin-top: -15px;
+    padding: 14px 0 2px 0;
+    border: 1px solid {{color.light_grey_3}};
+    text-align: center;
+    color: {{color.grey}};
+    font-size: 14px;
+    background-color: {{color.white}};
 }
 
 .dataTables_length {
-	width: 100%;
-        line-height: 40px;
+    width: 100%;
+    line-height: 40px;
 }
 
 .dataTables_filter {
-	width: 100%;
-        line-height: 40px;
+    width: 100%;
+    line-height: 40px;
 }
 
 .dataTables_info {
-	width: 45%;
-	float: left;
-        margin: 5px;
+    width: 45%;
+    float: left;
+    margin: 5px;
 }
 
 .dataTables_paginate {
-	width: 50%;
-	* width: 50px;
-	float: right;
-	text-align: right;
-        margin: 5px;
+    width: 50%;
+    * width: 50px;
+    float: right;
+    text-align: right;
+    margin: 5px;
 }
 
 a.paginate_active {
-        font-weight: bold;
-        padding: 5px;
+    font-weight: bold;
+    padding: 5px;
 }
 
 a.paginate_button {
@@ -1393,46 +1371,46 @@ a.paginate_button {
 
 /* Pagination nested */
 .paginate_disabled_previous, .paginate_enabled_previous, .paginate_disabled_next, .paginate_enabled_next {
-	height: 19px;
-	width: 19px;
-	margin-left: 3px;
-	float: left;
+    height: 19px;
+    width: 19px;
+    margin-left: 3px;
+    float: left;
 }
 
 .paginate_disabled_previous {
-	background-image: url('/static/images/back_disabled.jpg');
+    background-image: url('/static/images/back_disabled.jpg');
 }
 
 .paginate_enabled_previous {
-	background-image: url('/static/images/back_enabled.jpg');
+    background-image: url('/static/images/back_enabled.jpg');
 }
 
 .paginate_disabled_next {
-	background-image: url('/static/images/forward_disabled.jpg');
+    background-image: url('/static/images/forward_disabled.jpg');
 }
 
 .paginate_enabled_next {
-	background-image: url('/static/images/forward_enabled.jpg');
+    background-image: url('/static/images/forward_enabled.jpg');
 }
 
 table.display {
-	margin: 0 auto;
-	clear: both;
-	width: 100%;
+    margin: 0 auto;
+    clear: both;
+    width: 100%;
 }
 
 table.display thead th {
-	padding: 3px 18px 3px 10px;
-	border-bottom: 1px solid {{color.black}};
-	font-weight: bold;
-	cursor: pointer;
-	* cursor: hand;
+    padding: 3px 18px 3px 10px;
+    border-bottom: 1px solid {{color.black}};
+    font-weight: bold;
+    cursor: pointer;
+    * cursor: hand;
 }
 
 table.display tfoot th {
-	padding: 3px 18px 3px 10px;
-	border-top: 1px solid {{color.black}};
-	font-weight: bold;
+    padding: 3px 18px 3px 10px;
+    border-top: 1px solid {{color.black}};
+    font-weight: bold;
 }
 
 table.display tr.heading2 td {
@@ -1440,31 +1418,31 @@ table.display tr.heading2 td {
 }
 
 table.display td {
-	padding: 3px 10px;
+    padding: 3px 10px;
 }
 
 table.display td.center {
-	text-align: center;
+    text-align: center;
 }
 
 .sorting_asc {
-	background: url('/static/images/sort_asc.png') no-repeat center right;
+    background: url('/static/images/sort_asc.png') no-repeat center right;
 }
 
 .sorting_desc {
-	background: url('/static/images/sort_desc.png') no-repeat center right;
+    background: url('/static/images/sort_desc.png') no-repeat center right;
 }
 
 .sorting {
-	background: url('/static/images/sort_both.png') no-repeat center right;
+    background: url('/static/images/sort_both.png') no-repeat center right;
 }
 
 .sorting_asc_disabled {
-	background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_asc_disabled.png') no-repeat center right;
 }
 
 .sorting_desc_disabled {
-	background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
+    background: url('/static/images/sort_desc_disabled.png') no-repeat center right;
 }
 
 
@@ -1504,35 +1482,35 @@ table.display tr.even.gradeU {
 */
 
 .dataTables_scroll {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_scrollBody {
-	*margin-top: -1px;
+    *margin-top: -1px;
 }
 
 .top, .bottom {
-	padding: 52px 5px 5px;
-	background-color: {{color.white_1}};
-	border: 1px solid {{color.light_grey_4}};
+    padding: 52px 5px 5px;
+    background-color: {{color.white_1}};
+    border: 1px solid {{color.light_grey_4}};
 }
 
 .top .dataTables_info {
-	float: none;
+    float: none;
 }
 
 .clear {
-	clear: both;
+    clear: both;
 }
 
 .dataTables_empty {
-	text-align: center;
+    text-align: center;
 }
 
 tfoot input {
-	margin: 0.5em 0;
-	width: 100%;
-	color: {{color.dark_grey_1}};
+    margin: 0.5em 0;
+    width: 100%;
+    color: {{color.dark_grey_1}};
 }
 
 tfoot input.search_init {
@@ -1552,23 +1530,21 @@ td.details {
 
 
 .example_alt_pagination div.dataTables_info {
-	width: 40%;
+    width: 40%;
 }
 
 .paging_full_numbers {
-	height: 22px;
-	line-height: 22px;
+    height: 22px;
+    line-height: 22px;
 }
 
 .paging_full_numbers span.paginate_button,
- 	.paging_full_numbers span.paginate_active {
-	    border: 1px solid {{color.grey}};
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	padding: 2px 5px;
-	margin: 0 3px;
-	cursor: pointer;
-	*cursor: hand;
+.paging_full_numbers span.paginate_active {
+    border: 1px solid {{color.grey}};
+    padding: 2px 5px;
+    margin: 0 3px;
+    cursor: pointer;
+    *cursor: hand;
 }
 
 .paging_full_numbers span.paginate_button {
@@ -1754,7 +1730,7 @@ tr.even.gradeU td.sorting_3 {
 }
 
 table.KeyTable td {
-	border: 3px solid transparent;
+    border: 3px solid transparent;
 }
 
 table.KeyTable td.focus {
@@ -1780,11 +1756,11 @@ table.display tr.gradeU {
 
 /* TODO: div? */
 div.box {
-	height: 100px;
-	padding: 10px;
-	overflow: auto;
-	border: 1px solid {{color.knowl_thin_border}};
-	background-color: {{color.knowl_background}};
+    height: 100px;
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid {{color.knowl_thin_border}};
+    background-color: {{color.knowl_background}};
 }
 
 div.codebox {
@@ -1802,8 +1778,8 @@ div.codebox {
 
 div.maassformplot {
     position: absolute;
-            width: 720px;
-         position: relative;
+    width: 720px;
+    position: relative;
     /*    height: 800px;
         overflow: hidden;
         position: relative; */
@@ -1901,16 +1877,17 @@ div.maassformplot img {
 }
 
 #sidebar .list a {
-  display: block;
-  background: none;
-  padding: 0px;
+    display: block;
+    background: none;
+    padding: 0px;
 
 }
 #sidebar h2 {
-      margin: 5px 0px 0px;}
+    margin: 5px 0px 0px;}
 
 p.rotation  {
-             transform: rotate(270deg); }
+    transform: rotate(270deg);
+}
 
 /* temporary over-side for GL(2) on beta */
 body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
@@ -1918,41 +1895,41 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 }
 
 #sidebar table th, #sidebar table td {
-	text-align: left;
-	padding: 2px;
+    text-align: left;
+    padding: 2px;
 }
 
 #sidebar table.short{
     width: 100%;
     table-layout: fixed;
-	border-width: 2px;
+    border-width: 2px;
     border-bottom: 0px;
-	border-style: solid;
-	padding: 2px;
-	border-spacing: 0px;
-	border-color: {{color.sidebar_background}};
-	border-collapse: separate;
+    border-style: solid;
+    padding: 2px;
+    border-spacing: 0px;
+    border-color: {{color.sidebar_background}};
+    border-collapse: separate;
 }
 
 #sidebar table.short td.bor{
-	text-align: left;
+    text-align: left;
 }
 
 #sidebar table.short td.nbor{
-	padding: 0px; text-align: left;
+    padding: 0px; text-align: left;
 }
 
 #sidebar table.short td.borc{
-	text-align: center;
+    text-align: center;
 }
 
 #sidebar table.short td.full{
-        text-align: left;
+    text-align: left;
 }
 
 #sidebar table.short td.off {
-	text-align: center;
-	background: {{color.sidebar_background_off}};
+    text-align: center;
+    background: {{color.sidebar_background_off}};
 }
 
 
@@ -1967,7 +1944,6 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
   border-bottom-right-radius: 0px;
-  -moz-border-radius-bottomright: 0px;
 }
 
 #sidebar .list li {
@@ -1981,14 +1957,14 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar table.short2{
     width: 100%;
     table-layout:fixed;
-	padding: 10px;
-	border-spacing: 0px;
-	border-color: {{color.sidebar_background}};
-	border-collapse: collapse;
+    padding: 10px;
+    border-spacing: 0px;
+    border-color: {{color.sidebar_background}};
+    border-collapse: collapse;
 }
 
 #sidebar table.short2 td{
-	padding-left: 10px;
+    padding-left: 10px;
 }
 
 /*End of Sidebar style*/
@@ -2222,23 +2198,16 @@ table.qexp-table td.output {
     font-family: MJX_Math;
 }
 
-input::-webkit-input-placeholder {
+input::placeholder {
     color: #cccccc;
 }
 
 .table_rotate {
-  /* FF3.5+ */
-  -moz-transform: rotate(180deg);
-  /* Opera 10.5 */
-  -o-transform: rotate(180deg);
-  /* Saf3.1+, Chrome */
-  -webkit-transform: rotate(180deg);
-  /* IE6,IE7 */
-  filter: progid: DXImageTransform.Microsoft.BasicImage(rotation=0.166);
-  /* IE8 */
-  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0.166)";
-  /* Standard */
+   /* see the word "Weight" on the left edge of the table in
+        /ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&dim=1
+   */
   transform: rotate(180deg);
+
   writing-mode: vertical-lr;
   white-space: nowrap;
 }

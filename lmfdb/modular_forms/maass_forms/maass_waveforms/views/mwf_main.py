@@ -262,20 +262,18 @@ def render_one_maass_waveform_wp(info, prec=9):
         info["friends"] = [("L-function", Llink)]
 
     # Navigation to previous and next form
-    next_form_id = info['MF'].next_maassform_id()
-    if next_form_id:
-        next_data = ('next', r"$f_{\text next}$", url_for('mwf.render_one_maass_waveform',
-                                                                maass_id = next_form_id) )
-    else:
-        next_data = ('','','')
-    prev_form_id = info['MF'].prev_maassform_id()
-    if prev_form_id:
-        prev_data = ('previous', r"$f_{\text prev}$", url_for('mwf.render_one_maass_waveform',
-                                                                maass_id = prev_form_id) )
-    else:
-        prev_data = ('','','')
-
-    info['navi'] = ( prev_data, next_data )
+    # next_form_id = info['MF'].next_maassform_id()
+    # if next_form_id:
+    #    next_data = ('next', r"$f_{\text next}$", url_for('mwf.render_one_maass_waveform', maass_id = next_form_id) )
+    # else:
+    #    next_data = ('','','')
+    # prev_form_id = info['MF'].prev_maassform_id()
+    # if prev_form_id:
+    #    prev_data = ('previous', r"$f_{\text prev}$", url_for('mwf.render_one_maass_waveform', maass_id = prev_form_id) )
+    # else:
+    #    prev_data = ('','','')
+    
+    # info['navi'] = ( prev_data, next_data )
 
     info["downloads"] = [ ('All stored data of the form',
                            url_for('mwf.render_one_maass_waveform', maass_id=maass_id,
@@ -296,8 +294,8 @@ def render_one_maass_waveform_wp(info, prec=9):
     #                   'prec': 'mf.maass.mwf.precision',
     #                   'mult': 'mf.maass.mwf.dimension',
     #                   'ncoeff': 'mf.maass.mwf.ncoefficients',
-    #                   'fricke': 'mf.maass.mwf.fricke',
-    #                   'atkinlehner': 'mf.maass.mwf.atkinlehner'}
+    #                   'fricke': 'cmf.fricke',
+    #                   'atkinlehner': 'cmf.atkin-lehner'}
     properties = [('Level', [info['MF'].level]),
                   ('Symmetry', [info['MF'].even_odd()]),
                   ('Weight', [info['MF'].the_weight()]),
@@ -462,8 +460,8 @@ def evs_table2(search, twodarray=False, limit=50, offset=0):
     knowls = ['mf.maass.mwf.level', 'mf.maass.mwf.weight', 'mf.maass.mwf.character',
               'mf.maass.mwf.eigenvalue', 'mf.maass.mwf.symmetry',
               'mf.maass.mwf.precision', 'mf.maass.mwf.dimension',
-              'mf.maass.mwf.ncoefficients', 'mf.maass.mwf.fricke',
-              'mf.maass.mwf.atkinlehner']
+              'mf.maass.mwf.ncoefficients', 'cmf.fricke',
+              'cmf.atkin-lehner']
     titles = ['Level', 'Weight', 'Char',
               'Eigenvalue', 'Symmetry',
               'Precision', 'Mult.',

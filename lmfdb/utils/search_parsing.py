@@ -397,12 +397,10 @@ def _parse_subset(inp, query, qfield, mode, radical, product):
             return
         inp = sorted(inp)
         if inp:
-            print inp
             dup_free = [inp[0]]
             for i,x in enumerate(inp[1:]):
                 if x != inp[i]:
                     dup_free.append(x)
-            print dup_free
         else:
             dup_free = []
         if qfield in query:
@@ -612,7 +610,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise ValueError('%s does not define a number field in the database.'%F)
     # Expand out factored labels, like 11.11.11e20.1
     if not re.match(r'\d+\.\d+\.[0-9e_]+\.\d+',F):
-        raise ValueError("It must be of the form d.r.D.n, such as 2.2.5.1.")
+        raise ValueError("A number field label must be of the form d.r.D.n, such as 2.2.5.1.")
     parts = F.split(".")
     def raise_power(ab):
         if ab.count("e") == 0:

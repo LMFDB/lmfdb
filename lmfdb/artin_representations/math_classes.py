@@ -4,7 +4,7 @@ from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
-from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short, tryknowl
+from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
 
@@ -210,7 +210,7 @@ class ArtinRepresentation(object):
         galnt = self.smallest_gal_t()
         if len(galnt)==1:
             return galnt[0]
-        return tryknowl(galnt[0],galnt[1])
+        return group_display_knowl(galnt[0],galnt[1])
 
     def is_ramified(self, p):
         return self.number_field_galois_group().discriminant() % p == 0

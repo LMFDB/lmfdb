@@ -48,8 +48,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 	  <tr>
 	    <td>
 	  Search by {{KNOWL('dq.curve.highergenus.aut.label',title="label")}}
-          <input type="text" name="jump_to" value=""
-        placeholder="2.12-4.0.2-2-2-3">
+          <input type="text" name="jump_to" value="" placeholder="2.12-4.0.2-2-2-3">
 	    </td>
 	    <td>
           <button type="submit" value="Find">Find</button>
@@ -69,14 +68,23 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
           <tr align=left>
             <td align=right>
              {{KNOWL('ag.curve.genus',title='Genus')}}:
-            </td><td><input type="integer" name="genus" value=""
-      placeholder="3"></td>
+            </td><td><input type="integer" name="genus" value="" placeholder="3"></td>
       <td>
 	<span class="formexample">e.g. 4, or a range like 3..5</span>
       </td>
           </tr>
 
 
+ <tr align=left>
+            <td align=right>
+             {{KNOWL('curve.highergenus.aut.quotientgenus',title='Quotient Genus')}}:
+            </td><td><input type="integer" name="g0" value=""
+      placeholder="0"></td>
+      <td>
+	<span class="formexample">e.g. 4, or a range like 3..5</span>
+      </td>
+          </tr>
+	  
 	  <tr>
             <td align=right>
               {{KNOWL('curve.highergenus.aut.signature',title='Signature')}}:
@@ -95,7 +103,7 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
 
         <tr>
             <td align=right>
-	      {{KNOWL('curve.highergenus.aut.groupnotation', title="Group identifier")}}:
+	      {{KNOWL('group.small_group_label', title="Group identifier")}}:
             </td><td><input type="text" name="group" value="" placeholder="[4,2]"></td>
       <td>
 	<span class="formexample">e.g. [4,2]</span>
@@ -154,4 +162,5 @@ By  {{KNOWL('ag.curve.genus',title='genus')}}:
       </form>
 
 
-{% endblock %}
+      {% endblock %}
+      

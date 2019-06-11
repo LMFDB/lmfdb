@@ -143,18 +143,19 @@ class WebEC(object):
         try:
             N, iso, number = split_lmfdb_label(label)
             data = db.ec_curves.lucky({"lmfdb_label" : label})
+            if not data:
+                return "Curve not found" # caller must catch this and raise an error
             data['label_type'] = 'LMFDB'
         except AttributeError:
             try:
                 N, iso, number = split_cremona_label(label)
                 data = db.ec_curves.lucky({"label" : label})
+                if not data:
+                    return "Curve not found" # caller must catch this and raise an error
                 data['label_type'] = 'Cremona'
             except AttributeError:
                 return "Invalid label" # caller must catch this and raise an error
-
-        if data:
-            return WebEC(data)
-        return "Curve not found" # caller must catch this and raise an error
+        return WebEC(data)
 
     def make_curve(self):
         # To start with the data fields of self are just those from
@@ -248,7 +249,6 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        self.ncurves = db.ec_curves.count({'lmfdb_iso':self.lmfdb_iso})
         isodegs = [str(d) for d in self.isogeny_degrees if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)
@@ -312,11 +312,11 @@ class WebEC(object):
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
-        self.downloads = [('Download q-expansion', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
-                          ('Download all stored data', url_for(".download_EC_all", label=self.lmfdb_label)),
-                          ('Download Magma code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
-                          ('Download SageMath code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
-                          ('Download GP code', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
+        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
+                          ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
+                          ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Code to GP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp'))
         ]
 
         try:

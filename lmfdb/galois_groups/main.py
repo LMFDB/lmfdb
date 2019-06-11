@@ -10,14 +10,14 @@ from sage.all import ZZ, latex, gap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, 
+    list_to_latex_matrix, flash_error, comma,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_bracketed_posints, parse_restricted,
     search_wrap)
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
     group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
-    subfield_display, resolve_display, conjclasses, generators, chartable,
+    subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
 # Test to see if this gap installation knows about transitive groups
@@ -141,20 +141,21 @@ def yesno(val):
 
 
 def render_group_webpage(args):
-    data = None
-    info = {}
+    data = {}
     if 'label' in args:
         label = clean_input(args['label'])
         label = label.replace('t', 'T')
         data = db.gps_transitive.lookup(label)
         if data is None:
-            bread = get_bread([("Search Error", ' ')])
-            info['err'] = "Group " + label + " was not found in the database."
-            info['label'] = label
-            return search_input_error(info, bread)
+            if re.match(r'^\d+T\d+$', label):
+                flash_error("Group <span style='color:black'>%s</span> was not found in the database.", label)
+            else:
+                flash_error("<span style='color:black'>%s</span> is not a valid label for a Galois group.", label)
+            return redirect(url_for(".index"))
         data['label_raw'] = label.lower()
         title = 'Galois Group: ' + label
-        wgg = WebGaloisGroup.from_data(data)
+        wgg = WebGaloisGroup.from_nt(data['n'], data['t'])
+        data['wgg'] = wgg
         n = data['n']
         t = data['t']
         data['yesno'] = yesno
@@ -167,22 +168,17 @@ def render_group_webpage(args):
         if ZZ(order).is_prime():
             data['ordermsg'] = "$%s$ (is prime)" % order
         pgroup = len(ZZ(order).prime_factors()) < 2
-        if n == 1:
-            G = gap.SmallGroup(n, t)
-        else:
-            G = gap.TransitiveGroup(n, t)
-        if ZZ(order) < ZZ('10000000000'):
-            ctable = chartable(n, t)
-        else:
-            ctable = 'Group too large'
-        data['gens'] = generators(n, t)
+        if wgg.num_conjclasses() < 50:
+            data['cclasses'] = wgg.conjclasses()
+        if ZZ(order) < ZZ(10000000) and wgg.num_conjclasses() < 21:
+            data['chartable'] = chartable(n, t)
+        data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
-        data['chartable'] = ctable
+        data['num_cc'] = comma(wgg.num_conjclasses())
         data['parity'] = "$%s$" % data['parity']
-        data['cclasses'] = conjclasses(G, n)
-        data['subinfo'] = subfield_display(n, data['subs'])
-        data['resolve'] = resolve_display(data['resolve'])
+        data['subinfo'] = subfield_display(n, data['subfields'])
+        data['resolve'] = resolve_display(data['quotients'])
         if data['gapid'] == 0:
             data['gapid'] = "Data not available"
         else:
@@ -190,16 +186,16 @@ def render_group_webpage(args):
                                                       int(data['gapid']),
                                                       str([int(data['order']), int(data['gapid'])]))
         data['otherreps'] = wgg.otherrep_list()
-        ae = wgg.arith_equivalent()
+        ae = data['arith_equiv']
         if ae>0:
             if ae>1:
                 data['arith_equiv'] = r'A number field with this Galois group has %d <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'% ae
             else:
                 data['arith_equiv'] = r'A number field with this Galois group has exactly one <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> field.'
-        else:
+        elif ae > -1:
             data['arith_equiv'] = r'A number field with this Galois group has no <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields.'
-        if len(data['otherreps']) == 0:
-            data['otherreps']="There is no other low degree representation."
+        else:
+            data['arith_equiv'] = r'Data on whether or not a number field with this Galois group has <a knowl="nf.arithmetically_equivalent", title="arithmetically equivalent">arithmetically equivalent</a> fields has not been computed.'
         intreps = list(db.gps_gmodules.search({'n': n, 't': t}))
         if len(intreps) > 0:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
@@ -232,13 +228,12 @@ def render_group_webpage(args):
         pretty = group_display_pretty(n,t)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
-            info['pretty_name'] = pretty
+            data['pretty_name'] = pretty
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
-        info.update(data)
 
         bread = get_bread([(label, ' ')])
-        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%info['label_raw'], learnmore=learnmore_list())
+        return render_template("gg-show-group.html", credit=GG_credit, title=title, bread=bread, info=data, properties2=prop2, friends=friends, KNOWL_ID="gg.%s"%data['label_raw'], learnmore=learnmore_list())
 
 
 def search_input_error(info, bread):

@@ -203,15 +203,17 @@ def search_by_label(label):
     # check for general labels of the form w.d.name
     if re.match(ST_LABEL_NAME_RE,label):
         slabel = label.split('.')
-        try:
-            label = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, 0)
-        except ValueError:
-            label = None
-    if label is None:
+        rlabel = db.gps_sato_tate.lucky({'weight':int(slabel[0]),'degree':int(slabel[1]),'name':slabel[2]}, "label")
+        if not rlabel:
+            flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
+            return redirect(url_for(".index"))
+        return redirect(url_for('.by_label', label=rlabel), 301)
+    # check for a straight up name
+    rlabel = db.gps_sato_tate.lucky({'name':label}, "label")
+    if not rlabel:
         flash_error("%s is not the label or name of a Sato-Tate group currently in the database", label)
         return redirect(url_for(".index"))
-    else:
-        return redirect(url_for('.by_label', label=label), 301)
+    return redirect(url_for('.by_label', label=rlabel), 301)
 
 # This search function doesn't fit the model of search_wrapper very well,
 # So we don't use it.
@@ -542,21 +544,21 @@ def render_st_group(info, portrait=None):
 def completeness_page():
     t = 'Completeness of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Completeness','')]
-    return render_template('single.html', kid='dq.st_group.extent',
+    return render_template('single.html', kid='rcs.cande.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
 @st_page.route('/Source')
 def source_page():
     t = 'Source of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Source','')]
-    return render_template('single.html', kid='dq.st_group.source',
+    return render_template('single.html', kid='rcs.source.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
 @st_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Sato-Tate Group Data'
     bread = [('Sato-Tate Groups', url_for('.index')), ('Reliability','')]
-    return render_template('single.html', kid='dq.st_group.reliability',
+    return render_template('single.html', kid='rcs.rigor.st_group',
                            credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @st_page.route('/Labels')

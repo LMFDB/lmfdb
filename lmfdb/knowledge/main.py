@@ -28,7 +28,7 @@ from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
 from lmfdb.utils import datetime_to_timestamp_in_ms,\
-                        timestamp_in_ms_to_datetime
+                        timestamp_in_ms_to_datetime, flash_error
 
 #ejust for those, who still use an older markdown
 try:
@@ -195,7 +195,7 @@ def ref_to_link(txt):
                 ans += ", "
             ans += this_link
 
-    return '[' + ans + ']' + " " + everythingelse
+    return '[' + ans + ']'  + everythingelse
 
 def md_latex_accents(text):
     """
@@ -574,8 +574,19 @@ def save_form():
     if not allowed_id(ID):
         return redirect(url_for(".index"))
 
-    NEWID = request.form.get('krename', '').strip()
     FINISH_RENAME = request.form.get('finish_rename', '')
+    UNDO_RENAME = request.form.get('undo_rename', '')
+    if FINISH_RENAME:
+        k = Knowl(ID)
+        k.actually_rename()
+        flash("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name))
+        return redirect(url_for(".show", ID=k.source_name))
+    elif UNDO_RENAME:
+        k = Knowl(ID)
+        k.undo_rename()
+        flash("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID))
+        return redirect(url_for(".show", ID=ID))
+    NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
     new_content = request.form['content']
@@ -597,9 +608,14 @@ def save_form():
             pass
         else:
             try:
-                k.start_rename(NEWID, who)
+                if k.sed_safety == 0:
+                    time.sleep(0.01)
+                    k.actually_rename(NEWID)
+                    flash("Knowl renamed to {0} successfully.".format(NEWID))
+                else:
+                    k.start_rename(NEWID, who)
             except ValueError as err:
-                flash(str(err))
+                flash(str(err), "error")
             else:
                 if k.sed_safety == 1:
                     flash("Knowl rename process started. You can change code references using".format(NEWID))
@@ -607,18 +623,7 @@ def save_form():
                     flash("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID))
                 elif k.sed_safety == -1:
                     flash("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed".format(NEWID))
-                else:
-                    time.sleep(0.01)
-                    k.actually_rename()
-                    flash("Knowl renamed to {0} successfully.".format(NEWID))
                 ID = NEWID
-    elif FINISH_RENAME:
-        # We need to sleep briefly so that we don't have two identical timestamps
-        time.sleep(0.01)
-        if FINISH_RENAME == 'finish':
-            k.actually_rename()
-        elif FINISH_RENAME == 'undo':
-            k.undo_rename()
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))
     else:
@@ -752,8 +757,8 @@ def render_knowl(ID, footer=None, kwargs=None,
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
+    from psycopg2 import DataError
     cur_cat = request.args.get("category", "")
-
 
     filtermode = request.args.get("filtered")
     from knowl import knowl_status_code, knowl_type_code
@@ -775,7 +780,14 @@ def index():
     search = request.args.get("search", "")
     regex = (request.args.get("regex", "") == "on")
     keywords = search if regex else search.lower()
-    knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    try:
+        knowls = knowldb.search(category=cur_cat, filters=filters, types=types, keywords=keywords, regex=regex)
+    except DataError as e:
+        knowls = {}
+        if regex and "invalid regular expression" in str(e):
+	    flash_error("The string %s is not a valid regular expression", keywords)
+        else:
+            flash_error("Unexpected error %s occured during knowl search", str(e))
 
     def first_char(k):
         t = k['title']
