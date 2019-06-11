@@ -28,12 +28,13 @@ Graph = class {
 		this.nodes = [];
 		this.edges = [];
         this.ambient = ambient;
+        this.highlit = null;
 	}
        
 	addNode(value, posn, orders, options) {
 		var key = value[1].toString();
 		var node = this.nodeSet[key];
-        dbug = [value, posn, orders, this.nodes, node];
+        //dbug = [value, posn, orders, this.nodes, node];
 		if(node == undefined) {
 			node = new Node(key);
 			this.nodeSet[key] = node;
@@ -341,6 +342,7 @@ class Renderer {
         var node = this.graph.nodeSet[subid];
         if(node) {
             node.highlight();
+            this.graph.highlit = node;
             this.draw();
         }
     }
@@ -349,6 +351,7 @@ class Renderer {
         var node = this.graph.nodeSet[subid];
         if(node) {
             node.unhighlight();
+            this.graph.highlit = null;
             this.draw();
         }
     }
@@ -405,13 +408,13 @@ class Layout {
         }
 		this.numlevs = this.levs.length;
 
-		for (var i=0, node; node = this.graph.nodes[i]; i++) {
-			node.connected = new Array();
-		}
-		for (var i=0, edge; edge = this.graph.edges[i]; i++) {
-		  edge.source.connected.push(edge.target);
-		  edge.target.connected.push(edge.source);
-        }
+		//for (var i=0, node; node = this.graph.nodes[i]; i++) {
+			//node.connected = new Array();
+		//}
+		//for (var i=0, edge; edge = this.graph.edges[i]; i++) {
+		  //edge.source.connected.push(edge.target);
+		  //edge.target.connected.push(edge.source);
+        //}
 	}
 
        
@@ -446,13 +449,14 @@ class Layout {
         triv.layoutPosX = totx;
         wholeg.layoutPosX = totx;
 
-		for (var i=0, node; node = this.graph.nodes[i]; i++) {
-			node.connected = new Array();
-		}
-		for (var i=0, edge; edge = this.graph.edges[i]; i++) {
-		  edge.source.connected.push(edge.target);
-		  edge.target.connected.push(edge.source);
-        }
+        // Could be used to optimize layout
+		//for (var i=0, node; node = this.graph.nodes[i]; i++) {
+			//node.connected = new Array();
+		//}
+		//for (var i=0, edge; edge = this.graph.edges[i]; i++) {
+		  //edge.source.connected.push(edge.target);
+		  //edge.target.connected.push(edge.source);
+        //}
 	}
 
 	centering() {
@@ -601,12 +605,14 @@ class EventHandler {
 		var handlerinit = function(event){ event.data.initDrag(event) };
 		var handlerupdrag = function(event){ event.data.updateDrag(event) };
 		var handlerenddrag = function(event){ event.data.endDrag(event) };
+        var handlermousemove = function(event) { event.data.mouseMove(event)};
 		//this.eventMouseDown = this.initDrag.bindAsEventListener(this);
 		//this.eventMouseMove = this.updateDrag.bindAsEventListener(this);
 		//this.eventMouseUp   = this.endDrag.bindAsEventListener(this);
 		$(renderer.element).bind('mousedown', this, handlerinit);
 		$(renderer.element).bind('mousemove', this, handlerupdrag);
 		$(renderer.element).bind('mouseup', this, handlerenddrag);
+		$(renderer.element).bind('mousemove', this, handlermousemove);
 		//Event.observe(renderer.element, "mousedown", this.eventMouseDown);
 		//Event.observe(renderer.element, "mousemove", this.eventMouseMove);
 		//Event.observe(renderer.element, "mouseup", this.eventMouseUp);
@@ -620,6 +626,7 @@ class EventHandler {
 			initEdgeDrag:   nullfunc,
 			updateEdgeDrag: nullfunc,
 			endEdgeDrag:    nullfunc,
+			mouseMove:    nullfunc,
 			moveNodeOnDrag: true
 		}
 		for (var k in options) {
@@ -635,6 +642,30 @@ class EventHandler {
 		var r = this.renderer.element.getBoundingClientRect();
 		return [event.clientX-r.x, event.clientY-r.y];
     }
+
+  mouseMove(event) {
+    var overnode = this.renderer.nodeAt(this.offset(event));
+    // this.renderer
+    // this.renderer.graph
+    // this.renderer.element
+    if(overnode) {
+        if(overnode != this.renderer.graph.highlit) {
+            if(this.renderer.graph.highlit)
+                this.graph.highlit.unhighlight();
+            this.renderer.graph.highlit = overnode;
+            this.renderer.highlight(overnode.value);
+            // Turn on the lights
+            var subid = overnode.value;
+            $(`span[data-sgid=${subid}]`).addClass("activesubgp");
+        }
+    } else
+        if(this.renderer.graph.highlit) 
+            var val = this.renderer.graph.highlit.value;
+            this.renderer.unhighlight(val);
+            // Turn off the lights
+            var subid = val;
+            $(`span[data-sgid=${subid}]`).removeClass("activesubgp");
+  }
 
   initDrag(event) {
       if(isleftclick(event)) {
@@ -665,9 +696,9 @@ class EventHandler {
          //   }
       }
       this.options.updateNodeDrag(this.activeNode, event);
-    } else if(this.activeEdge) {
-      this.options.updateEdgeDrag(this.activeEdge, event);
-    }
+    } // else if(this.activeEdge) {
+       //this.options.updateEdgeDrag(this.activeEdge, event);
+     //}
   }
 
   endDrag(event) {
@@ -690,10 +721,10 @@ class EventHandler {
       //}
       this.options.endNodeDrag(this.activeNode);
       this.activeNode = null;
-    } else if(this.activeEdge) {
-      this.options.endEdgeDrag(this.activeEdge);
-      this.activeEdge = null;
-    }
+    } // else if(this.activeEdge) {
+       //this.options.endEdgeDrag(this.activeEdge);
+       //this.activeEdge = null;
+     //}
   }
 }
 
@@ -708,7 +739,7 @@ var onClickHandler = function(event) {
   }
 };
 
-// Utility
+// Utility from the web
 function isleftclick(e) {
 	var isLeftMB = false;
     e = e || window.event;
