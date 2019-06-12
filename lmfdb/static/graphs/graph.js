@@ -18,9 +18,25 @@
 /* For debugging, it can hold a value to be inspected in the console */
 var dbug = '';
 
-/* Highlight colors */
+// Highlight colors: these were for testing
 var selected_color = 'deepskyblue';
 var highlit_color = 'yellowgreen';
+
+
+
+// Figure out the highlight color for activesubgp
+var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
+for (var j = 0; j < classes.length; j++) {
+    if (classes[j].selectorText == 'span.activesubgp') {
+        var classtext = (classes[j].cssText) ? classes[j].cssText : classes[j].style.cssText;
+        highlit_color = classtext.replace(/^.*background:/,"");
+        highlit_color = highlit_color.replace(/;.*$/,"");
+        highlit_color = highlit_color.replace(/;/,"");
+    }
+}
+
+// A darker color: easier since these items exist in the DOM
+var selected_color = $(".link").css('background-color');
 
 Graph = class {
 	constructor(ambient) {
