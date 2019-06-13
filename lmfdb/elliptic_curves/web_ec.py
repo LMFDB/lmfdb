@@ -249,7 +249,10 @@ class WebEC(object):
 
         cond, iso, num = split_lmfdb_label(self.lmfdb_label)
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isogeny_degrees if d>1]
+        # NB self.isogeny_degrees is currently incorrect (as of
+        # 2019-06-13) but we can get the degrees from the correct row
+        # of the isogeny matrix
+        isodegs = [str(d) for d in sorted(list(set(self.isogeny_matrix[self.lmfdb_number-1]))) if d>1]
         if len(isodegs)<3:
             data['isogeny_degrees'] = " and ".join(isodegs)
         else:
