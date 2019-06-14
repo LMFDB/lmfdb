@@ -136,6 +136,8 @@ function set_buckets(col_selecter, bucket_id) {
   <tr>
   </tr>
   <tr>
+    <td>{{ KNOWL('cmf.coefficient_ring', title='Coefficient ring index')}}</td>
+    <td>{{ KNOWL('cmf.hecke_ring_generators', title='Coefficient ring gens.')}}</td>
     <td rowspan="2">
       Only for weight 1:
     </td>
@@ -144,6 +146,8 @@ function set_buckets(col_selecter, bucket_id) {
     {# <td>{{ KNOWL('cmf.artin_image', title='Artin image size*') }}</td> #}
   </tr>
   <tr>
+    <td><input type='text' style="width: 160px" name='hecke_ring_index' placeholder='20' value='{{info.hecke_ring_index}}'></td>
+    <td><input type='text' style="width: 160px" name='hecke_ring_generator_nbound' placeholder='20' value='{{info.hecke_ring_generator_nbound}}'></td>
     <td><input type='text' style="width: 160px" name='projective_image' placeholder='D15' value='{{info.projective_image}}'></td>
     <td>
       <select name='projective_image_type' style="width: 170px;">

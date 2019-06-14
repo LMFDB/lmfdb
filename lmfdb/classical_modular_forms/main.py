@@ -702,6 +702,8 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
+    parse_ints(info, query, 'hecke_ring_index')
+    parse_ints(info, query, 'hecke_ring_generator_nbound')
     parse_noop(info, query, 'projective_image', func=str.upper)
     parse_noop(info, query, 'projective_image_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
