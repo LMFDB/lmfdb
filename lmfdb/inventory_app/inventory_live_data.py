@@ -1,5 +1,5 @@
+from scripts.reports.jsonify_pg_structure import get_lmfdb_collections as glc
 import json
-from datetime import datetime
 import inventory_helpers as ih
 import inventory_viewer as iv
 import lmfdb_inventory as inv
@@ -7,100 +7,106 @@ import inventory_db_core as idc
 from scrape_helpers import register_scrape
 import scrape_frontend as sf
 import uuid
-from lmfdb import db
+
 
 ops_sz = 2000000
 null_uid = '00000000-0000-0000-0000-000000000000'
 
-glt = lambda x : "get_list_table"
-
-#Deal with ops table
+#Deal with ops collection
 
 def empty_ops():
-    raise NotImplementedError
+
     try:
-        db.drop_table('inv_ops')
-        db.create_table('inv_ops')
-    except Exception:
+      #TODO This should empty out the ops table
+      pass
+    except:
         pass
 
-#Function to get list a list of all available db/tables
+#Function to get list a list of all available db/collections
 def get_db_lists():
-    """Get list of all available DBs and Tables"""
-    return glt()
+    """Get list of all available DBs and Collections"""
+    return glc()
 
 #Scraping helpers and main functions
 
 def get_uid():
     """Create a new uid for a scrape process"""
-    return str(uuid.uuid4())
+    return uuid.uuid4()
 
 def trigger_scrape(data):
     """Start the rescrape process. In particular, get a uuid for it, register it, and spawn actual scrape"""
 
     data = json.loads(data)
-    db_name = data['data']['db']
-    table = data['data']['table']
+    db = data['data']['db']
+    coll = data['data']['coll']
     cont = True
     inprog = False
 
     uid = get_uid()
-    if not table:
-        all_tables = glt(databases=db_name)
-        inv.log_dest.warning(db_name+' '+str( all_tables))
-        table_list = all_tables[db_name]
-        for each_table in table_list:
-            tmp = register_scrape(db_name, each_table, uid)
+    if not coll:
+        all_colls = glc(databases=db)
+        inv.log_dest.warning(db+' '+str( all_colls))
+        coll_list = all_colls[db]
+        for each_coll in coll_list:
+            tmp = register_scrape(db, each_coll, uid)
             cont = cont and not tmp['err'] and not tmp['inprog']
             inprog = inprog and tmp['inprog']
     else:
-        tmp = register_scrape(db_name, table, uid)
+        tmp = register_scrape(db, coll, uid)
         cont = not tmp['err'] and not tmp['inprog']
         inprog = tmp['inprog']
-        table_list = [table]
+        coll_list = [coll]
     if(cont):
-        sf.scrape_and_upload_threaded(table_list, uid)
+        sf.scrape_and_upload_threaded(db, coll_list, uid)
         return {'uid':uid, 'locks':None, 'err':False}
     else:
-        return {'uid':null_uid, 'locks':inprog, 'err':cont}
+        return {'uid':uuid.UUID(null_uid), 'locks':inprog, 'err':cont}
 
 def get_progress(uid):
     """Get progress of scrape with uid"""
+
     #NOTE what follows _is_ vulnerable to races but
     # this will only affect the progress meter, and should be rare
-    scrapes = list(db.inv_ops.search({'uid':uid, 'running':{"$exists":True}}))
+    scrapes = idc.search_ops_table({'isa':'scrape', 'content':{'uid':uuid.UUID(uid)}})
     #Assume all ops records with correct uid and containing 'running' are relevant
-    n_scrapes = len(scrapes)
-    curr_table = 0
+    try:
+        n_scrapes = scrapes.count()
+    except:
+        try:
+            n_scrapes = len(scrapes())
+        except:
+            n_scrapes = 0
+
+    curr_coll = 0
     curr_item = None
     for item in scrapes:
-        if item['complete'] : curr_table = curr_table + 1
-        if item['running'] : curr_item = item
+        if item['content']['complete'] : curr_coll = curr_coll + 1
+        if item['content']['running'] : curr_item = item
 
     if curr_item:
         try:
-            prog_in_curr = get_progress_from_db(uid, curr_item['db'], curr_item['table'])
-        except Exception: # as e:
+            prog_in_curr = get_progress_from_db(uid, curr_item['db'], curr_item['coll'])
+        except Exception as e:
             #Web front or user can't do anything about errors here. If process
             # is failing, will become evident later
             prog_in_curr = 0
     else:
         #Nothing running. If not yet started, prog=0. If done prog=100.
-        prog_in_curr = 100 * (curr_table == n_scrapes)
+        prog_in_curr = 100 * (curr_coll == n_scrapes)
 
-    return {'n_tables':n_scrapes, 'curr_table':curr_table, 'progress_in_current':prog_in_curr}
+    return {'n_colls':n_scrapes, 'curr_coll':curr_coll, 'progress_in_current':prog_in_curr}
 
-def get_progress_from_db(uid, db_id, table_id):
+def get_progress_from_db(uid, db_id, coll_id):
     """Query db to see state of current scrape
 
     NOTE: this function assumed that when it is called there was a running
-    process on db.table, so if there no longer is, it must have finished
+    process on db.coll, so if there no longer is, it must have finished
     """
 
-    #db_name = idc.get_db_name(db_id)
-    table_name = idc.get_table_name(table_id)
+    db_name = idc.get_db_name(db_id)['name']
+    coll_name = idc.get_coll_name(coll_id)['name']
     try:
-        live_progress = sf.get_scrape_progress(table_name)
+#        live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
         #Cheat here: we'll cap running to 99% and the last 1% is left for upload time
         #If no running record found, this assumes it completed before
         #we managed to check it, hence 99%
@@ -113,46 +119,65 @@ def get_progress_from_db(uid, db_id, table_id):
 
 #Other live DB functions
 
-def check_for_gone(table_name):
-    """Check for a table in live db"""
+def check_for_gone(lmfdb, db_name, coll_name):
+    """Check for a collection db_name.coll_name in live db"""
 
     try:
-        return db[table_name].count() == 0
-    except Exception:
+        tbl_name = db_name+'_'+coll_name
+        return tbl_name in db.tablenames
+    except:
         pass
     return False
 
-def update_gone_list():
-    """Set status of all removed tables to gone"""
+def mark_all_gone():
+    """Set status of all removed collections to gone"""
 
-    dbs = iv.retrieve_db_listing()
-    all_tables = get_db_lists()
+    dbs = iv.gen_retrieve_db_listing()
+    all_colls = get_db_lists()
 
     gone_code = ih.status_to_code('gone')
-    for db_rec in dbs:
-        db_name = db_rec[0]
-        tables = iv.retrieve_db_listing(db_name)
-        #db_id = idc.get_db_id(db_name)
-        for table in tables:
-            table_name = table[0]
-            gone = not (table_name in all_tables[db_name])
+    for db in dbs:
+        colls = iv.gen_retrieve_db_listing(db[0])
+        db_id = idc.get_db_id(db[0])
+        for coll in colls:
+            gone = not (coll[0] in all_colls[db[0]])
             #Only mark if isn't already
-            if gone and table[3] != 'gone':
-                table_id = idc.get_table_id(table_name)
-                idc.update_table(table_id, status=gone_code)
-                inv.log_dest.info(str(table_name) +' is now gone')
+            mark = gone and coll[3] != 'gone'
+            if mark:
+                coll_id = idc.get_coll_id(db_id['id'], coll[0])
+                idc.update_coll(coll_id['id'], status=gone_code)
+                inv.log_dest.info(str(db) +'.'+str(coll) +' is now gone')
+
+def remove_all_gone():
+    """Remove inventory data for 'gone' collections"""
+    pass
+
+def update_gone_list():
+    """Check for any colections that are gone and mark
+    """
+
+    mark_all_gone()
+    return True
+
+def remove_gone_collections():
+    """Remove any collections marked as gone
+    """
+
+    remove_all_gone()
+    return True
 
 #Other scraping result handling
 
-def store_orphans(db_id, table_id, uid, orphan_document):
+def store_orphans(db_id, coll_id, uid, orphan_document):
     """Store orphan info into ops table"""
     try:
-        record = {'db_id':db_id, 'table_id':table_id, 'uid':uid, 'orphans':orphan_document}
-        db.inv_ops.insert_many([record])
+        record = {'db':db_id, 'coll':coll_id, 'uid':uuid.UUID(uid), 'orphans':orphan_document}
+        idc.add_to_ops_table(record)
     except Exception as e:
         inv.log_dest.error('Store failed with '+str(e))
-        table_name = idc.get_table_name(table_id)
-        filename = 'Orph_'+table_name+'.json'
+        db_name = idc.get_db_name(db_id)
+        coll_name = idc.get_coll_name(coll_id)
+        filename = 'Orph_'+db_name['name']+'_'+coll_name['name']+'.json'
         with open(filename, 'w') as file:
             file.write(json.dumps(orphan_document))
         inv.log_dest.error('Failed to store orphans, wrote to file '+filename)
@@ -161,40 +186,42 @@ def collate_orphans_by_uid(uid):
     """Fetch all orphans with given uid and return summary"""
 
     #All orphans records for this uid
-    record = {'uid':uid, 'orphans':{"$exists":True}}
-    records = db.inv_ops.search(record)
+    record = {'uid':uuid.UUID(uid), 'orphans':{"$exists":True}}
+    records = idc.search_ops_table(record)
     orph_data = {}
     db_name = ''
     try:
-        db_name = idc.get_db_name(records[0]['db'])
-    except Exception:
-        record = {'uid':uid}
-        tmp_record = db.inv_ops.lucky(record)
+        db_name = idc.get_db_name(records[0]['db'])['name']
+    except:
+        record = {'uid':uuid.UUID(uid)}
+        tmp_record = idc.search_ops_table(record)
         try:
-            db_name = idc.get_db_name(tmp_record['db'])
-        except Exception:
+            db_name = idc.get_db_name(tmp_record['db'])['name']
+        except:
             pass
 
     orph_data[db_name] = {}
     for entry in records:
-        table = idc.get_table_name(entry['table'])
-        orph_data[db_name][table] = split_orphans(entry)
+        coll = idc.get_coll_name(entry['coll'])['name']
+        orph_data[db_name][coll] = split_orphans(entry)
 
     return orph_data
 
 def collate_orphans():
     """Fetch all orphans and return summary"""
+
     #All orphans records
     record = {'orphans':{"$exists":True}}
+    records = idc.search_ops_table(record)
     orph_data = {}
 
-    for entry in db.inv_ops.search(record):
+    for entry in records:
         #print entry['uid']
-        db_name = idc.get_db_name(entry['db'])
+        db_name = idc.get_db_name(entry['db'])['name']
         orph_data[db_name] = {}
-        table = idc.get_table_name(entry['table'])
+        coll = idc.get_coll_name(entry['coll'])['name']
         orph_tmp = split_orphans(entry)
-        orph_data[db_name][table] = orph_tmp
+        orph_data[db_name][coll] = orph_tmp
 
     return orph_data
 
@@ -228,18 +255,22 @@ def set_lockout_state(state):
     """Swap state of lockout. If record exists, toggle, else create"""
     try:
         assert(state == True or state == False)
-        rec_set = {'lockout':state, 'time':datetime.now()}
-        db.inv_ops.insert_many([rec_set])
-    except Exception:
+        rec_set = {'lockout':state}
+        idc.add_to_ops_table(rec_set)
+    except:
         inv.log_dest.error('Failed to set lockout state')
 
 def get_lockout_state():
     """Get global lockout status"""
+    res = None
     try:
         rec_find = {'lockout':{"$exists":True}}
         #Get latest lockout record
-        res = db.inv_ops.search(rec_find, projection='lockout', sort=[['time',-1]], limit=1)
-        if res: return res
-    except Exception:
+        res = idc.search_ops_table(rec_find).sort('_id', -1).limit(1)
+    except:
+        res = None
         pass
-    return False
+    if res is None:
+        return False
+    else:
+        return res[0]['lockout']

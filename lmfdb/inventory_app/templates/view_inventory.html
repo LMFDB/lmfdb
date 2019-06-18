@@ -5,9 +5,9 @@
 <script type="text/javascript" src="{{ url_for('inventory_app.static', filename='inventory_viewer.js') }}"></script>
 <script type="text/javascript">
     //Create a js object of the fields from server.
-    var mainBlockList = new BlockList("{{db_name}}", "{{table_name}}");
-    var pageKey = "{{db_name}}"+"."+"{{table_name}}";
-    var pageId = {'db':"{{db_name}}", 'table':"{{table_name}}"};
+    var mainBlockList = new BlockList("{{db_name}}", "{{collection_name}}");
+    var pageKey ="{{db_name}}"+"."+"{{collection_name}}";
+    var pageId = {'db':"{{db_name}}", 'collection':"{{collection_name}}"};
     var table_fields = {{table_fields | safe}};
     var info_fields = {{info_fields | safe}};
 
@@ -28,19 +28,22 @@
 </script>
 {% endblock extra_script %}
 
-{% block title_block %} Showing <span id=nicename></span> [{{table_name}}]{% endblock title_block %}
+{% block title_block %} Showing <span id=nicename></span> [{{db_name}}.{{collection_name}}]{% endblock title_block %}
 
 {% block main_body %}
 <div>
-    <p>The following is the inventory for this table (last refreshed on <span id=scandate></span>) </p>
+    <p>The following is the inventory for this collection (last refreshed on <span id=scandate></span>) </p>
 </div>
 <div id="specialsDiv">
-<h2>Table information</h2>
+<h2>Collection information</h2>
 </div>
 <div id="dataDiv">
-<h2>List of columns in the database</h2>
-<p> Only the first 100 characters of the example record are shown.<br>
-  The Nulls column indicates the number of rows with no data.
+<h2>List of keys in the database</h2>
+<p>  The following keys appear in at least one record in the database
+<br>Warning: The type of the keys is inferred from only one record in the database.
+If the key can have different types in different records this type will be inaccurate.
+If no non-empty record can be found, the field is highlighted in blue.
+Only the first 100 characters of the example record are shown</br>
 </p>
 </div>
 <p></p>
