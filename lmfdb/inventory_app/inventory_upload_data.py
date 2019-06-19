@@ -55,18 +55,20 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
     dummy_info = {} #Dummy per collection info, containing basic fields we want included
     for field in inv.info_editable_fields:
         dummy_info[field] = None
-
     try:
         coll_entry = structure_dat[db_name][coll_name]
         db_entry = invc.get_db_id(db_name)
         if not db_entry['exist']:
             #All dbs should have been added from the struc: if not is error
             return
+        #Inventory data migration includes db name in collection name for some reason
+        #Work around until we can fix the data
+        full_coll_name = db_name +'_' + coll_name
 
-        _c_id = invc.get_coll_id(db_entry['id'], coll_name)
+        _c_id = invc.get_coll_id(db_entry['id'], full_coll_name)
         if not _c_id['exist']:
 	    #Collection doesn't exist, create it
-            _c_id = invc.set_coll(db_entry['id'], coll_name, coll_name,  {'description':None}, dummy_info, 0)
+            _c_id = invc.set_coll(db_entry['id'], full_coll_name, full_coll_name,  {'description':None}, dummy_info, 0)
         else:
 	    #Delete existing auto-table entries (no collection => no entries)
            delete_collection_data(_c_id['id'], tbl='auto')
