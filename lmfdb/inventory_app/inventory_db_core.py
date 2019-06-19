@@ -492,7 +492,7 @@ def count_colls(db_id):
 
     table_to_search = "inv_tables"
     info = {}
-    exists_at = db[table_to_search].search({'db_id':db_id}, count_only=True, info=info)
+    exists_at = db[table_to_search].search({'db_id':db_id}, info=info)
     return info['number']
 
 def get_all_colls(db_id=None):
