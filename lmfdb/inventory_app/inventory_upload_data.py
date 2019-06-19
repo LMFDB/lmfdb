@@ -77,15 +77,14 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
         invc.set_coll_scrape_date(_c_id['id'], scrape_date)
 
     except Exception as e:
-        inv.log_dest.error("Failed to refresh collection (db, coll or scrape data) "+str(e))
-
+        pass
     try:
         for field in coll_entry['fields']:
             invc.set_field(_c_id['id'], field, coll_entry['fields'][field])
 
 
     except Exception as e:
-        inv.log_dest.error("Failed to refresh collection entries "+str(e))
+        pass
 
     orphaned_keys = []
     if not fresh:
@@ -124,7 +123,6 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
     except Exception as e:
-        inv.log_dest.error("Failed to get db or coll id "+str(e))
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
@@ -132,7 +130,6 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
         upload_indices(db, coll_info['id'], data)
         # TODO rethrow if err
     except Exception as e:
-        inv.log_dest.error("Failed to upload index "+str(e))
         return {'err':True, 'mess':'Failed to upload'}
     return {'err':False, 'mess':''}
 
@@ -156,7 +153,7 @@ def delete_contents(tbl_name, check=True):
         #TODO if keep, below should delete all records
         db[tbl_name].empty()
     except Exception as e:
-        inv.log_dest.error("Error deleting from "+ tbl_name+' '+ str(e))
+        pass
 
 def delete_all_tables():
     """ Delete all tables specified by inv Note that other names can be present"""
@@ -172,7 +169,7 @@ def delete_all_tables():
         try:
             delete_contents(tbl)
         except Exception as e:
-            inv.log_dest.error("Error deleting "+ tbl + ' ' +str(e))
+            pass
 
 def delete_collection_data(coll_id, tbl, dry_run=False):
     """Clean out the data for given collection id
@@ -199,7 +196,7 @@ def delete_collection_data(coll_id, tbl, dry_run=False):
             for item in curs:
                 print item
     except Exception as e:
-        inv.log_dest.error("Error removing fields " + str(e))
+        pass
 
 def delete_by_collection(db_name, coll_name):
     """Remove collection entry and all its fields"""
@@ -208,7 +205,6 @@ def delete_by_collection(db_name, coll_name):
         _db_id = invc.get_db_id(db_name)
         _c_id = invc.get_coll_id(_db_id['id'], coll_name)
     except Exception as e:
-        inv.log_dest.error("Error getting collection " + str(e))
         return {'err':True, 'id':0, 'exist':False}
 
     #Remove fields entries matching _c_id
@@ -219,8 +215,7 @@ def delete_by_collection(db_name, coll_name):
     try:
         db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].delete({'_id':_c_id['id']})
     except Exception as e:
-        inv.log_dest.error("Error removing collection " + str(e))
-
+        pass
 
 #End table removal -----------------------------------------------------------------------
 

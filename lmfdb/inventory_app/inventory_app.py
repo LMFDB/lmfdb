@@ -52,7 +52,6 @@ def show_edit_root():
         listing = inventory_viewer.get_edit_list()
         lockout = inventory_live_data.get_lockout_state()
     except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
 
@@ -75,7 +74,6 @@ def show_edit_child(id):
     except BadNameError as e:
         return render_template('edit_bad_name.html', db_name=id, coll_name=None, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)]])
     except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
         new_url = str(request.referrer)
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -109,7 +107,6 @@ def show_records(id, id2):
     except BadNameError as e:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_records', id=id, id2=id2)]])
     except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
         new_url = str(request.referrer)
         bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')]]
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
@@ -128,7 +125,6 @@ def show_indices(id, id2):
     except BadNameError as e:
         return render_template('edit_bad_name.html', db_name=id, coll_name=id2, bread=[['&#8962;', url_for('index')],[url_pref.strip('/'), url_for('inventory_app.show_edit_root')],[id, url_for('inventory_app.show_edit_child', id=id)], [id2, url_for('inventory_app.show_indices', id=id, id2=id2)]])
     except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
 
         new_url = str(request.referrer)
 
@@ -182,7 +178,6 @@ def generate_live_listing():
     try:
         results = inventory_live_data.get_db_lists()
     except ih.ConnectOrAuthFail:
-        linv.log_dest.error("Connection failure, returning no data")
         return "{}"
     return jsonify(results)
 
@@ -193,7 +188,6 @@ def fetch_edit_inventory(id, id2):
     try:
         results = inventory_viewer.get_inventory_for_display(id+'.'+id2)
     except ih.ConnectOrAuthFail:
-        linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
 
@@ -204,7 +198,6 @@ def fetch_edit_records(id, id2):
     try:
         results = inventory_viewer.get_records_for_display(id+'.'+id2)
     except ih.ConnectOrAuthFail:
-        linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
 
@@ -214,7 +207,6 @@ def fetch_indices(id, id2):
     try:
         results = inventory_viewer.get_indices_for_display(id+'.'+id2)
     except ih.ConnectOrAuthFail:
-        linv.log_dest.error("Returning auth fail page")
         return "{}"
     return jsonify(results)
 
@@ -251,7 +243,6 @@ def edit_failure(request=request):
         else:
             errcode = -1
             errstr = "Undefined"
-    linv.log_dest.error("Returning fail page "+ errstr)
 
     new_url = str(request.referrer)
     url_info = ih.parse_edit_url(new_url)
@@ -286,7 +277,6 @@ def show_rescrape_page():
     try:
         listing = inventory_live_data.get_db_lists()
     except ih.ConnectOrAuthFail as e:
-        linv.log_dest.error("Returning auth fail page")
         new_url = str(request.referrer)
         mess = "Connect or Auth failure: ("+str(dt.now().strftime('%d/%m/%y %H:%M:%S'))+") "+e.message
         return render_template('edit_authfail.html', new_url=new_url, message = mess, submit_contact=linv.email_contact, bread=bread)

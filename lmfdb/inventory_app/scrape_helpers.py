@@ -34,10 +34,8 @@ def check_scrapes_by_coll_id(coll_id):
 def register_scrape(db, coll, uid):
     """Create a suitable inventory entry for the scrape"""
 
-    inv.log_dest.warning(db+' '+coll+' '+str(uid))
     try:
         db_id = idc.get_db_id(db)
-        inv.log_dest.warning(str(db_id))
         db_id = db_id['id']
         inprog = False
         had_err = False
@@ -50,7 +48,6 @@ def register_scrape(db, coll, uid):
                 had_err = tmp['err'] and had_err
         else:
             coll_id = idc.get_coll_id(db_id, coll)
-            inv.log_dest.warning(str(coll_id))
             coll_id = coll_id['id']
             tmp = check_and_insert_scrape_record(db_id, coll_id, uid)
             inprog = tmp['inprog'] and inprog
@@ -58,7 +55,6 @@ def register_scrape(db, coll, uid):
 
     except Exception as e:
         #Either failed to connect etc, or are already scraping
-        inv.log_dest.warning('Error resistering scrape '+str(e))
         return {'err':True, 'inprog':False}
 
     return {'err':had_err, 'inprog':inprog}
@@ -124,7 +120,6 @@ def null_all_scrapes(db, coll):
 
         # TODO fix this line inv_db['ops'].update_many(rec_find, {"$set":rec_set})
     except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
         return False
 
 def null_old_scrapes(time=DEFAULT_MAX_TIME):
@@ -159,7 +154,6 @@ def get_live_scrapes_older_than(min_hours_old=DEFAULT_MAX_TIME, db_id=None, coll
         curs = idc.search_ops_table(rec_test)
         return list(curs)
     except Exception as e:
-        inv.log_dest.warning('Failed to get old scrapes '+str(e))
         return []
 
 def check_scrapes_running(scrape_list):
@@ -175,7 +169,7 @@ def check_scrapes_running(scrape_list):
             if prog == (-1, -1):
                 new_list.append(item)
         except Exception as e:
-            inv.log_dest.warning('Failed to get progress '+db_name+' '+coll_name+' '+str(e))
+            pass
     return new_list
 
 def null_scrapes_by_list(scrape_list):
@@ -184,10 +178,9 @@ def null_scrapes_by_list(scrape_list):
     """
     try:
         for item in scrape_list:
-            #TODO write function below to update_ops(rec_find, rec_set, upsert)
             idc.update_ops({'_id':item['_id']}, {"$set": {'running':False, 'complete':True}}, upsert=False)
     except Exception as e:
-        inv.log_dest.warning('Failed to nullify scrapes '+str(e))
+        pass
 
 def get_completed_scrapes(n_days=7):
     """Get successfully completed scrapes from the last n days
@@ -200,5 +193,4 @@ def get_completed_scrapes(n_days=7):
         curs = idc.search_ops_table(rec_test)
         return list(curs)
     except Exception as e:
-        inv.log_dest.warning('Failed to get completed scrapes '+str(e))
         return []

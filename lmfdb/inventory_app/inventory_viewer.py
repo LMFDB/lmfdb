@@ -26,7 +26,6 @@ def is_valid_db_collection(db_name, collection_name):
             if not coll_id['exist']:
                 return False
     except Exception as e:
-        inv.log_dest.error('Failed checking existence of '+db_name+' '+collection_name+' '+str(e))
         return False
     return True
 
@@ -44,7 +43,6 @@ def get_nicename(db_name, collection_name):
             nice_name = db_rec['data']['nice_name']
         return nice_name
     except Exception as e:
-        inv.log_dest.error('Failed to get nice name for '+db_name+' '+collection_name+' '+str(e))
         #Can't return nice name so return None
         return None
 
@@ -69,10 +67,8 @@ def gen_retrieve_db_listing(db_name=None):
             table = db[coll_name]
             query = {'db_id':_id}
             records = list(table.search(query, {'_id': 1, 'name' : 1, 'nice_name':1, 'status':1}))
-            print(records)
             records = [(rec['name'], rec['nice_name'], 0, ih.code_to_status(rec['status']), False) for rec in records]
     except Exception as e:
-        inv.log_dest.error("Something went wrong retrieving db info "+str(e))
         records = None
     if records is not None:
         return sorted(records, key=lambda s: s[0].lower())
@@ -117,7 +113,6 @@ def retrieve_description(requested_db, requested_coll):
         return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scrape_date':coll_record['data']['scan_date']}
 
     except Exception as e:
-        inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
         return {'data':None, 'specials':None, 'scrape_date':None}
 
 def patch_records(first, second):
@@ -132,13 +127,12 @@ def patch_records(first, second):
         if val.get('schema',None): patched[el]['data']['schema'] = val['schema']
         pass
     except Exception as e:
-        inv.log_dest.error("Possible error unpacking results "+str(e))
-
+        pass
     try:
         dic_first = {item['name']:item['data'] for item in patched}
         dic_second = {item['name']:item['data'] for item in second}
     except Exception as e:
-        inv.log_dest.error("Possible error unpacking results "+str(e))
+        pass
     dic_patched = dic_first.copy()
 
     #Patch the not-None from second in
@@ -169,7 +163,6 @@ def retrieve_records(requested_db, requested_coll):
         return {'data':ih.empty_null_record_info(records['data']), 'scrape_date':coll_record['scan_date']}
 
     except Exception as e:
-        inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
         return {'data':None, 'specials':None, 'scrape_date':None}
 
 def retrieve_indices(requested_db, requested_coll):
@@ -188,7 +181,6 @@ def retrieve_indices(requested_db, requested_coll):
         return {'data':records['data'], 'scrape_date':coll_record['scan_date']}
 
     except Exception as e:
-        inv.log_dest.error("Error retrieving inventory "+requested_db+'.'+requested_coll+' '+str(e))
         return {'data':None, 'specials':None, 'scrape_date':None}
 
 def get_inventory_for_display(full_name):
@@ -201,13 +193,11 @@ def get_inventory_for_display(full_name):
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_description(parts[0], parts[1])
     except Exception as e:
-        inv.log_dest.error("Unable to get requested inventory "+ str(e))
         return {'data': None, 'specials': None, 'scrape_date': None}
 
     try:
         return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scrape_date':records['scrape_date']}
     except Exception as e:
-        inv.log_dest.error("Error decoding inventory object "+ str(e))
         return {'data': None, 'specials': None, 'scrape_date': None}
 
 def get_records_for_display(full_name):
@@ -220,13 +210,11 @@ def get_records_for_display(full_name):
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_records(parts[0], parts[1])
     except Exception as e:
-        inv.log_dest.error("Unable to get requested inventory "+ str(e))
         return {'data': None, 'scrape_date': None}
 
     try:
         return {'data':ih.diff_records(records['data']), 'scrape_date' : records['scrape_date']}
     except Exception as e:
-        inv.log_dest.error("Error decoding inventory object "+ str(e))
         return {'data': None, 'scrape_date': None}
 
 def get_indices_for_display(full_name):
@@ -238,13 +226,11 @@ def get_indices_for_display(full_name):
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_indices(parts[0], parts[1])
     except Exception as e:
-        inv.log_dest.error("Unable to get requested inventory "+ str(e))
         return {'data': None, 'scrape_date': None}
 
     try:
         return {'data':records['data'], 'scrape_date' : records['scrape_date']}
     except Exception as e:
-        inv.log_dest.error("Error decoding inventory object "+ str(e))
         return {'data': None, 'scrape_date': None}
 
 def collate_collection_info(db_name):
@@ -275,25 +261,18 @@ def apply_edits(diff):
         diff_to_apply = process_edits(diff_to_apply)
         update_fields(diff_to_apply)
     except Exception as e:
-#        inv.log_dest.error("Error in edit validation or apply "+str(e))
         raise e
 
 
 def apply_submitted_edits(response):
     """ Attempt to apply edits submitted as a diffs object via web, i.e member of response obj
     """
-#    try:
-#        inv.log_transac.info(str(response.referrer)+' : '+str(response.data))
-#    except Exception as e:
-#        #If we can't log the attempt, we can still maybe log the failure. Perhaps data is missing etc
-#        inv.log_transac.error("Failed to log transaction "+str(e))
 
     #Validate the response and if good pass to the DB interface code
     try:
         decoder = json.JSONDecoder()
         resp_str = decoder.decode(response.data)
     except Exception as e:
-#        inv.log_dest.error("Error decoding edits "+str(e))
         raise DiffDecodeError(str(e))
 
     try:
@@ -365,7 +344,6 @@ def process_edits(diff):
         if diff_item['field'] == "example":
             str = diff_item['content']
             str = ih.transform_examples(str, True)
-            inv.log_dest.info(str)
             diffs[index]['content'] = str
 
     #We allow editing of nice_names in two ways, so we patch the diff accordingly here
@@ -396,7 +374,6 @@ def check_locks(resp):
         if check_locked(coll_id['id']):
             raise EditLockError('Collection locked')
     except Exception as e:
-        inv.log_dest.error("Error in locking "+str(e))
         raise e
 
 #  Custom exceptions for diff validation ++++++++++++++++++++++++++++++++++

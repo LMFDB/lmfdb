@@ -19,10 +19,6 @@ def update_fields(diff, storeRollback=True):
     """
 
     try:
-        if diff['collection'] is not None:
-            inv.log_dest.info("Updating descriptions for " + diff["db"]+'.'+diff["collection"])
-        else:
-            inv.log_dest.info("Updating descriptions for " + diff["db"])
         _id = idc.get_db_id(diff["db"])
         rollback = None
 
@@ -75,11 +71,11 @@ def update_fields(diff, storeRollback=True):
                         store_rollback(rollback)
 
         except Exception as e:
-            inv.log_dest.error("Error applying diff "+ str(change)+' '+str(e))
             raise UpdateFailed(str(e))
 
     except Exception as e:
-        inv.log_dest.error("Error updating fields "+ str(e))
+        #inv.log_dest.error("Error updating fields "+ str(e))
+        pass
 
 def capture_rollback(db_id, db_name, coll_name, change, coll_id = None):
     """"Capture diff which will allow roll-back of edits
@@ -157,7 +153,6 @@ def store_rollback(rollback_diff):
         db[table].upsert(record)
         return {'err':False, 'id':_id}
     except Exception as e:
-        inv.log_dest.error("Error inserting new record" +str(e))
         return {'err':True, 'id':0}
 
 def set_rollback_dead(rollback_doc):

@@ -272,7 +272,6 @@ def set_field(coll_id, name, data, type='auto'):
     rec_set = {fields_fields[3]:data}
 
     result = upsert_and_check(db['inv_fields_'+type], rec_find, rec_set)
-    print(result)
     # Now generate and set the sequenctial _id until we can
     # refactor the data properly
     if not result['exist'] or result['id'] == -1:
@@ -310,7 +309,6 @@ def add_index(coll_id, index_data):
     #If record exists, just return its ID
     exists_at = db['inv_indices'].lookup(record)
     if exists_at is not None:
-        inv.log_dest.debug("Index exists")
         _id = exists_at['_id']
     else:
         record[indexes_fields[2]] = coll_id
@@ -318,7 +316,6 @@ def add_index(coll_id, index_data):
         try:
             upsert_and_check(db['inv_indices'], {}, record)
         except Exception as e:
-            inv.log_dest.error("Error inserting new index" +str(e))
             return {'err':True, 'id':0, 'exist':False}
 
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
@@ -338,7 +335,6 @@ def get_all_indices(coll_id):
         data = list(db[table_to_search].search(rec_find))
         return {'err':False, 'id':-1, 'exist':True, 'data':data}
     except Exception as e:
-        inv.log_dest.error("Error getting data "+str(e))
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
 def upsert_and_check(table, rec_find, rec_set):
@@ -485,7 +481,6 @@ def cleanup_records(coll_id, record_list):
                 db[table_to_search].delete(item)
 
     except Exception as e:
-        inv.log_dest.error("Error cleaning records "+str(e))
         return {'err':True}
 
 #End table sync --------------------------------------------------------------------------
@@ -523,7 +518,7 @@ def count_records_and_types(coll_id, as_string=False):
         n_rec = sum([rec['count'] for rec in recs])
         counts = (n_rec, n_types)
     except Exception as e:
-        inv.log_dest.error("Error getting counts "+str(e))
+        pass
     if as_string:
         counts = (comma(counts[0]), comma(counts[1]))
     return counts

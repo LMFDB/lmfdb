@@ -25,5 +25,4 @@ def update_scrape_progress(db_name, coll, uid, complete=None, running=None):
         coll_id = idc.get_coll_id(db_id['id'], coll)
         update_scrape_progress_helper(db_id['id'], coll_id['id'], uid, complete=complete, running=running)
     except Exception as e:
-        inv.log_dest.error("Error updating progress "+ str(e))
         return False

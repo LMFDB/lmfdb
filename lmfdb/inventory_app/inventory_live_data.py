@@ -45,7 +45,6 @@ def trigger_scrape(data):
     uid = get_uid()
     if not coll:
         all_colls = glc(databases=db)
-        inv.log_dest.warning(db+' '+str( all_colls))
         coll_list = all_colls[db]
         for each_coll in coll_list:
             tmp = register_scrape(db, each_coll, uid)
@@ -112,7 +111,6 @@ def get_progress_from_db(uid, db_id, coll_id):
         #we managed to check it, hence 99%
         percent = (live_progress[0] *99)/live_progress[1]
     except Exception as e:
-        inv.log_dest.warning(e)
         percent = 0
         raise e
     return percent
@@ -146,7 +144,6 @@ def mark_all_gone():
             if mark:
                 coll_id = idc.get_coll_id(db_id['id'], coll[0])
                 idc.update_coll(coll_id['id'], status=gone_code)
-                inv.log_dest.info(str(db) +'.'+str(coll) +' is now gone')
 
 def remove_all_gone():
     """Remove inventory data for 'gone' collections"""
@@ -174,7 +171,6 @@ def store_orphans(db_id, coll_id, uid, orphan_document):
         record = {'db':db_id, 'coll':coll_id, 'uid':uuid.UUID(uid), 'orphans':orphan_document}
         idc.add_to_ops_table(record)
     except Exception as e:
-        inv.log_dest.error('Store failed with '+str(e))
         db_name = idc.get_db_name(db_id)
         coll_name = idc.get_coll_name(coll_id)
         filename = 'Orph_'+db_name['name']+'_'+coll_name['name']+'.json'
@@ -258,7 +254,7 @@ def set_lockout_state(state):
         rec_set = {'lockout':state}
         idc.add_to_ops_table(rec_set)
     except:
-        inv.log_dest.error('Failed to set lockout state')
+        pass
 
 def get_lockout_state():
     """Get global lockout status"""
