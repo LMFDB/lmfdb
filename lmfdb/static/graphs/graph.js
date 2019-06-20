@@ -61,9 +61,10 @@ Graph = class {
             node.label = value[0];
             node.ccsize = value[3];
             node.level = orders.indexOf(value[4]);
-            var img = new Image();
-            img.src= value[5];
-            node.image = img;
+            node.image = new Image();
+            node.image.src= value[5];
+            node.ready=false;
+
             node.posn = posn;
 			node.setOptions(options);
             //console.log(options['raw']);
@@ -247,24 +248,33 @@ class Renderer {
 		this.ctx.font = "10px Arial";
         var ctxt = this.ctx;
 		//this.ctx.fillText(node.options.raw, node.center[0]-10, node.center[1]);
-        var img;
-        img = node.image;
-        var lft = node.center[0]-0.5*img.width;
-        if(node.selected) {
-            ctxt.fillStyle= selected_color;
-            ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+        var img = node.image;
+        if(! node.ready) {
+            console.log("Not ready");
+            img.onload = function() {
+                node.ready=true;
+                ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
+                if(node.ccsize>1) {
+                    ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+                };
+            };
+        } else {
+            var lft = node.center[0]-0.5*img.width;
+            if(node.selected) {
+                ctxt.fillStyle= selected_color;
+                ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+            }
+            if(node.highlit) {
+                ctxt.fillStyle= highlit_color;
+                ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+            }
+            ctxt.drawImage(node.image,lft,node.center[1]-4);
+            this.ctx.strokeStyle = 'black';
+            this.ctx.fillStyle = 'black';
+            if(node.ccsize>1) {
+                ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
+            }
         }
-        if(node.highlit) {
-            ctxt.fillStyle= highlit_color;
-            ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
-        }
-        ctxt.drawImage(node.image,lft,node.center[1]-4);
-		this.ctx.strokeStyle = 'black';
-		this.ctx.fillStyle = 'black';
-        if(node.ccsize>1) {
-            ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
-        }
-
 	}
        
 	drawEdge(edge) {
