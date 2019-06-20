@@ -464,9 +464,9 @@ def allisog(line, lmfdb_order=True):
     for storing in the database and then displaying with no need for
     further permutation.  Set lmfdb_order=False to not do this.
 
-    Note that the website shows the isogeny class w.r.t. LMFDB
-    ordering, so if the matrices were stored in Cremona order they
-    would have to be permuted before displaying.
+    Note that the website shows the isogeny class w.r.t. either the
+    LMFDB or the Cremona ordering; in the latter case, they are
+    permuted before displaying.
 
     Input line fields:
 
@@ -480,6 +480,14 @@ def allisog(line, lmfdb_order=True):
     data = split(line)
     isomat = data[5]
     isomat = [[int(d) for d in row.split(",")] for row in isomat[2:-2].split("],[")]
+    
+    # This dict stores the degrees of (cyclic) isogenies from each
+    # curve.  We must compute this *before* the optional (but default)
+    # reordering of the rows/cols.  The value for key n (=1,2,3,...)
+    # is a sorted list of distinct degrees for the n'th curve in the
+    # Cremona ordering.
+
+    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
 
     if lmfdb_order:
         curves = data[4] # string
@@ -489,14 +497,29 @@ def allisog(line, lmfdb_order=True):
         ncurves = len(curves)
         isomat = [[isomat[perm[i]][perm[j]] for i in range(ncurves)] for j in range(ncurves)]
 
-    # count the curves in the class
-    isogeny_degrees = dict([[n+1,sorted(list(set(row)))] for n,row in enumerate(isomat)])
 
     return {'label': data[:3],
         'isogeny_matrix': isomat,
         'isogeny_degrees': isogeny_degrees,
     }
 
+def fix_isogeny_degrees(C):
+    """function to (re)compute the isogeny_degrees field of a database
+    curve C from the isogeny_matrix. Note that the rows/columns of the
+    isogeny_matrix are indexed 1,2,... using LMFDB ordering.  There is
+    nothing to do if the class size is 1 or 2.
+    """
+    if C['class_size'] < 3:
+        return C
+    isomat = C['isogeny_matrix']
+    old_isodegs = C['isogeny_degrees']
+    new_isodegs = sorted(list(set(isomat[C['lmfdb_number']-1])))
+    if new_isodegs == old_isodegs:
+        return C
+    #print("changing isogeny_degrees for {} ({}) from {} to {}".format(C['label'],C['lmfdb_label'],old_isodegs,new_isodegs))
+    C['isogeny_degrees'] = new_isodegs
+    return C
+    
 
 filename_base_list = ['allbsd', 'allgens', 'intpts', 'alldegphi', 'alllabel']
 
