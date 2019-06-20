@@ -605,19 +605,37 @@ class EventHandler {
 		var handlerupdrag = function(event){ event.data.updateDrag(event) };
 		var handlerenddrag = function(event){ event.data.endDrag(event) };
         var handlermousemove = function(event) { event.data.mouseMove(event)};
-		//this.eventMouseDown = this.initDrag.bindAsEventListener(this);
-		//this.eventMouseMove = this.updateDrag.bindAsEventListener(this);
-		//this.eventMouseUp   = this.endDrag.bindAsEventListener(this);
+        var handlertouchstart = function(event) { 
+            var touch = event.touches[0];
+            var mouseEvent = new MouseEvent("mousedown", {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            renderer.element.dispatchEvent(mouseEvent);
+        };
+        var handlertouchmove = function(event) {
+            var touch = event.touches[0];
+            var mouseEvent = new MouseEvent("mousemove", {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            renderer.element.dispatchEvent(mouseEvent);
+        };
+        var handlertouchend = function(event) {
+            var touch = event.touches[0];
+            var mouseEvent = new MouseEvent("mouseup", {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            renderer.element.dispatchEvent(mouseEvent);
+        };
 		$(renderer.element).bind('mousedown', this, handlerinit);
 		$(renderer.element).bind('mousemove', this, handlerupdrag);
 		$(renderer.element).bind('mouseup', this, handlerenddrag);
 		$(renderer.element).bind('mousemove', this, handlermousemove);
-		$(renderer.element).bind('touchstart', this, handlerinit);
-		$(renderer.element).bind('touchend', this, handlerenddrag);
-		$(renderer.element).bind('touchmove', this, handlerupdrag);
-		//Event.observe(renderer.element, "mousedown", this.eventMouseDown);
-		//Event.observe(renderer.element, "mousemove", this.eventMouseMove);
-		//Event.observe(renderer.element, "mouseup", this.eventMouseUp);
+		$(renderer.element).bind('touchstart', this, handlertouchstart);
+		$(renderer.element).bind('touchmove', this, handlertouchmove);
+		$(renderer.element).bind('touchend', this, handlertouchend);
 	}
 
 	setOptions(options) {
@@ -688,19 +706,9 @@ class EventHandler {
     if(this.activeNode) {
         if(this.options.moveNodeOnDrag) {
 			this.activeNode.center = this.offset(event);
-			//for(var mynode = this.activeNode.next; mynode != null;
-            //  mynode = mynode.next) {
-            //  mynode.center = this.renderer.shift(mynode.prev.center, 43, 0);
-            //}
-            //for(var mynode = this.activeNode.prev; mynode != null;
-            //  mynode = mynode.prev) {
-		//		mynode.center = this.renderer.shift(mynode.next.center, -43, 0);
-         //   }
       }
       this.options.updateNodeDrag(this.activeNode, event);
-    } // else if(this.activeEdge) {
-       //this.options.updateEdgeDrag(this.activeEdge, event);
-     //}
+    }
   }
 
   endDrag(event) {
@@ -709,37 +717,23 @@ class EventHandler {
       var position = this.renderer.untranslate(this.offset(event));
       node.layoutPosX = position[0];
       node.layoutPosY = position[1];
-      //for(var mynode = this.activeNode.next; mynode != null;
-       //     mynode = mynode.next) {
-        //position =  this.renderer.untranslate(mynode.center);
-        //mynode.layoutPosX = position[0];
-        //mynode.layoutPosY = position[1];
-      //}
-      //for(var mynode = this.activeNode.prev; mynode != null;
-            //mynode = mynode.prev) {
-        //position =  this.renderer.untranslate(mynode.center);
-        //mynode.layoutPosX = position[0];
-        //mynode.layoutPosY = position[1];
-      //}
       this.options.endNodeDrag(this.activeNode);
       this.activeNode = null;
-    } // else if(this.activeEdge) {
-       //this.options.endEdgeDrag(this.activeEdge);
-       //this.activeEdge = null;
-     //}
+    }
   }
 }
 
 // Install event listeners
-var onClickHandler = function(event) {
-  var pos = this.eventPos(event);
+// Don't think this does anything
+//var onClickHandler = function(event) {
+//  var pos = this.eventPos(event);
 
-  var node = this.nodeAt(pos);
-  if(node && this.options.onnodeclick) {
-    this.options.onnodeclick(node);
-    return;
-  }
-};
+//  var node = this.nodeAt(pos);
+//  if(node && this.options.onnodeclick) {
+//    this.options.onnodeclick(node);
+//    return;
+//  }
+//};
 
 // Utility from the web
 function isleftclick(e) {
