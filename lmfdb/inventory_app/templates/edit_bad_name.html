@@ -9,10 +9,10 @@
 
 {% block main_body %}
 <div>
-{% if table_name is none %}
+{% if coll_name is none %}
   <h2> No database {{db_name}} exists </h2>
 {% else %}
-  <h2> No table {{table_name}} exists </h2>
+  <h2> No collection {{db_name}}.{{coll_name}} exists </h2>
 {% endif %}
 </div>
 {% endblock main_body %}
