@@ -159,6 +159,7 @@ def init_run_log(level_name=None):
 
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
+        assert(level)
         #log_dest.setLevel(level)
 
     #Add handler only if not already present
@@ -182,6 +183,7 @@ def init_transac_log(level_name=None):
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
         #log_transac.setLevel(level)
+        assert(level)
 
     #Add handler only if not already present
     if not len(log_transac.handlers):
