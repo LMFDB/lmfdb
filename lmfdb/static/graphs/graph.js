@@ -61,7 +61,9 @@ Graph = class {
             node.label = value[0];
             node.ccsize = value[3];
             node.level = orders.indexOf(value[4]);
-            node.imgnum = value[5];
+            var img = new Image();
+            img.src= value[5];
+            node.image = img;
             node.posn = posn;
 			node.setOptions(options);
             //console.log(options['raw']);
@@ -246,52 +248,23 @@ class Renderer {
         var ctxt = this.ctx;
 		//this.ctx.fillText(node.options.raw, node.center[0]-10, node.center[1]);
         var img;
-        if(node.image == null) {
-            img = new Image();
-            img.src="/static/graphs/img/eq"+node.imgnum+".png";
-            node.image = img;
-            img.onload = function() {
-                ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
-                if(node.ccsize>1) {
-                    ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
-                };
-            }
-        } else {
-            img = node.image;
-            var lft = node.center[0]-0.5*img.width;
-            if(node.selected) {
-                ctxt.fillStyle= selected_color;
-                ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
-            }
-            if(node.highlit) {
-                ctxt.fillStyle= highlit_color;
-                ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
-            }
-            ctxt.drawImage(node.image,lft,node.center[1]-4);
-            if(node.ccsize>1) {
-                ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
-            }
+        img = node.image;
+        var lft = node.center[0]-0.5*img.width;
+        if(node.selected) {
+            ctxt.fillStyle= selected_color;
+            ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+        }
+        if(node.highlit) {
+            ctxt.fillStyle= highlit_color;
+            ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
+        }
+        ctxt.drawImage(node.image,lft,node.center[1]-4);
+		this.ctx.strokeStyle = 'black';
+		this.ctx.fillStyle = 'black';
+        if(node.ccsize>1) {
+            ctxt.fillText(node.ccsize, node.center[0]-0.5*img.width-8, 12+node.center[1]);
         }
 
-		/*
-		var disp = node.options.display;
-		var url = 'data:image/svg+xml;base64,' + btoa(disp);
-		var DOMURL = window.URL || window.webkitURL || window;
-        var img = new Image();
-		var thisctx = this.ctx;
-        img.onload = function() {
-                thisctx.drawImage(img, node.center[0]-50, node.center[1]-10);
-                DOMURL.revokeObjectURL(url);
-        }
-		img.src=url;
-        */
-
-		//if(node.selected) { 
-			//this.ctx.beginPath();
-			//this.ctx.arc(node.center[0], node.center[1], radius, 0, Math.PI*2, true);
-			//this.ctx.closePath();
-			//this.ctx.stroke();
-		//}
 	}
        
 	drawEdge(edge) {
@@ -631,7 +604,7 @@ class EventHandler {
 		$(renderer.element).bind('mousemove', this, handlermousemove);
 		$(renderer.element).bind('touchstart', this, handlerinit);
 		$(renderer.element).bind('touchend', this, handlerenddrag);
-		$(renderer.element).bind('touchmove', this, handlermousemove);
+		$(renderer.element).bind('touchmove', this, handlerupdrag);
 		//Event.observe(renderer.element, "mousedown", this.eventMouseDown);
 		//Event.observe(renderer.element, "mousemove", this.eventMouseMove);
 		//Event.observe(renderer.element, "mouseup", this.eventMouseUp);

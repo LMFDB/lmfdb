@@ -15,7 +15,7 @@ from lmfdb.utils import (
 from lmfdb.groups.abstract import abstract_page
 from lmfdb.groups.abstract.web_groups import(
     WebAbstractGroup, WebAbstractSubgroup, group_names_pretty,
-    group_pretty_image_number)
+    group_pretty_image)
 
 credit_string = "Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, and Andrew Sutherland"
 
@@ -197,7 +197,7 @@ def render_abstract_group(args):
 
         # prepare for javascript call to make the diagram
         layers = gp.subgroup_layers
-        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image_number(grp.subgroup)] for grp in layer] for layer in layers[0]]
+        ll = [[["%s"%str(grp.subgroup), grp.counter, str(grp.subgroup_tex), grp.count, grp.subgroup_order, group_pretty_image(grp.subgroup)] for grp in layer] for layer in layers[0]]
         subs = gp.subgroups
         orders = list(set(sub.subgroup_order for sub in subs.values()))
         orders.sort()
