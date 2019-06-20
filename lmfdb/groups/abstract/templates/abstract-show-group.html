@@ -8,6 +8,7 @@
   $(document).ready(
   function() {
   $(".subgp").hover(highlight_group, unhighlight_group);
+  $(".subgp").on('touchstart', highlight_group);
   });
 </script>
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
