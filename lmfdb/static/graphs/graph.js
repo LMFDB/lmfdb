@@ -629,6 +629,9 @@ class EventHandler {
 		$(renderer.element).bind('mousemove', this, handlerupdrag);
 		$(renderer.element).bind('mouseup', this, handlerenddrag);
 		$(renderer.element).bind('mousemove', this, handlermousemove);
+		$(renderer.element).bind('touchstart', this, handlerinit);
+		$(renderer.element).bind('touchend', this, handlerenddrag);
+		$(renderer.element).bind('touchmove', this, handlermousemove);
 		//Event.observe(renderer.element, "mousedown", this.eventMouseDown);
 		//Event.observe(renderer.element, "mousemove", this.eventMouseMove);
 		//Event.observe(renderer.element, "mouseup", this.eventMouseUp);
