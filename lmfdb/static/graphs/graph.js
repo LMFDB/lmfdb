@@ -242,13 +242,12 @@ class Renderer {
 		node.style.left     = point[0] + 'px';
                
 		this.ctx.moveTo(0,0);
-		//var radius = this.options.radius;
 		this.ctx.strokeStyle = 'black';
 		this.ctx.fillStyle = 'black';
 		this.ctx.font = "10px Arial";
         var ctxt = this.ctx;
-		//this.ctx.fillText(node.options.raw, node.center[0]-10, node.center[1]);
         var img = node.image;
+
         if(! node.ready) {
             console.log("Not ready");
             img.onload = function() {
@@ -263,8 +262,7 @@ class Renderer {
             if(node.selected) {
                 ctxt.fillStyle= selected_color;
                 ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
-            }
-            if(node.highlit) {
+            } else if(node.highlit) {
                 ctxt.fillStyle= highlit_color;
                 ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
             }
