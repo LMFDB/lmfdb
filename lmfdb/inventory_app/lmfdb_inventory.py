@@ -1,5 +1,6 @@
 import json
 import logging, logging.handlers
+from os import devnull
 #from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
@@ -158,13 +159,14 @@ def init_run_log(level_name=None):
 
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
-        log_dest.setLevel(level)
+        #log_dest.setLevel(level)
 
     #Add handler only if not already present
     if not len(log_dest.handlers):
-        log_file_handler = logging.FileHandler(LOG_FILE_NAME)
-        formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
-        log_file_handler.setFormatter(formatter)
+        #log_file_handler = logging.FileHandler(LOG_FILE_NAME)
+        log_file_handler = logging.FileHandler(devnull)
+        #formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s ")
+        #log_file_handler.setFormatter(formatter)
         log_dest.addHandler(log_file_handler)
 
     if level_name:
@@ -179,16 +181,17 @@ def init_transac_log(level_name=None):
 
     if level_name:
         level = LEVELS.get(level_name, logging.NOTSET)
-        log_transac.setLevel(level)
+        #log_transac.setLevel(level)
 
     #Add handler only if not already present
     if not len(log_transac.handlers):
-        #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
-        log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
-        formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")
-        log_file_handler.setFormatter(formatter)
-        log_transac.addHandler(log_file_handler)
+        log_file_handler = logging.FileHandler(devnull)
 
+        #log_file_handler = logging.FileHandler(TR_LOG_FILE_NAME)
+        #log_file_handler = logging.handlers.RotatingFileHandler(TR_LOG_FILE_NAME, maxBytes=1024, backupCount=2)
+        #formatter = logging.Formatter( "%(asctime)s | %(pathname)s:%(lineno)d | %(levelname)s | %(message)s ")
+        #log_file_handler.setFormatter(formatter)
+        log_transac.addHandler(log_file_handler)
 
     if level_name:
         #Print the level change in debug mode
