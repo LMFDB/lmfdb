@@ -97,8 +97,20 @@ def set_db(name, nice_name):
 
 def update_db(db_id, name=None, nice_name=None):
     """"Update DB name or nice_name info by db id"""
-#TODO refill body
-    return {'err':True, 'id':db_id, 'exist':False}
+
+    #Check db exists with given id and get record for it
+    rec_find = list(db['inv_dbs'].search({'_id':db_id}))
+    if not rec_find:
+        return {'err':True, 'id':db_id, 'exist':False}
+
+    rec_find = rec_find[0]
+    rec_set = {}
+    if name is not None:
+        rec_set['name'] = name
+    if nice_name is not None:
+        rec_set['nice_name'] = nice_name
+    db['inv_dbs'].update(rec_find, rec_set)
+    return {'err':False, 'id':db_id, 'exist':True}
 
 def get_coll(db_id, name):
     """Return a collection entry.
