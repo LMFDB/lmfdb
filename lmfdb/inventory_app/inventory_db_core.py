@@ -374,7 +374,9 @@ def upsert_and_check(table, rec_find, rec_set):
         result = table.upsert(rec_find, rec_set)
         upserted = result[0]
         if result[0]:
-            _id = result[1]
+            #Upsert doesn't allow returning data, so search now...
+            dat = list(table.search({'id':result[1]}))
+            _id = dat[0]['_id']
         else:
             _id = -1
     except Exception as e:

@@ -76,16 +76,17 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
         except Exception as e:
             scrape_date = datetime.datetime.min
+
         invc.set_coll_scrape_date(_c_id['id'], scrape_date)
 
     except Exception as e:
         pass
+
     try:
         for field in coll_entry['fields']:
             invc.set_field(_c_id['id'], field, coll_entry['fields'][field])
             #Add any keys needed to human_table
             invc.create_field(_c_id['id'], field, 'human')
-
 
     except Exception as e:
         pass
