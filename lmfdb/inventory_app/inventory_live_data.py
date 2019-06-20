@@ -7,6 +7,7 @@ import inventory_db_core as idc
 from scrape_helpers import register_scrape
 import scrape_frontend as sf
 import uuid
+from lmfdb import db as lmfdb_db
 
 
 ops_sz = 2000000
@@ -85,7 +86,7 @@ def get_progress(uid):
     if curr_item:
         try:
             prog_in_curr = get_progress_from_db(uid, curr_item['db'], curr_item['coll'])
-        except Exception as e:
+        except:
             #Web front or user can't do anything about errors here. If process
             # is failing, will become evident later
             prog_in_curr = 0
@@ -105,7 +106,7 @@ def get_progress_from_db(uid, db_id, coll_id):
     db_name = idc.get_db_name(db_id)['name']
     coll_name = idc.get_coll_name(coll_id)['name']
     try:
-#        live_progress = sf.get_scrape_progress(db_name, coll_name, getDBConnection())
+        live_progress = sf.get_scrape_progress(db_name, coll_name)
         #Cheat here: we'll cap running to 99% and the last 1% is left for upload time
         #If no running record found, this assumes it completed before
         #we managed to check it, hence 99%
@@ -122,7 +123,7 @@ def check_for_gone(lmfdb, db_name, coll_name):
 
     try:
         tbl_name = db_name+'_'+coll_name
-        return tbl_name in db.tablenames
+        return tbl_name in lmfdb_db.tablenames
     except:
         pass
     return False
@@ -170,7 +171,7 @@ def store_orphans(db_id, coll_id, uid, orphan_document):
     try:
         record = {'db':db_id, 'coll':coll_id, 'uid':uuid.UUID(uid), 'orphans':orphan_document}
         idc.add_to_ops_table(record)
-    except Exception as e:
+    except:
         db_name = idc.get_db_name(db_id)
         coll_name = idc.get_coll_name(coll_id)
         filename = 'Orph_'+db_name['name']+'_'+coll_name['name']+'.json'

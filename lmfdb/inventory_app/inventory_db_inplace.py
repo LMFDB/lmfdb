@@ -1,7 +1,7 @@
 import inventory_helpers as ih
 import lmfdb_inventory as inv
 import inventory_db_core as idc
-import copy
+from lmfdb import db as lmfdb_db
 
 class UpdateFailed(Exception):
     """Raise for failure to update"""
@@ -35,6 +35,7 @@ def update_fields(diff, storeRollback=True):
                     if storeRollback:
                         rollback = capture_rollback(_id['id'], diff["db"], diff["collection"], change)
                     #Only nice_name is currently an option
+                    print(change['field'])
                     if(change["field"] not in ['nice_name', 'status']):
                         updated = {'err':True}
                     else:
@@ -49,6 +50,7 @@ def update_fields(diff, storeRollback=True):
                             updated = idc.update_coll(c_id['id'], nice_name=new_nice, status=new_stat)
                         else:
                             #Is database nice_name
+                            print(_id)
                             updated = idc.update_db(_id['id'], nice_name=change["content"])
                 else:
                     _c_id = idc.get_coll_id(_id['id'], diff["collection"])
@@ -150,9 +152,9 @@ def store_rollback(rollback_diff):
     record = {fields[1]:rollback_diff}
     try:
         _id = None
-        db[table].upsert(record)
+        lmfdb_db[table].upsert(record)
         return {'err':False, 'id':_id}
-    except Exception as e:
+    except:
         return {'err':True, 'id':0}
 
 def set_rollback_dead(rollback_doc):
@@ -161,11 +163,12 @@ def set_rollback_dead(rollback_doc):
     rollback_doc -- Rollback entry.
 
     """
+    return
     #Because we're using nexted documents, we capture the entire record, modify and return
-    rollback_coll = db['inv_rollback']
-    id = rollback_doc['_id']
-    diff = rollback_doc.copy()
-    diff['diff']['live'] = False
+    # rollback_coll = db['inv_rollback']
+    # id = rollback_doc['_id']
+    # diff = rollback_doc.copy()
+    # diff['diff']['live'] = False
     #TODO fix this, assuming we keep the rollback at all
     #rollback_coll.find_and_modify(query={'_id':id}, update={"$set":diff}, upsert=False, full_response=True)
 

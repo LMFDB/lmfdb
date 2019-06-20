@@ -2,7 +2,7 @@ import lmfdb_inventory as inv
 import inventory_db_core as invc
 import inventory_live_data as ild
 import datetime
-from psycopg2.extras import Json
+from lmfdb import db as lmfdb_db
 
 #Routines to upload data from reports scan into inventory DB
 
@@ -37,6 +37,7 @@ def upload_scraped_inventory(structure_dat, uid):
                 db_id = invc.get_db_id(db_name)
                 coll_id = invc.get_coll_id(db_id['id'], coll_name)
                 ild.store_orphans(db_id['id'], coll_id['id'], uid, orphaned_keys)
+    return n_dbs
 
 def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
     """Upload the structure description for a single collection
@@ -74,12 +75,12 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
            delete_collection_data(_c_id['id'], tbl='auto')
         try:
             scrape_date = datetime.datetime.strptime(structure_dat[db_name][coll_name]['scrape_date'], '%Y-%m-%d %H:%M:%S.%f')
-        except Exception as e:
+        except:
             scrape_date = datetime.datetime.min
 
         invc.set_coll_scrape_date(_c_id['id'], scrape_date)
 
-    except Exception as e:
+    except:
         pass
 
     try:
@@ -88,7 +89,7 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
             #Add any keys needed to human_table
             invc.create_field(_c_id['id'], field, 'human')
 
-    except Exception as e:
+    except:
         pass
 
     orphaned_keys = []
@@ -96,7 +97,7 @@ def upload_collection_structure(db_name, coll_name, structure_dat, fresh=False):
         try:
 	    #Trim any human table keys which are now redundant
             orphaned_keys = invc.trim_human_table(db_entry['id'], _c_id['id'])
-        except Exception as e:
+        except:
             pass
 
     return orphaned_keys
@@ -127,14 +128,14 @@ def upload_collection_indices(db, db_name, coll_name, structure_dat):
     try:
         db_info = invc.get_db(db, db_name)
         coll_info = invc.get_coll(db, db_info['id'], coll_name)
-    except Exception as e:
+    except:
         return {'err':True, 'mess':'Failed to get db or coll'} #Probably should rethrow
     try:
         data = structure_dat[db_name][coll_name]['indices']
         #err = upload_indices(db, coll_info['id'], data)
         upload_indices(db, coll_info['id'], data)
         # TODO rethrow if err
-    except Exception as e:
+    except:
         return {'err':True, 'mess':'Failed to upload'}
     return {'err':False, 'mess':''}
 
@@ -156,8 +157,8 @@ def delete_contents(tbl_name, check=True):
 
     try:
         #TODO if keep, below should delete all records
-        db[tbl_name].empty()
-    except Exception as e:
+        lmfdb_db[tbl_name].empty()
+    except:
         pass
 
 def delete_all_tables():
@@ -173,7 +174,7 @@ def delete_all_tables():
     for tbl in tbls:
         try:
             delete_contents(tbl)
-        except Exception as e:
+        except:
             pass
 
 def delete_collection_data(coll_id, tbl, dry_run=False):
@@ -193,14 +194,14 @@ def delete_collection_data(coll_id, tbl, dry_run=False):
             rec_find = {fields_fields[2]:coll_id}
 
         if not dry_run:
-            db[fields_tbl].delete(rec_find)
+            lmfdb_db[fields_tbl].delete(rec_find)
         else:
             print 'Finding '+str(rec_find)
             print 'Operation would delete:'
-            curs = db[fields_tbl].search(rec_find)
+            curs = lmfdb_db[fields_tbl].search(rec_find)
             for item in curs:
                 print item
-    except Exception as e:
+    except:
         pass
 
 def delete_by_collection(db_name, coll_name):
@@ -209,7 +210,7 @@ def delete_by_collection(db_name, coll_name):
     try:
         _db_id = invc.get_db_id(db_name)
         _c_id = invc.get_coll_id(_db_id['id'], coll_name)
-    except Exception as e:
+    except:
         return {'err':True, 'id':0, 'exist':False}
 
     #Remove fields entries matching _c_id
@@ -218,8 +219,8 @@ def delete_by_collection(db_name, coll_name):
     delete_collection_data(_c_id['id'], tbl='records')
 
     try:
-        db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].delete({'_id':_c_id['id']})
-    except Exception as e:
+        lmfdb_db[inv.ALL_STRUC.coll_ids[inv.STR_NAME]].delete({'_id':_c_id['id']})
+    except:
         pass
 
 #End table removal -----------------------------------------------------------------------
@@ -239,7 +240,7 @@ def recreate_rollback_table(sz):
         #TODO Do something useful here?
         pass
     #TODO replace with a recreate of rollbacks
-    db.create_collection(table_name, capped=True, size=sz)
+    #lmfdb_db.create_collection(table_name, capped=True, size=sz)
 
 #-----Orphan handling Functions --------------
 

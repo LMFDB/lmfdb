@@ -1,4 +1,3 @@
-import lmfdb_inventory as inv
 import inventory_db_core as idc
 import datetime
 from scrape_frontend import get_scrape_progress
@@ -19,7 +18,7 @@ def check_scrapes_on(spec=None):
                 spec_ids['coll'] = coll_id['id']
         result = check_if_scraping(spec_ids) or check_if_scraping_queued(spec_ids)
         return result
-    except Exception as e:
+    except:
         return False
 
 def check_scrapes_by_coll_id(coll_id):
@@ -53,7 +52,7 @@ def register_scrape(db, coll, uid):
             inprog = tmp['inprog'] and inprog
             had_err = tmp['err'] and had_err
 
-    except Exception as e:
+    except:
         #Either failed to connect etc, or are already scraping
         return {'err':True, 'inprog':False}
 
@@ -95,7 +94,7 @@ def check_and_insert_scrape_record(db_id, coll_id, uid):
     try:
         insert_scrape_record({'isa':'scrape', 'content':record})
         result = {'err':False, 'inprog':False, 'ok':True}
-    except Exception as e:
+    except:
         result = {'err':True, 'inprog':False, 'ok':False}
     return result
 
@@ -110,17 +109,18 @@ def insert_scrape_record(record):
 def null_all_scrapes(db, coll):
     """Update all scrapes on db.coll to be 'complete' """
 
-    try:
-        db_id = idc.get_db_id(db)
-        coll_id = idc.get_coll_id(db_id['id'], coll)
-        rec_find = {'db':db_id['id'], 'coll':coll_id['id']}
-        rec_set = {}
-        rec_set['complete'] = True
-        rec_set['running'] = False
-
-        # TODO fix this line inv_db['ops'].update_many(rec_find, {"$set":rec_set})
-    except Exception as e:
-        return False
+    return False
+    # try:
+    #     db_id = idc.get_db_id(db)
+    #     coll_id = idc.get_coll_id(db_id['id'], coll)
+    #     rec_find = {'db':db_id['id'], 'coll':coll_id['id']}
+    #     rec_set = {}
+    #     rec_set['complete'] = True
+    #     rec_set['running'] = False
+    #
+    #     # TODO fix this inv_db['ops'].update_many(rec_find, {"$set":rec_set})
+    # except:
+    #     return False
 
 def null_old_scrapes(time=DEFAULT_MAX_TIME):
     """Update any old, incomplete AND not running scrapes to be 'complete'"""
@@ -153,7 +153,7 @@ def get_live_scrapes_older_than(min_hours_old=DEFAULT_MAX_TIME, db_id=None, coll
         if coll_id: rec_test['coll'] = coll_id
         curs = idc.search_ops_table(rec_test)
         return list(curs)
-    except Exception as e:
+    except:
         return []
 
 def check_scrapes_running(scrape_list):
@@ -165,10 +165,10 @@ def check_scrapes_running(scrape_list):
         try:
             db_name = idc.get_db_name(item['db'])['name']
             coll_name = idc.get_coll_name(item['table'])['name']
-#            prog = get_scrape_progress(db_name, coll_name, getDBConnection())
+            prog = get_scrape_progress(db_name, coll_name)
             if prog == (-1, -1):
                 new_list.append(item)
-        except Exception as e:
+        except:
             pass
     return new_list
 
@@ -179,7 +179,7 @@ def null_scrapes_by_list(scrape_list):
     try:
         for item in scrape_list:
             idc.update_ops({'_id':item['_id']}, {"$set": {'running':False, 'complete':True}}, upsert=False)
-    except Exception as e:
+    except:
         pass
 
 def get_completed_scrapes(n_days=7):
@@ -192,5 +192,5 @@ def get_completed_scrapes(n_days=7):
         rec_test = {'time':{"$gt":start}, 'complete':True}
         curs = idc.search_ops_table(rec_test)
         return list(curs)
-    except Exception as e:
+    except:
         return []

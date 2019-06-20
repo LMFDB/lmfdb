@@ -3,7 +3,6 @@ import lmfdb_inventory as inv
 import datetime as dt
 from lmfdb.utils import comma
 from lmfdb.backend.database import db
-from psycopg2.extras import Json
 
 #Table creation routines -------------------------------------------------------------
 
@@ -217,7 +216,7 @@ def set_coll_scrape_date(coll_id, scrape_date):
 
     try:
         assert(isinstance(scrape_date, dt.datetime))
-    except Exception as e:
+    except:
         return {'err':True, 'id':0, 'exist':False}
 
     coll_fields = inv.ALL_STRUC.coll_ids[inv.STR_CONTENT]
@@ -340,7 +339,7 @@ def add_index(coll_id, index_data):
         record[indexes_fields[3]] = index_data['keys']
         try:
             upsert_and_check(db['inv_indices'], {}, record)
-        except Exception as e:
+        except:
             return {'err':True, 'id':0, 'exist':False}
 
     return {'err':False, 'id':_id, 'exist':(exists_at is not None)}
@@ -359,7 +358,7 @@ def get_all_indices(coll_id):
     try:
         data = list(db[table_to_search].search(rec_find))
         return {'err':False, 'id':-1, 'exist':True, 'data':data}
-    except Exception as e:
+    except:
         return {'err':True, 'id':0, 'exist':True, 'data':None}
 
 def upsert_and_check(table, rec_find, rec_set):
@@ -379,7 +378,7 @@ def upsert_and_check(table, rec_find, rec_set):
             _id = dat[0]['_id']
         else:
             _id = -1
-    except Exception as e:
+    except:
         return {'err':True, 'id':0, 'exist':False}
     return {'err':False, 'id':_id, 'exist':(not upserted)}
 
@@ -399,7 +398,7 @@ def update_and_check(table, rec_find, rec_set):
         result = list(table.search(rec_find))
         if len(result) == 0:
             raise(ValueError)
-    except Exception as e:
+    except:
         return {'err':True, 'id':-1, 'exist':False}
     return {'err':False, 'id':result[0]['_id'], 'exist':True}
 
@@ -507,7 +506,7 @@ def cleanup_records(coll_id, record_list):
             if item['hash'] not in extant_hashes:
                 db[table_to_search].delete(item)
 
-    except Exception as e:
+    except:
         return {'err':True}
 
 #End table sync --------------------------------------------------------------------------
@@ -519,7 +518,7 @@ def count_colls(db_id):
 
     table_to_search = "inv_tables"
     info = {}
-    exists_at = db[table_to_search].search({'db_id':db_id}, info=info)
+    db[table_to_search].search({'db_id':db_id}, info=info)
     return info['number']
 
 def get_all_colls(db_id=None):
@@ -544,7 +543,7 @@ def count_records_and_types(coll_id, as_string=False):
         n_types = len(recs)
         n_rec = sum([rec['count'] for rec in recs])
         counts = (n_rec, n_types)
-    except Exception as e:
+    except:
         pass
     if as_string:
         counts = (comma(counts[0]), comma(counts[1]))

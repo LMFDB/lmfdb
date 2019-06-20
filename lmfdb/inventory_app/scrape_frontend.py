@@ -3,23 +3,15 @@ import inventory_upload_data as iud
 from scrape_progress_update import update_scrape_progress
 import threading
 
-def get_scrape_progress(db, coll, connection):
-    """Routine to query database on state of MapReduce on a given db
-       collection. Will only return data for first operation if more than
-       one in flight
+def get_scrape_progress(db, coll):
+    """Routine to query database on state of scrape
 
        db - String name of database
        coll - String name of collection
-       connection - MongoDB connection object. Should be same role as called
-                    scrape_and_upload_threaded
 
        returns tuple containing (number of records scanned, total number of records)
     """
-    progress = connection['admin'].current_op()
-    for el in progress['inprog']:
-        if 'progress' in el.keys():
-            if el['ns'] == db + "." + coll:
-                return int(el['progress']['done']), int(el['progress']['total'])
+    #TODO restore progress or remove
     return -1, -1
 
 def scrape_worker(db, coll, uuid, connection):

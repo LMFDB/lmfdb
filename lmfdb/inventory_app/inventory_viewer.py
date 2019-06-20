@@ -25,7 +25,7 @@ def is_valid_db_collection(db_name, collection_name):
             coll_id = idc.get_coll_id(db_id['id'], collection_name)
             if not coll_id['exist']:
                 return False
-    except Exception as e:
+    except:
         return False
     return True
 
@@ -42,7 +42,7 @@ def get_nicename(db_name, collection_name):
             #print db_rec
             nice_name = db_rec['data']['nice_name']
         return nice_name
-    except Exception as e:
+    except:
         #Can't return nice name so return None
         return None
 
@@ -68,7 +68,7 @@ def gen_retrieve_db_listing(db_name=None):
             query = {'db_id':_id}
             records = list(table.search(query, {'_id': 1, 'name' : 1, 'nice_name':1, 'status':1}))
             records = [(rec['name'], rec['nice_name'], 0, ih.code_to_status(rec['status']), False) for rec in records]
-    except Exception as e:
+    except:
         records = None
     if records is not None:
         return sorted(records, key=lambda s: s[0].lower())
@@ -112,7 +112,7 @@ def retrieve_description(requested_db, requested_coll):
 
         return {'data':patch_records(descr_auto, descr_human), 'specials': specials, 'scrape_date':coll_record['data']['scan_date']}
 
-    except Exception as e:
+    except:
         return {'data':None, 'specials':None, 'scrape_date':None}
 
 def patch_records(first, second):
@@ -125,13 +125,12 @@ def patch_records(first, second):
       for el,val in enumerate(patched):
         if val.get('cname',None): patched[el]['data']['cname'] = val['cname']
         if val.get('schema',None): patched[el]['data']['schema'] = val['schema']
-        pass
-    except Exception as e:
+    except:
         pass
     try:
         dic_first = {item['name']:item['data'] for item in patched}
         dic_second = {item['name']:item['data'] for item in second}
-    except Exception as e:
+    except:
         pass
     dic_patched = dic_first.copy()
 
@@ -155,15 +154,7 @@ def retrieve_records(requested_db, requested_coll):
     requested_coll -- name of collection to fetch inventory for
     """
 
-    try:
-        _id = idc.get_db_id(requested_db)['id']
-        _c_id = idc.get_coll_id(_id, requested_coll)
-
-        records = idc.get_all_records(_id, _c_id)
-        return {'data':ih.empty_null_record_info(records['data']), 'scrape_date':coll_record['scan_date']}
-
-    except Exception as e:
-        return {'data':None, 'specials':None, 'scrape_date':None}
+    return {'data':None, 'specials':None, 'scrape_date':None}
 
 def retrieve_indices(requested_db, requested_coll):
     """Retrieve indices for named collection
@@ -173,15 +164,7 @@ def retrieve_indices(requested_db, requested_coll):
     requested_coll -- name of collection to fetch inventory for
     """
 
-    try:
-        _id = idc.get_db_id(requested_db)['id']
-        _c_id = idc.get_coll_id(_id, requested_coll)
-
-        records = idc.get_all_indices(db, _c_id)
-        return {'data':records['data'], 'scrape_date':coll_record['scan_date']}
-
-    except Exception as e:
-        return {'data':None, 'specials':None, 'scrape_date':None}
+    return {'data':None, 'specials':None, 'scrape_date':None}
 
 def get_inventory_for_display(full_name):
     """ Get inventory description
@@ -192,12 +175,12 @@ def get_inventory_for_display(full_name):
     try:
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_description(parts[0], parts[1])
-    except Exception as e:
+    except:
         return {'data': None, 'specials': None, 'scrape_date': None}
 
     try:
         return {'data':ih.escape_for_display(records['data']), 'specials':ih.escape_for_display(records['specials']), 'scrape_date':records['scrape_date']}
-    except Exception as e:
+    except:
         return {'data': None, 'specials': None, 'scrape_date': None}
 
 def get_records_for_display(full_name):
@@ -209,12 +192,12 @@ def get_records_for_display(full_name):
     try:
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_records(parts[0], parts[1])
-    except Exception as e:
+    except:
         return {'data': None, 'scrape_date': None}
 
     try:
         return {'data':ih.diff_records(records['data']), 'scrape_date' : records['scrape_date']}
-    except Exception as e:
+    except:
         return {'data': None, 'scrape_date': None}
 
 def get_indices_for_display(full_name):
@@ -225,12 +208,12 @@ def get_indices_for_display(full_name):
     try:
         parts = ih.get_description_key_parts(full_name)
         records = retrieve_indices(parts[0], parts[1])
-    except Exception as e:
+    except:
         return {'data': None, 'scrape_date': None}
 
     try:
         return {'data':records['data'], 'scrape_date' : records['scrape_date']}
-    except Exception as e:
+    except:
         return {'data': None, 'scrape_date': None}
 
 def collate_collection_info(db_name):

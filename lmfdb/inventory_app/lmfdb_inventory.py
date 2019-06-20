@@ -1,11 +1,10 @@
-from pymongo import MongoClient
 import json
 import logging, logging.handlers
 #from lmfdb.base import getDBConnection
 
 #Contains the general data and functions for all inventory handling
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 #Email contact for app errors
 email_contact = 'rse@warwick.ac.uk'
