@@ -15,12 +15,13 @@ def group_names_pretty(label):
         return data['pretty']
     return label
 
-def group_pretty_image_number(label):
-    num = db.gps_small.lookup(label, 'image_number')
-    if num:
-        return num
-    else:
-        return 0 # there is no image 0
+def group_pretty_image(label):
+    pretty = group_names_pretty(label)
+    img = db.gps_images.lookup(pretty, 'image')
+    if img:
+        return str(img)
+    else: # we don't have it, not sure what to do
+        return None
 
 class WebObj(object):
     def __init__(self, label, data=None):
