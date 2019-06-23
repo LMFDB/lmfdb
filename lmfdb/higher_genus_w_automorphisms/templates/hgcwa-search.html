@@ -129,15 +129,6 @@
   <td>
 <button type='submit' value='refine'>Search again</button>
 </td>
-
-<td align=left colspan="3">
-{% if info.results|length > 0 %}
-Download displayed results for 
-<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
-<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
-{% endif %}
-
-</td>
 </tr>
 
 </table>
@@ -177,15 +168,9 @@ Download displayed results for
 
 </tbody>
 </table>
-<hr>
 {% include 'forward_back.html' %}
-{% if info.results|length > 0 %}
-  <form>
-Download displayed results for 
-<button name='download_magma' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">Magma</button>
-<button name='download_gap' style='margin-left: 10px' onclick="document.getElementsByName('paging')[0].value = '1';document.findElementById('re-search').submit();">GAP</button>
-</form>
-{% endif %}
+{% set languages = ['gap', 'magma'] %}
+{% include 'download_search_results.html' %}
 {% endif %}
 {% include 'debug_info.html' %}
 
