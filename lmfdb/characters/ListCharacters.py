@@ -188,14 +188,14 @@ class CharacterSearch:
         self.primitive = query.get('primitive')
         self.limit = parse_limit(query.get('limit'))
         if self.parity and not self.parity in ['Odd','Even']:
-            flash_error("%s is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'")
+            flash_error("%s is not a valid value for parity.  It must be 'Odd', 'Even', or 'All'", self.parity)
             raise ValueError('parity')
         if self.primitive and not self.primitive in ['Yes','No']:
-            flash_error("%s is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'")
+            flash_error("%s is not a valid value for primitive.  It must be 'Yes', 'No', or 'All'", self.primitive)
             raise ValueError('primitive')
         self.mmin, self.mmax = parse_interval(self.modulus,'modulus') if self.modulus else (1, 9999)
         if self.mmax > 9999:
-            flash_error("Searching is limited to charactors of modulus less than $10^5$")
+            flash_error("Searching is limited to characters of modulus less than $10^5$")
             raise ValueError('modulus')
         if self.order and self.mmin > 999:
             flash_error("For order searching the minimum modulus needs to be less than $10^3$")
