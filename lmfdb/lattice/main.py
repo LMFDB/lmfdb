@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import ast, re, StringIO, time
 
-from flask import render_template, request, url_for, redirect, make_response, flash, send_file
-from markupsafe import Markup
+from flask import render_template, request, url_for, redirect, make_response, send_file
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt
 
 from lmfdb.utils import (
-    web_latex_split_on_pm,
+    web_latex_split_on_pm, flash_error,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap)
 from lmfdb.lattice import lattice_page
@@ -107,9 +106,9 @@ def lattice_by_label_or_name(lab):
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
     if lattice_label_regex.match(lab):
-        flash(Markup("The integral lattice <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No integral lattice in the database has label or name <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".lattice_render_webpage"))
 
 #download
@@ -193,7 +192,7 @@ def lattice_search(info, query):
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3]." % (gram)),"error")
+        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
 
@@ -208,7 +207,7 @@ def render_lattice_webpage(**args):
     if f is None:
         t = "Integral Lattices Search Error"
         bread = [('Lattices', url_for(".lattice_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label or name for an integral lattice in the database." % (lab)),"error")
+        flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
         return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(f)

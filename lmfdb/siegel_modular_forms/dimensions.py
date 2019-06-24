@@ -5,9 +5,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from flask import flash
-from markupsafe import Markup
 from sage.all import is_odd, is_even, ZZ, QQ, FunctionField, PowerSeriesRing
+from lmfdb.utils import flash_error
 
 from lmfdb import db
 from lmfdb.utils import parse_ints_to_list_flash
@@ -32,19 +31,19 @@ def parse_dim_args(dim_args, default_dim_args):
     args={}
     if 'k' in res:
         if res['k'][-1] > MAXWT:
-            flash(Markup("Error: <span style='color:black'>$k$</span> cannot exceed <span style='color:black'>%s</span>." % MAXWT), "error")
+            flash_error("<span style='color:black'>$k$</span> cannot exceed %s.",  MAXWT)
             raise ValueError("dim_args")
         if len(res['k']) > MAXWTRANGE:
-            flash(Markup("Error: range for <span style='color:black'>$k$</span> cannot include more than %s</span> values." % MAXWTRANGE), "error")
+            flash_error("range for <span style='color:black'>$k$</span> cannot include more than %s values.", MAXWTRANGE)
             raise ValueError("dim_args")
         args = {'k_range':res['k']}
     if 'j' in res:
         if res['j'][-1] > MAXJ:
-            flash(Markup("Error: <span style='color:black'>$j$</span> cannot exceed <span style='color:black'>%s</span>." % MAXJ), "error")
+            flash_error("<span style='color:black'>$j$</span> cannot exceed %s.", MAXJ)
             raise ValueError("dim_args")
         args['j_range'] = [j for j in res['j'] if j%2 == 0]
         if not args['j_range']:
-            flash(Markup("Error: <span style='color:black'>$j$</span> should be a nonnegative even integer."), "error")
+            flash_error("<span style='color:black'>$j$</span> should be a nonnegative even integer.")
             raise ValueError("dim_args")
     return args
 
@@ -136,7 +135,7 @@ def dimension_Sp4Z_2(wt_range):
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
     """
-    return _dimension_Gamma_2(wt_range, 2, group = 'Sp4(Z)')
+    return _dimension_Gamma_2(wt_range, 2, group='Sp4(Z)')
 
 def dimension_table_Sp4Z_j(wt_range, j_range):
     result = {}
@@ -145,11 +144,11 @@ def dimension_table_Sp4Z_j(wt_range, j_range):
     for j in j_range:
         if is_odd(j):
             for wt in wt_range:
-                result[wt][j]=0
+                result[wt][j] = 0
         else:
-            _,olddim= dimension_Sp4Z_j(wt_range, j)
+            _, olddim = dimension_Sp4Z_j(wt_range, j)
             for wt in wt_range:
-                result[wt][j]=olddim[wt]['Total']
+                result[wt][j] = olddim[wt]['Total']
     return result
 
 def dimension_Sp4Z_j(wt_range, j):
@@ -159,8 +158,8 @@ def dimension_Sp4Z_j(wt_range, j):
       <li><span class="emph">Non cusp</span>: The subspace of non cusp forms.</li>
       <li><span class="emph">Cusp</span>: The subspace of cusp forms.</li>
     </ul>
-    """    
-    return _dimension_Gamma_2(wt_range, j, group = 'Sp4(Z)')
+    """
+    return _dimension_Gamma_2(wt_range, j, group='Sp4(Z)')
 
 
 
