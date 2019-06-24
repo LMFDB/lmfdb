@@ -30,13 +30,7 @@ def split_full_label(lab):
     """
     data = lab.split("-")
     if len(data) != 3:
-        flash_error("%s is not a valid"
-                    "elliptic curve label. It must be of the form"
-                    "(number field label) - "
-                    "(conductor label) - "
-                    "(isogeny class label) - "
-                    "(curve identifier) "
-                    "separated by dashes, such as 2.2.5.1-31.1-a1", lab)
+        flash_error("%s is not a valid elliptic curve label. It must be of the form (number field label) - (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 2.2.5.1-31.1-a1", lab)
         raise ValueError
     field_label = data[0]
     conductor_label = data[1]
@@ -45,11 +39,7 @@ def split_full_label(lab):
         isoclass_label = re.search("(CM)?[a-zA-Z]+", data[2]).group()
         curve_number = re.search("\d+", data[2]).group()  # (a string)
     except AttributeError:
-        flash_error("%s is not a valid"
-                    "elliptic curve label. "
-                    "The last part must contain both an isogeny class label "
-                    "(a sequence of letters), "
-                    "followed by a curve id (an integer), such as a1",  lab)
+        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1",  lab)
         raise ValueError
     return (field_label, conductor_label, isoclass_label, curve_number)
 
@@ -60,12 +50,7 @@ def split_short_label(lab):
     """
     data = lab.split("-")
     if len(data) != 2:
-        flash_error("%s is not a valid "
-                    "elliptic curve label. It must be of the form "
-                    "(conductor label) - "
-                    "(isogeny class label) - "
-                    "(curve identifier) separated by dashes, "
-                    "such as 31.1-a1", lab)
+        flash_error("%s is not a valid elliptic curve label. It must be of the form (conductor label) - (isogeny class label) - (curve identifier) separated by dashes, such as 31.1-a1", lab)
         raise ValueError
     conductor_label = data[0]
     try:
@@ -73,10 +58,7 @@ def split_short_label(lab):
         isoclass_label = re.search("[a-zA-Z]+", data[1]).group()
         curve_number = re.search("\d+", data[1]).group()  # (a string)
     except AttributeError:
-        flash_error("%s is not a valid "
-                    "elliptic curve label. The last part must contain both an "
-                    "isogeny class label (a sequence of letters), followed by "
-                    "a curve id (an integer), such as a1", lab)
+        flash_error("%s is not a valid elliptic curve label. The last part must contain both an isogeny class label (a sequence of letters), followed by a curve id (an integer), such as a1", lab)
         raise ValueError
     return (conductor_label, isoclass_label, curve_number)
 
