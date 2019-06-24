@@ -105,19 +105,19 @@
               <option value="" {% if info.primitive not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
               <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
           </select></td>
-          <td><select name='jacobian'>
-              <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
-	      <option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
-              <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
-	      <option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
-              <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
-          </select></td>
           <td><select name='polarizable'>
               <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
 	      <option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
               <option value="" {% if info.polarizable not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
 	      <option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
               <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
+          </select></td>
+          <td><select name='jacobian'>
+              <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
+	      <option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
+              <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
+	      <option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
+              <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
           </select></td>
         </tr>
 
