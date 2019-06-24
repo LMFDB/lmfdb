@@ -442,7 +442,7 @@ def render_curve_webpage_by_label(label):
                          bread=data.bread, title=data.title,
                          friends=data.friends,
                          downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%label,
+                         KNOWL_ID="ec.q.%s"%lmfdb_label,
                          BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
                          learnmore=learnmore_list())
     ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
