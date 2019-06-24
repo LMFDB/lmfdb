@@ -47,49 +47,85 @@
             <td><input type='text' name='number_field' size=10 value="{{info.number_field}}"/></td>
             <td><input type='text' name='galois_group' size=10 value="{{info.galois_group}}"/></td>
         </tr>
-
         <tr>
-            <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
-            <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
-            <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
-            <td align=left>{{ KNOWL('av.princ_polarizable',title="princ polarizable") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="simple factors") }}
-                <select name='simple_quantifier'>
-                    <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
-                    <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
-                    <option value='include' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
-                </select>
-            </td>
+          <td>
+            {{KNOWL('av.fq.isogeny_class_size','Isogeny class size')}}
+          </td>
+          <td>
+            {{KNOWL('av.endomorphism_field', 'End.')}} degree
+          </td>
+          <td>
+            {{KNOWL('av.jacobian_count', title='# Jacobians')}}
+          </td>
+          <td>
+            {{KNOWL('av.hyperelliptic_count', title='# Hyp. Jacobians')}}
+          </td>
+          <td>
+            {{KNOWL('av.twist', '# twists')}}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <input type='text' name='size' example="1" size=10  value="{{info.size}}">
+          </td>
+          <td>
+            <input type='text' name='geom_deg' example="168" size=10  value="{{info.geom_deg}}"/>
+          </td>
+          <td>
+            <input type='text' name='jac_cnt' example="6" size=10  value="{{info.jac_cnt}}">
+          </td>
+          <td>
+            <input type='text' name='hyp_cnt' example="6" size=10value="{{info.hyp_cnt}}">
+          </td>
+          <td>
+            <input type='text' name='twist_count' example="96" size=10 value="{{info.twist_count}}"/>
+          </td>
+        </tr>
+        <tr>
+          <td align=left>{{ KNOWL('av.simple',title="simple") }}</td>
+          <td align=left>{{ KNOWL('av.geometrically_simple',title="geom. simple") }}</td>
+          <td align=left>{{ KNOWL('ag.primitive',title="primitive") }}</td>
+          <td align=left>{{ KNOWL('av.princ_polarizable',title="princ polarizable") }}</td>
+          <td align=left>{{ KNOWL('ag.jacobian',title="Jacobian") }}</td>
         </tr>
 
         <tr>
-            <td><select name='simple'>
-                <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
-                <option value="" {% if info.simple not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
-                <option value="no" {% if info.simple == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='primitive'>
-                <option value="yes" {% if info.primitive == "yes" %}selected{% endif %}>yes</option>
-                <option value="" {% if info.primitive not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
-                <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='jacobian'>
-                <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
-		<option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
-		<option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
-                <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><select name='polarizable'>
-                <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
-		<option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
-                <option value="" {% if info.polarizable not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
-		<option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
-                <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
-            </select></td>
-            <td><input type='text' name='simple_factors' size=10 value="{{info.simple_factors}}"/></td>
+          <td><select name='simple'>
+              <option value="yes" {% if info.simple == "yes" %}selected{% endif %}>yes</option>
+              <option value="" {% if info.simple not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
+              <option value="no" {% if info.simple == "no" %}selected{% endif %}>no</option>
+          </select></td>
+          <td><select name='geom_simple'>
+              <option value="yes" {% if info.geom_simple == "yes" %}selected{% endif %}>yes</option>
+              <option value="" {% if info.geom_simple not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
+              <option value="no" {% if info.geom_simple == "no" %}selected{% endif %}>no</option>
+          </select></td>
+          <td><select name='primitive'>
+              <option value="yes" {% if info.primitive == "yes" %}selected{% endif %}>yes</option>
+              <option value="" {% if info.primitive not in ["yes","no"] %}selected{% endif %}>unrestricted</option>
+              <option value="no" {% if info.primitive == "no" %}selected{% endif %}>no</option>
+          </select></td>
+          <td><select name='jacobian'>
+              <option value="yes" {% if info.jacobian == "yes" %}selected{% endif %}>yes</option>
+	      <option value="not_no" {% if info.jacobian == "not_no" %}selected{% endif %}>yes or unknown</option>
+              <option value="" {% if info.jacobian not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
+	      <option value="not_yes" {% if info.jacobian == "not_yes" %}selected{% endif %}>no or unknown</option>
+              <option value="no" {% if info.jacobian == "no" %}selected{% endif %}>no</option>
+          </select></td>
+          <td><select name='polarizable'>
+              <option value="yes" {% if info.polarizable == "yes" %}selected{% endif %}>yes</option>
+	      <option value="not_no" {% if info.polarizable == "not_no" %}selected{% endif %}>yes or unknown</option>
+              <option value="" {% if info.polarizable not in ["yes","not_no","not_yes","no"] %}selected{% endif %}>unrestricted</option>
+	      <option value="not_yes" {% if info.polarizable == "not_yes" %}selected{% endif %}>no or unknown</option>
+              <option value="no" {% if info.polarizable == "no" %}selected{% endif %}>no</option>
+          </select></td>
         </tr>
 
+        <tr>
+          <td colspan="5">
+            Use {{ KNOWL('av.decomposition',title="geometric decomposition") }} in the following inputs <input type="checkbox" name="use_geom_decomp"{% if info.use_geom_decomp %} checked{% endif %}>
+          </td>
+        </tr>
         <tr>
             <td align=left>{{ KNOWL('av.decomposition',title="dim 1 factors") }}</td>
             <td align=left>{{ KNOWL('av.decomposition',title="dim 2 factors") }}</td>
@@ -107,15 +143,23 @@
         </tr>
 
         <tr>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 1 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 2 factors") }}</td>
-            <td align=left>{{ KNOWL('av.decomposition',title="distinct dim 3 factors") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="(distinct)") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="(distinct)") }}</td>
+            <td align=left>{{ KNOWL('av.decomposition',title="(distinct)") }}</td>
+          <td colspan="2" align=left>{{ KNOWL('av.decomposition',title="simple factors") }}
+            <select name='simple_quantifier'>
+              <option value='contained' {% if info.simple_quantifier == 'contained' %}selected{% endif %}>subset of</option>
+              <option value='exactly' {% if info.simple_quantifier == 'exactly' %}selected{% endif %}>equal to</option>
+              <option value='include' {% if info.simple_quantifier not in ['contained','exactly'] %}selected{% endif %}>superset of</option>
+            </select>
+          </td>
         </tr>
 
         <tr>
             <td><input type='text' name='dim1_distinct' size=10 value="{{info.dim1_distinct}}" /></td>
             <td><input type='text' name='dim2_distinct' size=10 value="{{info.dim2_distinct}}" /></td>
             <td><input type='text' name='dim3_distinct' size=10 value="{{info.dim3_distinct}}" /></td>
+          <td colspan="2"><input type='text' name='simple_factors' size=20 value="{{info.simple_factors}}"/></td>
         </tr>
 
         <tr>
