@@ -407,11 +407,12 @@ class WebNumberField:
             for s in sibcnts:
                 repcounts[s[0][0]] += s[1]
             gc = 0
-            if galord<24:
+            if galord<48:
                 del repcounts[galord]
                 if self.degree() < galord:
                     gc = 1 
-            repcounts[self.degree()] -= numae
+            if numae>0:
+                repcounts[self.degree()] -= numae
             if repcounts[self.degree()] == 0:
                 del repcounts[self.degree()]
             self._data['repdata'] = [repcounts, numae, gc]
