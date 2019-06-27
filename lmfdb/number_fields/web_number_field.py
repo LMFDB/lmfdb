@@ -549,9 +549,6 @@ class WebNumberField:
             return self._data['regulator']
         if self.unit_rank() == 0:
             return 1
-        if self.haskey('class_number'):
-            K = self.K()
-            return K.regulator()
         return na_text()
 
     def units(self):  # fundamental units
