@@ -380,7 +380,7 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except (OperationalError, ProgrammingError, NotSupportedError, DataError) as e:
+                except (OperationalError, ProgrammingError, NotSupportedError, DataError, SyntaxError) as e:
                     try:
                         context = ' happens while executing {}'.format(cur.mogrify(query, values))
                     except Exception:
@@ -2810,7 +2810,11 @@ class PostgresTable(PostgresBase):
                 new_row = False
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
-                    if len(dat) == 1:
+                    # we are not updating any column in the extras table
+                    if len(dat) == 0:
+                        continue
+                    # the syntax for updating only one columns differs from multiple columns
+                    elif len(dat) == 1:
                         updater = SQL("UPDATE {0} SET {1} = {2} WHERE {3}")
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
