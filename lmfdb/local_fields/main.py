@@ -174,9 +174,9 @@ def render_field_webpage(args):
         data = db.lf_fields.lookup(label)
         if data is None:
             if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
-                flash_error("Field <span style='color:black'>%s</span> was not found in the database.", label)
+                flash_error("Field %s was not found in the database.", label)
             else:
-                flash_error("<span style='color:black'>%s</span> is not a valid label for a local number field.", label)
+                flash_error("%s is not a valid label for a local number field.", label)
             return redirect(url_for(".index"))
         title = 'Local Number Field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
