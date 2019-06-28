@@ -494,6 +494,13 @@ def humans_txt():
 
 @app.context_processor
 def add_colors():
+    # FIXME:
+    # - the template should use global variable g.color
+    # - try to get the color from
+    #       - the cookie
+    #       - from the config file
+    # - remove cookie at logout (see line 307 of users/main)
+    # - add cookie at login or when a color change happens (see line 175 of users/main)
     from lmfdb.utils.color import all_color_schemes
     color = request.args.get('color')
     if color and color.isdigit():

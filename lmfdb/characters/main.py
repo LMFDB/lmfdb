@@ -115,8 +115,6 @@ def render_DirichletNavigation():
 
         flash_error("%s is not a valid label for a Dirichlet character.  It should be of the form <span style='color:black'>q.n</span>, where q and n are coprime positive integers with n < q, or q=n=1.", label)
         return render_template('CharacterNavigate.html', **info)
-        #FIXME, delete line below?
-        #return redirect(url_for(".render_Dirichletwebpage"), 301)
 
     if args:
         # if user clicked refine search, reset start to 0
@@ -237,10 +235,10 @@ def render_Dirichletwebpage(modulus=None, number=None):
     except ValueError:
         modulus = 0
     if modulus <= 0:
-        flash_error ("%s is not a valid modulus for a Dirichlet character.  It should be a positive integer.", args['modulus'])
+        flash_error("%s is not a valid modulus for a Dirichlet character. It should be a positive integer.", args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
     if modulus > 10**20:
-        flash_error ("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
+        flash_error("specified modulus %s is too large, it should be less than $10^{20}$.", modulus)
         return redirect(url_for(".render_Dirichletwebpage"))
 
 
@@ -266,7 +264,7 @@ def render_Dirichletwebpage(modulus=None, number=None):
 
     number = label_to_number(modulus, number)
     if number == 0:
-        flash_error("the value %s is invalid.  It should be a positive integer coprime to and no greater than the modulus %s.", args['number'],args['modulus'])
+        flash_error("the value %s is invalid. It should be a positive integer coprime to and no greater than the modulus %s.", args['number'], args['modulus'])
         return redirect(url_for(".render_Dirichletwebpage"))
     args['number'] = number
     webchar = make_webchar(args)
@@ -345,7 +343,7 @@ def random_Dirichletwebpage():
 @characters_page.route("/calc-<calc>/Dirichlet/<int:modulus>/<int:number>")
 def dc_calc(calc, modulus, number):
     val = request.args.get("val", [])
-    args = {'type':'Dirichlet', 'modulus':modulus, 'number':number}
+    args = {'type': 'Dirichlet', 'modulus': modulus, 'number': number}
     if not val:
         return flask.abort(404)
     try:

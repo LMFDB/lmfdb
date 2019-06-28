@@ -45,7 +45,7 @@ def parse_artin_label(label):
     if LABEL_RE.match(label):
         return label
     else:
-        raise ValueError("input %s is not in a valid form for an Artin representation label, such as 9.2e12_587e3.10t32.1c1")
+        raise ValueError
 
 def add_lfunction_friends(friends, label):
     rec = db.lfunc_instances.lucky({'type':'Artin','url':'ArtinRepresentation/'+label})
@@ -72,8 +72,8 @@ def artin_representation_jump(info):
     label = info['natural']
     try:
         label = parse_artin_label(label)
-    except ValueError as err:
-        flash_error("%s" % (err),label)
+    except ValueError:
+        flash_error("%s is not in a valid form for an Artin representation label", label)
         return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
@@ -130,11 +130,11 @@ def render_artin_representation_webpage(label):
         the_rep = ArtinRepresentation(label)
     except:
         try:
-            newlabel=parse_artin_label(label)
+            newlabel = parse_artin_label(label)
             flash_error("Artin representation %s is not in database", newlabel)
             return redirect(url_for(".index"))
-        except ValueError as err:
-            flash_error("%s" % (err), label)
+        except ValueError:
+            flash_error("%s is not in a valid form for an Artin representation label", label)
             return redirect(url_for(".index"))
 
     extra_data = {} # for testing?

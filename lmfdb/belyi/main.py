@@ -234,8 +234,7 @@ def belyi_jump(info):
         if re.match(r'^\d+T\d+-\[\d+,\d+,\d+\]-\d+-\d+-\d+-g\d+$', jump):
             return redirect(url_for_belyi_passport_label(jump), 301)
         else:
-            errmsg = "%s is not a valid Belyi map or passport label"
-    flash_error (errmsg, jump)
+            flash_error("%s is not a valid Belyi map or passport label", jump)
     return redirect(url_for(".index"))
 
 class Belyi_download(Downloader):

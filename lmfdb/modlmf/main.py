@@ -2,12 +2,11 @@
 
 import ast, re, StringIO, time
 
-from flask import render_template, request, url_for, make_response, redirect, flash, send_file
-from markupsafe import Markup
+from flask import render_template, request, url_for, make_response, redirect, send_file
 from sage.all import QQ, PolynomialRing, PowerSeriesRing, conway_polynomial, prime_range, latex
 
 from lmfdb import db
-from lmfdb.utils import web_latex_split_on_pm, parse_ints, search_wrap
+from lmfdb.utils import web_latex_split_on_pm, parse_ints, search_wrap, flash_error
 from lmfdb.modlmf import modlmf_page
 from lmfdb.modlmf.modlmf_stats import get_stats
 
@@ -87,9 +86,9 @@ def modlmf_by_label(lab):
     if db.modlmf_forms.exists({'label': lab}):
         return render_modlmf_webpage(label=lab)
     if modlmf_label_regex.match(lab):
-        flash(Markup("The mod &#x2113; modular form <span style='color:black'>%s</span> is not recorded in the database or the label is invalid" % lab), "error")
+        flash_error("The mod &#x2113; modular form %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash(Markup("No mod &#x2113; modular form in the database has label <span style='color:black'>%s</span>" % lab), "error")
+        flash_error("No mod &#x2113; modular form in the database has label %s", lab)
     return redirect(url_for(".modlmf_render_webpage"))
 
 #download
@@ -151,7 +150,7 @@ def render_modlmf_webpage(**args):
     if data is None:
         t = "Mod &#x2113; Modular Form Search Error"
         bread = [('mod &#x2113; Modular Forms', url_for(".modlmf_render_webpage"))]
-        flash(Markup("Error: <span style='color:black'>%s</span> is not a valid label for a mod &#x2113; modular form in the database." % (lab)),"error")
+        flash_error("%s is not a valid label for a mod &#x2113; modular form in the database.", lab)
         return render_template("modlmf-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
     info = {}
     info.update(data)

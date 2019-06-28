@@ -6,7 +6,7 @@ import datetime
 #import bson
 #import time
 from collections import defaultdict
-from lmfdb.db_backend import db
+from lmfdb.backend.database import db
 
 __version__ = '1.0.0'
 

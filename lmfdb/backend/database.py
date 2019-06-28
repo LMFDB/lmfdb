@@ -380,7 +380,7 @@ class PostgresBase(object):
             else:
                 try:
                     cur.execute(query, values)
-                except (OperationalError, ProgrammingError, NotSupportedError, DataError) as e:
+                except (OperationalError, ProgrammingError, NotSupportedError, DataError, SyntaxError) as e:
                     try:
                         context = ' happens while executing {}'.format(cur.mogrify(query, values))
                     except Exception:
@@ -2159,7 +2159,7 @@ class PostgresTable(PostgresBase):
             raise ValueError("""kind={} is not "Index" or "Constraint" """)
 
         selecter = SQL("SELECT 1 FROM {} WHERE {} = %s AND table_name = %s")
-        cur = self._execute(selecter.format(map(Identifier, [meta, meta_name])),
+        cur = self._execute(selecter.format(*map(Identifier, [meta, meta_name])),
                             [name, self.search_table])
         if cur.rowcount > 0:
             raise ValueError("{} name {} is invalid, ".format(kind, name) +
@@ -2779,7 +2779,7 @@ class PostgresTable(PostgresBase):
             if col != "id" and col not in self._search_cols:
                 raise ValueError("%s is not a column of %s"%(col, self.search_table))
         if self.extra_table is None:
-            search_data = data
+            search_data = dict(data)
             for col in data:
                 if col not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(col, self.search_table))
@@ -2810,7 +2810,11 @@ class PostgresTable(PostgresBase):
                 new_row = False
                 row_id = cur.fetchone()[0]
                 for table, dat in cases:
-                    if len(dat) == 1:
+                    # we are not updating any column in the extras table
+                    if len(dat) == 0:
+                        continue
+                    # the syntax for updating only one columns differs from multiple columns
+                    elif len(dat) == 1:
                         updater = SQL("UPDATE {0} SET {1} = {2} WHERE {3}")
                     else:
                         updater = SQL("UPDATE {0} SET ({1}) = ({2}) WHERE {3}")
@@ -2823,7 +2827,8 @@ class PostgresTable(PostgresBase):
                     self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
                     self._break_order()
-            else: # insertion
+
+            else:  # insertion
                 if "id" in data or "id" in query:
                     raise ValueError("Cannot specify an id for insertion")
                 new_row = True
@@ -2838,8 +2843,8 @@ class PostgresTable(PostgresBase):
                 if self.extra_table is not None:
                     extras_data["id"] = self.max_id() + 1
                 for table, dat in cases:
-                    inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})")
-                    inserter.format(Identifier(table),
+                    inserter = SQL("INSERT INTO {0} ({1}) VALUES ({2})").format(
+                                    Identifier(table),
                                     SQL(", ").join(map(Identifier, dat.keys())),
                                     SQL(", ").join(Placeholder() * len(dat)))
                     self._execute(inserter, self._parse_values(dat))

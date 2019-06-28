@@ -137,7 +137,7 @@ from sage.all import NumberField, PolynomialRing, EllipticCurve, ZZ, QQ, Set, ma
 from sage.databases.cremona import cremona_to_lmfdb
 from lmfdb.ecnf.ecnf_stats import field_data
 from lmfdb.ecnf.WebEllipticCurve import FIELD, ideal_from_string, ideal_to_string, parse_ainvs, parse_point
-from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, split, numerify_iso_label, NFelt, get_cm, point_string
+from scripts.ecnf.import_utils import make_curves_line, make_curve_data_line, make_galrep_line, split, numerify_iso_label, NFelt, get_cm, point_string
 
 print "setting nfcurves and qcurves"
 nfcurves = db.ec_nfcurves
@@ -219,7 +219,7 @@ def convert_ideal_label(K, lab):
 def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     r""" Extract curve data for the given field for curves with conductor
     norm in the given range, and write to output files in the same
-    format as in the curves/curve_data/isoclass input files.
+    format as in the curves/curve_data/isoclass/galrep input files.
     """
     query = {}
     query['field_label'] = field_label
@@ -231,8 +231,9 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
     res = nfcurves.search(query, sort = ['conductor_norm', 'conductor_label', 'iso_nlabel', 'number'])
 
     file = {}
-    prefixes = ['curves', 'curve_data', 'isoclass']
+    #prefixes = ['curves', 'curve_data', 'isoclass', 'galrep']
     #prefixes = ['curves']
+    prefixes = ['galrep']
     suffix = ''.join([".", field_label])
     if min_norm>0 or max_norm!='infinity':
         suffix = ''.join([suffix, ".", str(min_norm), "-", str(max_norm)])
@@ -249,6 +250,9 @@ def download_curve_data(field_label, base_path, min_norm=0, max_norm=None):
         if 'isoclass' in prefixes:
             if ec['number'] == 1:
                 file['isoclass'].write(make_isoclass_line(ec) + "\n")
+        if 'galrep' in prefixes:
+            #print(make_galrep_line(ec))
+            file['galrep'].write(make_galrep_line(ec) + "\n")
 
     for prefix in prefixes:
         file[prefix].close()
@@ -835,7 +839,7 @@ def check_database_consistency(table, field=None, degree=None, ignore_ranks=Fals
 #   upper and lower bounds then the rank key is not set, and this
 #   script should allow for that.
 #
-    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens']
+    rank_keys = ['analytic_rank', 'rank', 'rank_bounds', 'ngens', 'gens', 'heights', 'old_heights']
 #
 #   As of April 2017 we have mod p Galois representration data for all
 #   curves except some of those over degree 6 fields since over these
