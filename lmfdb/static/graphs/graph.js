@@ -38,10 +38,6 @@ for (var j = 0; j < classes.length; j++) {
 // A darker color: easier since these items exist in the DOM
 var selected_color = $(".link").css('background-color');
 
-$(document).ready( function () {
-$("#diagramdebug").html(selected_color);
-});
-
 Graph = class {
 	constructor(ambient) {
 		this.nodeSet = {};
@@ -262,6 +258,9 @@ class Renderer {
             };
         } else {
             var lft = node.center[0]-0.5*img.width;
+$("#diagramdebug").html(selected_color);
+$("#diagramdebug").html( $("#diagramdebug").html() + "<p>"+highlit_color);
+
             if(node.selected) {
                 ctxt.fillStyle= selected_color;
                 ctxt.fillRect(lft-2, node.center[1]-6, img.width+2, img.height+3);
