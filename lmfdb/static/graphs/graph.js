@@ -258,8 +258,6 @@ class Renderer {
             };
         } else {
             var lft = node.center[0]-0.5*img.width;
-$("#diagramdebug").html(selected_color);
-$("#diagramdebug").html( $("#diagramdebug").html() + "<p>"+highlit_color);
 
             if(node.selected) {
                 ctxt.fillStyle= selected_color;
