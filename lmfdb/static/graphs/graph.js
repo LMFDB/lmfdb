@@ -29,7 +29,7 @@ var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
 for (var j = 0; j < classes.length; j++) {
     if (classes[j].selectorText == 'span.activesubgp') {
         var classtext = (classes[j].cssText) ? classes[j].cssText : classes[j].style.cssText;
-        highlit_color = classtext.replace(/^.*background:/,"");
+        highlit_color = classtext.replace(/^.*background.*:/,"");
         highlit_color = highlit_color.replace(/;.*$/,"");
         highlit_color = highlit_color.replace(/;/,"");
     }
