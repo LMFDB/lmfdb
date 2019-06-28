@@ -2,17 +2,13 @@
 
 """
 TODO
-- Geometric extension degree -> Degree of endomorphism field
-- add geometrically simple boolean flag
 - add geometric_number_fields, geometric_galois_groups
 - set Jacobians to 0 when known, make sure it doesn't display otherwise
-- add search on number of twists, max twist degree
+- add search on max twist degree?
 - has geometric supersingular factor (has a degree 1 factor geometrically)
-- geometric checkbox for number of factors of dimensions n
 - search on discriminant over the center (absolute norm down to Q)
-- should we use the polredabs polynomial to give the places?  It's a bit weird to have Q(sqrt(-1)) represented using the polynomial x^2 - 1481250*x + 95367431640625. Yes
+- Use the polredabs polynomial to give the places.  It's a bit weird to have Q(sqrt(-1)) represented using the polynomial x^2 - 1481250*x + 95367431640625
 - Fun examples: 4.5.f_k_z_cx, 4.2.b_e_c_j, 4.5.k_bt_fa_lt
-- Add more of Drew's data from math.mit.edu/~drew/avff
 """
 
 from flask import url_for
