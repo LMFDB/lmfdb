@@ -20,7 +20,7 @@ from types import GeneratorType
 from urllib import urlencode
 
 from flask import request, make_response, flash, url_for, current_app
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from werkzeug.contrib.cache import SimpleCache
 from werkzeug import cached_property
 from sage.all import CC, CBF, CDF, Factorization, NumberField, PolynomialRing, PowerSeriesRing, RealField, RR, RIF, ZZ, QQ, latex, valuation, prime_range, floor
@@ -1002,7 +1002,7 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: %s"%(errmsg%tuple(map(lambda x: "<span style='color:black'>%s</span>"%x, args)))),"error")
+    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
 
 
 cache = SimpleCache()
