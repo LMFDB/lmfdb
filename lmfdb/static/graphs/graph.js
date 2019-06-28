@@ -38,6 +38,10 @@ for (var j = 0; j < classes.length; j++) {
 // A darker color: easier since these items exist in the DOM
 var selected_color = $(".link").css('background-color');
 
+$(document).ready( function () {
+$("#diagramdebug").html(selected_color);
+});
+
 Graph = class {
 	constructor(ambient) {
 		this.nodeSet = {};
@@ -249,7 +253,6 @@ class Renderer {
         var img = node.image;
 
         if(! node.ready) {
-            console.log("Not ready");
             img.onload = function() {
                 node.ready=true;
                 ctxt.drawImage(img,node.center[0]-0.5*img.width,node.center[1]-4);
