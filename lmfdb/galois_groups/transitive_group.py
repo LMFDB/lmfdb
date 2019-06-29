@@ -121,6 +121,10 @@ class WebGaloisGroup:
     def display_short(self):
         if self._data.get('pretty',None) is not None:
             return self._data['pretty']
+        gapid = "%d.%d"%(group['order'],group['gapid'])
+        gapgroup = db.gps_small.lookup(gapid)
+        if gapgroup and 'pretty' in gapgroup:
+            return gapgroup['pretty']
         return self._data['name']
 
     def otherrep_list(self, givebound=True):
@@ -197,14 +201,17 @@ def trylink(n, t):
 
 
 def group_display_short(n, t):
-    label = base_label(n, t)
-    group = db.gps_transitive.lookup(label)
-    if group is not None and group.get('pretty',None) is not None:
-        return group['pretty']
-    return "%dT%d"%(n,t)
+    return WebGaloisGroup.from_nt(n,t).display_short()
+    #label = base_label(n, t)
+    #group = db.gps_transitive.lookup(label)
+    #if group is not None and group.get('pretty',None) is not None:
+    #    return group['pretty']
+    #return "%dT%d"%(n,t)
 
 # Returns the empty string if there is no pretty name
 def group_display_pretty(n, t):
+    return WebGaloisGroup.from_nt(n,t).display_short()
+
     label = base_label(n, t)
     group = db.gps_transitive.lookup(label)
     if group.get('pretty', None) is not None:
@@ -582,7 +589,7 @@ def complete_group_codes(codes):
 aliases = {}
 
 # Do all cyclic groups as once
-for j in range(1,24):
+for j in range(1,48):
     aliases['C'+str(j)] = [(j,1)]
 
 aliases['S1'] = [(1, 1)]
