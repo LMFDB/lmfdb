@@ -112,19 +112,24 @@ class WebGaloisGroup:
           return self._data['arith_equiv']
         return 0
 
+    def gapid(self):
+        return int(self._data['gapid'])
+
     def order(self):
         return int(self._data['order'])
 
     def gens(self):
         return(self._data['gens'])
 
-    def display_short(self):
+    def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty',None) is not None:
             return self._data['pretty']
-        gapid = "%d.%d"%(group['order'],group['gapid'])
+        gapid = "%d.%d"%(self.order(),self.gapid())
         gapgroup = db.gps_small.lookup(gapid)
         if gapgroup and 'pretty' in gapgroup:
-            return gapgroup['pretty']
+            return "$%s$" % gapgroup['pretty']
+        if emptyifnotpretty:
+            return ""
         return self._data['name']
 
     def otherrep_list(self, givebound=True):
@@ -200,40 +205,26 @@ def trylink(n, t):
     return '%dT%d' % (n, t)
 
 
-def group_display_short(n, t):
-    return WebGaloisGroup.from_nt(n,t).display_short()
-    #label = base_label(n, t)
-    #group = db.gps_transitive.lookup(label)
-    #if group is not None and group.get('pretty',None) is not None:
-    #    return group['pretty']
-    #return "%dT%d"%(n,t)
-
-# Returns the empty string if there is no pretty name
-def group_display_pretty(n, t):
-    return WebGaloisGroup.from_nt(n,t).display_short()
-
-    label = base_label(n, t)
-    group = db.gps_transitive.lookup(label)
-    if group.get('pretty', None) is not None:
-        return group['pretty']
-    return ""
+def group_display_short(n, t, emptyifnotpretty=False):
+    return WebGaloisGroup.from_nt(n,t).display_short(emptyifnotpretty)
 
 def group_pretty_and_nTj(n, t, useknowls=False):
     label = base_label(n, t)
     string = label
     group = db.gps_transitive.lookup(label)
+    group_obj = WebGaloisGroup.from_data(group)
     if useknowls and group is not None:
         ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
     else:
         ntj = label
-    if group is not None and group.get('pretty',None) is not None:
-        pretty = group['pretty']
+    pretty = group_obj.display_short(True) if group else ''
+    if pretty != '':
         # modify if we use knowls and have the gap id
         if useknowls:
             gapid = "%d.%d"%(group['order'],group['gapid'])
             gapgroup = db.gps_small.lookup(gapid)
             if gapgroup is not None:
-                pretty = small_group_display_knowl(group['order'], group['gapid'], name=group['pretty'])
+                pretty = small_group_display_knowl(group['order'], group['gapid'], name='$'+gapgroup['pretty']+'$')
         string = pretty + ' (as ' + ntj + ')'
     else:
         string = ntj
