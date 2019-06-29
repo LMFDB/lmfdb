@@ -16,7 +16,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
-    small_group_display_knowl, galois_module_knowl_guts,
+    small_group_display_knowl, galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 

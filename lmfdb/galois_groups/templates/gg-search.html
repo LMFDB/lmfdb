@@ -24,67 +24,27 @@ table.ntdata a {
               </tr>
               <tr>
                 <td> <select name='parity'>
- {% if info.parity=='1' %}
-                   <option value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option selected='yes' value='1'>Even</option>
- {% elif info.parity=='-1' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='-1'>Odd</option>
-                   <option value='1'>Even</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.parity != '1' and info.parity != '-1' }} >All</option>
+                   <option value='-1' {{ "selected" if info.parity == '-1' }}>Odd</option>
+                   <option value='1'{{ "selected" if info.parity == '1' }}>Even</option>
                   </select>
                 </td>
                 <td> <select name='cyc'>
- {% if info.cyc=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.cyc=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.cyc != 'True' and info.cyc != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.cyc == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.cyc == 'False' }}>No</option>
                   </select>
                 </td>
                 <td> <select name='solv'>
- {% if info.solv=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.solv=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.solv != 'True' and info.solv != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.solv == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.solv == 'False' }}>No</option>
                   </select>
                 </td>
                 <td> <select name='prim'>
- {% if info.prim=='True' %}
-                   <option value='Any'>All</option>
-                   <option selected='yes' value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% elif info.prim=='False' %}
-                   <option value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option selected='yes' value='False'>No</option>
- {% else %}
-                   <option selected='yes' value='Any'>All</option>
-                   <option value='True'>Yes</option>
-                   <option value='False'>No</option>
- {% endif %}
+                   <option value='' {{ "selected" if info.prim != 'True' and info.prim != 'False' }}>All</option>
+                   <option value='True' {{ "selected" if info.prim == 'True' }}>Yes</option>
+                   <option value='False' {{ "selected" if info.prim == 'False' }}>No</option>
                   </select>
                 </td>
               </tr>
