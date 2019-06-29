@@ -332,9 +332,10 @@ def galois_group_data(n, t):
         inf += ", primitive"
     else:
         inf += ", imprimitive"
-    inf += '<div>'
-    inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-    inf += '%s</div>'%(group['name'])
+    if n < 16:
+        inf += '<div>'
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>'%(group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
