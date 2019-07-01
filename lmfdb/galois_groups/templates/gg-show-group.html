@@ -17,7 +17,9 @@ table.reptable td, table.reptable th {
       {% if info.pretty_name %}
       <tr><td>{{KNOWL('gg.simple_name', title='Group')}} :<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
       {% endif %}
+      {% if info.n < 16 %}
       <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}} :<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
+      {% endif %}
       <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}</tr>
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</tr>
       <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}</tr>

@@ -16,7 +16,7 @@ from lmfdb.utils import (
 from lmfdb.number_fields.web_number_field import modules2string
 from lmfdb.galois_groups import galois_groups_page, logger
 from .transitive_group import (
-    group_display_pretty, small_group_display_knowl, galois_module_knowl_guts,
+    small_group_display_knowl, galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
     group_alias_table, WebGaloisGroup)
 
@@ -130,7 +130,7 @@ def galois_group_search(info, query):
 
     degree_str = prep_ranges(info.get('n'))
     info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
-    info['group_display'] = group_display_pretty
+    info['group_display'] = group_display_short
     info['yesno'] = yesno
     info['wgg'] = WebGaloisGroup.from_data
 
@@ -225,7 +225,7 @@ def render_group_webpage(args):
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
-        pretty = group_display_pretty(n,t)
+        pretty = group_display_short(n,t, emptyifnotpretty=True)
         if len(pretty)>0:
             prop2.extend([('Group:', pretty)])
             data['pretty_name'] = pretty

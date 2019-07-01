@@ -110,7 +110,7 @@ def NF_redirect():
 @nf_page.route("/Source")
 def source():
     learnmore = learnmore_list_remove('Source')
-    t = 'Source of Number Field Data'
+    t = 'Source of number field data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Source', ' ')]
     return render_template("single.html", kid='rcs.source.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
@@ -118,7 +118,7 @@ def source():
 @nf_page.route("/Reliability")
 def reliability():
     learnmore = learnmore_list_remove('Reliability')
-    t = 'Reliability of Number Field Data'
+    t = 'Reliability of number field data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Reliability', ' ')]
     return render_template("single.html", kid='rcs.rigor.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
@@ -127,7 +127,7 @@ def reliability():
 def render_groups_page():
     info = {}
     learnmore = learnmore_list_remove('Galois group')
-    t = 'Galois Group Labels'
+    t = 'Galois group labels'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Galois Group Labels', ' ')]
     return render_template("galois_groups.html", al=group_alias_table(), info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
 
@@ -135,7 +135,7 @@ def render_groups_page():
 def render_labels_page():
     info = {}
     learnmore = learnmore_list_remove('number field labels')
-    t = 'Labels for Global Number Fields'
+    t = 'Labels for global number fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Labels', '')]
     return render_template("single.html", info=info, credit=NF_credit, kid='nf.label', title=t, bread=bread, learnmore=learnmore)
 
@@ -143,7 +143,7 @@ def render_labels_page():
 @nf_page.route("/Completeness")
 def render_discriminants_page():
     learnmore = learnmore_list_remove('Completeness')
-    t = 'Completeness of Global Number Field Data'
+    t = 'Completeness of global number field data'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), ('Completeness', ' ')]
     return render_template("single.html", kid='rcs.cande.nf', 
         credit=NF_credit, title=t, bread=bread, learnmore=learnmore)
@@ -157,7 +157,7 @@ def render_class_group_data():
     # nf_logger.info(str(k) + ' ---> ' + str(info[k]))
     #nf_logger.info('******************* ')
     learnmore = learnmore_list_remove('Quadratic imaginary')
-    t = 'Class Groups of Quadratic Imaginary Fields'
+    t = 'Class groups of quadratic imaginary fields'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")), (t, ' ')]
     info['message'] =  ''
     info['filename']='none'
@@ -190,7 +190,7 @@ def render_class_group_data():
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread, learnmore=learnmore)
 
 def class_group_request_error(info, bread):
-    t = 'Class Groups of Quadratic Imaginary Fields'
+    t = 'Class groups of quadratic imaginary fields'
     return render_template("class_group_data.html", info=info, credit="A. Mosunov and M. J. Jacobson, Jr.", title=t, bread=bread)
 
 # Helper for stats page
@@ -207,7 +207,7 @@ def galstatdict(li, tots, t):
 def statistics():
     fields = db.nf_fields
     nfstatdb = fields.stats
-    title = 'Global Number Field Statistics'
+    title = 'Global number field statistics'
     bread = [('Global Number Fields', url_for(".number_field_render_webpage")),
              ('Number Field Statistics', '')]
     init_nf_count()
@@ -330,7 +330,7 @@ def number_field_render_webpage():
             'maxdeg': max_deg,
             'discriminant_list': discriminant_list
         }
-        t = 'Global Number Fields'
+        t = 'Global number fields'
         bread = [('Global Number Fields', url_for(".number_field_render_webpage"))]
         return render_template("nf-index.html", info=info, credit=NF_credit, title=t, bread=bread, learnmore=learnmore_list())
     else:
@@ -558,7 +558,7 @@ def render_field_webpage(args):
 
     info['resinfo'] = resinfo
     learnmore = learnmore_list()
-    title = "Global Number Field %s" % info['label']
+    title = "Global number field %s" % info['label']
 
     if npr == 1:
         primes = 'prime'
@@ -714,8 +714,8 @@ def number_field_jump(info):
 
 @search_wrap(template="nf-search.html",
              table=db.nf_fields,
-             title='Global Number Field Search Results',
-             err_title='Global Number Field Search Error',
+             title='Global number field search results',
+             err_title='Global number field search error',
              per_page=50,
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
@@ -731,6 +731,7 @@ def number_field_search(info, query):
     parse_floats(info, query, 'rd')
     parse_floats(info, query, 'regulator')
     parse_ints(info,query,'class_number')
+    parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
