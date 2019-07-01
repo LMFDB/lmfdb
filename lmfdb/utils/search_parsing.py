@@ -591,7 +591,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             if d == 1:
                 return '1.1.1.1'
             deg = euler_phi(d)
-            if deg > 23:
+            if deg > 47:
                 raise ValueError('%s is not in the database.' % F)
             adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
             return '%s.0.%s.1' % (deg, adisc)
