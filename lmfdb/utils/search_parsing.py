@@ -6,7 +6,7 @@ import re
 from collections import defaultdict, Counter
 
 from lmfdb.utils.utilities import flash_error
-from sage.all import ZZ, QQ, prod, euler_phi, CyclotomicField, PolynomialRing
+from sage.all import ZZ, QQ, prod, PolynomialRing
 from sage.misc.decorators import decorator_keywords
 
 SPACES_RE = re.compile(r'\d\s+\d')
@@ -547,18 +547,19 @@ def parse_galgrp(inp, query, qfield):
     except NameError:
         raise ValueError("It needs to be a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>, such as C5 or 5T1, or a comma separated list of such labels.")
 
-def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
-    if F == 'Q':
+def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+    if FF in ['q', 'Q']:
         return '1.1.1.1'
-    if F == 'Qi' or F == 'Q(i)':
+    if FF.lower() in ['qi', 'q(i)']:
         return '2.0.4.1'
     # Change unicode dash with minus sign
-    F = F.replace(u'\u2212', '-')
+    FF = FF.replace(u'\u2212', '-')
     # remove non-ascii characters from F
-    F = F.decode('utf8').encode('ascii', 'ignore')
+    FF = FF.decode('utf8').encode('ascii', 'ignore')
+    F = FF.lower() # keep original if needed
     if len(F) == 0:
         raise ValueError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
-    if F[0] == 'Q':
+    if F[0] == 'q':
         if '(' in F and ')' in F:
             F=F.replace('(','').replace(')','')
         if F[1:5] in ['sqrt', 'root']:
@@ -567,7 +568,7 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
-                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(F[:5]))
+                raise ValueError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(FF[:5]))
             if d == 1:
                 return '1.1.1.1'
             if d % 4 in [2, 3]:
@@ -577,24 +578,30 @@ def nf_string_to_label(F):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             absD = D.abs()
             s = 0 if D < 0 else 2
             return '2.%s.%s.1' % (s, str(absD))
-        if F[1:5] == 'zeta':
+        if F[0:5] == 'qzeta':
             if '_' in F:
                 F = F.replace('_','')
-            try:
-                d = ZZ(str(F[5:]))
-            except ValueError:
-                d = 0
-            if d < 1:
-                raise ValueError("After {0}, the remainder must be a positive integer.  Use {0}5 for example.".format(F[:5]))
+            match_obj = re.match(r'^qzeta(\d+)(\+|plus)?$', F)
+            if not match_obj:
+                raise ValueError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
+
+            d = ZZ(str(match_obj.group(1)))
             if d % 4 == 2:
                 d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
-            if d == 1:
-                return '1.1.1.1'
-            deg = euler_phi(d)
-            if deg > 47:
+
+            if match_obj.group(2):  # asking for the totally real field
+                from lmfdb.number_fields.web_number_field import rcyclolookup
+                if d in rcyclolookup:
+                    return rcyclolookup[d]
+                else:
+                    raise ValueError('%s is not in the database.' % F)
+            # Now not the totally real subfield
+            from lmfdb.number_fields.web_number_field import cyclolookup
+            if d in cyclolookup:
+                return cyclolookup[d]
+            else:
                 raise ValueError('%s is not in the database.' % F)
-            adisc = CyclotomicField(d).discriminant().abs()  # uses formula!
-            return '%s.0.%s.1' % (deg, adisc)
+                
         raise ValueError('It is not a valid field name or label, or a defining polynomial.')
     # check if a polynomial was entered
     F = F.replace('X', 'x')
