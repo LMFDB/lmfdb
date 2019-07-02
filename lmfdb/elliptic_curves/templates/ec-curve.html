@@ -276,20 +276,55 @@ white-space: pre in order to keep line breaks! #}
       For more coefficients, see the Downloads section to the right.
     </p>
 
+    {#
     <h4> {{ KNOWL('ec.q.modular_degree', title='Modular degree') }}
       and {{ KNOWL('ec.q.optimal', title='optimality') }}</h4>
-    {{ place_code('moddeg') }}
-      {% if data.data.degree==0 %}
-      Not available
-      {% else %}
-      {{ data.data.degree }}
-      {% endif %}
-      . This curve is
-      {% if not data.data.Gamma0optimal %}
-      <i>not</i>
-      {% endif %}
-      \( \Gamma_0(N) \)-optimal.
-    </p>
+    #}
+        <p>
+        <table>
+
+        <tr>
+        <td colspan="4">
+          {{ place_code('moddeg') }}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.modular_degree', title='Modular degree') }}:</td>
+        <td>
+	  {% if data.data.degree==0 %}
+	  Not available
+	  {% else %}
+	  {{ data.data.degree }}
+	  {% endif %}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.optimal', title='\( \Gamma_0(N) \)-optimal') }}:</td>
+        <td>
+	  {% if data.data.Gamma0optimal %}yes{% else %}no{% endif %}{% if not data.data.optimality_known %}<sup>*</sup>{% endif %}
+        </td>
+        </tr>
+        <tr>
+        <td>{{ KNOWL('ec.q.manin_constant', title='Manin constant') }}:</td>
+	<td>{% if data.data.Gamma0optimal %}1{% else %}not computed{% endif %}</td>
+        </tr>
+	</table>
+
+	{% if not data.data.optimality_known %}<sup>*</sup>optimality has not been proved rigorously in all cases for conductors over 60000, but the Manin constant is correct where given{% endif %}
+	</p>
+
+	{#
+	{% if data.data.degree==0 %}
+	Not available
+	{% else %}
+	{{ data.data.degree }}
+	{% endif %}
+	. This curve is
+	{% if not data.data.Gamma0optimal %}
+	<i>not</i>
+	{% endif %}
+	\( \Gamma_0(N) \)-optimal.
+	#}
 
     <p>
       <h4> {{KNOWL('ec.q.special_value', title='Special L-value', special_value = data.special_value)}} </h4>
