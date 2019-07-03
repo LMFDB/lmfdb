@@ -35,7 +35,8 @@ text-align: center;
 {% if c.degree==0 %}Not available{% else %}{{c.degree}}{% endif %}
 </td>
 {% if c.optimal %}
-<td>\(\Gamma_0(N)\)-optimal</td>
+<td>\(\Gamma_0(N)\)-optimal{% if not info.optimality_known %}<sup>*</sup>{% endif %}
+</td>
 {% else %}
 <td>&nbsp;</td>
 {% endif %}
@@ -43,6 +44,7 @@ text-align: center;
 {% endfor %}
 </table>
 
+{% if not info.optimality_known %}<sup>*</sup>optimality has not been proved rigorously for conductors over 60000{% endif %}
 <h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
 {{ place_code('rank') }}
 <p>
