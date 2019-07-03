@@ -169,6 +169,7 @@ cyclolookup[4] = '2.0.4.1'
 for n, label in cyclolookup.items():
     if n % 2 == 1:
         cyclolookup[2*n] = label
+
 rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
