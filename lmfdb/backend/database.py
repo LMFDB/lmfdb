@@ -3460,11 +3460,40 @@ class PostgresTable(PostgresBase):
                 self.create_index(sort)
             self.log_db_change("set_sort", sort=sort)
 
-    def add_column(self, name, datatype, extra=False):
+    def set_label(self, label_col=None):
+        """
+        Sets (or clears) the label column for this table.
+
+        INPUT:
+
+        - ``label_col`` -- a search column of this table, or ``None``.
+          If ``None``, the current label column will be cleared without a replacement.
+        """
+        if not (label_col is None or label_col in self._search_cols):
+            raise ValueError("%s is not a search column" % label_col)
+        modifier = SQL("UPDATE {0} SET label_col = %s WHERE name = %s").format(Identifier(self.search_table))
+        self._execute(modifier, [label_col, self.search_table])
+        self._label_col = label_col
+
+    def add_column(self, name, datatype, extra=False, label=False):
+        """
+        Adds a column to this table.
+
+        INPUT:
+
+        - ``name`` -- a string giving the column name.  Must not be a current column name.
+        - ``datatype`` -- a valid Postgres data type (e.g. 'numeric' or 'text')
+        - ``extra`` -- whether this column should be added to the extras table.
+          If no extras table has been created, you must call ``create_extra_table`` first.
+        - ``label`` -- whether this column should be set as the label column for this table
+          (used in the ``lookup`` method for example).
+        """
         if name in self._search_cols:
             raise ValueError("%s already has column %s"%(self.search_table, name))
         if name in self._extra_cols:
             raise ValueError("%s already has column %s"%(self.extra_table, name))
+        if label and extra:
+            raise ValueError("label must be a search column")
         if datatype.lower() not in types_whitelist:
             if not any(regexp.match(datatype.lower()) for regexp in param_types_whitelist):
                 raise ValueError("%s is not a valid type"%(datatype))
@@ -3484,6 +3513,8 @@ class PostgresTable(PostgresBase):
                 self._extra_cols.append(name)
             elif not extra and name != 'id':
                 self._search_cols.append(name)
+            if label:
+                self.set_label(name)
             self.log_db_change("add_column", name=name, datatype=datatype)
 
     def drop_column(self, name, commit=True, force=False):
