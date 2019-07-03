@@ -52,7 +52,7 @@ class ECisog_class(object):
     def make_class(self):
         self.CM = self.cm
         N, iso, number = split_lmfdb_label(self.lmfdb_iso)
-
+        self.conductor = int(N)
         # Extract the size of the isogeny class from the database
         self.ncurves = ncurves = self.class_size
         # Create a list of the curves in the class from the database
@@ -62,6 +62,7 @@ class ECisog_class(object):
 
         # Set optimality flags.  The optimal curve is number 1 except
         # in one case which is labeled differently in the Cremona tables
+        self.optimality_known = (self.ncurves==1) or (self.conductor<60000)
         for c in self.curves:
             c['optimal'] = (c['number']==(3 if self.iso == '990h' else 1))
             c['ai'] = c['ainvs']
