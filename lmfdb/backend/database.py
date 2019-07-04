@@ -3471,9 +3471,15 @@ class PostgresTable(PostgresBase):
         """
         if not (label_col is None or label_col in self._search_cols):
             raise ValueError("%s is not a search column" % label_col)
-        modifier = SQL("UPDATE {0} SET label_col = %s WHERE name = %s").format(Identifier(self.search_table))
+        modifier = SQL("UPDATE meta_tables SET label_col = %s WHERE name = %s")
         self._execute(modifier, [label_col, self.search_table])
         self._label_col = label_col
+
+    def get_label(self):
+        """
+        Returns the current label column as a string.
+        """
+        return self._label_col
 
     def add_column(self, name, datatype, extra=False, label=False):
         """
