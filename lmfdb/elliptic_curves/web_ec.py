@@ -272,8 +272,7 @@ class WebEC(object):
             data['Gamma0optimal'] = bool(self.number == 3)
         else:
             data['Gamma0optimal'] = bool(self.number == 1)
-
-
+        data['optimality_known'] = (int(self.class_size)==1) or (N<60000)
         data['p_adic_data_exists'] = False
         if data['Gamma0optimal']:
             data['p_adic_data_exists'] = db.ec_padic.exists({'lmfdb_iso': self.lmfdb_iso})

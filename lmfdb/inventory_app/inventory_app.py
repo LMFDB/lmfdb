@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, make_response, jsonify, Blueprint
+from flask import render_template, request, url_for, make_response, jsonify, Blueprint, send_from_directory
 from flask_login import login_required
 from lmfdb.users import admin_required
 import inventory_viewer
@@ -36,6 +36,12 @@ def css():
     else:
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
+
+#Temporary workaround for static files using non-flask webserver
+#If webserver is working correctly, this should not be reached
+@inventory_app.route("static/<path:path>/")
+def send_js(path):
+    return send_from_directory(inventory_app.static_folder, path)
 
 #------ Listing pages -----------------------------------
 #Custom error for bad db.coll names
