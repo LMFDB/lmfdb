@@ -621,7 +621,7 @@ class CMF_download(Downloader):
 
         out += self._magma_MakeCharacters(newform, hecke_nf) + newlines
 
-        if newform.hecke_cutters:
+        if newform.hecke_cutters <> None:
             out += self._magma_MakeNewformModSym(newform, hecke_nf) + newlines
         if newform.has_exact_qexp:
             # to return errors
