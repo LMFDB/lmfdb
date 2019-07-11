@@ -1,0 +1,23 @@
+{% extends "homepage.html" %}
+{% block content %}
+<h1 id="demo-of-api2">API2 Demo</h1>
+<p>This page shows a quick demo of the capabilities of API2 and how to use it. API2 uses a RESTful model using JSON for information transfer and has a human readable "pretty" interface for testing purposes. It provides an abstraction layer away from the underlying database to guarantee that clients always have a stable interface to get data from. To do this, it introduces the idea of <b>"searchers"</b> that are a list of query objects against which searches can be made. In general they are linked to underlying tables in the database but are not required to. A client should first query the server for what searchers are available by naviagting to the </p>
+<a href="/api2/description/searchers" class="uri">/api2/description/searchers</a>
+<p>end point. That will give a JSON document that contains a set of searchers by name inside it's <b>"data"</b> key along with a brief and a long description of both. If you wish to search on the elliptic curves over Q, you would select the searcher <b>elliptic_curves_q</b>.</p>
+<p> Once you know which searcher you want to use you have to query the API for which fields it is possible to search on. This is done by querying the interface <b>/api2/description//&lt;searcher&gt;</b> where &lt;searcher&gt is the name of the selected searcher. So for the elliptic curves over Q this would be</p> 
+<a href="/api2/description/elliptic_curves_q" class="uri">/api2/description/elliptic_curves_q</a>
+<p> This will return another JSON document describing the possible search fields, both by name and with a short human readable description. The names of these search fields are arbitrary and are subject to change but fields that contain information which have mathematical meaning are also assigned a <b>cname</b> or canonical name that will not change. This will eventually be supplemented by a <b>codec</b> field that describes how the data is encoded in the database. A client seeking a mathematical property should search through the document for the <b>cname</b> for that property and then store the field name associated with the <b>cname</b> and use it for search purposes.<p>
+<p>A client can now issue a search using the searcher name and the field names that it wishes to search on. So to search by Cremona label you would go to</p>
+<a href="/api2/data/elliptic_curves_q?label=47360s1" class="uri">/api2/data/elliptic_curves_q?label=47360s1</a>
+<p>You can search on multiple fields on a single searcher by using the <b>&amp;</b> symbol to combine the searches</p>
+<a href="/api2/data/elliptic_curves_q?rank=0&amp;conductor=11" class="uri">/api2/data/elliptic_curves_q?rank=0&amp;conductor=11</a>
+<p>For orderable items you can search for greater than or less than using the &gt; and &lt; symbols after the equality. So the following searches for rank=0, conductor > 11 </p>
+
+<a href="/api2/data/elliptic_curves_q?rank=0&amp;conductor=>11" class="uri">/api2/data/elliptic_curves_q?rank=0&amp;conductor=>11</a>
+
+<p>At this point a client should query the API for what the fields returned in response to the query mean. To do this it should go to <p>
+<a href="/api2/inventory/elliptic_curves_q" class="uri">/api2/inventory/elliptic_curves_q</a>
+<p>which will return a JSON document that lists and describes the fields that can be returned by the API in response to a query. Fields are again tagged with <b>cname</b> fields if they are present to identify mathematically meaninful fields. In general the fields 
+that can be searched for and the fields that can be returned are the same but this is not always true so this step should not be skipped.</p>
+
+{% endblock %}

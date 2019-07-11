@@ -1652,7 +1652,7 @@ class PostgresTable(PostgresBase):
             else:
                 return {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
 
-    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, silent=False):
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, silent=False, force_exact_count=False, count_only = False):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for usage from search pages where multiple results may be returned.
@@ -1678,6 +1678,8 @@ class PostgresTable(PostgresBase):
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
+        - ``force_exact_count`` -- a boolean. If True exact count will always be given
+        - ``count_only`` -- a boolean. If True then the exact count is calculated and the info object is populated. The function returns None
 
         WARNING:
 
@@ -1747,6 +1749,8 @@ class PostgresTable(PostgresBase):
             nres = offset + cur.rowcount
         else:
             exact_count = True
+            if force_exact_count: nres = self.count(query)
+            
         res = cur.fetchmany(limit)
         res = list(
                 self._search_iterator(res, search_cols, extra_cols, projection)
@@ -2804,6 +2808,7 @@ class PostgresTable(PostgresBase):
             qstr, values = self._parse_dict(query)
             selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id"), Identifier(self.search_table), qstr)
             cur = self._execute(selecter, values)
+            val = {"operation":None}
             if cur.rowcount > 1:
                 raise ValueError("Query %s does not specify a unique row"%(query))
             elif cur.rowcount == 1: # update
@@ -2824,7 +2829,8 @@ class PostgresTable(PostgresBase):
                                              SQL("id = %s"))
                     dvalues = self._parse_values(dat)
                     dvalues.append(row_id)
-                    self._execute(updater, dvalues)
+                    val["operation"] = "UPDATE"
+                    val["record"] = self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
                     self._break_order()
 
