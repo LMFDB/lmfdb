@@ -220,7 +220,7 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 def genus2_lookup_equation(f):
-    R.<x> = PolynomialRing(Rationals())
+    R = PolynomialRing(Rationals(),'x')
     if type(f) == type("") or type(f) == type(u""):
         if "x" in f:
             if "," in f:
