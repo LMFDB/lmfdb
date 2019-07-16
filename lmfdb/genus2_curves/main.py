@@ -254,6 +254,7 @@ ZLIST=r'\[\d+(,\d+)*\]'
 
 def genus2_jump(info):
     jump = info["jump"].replace(" ","")
+    print "jump =",jump
     if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
         return redirect(url_for_curve_label(jump), 301)
     elif re.match(r'^\d+\.[a-z]+$', jump):
@@ -269,7 +270,9 @@ def genus2_jump(info):
           re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
           re.match(r'^'+ZLIST+r'$',jump) or
           re.match(r'^\['+ZLIST+r','+ZLIST+r'\]$',jump)):
+        print "calling genus2_lookup_equation"
         label = genus2_lookup_equation(jump)
+        print "result", label
         if label:
             return redirect(url_for_curve_label(jump),301)
         errmsg = "%s is not the equation of a genus 2 curve in the database"
