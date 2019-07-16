@@ -219,25 +219,62 @@ def class_from_curve_label(label):
 ################################################################################
 # Searching
 ################################################################################
+def genus2_lookup_equation(f):
+    R.<x> = PolynomialRing(Rationals())
+    if type(f) == type("") or type(f) == type(u""):
+        if "x" in f:
+            if "," in f:
+                e = f.split(",")
+                f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
+            else:
+                f = R(f)
+        else:
+            f = R(literal_eval(f))
+    elif type(f) == type([]):
+        if len(f) > 2:
+            return None
+        f = [R(a) for a in f]
+    else:
+        f = R(f)
+    C = magma.HyperellipticCurve(f)
+    g2 = magma.G2Invariants(C)
+    g2 = str([str(i) for i in g2]).replace(" ","")
+    for r in db.g2c_curves.search({'g2_inv':g2}):
+        eqn = literal_eval(r['eqn'])
+        D = magma.HyperellipticCurve(R(eqn[0]),R(eqn[1]))
+        if magma.IsIsomorphic(C,D):
+            return r['label']
+    return None
+
+TERM_RE=r'(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?'
+STERM_RE=r'(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?'
+POLY_RE=TERM_RE+'('+STERM_RE+')*'
+ZLIST=r'\[\d+(,\d+)*\]'
 
 def genus2_jump(info):
-    jump = info["jump"].strip()
+    jump = info["jump"].replace(" ","")
     if re.match(r'^\d+\.[a-z]+\.\d+\.\d+$',jump):
         return redirect(url_for_curve_label(jump), 301)
-    else:
-        if re.match(r'^\d+\.[a-z]+$', jump):
-            return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\d+\.[a-z]+$', jump):
+        return redirect(url_for_isogeny_class_label(jump), 301)
+    elif re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
+        # Handle direct Lhash input
+        c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
+        if c:
+            return redirect(url_for_isogeny_class_label(c), 301)
         else:
-            # Handle direct Lhash input
-            if re.match(r'^\#\d+$',jump) and ZZ(jump[1:]) < 2**61:
-                c = db.g2c_curves.lucky({'Lhash': jump[1:].strip()}, projection="class")
-                if c:
-                    return redirect(url_for_isogeny_class_label(c), 301)
-                else:
-                    errmsg = "hash %s not found"
-            else:
-                errmsg = "%s is not a valid genus 2 curve or isogeny class label"
-        flash_error(errmsg, jump)
+            errmsg = "hash %s not found"
+    elif re.match(r'^'+POLY_RE+r'$',jump) or
+         re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
+         re.match(r'^'+ZLIST+r'$',jump) or
+         re.match(r'^\['+ZLIST+r','+ZLIST+r'\]$',jump):
+        label = genus2_lookup_equation(jump)
+        if label:
+            return redirect(url_for_curve_label(jump),301)
+        errmsg = "%s is not the equation of a genus 2 curve in the database"
+    else:
+        errmsg = "%s is not a valid genus 2 curve or isogeny class label"
+    flash_error(errmsg, jump)
     return redirect(url_for(".index"))
 
 class G2C_download(Downloader):
