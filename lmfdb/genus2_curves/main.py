@@ -6,7 +6,7 @@ from operator import mul
 
 from flask import render_template, url_for, request, redirect, abort
 from sage.all import ZZ, QQ, PolynomialRing
-from sage.interfaces import magma
+from sage.interfaces.magma import magma
 
 from lmfdb import db
 from lmfdb.utils import (
