@@ -5,7 +5,8 @@ from ast import literal_eval
 from operator import mul
 
 from flask import render_template, url_for, request, redirect, abort
-from sage.all import ZZ
+from sage.all import ZZ, QQ, PolynomialRing
+from sage.interfaces import magma
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -220,7 +221,7 @@ def class_from_curve_label(label):
 # Searching
 ################################################################################
 def genus2_lookup_equation(f):
-    R = PolynomialRing(Rationals(),'x')
+    R = PolynomialRing(QQ,'x')
     if type(f) == type("") or type(f) == type(u""):
         if "x" in f:
             if "," in f:
@@ -264,10 +265,10 @@ def genus2_jump(info):
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
             errmsg = "hash %s not found"
-    elif re.match(r'^'+POLY_RE+r'$',jump) or
-         re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
-         re.match(r'^'+ZLIST+r'$',jump) or
-         re.match(r'^\['+ZLIST+r','+ZLIST+r'\]$',jump):
+    elif (re.match(r'^'+POLY_RE+r'$',jump) or
+          re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
+          re.match(r'^'+ZLIST+r'$',jump) or
+          re.match(r'^\['+ZLIST+r','+ZLIST+r'\]$',jump)):
         label = genus2_lookup_equation(jump)
         if label:
             return redirect(url_for_curve_label(jump),301)
