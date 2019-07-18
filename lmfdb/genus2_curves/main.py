@@ -226,9 +226,7 @@ def genus2_lookup_equation(f):
     if ("x" in f and "," in f) or "],[" in f:
         if "],[" in f:
             e = f.split("],[")
-            e[0] = e[0] + "]"
-            e[1] = "[" + e[1]
-            f = [literal_eval(e[0]),leteral_eval(e[1])]
+            f = [literal_eval(e[0]+"]"),literal_eval("["+e[1])]
         else:
             e = f.split(",")
             f = [R(str(e[0][1:])),R(str(e[1][0:-1]))]
