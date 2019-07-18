@@ -268,8 +268,8 @@ def genus2_jump(info):
             errmsg = "hash %s not found"
     elif (re.match(r'^'+POLY_RE+r'$',jump) or
           re.match(r'^\['+POLY_RE+r','+POLY_RE+r'\]$',jump) or
-          re.match(r'^'+ZLIST+r'$',jump) or
-          re.match(r'^\['+ZLIST+r','+ZLIST+r'\]$',jump)):
+          re.match(r'^'+ZLIST_RE+r'$',jump) or
+          re.match(r'^\['+ZLIST_RE+r','+ZLIST_RE+r'\]$',jump)):
         print "calling genus2_lookup_equation"
         label = genus2_lookup_equation(jump)
         print "result", label
