@@ -232,8 +232,11 @@ def genus2_lookup_equation(f):
             f = [R(str(e[0][1:])),R(str(e[1][0:-1]))]
     else:
         f = R(str(f))
-    C = magma.HyperellipticCurve(f)
-    g2 = magma.G2Invariants(C)
+    try:
+        C = magma.HyperellipticCurve(f)
+        g2 = magma.G2Invariants(C)
+    except:
+        return None
     g2 = str([str(i) for i in g2]).replace(" ","")
     for r in db.g2c_curves.search({'g2_inv':g2}):
         eqn = literal_eval(r['eqn'])
