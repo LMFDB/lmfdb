@@ -222,15 +222,14 @@ def class_from_curve_label(label):
 ################################################################################
 def genus2_lookup_equation(f):
     R = PolynomialRing(QQ,'x')
-    if type(f) == type("") or type(f) == type(u""):
-        if "x" in f:
-            if "," in f:
-                e = f.split(",")
-                f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
-            else:
-                f = R(f)
+    if "x" in f:
+        if "," in f:
+            e = f.split(",")
+            f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
         else:
-            f = R(literal_eval(f))
+            f = R(f)
+    else:
+        f = literal_eval(f)
     elif type(f) == type([]):
         if len(f) > 2:
             return None
