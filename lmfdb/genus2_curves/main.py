@@ -250,7 +250,7 @@ def genus2_lookup_equation(f):
 TERM_RE=r'(\+|-)?(\d*x|\d+\*x|\d+)(\^\d+)?'
 STERM_RE=r'(\+|-)(\d*x|\d+\*x|\d+)(\^\d+)?'
 POLY_RE=TERM_RE+'('+STERM_RE+')*'
-ZLIST=r'\[\d+(,\d+)*\]'
+ZLIST_RE=r'\[\d+(,\d+)*\]'
 
 def genus2_jump(info):
     jump = info["jump"].replace(" ","")
@@ -274,7 +274,7 @@ def genus2_jump(info):
         label = genus2_lookup_equation(jump)
         print "result", label
         if label:
-            return redirect(url_for_curve_label(jump),301)
+            return redirect(url_for_curve_label(label),301)
         errmsg = "%s is not the equation of a genus 2 curve in the database"
     else:
         errmsg = "%s is not a valid genus 2 curve or isogeny class label"
