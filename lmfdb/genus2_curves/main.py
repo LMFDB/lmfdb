@@ -230,7 +230,7 @@ def genus2_lookup_equation(f):
             f = R(f)
     else:
         f = literal_eval(f)
-    elif type(f) == type([]):
+    if type(f) == type([]):
         if len(f) > 2:
             return None
         f = [R(a) for a in f]
