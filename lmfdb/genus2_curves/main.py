@@ -222,18 +222,9 @@ def class_from_curve_label(label):
 ################################################################################
 def genus2_lookup_equation(f):
     R = PolynomialRing(QQ,'x')
-    if "x" in f:
-        if "," in f:
-            e = f.split(",")
-            f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
-        else:
-            f = R(f)
-    else:
-        f = literal_eval(f)
-    if type(f) == type([]):
-        if len(f) > 2:
-            return None
-        f = [R(a) for a in f]
+    if ("x" in f and "," in f) or "],[" in f:
+        e = f.split(",")
+        f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
     else:
         f = R(f)
     C = magma.HyperellipticCurve(f)
