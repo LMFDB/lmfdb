@@ -224,9 +224,9 @@ def genus2_lookup_equation(f):
     R = PolynomialRing(QQ,'x')
     if ("x" in f and "," in f) or "],[" in f:
         e = f.split(",")
-        f = [R(e[0].split("[")[-1]),R(e[1].split("]")[0])]
+        f = [R(str(e[0].split("[")[-1])),R(str(e[1].split("]")[0])]
     else:
-        f = R(f)
+        f = R(str(f)
     C = magma.HyperellipticCurve(f)
     g2 = magma.G2Invariants(C)
     g2 = str([str(i) for i in g2]).replace(" ","")
