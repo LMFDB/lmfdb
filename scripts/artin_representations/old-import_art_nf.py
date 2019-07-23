@@ -1,9 +1,4 @@
 #!/usr/local/bin/sage -python
-
-# This version writes the data to a file, deletes all records from the database,
-# then reloads from the files.
-
-
 import sys, os
 import re
 import json
@@ -64,7 +59,14 @@ outrecs = []
 
 def artrepload(l):
   global count
+  global old
   global outrecs
+  ar1 = rep.lucky({'Baselabel': l['Baselabel']})
+  if ar1 is not None:
+    old += 1
+    if (count+old) % 100==0:
+      print "%s new, %s old" %(str(count),str(old))
+    return 
   l['Conductor'] = ZZ(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
   # Extract containing representation from the label
@@ -79,13 +81,20 @@ def artrepload(l):
   #print str(l)
   count +=1
   outrecs.append(l)
-  if count % 100==0:
-    print "Count %s" % count
+  if (count+old) % 100==0:
+    print "%s new, %s old" %(str(count),str(old))
   return
 
 def nfgalload(l):
   global count
+  global old
   global outrecs
+  ff = nfgal.lucky({'Polynomial': l['Polynomial']})
+  if ff is not None:
+    old += 1
+    if (count+old) % 100==0:
+      print "%s new, %s old" %(str(count),str(old))
+    return 
 
   artreps=l['ArtinReps']
   artreps=[{'Baselabel': z[0][0], 'GalConj': z[0][1], 'CharacterField': z[1],
@@ -94,8 +103,8 @@ def nfgalload(l):
   l['Size'] = int(l['Size'])
   outrecs.append(l)
   count +=1
-  if count % 100==0:
-    print "Count %s" % count
+  if (count+old) % 100==0:
+    print "%s new, %s old" %(str(count),str(old))
   return
 
 
