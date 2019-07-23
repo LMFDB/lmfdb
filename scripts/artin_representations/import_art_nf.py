@@ -92,7 +92,22 @@ def nfgalload(l):
     print "Count %s" % count
   return
 
+def strx(val, k):
+    if k == 'Algorithm':
+        return "'"+str(val)+"'"
+    if k == 'Baselabel':
+        return "'"+str(val)+"'"
+    return str(val)
 
+def fixdict(d):
+    kys = d.keys()
+    start = ["'"+str(k)+"': "+strx(d[k],k) for k in kys]
+    return "{"+','.join(start)+"}"
+
+def fixlist(d):
+    return [str(k) for k in d]
+
+reloadme = []
 # processing file names
 for path in sys.argv[1:]:
     print path
@@ -122,10 +137,34 @@ for path in sys.argv[1:]:
             fnout.write('|'.join(head1)+"\n")
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
+                for kk in ['ConjClasses','FrobResolvents','ArtinReps']:
+                    ent[kk] = [fixdict(z) for z in ent[kk]]
+                    ent[kk] = "["+','.join(ent[kk])+"]"
+                for kk in ['QpRts']:
+                    ent[kk] = [fixlist(z) for z in ent[kk]]
                 fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
             fnout.close()
+            reloadme.append('nfgal')
         if case == 'art rep':
-            pass
+            fnout = open("art.dump", "w")
+            cols = rep.col_type
+            del cols['id']
+            head1 = [str(z) for z in cols.keys()]
+            fnout.write('|'.join(head1)+"\n")
+            fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
+            for ent in outrecs:
+                for kk in ['GaloisConjugates']:
+                    ent[kk] = [fixdict(z) for z in ent[kk]]
+                    ent[kk] = "["+','.join(ent[kk])+"]"
+                fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
+            fnout.close()
+            reloadme.append('art')
     print "%s new" % count
     fn.close()
+
+for k in reloadme:
+    if k == 'nfgal':
+        nfgal.reload('nfgal.dump', sep='|')
+    if k == 'art':
+        rep.reload('art.dump', sep='|')
 
