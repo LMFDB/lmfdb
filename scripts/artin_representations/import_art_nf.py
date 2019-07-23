@@ -105,7 +105,7 @@ def fixdict(d):
     return "{"+','.join(start)+"}"
 
 def fixlist(d):
-    return [str(k).replace("'",'"') for k in d]
+    return [str(k) for k in d]
 
 reloadme = []
 # processing file names
@@ -142,7 +142,7 @@ for path in sys.argv[1:]:
                     ent[kk] = "["+','.join(ent[kk])+"]"
                 for kk in ['QpRts']:
                     ent[kk] = [fixlist(z) for z in ent[kk]]
-                fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
+                fnout.write('|'.join([str(ent[z]).replace("'",'"') for z in head1])+'\n')
             fnout.close()
             reloadme.append('nfgal')
         if case == 'art rep':

@@ -212,12 +212,13 @@ def group_pretty_and_nTj(n, t, useknowls=False):
     label = base_label(n, t)
     string = label
     group = db.gps_transitive.lookup(label)
-    group_obj = WebGaloisGroup.from_data(group)
-    if useknowls and group is not None:
-        ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
-    else:
-        ntj = label
-    pretty = group_obj.display_short(True) if group else ''
+    ntj = label
+    pretty = ''
+    if group is not None:
+        group_obj = WebGaloisGroup.from_data(group)
+        if useknowls:
+            ntj = '<a title = "' + label + ' [nf.galois_group.data]" knowl="nf.galois_group.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + label + '</a>'
+        pretty = group_obj.display_short(True) if group else ''
     if pretty != '':
         # modify if we use knowls and have the gap id
         if useknowls:
