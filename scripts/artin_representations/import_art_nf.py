@@ -94,9 +94,9 @@ def nfgalload(l):
 
 def strx(val, k):
     if k == 'Algorithm':
-        return "'"+str(val)+"'"
+        return '"'+str(val)+'"'
     if k == 'Baselabel':
-        return "'"+str(val)+"'"
+        return '"'+str(val)+'"'
     return str(val)
 
 def fixdict(d):
@@ -105,7 +105,7 @@ def fixdict(d):
     return "{"+','.join(start)+"}"
 
 def fixlist(d):
-    return [str(k) for k in d]
+    return [str(k).replace("'",'"') for k in d]
 
 reloadme = []
 # processing file names
