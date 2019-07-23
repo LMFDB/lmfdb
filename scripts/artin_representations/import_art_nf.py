@@ -101,7 +101,7 @@ def strx(val, k):
 
 def fixdict(d):
     kys = d.keys()
-    start = ["'"+str(k)+"': "+strx(d[k],k) for k in kys]
+    start = ['"'+str(k)+'": '+strx(d[k],k) for k in kys]
     return "{"+','.join(start)+"}"
 
 def fixlist(d):
