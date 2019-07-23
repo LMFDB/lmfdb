@@ -40,7 +40,6 @@ from sage.all import cartesian_product_iterator, binomial
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
 from lmfdb.logger import make_logger
-from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -5355,13 +5354,7 @@ class PostgresDatabase(PostgresBase):
         for tabledata in cur:
             tablename = tabledata[0]
             tabledata += (data_types,)
-            # it would be nice to include this in meta_tables
-            if tablename == 'artin_reps':
-                table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
-            elif tablename == 'artin_field_data':
-                table = ExtendedTable(Dokchitser_NumberFieldGaloisGroup, self, *tabledata)
-            else:
-                table = PostgresTable(self, *tabledata)
+            table = PostgresTable(self, *tabledata)
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
