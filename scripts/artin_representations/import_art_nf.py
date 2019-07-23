@@ -19,20 +19,10 @@ sys.path.append(mypath)
 
 from lmfdb import db
 
-
-
-# load the password file
-#import yaml
-#pw_dict = yaml.load(open(os.path.join(mypath, "passwords.yaml")))
-#username = pw_dict['data']['username']
-#password = pw_dict['data']['password']
-
-
 rep=db.artin_reps
 nfgal=db.artin_field_data
 
 count = 0
-old = 0
 
 #utilities
 
@@ -59,6 +49,10 @@ def fix_local_factors(gconj):
   return gconj
 
 # Main programs
+
+# There are two parts since we need to deal with two files/databases
+# The two functions below take our for one entry as a dictionary, and reformats
+# the dictionary
 
 outrecs = []
 
@@ -103,7 +97,7 @@ def nfgalload(l):
 for path in sys.argv[1:]:
     print path
     count = 0
-    old = 0
+    outrecs = []
     filename = os.path.basename(path)
     fn = open(path)
     if re.match(r'^nfgal', filename):
@@ -118,13 +112,20 @@ for path in sys.argv[1:]:
 	      nfgalload(l)
 	    if case == 'art rep':
 	      artrepload(l)
+    # We have loaded the file, now dump it
     if outrecs:
         if case == 'nfgal':
-          nfgal.insert_many(outrecs)
-          foobar=1
+            fnout = open("nfgal.dump", "w")
+            cols = nfgal.col_type
+            del cols['id']
+            head1 = [str(z) for z in cols.keys()]
+            fnout.write('|'.join(head1)+"\n")
+            fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
+            for ent in outrecs:
+                fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
+            fnout.close()
         if case == 'art rep':
-          rep.insert_many(outrecs)
-          foobar=1
-    print "%s new, %s old" %(str(count),str(old))
+            pass
+    print "%s new" % count
     fn.close()
 
