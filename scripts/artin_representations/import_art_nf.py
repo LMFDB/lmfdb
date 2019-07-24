@@ -137,9 +137,11 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    if not isinstance(elt, str):
+                    if isinstance(ent[kk], unicode):
+                        ent[kk] = str(ent[kk])
+                    if not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
-                fnout.write('|'.join([str(ent[z]).replace("'",'"') for z in head1])+'\n')
+                fnout.write('|'.join([ent[z].replace("'",'"') for z in head1])+'\n')
             fnout.close()
             reloadme.append('nfgal')
         if case == 'art rep':
@@ -151,13 +153,14 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    #print kk+ " " + repr(ent[kk]) +" "+ str(type(ent[kk]))
-                    if not isinstance(elt, str):
+                    if isinstance(ent[kk], unicode):
+                        ent[kk] = str(ent[kk])
+                    if not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
-                fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
+                fnout.write('|'.join([ent[z] for z in head1])+'\n')
             fnout.close()
             reloadme.append('art')
-    print "%s new" % count
+    print "%s entries" % count
     fn.close()
 
 for k in reloadme:
