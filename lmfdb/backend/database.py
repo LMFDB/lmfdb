@@ -5221,30 +5221,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             raise ValueError("Not a unique oldstat identifier")
         return cur.fetchone()[0]
 
-class ExtendedTable(PostgresTable):
-    """
-    This class supports type conversion when extracting data from the database.
-
-    It's use is currently hardcoded for artin_reps and artin_field_data,
-    but could eventually be specified by columns in meta_tables.
-    """
-    def __init__(self, type_conversion, *args, **kwds):
-        self._type_conversion = type_conversion
-        PostgresTable.__init__(self, *args, **kwds)
-    def _search_and_convert_iterator(self, source):
-        for x in source:
-            yield self._type_conversion(x)
-    def search_and_convert(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return self._search_and_convert_iterator(results)
-        else:
-            return [self._type_conversion(x) for x in results]
-    def convert_lucky(self, *args, **kwds):
-        result = self.lucky(*args, **kwds)
-        if result:
-            return self._type_conversion(result)
-
 class PostgresDatabase(PostgresBase):
     """
     The interface to the postgres database.

@@ -3,7 +3,6 @@
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
-from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
 from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -72,10 +71,6 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
-def _search_and_convert_iterator(cls, source):
-    for x in source:
-        yield cls(data=x)
-
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
@@ -103,11 +98,7 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return _search_and_convert_iterator(cls, results)
-        else:
-            return [cls(data=x) for x in results]
+        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
@@ -635,11 +626,7 @@ class NumberFieldGaloisGroup(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return _search_and_convert_iterator(cls, results)
-        else:
-            return [cls(data=x) for x in results]
+        return db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
@@ -651,12 +638,10 @@ class NumberFieldGaloisGroup(object):
         return self._data["TransitiveDegree"]
 
     def polynomial(self):
-        return PolynomialAsSequenceTooLargeInt(self._data["Polynomial"])
+        return self._data["Polynomial"]
 
     def polynomial_latex(self):
-	from sage.rings.all import PolynomialRing, QQ
-	PP = PolynomialRing(QQ, 'x')
-    	return PP(self.polynomial())._latex_()
+        return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
 
     # WebNumberField of the object
     def wnf(self):
