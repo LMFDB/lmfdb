@@ -72,7 +72,7 @@ def artrepload(l):
   #print str(l)
   count +=1
   outrecs.append(l)
-  if count % 100==0:
+  if count % 1000==0:
     print "Count %s" % count
   return
 
@@ -87,7 +87,7 @@ def nfgalload(l):
   l['Size'] = int(l['Size'])
   outrecs.append(l)
   count +=1
-  if count % 100==0:
+  if count % 1000==0:
     print "Count %s" % count
   return
 
