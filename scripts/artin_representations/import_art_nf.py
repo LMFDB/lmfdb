@@ -137,14 +137,8 @@ for path in sys.argv[1:]:
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
                 for kk in head1:
-                    ent[kk] = json.dumps(ent[kk])
-                #for kk in ['ConjClasses','FrobResolvents','ArtinReps','Polynomial']:
-                    #ent[kk] = [fixdict(z) for z in ent[kk]]
-                    #ent[kk] = "["+','.join(ent[kk])+"]"
-                #    ent[kk] = json.dumps(ent[kk])
-                #for kk in ['QpRts']:
-                    #ent[kk] = json.dumps(ent[kk])
-                    #ent[kk] = [fixlist(z) for z in ent[kk]]
+                    if not isinstance(elt, str):
+                        ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([str(ent[z]).replace("'",'"') for z in head1])+'\n')
             fnout.close()
             reloadme.append('nfgal')
@@ -158,7 +152,8 @@ for path in sys.argv[1:]:
             for ent in outrecs:
                 for kk in head1:
                     #print kk+ " " + repr(ent[kk]) +" "+ str(type(ent[kk]))
-                    ent[kk] = json.dumps(ent[kk])
+                    if not isinstance(elt, str):
+                        ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
             fnout.close()
             reloadme.append('art')
