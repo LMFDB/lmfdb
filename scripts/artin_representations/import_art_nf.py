@@ -59,7 +59,7 @@ outrecs = []
 def artrepload(l):
   global count
   global outrecs
-  l['Conductor'] = ZZ(l['Conductor'])
+  l['Conductor'] = int(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
   # Extract containing representation from the label
   cont = l['Baselabel'].split('.')[2]
@@ -137,11 +137,15 @@ for path in sys.argv[1:]:
             fnout.write('|'.join(head1)+"\n")
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
-                for kk in ['ConjClasses','FrobResolvents','ArtinReps']:
-                    ent[kk] = [fixdict(z) for z in ent[kk]]
-                    ent[kk] = "["+','.join(ent[kk])+"]"
-                for kk in ['QpRts']:
-                    ent[kk] = [fixlist(z) for z in ent[kk]]
+                for kk in head1:
+                    ent[kk] = json.dumps(ent[kk])
+                #for kk in ['ConjClasses','FrobResolvents','ArtinReps','Polynomial']:
+                    #ent[kk] = [fixdict(z) for z in ent[kk]]
+                    #ent[kk] = "["+','.join(ent[kk])+"]"
+                #    ent[kk] = json.dumps(ent[kk])
+                #for kk in ['QpRts']:
+                    #ent[kk] = json.dumps(ent[kk])
+                    #ent[kk] = [fixlist(z) for z in ent[kk]]
                 fnout.write('|'.join([str(ent[z]).replace("'",'"') for z in head1])+'\n')
             fnout.close()
             reloadme.append('nfgal')
@@ -153,9 +157,9 @@ for path in sys.argv[1:]:
             fnout.write('|'.join(head1)+"\n")
             fnout.write('|'.join([str(cols[z]) for z in head1])+"\n\n")
             for ent in outrecs:
-                for kk in ['GaloisConjugates']:
-                    ent[kk] = [fixdict(z) for z in ent[kk]]
-                    ent[kk] = "["+','.join(ent[kk])+"]"
+                for kk in head1:
+                    #print kk+ " " + repr(ent[kk]) +" "+ str(type(ent[kk]))
+                    ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([str(ent[z]) for z in head1])+'\n')
             fnout.close()
             reloadme.append('art')
