@@ -7,7 +7,6 @@
 import sys, os
 import re
 import json
-from sage.all import ZZ
 
 # find lmfdb and the top of the tree
 mypath = os.path.realpath(__file__)
