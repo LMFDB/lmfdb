@@ -9,19 +9,9 @@ mypath = os.path.realpath(__file__)
 while os.path.basename(mypath) != 'lmfdb':
     mypath = os.path.dirname(mypath)
     # now move up one more time...
-#mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
 
 from lmfdb import db
-
-
-
-# load the password file
-#import yaml
-#pw_dict = yaml.load(open(os.path.join(mypath, "passwords.yaml")))
-#username = pw_dict['data']['username']
-#password = pw_dict['data']['password']
-
 
 rep=db.artin_reps
 nfgal=db.artin_field_data
@@ -130,10 +120,8 @@ for path in sys.argv[1:]:
     if outrecs:
         if case == 'nfgal':
           nfgal.insert_many(outrecs)
-          foobar=1
         if case == 'art rep':
           rep.insert_many(outrecs)
-          foobar=1
     print "%s new, %s old" %(str(count),str(old))
     fn.close()
 
