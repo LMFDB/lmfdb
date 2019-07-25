@@ -84,7 +84,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+             table=db.artin_reps_new,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,
@@ -203,7 +203,7 @@ def render_artin_representation_webpage(label):
 
 @artin_representations_page.route("/random")
 def random_representation():
-    rep = db.artin_reps.random(projection=2)
+    rep = db.artin_reps_new.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
