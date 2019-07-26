@@ -10,7 +10,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
-    parse_ints, parse_container, clean_input, flash_error,
+    parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.artin_representations import artin_representations_page
@@ -106,6 +106,7 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_bool(info,query,'Is_Even')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)

@@ -3,10 +3,11 @@
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
 from lmfdb.utils.utilities import web_latex, coeff_to_poly
-from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
+from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime, PowerSeriesRing
 from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.characters.web_character import WebSmallDirichletCharacter
+import re
 
 
 # fun is the function, N the modulus, and n the denominator
@@ -343,10 +344,13 @@ class ArtinRepresentation(object):
         return s
 
     def parity(self):
-        par = (self.dimension()-self.trace_complex_conjugation())/2
-        if (par % 2) == 0: return "Even"
-        return "Odd"
-        #return (-1)**par
+        if self._data['Is_Even']:
+            return 'Even'
+        else:
+            return 'Odd'
+        #par = (self.dimension()-self.trace_complex_conjugation())/2
+        #if (par % 2) == 0: return "Even"
+        #return "Odd"
 
     def field_knowl(self):
         from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -734,7 +738,41 @@ class NumberFieldGaloisGroup(object):
 
     # We only need the latex of polynomials in a
     def computation_roots(self):
-        return [web_latex(coeff_to_poly(x, var='a'),enclose=False) for x in self._data["QpRts"]]
+        # Write these as p-adic series.  Start with helper
+        def help_padic(n,p, prec):
+            """
+              Take an integer n, prime p, and precision prec, and return a 
+              prec-tuple of the p-adic coefficients of j
+            """
+            n = int(n)
+            res = [0 for j in range(prec)]
+            while n<0:
+                n += p**prec
+            for k in range(prec):
+                res[k] = n % p
+                n = (n-res[k])/p
+            return res
+        # Second helper, in case some arrays are not extended by 0
+        def getel(li,j):
+            if j<len(li):
+                return li[j]
+            return 0
+        myroots = self._data["QpRts"]
+        p = self._data['QpRts-p']
+        myroots = [[help_padic(z, p, self._data['QpRts-prec']) for z in t] for t in myroots]
+        myroots = [[[getel(root[j], r) 
+            for j in range(len(self._data['QpRts-minpoly'])-1)]
+            for r in range(self._data['QpRts-prec'])]
+            for root in myroots]
+        myroots = [[coeff_to_poly(x, var='a')
+            for x in root] for root in myroots]
+        # Use power series so degrees increase
+        # Use formal p so we can make a power series
+        PR = PowerSeriesRing(PolynomialRing(QQ, 'a'), 'p')
+        myroots = [web_latex(PR(x), enclose=False) for x in myroots]
+        # change p into its value
+        myroots = [re.sub(r'([a)\d]) *p', r'\1\cdot '+str(p), z) for z in myroots]
+        return [z.replace('p',str(p)) for z in myroots]
 
     def index_complex_conjugation(self):
         # This is an index starting at 1
