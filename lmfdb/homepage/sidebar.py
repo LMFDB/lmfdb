@@ -25,9 +25,9 @@ def linked_name(item, level=""):
             this_entry = '&nbsp;'
         if 'status' in item and item['status'] == 'future':
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
-	if 'status' in item and item['status'] == 'beta':
+    if 'status' in item and item['status'] == 'beta':
             this_entry = ''.join(['<div class="beta">',this_entry,'</div>'])
-        return this_entry
+    return this_entry
 
 # The unique instance of the class SideBar:
 
