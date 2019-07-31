@@ -18,6 +18,12 @@ from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
 
+
+# Utility for permutations
+def cycle_string(lis):
+    from sage.combinat.permutation import Permutation
+    return Permutation(lis).cycle_string()
+
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
     for b in breads:
@@ -193,7 +199,7 @@ def render_artin_representation_webpage(label):
                                           label=the_rep.label())))
     info={}
 
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():

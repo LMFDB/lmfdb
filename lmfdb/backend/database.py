@@ -40,7 +40,6 @@ from sage.all import cartesian_product_iterator, binomial
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
 from lmfdb.logger import make_logger
-from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 # This list is used when creating new tables
 types_whitelist = [
@@ -5222,30 +5221,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             raise ValueError("Not a unique oldstat identifier")
         return cur.fetchone()[0]
 
-class ExtendedTable(PostgresTable):
-    """
-    This class supports type conversion when extracting data from the database.
-
-    It's use is currently hardcoded for artin_reps and artin_field_data,
-    but could eventually be specified by columns in meta_tables.
-    """
-    def __init__(self, type_conversion, *args, **kwds):
-        self._type_conversion = type_conversion
-        PostgresTable.__init__(self, *args, **kwds)
-    def _search_and_convert_iterator(self, source):
-        for x in source:
-            yield self._type_conversion(x)
-    def search_and_convert(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return self._search_and_convert_iterator(results)
-        else:
-            return [self._type_conversion(x) for x in results]
-    def convert_lucky(self, *args, **kwds):
-        result = self.lucky(*args, **kwds)
-        if result:
-            return self._type_conversion(result)
-
 class PostgresDatabase(PostgresBase):
     """
     The interface to the postgres database.
@@ -5355,13 +5330,7 @@ class PostgresDatabase(PostgresBase):
         for tabledata in cur:
             tablename = tabledata[0]
             tabledata += (data_types,)
-            # it would be nice to include this in meta_tables
-            if tablename == 'artin_reps':
-                table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
-            elif tablename == 'artin_field_data':
-                table = ExtendedTable(Dokchitser_NumberFieldGaloisGroup, self, *tabledata)
-            else:
-                table = PostgresTable(self, *tabledata)
+            table = PostgresTable(self, *tabledata)
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()
