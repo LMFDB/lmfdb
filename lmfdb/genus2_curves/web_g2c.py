@@ -76,7 +76,7 @@ def factorsRR_raw_to_pretty(factorsRR):
     elif factorsRR == ['CC', 'CC']:
         return r'\C \times \C'
     elif factorsRR == ['HH']:
-        return r'\mathbf{H}'
+        return r'\mathbb{H}'
     elif factorsRR == ['M_2(RR)']:
         return r'\mathrm{M}_2 (\R)'
     elif factorsRR == ['M_2(CC)']:
