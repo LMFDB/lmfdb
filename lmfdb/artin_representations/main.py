@@ -10,7 +10,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
-    parse_ints, parse_container, clean_input, flash_error,
+    parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.artin_representations import artin_representations_page
@@ -84,7 +84,7 @@ def artin_representation_jump(info):
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
 @search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+             table=db.artin_reps_new,
              title='Artin Representation Search Results',
              err_title='Artin Representation Search Error',
              per_page=50,
@@ -106,6 +106,7 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_bool(info,query,'Is_Even')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
@@ -203,7 +204,7 @@ def render_artin_representation_webpage(label):
 
 @artin_representations_page.route("/random")
 def random_representation():
-    rep = db.artin_reps.random(projection=2)
+    rep = db.artin_reps_new.random(projection=2)
     num = random.randrange(len(rep['GaloisConjugates']))
     label = rep['Baselabel']+"c"+str(num+1)
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
