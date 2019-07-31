@@ -2,7 +2,7 @@
 
 from lmfdb import db
 from lmfdb.utils import url_for, pol_to_html
-from lmfdb.typed_data.standard_types import PolynomialAsSequenceTooLargeInt
+from lmfdb.utils.utilities import web_latex, coeff_to_poly
 from sage.all import PolynomialRing, QQ, ComplexField, exp, pi, Integer, valuation, CyclotomicField, RealField, log, I, factor, crt, euler_phi, primitive_root, mod, next_prime
 from lmfdb.galois_groups.transitive_group import group_display_knowl, group_display_short
 from lmfdb.number_fields.web_number_field import WebNumberField
@@ -71,10 +71,6 @@ def process_polynomial_over_algebraic_integer(seq, field, root_of_unity):
     PP = PolynomialRing(field, "x")
     return PP([process_algebraic_integer(x, root_of_unity) for x in seq])
 
-def _search_and_convert_iterator(cls, source):
-    for x in source:
-        yield cls(data=x)
-
 
 class ArtinRepresentation(object):
     def __init__(self, *x, **data_dict):
@@ -94,7 +90,7 @@ class ArtinRepresentation(object):
                 label = "%sc%s"%(str(x[0]),str(x[1]))
             else:
                 raise ValueError("Invalid number of positional arguments")
-            self._data = db.artin_reps.convert_lucky({'Baselabel':str(base)})
+            self._data = db.artin_reps.lucky({'Baselabel':str(base)})
             conjs = self._data["GaloisConjugates"]
             conj = [xx for xx in conjs if xx['GalOrbIndex'] == conjindex]
             self._data['label'] = label
@@ -102,16 +98,12 @@ class ArtinRepresentation(object):
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = db.artin_reps.search_and_convert(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return _search_and_convert_iterator(cls, results)
-        else:
-            return [cls(data=x) for x in results]
+        return db.artin_reps.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
         # What about label?
-        return cls(data=db.artin_reps.convert_lucky(*args, **kwds))
+        return cls(data=db.artin_reps.lucky(*args, **kwds))
 
     @classmethod
     def find_one_in_galorbit(cls, baselabel):
@@ -627,22 +619,18 @@ class NumberFieldGaloisGroup(object):
             else:
                 coeffs = x[0]
             coeffs = [int(c) for c in coeffs]
-            self._data = db.artin_field_data.convert_lucky({'Polynomial':coeffs})
+            self._data = db.artin_field_data.lucky({'Polynomial':coeffs})
             if self._data is None:
                 # This should probably be a ValueError, but we use an AttributeError for backward compatibility
                 raise AttributeError("No Galois group data for polynonial %s"%(coeffs))
 
     @classmethod
     def search(cls, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = db.artin_field_data.search_and_convert(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return _search_and_convert_iterator(cls, results)
-        else:
-            return [cls(data=x) for x in results]
+        return db.artin_field_data.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
 
     @classmethod
     def lucky(cls, *args, **kwds):
-        result = db.artin_field_data.convert_lucky(*args, **kwds)
+        result = db.artin_field_data.lucky(*args, **kwds)
         if result is not None:
             return cls(data=result)
 
@@ -650,12 +638,10 @@ class NumberFieldGaloisGroup(object):
         return self._data["TransitiveDegree"]
 
     def polynomial(self):
-        return PolynomialAsSequenceTooLargeInt(self._data["Polynomial"])
+        return self._data["Polynomial"]
 
     def polynomial_latex(self):
-	from sage.rings.all import PolynomialRing, QQ
-	PP = PolynomialRing(QQ, 'x')
-    	return PP(self.polynomial())._latex_()
+        return web_latex(coeff_to_poly(self.polynomial()), enclose=False)
 
     # WebNumberField of the object
     def wnf(self):
@@ -739,11 +725,16 @@ class NumberFieldGaloisGroup(object):
     def computation_precision(self):
         return self._data["QpRts-prec"]
 
+    def computation_minimal_polynomial_latex(self):
+        pol = coeff_to_poly(self._data["QpRts-minpoly"])
+        return web_latex(pol, enclose=False)
+
     def computation_minimal_polynomial(self):
         return self._data["QpRts-minpoly"]
 
+    # We only need the latex of polynomials in a
     def computation_roots(self):
-        return [x for x in self._data["QpRts"]]
+        return [web_latex(coeff_to_poly(x, var='a'),enclose=False) for x in self._data["QpRts"]]
 
     def index_complex_conjugation(self):
         # This is an index starting at 1
