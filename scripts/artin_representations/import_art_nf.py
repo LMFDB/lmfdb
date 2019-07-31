@@ -16,12 +16,16 @@ while os.path.basename(mypath) != 'lmfdb':
 #mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
 
+import lmfdb
 from lmfdb import db
+from lmfdb import ArtinRepresentation
 
 rep=db.artin_reps
 nfgal=db.artin_field_data
 
 count = 0
+
+nottest = False
 
 #utilities
 
@@ -69,6 +73,13 @@ def artrepload(l):
   l['Galt'] = l['Galois_nt'][1]
   del l['Galois_nt']
   l['GalConjSigns'] = [z['Sign'] for z in l['GaloisConjugates']]
+  ar1 = rep.lucky({'Baselabel'}: l['Baselabel']})
+  if ar1 is not None:
+    l['Dets'] = [str(z) for z in ar1['Dets']]
+    l['Is_Even'] = ar1['Is_Even']
+  else:
+    ar2 = ArtinRepresentation(l)
+    print ar2.parity()
   #print str(l)
   count +=1
   outrecs.append(l)
@@ -163,7 +174,8 @@ for path in sys.argv[1:]:
     print "%s entries" % count
     fn.close()
 
-for k in reloadme:
+if nottest:
+  for k in reloadme:
     if k == 'nfgal':
         nfgal.reload('nfgal.dump', sep='|')
     if k == 'art':
