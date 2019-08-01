@@ -84,20 +84,21 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+# priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
-md.inlinePatterns.add('math$', IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), '<escape')
-md.inlinePatterns.add('math$$', IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), '<escape')
-md.inlinePatterns.add('math\\(', IgnorePattern(r'(\\\(.+?\\\))'), '<escape')
-md.inlinePatterns.add('math\\[', IgnorePattern(r'(\\\[.+?\\\])'), '<escape')
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
+md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
+md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
+md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
 
 # Tell markdown to turn hashtags into search urls
 hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.add('hashtag', HashTagPattern(hashtag_keywords_rex), '<escape')
+md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
 knowltagtitle_regex = r'\[\[\[[ ]*([^\]]+)[ ]*\]\]\]'
-md.inlinePatterns.add('knowltagtitle', KnowlTagPatternWithTitle(knowltagtitle_regex), '<escape')
+md.inlinePatterns.register(KnowlTagPatternWithTitle(knowltagtitle_regex), 'knowltagtitle', 181)
 
 # global (application wide) insertion of the variable "Knowl" to create
 # lightweight Knowl objects inside the templates.
