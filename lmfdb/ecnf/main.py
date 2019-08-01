@@ -13,7 +13,7 @@ from lmfdb.backend.encoding import Json
 from lmfdb.app import app
 from lmfdb.utils import (
     to_dict, flash_error,
-    parse_ints, parse_noop, nf_string_to_label,
+    parse_ints, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_elt, parse_bracketed_posints,
     search_wrap)
 from lmfdb.number_fields.number_field import field_pretty
@@ -484,7 +484,7 @@ def elliptic_curve_search(info, query):
     parse_bracketed_posints(info,query,'torsion_structure',maxlength=2)
     if 'torsion_structure' in query and not 'torsion_order' in query:
         query['torsion_order'] = reduce(mul,[int(n) for n in query['torsion_structure']],1)
-    parse_ints(info,query,field='isodeg',qfield='isogeny_degrees')
+    parse_element_of(info,query,field='isodeg',qfield='isogeny_degrees',split_interval=1000)
 
     if 'jinv' in info:
         if info.get('field','').strip() == '2.2.5.1':
