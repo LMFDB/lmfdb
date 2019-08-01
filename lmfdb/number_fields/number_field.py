@@ -584,6 +584,11 @@ def render_field_webpage(args):
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
     try:
         info["tim_number_field"] = NumberFieldGaloisGroup(nf._data['coeffs'])
+        arts = [z.label() for z in info["tim_number_field"].artin_representations()]
+        print arts
+        for ar in arts:
+            info['friends'].append(('Artin representation '+str(ar), 
+                url_for("artin_representations.render_artin_representation_webpage", label=ar)))
         v = nf.factor_perm_repn(info["tim_number_field"])
         def dopow(m):
             if m==0: return ''
