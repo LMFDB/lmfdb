@@ -670,7 +670,7 @@ def parse_hmf_weight(inp, query, qfield):
         try:
             query[normal_field] = str(split_list(inp))
         except ValueError:
-            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers, such as 2 or 2,4,6.")
+            raise ValueError("It must be either an integer (parallel weight) or a comma separated list of integers enclosed in brackets, such as 2, or [2,2], or [2,4,6].")
 
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_bool(inp, query, qfield, process=None, blank=[]):
