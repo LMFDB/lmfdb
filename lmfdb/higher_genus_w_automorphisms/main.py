@@ -837,7 +837,7 @@ def how_computed_page():
 
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
-code_list = yaml.load(open(os.path.join(_curdir, "code.yaml")))
+code_list = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
 
 same_for_all = ['signature', 'genus']

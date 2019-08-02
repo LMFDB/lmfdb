@@ -100,10 +100,10 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert elt in page.data
                 # redirect to the same page
-                assert "Space of Cuspidal Newforms of " in page.data
+                assert "Space of Modular Forms of " in page.data
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
                 assert elt in page.data
-                assert "Space of Cuspidal Newforms of " in page.data
+                assert "Space of Modular Forms of " in page.data
 
     def test_tracehash(self):
         for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a'],[0,'not found']]:
