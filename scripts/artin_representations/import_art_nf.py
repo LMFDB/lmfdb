@@ -16,7 +16,6 @@ while os.path.basename(mypath) != 'lmfdb':
 #mypath = os.path.dirname(mypath)
 sys.path.append(mypath)
 
-import lmfdb
 from lmfdb import db
 from lmfdb.backend.encoding import copy_dumps
 
