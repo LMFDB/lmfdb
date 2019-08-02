@@ -26,7 +26,7 @@ nfgal=db.artin_field_data
 count = 0
 
 nottest = False
-#nottest = True
+nottest = True
 
 #utilities
 
@@ -181,7 +181,6 @@ for path in sys.argv[1:]:
                     if isinstance(ent[kk], unicode):
                         ent[kk] = str(ent[kk])
                     if kk == 'Dets':
-                        #print "type "+str(type(ent[kk]))+" "+str(ent[kk])
                         ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
                     elif not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
