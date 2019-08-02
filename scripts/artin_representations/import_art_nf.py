@@ -18,7 +18,7 @@ sys.path.append(mypath)
 
 import lmfdb
 from lmfdb import db
-from lmfdb import ArtinRepresentation
+from lmfdb.backend.encoding import copy_dumps
 
 rep=db.artin_reps
 nfgal=db.artin_field_data
@@ -26,6 +26,7 @@ nfgal=db.artin_field_data
 count = 0
 
 nottest = False
+#nottest = True
 
 #utilities
 
@@ -73,14 +74,27 @@ def artrepload(l):
   l['Galt'] = l['Galois_nt'][1]
   del l['Galois_nt']
   l['GalConjSigns'] = [z['Sign'] for z in l['GaloisConjugates']]
-  ar1 = rep.lucky({'Baselabel'}: l['Baselabel']})
+  chival = int(l['Chi_of_complex'])
+  dim = int(l['Dim'])
+  minusones = (dim - chival)/2
+  iseven = (minusones % 2) == 0
+  ar1 = rep.lucky({'Baselabel': l['Baselabel'],'NFGal': l['NFGal']})
   if ar1 is not None:
-    l['Dets'] = [str(z) for z in ar1['Dets']]
+    if 'Dets' not in ar1:
+        print ar1
+        l['Dets'] = []
+    else:
+        l['Dets'] = [str(z) for z in ar1['Dets']]
+        #print "type "+str(type(l['Dets']))
     l['Is_Even'] = ar1['Is_Even']
+    if iseven != l['Is_Even']:
+      print "Is even mismatch: %s from %d and %d" % (str(l['Baselabel']), dim, chival)
   else:
-    ar2 = ArtinRepresentation(l)
-    print ar2.parity()
+    l['Is_Even'] = iseven
+    l['Dets'] = []
   #print str(l)
+  if not isinstance(l['Dets'], list):
+    print "Type error "+str(l['Baselabel'])+" , "+str(l['Dets'])+" "+str(type(l['Dets']))
   count +=1
   outrecs.append(l)
   if count % 10000==0:
@@ -166,7 +180,10 @@ for path in sys.argv[1:]:
                 for kk in head1:
                     if isinstance(ent[kk], unicode):
                         ent[kk] = str(ent[kk])
-                    if not isinstance(ent[kk], str):
+                    if kk == 'Dets':
+                        #print "type "+str(type(ent[kk]))+" "+str(ent[kk])
+                        ent[kk] = copy_dumps(ent[kk], 'text[]', recursing=False)
+                    elif not isinstance(ent[kk], str):
                         ent[kk] = json.dumps(ent[kk])
                 fnout.write('|'.join([ent[z] for z in head1])+'\n')
             fnout.close()
