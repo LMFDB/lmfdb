@@ -300,7 +300,9 @@ Note that you need editor priviledges to add, delete or modify data.
    There are a number of methods for updating data.  One option is
    `upsert`, which takes a query and dictionary containing values to
    be set and updates a single row satisfying the query.  If no row
-   satisfies the query, a new row will be added.
+   satisfies the query, a new row will be added.  If multiple rows
+   satisfy the query, an error will be raised.  Note that columns
+   not contained in the specified data will be left unchanged.
 
    ```python
    sage: db.test_table.upsert({'discriminant': 12}, {'label':'1.12.B'})
