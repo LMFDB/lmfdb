@@ -12,62 +12,63 @@ Rewritten by John Cremona and David Roe, Bristol, March 2012
 Evolved during 2012-2018
 2018: adapted for postgres, JEC.
 
-Postgres table ec_curves has these columns:
+Postgres table ec_curves has these columns (updated 2019-08-05):
 """
 
 qcurves_col_type = {
- u'2adic_gens': u'jsonb',
- u'2adic_index': u'smallint',
- u'2adic_label': u'text',
- u'2adic_log_level': u'smallint',
- u'ainvs': u'jsonb',
- u'anlist': u'jsonb',
- u'aplist': u'jsonb',
- u'class_deg': u'smallint',
- u'class_size': u'smallint',
- u'cm': u'smallint',
- u'conductor': u'numeric',
- u'degree': u'numeric',
- u'equation': u'text',
- u'galois_images': u'jsonb',
- u'gens': u'jsonb',
- u'heights': u'jsonb',
- u'id': u'bigint',
- u'iso': u'text',
- u'iso_nlabel': u'smallint',
- u'isogeny_degrees': u'jsonb',
- u'isogeny_matrix': u'jsonb',
- u'iwdata': u'jsonb',
- u'iwp0': u'smallint',
- u'jinv': u'text',
- u'label': u'text',
- u'lmfdb_iso': u'text',
- u'lmfdb_label': u'text',
- u'lmfdb_number': u'smallint',
- u'local_data': u'jsonb',
- u'min_quad_twist': u'jsonb',
- u'modp_images': u'jsonb',
- u'nonmax_primes': u'jsonb',
- u'nonmax_rad': u'integer',
- u'number': u'smallint',
- u'rank': u'smallint',
- u'real_period': u'numeric',
- u'regulator': u'numeric',
- u'sha': u'integer',
- u'sha_an': u'numeric',
- u'sha_primes': u'jsonb',
- u'signD': u'smallint',
- u'special_value': u'numeric',
- u'tamagawa_product': u'integer',
- u'tor_degs': u'jsonb',
- u'tor_fields': u'jsonb',
- u'tor_gro': u'jsonb',
- u'torsion': u'smallint',
- u'torsion_generators': u'jsonb',
- u'torsion_primes': u'jsonb',
- u'torsion_structure': u'jsonb',
- u'trace_hash': u'bigint',
- u'xcoord_integral_points': u'jsonb',
+    u'2adic_gens': 'jsonb',
+    u'2adic_index': 'smallint',
+    u'2adic_label': 'text',
+    u'2adic_log_level': 'smallint',
+    u'ainvs': 'jsonb',
+    u'anlist': 'jsonb',
+    u'aplist': 'jsonb',
+    u'bad_primes': 'integer[]',
+    u'class_deg': 'smallint',
+    u'class_size': 'smallint',
+    u'cm': 'smallint',
+    u'conductor': 'numeric',
+    u'degree': 'numeric',
+    u'equation': 'text',
+    u'galois_images': 'jsonb',
+    u'gens': 'jsonb',
+    u'heights': 'jsonb',
+    u'id': 'bigint',
+    u'iso': 'text',
+    u'iso_nlabel': 'smallint',
+    u'isogeny_degrees': 'jsonb',
+    u'isogeny_matrix': 'jsonb',
+    u'iwdata': 'jsonb',
+    u'iwp0': 'smallint',
+    u'jinv': 'text',
+    u'label': 'text',
+    u'lmfdb_iso': 'text',
+    u'lmfdb_label': 'text',
+    u'lmfdb_number': 'smallint',
+    u'local_data': 'jsonb',
+    u'min_quad_twist': 'jsonb',
+    u'modp_images': 'jsonb',
+    u'nonmax_primes': 'jsonb',
+    u'nonmax_rad': 'integer',
+    u'number': 'smallint',
+    u'rank': 'smallint',
+    u'real_period': 'numeric',
+    u'regulator': 'numeric',
+    u'sha': 'integer',
+    u'sha_an': 'numeric',
+    u'sha_primes': 'jsonb',
+    u'signD': 'smallint',
+    u'special_value': 'numeric',
+    u'tamagawa_product': 'integer',
+    u'tor_degs': 'jsonb',
+    u'tor_fields': 'jsonb',
+    u'tor_gro': 'jsonb',
+    u'torsion': 'smallint',
+    u'torsion_generators': 'jsonb',
+    u'torsion_primes': 'jsonb',
+    u'torsion_structure': 'jsonb',
+    u'trace_hash': 'bigint',
+    u'xcoord_integral_points': 'jsonb',
 }
 
 r"""
@@ -718,6 +719,7 @@ def make_extra_data(label,number,ainvs,gens):
     'local_data': list of dicts, one item for each bad prime
     'min_quad_twist': dict holding curve's min quadratic twist and the twisting discriminant
     'heights': list of heights of gens
+    'bad_primes': list of primes dividing conductor
 
     and for curve #1 in a class only:
 
@@ -726,9 +728,11 @@ def make_extra_data(label,number,ainvs,gens):
 
     """
     E = EllipticCurve(parse_ainvs(ainvs))
+    N = E.conductor()
     data = {}
     # convert from a list of strings to a single string, e.g. from ['0','0','0','1','1'] to '[0,0,0,1,1]'
     data['equation'] = web_latex(E)
+    data['bad_primes'] = N.prime_factors() # will be sorted
     data['signD'] = int(E.discriminant().sign())
     data['local_data'] = [{'p': int(ld.prime().gen()),
                            'ord_cond':int(ld.conductor_valuation()),
@@ -740,7 +744,7 @@ def make_extra_data(label,number,ainvs,gens):
                            'cp':int(ld.tamagawa_number())}
                           for ld in E.local_data()]
     Etw, Dtw = E.minimal_quadratic_twist()
-    if Etw.conductor()==E.conductor():
+    if Etw.conductor()==N:
         data['min_quad_twist'] = {'label':label, 'disc':int(1)}
     else:
         minq_ainvs = ''.join(['['] + [str(c) for c in Etw.ainvs()] + [']'])
@@ -756,7 +760,7 @@ def make_extra_data(label,number,ainvs,gens):
     return data
 
 
-def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
+def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=150000):
     r""" Check that for conductors in the specified range (or all
     conductors) every database entry has all the fields it should, and
     that these have the correct type.
@@ -778,6 +782,7 @@ def check_database_consistency(table, N1=None, N2=None, iwasawa_bound=100000):
     keys_and_types = {'label':  str_type,
                       'lmfdb_label':  str_type,
                       'conductor': bigint_type,
+                      'bad_primes': list_type,
                       'iso': str_type,
                       'lmfdb_iso': str_type,
                       'iso_nlabel': int_type,
@@ -999,3 +1004,38 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
             else:
                 print("Using upsert to change database entry for {}".format(lab))
                 curves.upsert({'label': lab}, e)
+
+def swap2curves(iso, n1=1, n2=2, test=True):
+    """Swaps the Cremona number part of the Cremona labels of two curves in isogeny class iso.
+
+    Example: swap2curves('235470bb') will swap curves '235470bb1' and
+    '235470bb2'.  The only columns affected are 'label' and 'number'.
+    This uses the fact that the columns 'lmfdb_label' (and
+    'lmfdb_number') are unchanged.
+    """
+    c1 = curves.lucky({'label':iso+str(n1)})
+    c2 = curves.lucky({'label':iso+str(n2)})
+    c1_lmfdb_label = c1['lmfdb_label']
+    c2_lmfdb_label = c2['lmfdb_label']
+    print("Retrieved curves with LMFDB labels {} and {}".format(c1_lmfdb_label, c2_lmfdb_label))
+    print("Old (Cremona) labels for these: {} and {}".format(c1['label'], c2['label']))
+    c1_new_label = c2['label']
+    c2_new_label = c1['label']
+    c1_new_number = c2['number']
+    c2_new_number = c1['number']
+    c1['label'] = c1_new_label
+    c2['label'] = c2_new_label
+    c1['number'] = c1_new_number
+    c2['number'] = c2_new_number
+    print("New (Cremona) labels for these: {} and {}".format(c1_new_label, c2_new_label))
+
+    # Now do the updates:
+    
+    if not test:
+        print("Replacing {}".format(c1['lmfdb_label']))
+        curves.upsert({'lmfdb_label':c1['lmfdb_label']},c1)
+        print("Replacing {}".format(c2['lmfdb_label']))
+        curves.upsert({'lmfdb_label':c2['lmfdb_label']},c2)
+    else:
+        print("Taking no further action")
+        
