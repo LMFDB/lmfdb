@@ -100,7 +100,7 @@ The documents in the mongo collection 'curves' in the database 'elliptic_curves'
    - 'degree': (int) degree of modular parametrization, e.g. 1984
    - 'nonmax_primes': (list of ints) primes p for which the
       mod p Galois representation is not maximal, e.g. [5]
-   - 'nonmax_radd': (int) product of nonmax_primes
+   - 'nonmax_rad': (int) product of nonmax_primes
    - 'modp_images': (list of strings) Sutherland codes for the
       images of the mod p Galois representations for the primes in
       'nonmax_primes' e.g. ['5B']
@@ -1008,34 +1008,32 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
 def swap2curves(iso, n1=1, n2=2, test=True):
     """Swaps the Cremona number part of the Cremona labels of two curves in isogeny class iso.
 
+    Here iso is the Cremona label of an isogeny class (no dot, no
+    final number).
+
     Example: swap2curves('235470bb') will swap curves '235470bb1' and
     '235470bb2'.  The only columns affected are 'label' and 'number'.
     This uses the fact that the columns 'lmfdb_label' (and
     'lmfdb_number') are unchanged.
+
     """
-    c1 = curves.lucky({'label':iso+str(n1)})
-    c2 = curves.lucky({'label':iso+str(n2)})
-    c1_lmfdb_label = c1['lmfdb_label']
-    c2_lmfdb_label = c2['lmfdb_label']
+    c1_old_label = iso+str(n1)
+    c2_old_label = iso+str(n2)
+    c1_lmfdb_label = curves.lucky({'label':c1_old_label}, projection='lmfdb_label')
+    c2_lmfdb_label = curves.lucky({'label':c2_old_label}, projection='lmfdb_label')
     print("Retrieved curves with LMFDB labels {} and {}".format(c1_lmfdb_label, c2_lmfdb_label))
-    print("Old (Cremona) labels for these: {} and {}".format(c1['label'], c2['label']))
-    c1_new_label = c2['label']
-    c2_new_label = c1['label']
-    c1_new_number = c2['number']
-    c2_new_number = c1['number']
-    c1['label'] = c1_new_label
-    c2['label'] = c2_new_label
-    c1['number'] = c1_new_number
-    c2['number'] = c2_new_number
-    print("New (Cremona) labels for these: {} and {}".format(c1_new_label, c2_new_label))
+    print("Old (Cremona) labels for these: {} and {}".format(c1_old_label, c2_old_label))
+    c1_new_data = {'label': c2_old_label, 'number': n2}
+    c2_new_data = {'label': c1_old_label, 'number': n1}
+    print("New (Cremona) labels for these: {} and {}".format(c2_old_label, c1_old_label))
 
     # Now do the updates:
-    
+
+    print("Changing data for {} using {}".format(c1_lmfdb_label, c1_new_data))
+    print("Changing data for {} using {}".format(c2_lmfdb_label, c2_new_data))
     if not test:
-        print("Replacing {}".format(c1['lmfdb_label']))
-        curves.upsert({'lmfdb_label':c1['lmfdb_label']},c1)
-        print("Replacing {}".format(c2['lmfdb_label']))
-        curves.upsert({'lmfdb_label':c2['lmfdb_label']},c2)
+        curves.upsert({'lmfdb_label':c1_lmfdb_label},c1_new_data)
+        curves.upsert({'lmfdb_label':c2_lmfdb_label},c2_new_data)
+        print("changes made")
     else:
         print("Taking no further action")
-        
