@@ -44,7 +44,7 @@ install:
     - export SAGE="${SAGE_DIR}/sage"
     - export SAGE_INSTALL_GCC=no
     - export MAKE='make -j4'
-    - wget  --no-verbose https://storage.googleapis.com/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
+    - wget  --no-verbose http://grace.mit.edu/sage-lmfdb/sage-${SAGE_VERSION}-Ubuntu_14.04-x86_64.tar.bz2
     # travis_wait extends the default 10 minute timeout to 30 minutes
     # what is the load on the server
     - uptime
