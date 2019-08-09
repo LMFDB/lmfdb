@@ -1202,7 +1202,7 @@ class PostgresTable(PostgresBase):
                     search_cols.append(col)
                 projection.pop(col, None)
             for col in self._extra_cols:
-                if (col in projvals) == including:
+                if (col in projection) == including:
                     extra_cols.append(col)
                 projection.pop(col, None)
             if projection: # there were more columns requested
