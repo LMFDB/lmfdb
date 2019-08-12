@@ -602,14 +602,17 @@ class ECNF(object):
 
         if 'Lfunction' in self.urls:
             Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
-            instances = get_instances_by_Lhash_and_trace_hash(
+            if Lfun is None:
+                self.friends += [('L-function not available', "")]
+            else:
+                instances = get_instances_by_Lhash_and_trace_hash(
                     Lfun['Lhash'],
                     Lfun['degree'],
                     Lfun.get('trace_hash'))
-            exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
-                     if elt[1]}
-            self.friends += names_and_urls(instances, exclude=exclude)
-            self.friends += [('L-function', self.urls['Lfunction'])]
+                exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                         if elt[1]}
+                self.friends += names_and_urls(instances, exclude=exclude)
+                self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
 
