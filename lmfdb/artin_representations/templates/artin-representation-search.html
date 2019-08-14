@@ -3,7 +3,7 @@
 {# Refine search page #}
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+  {% include 'hidden_search_inputs.html' %}
   <table>
     <tr>
       <td>{{ KNOWL('artin.dimension',title="Dimension") }}
@@ -36,7 +36,7 @@
     <tr>
       <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{info.count}}" size=10></td>
   <tr>
-    <td class="button"><button type='submit' value='Search'>Search again</button></td>
+    <td class="button"><button type='submit' value='Search' onclick='resetStart()'>Search again</button></td>
   </table>
 </form>
 
