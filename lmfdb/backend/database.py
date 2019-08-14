@@ -1679,7 +1679,7 @@ class PostgresTable(PostgresBase):
                                1 means return all search columns (default),
                                2 means all columns).
         - ``limit`` -- an integer or None (default), giving the maximum number of records to return.
-        - ``offset`` -- an integer (default 0), where to start in the list of results.
+        - ``offset`` -- a nonnegative integer (default 0), where to start in the list of results.
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
@@ -1723,6 +1723,8 @@ class PostgresTable(PostgresBase):
             sage: info['number'], info['exact_count']
             (1000, False)
         """
+        if offset < 0:
+            raise ValueError("Offset cannot be negative")
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         if limit is None:
@@ -1758,9 +1760,13 @@ class PostgresTable(PostgresBase):
                 )
         if info is not None:
             if offset >= nres:
+                # We're passing in an info dictionary, so this is a front end query,
+                # and the user has requested a start location larger than the number
+                # of results.  We adjust the results to be the last page instead.
                 offset -= (1 + (offset - nres) / limit) * limit
-            if offset < 0:
-                offset = 0
+                if offset < 0:
+                    offset = 0
+                return self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info, silent=silent)
             info['query'] = dict(query)
             info['number'] = nres
             info['count'] = limit
