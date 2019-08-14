@@ -1759,7 +1759,7 @@ class PostgresTable(PostgresBase):
                 self._search_iterator(res, search_cols, extra_cols, projection)
                 )
         if info is not None:
-            if offset >= nres:
+            if offset >= nres > 0:
                 # We're passing in an info dictionary, so this is a front end query,
                 # and the user has requested a start location larger than the number
                 # of results.  We adjust the results to be the last page instead.
