@@ -112,7 +112,7 @@ records:{...}
 <li><p>records - List of JSON objects containing data from the database. This is guaranteed to be a list of valid JSON object, but the data contained is not guaranteed in any way</p></li>
 </ul>
 <h3 id="interpreting-the-records">Interpreting the records</h3>
-<p>The fields returned by an API_RECORDS object have no general form, but the <a href="/api2/inventory/:searcher" class="uri">/api2/inventory/:searcher</a> result allows a client to match them to a canonical name and description. For speed, this remapping is not handled by the API but must be handled by the client. See the section on accessing the inventory.</p>
+<p>The fields returned by an API_RECORDS object have no general form, but the <a class="uri">/api2/inventory/<searcher></a> result allows a client to match them to a canonical name and description. For speed, this remapping is not handled by the API but must be handled by the client. See the section on accessing the inventory.</p>
 <h3 id="api_error">API_ERROR</h3>
 <p>If the <code>type</code> field of the API2 response is “<code>API_ERROR</code>” then the <code>key</code> field will be a string containing the string “GLOBAL”. The <code>data</code> field will be a string containing additional information about the error. A blank string is valid, but should not normally be returned. Your request has failed.</p>
 <h1 id="an-example-api2-client-operation">An example API2 client operation</h1>

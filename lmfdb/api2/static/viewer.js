@@ -23,9 +23,11 @@ function fetch(offset, chunk){
     if(jQuery.isEmptyObject(data)){
       onLoadingFail();
     }else{
-      if(data.data.view_next == -1) hasMoreRecords = false;
-      fillPage(data);
-      $( document ).trigger("dataPopulated");
+      if (data.type == "API_RECORDS") {
+          if(data.data.view_next == -1) hasMoreRecords = false;
+          fillPage(data);
+          $( document ).trigger("dataPopulated");
+      }else{onLoadingFail();}
     }
   });
 
