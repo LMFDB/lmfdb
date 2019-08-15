@@ -57,15 +57,16 @@ def handle_singletons(path_var):
        label = val[2] + '/' + label
 
     if baseurl in singletons:
-        search = utils.create_search_dict(database = singletons[baseurl]['database'],
-            collection = singletons[baseurl]['collection'], request = request)
+        search = utils.create_search_dict(table = singletons[baseurl]['table'],
+            request = request)
         if singletons[baseurl]['full_search']:
             return Response(singletons[baseurl]['full_search'], mimetype='application/json')
         elif singletons[baseurl]['simple_search']:
             singletons[baseurl]['simple_search'](search, baseurl, label)
         else:
             search['query'] = {singletons[baseurl]['key']:label}
-        return Response(utils.build_api_search(path_var, search, request = request), mimetype='application/json')
+        search_tuple = utils.simple_search(search)
+        return Response(utils.build_api_search(path_var, search_tuple, request = request), mimetype='application/json')
     return Response(utils.build_api_error(path_var), mimetype='application/json')
 
 @api2_page.route("/description/searchers")

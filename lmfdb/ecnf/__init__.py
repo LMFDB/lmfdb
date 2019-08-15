@@ -18,5 +18,5 @@ assert main # to keep pyflakes quiet
 
 app.register_blueprint(ecnf_page, url_prefix="/EllipticCurve")
 
-register_singleton('EllipticCurve', 'elliptic_curves', 'nfcurves', 'label',
+register_singleton('EllipticCurve', 'ec_nfcurves',
     simple_search = searchers.ecnf_simple_label_search)
