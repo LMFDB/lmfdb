@@ -59,7 +59,7 @@ def build_api_wrapper(api_key, api_type, data, request = None):
     """
 
     return json.dumps({"key":api_key, 'built_at':str(datetime.datetime.now()), 
-        'api_version':api_version, 'type':api_type, 'has_api2':False, 'data':data},
+        'api_version':api_version, 'type':api_type, 'data':data},
         indent=4, sort_keys=False, cls = APIEncoder)
 
 def build_api_records(api_key, record_count, r_c_e, view_start, view_count, record_list, \
