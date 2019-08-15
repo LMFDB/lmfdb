@@ -14,12 +14,12 @@
 <p>Since API2 is intended for returning data from the server only all requests should be issued as HTTP(S) GET requests. There are six end points</p>
 <ul>
 <li><p><a href="/api2/description/searchers" class="uri">/api2/description/searchers</a> - Describe the list of possible searchers</p></li>
-<li><p><a href="/api2/description/&lt;searcher&gt;" class="uri">/api2/description/&lt;searcher&gt;</a> - Describe the list of possible search parameters for a given searcher</p></li>
-<li><p><a href="/api2/inventory/&lt;searcher&gt;" class="uri">/api2/inventory/&lt;searcher&gt;</a> - Describe the list of possible fields that can be returned by a searcher</p></li>
-<li><p><a href="/api2/data/&lt;searcher&gt;" class="uri">/api2/data/&lt;searcher&gt;</a> - Perform a search using a given searcher. Query parameters taken from the searcher description are provided as an ampersand delimited query string to this endpoint. Non searching parameters are available and are all prepended by “_”</p></li>
-<li><p><a href="/api2/pretty/&lt;other_path&gt;" class="uri">/api2/pretty/&lt;other_path&gt;</a> - This takes a valid other API path and produces a human readable (just) HTML page from the data contained. The other path should be the part after “api2” in the URL</p></li>
-<li><p><a href="/api2/singleton/&lt;path&gt;" class="uri">/api2/singleton/&lt;path&gt;</a> - This is intended to provide a URL that allows canonical reference to a single element of the database. The format of the singletons is not standardised and should not in general be used for machine readable access</p></li>
-<li><p><a href="/api2/livepg/&lt;database&gt;" class="uri">/api2/livepg/&lt;database&gt;</a> - This is intended to replicate the behaviour of the existing API. By specifying a database name and then using a standard search string (as per the /data/&lt;searcher&gt; endpoint) a search is performed on the raw database. This is not intended for normal access, but for debugging and testing purposes only.</p></li>
+<li><p><a class="uri">/api2/description/&lt;searcher&gt;</a> - Describe the list of possible search parameters for a given searcher</p></li>
+<li><p><a class="uri">/api2/inventory/&lt;searcher&gt;</a> - Describe the list of possible fields that can be returned by a searcher</p></li>
+<li><p><a class="uri">/api2/data/&lt;searcher&gt;</a> - Perform a search using a given searcher. Query parameters taken from the searcher description are provided as an ampersand delimited query string to this endpoint. Non searching parameters are available and are all prepended by “_”</p></li>
+<li><p><a class="uri">/api2/pretty/&lt;other_path&gt;</a> - This takes a valid other API path and produces a human readable (just) HTML page from the data contained. The other path should be the part after “api2” in the URL</p></li>
+<li><p><a class="uri">/api2/singleton/&lt;path&gt;</a> - This is intended to provide a URL that allows canonical reference to a single element of the database. The format of the singletons is not standardised and should not in general be used for machine readable access</p></li>
+<li><p><a class="uri">/api2/livepg/&lt;database&gt;</a> - This is intended to replicate the behaviour of the existing API. By specifying a database name and then using a standard search string (as per the /data/&lt;searcher&gt; endpoint) a search is performed on the raw database. This is not intended for normal access, but for debugging and testing purposes only.</p></li>
 </ul>
 <h3 id="api2-search-query-strings">API2 search query strings</h3>
 <p>The description parts of API2 take all of their parameters through their URL. Searches are performed by passing a query string. The main part of an API2 searcher query is name=value keys representing values for possible search parameters obtained from the <code>description</code> endpoint. These have the simple obvious form for equality, for example <a href="/api2/data/elliptic_curves_q?rank=0&amp;conductor=11" class="uri">/api2/data/elliptic_curves_q?rank=0&amp;conductor=11</a> is a search for rank=0, conductor = 11 in the elliptic curves over Q. Searching for conditions other than simple equality are performed by prepending an operator immediately after the = symbol. Currently there are 3 operators</p>
@@ -32,7 +32,7 @@
 <ul>
 <li><p>_view_start - Record to start viewing the list of returned fields. Should be given the value returned in the view_next field of the information returned by a search to get the next “page” of the data</p></li>
 <li><p>_max_count - Maximum number of records to return from this search. Will not exceed the maximum number specified on the server but will be respected if lower than that value. For example, set to 1 if you are merely interested in the existence or non-existence of records of the specified type</p></li>
-<li><p>_fields - The fields that should be returned by the search. The valid lists of fields should be inferred from a call to <a href="/api2/inventory/&lt;searcher&gt;" class="uri">/api2/inventory/&lt;searcher&gt;</a></p></li>
+<li><p>_fields - The fields that should be returned by the search. The valid lists of fields should be inferred from a call to <a class="uri">/api2/inventory/&lt;searcher&gt;</a></p></li>
 <li><p>_exclude - If set = 1, change the operation of the _fields key from being the fields that should be returned for found records to being fields that should be excluded from the return</p></li>
 </ul>
 <h2 id="api2-responses">API2 responses</h2>
