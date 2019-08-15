@@ -29,20 +29,12 @@ def demo():
 def other(other):
     return Response(utils.build_api_error(other), mimetype='application/json')    
 
-@api2_page.route("/live/<db>/<coll>")
-def live_page(db, coll):
-    search = utils.create_search_dict(database=db, collection = coll, request = request)
-    for el in request.args:
-        utils.interpret(search['query'], el, request.args[el], None)
-    search_tuple = utils.simple_search(search)
-    return Response(utils.build_api_search(db+'/'+coll, search_tuple, request = request), mimetype='application/json')
-
 @api2_page.route("/livepg/<db>")
 def live_page_pg(db):
     if (db.startswith("<") and db.endswith(">")):
         title = "API Description"
         return render_template("example.html", **locals())
-    search = utils.create_search_dict(database=None, collection = db, request = request)
+    search = utils.create_search_dict(table = db, request = request)
     for el in request.args:
         utils.interpret(search['query'], el, request.args[el], None)
     search_tuple = utils.simple_search(search)
@@ -50,7 +42,6 @@ def live_page_pg(db):
 
 @api2_page.route("/pretty/<path:path_var>")
 def prettify_live(path_var):
-    print(path_var)
     bread = []
     return render_template('view.html', data_url=path_var, bread=bread)
 
