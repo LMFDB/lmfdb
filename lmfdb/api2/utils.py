@@ -333,17 +333,22 @@ def interpret(query, qkey, qval, type_info):
             if type_info == 'string':
                 pass #Already a string
             elif type_info == 'integer':
-                qval = int(qval)
+                try:
+                    qval = int(qval)
+                except:
+                    qval = [int(_) for _ in qval.split(DELIM)]
             elif type_info == 'real':
                 qval = float(qval)
             elif type_info == 'list of integers':
-                qval = [int(_) for _ in qval[2:].split(DELIM)]
+                qval = [int(_) for _ in qval.split(DELIM)]
             elif type_info == 'list of integers stored as string':
-                qval = str([int(_) for _ in qval[2:].split(DELIM)])
+                qval = str([int(_) for _ in qval.split(DELIM)])
             elif type_info == 'boolean':
                 qval = bool(qval)
             else:
                 user_infer = True
+
+            print(type_info)
 
             if not user_infer and comparator: qval = {comparator:qval}
 
