@@ -146,7 +146,6 @@ class CMF_download(Downloader):
         if hecke_nf is None:
             return abort(404, "No q-expansion found for %s" % label)
 
-        dim = hecke_nf['hecke_ring_rank']
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
         level_data = self.assign(lang, 'level', level);
