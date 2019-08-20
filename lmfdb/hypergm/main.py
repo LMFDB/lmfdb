@@ -281,7 +281,8 @@ def hgm_search(info, query):
     queryab = {}
     for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
                   'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
-        parse_bracketed_posints(info, queryab, param, split=False,
+        parse_bracketed_posints(info, queryab, param, split=True, 
+                                keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
     if queryab:
@@ -293,7 +294,7 @@ def hgm_search(info, query):
     # generic, irreducible not in DB yet
     parse_ints(info, query, 'degree')
     parse_ints(info, query, 'weight')
-    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=False)
+    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector',split=True)
     parse_restricted(info, query, 'sign', allowed=['+1',1,-1], process=int)
     # Make a version to search reversed way
     if not family_search:
@@ -457,6 +458,17 @@ def show_slopes(sl):
     if str(sl) == "[]":
         return "None"
     return(sl)
+
+@hypergm_page.route("/random_family")
+def random_family():
+    label = db.hgm_families.random()
+    return redirect(url_for(".by_family_label", label= label))
+
+@hypergm_page.route("/random_motive")
+def random_motive():
+    label = db.hgm_motives.random()
+    s = label.split('_t')
+    return redirect(url_for(".by_label", label= s[0], t='t'+s[1]))
 
 @hypergm_page.route("/Completeness")
 def completeness_page():

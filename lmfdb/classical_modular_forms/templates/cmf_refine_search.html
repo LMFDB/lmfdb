@@ -22,9 +22,7 @@ function set_buckets(col_selecter, bucket_id) {
 {% endif %}
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
-<input type="hidden" name="hst" value="{{info.search_type}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table>
   <tr>
