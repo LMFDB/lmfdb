@@ -5,13 +5,13 @@
 import re
 
 from flask import render_template, request, url_for, redirect, abort
-from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing
+from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd
 
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
     clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted,
-    search_wrap)
+    search_wrap, web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 
@@ -88,6 +88,14 @@ def normalize_motive(label):
     if 1 in b or b[0]>a[0]:
         return 'A%s_B%s_t%s%s.%s'%(aas, bs,m.group(5),m.group(6),m.group(7))
     return 'A%s_B%s_t%s%s.%s'%(bs, aas, m.group(5), m.group(7), m.group(6))
+
+# Convert cyclotomic indices to rational numbers
+def cyc_to_QZ(A):
+    alpha = []
+    for Ai in A:
+        alpha.extend([QQ(k)/Ai for k in range(1,Ai+1) if gcd(k,Ai) == 1])
+    alpha.sort()
+    return alpha
 
 # A and B are lists, tn and td are num/den for t
 def ab_label(A,B):
@@ -318,6 +326,10 @@ def render_hgm_webpage(label):
     title = 'Hypergeometric Motive:' + label
     A = data['A']
     B = data['B']
+
+    alpha = cyc_to_QZ(A)
+    beta = cyc_to_QZ(B)
+
     det = db.hgm_families.lucky({'A': A, 'B': B}, 'det')
     if det is None:
         det = 'data not computed'
@@ -358,6 +370,8 @@ def render_hgm_webpage(label):
     info.update({
                 'A': A,
                 'B': B,
+                'alpha': web_latex(alpha),
+                'beta': web_latex(beta),
                 't': t,
                 'degree': data['degree'],
                 'weight': data['weight'],
@@ -391,6 +405,8 @@ def render_hgm_family_webpage(label):
     title = 'Hypergeometric Motive Family:' + label
     A = data['A']
     B = data['B']
+    alpha = cyc_to_QZ(A)
+    beta = cyc_to_QZ(B)
     hodge = data['famhodge']
     mydet = data['det']
     detexp = QQ(data['weight']*data['degree'])
@@ -427,6 +443,8 @@ def render_hgm_family_webpage(label):
     info.update({
                 'A': A,
                 'B': B,
+                'alpha': web_latex(alpha),
+                'beta': web_latex(beta),
                 'degree': data['degree'],
                 'weight': data['weight'],
                 'hodge': hodge,
