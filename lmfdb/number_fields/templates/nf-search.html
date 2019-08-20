@@ -5,8 +5,7 @@
 <h2> Further refine search </h2>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
 <tr>
@@ -66,7 +65,7 @@
 #}
 
 <tr> 
-<td class="button" align=left><button type='submit' value='refine'>Search again</button></td> 
+<td class="button" align=left><button type='submit' value='refine' onclick='resetStart()'>Search again</button></td> 
 </tr>
 </table>
 </form>
