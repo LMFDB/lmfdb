@@ -128,8 +128,7 @@ class mf_newforms(MfChecker):
         nfyes = {'nf_label':{'exists':True}}
         selfdual = {'nf_label':{'exists':True}, 'is_self_dual':True}
         return (self.check_crosstable_count('nf_fields', 1, 'nf_label', 'label', constraint=nfyes) +
-                # since coeffs is still jsonb, we must use coeffs_array
-                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs_array', 'label', constraint=nfyes) +
+                self.check_crosstable('nf_fields', 'field_poly', 'nf_label', 'coeffs', 'label', constraint=nfyes) +
                 self.check_crosstable('nf_fields', 0, 'nf_label', 'r2', 'label', constraint=selfdual) +
                 self.check_crosstable_dotprod('nf_fields', 'field_disc', 'nf_label', ['disc_sign', 'disc_abs'], 'label', constraint=nfyes))
 
@@ -239,7 +238,7 @@ class mf_newforms(MfChecker):
         """
         # TIME > 240s
         return (self.check_crosstable_count('nf_fields', 1, 'projective_field_label', 'label', constraint={'projective_field_label':{'$exists':True}}) +
-                self.check_crosstable('nf_fields_new', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
+                self.check_crosstable('nf_fields', 'projective_field', 'projective_field_label', 'coeffs', 'label'))
 
     @overall_long
     def check_artin_field(self):
@@ -249,7 +248,7 @@ class mf_newforms(MfChecker):
         """
         # TIME > 600s
         return (self.check_crosstable_count('nf_fields', 1, 'artin_field_label', 'label', constraint={'artin_field_label':{'$exists':True}}) +
-                self.check_crosstable('nf_fields_new', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
+                self.check_crosstable('nf_fields', 'artin_field', 'artin_field_label', 'coeffs', 'label'))
 
     @overall
     def check_artin_degree(self):
