@@ -725,6 +725,7 @@ def number_field_jump(info):
              shortcuts={'natural':number_field_jump,
                         #'algebra':number_field_algebra,
                         'download':download_search},
+             split_ors=['galois_group'],
              bread=lambda:[('Global Number Fields', url_for(".number_field_render_webpage")),
                            ('Search Results', '.')],
              learnmore=learnmore_list)
