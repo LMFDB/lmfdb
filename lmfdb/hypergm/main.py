@@ -10,8 +10,10 @@ from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd
 from lmfdb import db
 from lmfdb.utils import (
     image_callback, flash_error, list_to_factored_poly_otherorder,
-    clean_input, parse_ints, parse_bracketed_posints, parse_rational, parse_restricted,
-    search_wrap, web_latex)
+    clean_input, parse_ints, parse_bracketed_posints, parse_rational, 
+    parse_restricted, search_wrap, web_latex)
+from base64 import b64encode
+from urllib import quote
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
 
@@ -220,7 +222,19 @@ def index():
     info = {'count': 50}
     return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
 
-
+def hgm_family_circle_plot_data(AB):
+    A,B = AB.split("_")
+    from plot import circle_image
+    A = map(int,A[1:].split("."))
+    B = map(int,B[1:].split("."))
+    G = circle_image(A, B)
+    P = G.plot()
+    import tempfile, os
+    _, filename = tempfile.mkstemp('.png')
+    P.save(filename)
+    data = open(filename).read()
+    os.unlink(filename)
+    return data
 
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
@@ -357,6 +371,9 @@ def render_hgm_webpage(label):
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
+        ('Label', '%s' % data['label']),
+        ('A', '\(%s\)' % A),
+        ('B', '\(%s\)' % B),
         ('Degree', '\(%s\)' % data['degree']),
         ('Weight',  '\(%s\)' % data['weight']),
         ('Hodge vector',  '\(%s\)' % hodge),
@@ -431,9 +448,17 @@ def render_hgm_family_webpage(label):
         [3, [data['A3'],data['B3'],data['C3']]],
         [5, [data['A5'],data['B5'],data['C5']]],
         [7, [data['A7'],data['B7'],data['C7']]]]
+    plot = hgm_family_circle_plot_data("A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))
+    plot = "data:image/png;base64," + quote(b64encode(plot))
+    plot_link = '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(plot)
     prop2 = [
+        ('Label', '%s' % data['label']),
+        (None, plot_link),
+        ('A', '\(%s\)' % A),
+        ('B', '\(%s\)' % B),
         ('Degree', '\(%s\)' % data['degree']),
-        ('Weight',  '\(%s\)' % data['weight'])
+        ('Weight',  '\(%s\)' % data['weight']),
+        ('Type', '%s' % typee)
     ]
     mono = [m for m in data['mono'] if m[1] != 0]
     mono = [[m[0], dogapthing(m[1]),
