@@ -136,15 +136,15 @@ $t$</td><td align=left> <input type="text" name="t" size="3" value="{{info.t}}" 
     </a> 
 {% endif %}
 </td>
-<td>$[{{hgm.A}}]$</td>
-<td>$[{{hgm.B}}]$</td>
+<td>${{hgm.A}}$</td>
+<td>${{hgm.B}}$</td>
 {% if not info.family %}
     <td>${{info.display_t(hgm.t)}}$</td>
     <td>${{info.factorint(hgm.cond)}}$</td>
 {% endif %}
 <td>${{hgm.degree}}$</td>
 <td>${{hgm.weight}}$</td>
-<td>$[{{hgm.famhodge}}]$</td>
+<td>${{hgm.famhodge}}$</td>
 </tr>
 
 {% endfor %}
