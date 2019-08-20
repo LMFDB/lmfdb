@@ -1231,7 +1231,21 @@ class PostgresTable(PostgresBase):
             search_cols.insert(0, "id")
         return tuple(search_cols), tuple(extra_cols)
 
-    def _parse_special(self, key, value, col, force_json):
+    def _create_typecast(self, key, value, col, col_type):
+        """
+        This method is used to add typecasts to queries when necessary.
+        It is called from `_parse_special` and `_parse_dict`; see the documentation
+        of those functions for inputs.
+        """
+        if col_type.endswith('[]') and key in ['$eq', '$ne', '$contains', '$containedin']:
+            if isinstance(col, Identifier):
+                return '::' + col_type
+            else:
+                # Selected a path
+                return '::' + col_type[:-2]
+        return ''
+
+    def _parse_special(self, key, value, col, col_type):
         """
         Implements more complicated query conditions than just testing for equality:
         inequalities, containment and disjunctions.
@@ -1254,7 +1268,7 @@ class PostgresTable(PostgresBase):
             - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column, wrapped in SQL
-        - ``force_json`` -- whether the column is a jsonb column
+        - ``col_type`` -- the SQL type of the column
 
         OUTPUT:
 
@@ -1280,7 +1294,7 @@ class PostgresTable(PostgresBase):
             ('"ramps" @> %s', [[2, 3, 5]])
         """
         if key in ['$or', '$and']:
-            pairs = [self._parse_dict(clause, outer=col, outer_json=force_json) for clause in value]
+            pairs = [self._parse_dict(clause, outer=col, outer_type=col_type) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
                 strings, values = zip(*pairs)
@@ -1299,7 +1313,7 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} IS NULL").format(col)
             value = []
         elif key == '$notcontains':
-            if force_json:
+            if col_type == 'jsonb':
                 cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
                 value = [Json(v) for v in value]
             else:
@@ -1328,20 +1342,20 @@ class PostgresTable(PostgresBase):
             elif key == '$anylte':
                 cmd = SQL("%s >= ANY({0})")
             elif key == '$in':
-                if force_json:
+                if col_type == 'jsonb':
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("{0} <@ %s")
                 else:
                     cmd = SQL("{0} = ANY(%s)")
             elif key == '$nin':
-                if force_json:
+                if col_type == 'jsonb':
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("NOT ({0} <@ %s)")
                 else:
                     cmd = SQL("NOT ({0} = ANY(%s)")
             elif key == '$contains':
                 cmd = SQL("{0} @> %s")
-                if not force_json:
+                if col_type != 'jsonb':
                     value = [value]
             elif key == '$containedin':
                 #jsonb_path_ops modifiers for the GIN index doesn't support this query
@@ -1355,9 +1369,13 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} ~ '%s'")
             else:
                 raise ValueError("Error building query: {0}".format(key))
-            if force_json:
+            if col_type == 'jsonb':
                 value = Json(value)
             cmd = cmd.format(col)
+            # For some array types (e.g. numeric), operators such as = and @> can't automatically typecast so we have to do it manually.
+            typecast = self._create_typecast(key, value, col, col_type)
+            if typecast:
+                cmd += SQL(typecast)
             value = [value]
         return cmd, value
 
@@ -1385,7 +1403,7 @@ class PostgresTable(PostgresBase):
 
         return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
 
-    def _parse_dict(self, D, outer=None, outer_json=None):
+    def _parse_dict(self, D, outer=None, outer_type=None):
         """
         Parses a dictionary that specifies a query in something close to Mongo syntax into an SQL query.
 
@@ -1393,7 +1411,7 @@ class PostgresTable(PostgresBase):
 
         - ``D`` -- a dictionary, or a scalar if outer is set
         - ``outer`` -- the column that we are parsing (None if not yet parsing any column).  Used in recursion.  Should be wrapped in SQL.
-        - ``outer_json`` -- whether the outer column is a jsonb column
+        - ``outer_type`` -- the SQL type for the outer column
 
         OUTPUT:
 
@@ -1416,7 +1434,7 @@ class PostgresTable(PostgresBase):
             (None, None)
         """
         if outer is not None and not isinstance(D, dict):
-            if outer_json:
+            if outer_type == 'jsonb':
                 D = Json(D)
             return SQL("{0} = %s").format(outer), [D]
         if len(D) == 0:
@@ -1428,7 +1446,7 @@ class PostgresTable(PostgresBase):
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == '$':
-                    sub, vals = self._parse_special(key, value, outer, force_json=outer_json)
+                    sub, vals = self._parse_special(key, value, outer, col_type=outer_type)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -1445,14 +1463,13 @@ class PostgresTable(PostgresBase):
                 if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 # Have to determine whether key is jsonb before wrapping it in Identifier
-                coltype = self.col_type[key]
-                force_json = (coltype == 'jsonb')
+                col_type = self.col_type[key]
                 if path:
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 else:
                     key = Identifier(key)
                 if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
-                    sub, vals = self._parse_dict(value, key, outer_json=force_json)
+                    sub, vals = self._parse_dict(value, key, outer_type=col_type)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -1460,16 +1477,9 @@ class PostgresTable(PostgresBase):
                 if value is None:
                     strings.append(SQL("{0} IS NULL").format(key))
                 else:
-                    if force_json:
+                    if col_type == 'jsonb':
                         value = Json(value)
-                    cmd = "{0} = %s"
-                    # For arrays, have to add an explicit typecast
-                    if coltype.endswith('[]'):
-                        if not path:
-                            cmd += '::' + coltype
-                        else:
-                            cmd += '::' + coltype[:-2]
-
+                    cmd = "{0} = %s" + self._create_typecast('$eq', value, key, col_type)
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
@@ -1679,7 +1689,7 @@ class PostgresTable(PostgresBase):
                                1 means return all search columns (default),
                                2 means all columns).
         - ``limit`` -- an integer or None (default), giving the maximum number of records to return.
-        - ``offset`` -- an integer (default 0), where to start in the list of results.
+        - ``offset`` -- a nonnegative integer (default 0), where to start in the list of results.
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
@@ -1723,6 +1733,8 @@ class PostgresTable(PostgresBase):
             sage: info['number'], info['exact_count']
             (1000, False)
         """
+        if offset < 0:
+            raise ValueError("Offset cannot be negative")
         search_cols, extra_cols = self._parse_projection(projection)
         vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         if limit is None:
@@ -1757,10 +1769,14 @@ class PostgresTable(PostgresBase):
                 self._search_iterator(res, search_cols, extra_cols, projection)
                 )
         if info is not None:
-            if offset >= nres:
+            if offset >= nres > 0:
+                # We're passing in an info dictionary, so this is a front end query,
+                # and the user has requested a start location larger than the number
+                # of results.  We adjust the results to be the last page instead.
                 offset -= (1 + (offset - nres) / limit) * limit
-            if offset < 0:
-                offset = 0
+                if offset < 0:
+                    offset = 0
+                return self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info, silent=silent)
             info['query'] = dict(query)
             info['number'] = nres
             info['count'] = limit

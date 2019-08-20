@@ -890,10 +890,4 @@ def parse_start(info, default=0):
             start += (1 - (start + 1) / count) * count
     except (KeyError, ValueError):
         start = default
-    try:
-        paging = int(info['paging'])
-        if paging == 0:
-            start = 0
-    except (KeyError, ValueError, TypeError):
-        pass
     return start

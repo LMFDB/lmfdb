@@ -3,40 +3,42 @@
 {# Refine search page #}
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+  {% include 'hidden_search_inputs.html' %}
   <table>
     <tr>
-      <td>{{ KNOWL('artin.dimension',title="Dimension") }}
-      <td>{{ KNOWL('artin.conductor',title = "Conductor") }}
-      <td>{{ KNOWL('artin.gg_quotient',title="Group") }}
-      <td>{{ KNOWL('artin.root_number',title="Root number") }}
-      <td>{{ KNOWL('artin.parity',title="Parity") }}
+      <td>{{ KNOWL('artin.dimension',title="Dimension") }}</td>
+      <td>{{ KNOWL('artin.conductor',title = "Conductor") }}</td>
+      <td>{{ KNOWL('artin.gg_quotient',title="Group") }}</td>
+      <td>{{ KNOWL('artin.root_number',title="Root number") }}</td>
+      <td>{{ KNOWL('artin.parity',title="Parity") }}</td>
 
     <tr>
-      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15/>
-      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15/>
-      <td><input type='text' name='group' value="{{info.group}}" size=15>
-      <td><input type='text' name='root_number' value = "{{info.root_number}}" size=15/>
+      <td><input type='text' name='dimension' value="{{info.dimension}}" size=15/></td>
+      <td><input type='text' name='conductor' value="{{info.conductor}}" size=15/></td>
+      <td><input type='text' name='group' value="{{info.group}}" size=15></td>
+      <td><input type='text' name='root_number' value = "{{info.root_number}}" size=15/></td>
       <td><select name='Is_Even' width="105" style="width: 105px">
         <option value=''>All</option>
         <option value='True' {{ "selected" if info.Is_Even == 'True'}} >Even</option>
         <option value='False' {{ "selected" if info.Is_Even == 'False'}} >Odd</option>
-        </select>
+      </select></td>
+    </tr>
 
     <tr>
-      <td>{{ KNOWL('artin.permutation_container',title="Smallest permutation container") }}
-      <td>{{KNOWL('artin.ramified_primes', 'Ramified primes')}}
-      <td>{{KNOWL('artin.unramified_primes', 'Unramified primes')}}
-      <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}
+      <td>{{ KNOWL('artin.permutation_container',title="Smallest permutation container") }}</td>
+      <td>{{KNOWL('artin.ramified_primes', 'Ramified primes')}}</td>
+      <td>{{KNOWL('artin.unramified_primes', 'Unramified primes')}}</td>
+      <td>{{ KNOWL('artin.frobenius_schur_indicator',title="Frobenius-Schur indicator") }}</td>
+    </tr>
     <tr>
-      <td><input type='text' name='container' value="{{info.container}}" size=15>
-      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15/>
-      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15/>
+      <td><input type='text' name='container' value="{{info.container}}" size=15></td>
+      <td><input type='text' name='ramified' value="{{info.ramified}}" size=15/></td>
+      <td><input type='text' name='unramified' value = "{{info.unramified}}" size=15/></td>
       <td><input type='text' name='frobenius_schur_indicator' value = "{{info.frobenius_schur_indicator}}" size=15/></td>
-    <tr>
-      <td align=left colspan=4>Maximum number of Artin representations to display <input type='text' name='count' value="{{info.count}}" size=10></td>
+    </tr>
   <tr>
-    <td class="button"><button type='submit' value='Search'>Search again</button></td>
+    <td class="button"><button type='submit' value='Search' onclick='resetStart()'>Search again</button></td>
+  </tr>
   </table>
 </form>
 

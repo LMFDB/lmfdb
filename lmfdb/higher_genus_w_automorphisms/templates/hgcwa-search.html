@@ -5,8 +5,7 @@
 {% include "hgcwa-clean-submit.html" %}
 
 <form id="re-search" onsubmit="cleanSubmitHGCWA(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="paging" value="0"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
 <tr>
@@ -97,8 +96,6 @@
         {% endif %}
         {% endif %}
         </td>
-<td align='left' colspan='4'>Maximum number of families to display: <input type='text' id='count' name='count' value="{{info.count}}" size='10'>
-</td>
 </tr>
 
 
@@ -127,7 +124,7 @@
 
 <tr>
   <td>
-<button type='submit' value='refine'>Search again</button>
+<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td>
 </tr>
 
