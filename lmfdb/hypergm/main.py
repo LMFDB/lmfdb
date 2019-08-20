@@ -459,6 +459,17 @@ def show_slopes(sl):
         return "None"
     return(sl)
 
+@hypergm_page.route("/random_family")
+def random_family():
+    label = db.hgm_families.random()
+    return redirect(url_for(".by_family_label", label= label))
+
+@hypergm_page.route("/random_motive")
+def random_motive():
+    label = db.hgm_motives.random()
+    s = label.split('_t')
+    return redirect(url_for(".by_label", label= s[0], t='t'+s[1]))
+
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of Hypergeometric Motive Data over $\Q$'
