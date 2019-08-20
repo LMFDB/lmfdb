@@ -300,11 +300,25 @@ def hgm_search(info, query):
         query['__table__'] = db.hgm_families
 
     queryab = {}
-    for param in ['A', 'B', 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
-                  'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
+    p = info['p']
+    for param in ['A', 'B']:
+#    , 'A2', 'B2', 'A3', 'B3', 'A5', 'B5', 'A7', 'B7',
+#                  'Au2', 'Bu2', 'Au3', 'Bu3', 'Au5', 'Bu5', 'Au7', 'Bu7']:
         parse_bracketed_posints(info, queryab, param, split=True, 
                                 keepbrackets=True,
                                 listprocess=lambda a: sorted(a, reverse=True))
+    parse_bracketed_posints(info, queryab, 'Ap', qfield='A'+p,split=True, 
+                            keepbrackets=True,
+                            listprocess=lambda a: sorted(a, reverse=True))
+    parse_bracketed_posints(info, queryab, 'Bp', qfield='B'+p,split=True, 
+                            keepbrackets=True,
+                            listprocess=lambda a: sorted(a, reverse=True))
+    parse_bracketed_posints(info, queryab, 'Apperp', qfield='Au'+p,split=True, 
+                            keepbrackets=True,
+                            listprocess=lambda a: sorted(a, reverse=True))
+    parse_bracketed_posints(info, queryab, 'Bpperp', qfield='Bu'+p,split=True, 
+                            keepbrackets=True,
+                            listprocess=lambda a: sorted(a, reverse=True))
     # Combine the parts of the query if there are A,B parts
     if queryab:
         queryabrev = {}
