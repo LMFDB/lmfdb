@@ -455,7 +455,7 @@ def parse_primes(inp, query, qfield, mode=None, radical=None):
     _parse_subset(primes, query, qfield, mode, radical, prod)
 
 @search_parser(clean_info=True) # see SearchParser.__call__ for actual arguments when calling
-def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, check_divisibility=None, keepbrackets=False, extractor=None):
+def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None, split=True, process=None, listprocess=None, check_divisibility=None, keepbrackets=False, extractor=None):
     if (not BRACKETED_POSINT_RE.match(inp) or
         (maxlength is not None and inp.count(',') > maxlength - 1) or
         (exactlength is not None and inp.count(',') != exactlength - 1) or
@@ -498,6 +498,8 @@ def parse_bracketed_posints(inp, query, qfield, maxlength=None, exactlength=None
                     raise ValueError("Each entry must divide the next, such as [2,4].")
         if process is not None:
             L = [process(a) for a in L]
+        if listprocess is not None:
+            L = listprocess(L)
         if extractor is not None:
             for qf, v in zip(qfield, extractor(L)):
                 if qf in query and query[qf] != v:
