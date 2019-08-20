@@ -740,7 +740,7 @@ def number_field_search(info, query):
     parse_bool(info,query,'cm_field',qfield='cm')
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
-                 qfield='ramps_array',mode='complement')
+                 qfield='ramps',mode='complement')
     # modes are now contained (in), exactly, include
     if 'ram_quantifier' in info and str(info['ram_quantifier']) == 'include':
         mode='append'
@@ -749,7 +749,7 @@ def number_field_search(info, query):
     else:
         mode='exact'
     parse_primes(info,query,'ram_primes',name='Ramified primes',
-                 qfield='ramps_array',mode=mode,radical='disc_rad')
+                 qfield='ramps',mode=mode,radical='disc_rad')
     ## This seems not to be used
     #if 'lucky' in info:
     #    label = db.nf_fields.lucky(query, 0)
