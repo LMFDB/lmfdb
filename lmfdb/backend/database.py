@@ -1867,7 +1867,10 @@ class PostgresTable(PostgresBase):
                         nres = min(total, self._count_cutoff)
 
         if not split_ors: # also handle the case len(queries) == 1
-            prelimit = max(limit, self._count_cutoff - offset) if nres is None else limit
+            if nres is None or limit is None:
+                prelimit = limit
+            else:
+                prelimit = max(limit, self._count_cutoff - offset)
             cur = run_one_query(query, prelimit, offset)
             if limit is None:
                 if info is not None:
