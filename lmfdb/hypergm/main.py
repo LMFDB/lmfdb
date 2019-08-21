@@ -214,11 +214,10 @@ def poly_with_factored_coeffs(c, p):
 
 @hypergm_page.route("/")
 def index():
-    bread = get_bread()
     if len(request.args) != 0:
         return hgm_search(request.args)
     info = {'count': 50}
-    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=bread, credit=HGM_credit, info=info, learnmore=learnmore_list())
+    return render_template("hgm-index.html", title="Hypergeometric Motives over $\Q$", bread=get_bread(), credit=HGM_credit, info=info, learnmore=learnmore_list())
 
 
 
@@ -393,7 +392,10 @@ def render_hgm_webpage(label):
 #        friends.append(('Discriminant root field', rffriend))
 
 
-    bread = get_bread([(label, ' ')])
+    AB = 'A = '+str(A)+', B = '+str(B)
+    t_data = str(QQ(data['t']))
+
+    bread = get_bread([('family '+str(AB),url_for(".by_family_label", label = AB_data)), ('t = '+t_data, ' ')])
     return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 def render_hgm_family_webpage(label):
@@ -465,10 +467,13 @@ def render_hgm_family_webpage(label):
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
 
+    AB = 'A = '+str(A)+', B = '+str(B)
+    bread = get_bread([('family '+str(AB), ' ')])
+
     info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
     info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
     info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-    bread = get_bread([(label, ' ')])
+
     return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 
