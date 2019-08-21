@@ -141,7 +141,7 @@ class ArtinRepresentation(object):
         # Not in the database
         if self.dimension()==1:
             return self.central_character()
-        return self.central_character_as_artin_rep()
+        return self.central_character_as_artin_rep().label()
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
