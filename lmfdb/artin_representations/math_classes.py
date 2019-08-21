@@ -125,13 +125,23 @@ class ArtinRepresentation(object):
     def NFGal(self):
         return  map(int, self._data["NFGal"]);
 
+    # If the dimension is 1, we want the result as a webcharacter
+    # Otherwise, we want the label of it as an Artin rep.
+    # Mostly, this is pulled from the database, but we can fall back
+    # and compute it ourselves
     def determinant(self):
         if len(self._data['Dets'])>0:
             parts = self.label().split("c")
-            thischar = str(self._data['Dets'][int(parts[1])-1])
-            wc = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
-        # If we don't have it, return None and the code will compute it
-        return None
+            thischar = str( self._data['Dets'][int(parts[1])-1] )
+            if self.dimension()==1:
+                wc = thischar.split(r'.')
+                self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
+                return self._data['central_character']
+            return(thischar)
+        # Not in the database
+        if self.dimension()==1:
+            return self.central_character()
+        return self.central_character_as_artin_rep()
 
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"

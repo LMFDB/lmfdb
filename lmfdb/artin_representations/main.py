@@ -168,19 +168,18 @@ def render_artin_representation_webpage(label):
     nf_url = the_nf.url_for()
     if nf_url:
         friends.append(("Artin Field", nf_url))
-    if the_rep.determinant() is None:
-        cc = the_rep.central_character()
-        if cc is not None:
-            if the_rep.dimension()==1:
-                if cc.order == 2:
-                    cc_name = cc.symbol
-                else:
-                    cc_name = cc.texname
-                friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+    cc = the_rep.determinant()
+    if cc is not None:
+        if the_rep.dimension()==1:
+            if cc.order == 2:
+                cc_name = cc.symbol
             else:
-                detrep = the_rep.central_character_as_artin_rep()
-                friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
-        add_lfunction_friends(friends,label)
+                cc_name = cc.texname
+            friends.append(("Dirichlet character "+cc_name, url_for("characters.render_Dirichletwebpage", modulus=cc.modulus, number=cc.number)))
+        else:
+            detrep = ArtinRepresentation(cc)
+            friends.append(("Determinant representation "+detrep.label(), detrep.url_for()))
+    add_lfunction_friends(friends,label)
 
     # once the L-functions are in the database, the link can always be shown
     #if the_rep.dimension() <= 6:
