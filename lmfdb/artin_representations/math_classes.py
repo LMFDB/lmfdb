@@ -125,6 +125,14 @@ class ArtinRepresentation(object):
     def NFGal(self):
         return  map(int, self._data["NFGal"]);
 
+    def determinant(self):
+        if len(self._data['Dets'])>0:
+            parts = self.label().split("c")
+            thischar = str(self._data['Dets'][int(parts[1])-1])
+            wc = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
+        # If we don't have it, return None and the code will compute it
+        return None
+
     def conductor_equation(self):
         # Returns things of the type "1", "7", "49 = 7^{2}"
         factors = self.factored_conductor()
