@@ -337,6 +337,10 @@ def hgm_search(info, query):
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
+    query['__sort__'] = ['degree', 'weight', 'A', 'B', 'label']
+    # Should search on analytic conductor when available
+    # Sorts A and B first by length, then by the elements of the list; could go another way
+
     info['make_label'] = make_abt_label
     info['make_t_label'] = make_t_label
     info['ab_label'] = ab_label
