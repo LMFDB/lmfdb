@@ -49,10 +49,10 @@
 <td align=left>{{KNOWL('hgm.defining_parameter_primetoppart','$B^\perp_p$')}}
 </tr><tr>
 <td><select name="p">
-  <option "2" {{ "selected" if info.p == '2'}}>2</option>
-  <option "3" {{ "selected" if info.p == '3'}}>3</option>
-  <option "5" {{ "selected" if info.p == '5'}}>5</option>
-  <option "7" {{ "selected" if info.p == '7'}}>7</option>
+  <option value="" {{ "selected" if info.p == '2'}}>2</option>
+  <option value="3" {{ "selected" if info.p == '3'}}>3</option>
+  <option value="5" {{ "selected" if info.p == '5'}}>5</option>
+  <option value="7" {{ "selected" if info.p == '7'}}>7</option>
   </select>
 </td>
 <td><input type='text' name='Ap' size="8" value="{{info.Ap}}" example='[1,1,1,1]'></td>
