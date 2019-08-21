@@ -261,7 +261,7 @@ def allgens(line):
         'torsion_structure': ["%s" % tor for tor in t],
         'torsion_generators': ["%s" % parse_tgens(tgens[1:-1]) for tgens in data[6 + rank:]],
     }
-    extra_data = make_extra_data(label,content['number'],ainvs,content['gens'])
+    extra_data = make_extra_data(label,ainvs,content['gens'])
     content.update(extra_data)
 
     return label, content
@@ -708,9 +708,8 @@ def add_galreps_to_one(c):
 
 # function to compute some extra data on the fly duringupload.  This is called in the function allgens()
 
-def make_extra_data(label,number,ainvs,gens):
-    """Given a curve label (and number, as some data is only stored wih
-    curve number 1 in each class) and its ainvs and gens, returns a
+def make_extra_data(label,ainvs,gens):
+    """Given a curve label and its ainvs and gens, returns a
     dict with which to update the entry.
 
     Extra items computed here:
@@ -720,9 +719,6 @@ def make_extra_data(label,number,ainvs,gens):
     'min_quad_twist': dict holding curve's min quadratic twist and the twisting discriminant
     'heights': list of heights of gens
     'bad_primes': list of primes dividing conductor
-
-    and for curve #1 in a class only:
-
     'aplist': list of a_p for p<100
     'anlist': list of a_n for n<=20
 
@@ -754,9 +750,8 @@ def make_extra_data(label,number,ainvs,gens):
     from lmfdb.elliptic_curves.web_ec import parse_points
     gens = [E(g) for g in parse_points(gens)]
     data['heights'] = [float(P.height()) for P in gens]
-    if number==1:
-        data['aplist'] = E.aplist(100,python_ints=True)
-        data['anlist'] = E.anlist(20,python_ints=True)
+    data['aplist'] = E.aplist(100,python_ints=True)
+    data['anlist'] = E.anlist(20,python_ints=True)
     return data
 
 
@@ -1005,7 +1000,7 @@ def update_int_pts(filename, test=True, verbose=0, basepath=None):
                 print("Using upsert to change database entry for {}".format(lab))
                 curves.upsert({'label': lab}, e)
 
-def swap2curves(iso, n1=1, n2=2, test=True):
+def swap2curves(iso, test=True):
     """Swaps the Cremona number part of the Cremona labels of two curves in isogeny class iso.
 
     Here iso is the Cremona label of an isogeny class (no dot, no
@@ -1017,14 +1012,16 @@ def swap2curves(iso, n1=1, n2=2, test=True):
     'lmfdb_number') are unchanged.
 
     """
-    c1_old_label = iso+str(n1)
-    c2_old_label = iso+str(n2)
-    c1_lmfdb_label = curves.lucky({'label':c1_old_label}, projection='lmfdb_label')
-    c2_lmfdb_label = curves.lucky({'label':c2_old_label}, projection='lmfdb_label')
-    print("Retrieved curves with LMFDB labels {} and {}".format(c1_lmfdb_label, c2_lmfdb_label))
+    c1_old_label = iso+"1"
+    c2_old_label = iso+"2"
+    c1_data = curves.lucky({'label':c1_old_label}, projection=['lmfdb_label','aplist','anlist'])
+    c2_data = curves.lucky({'label':c2_old_label}, projection=['lmfdb_label','aplist','anlist'])
+    c1_lmfdb_label = c1_data['lmfdb_label']
+    c2_lmfdb_label = c2_data['lmfdb_label']
+    print("Retrieved curves with LMFDB labels {} (keys {}) and {} (keys {})".format(c1_lmfdb_label, c1_data.keys(), c2_lmfdb_label, c2_data.keys()))
     print("Old (Cremona) labels for these: {} and {}".format(c1_old_label, c2_old_label))
-    c1_new_data = {'label': c2_old_label, 'number': n2}
-    c2_new_data = {'label': c1_old_label, 'number': n1}
+    c1_new_data = {'label': c2_old_label, 'number': 2}
+    c2_new_data = {'label': c1_old_label, 'number': 1, 'aplist':c1_data['aplist'], 'anlist':c1_data['anlist']}
     print("New (Cremona) labels for these: {} and {}".format(c2_old_label, c1_old_label))
 
     # Now do the updates:
@@ -1037,3 +1034,28 @@ def swap2curves(iso, n1=1, n2=2, test=True):
         print("changes made")
     else:
         print("Taking no further action")
+
+
+an_global = {}
+ap_global={}
+
+def get_an_ap(iso, verbose):
+    global an_global, ap_global
+    if not iso in an_global:
+        if verbose:
+            print("fetching anlist and aplist for class {}".format(iso))
+        an_ap = db.ec_curves.lucky({'iso':iso, 'number':1}, projection=['anlist', 'aplist'])
+        an_global[iso] = an_ap['anlist']
+        ap_global[iso] = an_ap['aplist']
+    return an_global[iso], ap_global[iso]
+
+def add_an(e, verbose=False):
+    """Given a curve record, adds fields 'anlist' and 'aplist' if not there already.
+    """
+    if not 'anlist' in e:
+        if verbose:
+            print("adding anlist and aplist to record {}".format(e['label']))
+        anlist, aplist = get_an_ap(e['iso'], verbose)
+        e['anlist'] = anlist
+        e['aplist'] = aplist
+    return e
