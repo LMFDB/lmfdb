@@ -1,7 +1,7 @@
 #!/usr/local/bin/sage -python
 
 # This version writes the data to a file, deletes all records from the database,
-# then reloads from the files.
+# then reloads from the files. 
 
 
 import sys, os

@@ -10,7 +10,7 @@ table.ntdata a {
 </style>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
+{% include 'hidden_search_inputs.html' %}
 <table border="0">
 
           <tr>
@@ -71,12 +71,8 @@ table.ntdata a {
 </tr>
 
 <tr>
-<td align='left' colspan='8'>Maximum number of groups to display: <input type='text' name='count' value="{{info.count}}" size='10'>
-</td>
-</tr>
-<tr>
 <td align=left colspan="2"> 
-<button type='submit' value='refine'>Search again</button>
+<button type='submit' value='refine' onclick='resetStart()'>Search again</button>
 </td></tr>
 </table>
 </form>

@@ -4,8 +4,7 @@
 <h2>Refine search </h2>
 
 <form id="re-search" onsubmit="cleanSubmit(this.id)">
-<input type="hidden" name="start" value="{{info.start}}"/>
-<input type="hidden" name="count" value="{{info.count}}"/>
+{% include 'hidden_search_inputs.html' %}
 
 <table>
 <tr>
@@ -80,7 +79,7 @@
 
 <tr>
 
-<td class="button"><button type='submit' value='refine' style='min-width: 110px'>Search again</button></td>
+<td class="button"><button type='submit' value='refine' style='min-width: 110px' onclick='resetStart()'>Search again</button></td>
 
 <td><select name='geom_aut_grp_id' style="width: 110px">
     <option ></option>
