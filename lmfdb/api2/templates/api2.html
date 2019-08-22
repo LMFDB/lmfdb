@@ -1,0 +1,204 @@
+{% extends "homepage.html" %}
+{% block content %}
+<h1 id="overview-of-api2">Overview of API2</h1>
+<p>LMFDB’s existing API was designed to be a very thin HTTP wrapper over the database core of LMFDB. As such, it requires low level knowledge of the structure of the database, provides no guarantees of stability of the interface and no guarantees or information about what is stored in the database. API2 was designed to provide a middleware layer providing some level of stability without enforcing a rigid design paradigm on the LMFDB developer community.</p>
+<p>It works by providing “searcher” objects that describe packaged sets of search operations that are permitted. Each searcher then allows a set of possible query parameters, one or more of which are required to perform a valid search. Human readable descriptions of searchers and search parameters are provided through the API.</p>
+<h2 id="api2-versioning">API2 versioning</h2>
+<p>API2 uses a three part version string major.minor.revision. It is expected that breaking changes would only be introduced on a version change. Current version is 1.0.0</p>
+<h1 id="api2-resources">API2 resources</h1>
+<p>API2 consists of a single resource</p>
+<ul>
+<li><p>the <a href="/api2" class="uri">/api2</a> resource is responsible for describing what searches may be performed through the API, detailing the valid parameters for each search and returning the data from a performed search</p></li>
+</ul>
+<h2 id="api2-requests">API2 requests</h2>
+<p>Since API2 is intended for returning data from the server only all requests should be issued as HTTP(S) GET requests. There are six end points</p>
+<ul>
+<li><p><a href="/api2/description/searchers" class="uri">/api2/description/searchers</a> - Describe the list of possible searchers</p></li>
+<li><p><a class="uri">/api2/description/&lt;searcher&gt;</a> - Describe the list of possible search parameters for a given searcher</p></li>
+<li><p><a class="uri">/api2/inventory/&lt;searcher&gt;</a> - Describe the list of possible fields that can be returned by a searcher</p></li>
+<li><p><a class="uri">/api2/data/&lt;searcher&gt;</a> - Perform a search using a given searcher. Query parameters taken from the searcher description are provided as an ampersand delimited query string to this endpoint. Non searching parameters are available and are all prepended by “_”</p></li>
+<li><p><a class="uri">/api2/pretty/&lt;other_path&gt;</a> - This takes a valid other API path and produces a human readable (just) HTML page from the data contained. The other path should be the part after “api2” in the URL</p></li>
+<li><p><a class="uri">/api2/singleton/&lt;path&gt;</a> - This is intended to provide a URL that allows canonical reference to a single element of the database. The format of the singletons is not standardised and should not in general be used for machine readable access</p></li>
+<li><p><a class="uri">/api2/livepg/&lt;database&gt;</a> - This is intended to replicate the behaviour of the existing API. By specifying a database name and then using a standard search string (as per the /data/&lt;searcher&gt; endpoint) a search is performed on the raw database. This is not intended for normal access, but for debugging and testing purposes only.</p></li>
+</ul>
+<h3 id="api2-singletons">API2 singleton queries</h3>
+<p>Singletons are intended to be references to machine readable versions of single objects in the database and are supposed to be the same as the existing human readable versions of the same data. So for example <a href="/api2/singletons/EllipticCurve/Q/11/a/2" class="uri">/api2/singletons/EllipticCurve/Q/11/a/2</a> will give a machine readable version of the same curve as <a href="/EllipticCurve/Q/11/a/2" class="uri">/EllipticCurve/Q/11/a/2</a>
+<h3 id="api2-search-query-strings">API2 search query strings</h3>
+<p>The description parts of API2 take all of their parameters through their URL. Searches are performed by passing a query string. The main part of an API2 searcher query is name=value keys representing values for possible search parameters obtained from the <code>description</code> endpoint. These have the simple obvious form for equality, for example <a href="/api2/data/elliptic_curves_q?rank=0&amp;conductor=11" class="uri">/api2/data/elliptic_curves_q?rank=0&amp;conductor=11</a> is a search for rank=0, conductor = 11 in the elliptic curves over Q. Searching for conditions other than simple equality are performed by prepending an operator immediately after the = symbol. Currently there are 3 operators</p>
+<ul>
+<li><p>“&gt;” - Test for greater than a value</p></li>
+<li><p>“&lt;” - Test for less than a value</p></li>
+<li><p>“%” - Test if the value specified is in the list of values in the database</p></li>
+</ul>
+<p>For example <a href="/api2/data/elliptic_curves_q?rank=0&amp;conductor=&gt;11" class="uri">/api2/data/elliptic_curves_q?rank=0&amp;conductor=&gt;11</a> is a search for rank=0, conductor &gt; 11 There are also other possible query parameters that are not directly related to searching, but to controlling the data returned. These are</p>
+<ul>
+<li><p>_view_start - Record to start viewing the list of returned fields. Should be given the value returned in the view_next field of the information returned by a search to get the next “page” of the data</p></li>
+<li><p>_max_count - Maximum number of records to return from this search. Will not exceed the maximum number specified on the server but will be respected if lower than that value. For example, set to 1 if you are merely interested in the existence or non-existence of records of the specified type</p></li>
+<li><p>_fields - The fields that should be returned by the search. The valid lists of fields should be inferred from a call to <a class="uri">/api2/inventory/&lt;searcher&gt;</a></p></li>
+<li><p>_exclude - If set = 1, change the operation of the _fields key from being the fields that should be returned for found records to being fields that should be excluded from the return</p></li>
+</ul>
+<h2 id="api2-responses">API2 responses</h2>
+<p>All API2 responses are as JSON documents complying with the ECMA-404 standard. Compliance with RFC 8259 is attempted but not guaranteed. The outer layer of the response is the same for all API2 requests</p>
+<pre language="json" startFrom="1"><code>{&quot;api_version&quot;:&quot;1.0.0&quot;,
+&quot;type&quot;:&quot;API_SEARCHERS&quot;,
+&quot;key&quot;: &quot;GLOBAL&quot;,
+&quot;built_at&quot;: &quot;2010-04-20T20:08:21.634121&quot;,
+&quot;data&quot;: [...]}</code></pre>
+<ul>
+<li><p>api_version - major.minor.revision string value showing version of API2 interface that the response is complying with</p></li>
+<li><p>type - String describing the type of response to be parsed from the “data” key. May be API_SEARCHERS - Data should be parsed as a list of searcher objects API_DESCRIPTIONS - Data should be parsed as description of a searcher object API_INVENTORY - Data should be parsed as a description of the fields that will be returned by a searcher API_RECORDS - Data should be parsed as a list of records requested by a search API_ERROR - Data should be parsed as an error object. Request failed</p></li>
+<li><p>built_at - ISO8601 UTC date time string of when request was processed</p></li>
+<li><p>key - string identifying operation, may be GLOBAL</p></li>
+<li><p>data - Valid ECMA-404 JSON document containing the detailed response</p></li>
+</ul>
+<h3 id="api_searchers">API_SEARCHERS</h3>
+<p>If the <code>type</code> field of the API2 response is “<code>API_SEARCHERS</code>” then the <code>key</code> field will be <code>GLOBAL</code>. The <code>data</code> field will consist of a JSON object the keys of which correspond to unique named searchers. The names are used when querying or using the searcher. Each value for these keys has the following format</p>
+<pre language="json" startFrom="1"><code>{&quot;elliptic_curves_q&quot;:{
+    &quot;human_name&quot;:&quot;Elliptic curves over q&quot;,
+    &quot;desc&quot;:&quot;Search elliptic curves defined over the rationals&quot;}
+}</code></pre>
+<ul>
+<li><p>human_name - Human readable name that should be presented to a user when selecting search options</p></li>
+<li><p>desc - Human readable description of the purpose of the searcher. Should be presented to a user if the search source has a way of displaying extended text descriptions</p></li>
+</ul>
+<h3 id="api_descriptions">API_DESCRIPTIONS</h3>
+<p>If the <code>type</code> field of the API2 response is “<code>API_DESCRIPTIONS</code>” then the <code>key</code> field will be the name of the searcher requested. The <code>data</code> field will consist of a JSON object with keys corresponding to the names of all available query fields for this searcher. A single key (representing a single query field) has the following structure.</p>
+<pre language="json" startFrom="1"><code>{    &quot;cm&quot;: {
+      &quot;description&quot;: &quot;CM code. 0 (for no CM), or a negative discriminant&quot;, 
+      &quot;example&quot;: &quot;-163&quot;, 
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;cname&quot;:&quot;CMCODE&quot;,
+      &quot;codec&quot;:&quot;CODEC_TO_COME&quot;
+    }
+}</code></pre>
+<p>It is important to note that a searcher is valid if it contains any subset of these fields, or is also valid if it is null.</p>
+<ul>
+<li><p>description - Human readable description that should be presented to a user from clients that have the ability to display long form text when a search is being selected</p></li>
+<li><p>example - An example of the record that would be a valid search term. This is especially important if there is no <code>codec</code> field because the user will have to provide a valid code manually</p></li>
+<li><p>type - This is a human readable representation of the type of the data that would be valid as a search. It may be auto generated or written by a human, so should not be parsed for type information</p></li>
+<li><p>canonical_name - The canonical name of the item. This name should be unique and unchanging. If a client wants a given <span><em>mathematical</em></span> property then it should search for this property by canonical name and then use the name of the query field having the correct canonical name to actually search for the data. This allows substantial changes to the underlying representation of the data while retaining API layer compatability</p></li>
+<li><p>codec - The codec information encoding the type of the data that is expected for this field</p></li>
+</ul>
+<h3 id="api_inventory">API_INVENTORY</h3>
+<p>If the <code>type</code> field of the API2 response is “<code>API_INVENTORY</code>” then the <code>key</code> field will be the name of the searcher requested. The <code>data</code> field will consist of a JSON object with keys corresponding to the names of all available return fields for this searcher. A single key (representing a single query field) has the following structure.</p>
+<pre language="json" startFrom="1"><code>{    &quot;cm&quot;: {
+      &quot;description&quot;: &quot;CM code. 0 (for no CM), or a negative discriminant&quot;, 
+      &quot;example&quot;: &quot;-163&quot;, 
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;cname&quot;:&quot;CMCODE&quot;,
+      &quot;codec&quot;:&quot;CODEC_TO_COME&quot;
+    }
+}</code></pre>
+<p>It is important to note that a return field is valid if it contains any subset of these fields, or is also valid if it is null.</p>
+<ul>
+<li><p>description - Human readable description that should be presented to a user from clients that have the ability to display long form text if requested by a user</p></li>
+<li><p>example - An example of the record that will be returned. This should be shown to a user as an example of what the field will return. This is especially important if there is no <code>codec</code> field because the user will have to parse the result manually</p></li>
+<li><p>type - This is a human readable representation of the type of the data that will be returned by the search. It may be auto generated or written by a human, so should not be parsed for type information</p></li>
+<li><p>canonical_name - The canonical name of the item. This name should be unique and unchanging. If a client wants a given <span><em>mathematical</em></span> property then it should search for this property by canonical name and then use the name of the query field having the correct canonical name to actually search for the data. This allows substantial changes to the underlying representation of the data while retaining API layer compatability</p></li>
+<li><p>codec - The codec information encoding the type of the data that is expected for this field</p></li>
+</ul>
+<p>You will notice that the returns of API_DESCRIPTIONS and API_INVENTORY are often very similar, but this is not guaranteed. In the simple case the list of items that you can search on and fields that you will be returned will be the same but in general both must be parsed by a client.</p>
+<h3 id="api_records">API_RECORDS</h3>
+<p>If the <code>type</code> field of the API2 response is “<code>API_RECORDS</code>” then the <code>key</code> field will be a string containing the “data/” followed by the name of the searcher that generated the records. The <code>data</code> field will be a JSON object containing information about the number of records found in total, the number returned in this request and how to request the next tranche of records. It also contains a list of JSON objects returning the results from the database. The response has the following format</p>
+<pre language="json" startFrom="1"><code>{&quot;record_count&quot;:6000,
+&quot;view_start&quot;:0,
+&quot;view_count&quot;:100,
+&quot;view_next&quot;:99,
+records:{...}
+}</code></pre>
+<ul>
+<li><p>record_count - Total number of records returned by the search</p></li>
+<li><p>view_start - First record returned in this “view” of the data. First element is zero</p></li>
+<li><p>view_count - Number of records in this “view” of the data.</p></li>
+<li><p>view_next - Offset that should be issued next request to move the view to the next set of records. Will be negative if you have reached the end of the available data</p></li>
+<li><p>records - List of JSON objects containing data from the database. This is guaranteed to be a list of valid JSON object, but the data contained is not guaranteed in any way</p></li>
+</ul>
+<h3 id="interpreting-the-records">Interpreting the records</h3>
+<p>The fields returned by an API_RECORDS object have no general form, but the <a class="uri">/api2/inventory/<searcher></a> result allows a client to match them to a canonical name and description. For speed, this remapping is not handled by the API but must be handled by the client. See the section on accessing the inventory.</p>
+<h3 id="api_error">API_ERROR</h3>
+<p>If the <code>type</code> field of the API2 response is “<code>API_ERROR</code>” then the <code>key</code> field will be a string containing the string “GLOBAL”. The <code>data</code> field will be a string containing additional information about the error. A blank string is valid, but should not normally be returned. Your request has failed.</p>
+<h1 id="an-example-api2-client-operation">An example API2 client operation</h1>
+<p>This is an example of how a valid client would interact with API2</p>
+<h2 id="find-searchers">Find searchers</h2>
+<p>Client would connect to <a href="/api2/description/searchers" class="uri">/api2/description/searchers</a>. Result is</p>
+<pre language="json" startFrom="1"><code>[
+{&quot;api_version&quot;:&quot;1.0.0&quot;,
+&quot;type&quot;:&quot;API_SEARCHERS&quot;,
+&quot;key&quot;: &quot;GLOBAL&quot;,
+&quot;built_at&quot;: &quot;2010-04-20T20:08:21.634121&quot;,
+&quot;data&quot;: [
+    {&quot;&quot;elliptic_curves_q&quot;:{
+    &quot;human_name&quot;:&quot;Elliptic curves over q&quot;,
+    &quot;desc&quot;:&quot;Search elliptic curves defined over the rationals&quot;}
+    },
+    {&quot;classical_modular_forms&quot;:{
+    &quot;human_name&quot;:&quot;Classical Modular Forms&quot;,
+    &quot;desc&quot;:&quot;Search classical modular forms&quot;}
+    }]</code></pre>
+<p>(In a fully working implementation there would be many more than this, but a client should cope with what is available). The client decides that it wishes to search in <code>elliptic_curve_q</code>.</p>
+<h2 id="query-searcher">Query searcher</h2>
+<p>Client connects to <a href="/api2/description/elliptic_curves_q" class="uri">/api2/description/elliptic_curves_q</a>. Result is</p>
+<pre language="json" startFrom="1"><code>{&quot;api_version&quot;:&quot;1.0.0&quot;,
+&quot;type&quot;:&quot;API_DESCRIPTIONS&quot;,
+&quot;key&quot;: &quot;description/elliptic_curves_q&quot;,
+&quot;built_at&quot;: &quot;2010-04-20T20:08:21.634121&quot;,
+&quot;data&quot;: [
+    ...
+    ...
+    &quot;label&quot;:&quot;{
+          &quot;description&quot;: &quot;Cremona label&quot;, 
+          &quot;example&quot;: &quot;100002a1&quot;, 
+          &quot;type&quot;: &quot;string&quot;,
+          &quot;cname&quot;:&quot;CREMONA_LABEL&quot;
+      },
+      &quot;lmfdb_label&quot;: {
+          &quot;description&quot;: &quot;LMFDB label&quot;, 
+          &quot;example&quot;: &quot;100.a1&quot;, 
+          &quot;type&quot;: &quot;string&quot;
+          &quot;cname&quot;:&quot;LMFDB_LABEL&quot;
+        },
+        ...
+        ...
+    ]
+}</code></pre>
+<p>The client parses this response and knows that it seeks to search on the canonical <code>CREMONA_LABEL</code> so it checks every returned search query term to ensure that a searchable field has a matching canonical name. It finds that a field does so and may continue. If searching on multiple fields this check should be performed on each field. Since the server will allow searching on canonical name (which should be unchanging by construction) it is acceptable for a client to skip this step and simply seek to search on a known canonical name but this is not recommended.</p>
+<h2 id="optional-get-inventory-information">(Optional) Get inventory information</h2>
+<p>If a client is purely recovering data for a human to manage then this step can be skipped, but a typical client will get inventory information about the data returned by a search on the selected searcher.</p>
+<p>Client connects to <a href="/api2/inventory/elliptic_curves_q" class="uri">/api2/inventory/elliptic_curves_q</a>. Result is</p>
+<pre language="json" startFrom="1"><code>{&quot;api_version&quot;:&quot;1.0.0&quot;,
+&quot;type&quot;:&quot;API_INVENTORY&quot;,
+&quot;key&quot;: &quot;inventory/elliptic_curves_q&quot;,
+&quot;built_at&quot;: &quot;2010-04-20T20:08:21.634121&quot;,
+&quot;data&quot;: [
+    &quot;2adic_index&quot;: {
+      &quot;description&quot;: &quot;index in GL(2,Z2) of the 2-adicrepresentation (or 0 for CM curves)&quot;, 
+      &quot;example&quot;: &quot;1&quot;, 
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;cname&quot;:&quot;2ADIC_INDEX&quot;
+    }, 
+    &quot;2adic_label&quot;: {
+      &quot;description&quot;: &quot;Rouse label of the associated modular curve (null for CM curves). Based on Rouse, Zureik-Brown classification&quot;, 
+      &quot;example&quot;: &quot;X1&quot;, 
+      &quot;type&quot;: &quot;string&quot;,
+      &quot;cname&quot;:&quot;2ADIC_LABEL&quot;
+    }, 
+    ...
+    ...
+    ]
+}</code></pre>
+<p>client is interested in returning the key with canonical name <code>2ADIC_INDEX</code>. It can express this as <code>_fields=&quot;2ADIC_INDEX&quot;</code> .</p>
+<h2 id="get-results">Get results</h2>
+<p>Knowing what it wants to search on and what it wants returned the client connects to <a href="/api2/data/elliptic_curve_q?label=&quot;100a3&quot;&amp;_fields=&quot;2adic_index&quot;" class="uri">/api2/data/elliptical_curve_q?label=&quot;100a3&quot;&amp;_fields=&quot;2ADIC_INDEX&quot;</a>. Result is</p>
+<pre language="json" startFrom="1"><code>{&quot;api_version&quot;:&quot;1.0.0&quot;,
+&quot;type&quot;:&quot;API_INVENTORY&quot;,
+&quot;key&quot;: &quot;inventory/elliptic_curves_q&quot;,
+&quot;built_at&quot;: &quot;2010-04-20T20:08:21.634121&quot;,
+&quot;data&quot;: [
+  &quot;record_count&quot;:1,
+  &quot;view_start&quot;:0,
+  &quot;view_count&quot;:1,
+  &quot;view_next&quot;:-1,
+  records:[{2adic_index:12}]]
+}</code></pre>
+<p>It is important to note that returned database keys are not transformed into canonical name form. The client must use the server supplied mappings from canonical name to database name </p>
+{% endblock %}

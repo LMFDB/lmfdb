@@ -789,7 +789,7 @@ class PostgresBase(object):
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
         self._execute(creator)
 
-    def _create_table_from_header(self, filename, name, addid=True):
+    def _create_table_from_header(self, filename, name, sep, addid=True):
         """
         Utility function: creates a table with the schema specified in the header of the file.
         Returns column names found in the header
@@ -800,7 +800,7 @@ class PostgresBase(object):
                 error_msg += "Run db.%s.cleanup_from_reload() if you want to delete it and proceed." % (name[:-4])
             raise ValueError(error_msg)
         with open(filename, "r") as F:
-            columns = self._read_header_lines(F)
+            columns = self._read_header_lines(F, sep)
         col_list = [elt[0] for elt in columns]
         if addid:
             if ('id','bigint') not in columns:
@@ -1746,6 +1746,8 @@ class PostgresTable(PostgresBase):
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
         - ``split_ors`` -- a boolean.  If true, executes one query per clause in the `$or` list, combining the results.  Only used when a limit is provided.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
+        - ``force_exact_count`` -- a boolean. If True exact count will always be given
+        - ``count_only`` -- a boolean. If True then the exact count is calculated and the info object is populated. The function returns None
 
         WARNING:
 
@@ -3061,6 +3063,7 @@ class PostgresTable(PostgresBase):
             qstr, values = self._parse_dict(query)
             selecter = SQL("SELECT {0} FROM {1} WHERE {2} LIMIT 2").format(Identifier("id"), Identifier(self.search_table), qstr)
             cur = self._execute(selecter, values)
+            val = {"operation":None}
             if cur.rowcount > 1:
                 raise ValueError("Query %s does not specify a unique row"%(query))
             elif cur.rowcount == 1: # update
@@ -3081,7 +3084,8 @@ class PostgresTable(PostgresBase):
                                              SQL("id = %s"))
                     dvalues = self._parse_values(dat)
                     dvalues.append(row_id)
-                    self._execute(updater, dvalues)
+                    val["operation"] = "UPDATE"
+                    val["record"] = self._execute(updater, dvalues)
                 if not self._out_of_order and any(key in self._sort_keys for key in data):
                     self._break_order()
 
@@ -3406,7 +3410,8 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 if adjust_schema and header:
                     # read the header and create the tmp_table accordingly
-                    cols = self._create_table_from_header(filename, tmp_table)
+                    sep = kwds.get("sep", u"\t")
+                    cols = self._create_table_from_header(filename, tmp_table, sep)
                 else:
                     self._clone(table, tmp_table)
                 addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds)
