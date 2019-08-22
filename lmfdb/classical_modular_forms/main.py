@@ -325,7 +325,7 @@ def parse_prec(info):
 def render_newform_webpage(label):
     try:
         newform = WebNewform.by_label(label)
-    except (KeyError,ValueError) as err:
+    except (KeyError, ValueError) as err:
         return abort(404, err.args)
     info = to_dict(request.args)
     info['format'] = info.get('format', 'embed')

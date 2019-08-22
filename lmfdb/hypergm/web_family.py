@@ -1,51 +1,32 @@
 
 import re
-from flask import render_template, request, url_for, redirect, abort
-from sage.all import ZZ, QQ, latex, matrix, valuation, PolynomialRing, gcd
+from flask import url_for
+from collections import defaultdict
+from sage.all import ZZ, QQ
+from sage.all import (cached_method, divisors, gcd, latex, lazy_attribute,
+                      matrix, valuation)
 
 from lmfdb import db
 from lmfdb.utils import (
     encode_plot, flash_error, list_to_factored_poly_otherorder,
-    clean_input, parse_ints, parse_bracketed_posints, parse_rational,
-    parse_restricted, search_wrap, web_latex)
-from plot import circle_image, piecewise_constant_image, piecewise_linear_image
+    web_latex)
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
-from lmfdb import db
+from plot import circle_image, piecewise_constant_image, piecewise_linear_image
 
+HMF_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
+
+def HMF_valid_label(label):
+    return bool(HMF_LABEL_RE.match(label))
 
 GAP_ID_RE = re.compile(r'^\[\d+,\d+\]$')
 
-def dogapthing(m1):
-    mnew = str(m1[2])
-    mnew = mnew.replace(' ', '')
-    if GAP_ID_RE.match(mnew):
-        mnew = mnew[1:-1]
-        two = mnew.split(',')
-        two = [int(j) for j in two]
-        try:
-            m1[2] = small_group_display_knowl(two[0],two[1])
-        except TypeError:
-            m1[2] = 'Gap[%d,%d]' % (two[0],two[1])
-    else:
-        # Fix multiple backslashes
-        m1[2] = re.sub(r'\\+', r'\\', m1[2])
-        m1[2] = '$%s$'% m1[2]
-    return m1
-
-def getgroup(m1, ell):
-    pind = {2: 0, 3: 1, 5: 2, 7: 3, 11: 4, 13: 5}
-    if not m1[3][2]:
-        return [m1[2], m1[0]]
-    myA = m1[3][0]
-    myB = m1[3][1]
-    if not myA and not myB:  # myA = myB = []
-        return [small_group_display_knowl(1, 1), 1]
-    mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
-    if mono is None:
-        return ['??', 1]
-    newthing = mono[pind[ell]]
-    newthing = dogapthing(newthing[1])
-    return [newthing[2], newthing[0]]
+# Convert cyclotomic indices to rational numbers
+def cyc_to_QZ(A):
+    alpha = []
+    for Ai in A:
+        alpha.extend([QQ(k)/Ai for k in range(1,Ai+1) if gcd(k,Ai) == 1])
+    alpha.sort()
+    return alpha
 
 class WebHyperGeometricFamily(object):
     def __init__(self, data):
@@ -55,11 +36,21 @@ class WebHyperGeometricFamily(object):
 
         self.__dict__.update(data)
 
-        self.alpha = cyc_to_QZ(A)
-        self.beta = cyc_to_QZ(B)
+        self.alpha = cyc_to_QZ(self.A)
+        self.beta = cyc_to_QZ(self.B)
         self.hodge = data['famhodge']
         self.bezout = matrix(self.bezout)
 
+    @staticmethod
+    def by_label(label):
+        if not HMF_valid_label(label):
+            raise ValueError("Hypergeometric Motive Family label %s." % label)
+
+        data = db.hgm_families.lookup(label)
+        if data is None:
+            raise ValueError("Hypergeometric Motive Family label %s not found."
+                             % label)
+        return WebHyperGeometricFamily(data)
 
     @lazy_attribute
     def alpha_latex(self):
@@ -70,15 +61,47 @@ class WebHyperGeometricFamily(object):
         return web_latex(self.beta)
 
     @lazy_attribute
+    def gammas(self):
+        def subdict(d, v):
+            if d[v]>1:
+                d[v] -= 1
+            else:
+                del d[v]
+
+        a = defaultdict(int)
+        b = defaultdict(int)
+        for x in self.A:
+            a[x] += 1
+        for x in self.B:
+            b[x] += 1
+        gamma = [[],[]]
+        ab = [a, b]
+        while a or b:
+            m = max(a.keys() + b.keys())
+            wh = 0 if m in a else 1
+            gamma[wh].append(m)
+            subdict(ab[wh], m)
+            for d in divisors(m)[:-1]:
+                if d in ab[wh]:
+                    subdict(ab[wh], d)
+                else:
+                    ab[1-wh][d] += 1
+        gamma[1] = [-1*z for z in gamma[1]]
+        gamma = gamma[1] + gamma[0]
+        gamma.sort()
+        return gamma
+
+
+    @lazy_attribute
     def motivic_det_char(self):
-        exp = -QQ(self.weight * sel.data)/2
+        exp = -QQ(self.weight * self.degree)/2
         first = r'\Q({})'.format(exp)
 
         foo = str(self.det[0]) if self.det[0] != 1 else ""
-        foo += selt.det[1]
+        foo += self.det[1]
         if foo == "":
             foo = "1"
-        second = r'\Q(\sqrt{ {} })'.format(foo)
+        second = r'\Q(\sqrt{{ {} }})'.format(foo)
 
         return r'{} \otimes {}'.format(first, second)
 
@@ -114,10 +137,10 @@ class WebHyperGeometricFamily(object):
 
     @lazy_attribute
     def ppart(self):
-        return [[2, [self.A2, self.B2, self.C2]],
-                [3, [self.A3, self.B3, self.C3]],
-                [5, [self.A5, self.B5, self.C5]],
-                [7, [self.A7, self.B7, self.C7]]]
+        return [[2, self.A2, self.B2, self.C2],
+                [3, self.A3, self.B3, self.C3],
+                [5, self.A5, self.B5, self.C5],
+                [7, self.A7, self.B7, self.C7]]
 
     @cached_method
     def plot(self, typ="circle"):
@@ -128,7 +151,13 @@ class WebHyperGeometricFamily(object):
             G = piecewise_linear_image(self.A, self.B)
         else:
             G = piecewise_constant_image(self.A, self.B)
-        return encode_plot(G.plot())
+
+        return encode_plot(
+                    G.plot(),
+                    pad=0,
+                    pad_inches=0,
+                    bbox_inches='tight',
+                    remove_axes=True)
 
     @lazy_attribute
     def plot_link(self):
@@ -138,7 +167,7 @@ class WebHyperGeometricFamily(object):
     def properties(self):
         return [
                 ('Label', self.label),
-                (None, plot_link),
+                (None, self.plot_link),
                 ('A', '\({}\)'.format(self.A)),
                 ('B', '\({}\)'.format(self.B)),
                 ('Degree', '\({}\)'.format(self.degree)),
@@ -180,27 +209,39 @@ class WebHyperGeometricFamily(object):
             newthing = mono[pind[ell]]
             newthing = dogapthing(newthing[1])
             return [newthing[2], newthing[0]]
+        def splitint(a, p):
+            if a == 1:
+                return ' '
+            j = valuation(a, p)
+            if j == 0:
+                return str(a)
+            a = a/p**j
+            if a == 1:
+                return latex(ZZ(p**j).factor())
+            return str(a)+r'\cdot'+latex(ZZ(p**j).factor())
 
-        # this will have a new data format in the future
-        converted = [[ell,
-            dogapthing(m1),
-            getgroup(m1, ell),
-            latex(ZZ(m1[0]).factor())] for ell, m1 in mono if m1 != 0]
-        return [[m[0], m[1], m[2][0],
-                splitint(m[1][0]/m[2][1], m[0]), m[3]] for m in converted]
+        # # this will have a new data format in the future
+        # converted = [[ell,
+        #     dogapthing(m1),
+        #     getgroup(m1, ell),
+        #     latex(ZZ(m1[0]).factor())] for ell, m1 in self.mono if m1 != 0]
+        # return [[m[0], m[1], m[2][0],
+        #         splitint(m[1][0]/m[2][1], m[0]), m[3]] for m in converted]
+
+        mono = [m for m in self.mono if m[1] != 0]
+        mono = [[m[0], dogapthing(m[1]),
+          getgroup(m[1],m[0]),
+          latex(ZZ(m[1][0]).factor())] for m in mono]
+        print mono
+        print [(m[1][0], m[2][1], splitint(ZZ(m[1][0])/m[2][1], m[0])) for m in mono]
+        mono = [[m[0], m[1], m[2][0], splitint(ZZ(m[1][0])/m[2][1], m[0]), m[3]] for m in mono]
+        return mono
 
     @lazy_attribute
     def friends(self):
         return [('Motives in the family',
                  url_for('hypergm.index') +
                  "?A={}&B={}".format(str(self.A), str(self.B)))]
-
-    @lazy_attribute
-    def bread(self):
-        AB = 'A = '+str(A)+', B = '+str(B)
-        return get_bread(
-                [('family A = {}, B = {}'.format(str(self.A), str(self.B)),
-                   '')])
 
 
     @lazy_attribute
@@ -211,6 +252,16 @@ class WebHyperGeometricFamily(object):
                                           sort=[])])
 
 
+    @lazy_attribute
+    def title(self):
+        return 'Hypergeometric Motive Family: {}'.format(self.label)
+
+    @lazy_attribute
+    def bread(self):
+        return [("Motives", url_for("motive.index")),
+                ("Hypergeometric", url_for("motive.index2")),
+                ("$\Q$", url_for(".index")),
+                ('family A = {}, B = {}'.format(str(self.A), str(self.B)), '')]
 
 
 

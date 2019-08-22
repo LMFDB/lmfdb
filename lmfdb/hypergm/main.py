@@ -17,6 +17,7 @@ from base64 import b64encode
 from urllib import quote
 from lmfdb.galois_groups.transitive_group import small_group_display_knowl
 from lmfdb.hypergm import hypergm_page
+from web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
 HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
@@ -100,7 +101,6 @@ def incdict(d, v):
         d[v] += 1
     else:
         d[v] = 1
-
 def subdict(d, v):
     if d[v]>1:
         d[v] -= 1
@@ -481,92 +481,20 @@ def render_hgm_webpage(label):
     return render_template("hgm-show-motive.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
 
 def render_hgm_family_webpage(label):
-    data = None
-    info = {}
-    data = db.hgm_families.lookup(label)
-    if data is None:
-        abort(404, "Hypergeometric motive family " + label + " was not found in the database.")
-    title = 'Hypergeometric Motive Family:' + label
-    A = data['A']
-    B = data['B']
-    alpha = cyc_to_QZ(A)
-    beta = cyc_to_QZ(B)
-    gammas = ab2gammas(A,B)
-    hodge = data['famhodge']
-    mydet = data['det']
-    detexp = QQ(data['weight']*data['degree'])
-    detexp = -detexp/2
-    mydet = r'\Q(%s)\otimes\Q(\sqrt{'%str(detexp)
-    if int(data['det'][0]) != 1:
-        mydet += str(data['det'][0])
-    if len(data['det'][1])>0:
-        mydet += data['det'][1]
-    if int(data['det'][0]) == 1 and len(data['det'][1])==0:
-        mydet += '1'
-    mydet += '})'
-    bezoutmat = matrix(data['bezout'])
-    bezoutdet = bezoutmat.det()
-    bezoutmat = latex(bezoutmat)
-    snf = data['snf']
-    snf = list2Cnstring(snf)
-    typee = 'Orthogonal'
-    if (data['weight'] % 2) == 1 and (data['degree'] % 2) == 0:
-        typee = 'Symplectic'
-    ppart = [[2, [data['A2'],data['B2'],data['C2']]],
-        [3, [data['A3'],data['B3'],data['C3']]],
-        [5, [data['A5'],data['B5'],data['C5']]],
-        [7, [data['A7'],data['B7'],data['C7']]]]
-    plot = hgm_family_circle_plot_data("A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))
-    plot = "data:image/png;base64," + quote(b64encode(plot))
-    plot_link = '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(plot)
-    prop2 = [
-        ('Label', '%s' % data['label']),
-        (None, plot_link),
-        ('A', '\(%s\)' % A),
-        ('B', '\(%s\)' % B),
-        ('Degree', '\(%s\)' % data['degree']),
-        ('Weight',  '\(%s\)' % data['weight']),
-        ('Type', '%s' % typee)
-    ]
-    mono = [m for m in data['mono'] if m[1] != 0]
-    mono = [[m[0], dogapthing(m[1]),
-      getgroup(m[1],m[0]),
-      latex(ZZ(m[1][0]).factor())] for m in mono]
-    mono = [[m[0], m[1], m[2][0], splitint(m[1][0]/m[2][1],m[0]), m[3]] for m in mono]
-    info.update({
-                'A': A,
-                'B': B,
-                'alpha': web_latex(alpha),
-                'beta': web_latex(beta),
-                'gammas': gammas,
-                'degree': data['degree'],
-                'weight': data['weight'],
-                'hodge': hodge,
-                'det': mydet,
-                'snf': snf,
-                'bezoutmat': bezoutmat,
-                'bezoutdet': bezoutdet,
-                'mono': mono,
-                'imprim': data['imprim'],
-                'ppart': ppart,
-                'type': typee,
-                'junk': small_group_display_knowl(18,2),
-                'showlist': showlist
-                })
-    friends = [('Motives in the family', url_for('hypergm.index')+"?A=%s&B=%s" % (str(A), str(B)))]
-#    if unramfriend != '':
-#        friends.append(('Unramified subfield', unramfriend))
-#    if rffriend != '':
-#        friends.append(('Discriminant root field', rffriend))
+    try:
+        family = WebHyperGeometricFamily.by_label(label)
+    except (KeyError, ValueError) as err:
+        return abort(404, err.args)
 
-    AB = 'A = '+str(A)+', B = '+str(B)
-    bread = get_bread([('family '+str(AB), ' ')])
-
-    info.update({"plotcircle":  url_for(".hgm_family_circle_image", AB  =  "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-    info.update({"plotlinear": url_for(".hgm_family_linear_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-    info.update({"plotconstant": url_for(".hgm_family_constant_image", AB  = "A"+".".join(map(str,A))+"_B"+".".join(map(str,B)))})
-
-    return render_template("hgm-show-family.html", credit=HGM_credit, title=title, bread=bread, info=info, properties2=prop2, friends=friends, learnmore=learnmore_list())
+    return render_template("hgm_family.html",
+                           family=family,
+                           properties2=family.properties,
+                           credit=HGM_credit,
+                           bread=family.bread,
+                           title=family.title,
+                           friends=family.friends,
+                           KNOWL_ID="hgm.%s" % label,
+                           learnmore=learnmore_list())
 
 
 def show_slopes(sl):
