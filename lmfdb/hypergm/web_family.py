@@ -232,8 +232,6 @@ class WebHyperGeometricFamily(object):
         mono = [[m[0], dogapthing(m[1]),
           getgroup(m[1],m[0]),
           latex(ZZ(m[1][0]).factor())] for m in mono]
-        print mono
-        print [(m[1][0], m[2][1], splitint(ZZ(m[1][0])/m[2][1], m[0])) for m in mono]
         mono = [[m[0], m[1], m[2][0], splitint(ZZ(m[1][0])/m[2][1], m[0]), m[3]] for m in mono]
         return mono
 
