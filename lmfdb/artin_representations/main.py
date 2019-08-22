@@ -10,13 +10,19 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.utils import (
     parse_primes, parse_restricted, parse_element_of, parse_galgrp,
-    parse_ints, parse_container, clean_input, flash_error,
+    parse_ints, parse_container, parse_bool, clean_input, flash_error,
     search_wrap)
 from lmfdb.galois_groups.transitive_group import group_display_knowl
 from lmfdb.artin_representations import artin_representations_page
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 
 LABEL_RE = re.compile(r'^\d+\.\d+(e\d+)?(_\d+(e\d+)?)*\.\d+(t\d+)?\.\d+c\d+$')
+
+
+# Utility for permutations
+def cycle_string(lis):
+    from sage.combinat.permutation import Permutation
+    return Permutation(lis).cycle_string()
 
 def get_bread(breads=[]):
     bc = [("Artin Representations", url_for(".index"))]
@@ -100,6 +106,7 @@ def artin_representation_search(info, query):
     parse_galgrp(info,query,"group",name="Group",qfield=("Galn","Galt"))
     parse_ints(info,query,'dimension',qfield='Dim')
     parse_ints(info,query,'conductor',qfield='Conductor')
+    parse_bool(info,query,'Is_Even')
 
 def search_input_error(info, bread):
     return render_template("artin-representation-search.html", req=info, title='Artin Representation Search Error', bread=bread)
@@ -193,7 +200,7 @@ def render_artin_representation_webpage(label):
                                           label=the_rep.label())))
     info={}
 
-    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
+    return render_template("artin-representation-show.html", credit=tim_credit, support=support_credit, title=title, bread=bread, friends=friends, object=the_rep, cycle_string=cycle_string, properties2=properties, extra_data=extra_data, info=info, learnmore=learnmore_list())
 
 @artin_representations_page.route("/random")
 def random_representation():

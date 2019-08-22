@@ -27,6 +27,7 @@ You can search using the methods ``search``, ``lucky`` and ``lookup``::
 
 import datetime, inspect, logging, os, random, re, shutil, signal, subprocess, tempfile, time, traceback
 from collections import defaultdict, Counter
+from itertools import islice
 from glob import glob
 import csv
 import sys
@@ -40,16 +41,17 @@ from sage.all import cartesian_product_iterator, binomial
 from lmfdb.backend.encoding import setup_connection, Json, copy_dumps, numeric_converter
 from lmfdb.utils import KeyedDefaultDict, make_tuple, reraise
 from lmfdb.logger import make_logger
-from lmfdb.typed_data.artin_types import Dokchitser_ArtinRepresentation, Dokchitser_NumberFieldGaloisGroup
 
 # This list is used when creating new tables
-types_whitelist = [
+number_types = [
     "int2", "smallint", "smallserial", "serial2",
     "int4", "int", "integer", "serial", "serial4",
     "int8", "bigint", "bigserial", "serial8",
     "numeric", "decimal",
     "float4", "real",
     "float8", "double precision",
+]
+types_whitelist = number_types + [
     "boolean", "bool",
     "text", "char", "character", "character varying", "varchar",
     "json", "jsonb", "xml",
@@ -594,23 +596,28 @@ class PostgresBase(object):
 
     def _column_types(self, table_name, data_types=None):
         """
-        Returns the column list, column types (as a dict), and has_id for a given table_name
+        Returns the column list, column types (as a dict), and has_id for a given table_name or list of table names
         """
         has_id = False
         col_list = []
         col_type = {}
-        if data_types is None or table_name not in data_types:
-            # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
-            cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [table_name])
-        else:
-            cur = data_types[table_name]
-        for rec in cur:
-            col = rec[0]
-            col_type[col] = rec[1]
-            if col != 'id':
-                col_list.append(col)
+        if isinstance(table_name, basestring):
+            table_name = [table_name]
+        for tname in table_name:
+            if data_types is None or tname not in data_types:
+                # in case of an array data type, data_type only gives 'ARRAY', while 'udt_name::regtype' gives us 'base_type[]'
+                cur = self._execute(SQL("SELECT column_name, udt_name::regtype FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position"), [tname])
             else:
-                has_id = True
+                cur = data_types[tname]
+            for rec in cur:
+                col = rec[0]
+                if col in col_type and col_type[col] != rec[1]:
+                    raise ValueError("Type mismatch on %s: %s vs %s" % (col, col_type[col], rec[1]))
+                col_type[col] = rec[1]
+                if col != 'id':
+                    col_list.append(col)
+                else:
+                    has_id = True
         return col_list, col_type, has_id
 
     def _copy_to_select(self, select, filename, header="", sep=None, silent=False):
@@ -634,7 +641,7 @@ class PostgresBase(object):
                 if not silent:
                     print "Created file %s" % filename
 
-    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t"):
+    def _check_header_lines(self, F, table_name, columns_set, sep=u"\t", prohibit_missing=True):
         """
         Reads the header lines from a file (row of column names, row of column
         types, blank line), checking if these names match the columns set and
@@ -644,9 +651,10 @@ class PostgresBase(object):
         INPUT:
 
         - ``F`` -- an open file handle, at the beginning of the file.
-        - ``table_name`` -- the table to compare types against
+        - ``table_name`` -- the table to compare types against (or a list of tables)
         - ``columns_set`` -- a set of the columns expected in the table.
         - ``sep`` -- a string giving the column separator.
+        - ``prohibit_missing`` -- raise an error if not all columns present.
 
         OUTPUT:
 
@@ -675,7 +683,7 @@ class PostgresBase(object):
         wrong_type = [(name, typ) for name, typ in header_cols
                 if name in columns_set and col_type[name] != typ]
 
-        if missing or extra or wrong_type:
+        if (missing and prohibit_missing) or extra or wrong_type:
             err = ""
             if missing or extra:
                 err += "Invalid header: "
@@ -776,7 +784,7 @@ class PostgresBase(object):
         creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(name), table_col)
         self._execute(creator)
 
-    def _create_table_from_header(self, filename, name, addid=True):
+    def _create_table_from_header(self, filename, name, sep, addid=True):
         """
         Utility function: creates a table with the schema specified in the header of the file.
         Returns column names found in the header
@@ -787,7 +795,7 @@ class PostgresBase(object):
                 error_msg += "Run db.%s.cleanup_from_reload() if you want to delete it and proceed." % (name[:-4])
             raise ValueError(error_msg)
         with open(filename, "r") as F:
-            columns = self._read_header_lines(F)
+            columns = self._read_header_lines(F, sep)
         col_list = [elt[0] for elt in columns]
         if addid:
             if ('id','bigint') not in columns:
@@ -1203,7 +1211,7 @@ class PostgresTable(PostgresBase):
                     search_cols.append(col)
                 projection.pop(col, None)
             for col in self._extra_cols:
-                if (col in projvals) == including:
+                if (col in projection) == including:
                     extra_cols.append(col)
                 projection.pop(col, None)
             if projection: # there were more columns requested
@@ -1226,7 +1234,21 @@ class PostgresTable(PostgresBase):
             search_cols.insert(0, "id")
         return tuple(search_cols), tuple(extra_cols)
 
-    def _parse_special(self, key, value, col, force_json):
+    def _create_typecast(self, key, value, col, col_type):
+        """
+        This method is used to add typecasts to queries when necessary.
+        It is called from `_parse_special` and `_parse_dict`; see the documentation
+        of those functions for inputs.
+        """
+        if col_type.endswith('[]') and key in ['$eq', '$ne', '$contains', '$containedin']:
+            if isinstance(col, Identifier):
+                return '::' + col_type
+            else:
+                # Selected a path
+                return '::' + col_type[:-2]
+        return ''
+
+    def _parse_special(self, key, value, col, col_type):
         """
         Implements more complicated query conditions than just testing for equality:
         inequalities, containment and disjunctions.
@@ -1249,7 +1271,7 @@ class PostgresTable(PostgresBase):
             - ``$regex`` -- for text columns, matches the given regex expression supported by PostgresSQL
         - ``value`` -- The value to compare to.  The meaning depends on the key.
         - ``col`` -- The name of the column, wrapped in SQL
-        - ``force_json`` -- whether the column is a jsonb column
+        - ``col_type`` -- the SQL type of the column
 
         OUTPUT:
 
@@ -1275,7 +1297,7 @@ class PostgresTable(PostgresBase):
             ('"ramps" @> %s', [[2, 3, 5]])
         """
         if key in ['$or', '$and']:
-            pairs = [self._parse_dict(clause, outer=col, outer_json=force_json) for clause in value]
+            pairs = [self._parse_dict(clause, outer=col, outer_type=col_type) for clause in value]
             pairs = [pair for pair in pairs if pair[0] is not None]
             if pairs:
                 strings, values = zip(*pairs)
@@ -1294,7 +1316,7 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} IS NULL").format(col)
             value = []
         elif key == '$notcontains':
-            if force_json:
+            if col_type == 'jsonb':
                 cmd = SQL(" AND ").join(SQL("NOT {0} @> %s").format(col) * len(value))
                 value = [Json(v) for v in value]
             else:
@@ -1323,20 +1345,20 @@ class PostgresTable(PostgresBase):
             elif key == '$anylte':
                 cmd = SQL("%s >= ANY({0})")
             elif key == '$in':
-                if force_json:
+                if col_type == 'jsonb':
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("{0} <@ %s")
                 else:
                     cmd = SQL("{0} = ANY(%s)")
             elif key == '$nin':
-                if force_json:
+                if col_type == 'jsonb':
                     #jsonb_path_ops modifiers for the GIN index doesn't support this query
                     cmd = SQL("NOT ({0} <@ %s)")
                 else:
                     cmd = SQL("NOT ({0} = ANY(%s)")
             elif key == '$contains':
                 cmd = SQL("{0} @> %s")
-                if not force_json:
+                if col_type != 'jsonb':
                     value = [value]
             elif key == '$containedin':
                 #jsonb_path_ops modifiers for the GIN index doesn't support this query
@@ -1350,9 +1372,13 @@ class PostgresTable(PostgresBase):
                 cmd = SQL("{0} ~ '%s'")
             else:
                 raise ValueError("Error building query: {0}".format(key))
-            if force_json:
+            if col_type == 'jsonb':
                 value = Json(value)
             cmd = cmd.format(col)
+            # For some array types (e.g. numeric), operators such as = and @> can't automatically typecast so we have to do it manually.
+            typecast = self._create_typecast(key, value, col, col_type)
+            if typecast:
+                cmd += SQL(typecast)
             value = [value]
         return cmd, value
 
@@ -1380,7 +1406,7 @@ class PostgresTable(PostgresBase):
 
         return [Json(val) if self.col_type[key] == 'jsonb' else val for key, val in D.iteritems()]
 
-    def _parse_dict(self, D, outer=None, outer_json=None):
+    def _parse_dict(self, D, outer=None, outer_type=None):
         """
         Parses a dictionary that specifies a query in something close to Mongo syntax into an SQL query.
 
@@ -1388,7 +1414,7 @@ class PostgresTable(PostgresBase):
 
         - ``D`` -- a dictionary, or a scalar if outer is set
         - ``outer`` -- the column that we are parsing (None if not yet parsing any column).  Used in recursion.  Should be wrapped in SQL.
-        - ``outer_json`` -- whether the outer column is a jsonb column
+        - ``outer_type`` -- the SQL type for the outer column
 
         OUTPUT:
 
@@ -1411,7 +1437,7 @@ class PostgresTable(PostgresBase):
             (None, None)
         """
         if outer is not None and not isinstance(D, dict):
-            if outer_json:
+            if outer_type == 'jsonb':
                 D = Json(D)
             return SQL("{0} = %s").format(outer), [D]
         if len(D) == 0:
@@ -1423,7 +1449,7 @@ class PostgresTable(PostgresBase):
                 if not key:
                     raise ValueError("Error building query: empty key")
                 if key[0] == '$':
-                    sub, vals = self._parse_special(key, value, outer, force_json=outer_json)
+                    sub, vals = self._parse_special(key, value, outer, col_type=outer_type)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -1440,14 +1466,13 @@ class PostgresTable(PostgresBase):
                 if key != 'id' and key not in self._search_cols:
                     raise ValueError("%s is not a column of %s"%(key, self.search_table))
                 # Have to determine whether key is jsonb before wrapping it in Identifier
-                coltype = self.col_type[key]
-                force_json = (coltype == 'jsonb')
+                col_type = self.col_type[key]
                 if path:
                     key = SQL("{0}{1}").format(Identifier(key), SQL("").join(path))
                 else:
                     key = Identifier(key)
                 if isinstance(value, dict) and all(k.startswith('$') for k in value.iterkeys()):
-                    sub, vals = self._parse_dict(value, key, outer_json=force_json)
+                    sub, vals = self._parse_dict(value, key, outer_type=col_type)
                     if sub is not None:
                         strings.append(sub)
                         values.extend(vals)
@@ -1455,22 +1480,44 @@ class PostgresTable(PostgresBase):
                 if value is None:
                     strings.append(SQL("{0} IS NULL").format(key))
                 else:
-                    if force_json:
+                    if col_type == 'jsonb':
                         value = Json(value)
-                    cmd = "{0} = %s"
-                    # For arrays, have to add an explicit typecast
-                    if coltype.endswith('[]'):
-                        if not path:
-                            cmd += '::' + coltype
-                        else:
-                            cmd += '::' + coltype[:-2]
-
+                    cmd = "{0} = %s" + self._create_typecast('$eq', value, key, col_type)
                     strings.append(SQL(cmd).format(key))
                     values.append(value)
             if strings:
                 return SQL(" AND ").join(strings), values
             else:
                 return None, None
+
+    def _process_sort(self, query, limit, offset, sort):
+        """
+        OUTPUT:
+
+        - a Composed object for use in a PostgreSQL query
+        - a boolean indicating whether the results are being sorted
+        - a list of columns or pairs, as input into the search method
+        """
+        if sort is None:
+            has_sort = True
+            if self._sort is None:
+                if limit is not None and not (limit == 1 and offset == 0):
+                    sort = Identifier("id")
+                    raw = ['id']
+                else:
+                    has_sort = False
+                    raw = []
+            elif self._primary_sort in query or self._out_of_order:
+                # We use the actual sort because the postgres query planner doesn't know that
+                # the primary key is connected to the id.
+                sort = self._sort
+                raw = self._sort_orig
+            else:
+                sort = Identifier("id")
+                raw = ['id']
+            return sort, has_sort, raw
+        else:
+            return self._sort_str(sort), bool(sort), sort
 
     def _build_query(self, query, limit=None, offset=0, sort=None):
         """
@@ -1504,22 +1551,7 @@ class PostgresTable(PostgresBase):
             values = []
         else:
             s = SQL(" WHERE {0}").format(qstr)
-        if sort is None:
-            has_sort = True
-            if self._sort is None:
-                if limit is not None and not (limit == 1 and offset == 0):
-                    sort = Identifier("id")
-                else:
-                    has_sort = False
-            elif self._primary_sort in query or self._out_of_order:
-                # We use the actual sort because the postgres query planner doesn't know that
-                # the primary key is connected to the id.
-                sort = self._sort
-            else:
-                sort = Identifier("id")
-        else:
-            has_sort = bool(sort)
-            sort = self._sort_str(sort)
+        sort, has_sort, _ = self._process_sort(query, limit, offset, sort)
         if has_sort:
             s = SQL("{0} ORDER BY {1}").format(s, sort)
         if limit is not None:
@@ -1564,6 +1596,36 @@ class PostgresTable(PostgresBase):
     ##################################################################
     # Methods for querying                                           #
     ##################################################################
+
+    def _split_ors(self, query, sort=None):
+        """
+        Splits a query into multiple queries by breaking up the outer
+        $or clause and copying the rest of the query.
+
+        If sort is provided, the resulting dictionaries will be sorted by the first entry of the given sort.
+        """
+        # make a copy of the query so we don't modify the original
+        query = dict(query)
+        ors = query.pop('$or', None)
+        if ors is None:
+            # no $or clause
+            return [query]
+        queries = []
+        for orc in ors:
+            Q = dict(query)
+            for key, val in orc.items():
+                if key in Q and val != Q[key]:
+                    raise ValueError("Error in LMFDB query construction")
+                Q[key] = val
+            queries.append(Q)
+        if sort:
+            col = sort[0]
+            if isinstance(col, basestring):
+                asc = 1
+            else:
+                col, asc = col
+            queries.sort(key=lambda Q: Q[col], reverse=(asc != 1))
+        return queries
 
     def _get_table_clause(self, extra_cols):
         """
@@ -1652,7 +1714,7 @@ class PostgresTable(PostgresBase):
             else:
                 return {k:v for k,v in zip(search_cols + extra_cols, rec) if v is not None}
 
-    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, silent=False, force_exact_count=False, count_only = False):
+    def search(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None, split_ors=False, silent=False):
         """
         One of the two main public interfaces for performing SELECT queries,
         intended for usage from search pages where multiple results may be returned.
@@ -1674,9 +1736,10 @@ class PostgresTable(PostgresBase):
                                1 means return all search columns (default),
                                2 means all columns).
         - ``limit`` -- an integer or None (default), giving the maximum number of records to return.
-        - ``offset`` -- an integer (default 0), where to start in the list of results.
+        - ``offset`` -- a nonnegative integer (default 0), where to start in the list of results.
         - ``sort`` -- a sort order.  Either None or a list of strings (which are interpreted as column names in the ascending direction) or of pairs (column name, 1 or -1).  If not specified, will use the default sort order on the table.  If you want the result unsorted, use [].
         - ``info`` -- a dictionary, which is updated with values of 'query', 'count', 'start', 'exact_count' and 'number'.  Optional.
+        - ``split_ors`` -- a boolean.  If true, executes one query per clause in the `$or` list, combining the results.  Only used when a limit is provided.
         - ``silent`` -- a boolean.  If True, slow query warnings will be suppressed.
         - ``force_exact_count`` -- a boolean. If True exact count will always be given
         - ``count_only`` -- a boolean. If True then the exact count is calculated and the info object is populated. The function returns None
@@ -1720,52 +1783,127 @@ class PostgresTable(PostgresBase):
             sage: info['number'], info['exact_count']
             (1000, False)
         """
+        if offset < 0:
+            raise ValueError("Offset cannot be negative")
         search_cols, extra_cols = self._parse_projection(projection)
-        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
-        if limit is None:
-            qstr, values = self._build_query(query, sort=sort)
-        else:
-            nres = self.stats.quick_count(query)
-            if nres is None:
-                prelimit = max(limit, self._count_cutoff - offset)
-                qstr, values = self._build_query(query, prelimit, offset, sort)
+        if limit is None and split_ors:
+            raise ValueError("split_ors only supported when a limit is provided")
+        if split_ors:
+            # We need to be able to extract the sort columns, so they need to be added
+            _, _, raw_sort = self._process_sort(query, limit, offset, sort)
+            raw_sort = [((col, 1) if isinstance(col, basestring) else col) for col in raw_sort]
+            sort_cols = [col[0] for col in raw_sort]
+            sort_only = tuple(col for col in sort_cols if col not in search_cols)
+            search_cols = search_cols + sort_only
+            if raw_sort:
+                primary_sort = raw_sort[0][0]
             else:
-                qstr, values = self._build_query(query, limit, offset, sort)
+                primary_sort = None
+        vars = SQL(", ").join(map(IdentifierWrapper, search_cols + extra_cols))
         tbl = self._get_table_clause(extra_cols)
-        selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
-        cur = self._execute(selecter, values, silent=silent,
-                            buffered=(limit is None),
-                            slow_note=(
-                                self.search_table, "analyze", query,
-                                repr(projection), limit, offset))
-        if limit is None:
-            if info is not None:
-                # caller is requesting count data
-                info['number'] = self.count(query)
-            return self._search_iterator(cur, search_cols,
-                                         extra_cols, projection)
-        if nres is None:
-            exact_count = (cur.rowcount < prelimit)
-            nres = offset + cur.rowcount
-        else:
-            exact_count = True
-            if force_exact_count: nres = self.count(query)
-            
-        res = cur.fetchmany(limit)
-        res = list(
-                self._search_iterator(res, search_cols, extra_cols, projection)
-                )
+        nres = None if limit is None else self.stats.quick_count(query)
+        def run_one_query(Q, lim, off):
+            if lim is None:
+                qstr, values = self._build_query(Q, sort=sort)
+            else:
+                qstr, values = self._build_query(Q, lim, off, sort)
+            selecter = SQL("SELECT {0} FROM {1}{2}").format(vars, tbl, qstr)
+            return self._execute(selecter, values, silent=silent,
+                                 buffered=(lim is None),
+                                 slow_note=(
+                                     self.search_table, "analyze", Q,
+                                     repr(projection), lim, off))
+        def trim_results(it, lim, off, projection):
+            for rec in islice(it, off, lim+off):
+                if projection == 0:
+                    yield rec[self._label_col]
+                elif isinstance(projection, basestring):
+                    yield rec[projection]
+                else:
+                    for col in sort_only:
+                        rec.pop(col, None)
+                    yield rec
+
+        if split_ors:
+            queries = self._split_ors(query, raw_sort)
+            if len(queries) <= 1:
+                # no ors to split
+                split_ors = False
+            else:
+                results = []
+                total = 0
+                prelimit = max(limit + offset, self._count_cutoff) if nres is None else limit + offset
+                exact_count = True # updated below if we have a subquery hitting the prelimit
+                # short_circuit determines whether we execute all queries; not all are needed
+                # if we reach the limit and the queries all include the primary sort key
+                short_circuit = primary_sort is None or all(primary_sort in Q for Q in queries)
+                for Q in queries:
+                    cur = run_one_query(Q, prelimit, 0)
+                    if cur.rowcount == prelimit and nres is None:
+                        exact_count = False
+                    total += cur.rowcount
+                    # theoretically it's faster to use a heap to merge these sorted lists,
+                    # but the sorting runtime is small compared to getting the records from
+                    # postgres in the first place, so we use a simpler option.
+                    # We override the projection on the iterator since we need to sort
+                    results.extend(list(self._search_iterator(cur, search_cols,
+                                                              extra_cols, projection=1)))
+                    if short_circuit and total >= prelimit:
+                        if nres is None:
+                            exact_count = False
+                        break
+                if all((asc == 1 or self.col_type[col] in number_types) for col, asc in raw_sort):
+                    # every key is in increasing order or numeric so we can just use a tuple as a sort key
+                    if raw_sort:
+                        results.sort(key=lambda x: tuple((x[col] if asc == 1 else -x[col]) for col, asc in raw_sort))
+                else:
+                    for col, asc in reversed(raw_sort):
+                        results.sort(key=lambda x: x[col], reverse=(asc != 1))
+                results = list(trim_results(results, limit, offset, projection))
+                if nres is None:
+                    if exact_count:
+                        nres = total
+                    else:
+                        # We could use total, since it's a valid lower bound, but we want consistency
+                        # with the results that don't use split_ors
+                        nres = min(total, self._count_cutoff)
+
+        if not split_ors: # also handle the case len(queries) == 1
+            if nres is not None or limit is None:
+                prelimit = limit
+            else:
+                prelimit = max(limit, self._count_cutoff - offset)
+            cur = run_one_query(query, prelimit, offset)
+            if limit is None:
+                if info is not None:
+                    # caller is requesting count data
+                    info['number'] = self.count(query)
+                return self._search_iterator(cur, search_cols,
+                                             extra_cols, projection)
+            if nres is None:
+                exact_count = (cur.rowcount < prelimit)
+                nres = offset + cur.rowcount
+            else:
+                exact_count = True
+            results = cur.fetchmany(limit)
+            results = list(
+                self._search_iterator(results, search_cols, extra_cols, projection)
+            )
         if info is not None:
-            if offset >= nres:
+            if offset >= nres > 0:
+                # We're passing in an info dictionary, so this is a front end query,
+                # and the user has requested a start location larger than the number
+                # of results.  We adjust the results to be the last page instead.
                 offset -= (1 + (offset - nres) / limit) * limit
-            if offset < 0:
-                offset = 0
+                if offset < 0:
+                    offset = 0
+                return self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info, silent=silent)
             info['query'] = dict(query)
             info['number'] = nres
             info['count'] = limit
             info['start'] = offset
             info['exact_count'] = exact_count
-        return res
+        return results
 
     def lookup(self, label, projection=2, label_col=None):
         """
@@ -2699,6 +2837,118 @@ class PostgresTable(PostgresBase):
             if self.extra_table is not None:
                 os.unlink(extrafile.name)
 
+    def update_from_file(self, datafile, label_col=None, inplace=False, resort=None, reindex=True, restat=True, commit=True, log_change=True, **kwds):
+        """
+        Updates this table from data stored in a file.
+
+        INPUT:
+
+        - ``datafile`` -- a file with header lines (unlike ``reload``, does not need to include all columns) and rows containing data to be updated.
+        - ``label_col`` -- a column specifying which row(s) of the table should be updated corresponding to each row of the input file.  This will usually be the label for the table, in which case it can be omitted.
+        - ``inplace`` -- whether to do the update in place.  If set, the operation cannot be undone with ``reload_revert``.
+        - ``resort`` -- whether this table should be resorted after updating (default is to resort when the sort columns intersect the updated columns)
+        - ``reindex`` -- whether the indexes on this table should be dropped and recreated during update (default is to recreate only the indexes that touch the updated columns)
+        - ``restat`` -- whether to recompute stats for the table
+        - ``kwds`` -- passed on to psycopg2's ``copy_from``.  Cannot include "columns".
+        """
+        sep = kwds.get("sep", u"\t")
+        print "Updating %s from %s..." % (self.search_table, datafile)
+        now = time.time()
+        if label_col is None:
+            label_col = self._label_col
+            if label_col is None:
+                raise ValueError("You must specify a column that is contained in the datafile and uniquely specifies each row")
+        with open(datafile) as F:
+            tables = [self.search_table]
+            columns = self._search_cols
+            if self.extra_table is not None:
+                tables.append(self.extra_table)
+                columns.extend(self._extra_cols)
+            columns = self._check_header_lines(F, tables, set(columns), sep=sep, prohibit_missing=False)
+            if columns[0] != label_col:
+                raise ValueError("%s must be the first column in the data file" % label_col)
+            # We don't allow updating id using this interface (it gets in the way of the tie-in with extras tables)
+            if 'id' in columns[1:]:
+                raise ValueError("Cannot update id using update_from_file")
+        if resort is None:
+            resort = bool(set(columns[1:]).intersection(self._sort_keys))
+        # Create a temp table to hold the data
+        tmp_table = 'tmp_update_from_file'
+        def drop_tmp():
+            dropper = SQL("DROP TABLE {0}").format(Identifier(tmp_table))
+            self._execute(dropper)
+        with DelayCommit(self, commit, silence=True):
+            if self._table_exists(tmp_table):
+                drop_tmp()
+            processed_columns = SQL(", ").join([SQL("{0} " + self.col_type[col]).format(Identifier(col)) for col in columns])
+            creator = SQL("CREATE TABLE {0} ({1})").format(Identifier(tmp_table), processed_columns)
+            self._execute(creator)
+            # We need to add an id column and populate it correctly
+            if label_col != 'id':
+                coladd = SQL("ALTER TABLE {0} ADD COLUMN id bigint").format(Identifier(tmp_table))
+                self._execute(coladd)
+            self._copy_from(datafile, tmp_table, columns, True, kwds)
+            if label_col != 'id':
+                # When using _copy_from, the id column was just added consecutively
+                # We reset it to match the id from the search table
+                idadder = SQL("UPDATE {0} SET id = {1}.id FROM {1} WHERE {0}.{2} = {1}.{2}").format(
+                    Identifier(tmp_table),
+                    Identifier(self.search_table),
+                    Identifier(label_col))
+                self._execute(idadder)
+            # don't include the label col
+            scols = [col for col in columns[1:] if col in self._search_cols]
+            if self.extra_table is not None:
+                ecols = [col for col in columns[1:] if col in self._extra_cols]
+            suffix = '' if inplace else '_tmp'
+            stable = self.search_table + suffix
+            etable = None if self.extra_table is None else self.extra_table + suffix
+            if inplace:
+                if reindex:
+                    self.drop_indexes(columns[1:], commit=commit)
+                if self.extra_table is not None and not ecols:
+                    etable = None
+            else:
+                self._clone(self.search_table, stable)
+                inserter = SQL("INSERT INTO {0} SELECT * FROM {1}")
+                self._execute(inserter.format(Identifier(stable), Identifier(self.search_table)))
+                if self.extra_table is None or not ecols:
+                    etable = None
+                else:
+                    self._clone(self.extra_table, etable)
+                    self._execute(inserter.format(Identifier(etable), Identifier(self.extra_table)))
+            scols = SQL(", ").join([SQL("{0} = {1}.{0}").format(Identifier(col), Identifier(tmp_table)) for col in scols])
+            updater = SQL("UPDATE {0} SET {1} FROM {2} WHERE {0}.{3} = {2}.{3}")
+            self._execute(updater.format(Identifier(stable), scols, Identifier(tmp_table), Identifier(label_col)))
+            if reindex and inplace:
+                # also restores constraints
+                self.restore_indexes(columns[1:])
+            elif not inplace:
+                # restore all indexes since we're working with a fresh table; also restores constraints
+                self.restore_indexes(suffix='_tmp')
+                # We also need to recreate the primary key
+                self.restore_pkeys(suffix='_tmp')
+            #if self._id_ordered and resort:
+            #    extra_table = None if self.extra_table is None else self.extra_table + suffix
+            #    self.resort(self.search_table + suffix, extra_table)
+            if etable is not None:
+                ecols = SQL(", ").join([SQL("{0} = {1}.{0}").format(col, Identifier(tmp_table)) for col in ecols])
+                self._execute(updater.format(Identifier(etable), ecols, Identifier(tmp_table), Identifier(label_col)))
+            if restat:
+                if not inplace:
+                    for table in [self.stats.counts, self.stats.stats]:
+                        if not self._table_exists(table + '_tmp'):
+                            self._clone(table, table + '_tmp')
+                self.stats.refresh_stats(suffix=suffix)
+            if not inplace:
+                swapped_tables = [self.search_table] if etable is None else [self.search_table, self.extra_table]
+                self._swap_in_tmp(swapped_tables, commit=commit)
+            # Delete the temporary table used to load the data
+            drop_tmp()
+            if log_change:
+                self.log_db_change("file_update")
+            print "Updated %s in %.3f secs" % (self.search_table, time.time() - now)
+
     def delete(self, query, resort=True, restat=True, commit=True):
         """
         Delete all rows matching the query.
@@ -3130,7 +3380,8 @@ class PostgresTable(PostgresBase):
                 tmp_table = table + suffix
                 if adjust_schema and header:
                     # read the header and create the tmp_table accordingly
-                    cols = self._create_table_from_header(filename, tmp_table)
+                    sep = kwds.get("sep", u"\t")
+                    cols = self._create_table_from_header(filename, tmp_table, sep)
                 else:
                     self._clone(table, tmp_table)
                 addid, counts[table] = self._copy_from(filename, tmp_table, cols, header, kwds)
@@ -5228,30 +5479,6 @@ ORDER BY v.ord LIMIT %s""").format(Identifier(col))
             raise ValueError("Not a unique oldstat identifier")
         return cur.fetchone()[0]
 
-class ExtendedTable(PostgresTable):
-    """
-    This class supports type conversion when extracting data from the database.
-
-    It's use is currently hardcoded for artin_reps and artin_field_data,
-    but could eventually be specified by columns in meta_tables.
-    """
-    def __init__(self, type_conversion, *args, **kwds):
-        self._type_conversion = type_conversion
-        PostgresTable.__init__(self, *args, **kwds)
-    def _search_and_convert_iterator(self, source):
-        for x in source:
-            yield self._type_conversion(x)
-    def search_and_convert(self, query={}, projection=1, limit=None, offset=0, sort=None, info=None):
-        results = self.search(query, projection, limit=limit, offset=offset, sort=sort, info=info)
-        if limit is None:
-            return self._search_and_convert_iterator(results)
-        else:
-            return [self._type_conversion(x) for x in results]
-    def convert_lucky(self, *args, **kwds):
-        result = self.lucky(*args, **kwds)
-        if result:
-            return self._type_conversion(result)
-
 class PostgresDatabase(PostgresBase):
     """
     The interface to the postgres database.
@@ -5361,13 +5588,7 @@ class PostgresDatabase(PostgresBase):
         for tabledata in cur:
             tablename = tabledata[0]
             tabledata += (data_types,)
-            # it would be nice to include this in meta_tables
-            if tablename == 'artin_reps':
-                table = ExtendedTable(Dokchitser_ArtinRepresentation, self, *tabledata)
-            elif tablename == 'artin_field_data':
-                table = ExtendedTable(Dokchitser_NumberFieldGaloisGroup, self, *tabledata)
-            else:
-                table = PostgresTable(self, *tabledata)
+            table = PostgresTable(self, *tabledata)
             self.__dict__[tablename] = table
             self.tablenames.append(tablename)
         self.tablenames.sort()

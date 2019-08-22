@@ -1,4 +1,5 @@
 
+from random import randrange
 from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from sage.misc.decorators import decorator_keywords
@@ -7,8 +8,27 @@ from lmfdb.app import ctx_proc_userdata
 from lmfdb.utils.search_parsing import parse_start, parse_count
 from lmfdb.utils.utilities import flash_error, to_dict
 
+def use_split_ors(info, query, split_ors, offset, table):
+    """
+    Whether to split the $or part of a query into multiple queries when passing to postgres.
+
+    INPUT:
+
+    - ``info`` -- the info dictionary passed in from the front end
+    - ``query`` -- the processed query dictionary for passage to postgres
+    - ``split_ors`` -- either None (never split ors), or a list of fields in ``info`` whose presence will lead to splitting ors.
+    - ``offset`` -- the current offset for the query
+    - ``table`` -- the search table on which the query will be executed
+    """
+    return (split_ors is not None and
+            any(field in info for field in split_ors) and
+            len(query.get('$or',[])) > 1 and
+            # We don't support large offsets since sorting in Python requires
+            #fetching all records, starting from 0
+            offset < table._count_cutoff)
+
 class SearchWrapper(object):
-    def __init__(self, f, template, table, title, err_title, per_page=50, shortcuts={}, longcuts={}, projection=1, url_for_label=None, cleaners = {}, postprocess=None, **kwds):
+    def __init__(self, f, template, table, title, err_title, per_page=50, shortcuts={}, longcuts={}, projection=1, url_for_label=None, cleaners = {}, postprocess=None, split_ors=None, **kwds):
         self.f = f
         self.template = template
         self.table = table
@@ -21,6 +41,7 @@ class SearchWrapper(object):
         self.url_for_label = url_for_label
         self.cleaners = cleaners
         self.postprocess = postprocess
+        self.split_ors = split_ors
         self.kwds = kwds
 
     def __call__(self, info, random=False):
@@ -59,8 +80,26 @@ class SearchWrapper(object):
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
+            split_ors = use_split_ors(info, query, self.split_ors, start, table)
             if random:
                 # Ignore __projection__: it's intended for searches
+                if split_ors:
+                    queries = table._split_ors(query)
+                else:
+                    queries = [query]
+                if len(queries) > 1:
+                    # The following method won't produce a uniform distribution
+                    # if there's overlap between queries.  But it's simple,
+                    # and in many use cases (e.g. galois group for number fields)
+                    # the subqueries are disjoint.
+                    counts = [table.count(Q) for Q in queries]
+                    pick = randrange(sum(counts))
+                    accum = 0
+                    for Q, cnt in zip(queries, counts):
+                        accum += cnt
+                        if pick < accum:
+                            query = Q
+                            break
                 label = table.random(query, projection=0)
                 if label is None:
                     res = []
@@ -73,7 +112,7 @@ class SearchWrapper(object):
                 else:
                     return redirect(self.url_for_label(label), 307)
             else:
-                res = table.search(query, proj, limit=count, offset=start, sort=sort, info=info)
+                res = table.search(query, proj, limit=count, offset=start, sort=sort, info=info, split_ors=split_ors)
         except QueryCanceledError as err:
             ctx = ctx_proc_userdata()
             flash_error('The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.' % ctx['feedbackpage'])

@@ -585,7 +585,7 @@ class WebNewform(object):
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:
-            s += r'%s, \chi)\)'
+            s += r'%s, [\chi])\)'
         return s%(self.weight, self.level)
 
     def display_hecke_cutters(self):

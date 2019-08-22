@@ -100,10 +100,10 @@ class CmfTest(LmfdbTest):
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert elt in page.data
                 # redirect to the same page
-                assert "Space of Cuspidal Newforms of " in page.data
+                assert "Space of Modular Forms of " in page.data
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
                 assert elt in page.data
-                assert "Space of Cuspidal Newforms of " in page.data
+                assert "Space of Modular Forms of " in page.data
 
     def test_tracehash(self):
         for t, l in [[1329751273693490116,'7.3.b.a'],[1294334189658968734, '4.5.b.a'],[0,'not found']]:
@@ -534,7 +534,7 @@ class CmfTest(LmfdbTest):
     def test_download_qexp(self):
         for label, exp in [
                 ['11.7.b.a'
-                    , '[0, 10, -64]'],
+                    , '[0, 10, 64]'],
                 ['11.2.a.a'
                     , '[-2, -1, 2]'],
                 ['21.2.g.a'
@@ -544,11 +544,11 @@ class CmfTest(LmfdbTest):
                 ['13.2.e.a'
                     , '[-a - 1, 2*a - 2, a]'],
                 ['340.1.ba.b'
-                    , '[z, 0, 0]'],
+                    , '[z, 0, z^2]'],
                 ['24.3.h.a'
-                    , '[-2, 3, 0]'],
+                    , '[-2, 3, 4]'],
                 ['24.3.h.c'
-                    , '[a, -a^2 - 3, 0]'],
+                    , '[a, -a^2 - 3, a^2]'],
                 ]:
             sage_code = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label, follow_redirects=True).data
             assert "make_data" in sage_code
